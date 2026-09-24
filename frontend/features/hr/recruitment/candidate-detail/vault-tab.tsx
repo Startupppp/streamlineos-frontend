@@ -12,6 +12,7 @@ import type { BgvStatus as CandidateBgvStatus } from "@/types/hr";
 import { BgvTracker } from "./vault-bgv-tracker";
 import { AssessmentsCard } from "./assessments-card";
 import { IdentityCard } from "./identity-card";
+import { CandidateConsentCard } from "./candidate-consent-card";
 import { VoiceScreensCard } from "./voice-screens-card";
 import { VaultUploadArea } from "./vault-upload-area";
 import { VaultDocumentList } from "./vault-document-list";
@@ -94,6 +95,14 @@ export function VaultTab(props: VaultTabProps) {
         a recruiter refused an offer by the identity gate looks here first.
       */}
       <IdentityCard candidateId={props.candidateId} />
+
+      {/*
+        Beside the vault rather than in the row actions. This card states what
+        the candidate's data may be used for and when it expires, and the erase
+        control that ends it deletes the documents listed immediately below —
+        keeping the two together is what makes the consequence legible.
+      */}
+      <CandidateConsentCard candidateId={props.candidateId} />
 
       <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
         <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between border-b border-border">

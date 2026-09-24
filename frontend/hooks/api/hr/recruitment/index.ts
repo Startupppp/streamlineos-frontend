@@ -16,4 +16,5 @@ export * from "./vendors";
 export * from "./reports";
 export * from "./job-board-postings";
 export * from "./talent-pools";
+export * from "./job-templates";
 export * from "./external-referrals";

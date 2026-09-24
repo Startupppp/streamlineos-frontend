@@ -13,6 +13,7 @@ import { useBranchOptions } from "@/hooks/api";
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Briefcase, MapPin } from "lucide-react";
+import { JobTemplatePicker } from "./job-template-picker";
 
 export interface SectionProps {
   form: UseFormReturn<CreateJobFormValues>;
@@ -104,6 +105,8 @@ export function Section1({ form, departments }: SectionProps) {
     <div>
       <SectionTitle title="Basic Job Details" subtitle="Core information about the position" icon={Briefcase} />
       <FieldGroup>
+        {/* First, because a template is worth choosing before typing — it only fills blanks, so picking it later fills less. */}
+        <JobTemplatePicker form={form} />
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Job Title" required error={errors.title?.message}>
             <Input placeholder="e.g. Software Engineer, HR Manager" {...register("title")} />

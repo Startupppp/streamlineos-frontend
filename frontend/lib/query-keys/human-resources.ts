@@ -161,6 +161,19 @@ export const humanResourcesQueryKeys = {
     interviewSlas: () => [...base, "hr", "interviewSlas"] as const,
     slaReport: () => [...base, "hr", "slaReport"] as const,
     hiringFlows: () => [...base, "hr", "hiringFlows"] as const,
+    /**
+     * The reusable job-template library. `params === undefined` yields the bare
+     * prefix so a write can invalidate every filtered page at once — a key that
+     * always carried its filters would leave the unfiltered picker stale.
+     *
+     * Named `jobTemplates`, not `hrTemplates`: that segment already belongs to
+     * the HR document-template domain, and sharing it would make one domain's
+     * invalidation silently refetch the other's.
+     */
+    jobTemplates: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "hr", "jobTemplates"] as const)
+        : ([...base, "hr", "jobTemplates", params] as const),
     hiringFlow: (hiringFlowId: number) =>
       [...base, "hr", "hiringFlow", hiringFlowId] as const,
     hiringFlowRounds: (flowId: number) =>

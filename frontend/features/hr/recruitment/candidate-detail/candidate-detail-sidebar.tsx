@@ -6,7 +6,52 @@ import { AiScoreCard } from "@/features/hr/recruitment/candidates/ai-score-card"
 import { CompositeScoreCard } from "@/features/hr/recruitment/candidates/composite-score-card";
 import type { AiScoreResult } from "@/hooks/api/hr";
 import type { CompositeScoreResult } from "@/hooks/api/hr/recruitment";
+import {
+  REJECTION_REASON_LABELS,
+  type RejectionReason,
+} from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
 import type { CandidateStatus } from "@/types/hr";
+
+/**
+ * What a rejected candidate was rejected for.
+ *
+ * Shown for every rejected candidate, including the ones with no reason on
+ * record: rejections made before the reason became required are real rows, and
+ * rendering nothing for them would read as "this screen does not show reasons"
+ * rather than "nobody recorded one".
+ *
+ * The label is looked up from the stored code — the code is what the row holds,
+ * so rewording a label here never rewrites history.
+ */
+function RejectionReasonCard({
+  reason,
+  note,
+}: {
+  reason: RejectionReason | null;
+  note: string | null;
+}) {
+  return (
+    <Card>
+      <CardHeader className="p-4 pb-2">
+        <CardTitle className="text-xs font-medium">Rejection reason</CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-0 space-y-1.5">
+        {reason ? (
+          <p className="text-sm font-medium text-foreground">
+            {REJECTION_REASON_LABELS[reason]}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Not recorded — this rejection predates the reason requirement.
+          </p>
+        )}
+        {note && (
+          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{note}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 interface CandidateDetailSidebarProps {
   status: CandidateStatus | null;
@@ -18,6 +63,8 @@ interface CandidateDetailSidebarProps {
   linkedinUrl: string | null;
   skills: string[] | null;
   notes: string | null;
+  rejectionReason: RejectionReason | null;
+  rejectionNote: string | null;
   displayAiScore: AiScoreResult | null;
   aiScoreGeneratedAt: Date | string | null;
   isLatestScore: boolean;
@@ -41,6 +88,8 @@ export function CandidateDetailSidebar({
   linkedinUrl,
   skills,
   notes,
+  rejectionReason,
+  rejectionNote,
   displayAiScore,
   aiScoreGeneratedAt,
   isLatestScore,
@@ -67,6 +116,10 @@ export function CandidateDetailSidebar({
         onStatusChange={onStatusChange}
         isUpdating={isUpdating}
       />
+
+      {status === "REJECTED" && (
+        <RejectionReasonCard reason={rejectionReason} note={rejectionNote} />
+      )}
 
       <AiScoreCard
         displayAiScore={displayAiScore}

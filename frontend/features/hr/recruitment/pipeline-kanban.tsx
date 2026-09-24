@@ -3,17 +3,9 @@
 import { useState, useCallback, memo } from "react";
 import { ArrowRight, XCircle } from "lucide-react";
 import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import type { RejectionDetails } from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
+import { RejectCandidateDialog } from "@/features/hr/recruitment/reject-candidate-dialog";
 import type {
   AtsPipelineStage,
   AtsPipelineCandidate,
@@ -121,13 +113,24 @@ const KanbanColumn = memo(function KanbanColumn({
 
 interface PipelineKanbanProps {
   stages: AtsPipelineStage[];
-  onStageChange: (candidateId: number, newStage: CandidateStatus) => void;
+  /**
+   * `rejection` is present exactly when `newStage` is `REJECTED`. The endpoint
+   * refuses a reject with no reason, so the board collects one before it calls
+   * back rather than letting a drag produce a 422 the recruiter cannot act on.
+   */
+  onStageChange: (
+    candidateId: number,
+    newStage: CandidateStatus,
+    rejection?: RejectionDetails,
+  ) => void;
+  isRejecting?: boolean;
   isLoading?: boolean;
 }
 
 export function PipelineKanban({
   stages,
   onStageChange,
+  isRejecting,
   isLoading,
 }: PipelineKanbanProps) {
   const [selectedCandidate, setSelectedCandidate] =
@@ -165,16 +168,17 @@ export function PipelineKanban({
     [onStageChange, stages],
   );
 
-  const confirmReject = useCallback(() => {
-    if (pendingReject) {
-      onStageChange(pendingReject.candidateId, "REJECTED");
-      setPendingReject(null);
-    }
-  }, [pendingReject, onStageChange]);
+  const confirmReject = useCallback(
+    (rejection: RejectionDetails) => {
+      if (pendingReject) {
+        onStageChange(pendingReject.candidateId, "REJECTED", rejection);
+        setPendingReject(null);
+      }
+    },
+    [pendingReject, onStageChange],
+  );
 
-  const handleRejectDialogChange = useCallback((open: boolean) => {
-    if (!open) setPendingReject(null);
-  }, []);
+  const cancelReject = useCallback(() => setPendingReject(null), []);
 
   const FLOW_STAGES = [
     { label: "New", color: "bg-muted text-muted-foreground", count: stageCounts["NEW"]?.total ?? 0 },
@@ -253,26 +257,12 @@ export function PipelineKanban({
         onOpenChange={setSheetOpen}
       />
 
-      <AlertDialog open={!!pendingReject} onOpenChange={handleRejectDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Reject candidate?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Move <span className="font-semibold">{pendingReject?.candidateName}</span> to{" "}
-              <span className="font-semibold text-destructive">Rejected</span>? This will notify the HR team.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmReject}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Reject
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <RejectCandidateDialog
+        candidateName={pendingReject?.candidateName ?? null}
+        isPending={isRejecting}
+        onCancel={cancelReject}
+        onConfirm={confirmReject}
+      />
     </>
   );
 }

@@ -9,6 +9,9 @@ import { lazyContract } from "@/lib/api-envelope";
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
+const candidateErasureC = lazyContract(() =>
+  import("@/hooks/api/hr/recruitment/candidates-schema").then((m) => m.candidateErasureContract),
+);
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -20,8 +23,9 @@ import type {
   UpdateCandidateInput,
   Interview,
 } from "@/types/hr";
+import type { RejectionDetails } from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
 import type { CandidateSlaRecord, InterviewScorecard } from "./interviews";
-import type { candidateDetailSchema } from "@/hooks/api/hr/recruitment/candidates-schema";
+import type { candidateDetailSchema, CandidateErasureResult } from "@/hooks/api/hr/recruitment/candidates-schema";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type CandidateDetail = z.infer<typeof candidateDetailSchema>;
@@ -360,6 +364,35 @@ export function useDeleteCandidate() {
   });
 }
 
+/**
+ * Erase a candidate's personal data, résumé vault included.
+ *
+ * Deliberately separate from `useDeleteCandidate`, which hits a 204 route and
+ * therefore cannot report anything. This one returns what was and was not
+ * deleted, because the résumé objects live in a store the API does not own and
+ * "we tried" is a different claim from "it is gone". Callers must branch on
+ * `status` rather than treating a resolved promise as success.
+ */
+export function useEraseCandidate() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("hr:requisitions:manage", {
+    mutationKey: ["hr", "recruitment", "candidates", "erase"],
+    mutationFn: (candidateId: number) =>
+      apiClient.delete<CandidateErasureResult>(
+        `/hr/recruitment/candidates/${candidateId}/personal-data`,
+        undefined,
+        undefined,
+        candidateErasureC,
+      ),
+    onSuccess: (_result, candidateId) => {
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidate(candidateId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentPipeline() });
+    },
+  });
+}
+
 export function useCreateApplication() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:requisitions:manage", {
@@ -392,10 +425,19 @@ export function useUpdateCandidateStage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "update-stage"],
-    mutationFn: ({ candidateId, stage }: { candidateId: number; stage: CandidateStatus }) =>
+    /*
+      The disposition rides with the stage. The endpoint refuses a move to
+      REJECTED that carries no reason, so a caller that omits it gets a 422
+      rather than a silent reject — which is why every reject control routes
+      through `RejectCandidateDialog` before reaching here.
+    */
+    mutationFn: ({
+      candidateId,
+      ...body
+    }: { candidateId: number; stage: CandidateStatus } & Partial<RejectionDetails>) =>
       apiClient.patch<{ id: number; stage: CandidateStatus; changed: boolean }>(
         `/hr/recruitment/candidates/${candidateId}/stage`,
-        { stage },
+        body,
         undefined,
         moveStageContract,
       ),

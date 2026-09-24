@@ -93,7 +93,9 @@ export interface VendorSubmission {
   paidAt: string | null;
   billRate: string | null;
   payRate: string | null;
-  margin: string | null;
+  marginAmount: string | null;
+  marginPercent: number | null;
+  negative: boolean;
   contractStartDate: string | null;
   contractEndDate: string | null;
   candidateFirstName: string | null;

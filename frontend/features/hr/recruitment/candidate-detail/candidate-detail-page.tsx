@@ -27,6 +27,8 @@ import type { CandidateStatus, InterviewType } from "@/types/hr";
 import { CandidateDetailSidebar } from "@/features/hr/recruitment/candidate-detail/candidate-detail-sidebar";
 import { CandidateDetailTabs } from "@/features/hr/recruitment/candidate-detail/candidate-detail-tabs";
 import { useCandidateAiActions } from "@/features/hr/recruitment/candidate-detail/use-candidate-ai-actions";
+import { RejectCandidateDialog } from "@/features/hr/recruitment/reject-candidate-dialog";
+import type { RejectionDetails } from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
 import {
   ScheduleInterviewSheet,
   ApplyToJobSheet,
@@ -55,6 +57,7 @@ export function CandidateDetailPage() {
   const [latestAiScore, setLatestAiScore] = useState<AiScoreResult | null>(null);
   const [expandedScorecardId, setExpandedScorecardId] = useState<number | null>(null);
   const [compositeScore, setCompositeScore] = useState<CompositeScoreResult | null>(null);
+  const [rejectOpen, setRejectOpen] = useState(false);
 
   const { data: scorecardTemplates } = useScorecardTemplates();
   const generateCompositeScore = useGenerateCandidateCompositeScore();
@@ -65,6 +68,16 @@ export function CandidateDetailPage() {
 
   const handleStatusChange = useCallback(
     (status: CandidateStatus) => {
+      /*
+        Same rule as the board: a reject collects its reason first. This page
+        rejects through PATCH rather than the stage endpoint, and both refuse a
+        rejection with no reason — so without the dialog this select would be
+        the one control that produced a 422 instead of a rejection.
+      */
+      if (status === "REJECTED") {
+        setRejectOpen(true);
+        return;
+      }
       updateCandidate.mutate(
         { candidateId: id, status },
         {
@@ -75,6 +88,22 @@ export function CandidateDetailPage() {
     },
     [id, updateCandidate],
   );
+
+  const handleConfirmReject = useCallback(
+    (rejection: RejectionDetails) => {
+      updateCandidate.mutate(
+        { candidateId: id, status: "REJECTED", ...rejection },
+        {
+          onSuccess: () => toast.success("Candidate rejected"),
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+      setRejectOpen(false);
+    },
+    [id, updateCandidate],
+  );
+
+  const handleCancelReject = useCallback(() => setRejectOpen(false), []);
 
   const handleScheduleInterview = useCallback(() => {
     if (!scheduledAt) {
@@ -263,6 +292,8 @@ export function CandidateDetailPage() {
           linkedinUrl={candidate.linkedinUrl}
           skills={candidate.skills}
           notes={candidate.notes}
+          rejectionReason={candidate.rejectionReason ?? null}
+          rejectionNote={candidate.rejectionNote ?? null}
           displayAiScore={displayAiScore}
           aiScoreGeneratedAt={candidate.aiScoreGeneratedAt}
           isLatestScore={latestAiScore !== null}
@@ -297,6 +328,15 @@ export function CandidateDetailPage() {
           onScheduleOpen={handleInterviewOpen}
         />
       </div>
+
+      <RejectCandidateDialog
+        candidateName={
+          rejectOpen ? `${candidate.firstName} ${candidate.lastName}` : null
+        }
+        isPending={updateCandidate.isPending}
+        onCancel={handleCancelReject}
+        onConfirm={handleConfirmReject}
+      />
 
       <ScheduleInterviewSheet
         open={interviewOpen}

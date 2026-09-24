@@ -12,6 +12,7 @@ import { CheckIcon, SendIcon, TrashIcon, XIcon } from "@animateicons/react/lucid
 import type { CandidateOffer } from "@/hooks/api/hr/recruitment";
 import { format } from "date-fns";
 import { formatINR } from "@/lib/format-utils";
+import { CtcBreakdownPanel } from "@/components/shared/ctc-breakdown-panel";
 
 export const STATUS_CONFIG: Record<CandidateOffer["offerStatus"], { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
   DRAFT: { label: "Draft", variant: "secondary" },
@@ -114,6 +115,25 @@ export function OfferCard({
             </p>
           </div>
         </div>
+
+        {/*
+          The reconciliation warning is shown here and only here. It is what
+          tells a recruiter the breakdown will refuse approval — before they
+          find out by clicking Approve and reading a 400. The candidate's copy
+          of this panel is passed no warning.
+        */}
+        {offer.ctcPreview && offer.ctcPreview.lines.length > 0 && (
+          <div className="mb-3">
+            <CtcBreakdownPanel
+              preview={offer.ctcPreview}
+              warning={
+                offer.ctcPreview.reconciliation.status === "MISMATCHED"
+                  ? offer.ctcPreview.reconciliation.message
+                  : null
+              }
+            />
+          </div>
+        )}
 
         {offer.approvalRemarks && (
           <div className="rounded-md border border-muted bg-muted/30 px-3 py-2 mb-3">

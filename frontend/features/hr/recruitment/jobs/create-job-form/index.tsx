@@ -17,7 +17,7 @@ import { Section3, Section4, Section5 } from "./compensation-qualifications-sect
 import { Section6 } from "./job-description-sections";
 import { Section7, Section8 } from "./hiring-pipeline-sections";
 import { Section9, Section10 } from "./publishing-settings-sections";
-import { createJobFormSchema, SECTION_KEYS, NO_HIRING_FLOW, type CreateJobFormValues } from "./schema";
+import { createJobFormSchema, SECTION_KEYS, NO_HIRING_FLOW, NO_JOB_TEMPLATE, type CreateJobFormValues } from "./schema";
 import { parseJobToFormValues } from "./parse-job";
 import { JobPostingPreview } from "./job-posting-preview";
 import { PublishReadiness } from "./publish-readiness";
@@ -132,6 +132,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
       approvalRequired: false,
       status: "DRAFT",
       hiringFlowId: NO_HIRING_FLOW,
+      jobTemplateId: NO_JOB_TEMPLATE,
       ...parsed,
     },
   });

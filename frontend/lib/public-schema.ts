@@ -92,6 +92,27 @@ export const publicJobApplicationContract = z.object({
   resumeReason: z.string().nullable(),
 });
 
+/**
+ * The compensation breakdown, already summed and already divided into months by
+ * the backend. `monthly` is null on a line that has no monthly form — a joining
+ * bonus is paid once, and a per-month figure against it would state a recurring
+ * payment nobody offered.
+ */
+const publicCtcPreview = z.object({
+  lines: z.array(
+    z.object({
+      key: z.string(),
+      label: z.string(),
+      recurrence: z.enum(["MONTHLY", "LUMP_SUM"]),
+      annual: z.string(),
+      monthly: z.string().nullable(),
+    }),
+  ),
+  annualTotal: z.string().nullable(),
+  monthlyTotal: z.string().nullable(),
+  lumpSumTotal: z.string().nullable(),
+});
+
 export const publicOfferDetailContract = z.object({
   id: z.number().int(),
   offerStatus: z.string(),
@@ -101,6 +122,8 @@ export const publicOfferDetailContract = z.object({
   joiningDate: z.string().nullable(),
   validUntil: z.string().nullable(),
   notes: z.string().nullable(),
+  /** Null when no breakdown was entered, or when it disagrees with the salary. */
+  ctcPreview: publicCtcPreview.nullable(),
   negotiations: z.array(z.record(z.string(), z.unknown())),
 });
 
