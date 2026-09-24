@@ -86,7 +86,7 @@ export function useUnifiedInbox(
   const eventKeys = params?.eventKeys?.length
     ? [...params.eventKeys].sort()
     : undefined;
-  const module = params?.module || undefined;
+  const moduleFilter = params?.module || undefined;
   const triage = params?.triage;
 
   return useInfiniteQuery<UnifiedInboxResponse, Error>({
@@ -99,7 +99,7 @@ export function useUnifiedInbox(
       category,
       priority,
       eventKeys,
-      module,
+      module: moduleFilter,
       triage,
       infinite: true,
     }),
@@ -113,7 +113,7 @@ export function useUnifiedInbox(
       if (category) query["category"] = category;
       if (priority) query["priority"] = priority;
       if (eventKeys) query["eventKeys"] = eventKeys.join(",");
-      if (module) query["module"] = module;
+      if (moduleFilter) query["module"] = moduleFilter;
       if (triage) query["triage"] = triage;
       return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query, signal, unifiedInboxContract);
     },

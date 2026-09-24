@@ -60,7 +60,7 @@ export const KanbanColumnWip = memo(function KanbanColumnWip({
       aria-label={description}
       title={description}
       className={cn(
-        "h-5 shrink-0 gap-0 px-1.5 py-0 text-[10px] font-semibold tabular-nums",
+        "h-5 shrink-0 gap-0 px-1.5 py-0 text-micro font-semibold tabular-nums",
         tone.surface,
         tone.ink,
         tone.rule,

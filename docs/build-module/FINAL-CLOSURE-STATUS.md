@@ -1,3 +1,8 @@
+> **HISTORICAL — point-in-time record, 2026-09-21**
+> The environment facts inside this document — including `main = 4b41bb510, in sync with origin/main` and all commit SHAs, route counts, and migration states — are point-in-time and no longer current. For current release status see [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+
+---
+
 # Build module — final closure status
 
 Coordinator ledger for the closure phase opened 2026-09-21. Every row is reconciled against **source**, not against the backlog document. The backlog has already been caught twice claiming pending work that was in fact finished, so an unsupported claim here is marked UNVERIFIED rather than carried forward.

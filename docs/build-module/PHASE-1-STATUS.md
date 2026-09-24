@@ -1,3 +1,8 @@
+> **HISTORICAL — point-in-time record, 2026-09-22**
+> The environment facts inside this document (commit SHAs including `main = 484af9d89`, route counts, migration states, workstream blockers) are point-in-time and no longer current. For current release status see [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+
+---
+
 # Phase 1 Build Production Readiness — Status Ledger
 
 Coordinator-owned. Workers never edit this file.

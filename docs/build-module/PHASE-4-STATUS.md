@@ -1,3 +1,8 @@
+> **HISTORICAL — point-in-time record, 2026-09-22**
+> The environment facts inside this document (commit SHAs, branch state, worktree paths, test counts) are point-in-time and no longer current. For current release status see [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+
+---
+
 # Phase 4 — Customer Collaboration and Reliability — Status Ledger
 
 Coordinator-owned. Workers never edit this file.

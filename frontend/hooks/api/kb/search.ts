@@ -8,14 +8,21 @@ import { useCan } from "@/hooks/api/access";
 import { useKbSpaces } from "./spaces";
 import type { KbSpaceListPage } from "./spaces";
 import type { KbSearchParams } from "@/types/kb";
-import type { KbSearchApiResponse, KbPageFullSearchResponse } from "@/hooks/api/kb/kb-search-schema";
+import type {
+  KbSearchApiResponse,
+  KbPageFullSearchResponse,
+} from "@/hooks/api/kb/kb-search-schema";
 
 const kbSearchResponseContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-search-schema").then((m) => m.kbSearchResponseContract),
+  import("@/hooks/api/kb/kb-search-schema").then(
+    (m) => m.kbSearchResponseContract,
+  ),
 );
 
 const kbPageFullSearchResponseContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-search-schema").then((m) => m.kbPageFullSearchResponseContract),
+  import("@/hooks/api/kb/kb-search-schema").then(
+    (m) => m.kbPageFullSearchResponseContract,
+  ),
 );
 
 const ACL_VERSION_SPACE_LIMIT = 100;
@@ -26,18 +33,29 @@ function deriveAclVersion(page: KbSpaceListPage | undefined): string {
   return page.pagination.hasMore ? `${ids.join(",")}~truncated` : ids.join(",");
 }
 
-export function useKbSearch(params: KbSearchParams, options?: { enabled?: boolean }) {
+export function useKbSearch(
+  params: KbSearchParams,
+  options?: { enabled?: boolean },
+) {
   const canViewArticles = useCan("kb:articles:view");
   const { data: spaces, isLoading: spacesLoading } = useKbSpaces({
     limit: ACL_VERSION_SPACE_LIMIT,
   });
   const aclVersion = spacesLoading ? null : deriveAclVersion(spaces);
-  const cacheParams: Record<string, unknown> = { ...params, aclVersion: aclVersion ?? "" };
+  const cacheParams: Record<string, unknown> = {
+    ...params,
+    aclVersion: aclVersion ?? "",
+  };
   const apiParams: Record<string, unknown> = { ...params };
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.search(cacheParams),
     queryFn: ({ signal }) =>
-      apiClient.get<KbSearchApiResponse>("/kb/search", apiParams, signal, kbSearchResponseContract),
+      apiClient.get<KbSearchApiResponse>(
+        "/kb/search",
+        apiParams,
+        signal,
+        kbSearchResponseContract,
+      ),
     staleTime: 0,
     enabled:
       canViewArticles &&
@@ -84,8 +102,6 @@ export function useKbPageFullSearch(
       ),
     staleTime: 0,
     enabled:
-      canView &&
-      (options?.enabled ?? true) &&
-      params.q.trim().length > 0,
+      canView && (options?.enabled ?? true) && params.q.trim().length > 0,
   });
 }

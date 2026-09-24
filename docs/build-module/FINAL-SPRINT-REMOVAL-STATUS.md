@@ -1,3 +1,8 @@
+> **HISTORICAL — point-in-time record, 2026-09-22**
+> The environment facts inside this document (commit SHAs, migration application state, database row counts) are point-in-time and no longer current. For current release status see [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+
+---
+
 # Final closure — 2026-09-22, legacy sprint identity removed
 
 **Authoritative for the work below.** Where an earlier row in `IMPLEMENTATION-STATUS.md` disagrees, this

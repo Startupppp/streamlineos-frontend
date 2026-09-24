@@ -41,7 +41,8 @@ interface KbResearchBriefFormProps {
 export function KbResearchBriefForm({ basePath }: KbResearchBriefFormProps) {
   const router = useRouter();
   const createMutation = useCreateResearchBrief();
-  const { data: spaces } = useKbSpaces();
+  const { data: spacesPage } = useKbSpaces();
+  const spaces = spacesPage?.data;
 
   const form = useForm<KbResearchBriefFormValues>({
     resolver: zodResolver(kbResearchBriefSchema),

@@ -10,12 +10,14 @@ Migration 1159 is already applied to the production database. Any checkout that
 predates the removal now talks to a schema it does not know, so a stale dev server
 fails in a way that looks like a defect in this work and is not.
 
-The observed symptom, for recognition: `/build/5` returns 200 and the client throws
+The observed symptom, for recognition: a project route (e.g. `/build/6`) returns 200 and the client throws
 `ApiContractError` with `{"path":"pmWorkspaceId","message":"Invalid input: expected
 string, received undefined"}`, then the route falls back to client rendering. That is
 a pre-removal `build-project-schema.ts` still declaring `pmWorkspaceId: z.string()`
 against a backend that correctly no longer sends it. Restarting the same checkout does
 not fix it; running the branch does.
+
+> **Note (2026-09-23):** The original text used `/build/5` as the example. Project 5 does not exist in the active organisation. Use project 6 (`/build/6`) as the QA sandbox for any manual verification. Verified: `frontend/app/(authenticated)/build/[projectId]/page.tsx` exists; project 6 is the active QA sandbox.
 
 Confirm before booting, from whichever directory you are about to run:
 
