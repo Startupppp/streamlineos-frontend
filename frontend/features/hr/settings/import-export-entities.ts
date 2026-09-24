@@ -8,7 +8,16 @@ export const HR_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
     icon: FileSpreadsheet,
     description:
       "Export expense claims with status, category, and amounts.",
-    exportEndpoint: "/hr/expenses/export",
+    // Expenses exports run as a job. This card used to name
+    // `GET /hr/expenses/export`, a route that has never existed — the backend
+    // has `POST /hr/expenses/export/jobs` — so the browser answered
+    // "Cannot GET /hr/expenses/export" and the card looked broken rather than
+    // unavailable.
+    exportJob: {
+      create: "/hr/expenses/export/jobs",
+      status: (jobId: string) => `/hr/expenses/export/jobs/${jobId}`,
+      download: (jobId: string) => `/hr/expenses/export/jobs/${jobId}/download`,
+    },
     accent: "text-status-info-ink bg-status-info-surface",
     supported: { import: false, export: true },
   },

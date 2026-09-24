@@ -16,11 +16,12 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans:
-    var(--font-geist), "Geist", ui-sans-serif, system-ui, -apple-system,
+    var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display:
-    var(--font-geist), "Geist", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-geist), "Geist", Georgia, "Times New Roman", serif;
+    var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-serif:
+    var(--font-geist-sans), "Geist", Georgia, "Times New Roman", serif;
   --font-mono:
     var(--font-geist-mono), ui-monospace, SFMono-Regular, "Cascadia Code",
     "Consolas", monospace;
@@ -71,7 +72,7 @@
 }
 
 :root {
-  --font-geist: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-geist-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-geist-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
 
   --radius: 0.625rem;

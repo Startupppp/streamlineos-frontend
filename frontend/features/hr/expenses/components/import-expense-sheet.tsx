@@ -16,8 +16,22 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyUploadIllustration } from "@/components/illustrations/illustration-image";
 import { activationProps } from "@/lib/keyboard-activation";
 
+/**
+ * One declaration of the import contract: what the parser reads, what the
+ * template writes, and what the instructions below list.
+ *
+ * The template used to be generated from a private list with Title Case headers
+ * ("Payment Method") while the instructions documented snake_case, and it
+ * carried no rows at all although the copy beside it promised "sample rows to
+ * guide you". Keeping the three in one place is what stops them drifting again.
+ */
 const TEMPLATE_COLUMNS = [
-  "category", "amount", "description", "merchant", "payment_method", "expense_date",
+  { key: "category", hint: "Travel, Food, Software, …", sample: "Travel" },
+  { key: "amount", hint: "Positive number", sample: "450" },
+  { key: "description", hint: "Text (optional)", sample: "Cab to client site" },
+  { key: "merchant", hint: "Vendor name (optional)", sample: "City Cabs" },
+  { key: "payment_method", hint: "Cash, UPI, Company Card, … (optional)", sample: "CASH" },
+  { key: "expense_date", hint: "YYYY-MM-DD", sample: "2026-09-20" },
 ] as const;
 
 const ALLOWED_CATEGORIES = [
@@ -175,12 +189,13 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
       await downloadXlsx(`expense_import_template_${format(new Date(), "yyyy-MM-dd")}.xlsx`, [{
         name: "Expenses",
-        columns: TEMPLATE_COLUMNS.map((col) => ({
-          header: col.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-          key: col,
-          width: 18,
-        })),
-        rows: [],
+        // snake_case, exactly as the instructions below document it and as the
+        // parser reads it. The header used to be Title Cased here and
+        // snake_case in the docs, so a file built from one did not match the
+        // other's description.
+        columns: TEMPLATE_COLUMNS.map((col) => ({ header: col.key, key: col.key, width: 18 })),
+        // One filled row, because the copy beside this button promises one.
+        rows: [Object.fromEntries(TEMPLATE_COLUMNS.map((col) => [col.key, col.sample]))],
       }]);
       toast.success("Template downloaded");
     } catch (error) {
@@ -228,9 +243,19 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
           ? "Close"
           : isImporting
             ? "Importing..."
-            : `Import${validCount > 0 ? ` (${validCount} rows)` : ""}`
+            : file === null
+              ? "Choose a file to import"
+              : isParsing
+                ? "Reading file..."
+                : validCount === 0
+                  ? "No valid rows to import"
+                  : `Import (${validCount} ${validCount === 1 ? "row" : "rows"})`
       }
       isPending={isImporting || isParsing}
+      // Import used to be clickable with no file chosen: the handler returned
+      // early and the click did nothing at all, with no message. The button now
+      // says what it is waiting for.
+      submitDisabled={!importResult && (file === null || isParsing || validCount === 0)}
     >
       <div className="space-y-4">
         <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
@@ -252,12 +277,18 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
               <details className="text-xs text-muted-foreground">
                 <summary className="cursor-pointer hover:text-foreground transition-colors">View required columns</summary>
                 <div className="mt-2 space-y-1 pl-2 border-l-2 border-border">
-                  <p><span className="font-medium text-foreground">category</span> — {ALLOWED_CATEGORIES.join(", ")}</p>
-                  <p><span className="font-medium text-foreground">amount</span> — Positive number</p>
-                  <p><span className="font-medium text-foreground">description</span> — Text (optional)</p>
-                  <p><span className="font-medium text-foreground">merchant</span> — Vendor name (optional)</p>
-                  <p><span className="font-medium text-foreground">payment_method</span> — Cash, UPI, Company Card, etc. (optional)</p>
-                  <p><span className="font-medium text-foreground">expense_date</span> — YYYY-MM-DD format</p>
+                  {TEMPLATE_COLUMNS.map((col) => (
+                    <p key={col.key}>
+                      <span className="font-medium text-foreground">{col.key}</span> —{" "}
+                      {col.key === "category" ? ALLOWED_CATEGORIES.join(", ") : col.hint}
+                    </p>
+                  ))}
+                  <p className="pt-1">
+                    Headers are matched case-insensitively, so{" "}
+                    <span className="font-medium text-foreground">payment_method</span>,{" "}
+                    <span className="font-medium text-foreground">Payment Method</span> and{" "}
+                    <span className="font-medium text-foreground">paymentMethod</span> all work.
+                  </p>
                 </div>
               </details>
             </div>

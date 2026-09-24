@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 
 import { OnboardingInitiateSheet } from "./onboarding-initiate-sheet";
 import { ResendInviteButton } from "@/components/hr/resend-invite-button";
+import { CopyInviteLinkButton } from "@/components/hr/copy-invite-link-button";
 import { useOnboardingStatus, type OnboardingStatus } from "@/hooks/api/hr/onboarding";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getInitials } from "@/lib/format-utils";
@@ -163,11 +164,18 @@ export function OnboardingList() {
 
                     <div className="flex shrink-0 items-center gap-1.5">
                       {row.userId ? (
-                        <ResendInviteButton
-                          employeeId={row.userId}
-                          employeeName={row.userName}
-                          className="hidden text-xs sm:inline-flex"
-                        />
+                        <>
+                          <ResendInviteButton
+                            employeeId={row.userId}
+                            employeeName={row.userName}
+                            className="hidden text-xs sm:inline-flex"
+                          />
+                          <CopyInviteLinkButton
+                            employeeId={row.userId}
+                            employeeName={row.userName}
+                            className="hidden text-xs sm:inline-flex"
+                          />
+                        </>
                       ) : null}
                       <Button
                         size="sm"

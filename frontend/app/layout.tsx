@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import { headers } from "next/headers";
 
 import "../globals.css";
@@ -29,20 +30,6 @@ import {
   GoogleTagManagerNoscript,
 } from "@/features/analytics/google-tag-manager";
 import { MicrosoftClarity } from "@/features/analytics/clarity";
-
-const geist = Geist({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-geist",
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-geist-mono",
-  weight: ["400", "500", "600", "700"],
-});
 
 const SITE_URL = new URL(process.env.NEXTAUTH_URL || BRAND_URL);
 
@@ -136,7 +123,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`light ${geist.variable} ${geistMono.variable}`}
+      className={`light ${GeistSans.variable} ${GeistMono.variable}`}
       style={{ colorScheme: "light" }}
     >
       <head>

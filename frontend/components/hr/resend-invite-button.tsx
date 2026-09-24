@@ -6,7 +6,11 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import { useResendEmployeeInvite } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { describeUnsentInvite } from "@/components/hr/invite-delivery";
+import {
+  INVITE_QUEUED_HINT,
+  describeQueuedInvite,
+  describeUnsentInvite,
+} from "@/components/hr/invite-delivery";
 import { cn } from "@/lib/utils";
 
 interface ResendInviteButtonProps {
@@ -25,8 +29,15 @@ export function ResendInviteButton({ employeeId, employeeName, className }: Rese
     resendInvite.mutate(employeeId, {
       onSuccess: (result) => {
         const unsent = describeUnsentInvite(result.invite);
+        // "Sent" was never what the server reported. invite.sent means the mail
+        // reached the outbox — a queue drained later, through a provider that
+        // may not be configured — so claiming delivery sent QA to watch an inbox
+        // for three minutes on a promise nothing had made.
         if (unsent) toast.warning(unsent);
-        else toast.success(`Invitation sent to ${employeeName}`);
+        else
+          toast.success(describeQueuedInvite(employeeName), {
+            description: INVITE_QUEUED_HINT,
+          });
       },
       onError: (error) => toast.error(getErrorMessage(error)),
     });
