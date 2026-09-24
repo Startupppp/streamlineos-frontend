@@ -43,8 +43,50 @@ export const publicJobListContract = z.object({
   ),
 });
 
+/**
+ * The screening questions a careers form has to render. `knockoutAnswer` is
+ * deliberately absent from the payload — publishing the passing answer would
+ * tell every applicant what to say.
+ */
+export const publicScreeningQuestionContract = z.object({
+  id: z.string(),
+  question: z.string(),
+  type: z.enum(["TEXT", "YES_NO", "SINGLE_SELECT", "NUMBER"]),
+  required: z.boolean(),
+  options: z.array(z.string()).optional(),
+});
+
+export const publicJobDetailContract = z.object({
+  org: z.object({
+    id: z.string(),
+    name: z.string().nullable(),
+    logo: z.string().nullable(),
+  }),
+  job: z.object({
+    id: z.number().int(),
+    title: z.string(),
+    location: z.string().nullable(),
+    type: z.string().nullable(),
+    experience: z.string().nullable(),
+    salaryMin: z.string().nullable(),
+    salaryMax: z.string().nullable(),
+    openings: z.number().int(),
+    applicationDeadline: z.string().nullable(),
+    createdAt: z.string(),
+    description: z.string().nullable(),
+    requirements: z.string().nullable(),
+    benefits: z.string().nullable(),
+    closingDate: z.string().nullable(),
+    screeningQuestions: z.array(publicScreeningQuestionContract).nullable(),
+  }),
+});
+
 export const publicJobApplicationContract = z.object({
   trackingToken: z.string(),
+  /** True when this email had already applied; the token is the first one's. */
+  duplicate: z.boolean(),
+  resumeStored: z.boolean(),
+  resumeReason: z.string().nullable(),
 });
 
 export const publicOfferDetailContract = z.object({
