@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
-import { portfolioPageContract, programListContract } from "./portfolios-schema";
+import { portfolioPageContract, programPageContract } from "./portfolios-schema";
 
 const PORTFOLIOS_SERVICE = "src/modules/build/portfolios/portfolios.service.ts";
 const PROGRAMS_SERVICE = "src/modules/build/portfolios/programs.service.ts";
@@ -19,7 +19,7 @@ const PORTFOLIO_ROW = {
   name: "Platform",
   description: null,
   ownerId: null,
-  status: "ACTIVE",
+  status: "active",
   health: null,
   strategicGoal: null,
   createdBy: "user-1",
@@ -35,7 +35,7 @@ const PROGRAM_ROW = {
   name: "Onboarding",
   description: null,
   ownerId: null,
-  status: "ACTIVE",
+  status: "active",
   health: null,
   createdBy: "user-1",
   createdAt: "2026-09-19T10:00:00.000Z",
@@ -59,7 +59,7 @@ describe("the portfolio and program list contracts describe the rows their endpo
 
   it("asks for no column the program projection omits, which is what threw once a program existed", () => {
     const projected = new Set(projectionKeys(PROGRAMS_SERVICE, "async listPrograms("));
-    const required = Object.keys(programListContract.element.shape);
+    const required = Object.keys(programPageContract.shape.data.element.shape);
     expect(required.filter((key) => !projected.has(key))).toEqual([]);
   });
 
@@ -68,6 +68,31 @@ describe("the portfolio and program list contracts describe the rows their endpo
       data: [PORTFOLIO_ROW],
       pagination: { limit: 50, hasMore: false, nextCursor: null },
     }).data[0]?.projectCount).toBe(2);
-    expect(programListContract.parse([PROGRAM_ROW])[0]?.projectCount).toBe(4);
+    expect(programPageContract.parse({
+      data: [PROGRAM_ROW],
+      pagination: { limit: 50, hasMore: false, nextCursor: null },
+    }).data[0]?.projectCount).toBe(4);
+  });
+
+  it("rejects a status the portfolio pgEnum never emits, where the previous z.string() waved it through", () => {
+    expect(() => portfolioPageContract.parse({
+      data: [{ ...PORTFOLIO_ROW, status: "ACTIVE" }],
+      pagination: { limit: 50, hasMore: false, nextCursor: null },
+    })).toThrow();
+  });
+
+  it("rejects a health value outside the portfolio health pgEnum on both lists", () => {
+    expect(() => portfolioPageContract.parse({
+      data: [{ ...PORTFOLIO_ROW, health: "green" }],
+      pagination: { limit: 50, hasMore: false, nextCursor: null },
+    })).toThrow();
+    expect(() => programPageContract.parse({
+      data: [{ ...PROGRAM_ROW, health: "green" }],
+      pagination: { limit: 50, hasMore: false, nextCursor: null },
+    })).toThrow();
+  });
+
+  it("describes the program list as a cursor page, matching the keyset the service now returns", () => {
+    expect(Object.keys(programPageContract.shape)).toEqual(["data", "pagination"]);
   });
 });

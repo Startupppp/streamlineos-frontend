@@ -2,6 +2,8 @@
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { formatMoneyCompact } from "@/lib/format-utils";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 import type { RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap";
 import {
   CRM_ACCOUNT_TIER_LABEL,
@@ -20,6 +22,44 @@ interface RoadmapPriorityScoreProps {
  * present. When it is not, the plain RICE score stands and the reason travels
  * with it, so a weighted number is never implied by its absence.
  */
+/**
+ * What the linked accounts are worth, and how much of that the backend actually
+ * knows. A null total is "no linked account told us its value" and is rendered
+ * as unknown; it is never shown as a zero, which would read as "worth nothing".
+ */
+function LinkedRevenueBadge({ tierWeighting }: { tierWeighting: RoadmapTierWeighting }) {
+  const display = useOrgDisplay();
+  const { linkedRevenue, revenueKnownAccountCount, linkedAccountCount } = tierWeighting;
+  if (linkedAccountCount <= 0) return null;
+
+  if (linkedRevenue === null)
+    return (
+      <Badge
+        variant="outline"
+        className="text-micro text-muted-foreground"
+        title={`No linked account carries a recorded value, so revenue is unknown for ${String(linkedAccountCount)} linked account(s).`}
+      >
+        Revenue unknown
+      </Badge>
+    );
+
+  const partial = revenueKnownAccountCount < linkedAccountCount;
+  return (
+    <Badge
+      variant="secondary"
+      className="text-micro tabular-nums"
+      title={
+        partial
+          ? `Total across ${String(revenueKnownAccountCount)} of ${String(linkedAccountCount)} linked accounts; the rest carry no recorded value.`
+          : `Total across all ${String(linkedAccountCount)} linked accounts.`
+      }
+    >
+      {formatMoneyCompact(linkedRevenue, display)}
+      {partial ? ` (${String(revenueKnownAccountCount)}/${String(linkedAccountCount)})` : ""}
+    </Badge>
+  );
+}
+
 export function RoadmapPriorityScore({
   prioritization,
   tierWeighting,
@@ -49,6 +89,7 @@ export function RoadmapPriorityScore({
             ×{weighted.weight}{" "}
             {weighted.tier === null ? null : CRM_ACCOUNT_TIER_LABEL[weighted.tier]}
           </Badge>
+          <LinkedRevenueBadge tierWeighting={weighted} />
         </span>
       );
 
@@ -66,6 +107,9 @@ export function RoadmapPriorityScore({
           >
             Not tier-weighted
           </Badge>
+        )}
+        {tierWeighting === undefined ? null : (
+          <LinkedRevenueBadge tierWeighting={tierWeighting} />
         )}
       </span>
     );

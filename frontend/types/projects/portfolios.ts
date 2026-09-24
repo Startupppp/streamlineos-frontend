@@ -1,5 +1,17 @@
+export type ProjectStatus = "ACTIVE" | "COMPLETED" | "ARCHIVED";
 export type PortfolioStatus = "active" | "on_hold" | "completed" | "archived";
 export type PortfolioHealth = "on_track" | "at_risk" | "off_track";
+
+export interface CursorPagination {
+  limit: number;
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
+export interface CursorPage<T> {
+  data: T[];
+  pagination: CursorPagination;
+}
 
 export interface Portfolio {
   id: number;
@@ -7,8 +19,8 @@ export interface Portfolio {
   name: string;
   description: string | null;
   ownerId: string | null;
-  status: string;
-  health: string | null;
+  status: PortfolioStatus;
+  health: PortfolioHealth | null;
   strategicGoal: string | null;
   createdBy: string | null;
   deletedAt?: string | null;
@@ -17,20 +29,26 @@ export interface Portfolio {
   projectCount?: number;
 }
 
-export interface PortfoliosPage {
-  data: Portfolio[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
+export type PortfoliosPage = CursorPage<Portfolio>;
 
 export interface LinkedProject {
   id: number;
   name: string;
   key: string;
-  status: string;
+  status: ProjectStatus;
+  openCount: number;
+  doneCount: number;
+}
+
+export interface LinkedProgram {
+  id: number;
+  name: string;
+  status: PortfolioStatus;
 }
 
 export interface PortfolioDetail extends Portfolio {
-  projects: LinkedProject[];
+  projects: CursorPage<LinkedProject>;
+  programs: CursorPage<LinkedProgram>;
 }
 
 export interface CreatePortfolioInput {
@@ -58,12 +76,26 @@ export interface Program {
   name: string;
   description: string | null;
   ownerId: string | null;
-  status: string;
-  health: string | null;
+  status: PortfolioStatus;
+  health: PortfolioHealth | null;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
   projectCount?: number;
+}
+
+export type ProgramsPage = CursorPage<Program>;
+
+export interface ProgramLinkedProject {
+  id: number;
+  name: string;
+  key: string;
+  status: ProjectStatus;
+  addedAt: string;
+}
+
+export interface ProgramDetail extends Program {
+  projects: CursorPage<ProgramLinkedProject>;
 }
 
 export interface CreateProgramInput {

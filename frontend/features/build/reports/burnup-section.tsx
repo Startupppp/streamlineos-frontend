@@ -29,9 +29,9 @@ export function BurnupSection({ projectId }: { projectId: number }) {
   const velocity = useVelocityReport(projectId);
   const [cycleId, setCycleId] = useState<number | undefined>(undefined);
 
-  const sprints = velocity.data ?? [];
+  const cycles = velocity.data ?? [];
   const activeCycleId =
-    sprints.length > 0 ? sprints[sprints.length - 1].cycleId : undefined;
+    cycles.length > 0 ? cycles[cycles.length - 1].cycleId : undefined;
   const selectedCycleId = cycleId ?? activeCycleId;
 
   const { data, isLoading, isError, error, refetch } = useBurnupReport(
@@ -51,21 +51,21 @@ export function BurnupSection({ projectId }: { projectId: number }) {
     [data],
   );
 
-  function handleSprintChange(value: string) {
+  function handleCycleChange(value: string) {
     setCycleId(Number(value));
   }
 
-  const sprintSelect =
-    sprints.length > 0 ? (
+  const cycleSelect =
+    cycles.length > 0 ? (
       <Select
         value={selectedCycleId ? String(selectedCycleId) : undefined}
-        onValueChange={handleSprintChange}
+        onValueChange={handleCycleChange}
       >
         <SelectTrigger className="w-44 text-sm bg-muted/40 border-border">
-          <SelectValue placeholder="Recent sprints" />
+          <SelectValue placeholder="Recent cycles" />
         </SelectTrigger>
         <SelectContent>
-          {sprints.map((s) => (
+          {cycles.map((s) => (
             <SelectItem key={s.cycleId} value={String(s.cycleId)}>
               {s.name}
             </SelectItem>
@@ -75,7 +75,7 @@ export function BurnupSection({ projectId }: { projectId: number }) {
     ) : null;
 
   return (
-    <ChartCard title="Burnup · latest 100 sprints" icon={TrendingUp} actions={sprintSelect}>
+    <ChartCard title="Burnup · latest 100 cycles" icon={TrendingUp} actions={cycleSelect}>
       {velocity.isLoading || isLoading ? (
         <LoadingState variant="cards" rows={2} />
       ) : velocity.isError || isError ? (
@@ -85,11 +85,11 @@ export function BurnupSection({ projectId }: { projectId: number }) {
           onRetry={handleRetry}
           compact
         />
-      ) : sprints.length === 0 || chartData.length === 0 ? (
+      ) : cycles.length === 0 || chartData.length === 0 ? (
         <EmptyState
           illustration={<EmptyLeaderboardIllustration />}
-          title="No sprint to chart"
-          description="Burnup tracks completed work against scope across a sprint's date range."
+          title="No cycle to chart"
+          description="Burnup tracks completed work against scope across a cycle's date range."
           compact
         />
       ) : (
