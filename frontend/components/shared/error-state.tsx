@@ -3,6 +3,7 @@
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ErrorReference } from "@/components/shared/error-reference";
 
 interface ErrorStateProps {
   title?: string;
@@ -10,6 +11,8 @@ interface ErrorStateProps {
   onRetry?: () => void;
   className?: string;
   compact?: boolean;
+  /** The failed call's error. When it carries a request id, a copyable reference line is shown under the message. */
+  error?: unknown;
 }
 
 export function ErrorState({
@@ -18,6 +21,7 @@ export function ErrorState({
   onRetry,
   className,
   compact = false,
+  error,
 }: ErrorStateProps) {
   return (
     <div
@@ -59,6 +63,8 @@ export function ErrorState({
       >
         {description}
       </p>
+
+      <ErrorReference error={error} className="mt-3" />
 
       {onRetry && (
         <Button
