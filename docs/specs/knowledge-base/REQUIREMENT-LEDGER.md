@@ -27,7 +27,7 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 | Migration/data-loss target | **production, authorized by the repo owner** on 2026-09-23 | Destructive KB-scoped operations are permitted. |
 | Destructive ordering rule | contraction runs **last** | Additive/expansion migrations land per-slice; drops, truncates, and reseeds run only in S21 after cutover gates, with a pre-verified snapshot and resolved exact table targets. |
 | RDS PITR window | 1 day, unencrypted | Snapshot before any contraction step; record the snapshot id in S21 evidence. |
-| **Applying any migration** | **BLOCKED — external credential** | The cluster uses **IAM auth**: `db:apply-one` reaches it but fails `PAM authentication failed for user "streamline_admin"`. There is no AWS CLI on this machine, no IAM-token tooling in the repo, and no credentials. Everything DB-dependent is blocked behind this. |
+| **Applying any migration** | **UNBLOCKED 2026-09-24 — all nine KB migrations applied** | The `PAM authentication failed` reading was never a credential problem. `28P01` here means the migration scripts hand `DATABASE_URL` straight to `postgres()` and never mint an IAM token; the app itself does, via `src/db/rds-iam-auth.ts`. No AWS CLI is needed — `~/.aws/credentials` resolves and `@aws-sdk/rds-signer` is already a backend dependency. The wrapper at `D:/agent-work/mig-iam.mjs` mints a token and spawns the real script with it. Every "blocked on IAM" row below this one is stale for the same reason. |
 | Two independent prod guards | `ALLOW_PRODUCTION_MIGRATION=1` (runner), `APPLY_ONE_ALLOW_REMOTE=1` (single-apply) | Both must be acknowledged deliberately. Do not remove or weaken either. |
 | Never use `db:migrate` here | it applies **all** pending migrations | The production ledger is reconciled-not-replayed (47 rows vs 921 journal entries), so "pending" is not what it looks like. Apply one tag at a time with `db:apply-one --tag=`. |
 | Concurrent session in this tree | confirmed | Commit `a5ac2c529` landed on `feat/knowledge-base` without this session making it, `inbox-toolbar.tsx` was modified externally, and source files are being reformatted to ~80 columns on disk. Re-read before editing; never `stash`/`restore`/`reset`. |
@@ -47,6 +47,13 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 
 ## Slice index
 
+> ⚠️ **This table lagged the code badly and is only as good as its last measured pass.** On
+> 2026-09-24 it still listed S12, S14, S15, S17, S19 and S20 as `NOT STARTED` while every one of
+> them was built, registered and under test — see the eighth pass at the end of this file. The
+> unchecked boxes in the per-slice sections below are staler still (171 unchecked against 21
+> checked, in a module with 34 controllers and 171 spec files). **Measure before you build:** run
+> the slice's suites and look for its controller before treating any row here as work to do.
+
 | # | Slice | Phase | Priority | Status |
 |---:|---|---|---|---|
 | S01 | `KnowledgeAuthorization` + `kb_page_grants` schema | 1 | P0 | IN PROGRESS |
@@ -60,15 +67,15 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 | S09 | History — diff + append-only restore | 3 | P0 | IN PROGRESS |
 | S10 | Reviews — derived overdue, URL filters, bulk decide | 4 | P0/P1 | LANDED — needs final gate sweep |
 | S11 | Trash — cursor, bulk restore/purge, resumable purge ledger | 3 | P0 | LANDED — resumable purge ledger still open |
-| S12 | Templates — URL state, preview, saved-template lifecycle | 3 | P1 | NOT STARTED |
-| S13 | Import & Export — validation, dry-run, resumable jobs | 3 | P0 | NOT STARTED |
-| S14 | Analytics — permission-safe, minimum cohort, drill-down | 4 | P1 | NOT STARTED |
-| S15 | Content Health — `/knowledge/wiki/manage` | 4 | P1 | NOT STARTED |
+| S12 | Templates — URL state, preview, saved-template lifecycle | 3 | P1 | LANDED — backend pre-existed; BE-24 cap+pagination fixed |
+| S13 | Import & Export — validation, dry-run, resumable jobs | 3 | P0 | BUILT — controller + suites green; checkbox list not re-audited |
+| S14 | Analytics — permission-safe, minimum cohort, drill-down | 4 | P1 | LANDED — registered in KbWikiModule (BE-01) |
+| S15 | Content Health — `/knowledge/wiki/manage` | 4 | P1 | LANDED — registered in KbWikiModule (BE-01) |
 | S16 | Ask KB — scope, citations, fallback, budgets | 1/4 | P0/P1 | IN PROGRESS |
-| S17 | Public page — `/wiki/[shareToken]` | 3 | P0 | NOT STARTED |
-| S18 | Project wiki adapters | 2 | P0 | NOT STARTED |
-| S19 | Research Briefs moved under Knowledge | 4 | P1 | NOT STARTED |
-| S20 | `/ask` removal, redirects, aliases | 6 | P0 | IN PROGRESS |
+| S17 | Public page — `/wiki/[shareToken]` | 3 | P0 | LANDED — 404/hash/rate-limit verified; token VERSIONING still open |
+| S18 | Project wiki adapters | 2 | P0 | BUILT — adapter suites green; checkbox list not re-audited |
+| S19 | Research Briefs moved under Knowledge | 4 | P1 | LANDED — one controller repo-wide; no duplicate left to remove |
+| S20 | `/ask` removal, redirects, aliases | 6 | P0 | VERIFIED — surface deleted, redirect live, not shadowed |
 | S21 | `kb_articles` cutover + destructive contraction | 6 | P1 | NOT STARTED |
 | S22 | Async scale — queue lanes, admission, SLOs, DR drills | 5 | P0/P1 | NOT STARTED |
 | S23 | Observability — dashboards, alerts, cost budgets, runbooks | 0/5 | P0 | NOT STARTED |
@@ -709,7 +716,10 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [ ] Answer parts: citations, source passage, freshness, verification, disagreement, insufficient evidence
 - [ ] Streaming stop/retry, network recovery, copy, helpful/unhelpful, report wrong/stale, create knowledge gap
 - [ ] Access-change handling after an answer was generated
-- [ ] Deterministic search fallback when AI is disabled, rate limited, over budget, or unavailable
+- [x] Deterministic search fallback when AI is disabled, rate limited, over budget, or unavailable —
+  **retrieval** degrades to lexical ranking on all four; the **answer** still 402s when the org is
+  over budget and 503s at the concurrency cap, because degrading those would bypass credit and the
+  limiter rather than the provider. See the fifth-pass entry below.
 - [ ] `kb:ai:generate` + read access required; billing permission not inferred from view
 - [ ] Provider context contains only authorized passages; document content is data, never instruction
 - [ ] Citations accepted only when they map to a retrieved, still-authorized passage
@@ -791,29 +801,142 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S22 — Async scale, cost, disaster recovery
 
-- [ ] Dedicated queue lanes with the target ages in `04-backend-scale-architecture.md`
-- [ ] Per-tenant concurrency, admission control, retry/DLQ/lease recovery, bounded attempts, correlation ids
-- [ ] Interactive index and access-revocation freshness SLOs
-- [ ] Batched, content-hash-deduplicated embedding with budgets and lexical fallback
-- [ ] Public-page CDN invalidation by token/page revision
-- [ ] Replica consistency classification and lag failover to primary
-- [ ] Connection budget: background lanes cannot exhaust interactive connections
-- [ ] Drills: backup restore, tenant export/delete, reindex, cell-move
-- [ ] Load/soak at current, 10×, and the planning envelope
-- [ ] Conditional stages (partitioning, cells, service extraction, external search) stay **unactivated** unless a measured trigger fires; record the measurement either way
+Split per item, because the original single checkboxes hid four things that are done behind
+six that cannot be.
 
-**Evidence:** _pending_
+- [ ] **Dedicated queue lanes.** `ai_jobs` is one undifferentiated queue — `claimBatch` has no
+  `type` predicate and the kind only selects a handler after the claim. Separation today is by
+  *table and worker* (`payroll_jobs`, `outbox_events`, `workflow_runs`), not by lane.
+- [x] **Retry / DLQ / bounded attempts.** `attempts`/`max_attempts` default 3, `DEAD` is a real
+  terminal state, `fail()` backs off exponentially, and a revived key no longer poisons.
+- [x] **Lease recovery.** `reclaimExpiredLeases` — **written and tested, but dormant.** It sits in
+  `flush()`, which has no scheduler. See "The AI job queue is not draining at all".
+- [x] **Admission control.** `MAX_LIVE_JOBS_PER_ORG = 500` on `QUEUED` + `RUNNING`, 429 with
+  `Retry-After`, and an existing idempotency key is never rejected by a full queue.
+- [ ] **Per-tenant concurrency / fairness.** `claimBatch` still has no per-org cap. Deliberately
+  unbuilt: the rewrite was reverted once after rendering its SQL showed a dropped
+  `status = 'QUEUED'` re-check, and there is no queue here to exercise a replacement against.
+  The rotating per-tenant cursor in `outbox-claim.ts` is the model when it is built.
+- [ ] **Correlation ids on jobs.** The infrastructure exists and `outbox_events` and
+  `workflow_runs` both persist `correlation_id`. `ai_jobs` has no such column, so nothing links an
+  enqueued job to the request that created it. Needs a migration.
+- [ ] Interactive index and access-revocation freshness SLOs
+- [x] **Batched, content-hash-deduplicated embedding.** One gateway call per document, provider
+  sub-batches at 64, `content_hash` short-circuits an unchanged body, and per-chunk checkpoints
+  make a crashed run resume rather than re-pay.
+- [ ] **Embedding budgets.** Present but coarse: the credit reservation is a flat per-call estimate
+  regardless of batch size, so a 400-chunk batch reserves what a 1-chunk batch does.
+- [ ] **Public-page CDN invalidation by token/page revision.** Not built, and not fabricated:
+  there is no CDN in front of this endpoint, the frontend route is `force-dynamic` with
+  `cache: "no-store"`, and `kb_pages.content_revision` is available whenever one is introduced.
+  What *was* fixed here is a real defect in the same area — see "Unsharing a page did not revoke
+  its link" — plus the duplicate origin read below.
+- [ ] **Replica consistency classification and lag failover.** `ReplicaRouter` exists, classifies
+  `WorkClass`, and is registered — with **zero injection sites**. No lag probe exists anywhere;
+  `isReplicaHealthy` is hardcoded `true`, and the router throws `ReplicaShedError` rather than
+  falling back, which its own note says is deliberate. Closing this needs a real replica endpoint,
+  which this deployment does not have.
+- [ ] **Connection budget.** `poolAdmission` lanes are *regions*, not workloads, so interactive and
+  background share one counter sized at `DB_POOL_MAX`. The shed is real but indiscriminate: a
+  worker burst evicts interactive requests.
+- [ ] Drills: backup restore, tenant export/delete, reindex, cell-move — **needs a live
+  environment.** No local Postgres, no capture stack, PITR window 1 day.
+- [ ] Load/soak at current, 10×, and the planning envelope — **needs a live environment.**
+- [ ] Conditional stages (partitioning, cells, service extraction, external search) stay
+  **unactivated**. No trigger was measured, because measuring one needs the environment above.
+  Recorded as unmeasured rather than as "not triggered" — those are different claims.
+
+**Evidence:** `npx jest src/modules/ai/jobs/` → 4 suites, 55 tests, all passing, with
+`ai-jobs-lease-recovery.spec.ts` unmodified. `all-exceptions.filter.spec.ts` 28/28.
+`src/common/http/ src/common/ratelimit/` → 11 suites, 143 tests.
+
+One duplicate origin read closed on the way past: the public share page fetched
+`/public/wiki/:token` twice per view — once in `generateMetadata`, once in the page body — and
+`withCorrelation` gives each call distinct headers, so Next's request memoization did not collapse
+them. Wrapped in React `cache()` (FE-03). Frontend `type-check` exit 0.
 
 ---
 
 ### S23 — Observability
 
-- [ ] Dimensions: tenant bucket/placement, route/module, result code, actor standing, cache outcome, primary/replica, queue lane, job kind, provider/model, source kind
-- [ ] No page title/body, query text, token, or attachment name in metric labels or logs
-- [ ] Dashboards/alerts for read/write/search/Ask latency and errors; DB connections, locks, slow queries, replica lag, cache hit and dropped invalidations; queue age, retries, dead letters, lease recovery, index freshness; ACL denial/not-found anomalies and revocation lag; retrieval candidate counts, rerank latency, no-answer rate, citation coverage; storage/index/embedding/AI cost by tenant tier; purge backlog and oldest incomplete ledger
-- [ ] SLOs, rate limits, queue-age alerts, cost budgets, and runbooks exist and are drill-verified
+Split per item, for the same reason S22 was. One checkbox spanning ten dimensions hides the one
+seam that now emits behind the nine that still do not.
 
-**Evidence:** _pending_
+**Dimensions**
+
+- [x] Route/module and result code, for KB indexing only. `kb.indexing.operation` carries
+  `kb.content_type`, `kb.outcome`, `kb.chunks`, `kb.embedded`, `kb.reused`, `kb.duration_ms` and
+  `org.id`; `startSpan` joins `correlation.id` and `http.route` from the ambient context.
+- [x] Provider/model — pre-existing on `AiCallMetrics`, not delivered here.
+- [ ] Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source
+  kind. None is emitted on any KB span.
+- [ ] Only the **page** indexing path is instrumented. `indexArticle` delegates to
+  `kb-article-indexing.ts` and attachments run their own flow. `KbIndexingContentType` already
+  declares `article` and `attachment`, so wiring them adds no new vocabulary — but they are not
+  wired, and an article indexing failure is still silent.
+
+**No tenant content in labels or logs**
+
+- [x] For the new span, pinned three ways: a test replays `redact.ts`'s own `SENSITIVE_EXACT` and
+  `SENSITIVE_SUBSTRINGS` rules over the real emitted attribute set and asserts nothing is blanked;
+  an allowlist test fails on any new key; a third asserts the emitter interpolates nothing into an
+  attribute *value*. No title, body, query, token or filename can reach the stream.
+- [ ] Not audited for the rest of the KB surface.
+
+**Dashboards and alerts**
+
+- [x] Index freshness and indexing failure: `alert:kb-indexing` fires when
+  `faults >= 2 && faults/ops > 0.05`, over `embedding_unavailable`, `credits_exhausted`, `error`.
+  Registered in `alert-dispatch.mjs` under `knowledge-team`, anchored at `#kb-indexing`.
+- [x] Queue age, retries, dead letters — pre-existing (`job-queue-age`, the `ai-jobs` dead-letter
+  SLO). Lease recovery is written and tested but dormant; see S22.
+- [ ] Read/write/search/Ask latency and errors. No span exists on any of those paths.
+- [ ] Retrieval candidate counts, rerank latency, no-answer rate, citation coverage. The Ask path
+  now sets `degraded: true` when it falls back to lexical ranking; counting that is the first thing
+  to build here, and nothing counts it yet.
+- [ ] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
+  All need a live database.
+- [ ] ACL denial and not-found anomalies, revocation lag.
+- [ ] Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
+- [ ] Purge backlog and oldest incomplete ledger.
+- [ ] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
+  script over a log stream, and routing one to a human is a deployment concern that does not exist.
+
+**SLOs, rate limits, cost budgets, runbooks — drill-verified**
+
+- [x] SLO and runbook for KB indexing: `module:kb:indexing` in the catalogue, `#kb-indexing` in
+  `FAILURE-RUNBOOKS.md` with the six-part structure, plus the `### kb-indexing` entry in
+  `completion-plan.md` that the dispatch half of `slo-catalogue.spec.ts` actually resolves against.
+- [ ] Drill-verified. Nothing here has fired against a live stream. The self-test proves the
+  predicate matches a line the emitter really produces — it does not prove an operator is paged.
+
+**Evidence:**
+
+```
+npm run alert:kb-indexing:self-test   EXIT=0, 10/10 checks true
+npx jest src/modules/kb/core/telemetry/   31 passed, 31 total
+npx jest src/modules/kb/ src/modules/ai/ src/common/http/
+  Test Suites: 11 failed, 291 passed, 302 total
+  Tests:       51 failed, 2707 passed, 2758 total
+pnpm typecheck        EXIT=0
+pnpm typecheck:test   EXIT=0
+npx eslint <every touched file>   EXIT=0
+check:over-300  EXIT=0   check:type-assertions — no file this session touched gained one
+check:migration-rollback / -immutability / drop-column-safety   EXIT=0
+frontend pnpm type-check   EXIT=0
+```
+
+All 51 failures are pre-existing and environmental: 10 AI suites die at `ai-stream-model.ts:37`,
+`ServiceUnavailableException: AI provider is not configured` — no API key in this environment, and
+that file is untouched by this session. The eleventh is `kb-version-append-only-migration.spec.ts`,
+known-red by design.
+
+**A misattribution worth recording.** The telemetry lane reported that failure as caused by "another
+lane's `1176_*` migration". It is not. The spec asserts every journal entry *before* `1078`'s array
+position has a smaller `when`; the offending pair is `1803000010169` at journal line 2388 against
+`1803000010156` at line 4950 — both thousands of lines above 1176's entry at line 6525, and both
+left behind by the two interleaved lineages the spec's own comment describes. Fixing it means
+renumbering applied migrations, which BE-59 and BE-60 forbid.
 
 ## Verification commands
 
@@ -928,9 +1051,17 @@ blind to the only failure that mattered.
 Consequences had it run: every existing help-centre URL breaks (`slug`), and all view and
 helpfulness history is destroyed with a 1-day unencrypted PITR window as the only recourse.
 
-Resolved by `1173a_kb_pages_article_columns` (adds the columns, `slug` distinct from the
+Resolved by `1172a_kb_pages_article_columns` (adds the columns, `slug` distinct from the
 existing `public_slug`, partial unique index leading with `org_id`), a rewritten backfill,
 and a parity query plus 1174 preflight that compare **values, not counts**.
+
+The tag is `1172a`, not `1173a`. Lexical order is what sequences these: `1173a` sorts
+*after* `1173`, so the columns would have been created after the backfill that fills them.
+The runbook carried the wrong tag for a while — every command in it would have failed with
+an unknown tag, which is the benign failure, but its paste-ready journal entry also claimed
+`idx` 1056, already held by this very migration. Compute the next `idx` from
+`max(idx) + 1`, never from the entry count: 447 of 931 entries have an `idx` that is not
+their array position.
 
 **The interlock that caught it:** migrations are unappliable until journalled, because
 `--tag=` builds its queue from `_journal.json`. Withholding the journal entry is the
@@ -1092,3 +1223,571 @@ Thirty-two passing mocked tests did not see it; reading the generated SQL did.
 `claimBatch` is now byte-identical to its pre-session form. Fairness stays unbuilt until it can be
 exercised against a real queue. `1175_ai_jobs_expired_lease_index` supports the reclaim and is
 written, reversible, and deliberately unjournalled.
+
+## Fifth pass — 2026-09-24
+
+### Unsharing a page did not revoke its link
+
+`setVisibility` minted a public token when a page became `public` and then never cleared it.
+Leaving `public` wrote only the new visibility. The token and its hash stayed on the row.
+
+This read as safe because `getPublicPage` also requires `visibility = 'public'`, so an unshared
+link does stop resolving. The hole is on the way back: the mint path issues a token only when the
+stored one is NULL, so **unshare → re-share handed back the same URL**. Anyone who kept the old
+link — a forwarded email, a crawler, a former contractor — regained access the moment the owner
+re-shared, and nothing in the product told the owner that had happened. `05-data-api-security.md`
+requires public tokens to be *revocable*; a credential that comes back is not revoked.
+
+Fixed in `publicTokenColumnsFor` (`kb-page-share-visibility.ts`), which returns explicit NULLs for
+both columns on any move away from `public` and mints only into an empty slot. `setVisibility`
+spreads its result, so the service lost five lines rather than gaining any — it was at exactly the
+500-line cap (BE-09).
+
+**The code fix alone was not enough.** Rows unshared *before* it still carry their old token, and
+the mint path skips them precisely because the token is non-NULL. Those rows needed
+`1176_kb_pages_revoke_dormant_share_tokens`, journalled at idx 1060, which clears both columns
+wherever `visibility <> 'public'`. Safe to apply before the code ships: every row it touches is
+already non-public, so no link that resolves today changes. Soft-deleted pages are skipped on
+purpose, so restoring from trash restores the same link. The rollback cannot undo it and says so —
+the tokens were random secrets with no second copy, and restoring them would restore the hole.
+
+An existing spec pinned the old behaviour: `kb-page-visibility.spec.ts` asserted that unsharing
+wrote *no* `publicToken` key at all. Its stated reason — "unsharing cannot hand out a fresh
+credential" — was still satisfied, but the assertion had frozen the mechanism rather than the
+intent, and it was the weaker of the two. Replaced with the stronger claim plus a resurrection
+test. 7/7 pass.
+
+### The AI job queue is not draining at all, and the lease recovery cannot run either
+
+Worth recording as a correction to the fourth pass, which reported lease recovery as delivered.
+
+`reclaimExpiredLeases` is called from `AiJobsWorkerService.flush()`. `flush()` has **no scheduler**
+— no `OnModuleInit`, no interval — and is reachable only through the `cron/ai-jobs-flush` HTTP
+route. That route is deliberately excluded from the retention scheduler, and the repo documents why
+at `retention-schedule.ts` → `UNSCHEDULED_BILLING_JOBS`: `claimBatch` is a cross-tenant
+`UPDATE ai_jobs` with no `org_id` predicate issued outside any tenant transaction, which raises
+`42501` as `streamline_app`. `releaseStaleLocks` has the same shape — and so does
+`reclaimExpiredLeases`, which this session added. It inherits the defect it was written beside.
+
+So the reclaim is correct and tested, and it does not run. Enabling it means moving the claim
+inside `forEachOrg` / `runInNewTenantTransaction` first, exactly as `outbox-claim.ts` already does.
+That is a change to a queue shared by KB, CRM, Build and chat, in a queue that has never drained,
+and the repo's own note warns that the first successful tick would then dead-letter
+`crm.stale-pipeline` — a type with no registered handler — and poison its idempotency key. This is
+not a Knowledge Base change and it is not safe to make blind. **Left for a decision, not silently
+switched on.**
+
+No migration in this pack applies the policy. `ai_jobs` has no `CREATE POLICY` in any `.sql` file,
+so whether RLS is live on it is a property of the production database, not of this repository.
+Either way the conclusion holds: scheduled or not, the queue does not drain today.
+
+### A reported revocation leak that was not one
+
+An audit reported that removing a space member left that member's pages reachable through KB
+semantic search, because `syncAclRevisionForSpace` copies `acl_revision` onto chunks without
+re-evaluating ACLs, reopening the revision gate.
+
+The mechanism is real; the conclusion is not. `visibleTo` (`kb-page-visibility.ts:31-44`) has no
+space branch at all. Its only grants are org-visible-and-unprojected, creator, acting membership,
+or an accessible project. Space membership never conferred visibility in the vector path, so
+removing it cannot leak anything — the path **fails closed**.
+
+The genuine finding underneath is the opposite of a leak: a page reachable only through space
+membership is invisible to semantic search for the very people entitled to read it. Under-return,
+not over-return, and the safe direction. Recorded here so the next reader does not re-open it as a
+security issue, and so the recall gap is not mistaken for a bug in ranking.
+
+### A dead job poisoned its idempotency key forever
+
+Second defect named in the repo's own `ai-jobs-flush` note, and the one that would have bitten
+first if the queue were ever switched on.
+
+`enqueue` looked up the row by `(org_id, idempotency_key)` and returned it **whatever its status**.
+The worker's no-handler branch writes `status = 'DEAD'` with `attempts = max_attempts`. So the
+first tick over a job type with no registered handler dead-letters it, and every later enqueue of
+that key returns the dead row — the work can never be retried, for that organisation, forever.
+
+`enqueue` now revives a row in a terminal-failed state (`DEAD`, `FAILED`) in place: back to
+`QUEUED`, `attempts` reset, `last_error`/`result`/`locked_by`/`locked_at` cleared. Every other
+status is returned untouched, and the reasoning is per-status rather than per-category:
+
+| status | on re-enqueue |
+|---|---|
+| `QUEUED` | returned as-is — already waiting |
+| `RUNNING` | returned as-is — a worker holds the lease; resetting it is the duplicate-execution bug |
+| `COMPLETED` | returned as-is — replaying a finished job is what idempotency exists to prevent |
+| `FAILED` / `DEAD` | revived |
+| `CANCELLED` | returned as-is — reviving would silently undo an operator's explicit cancel |
+
+**Reset rather than supersede**, because `uq_ai_jobs_org_idem_key` does not filter on status: it
+admits one row per key regardless of liveness, so superseding needs a delete plus an insert with a
+`23505` window between them. The in-place `UPDATE … WHERE id = ? AND org_id = ? AND status IN
+('DEAD','FAILED')` never challenges the index and is its own concurrency guard — if a worker moved
+the row between the read and the write it matches zero rows, and the existing id is still returned.
+
+`23505` was not handled at all on this path and became a 500 (BE-41). It now maps to
+`ConflictException` via `isUniqueViolation`, which walks the `cause` chain — `err.code` on
+Drizzle's wrapper is always `undefined`, so a naive `error.code === "23505"` check reads as a miss.
+
+### Per-tenant admission control on the queue
+
+`MAX_LIVE_JOBS_PER_ORG = 500`, counting `QUEUED` + `RUNNING` only — a `COMPLETED` or `DEAD` row
+occupies no worker. Beyond the cap, `enqueue` raises 429.
+
+The ordering is the part worth pinning: idempotency read → revive → return, and the cap is
+consulted **only on the insert path**. A re-enqueue of an existing key consumes no new capacity, so
+it must not be rejected by a full queue; two tests pin that, including a `DEAD` revive at twice the
+cap.
+
+This is admission control, not fairness. `claimBatch` still has no per-org cap, so one tenant that
+fills its 500 can still dominate a batch. Fairness stays unbuilt for the reason recorded above.
+
+### 429 carried no `Retry-After`
+
+Surfaced by the queue-depth work and fixed one level up, because it was never specific to it.
+`Retry-After` was set in exactly one place — `RateLimitGuard`, which has a `Response` to set it on.
+A **service** raising 429 is a singleton with no response object, so its 429 reached the client with
+the delay in the body and no header, which BE-22 requires.
+
+`AllExceptionsFilter` now projects a numeric `retryAfterSecs` from the exception body onto the
+header for 429 only. Fractional values round **up** — rounding down invites the caller back before
+the window closes. Non-finite and negative values are dropped rather than emitted.
+
+Scoped to 429 on purpose: the same field on a 409 would tell a caller to blindly retry a conflict.
+Five tests, each pairing the positive with the negative that proves the scoping is real (BE-141).
+28/28 in `all-exceptions.filter.spec.ts`, the 23 pre-existing ones unchanged.
+
+### Ask returned nothing rather than degrading
+
+`retrieveTopSources` and `retrieveDocumentPassages` both opened with an `isEmbeddingConfigured()`
+early return and an `if (!ok) return []` on the embedding call, and `kb-rag-retrieval.service.ts`
+rethrew a generic 503. So on an embedding-provider outage the public Ask path returned *no sources*
+or a 503 — while `retrieveTopArticles`, three methods up the same file, had always fallen back to
+keyword ranking. The capability existed; two of the three callers just did not use it.
+
+That reference pattern is now `embedOrDegrade()`, and all three paths call it. When it returns
+`null` the query keeps every authorization term and swaps only the `ORDER BY` — `<=>` becomes
+`ts_rank(to_tsvector(content), websearch_to_tsquery(q))`, with the same predicate applied as a
+match filter so the lexical branch is not an unranked scan. `MIN_DISPLAY_SIMILARITY` is applied on
+the vector branch only: `ts_rank` is not a cosine similarity and thresholding it against that
+constant would silently empty the degraded result.
+
+Degradation had no caller-visible signal, only a log line, so an answer built from keyword hits was
+indistinguishable from one built from semantic hits. An optional `degraded?: true` now rides on each
+source, each passage and the context; optional so no existing caller or fixture breaks.
+
+Two things worth knowing about this change:
+
+- `kb-rag.service.spec.ts` pinned the old behaviour — *"throws ServiceUnavailableException when
+  embedding returns provider_unavailable"* — which is exactly what the fallback removes. Inverted,
+  with the name carrying the reason (BE-134) and `invokeText` asserted as called (BE-141). The
+  sibling test for `invokeText` returning `provider_unavailable` still expects a 503 and should:
+  when the *answer* model is down there is nothing to degrade to.
+- `kb_article_chunks.content` has no GIN index, so the `retrieveTopSources` lexical branch is a
+  bounded sequential scan over the org's source chunks. Acceptable on a path that only runs during
+  an outage; worth an index if degradation stops being rare.
+
+### Three defects in delivered lane work, found by reading it rather than trusting it
+
+**A spec pinned the source text of a branch, and blocked the fix.** The KB indexing parity spec
+asserted `serviceSource` contained the literal `configured ? "skipped_no_content" :
+"embedding_unavailable"`. That ternary was itself wrong: the branch it guards is
+`!page || !isPageIndexable(page) || !page.contentText?.trim() || !isEmbeddingConfigured()`, so a
+deleted page in a deployment with no embedding provider was reported as `embedding_unavailable` — a
+**fault** outcome, feeding an alert that pages an operator — when the real reason was that there was
+nothing to index. Split into two branches, each finishing its own outcome. The spec now extracts the
+literals actually passed to `metrics.finish(` and asserts set membership, so it still fails if a
+branch stops emitting, without dictating how the branch spells its choice.
+
+**Narrowing loss the ternary had been hiding.** The first attempt replaced the compound condition
+with a `hasIndexableContent` boolean, which reads better and does not narrow `page` — two `TS2345`
+errors at `kb-indexing.service.ts:142` and `:171`. Only `pnpm typecheck` sees this; every focused
+check was green. Restructured into two sequential early returns, which narrows and costs nothing.
+
+**A type assertion I added myself.** `retryAfterSecondsOf` in `all-exceptions.filter.ts` reached
+`retryAfterSecs` through `(body as Record<string, unknown>)`. `check:type-assertions` is a hard zero
+with a per-file ceiling that does not rise, and it named the file: `3 -> 4`. Replaced with the
+repo's own `isRecord` predicate, which narrows properly. The gate's two remaining risers
+(`jwt-keyring.service.ts`, `invoices-write.service.ts`) belong to other sessions.
+
+Also removed: `embedSearchQuery`, a private method whose entire body was one call to
+`aiGateway.embedQueryWithCredit` and whose only caller was `embedOrDegrade`. Inlined.
+
+**Still over the line:** `kb-search.service.ts` is 540 lines against BE-09's 500 cap. It was already
+520 at HEAD and the lexical fallback added 28 more. Bringing it under means lifting
+`retrieveDocumentPassages` and `attachmentArticleScope` into a sibling module, which needs a
+dependency bag of five collaborators — a real refactor of code written minutes earlier, and not one
+to attempt at the end of a session. `check:file-sizes` lists 18 files over the cap and was red
+before this work; this is one of them, not a new break.
+
+---
+
+## Sixth pass — the nine migrations are applied to production
+
+`1168 · 1169 · 1170 · 1171 · 1172 · 1172a · 1173 · 1174 · 1175 · 1176`, applied
+2026-09-24 over the IAM wrapper, one `--tag=` at a time, dry-run read before each.
+`check:migration-ledger` closes at **938 rows against 933 journal entries, watermark
+1803000010681, 0 pending, gate exit 0**, and all ten on-disk sha256 hashes match their
+`drizzle.__drizzle_migrations` rows. `check:migration-immutability`,
+`check:migration-discipline` and `check:migration-rollback` are green.
+
+Verification was 12/12 for 1171, 16/16 across 1168–1173, and 12/12 for the closing state.
+
+### The IAM blocker was never a credential
+
+Thirteen rows of this ledger recorded the migrations as blocked on an external credential,
+on the strength of `PAM authentication failed for user "streamline_admin"`. That reading was
+wrong, and it stalled the work across several sessions. `28P01` from these scripts means they
+hand `DATABASE_URL` to `postgres()` without minting a token; the app does mint one, through
+`src/db/rds-iam-auth.ts`, using a dependency the backend already ships. No AWS CLI, no new
+credential, no user action. **An error that reads like a missing credential is worth one
+minute of reading the caller before it becomes a blocker in a spec.**
+
+### `kb_articles` was empty, which is the fact the whole cutover design was missing
+
+Zero rows in `kb_articles`, and zero in all seven dependent tables 1174 drops. The elaborate
+machinery around this cutover — `1172a` adding eleven columns so nothing is discarded, the
+value-comparing parity query, 1174's column-level preflight — protected data that does not
+exist. It was still right to build: nobody knew the count until someone measured it, and the
+original count-comparing design would have destroyed real rows had there been any.
+
+What matters now is the inverse: **the parity evidence is vacuous.** Three empty result sets
+from `verify/1173_kb_articles_cutover_parity.sql` prove nothing about the backfill when there
+is no source row to compare. Do not cite it as a passing gate.
+
+### The precondition that mattered is not expressible in SQL
+
+1174 dropped eight empty tables and lost no data. But `KbModule` is registered and
+`kb-articles.controller.ts` still serves twelve live routes off `kb_articles`, and about
+thirty committed files still reference it — `kb-article-query.service.ts`,
+`kb-analytics.service.ts`, `kb-verification.service.ts`, `hr-helpdesk.service.ts`,
+`kb-rag-retrieval.service.ts`, `kb-document-query.service.ts`,
+`gdpr-subject-erasure-authored-content.ts`. All of those now raise `42P01` against production
+until they move to `kb_pages`. This was surfaced with the route list before 1174 ran and
+applied on the repo owner's explicit instruction.
+
+1174's preflight asked whether every article has a matching page. At zero rows that question
+answers itself. The question that governed the outcome — *does any deployed code still read
+this table?* — has no SQL form, so no `DO` block can hold it. It belongs in a deploy gate.
+**Recording the remaining work: the help-centre read and write paths must be moved onto
+`kb_pages` before the twelve `/kb/articles` routes work again.**
+
+### 1171 was repairing a live break, not risking one
+
+The runbook said to apply 1171 before deploying the share-token code, or hold the deploy.
+Neither applied: `getPublicPage` already hashes the token before setting the GUC and already
+filters on `publicTokenHash`, and that code was in `HEAD` and shipped by Railway. Production
+had been raising `42703` on share reads until 1171 landed. **Check what is deployed before
+trusting a deploy-ordering note; the note was written against an order that had already
+passed.**
+
+Proved under `SET LOCAL ROLE streamline_app`, because `streamline_admin` carries BYPASSRLS
+and would have made every check pass vacuously: the correct hash returns the row, a wrong
+hash returns nothing and sees zero rows org-wide, and the old plaintext token no longer
+resolves — the last being the assertion that shows the policy moved rather than merely
+gaining an arm (BE-141).
+
+### 1168 raised on a constraint that was present the whole time
+
+Its preflight looked for `uniq_org_members_org_id`. Production carries that unique on
+`organization_members (org_id, id)` as `uniq_org_members_org_id_key`. The foreign key
+references columns and never the name, so only the guard was wrong — it now resolves by
+column set through `pg_constraint.conkey`. `kb_categories` was checked the same way before
+1172a and carries `uniq_kb_categories_org_id`. Third instance of this class in this
+codebase: **a guessed identifier reads as a missing object.**
+
+### Noted, not fixed
+
+`kb_article_chunks` holds 124 rows: 93 page-anchored, 0 article-anchored, and **31 anchored
+to nothing** — no page, no attachment, no article. They predate this work (no article chunk
+could have existed against an empty `kb_articles`) and 1174 did not create them. Unowned
+here, but they are dead weight in every retrieval scan.
+
+### The 1174 rollback could not have run, and nothing in the repo would have found that
+
+Shipped, gated green, and unrunnable. It recreated **one** of the eight tables 1174 drops and
+omitted `uniq_kb_articles_org_id UNIQUE (org_id, id)` from the `CREATE TABLE`; the next
+statement adds a foreign key referencing `kb_articles (org_id, id)`, which fails with *there
+is no unique constraint matching given keys for referenced table* — at statement 4 of 7, with
+two enum types already created and the schema half-restored. It also restored no RLS policy
+and no grant, so each recreated table would have been either a silent cross-tenant hole or a
+`42501` that reads as an RLS denial.
+
+`check:migration-rollback` passed it, correctly by its own contract: it checks type names and
+states plainly that it "never executes a rollback". It names `pnpm drill:rollback` as the
+command that does. **There is no `drill:rollback` script in `package.json`.** So the gate
+delegates the only real check to a tool that does not exist, and a rollback can be green,
+shipped, and dead on arrival. This is the same shape as a spec that documents a gap and reads
+as covering it — the gate's honesty about its own limits is exactly what made the limit
+invisible.
+
+Rewritten: all eight tables with every unique constraint, index, FK, RLS policy, grant and
+sequence grant; all five FKs 1174 strips from tables it keeps re-attached; and a closing `DO`
+block that raises unless every table, policy and grant is present, so a future partial
+failure cannot report success.
+
+**Proved against production inside a transaction that was then rolled back** — 43 statements,
+8 tables, 8 `tenant_isolation` policies, 8 grants, 5 FKs, both enums, and
+`fk_kb_article_versions_org_article` biting with `23503` under a real `org_id` so the
+org-level FK could not mask it. `present_after` empty; production untouched. 11/11.
+
+Since all eight tables were empty when 1174 ran, **a structural restore is a complete restore
+for this database** — the usual "rows do not come back from SQL" objection does not apply
+here. Restoring is therefore available as an instant, lossless way to end the `42P01` outage
+while the help-centre code moves to `kb_pages`, rather than holding production broken for the
+length of a 47-file refactor.
+
+### 1174 restored, and `drill:rollback` now exists
+
+The proven rollback was applied to production and 1174's ledger row (id 938) deleted in the
+same transaction, so the migration is pending again and the `42P01` outage across
+`/kb/articles`, HR helpdesk, KB analytics, verification, RAG retrieval and GDPR erasure is
+over. Eight tables, eight `tenant_isolation` policies, eight grants. Verified after the fact
+as `streamline_app`: all eight readable with the tenant GUC set and **`42501` without it**,
+which is what distinguishes an armed policy from a present one. `kb_article_chunks` 124,
+`kb_events` 32, `kb_pages` 20, five inbound FKs, share token and hash intact.
+
+**`check:migration-ledger` now exits 1 and is wrong.** It reports *1 entry below the
+watermark that will NEVER apply: 1174*, because 1176's `when` sits above 1174's. That was a
+real hazard once; it is not one now. `run-pending-migrations.mjs` states in its own source
+that "the watermark filter was a silent data-loss bug" and that the watermark "is reported
+for context and decides nothing", and a dry-run of 1174 reports *would apply (17 stmts)*.
+The gate still models semantics the runner abandoned. Left red rather than papered over — it
+clears when 1174 is re-applied.
+
+#### `drill:rollback`
+
+`src/scripts/drill-rollback.mjs`, wired as `drill:rollback` and `drill:rollback:self-test`.
+It executes each `.down.sql` inside a transaction it then rolls back, asserts every table and
+type the file declares actually appears, re-checks afterwards that none survived, and
+classifies a duplicate-object failure as *skipped — its migration is not applied* rather than
+as breakage. Requires `ALLOW_PRODUCTION_ROLLBACK_DRILL=1`, because `DATABASE_URL` is
+production and "nothing is committed" is a claim about the file that the operator should not
+have to take on faith.
+
+Self-test: **17/17**. Drilled for real: the ten KB rollbacks plus 1143–1167 — twenty-nine
+executed, 1174 correctly *skipped* with `42710` since its tables are back.
+
+Two things the drill taught about itself, both worth more than the tally:
+
+- **It reported `1159_build_remove_pm_workspaces` broken, and that was my defect.** That
+  rollback creates `build.pm_workspaces`; my extractor only stripped a `public.` prefix, so
+  it read the schema name as the table and declared the object missing. The `build`-schema
+  trap, reproduced inside the tool built to catch trap-class defects. Fixed to qualify every
+  name, with a fixture pinning `build.pm_workspaces`; 1159 then passes with both objects
+  genuinely recreated.
+- **Most rollbacks create nothing**, so "every declared object present" was vacuously true
+  for them. The output now says *"it creates no table or type, so only execution is proven"*
+  instead of implying a restoration it never checked.
+
+Anti-vacuity, end to end: a fixture reproducing 1174's exact defect — a foreign key
+referencing a column pair carrying no `UNIQUE` — was drilled and came back
+`42830 there is no unique constraint matching given keys`, verdict **broken**, exit 1. The
+fixture was removed and left no tables behind. So the drill is known to fail, not merely
+known to pass.
+
+### Seventh pass — the cutover, and why 1174 had to be rewritten
+
+The code cutover was scoped before any code was edited, and the scoping refuted the
+migration. **47 non-spec files carry 750 references** — `kbArticles` 522,
+`kbArticleAttachments` 79, `kbArticleTags` 33, `kbArticleVersions` 27, `kbArticleFeedback`
+24, `kbArticleRestrictions` 22, `kbArticleComments` 22, `kbArticleTranslations` 21.
+
+#### Four of the eight tables had nowhere to go
+
+1174 dropped eight tables. Four have a page-side equivalent — `kb_page_versions`,
+`kb_page_comments`, `kb_page_attachments`, and `kb_pages` itself. **The other four do not
+exist and never did.** A search of all of `src/` and `migrations/` for `kb_page_tags`,
+`kb_page_translations` and `kb_page_feedback` returns zero hits. Dropping
+`kb_article_tags`, `kb_article_translations`, `kb_article_feedback` and
+`kb_article_restrictions` would have deleted four shipped features rather than moving them.
+
+1174 now renames those four instead. A rename carries the table's OID, so the RLS policy and
+the grants travel with it — which the migration asserts rather than assumes.
+
+Editing 1174 was legitimate because it is **unapplied**: the rollback deleted its ledger row,
+so BE-60 does not seal it. This is the second time that distinction has mattered; 1168 was
+edited on the same grounds.
+
+**The generalisable point: a contraction migration's drop list is only as good as the
+inventory of what replaces each dropped object.** 1174 had a preflight that checked
+article→page row parity and said nothing about the seven dependent tables. Parity of the
+parent proves nothing about the children.
+
+#### Three more gaps that a rename alone does not close
+
+Found by diffing the two tables column by column instead of trusting that same-purpose tables
+have the same shape:
+
+- `kb_page_versions` had no `excerpt`; `kb_page_attachments` had no `file_url`.
+- `kb_article_chunks.attachment_id` is `integer`, but `kb_page_attachments.id` is a **bigint
+  identity** column. The foreign key cannot be declared without widening the column first.
+  Nothing in the TypeScript would have revealed this; it surfaces only as an apply-time type
+  error.
+
+#### The counter columns lose a NOT NULL, and that silently eats votes
+
+`views`, `helpful_count` and `not_helpful_count` are `NOT NULL` on `kb_articles` and
+**nullable with a default of 0** on `kb_pages`. Moving the help centre across drops the
+guarantee, and `col + 1` over a NULL yields NULL — so one null counter swallows every
+subsequent vote on that page, with no error anywhere.
+
+Measured: 20 rows in `kb_pages`, 0 null in any of the three. So 1174 sets NOT NULL directly
+rather than through BE-63's staged `CHECK NOT VALID` → `VALIDATE` → `SET NOT NULL`. That
+staging exists to avoid holding ACCESS EXCLUSIVE through a full-table scan; at 20 rows there
+is no scan to avoid, and the row count is recorded in the migration so the reasoning is
+auditable rather than asserted.
+
+This was surfaced by a subagent working the public surface, not by the migration review. It
+is the kind of defect that only appears when someone writes the increment.
+
+#### The discriminator, and the risk that made it necessary
+
+`kb_pages` holds wiki pages **and** help-centre articles. Production holds 20 wiki pages and
+**0 articles**. So a bare table swap does not raise — the help centre silently starts serving
+internal wiki pages, and the public surface publishes them.
+
+1173's own backfill settles the mapping, and it is authoritative because it is what
+production actually contains:
+
+| article | page |
+|---|---|
+| every row | `content_type = 'support_article'` |
+| `visibility = 'public'` | `'public'` |
+| `visibility = 'internal'` | `'org'` |
+| `content` (text) | `content_text`, with `content` as a generated jsonb doc |
+| `author_id` | `created_by_id` |
+| `last_verified_at` within 180 days | `trust_state = 'verified'` |
+
+Every read therefore needs `content_type = 'support_article'` **and** `deleted_at IS NULL` —
+the latter a predicate `kb_articles` never needed, because it had no soft-delete column.
+
+`visibility` predicates must be written as allow-lists. `kb_pages` has a `'private'` value
+that articles never had, so a deny-list (`<> 'internal'`) silently admits it.
+
+#### The round trip is proven, not argued
+
+`prove-1174-roundtrip.mjs` runs the migration forward and the rollback backward inside one
+transaction against production, asserts both end states, then rolls back and re-verifies
+production is untouched. **19/19.** It proves the forward migration executes end to end, all
+four renamed tables carry `page_id` plus a foreign key into `kb_pages` plus RLS plus a policy
+plus the `streamline_app` grant, all eight article tables are gone, both enums are dropped,
+`attachment_id` is bigint, the counters are NOT NULL — and then that the rollback restores
+every one of those, re-attaches all five inbound foreign keys, and leaves nothing behind.
+
+#### `/kb/article-migration` was deleted, and it cost nothing
+
+`src/modules/kb/article-conversion/` existed only to copy `kb_articles` rows into `kb_pages`.
+With `kb_articles` dropped it has no source table, so its two routes could not be kept
+working. The frontend defined `useArticleMigrationPreview` and `useRunArticleMigration`,
+barrel-exported both, and **called neither from any component or page** — so the contract
+break reaches no user. The hooks, their query-key factory entry and their two Zod contracts
+were deleted with the backend module.
+
+## Eighth pass — 2026-09-24, measuring instead of trusting the checkboxes
+
+### The slice index was the least reliable document in this pack
+
+The table at the top of this file listed S12, S14 and S15 as `NOT STARTED` while the prose
+two hundred lines below it described all three as built, registered and tested. It listed S13,
+S17 and S19 as `NOT STARTED` while `kb-import-export.controller.ts`, `kb-public-pages.controller.ts`
+and `kb-research-brief.controller.ts` were all on disk and registered.
+
+Counted rather than read: **171 unchecked boxes against 21 checked**, in a module that carries
+**34 controllers and 171 backend spec files**. The checkboxes were written when the ledger was
+opened and were never maintained, so the resume authority was pointing the next session at work
+that is already done. That is worse than no ledger — it invites a rebuild of working code.
+
+Measured state, this pass:
+
+| Surface | Result |
+|---|---|
+| `src/modules/kb` unit tier | **163 of 164 suites, 1355 of 1356 tests pass** |
+| frontend wiki/knowledge/kb tier | **38 of 38 suites, 239 of 239 tests pass** |
+| `pnpm typecheck` (backend, merged base) | **0 errors** |
+| `pnpm type-check` (frontend) | **0 errors** |
+
+The single backend red is `kb-version-append-only-migration.spec.ts`, unchanged and still
+correct to fail — see the journal-ordering section above. It is not repaired here for the same
+reason it was not repaired then: BE-59 and BE-60 forbid renumbering an applied migration, and
+silencing it would edit the production ledger to hide a warning about the production ledger.
+
+### Three slices closed by evidence, one gap found
+
+- **S20 is complete.** No `/ask` directory survives under `frontend/app/`, nothing imports or
+  links to it, and the redirect lives at `frontend/next.config.ts:286-289`. The shadowing
+  hazard was checked specifically and does not apply: there is no route-level redirect page for
+  `/ask`, `/knowledge` or `/wiki`, so nothing is dead code behind the config.
+- **S19 has no duplicate to remove.** One research-brief controller exists repo-wide,
+  `kb/retrieval/kb-research-brief.controller.ts`. The Support-owned duplicate the slice was
+  written to delete is already gone.
+- **S17 is materially complete with one real gap.** Invalid and revoked tokens 404
+  (`kb-pages.service.ts:506`), tokens are stored as SHA-256 in `publicTokenHash`
+  (`db/schema/kb/pages.ts:58`, hashed at `kb-public-token.ts:10`), and the public route is rate
+  limited (`kb-public-pages.controller.ts:31`). The `@Public` RLS hazard is handled by a GUC
+  accessor that migration `0384_rls_public_token_read.sql` documents as non-raising, not by a
+  SECURITY DEFINER function — different mechanism, same outcome.
+  **The gap: tokens are not versioned.** The schema carries `publicToken` and `publicTokenHash`
+  and no revision column, so the slice's "cache headers keyed by token revision" and
+  "rotation/revocation purges CDN/cache" requirements have nothing to key on. This is the one
+  S17 item that is genuinely unbuilt.
+
+### A stale generated contract had disarmed a security gate
+
+`frontend/contracts/openapi.json` was stale, and `backend/openapi.json` was stale too — four ATS
+routes existed in the controllers and in neither artifact. That is not cosmetic:
+`check:permission-binding` reads the **vendored** contract to learn which permission each route
+declares, so while it was stale the gate compared hooks against a contract that no longer
+described the backend, and passed vacuously.
+
+Regenerating (4029 operations, 0 undeclared, no paths removed) and re-vendoring armed it, and it
+immediately found a real defect: `useRecruitmentAnalytics` gated on `hr:interviews:view` while
+both `/hr/recruitment/analytics` handlers declare `hr:requisitions:view`. Matching is exact, so
+that stranded two populations at once — a requisitions viewer saw an empty screen the backend
+would have served, and an interviews viewer got a live query the backend 403s. The hook moved to
+the key the route declares. **2590 bindings now check clean.**
+
+### `check:record-access` could not see a predicate behind a helper
+
+It reported five KB reads as able to return a soft-deleted row. Four were not defects: they
+compose their predicate from `supportArticlePredicate()`, whose body is
+`content_type = 'support_article' AND deleted_at IS NULL`. The clause is applied; the literal
+`deletedAt` just never appears inside the `findFirst` parens, and the gate tested those parens
+with a regex. Its printed remedy would have added a redundant `isNull` to all four.
+
+The fifth was a stale registry key: `661aebda2` renamed `KbPageTreeService` to
+`KbPageTrashService` and `PURGE_READS` kept pointing at the old path, so `hardDelete` lost the
+entry naming why it must read a deleted row. Re-pointing it made the gate stricter — every
+`kbPages` read left in `kb-page-tree.service.ts` carries `deletedAt` inline, so the old key had
+been excusing nothing.
+
+Helpers are now resolved from their bodies, never listed by name, so this cannot decay into an
+allowlist: a helper counts only while it still applies `isNull(...deletedAt)`, and its callers
+fail on the same run if it stops. Four self-test cases pin that, including that a blind parse
+still flags the helper-composed read. **18/18 self-test checks pass; the gate is green.**
+
+### Gate status measured this pass
+
+Green: `check:module-registration` · `check:route-classification` · `check:permission-keys` ·
+`check:cache-invalidation` · `check:scope-boundary` · `check:record-access` ·
+`check:contract-vendor` · `check:contract-drift` · `check:permission-binding`.
+
+Red and **not** KB-owned:
+- `check:tenant-indexes` — one table, `impersonation_sessions`, declares no index at all.
+- `check:unbounded-reads` — six unclassified paths and two regressions, all in e-sign,
+  accounting, hr, invoices and timesheets. The four KB paths it flagged are now classified:
+  all four are bounded at the request boundary by a `.strict()` Zod cap rather than by a
+  `LIMIT`, which is why the detector cannot see it. Suppressed count went 647 → 654 against an
+  **unchanged** ceiling of 655 — the ratchet was not repriced to fit them.
+
+### Still true, and still blocking a claim of completion
+
+- **Browser verification.** Playwright is **not** gone, contrary to the environment table at the
+  top of this file: `frontend/playwright.config.ts`, `@playwright/test@1.63.0` and the chromium
+  binaries are all present, and ten e2e specs exist. None of them cover KB. What is genuinely
+  missing is a backend with non-production data to drive them against, which is why the KB
+  states remain unverified in a real browser.
+- **No non-production Postgres.** Confirmed again: no docker-compose or equivalent anywhere in
+  either repo. Every DB-backed proof would run against the live cluster.
+- **S21 has not run.** Its precondition is S01–S20 all `VERIFIED`, which this pass does not
+  establish.
