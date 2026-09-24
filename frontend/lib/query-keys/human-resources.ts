@@ -363,6 +363,10 @@ export const humanResourcesQueryKeys = {
     internalMyApplications: [...base, "hr", "recruitment", "internal-mobility", "mine"] as const,
     internalApprovals: [...base, "hr", "recruitment", "internal-mobility", "approvals"] as const,
     internalApprovalDecision: [...base, "hr", "recruitment", "internal-mobility", "decide"] as const,
+    atsSandboxEvents: [...base, "hr", "recruitment", "developer", "events"] as const,
+    atsDirectorySync: [...base, "hr", "recruitment", "developer", "directory-sync"] as const,
+    atsSandboxDeliveries: [...base, "hr", "recruitment", "developer", "deliveries"] as const,
+    atsSandboxReplay: [...base, "hr", "recruitment", "developer", "replay"] as const,
     hrAssignedInterviews: (page: number) =>
       [...base, "hr", "me", "assigned-interviews", page] as const,
     hrDevicesAll: [...base, "hr", "enterprise", "comp", "devices"] as const,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -184,6 +185,26 @@ export function RecruitmentIntegrationsPage() {
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <SourcingExtensionCard />
             </div>
+          </section>
+
+          {/*
+            The way out to the developer surface. Somebody who has just read
+            that nine providers cannot run is exactly the person who will
+            integrate over the webhook instead, and that page is otherwise
+            reachable only by typing the URL.
+          */}
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold text-foreground">Build your own</h2>
+            <Link
+              href="/hr/recruitment/developer"
+              className="block rounded-xl border p-4 text-sm transition-colors hover:bg-muted/40"
+            >
+              <span className="font-medium text-foreground">Hiring webhooks and signatures</span>
+              <span className="mt-1 block text-xs text-muted-foreground">
+                The five hiring events, a signed example you can verify, a replay button, and what
+                sign-on and directory sync actually do here.
+              </span>
+            </Link>
           </section>
 
           {grouped.map(({ family, entries }) => (
