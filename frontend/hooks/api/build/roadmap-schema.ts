@@ -27,6 +27,8 @@ export const roadmapTierWeightingContract = z.object({
   unweightedReason: z.enum(ROADMAP_TIER_UNWEIGHTED_REASONS).nullable(),
   linkedFeedbackCount: z.number().int(),
   linkedAccountCount: z.number().int(),
+  linkedRevenue: z.number().nullable(),
+  revenueKnownAccountCount: z.number().int(),
 });
 
 export const roadmapSignalsContract = z.object({

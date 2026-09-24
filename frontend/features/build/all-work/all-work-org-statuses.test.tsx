@@ -84,7 +84,7 @@ jest.mock("./use-all-work-bulk", () => ({
     handleBulkStatus: jest.fn(),
     handleBulkPriority: jest.fn(),
     handleBulkAssignee: jest.fn(),
-    handleBulkSprintNoOp: jest.fn(),
+    handleBulkCycleNoOp: jest.fn(),
     handleClearSelection: jest.fn(),
   }),
 }));

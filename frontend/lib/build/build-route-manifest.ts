@@ -43,11 +43,7 @@ const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
     decision: "KEEP",
     target: null,
   },
-  {
-    route: "/build/[projectId]/intake",
-    decision: "CONSOLIDATE",
-    target: "/build/[projectId]/forms",
-  },
+  { route: "/build/[projectId]/intake", decision: "KEEP", target: null },
   { route: "/build/[projectId]/issues", decision: "KEEP", target: null },
   { route: "/build/[projectId]/meetings", decision: "KEEP", target: null },
   {

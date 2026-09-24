@@ -29,21 +29,21 @@ export const MEETING_TEMPLATES: MeetingTemplate[] = [
   },
   {
     type: "planning",
-    label: "Sprint Planning",
+    label: "Cycle Planning",
     duration: 60,
-    agenda: "1. Review sprint goal\n2. Review backlog items\n3. Estimate and commit to tickets\n4. Clarify acceptance criteria",
+    agenda: "1. Review cycle goal\n2. Review backlog items\n3. Estimate and commit to tickets\n4. Clarify acceptance criteria",
   },
   {
     type: "review",
-    label: "Sprint Review",
+    label: "Cycle Review",
     duration: 60,
-    agenda: "1. Demo completed work\n2. Gather stakeholder feedback\n3. Review sprint metrics\n4. Update product backlog",
+    agenda: "1. Demo completed work\n2. Gather stakeholder feedback\n3. Review cycle metrics\n4. Update product backlog",
   },
   {
     type: "retro",
     label: "Retrospective",
     duration: 60,
-    agenda: "1. What went well?\n2. What could be improved?\n3. Action items for next sprint",
+    agenda: "1. What went well?\n2. What could be improved?\n3. Action items for next cycle",
   },
   {
     type: "meeting",

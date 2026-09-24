@@ -30,20 +30,17 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import type { ProjectView } from "@/types/projects";
+import {
+  BUILD_LIST_CURSOR_PARAM,
+  BUILD_LIST_FILTER_PARAMS,
+} from "@/features/build/shared/use-build-list-url-state";
 import type { AllWorkView } from "./all-work-view-switcher";
 import { AllWorkViewRow } from "./all-work-view-row";
 
 const FILTER_KEYS = [
-  "q",
-  "status",
-  "priority",
-  "type",
-  "assigneeId",
-  "labels",
-  "projectIds",
-  "dueDateFrom",
-  "dueDateTo",
-] as const;
+  ...BUILD_LIST_FILTER_PARAMS,
+  "cycle",
+] as const satisfies readonly string[];
 
 function buildCurrentFilters(
   searchParams: ReturnType<typeof useSearchParams>,
@@ -73,6 +70,7 @@ function applyViewToParams(
     }
     next.delete("scope");
     next.delete("page");
+    next.delete(BUILD_LIST_CURSOR_PARAM);
 
     if (view.filters && typeof view.filters === "object") {
       for (const [k, val] of Object.entries(view.filters)) {

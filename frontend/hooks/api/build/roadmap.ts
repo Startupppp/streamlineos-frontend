@@ -241,7 +241,7 @@ export function useCreateRoadmapItem() {
     mutationKey: ["projects", "roadmap", "create"],
     mutationFn: (input: CreateRoadmapItemInput) =>
       apiClient.post<ScoredRoadmapItem>("/build/roadmap", input, undefined, roadmapItemContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() }),
   });
 }
 
@@ -251,7 +251,10 @@ export function useUpdateRoadmapItem() {
     mutationKey: ["projects", "roadmap", "update"],
     mutationFn: ({ roadmapItemId, ...input }: UpdateRoadmapItemInput & { roadmapItemId: number }) =>
       apiClient.patch<ScoredRoadmapItem>(`/build/roadmap/${roadmapItemId}`, input, undefined, roadmapItemContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+    onSuccess: (_result, vars) => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.item(vars.roadmapItemId) });
+    },
   });
 }
 
@@ -261,7 +264,10 @@ export function useDeleteRoadmapItem() {
     mutationKey: ["projects", "roadmap", "delete"],
     mutationFn: (roadmapItemId: number) =>
       apiClient.delete<void>(`/build/roadmap/${roadmapItemId}`, undefined, undefined, noContentLazy),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+    onSuccess: (_result, roadmapItemId) => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.item(roadmapItemId) });
+    },
   });
 }
 
@@ -283,7 +289,10 @@ export function useUpdateFeedbackPost() {
     mutationKey: ["projects", "feedback", "update"],
     mutationFn: ({ postId, ...input }: UpdateFeedbackPostInput & { postId: number }) =>
       apiClient.patch<FeedbackPost>(`/build/feedback/${postId}`, input, undefined, feedbackPostContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+    },
   });
 }
 
@@ -293,7 +302,10 @@ export function useMergeFeedbackPost() {
     mutationKey: ["projects", "feedback", "merge"],
     mutationFn: ({ postId, targetPostId }: { postId: number; targetPostId: number }) =>
       apiClient.post<FeedbackPost>(`/build/feedback/${postId}/merge`, { targetPostId }, undefined, feedbackPostContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+    },
   });
 }
 
@@ -303,7 +315,10 @@ export function useDeleteFeedbackPost() {
     mutationKey: ["projects", "feedback", "delete"],
     mutationFn: (postId: number) =>
       apiClient.delete<void>(`/build/feedback/${postId}`, undefined, undefined, noContentLazy),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+    },
   });
 }
 
@@ -325,7 +340,7 @@ export function useCreateChangelogEntry() {
     mutationKey: ["projects", "changelog", "create"],
     mutationFn: (input: CreateChangelogEntryInput) =>
       apiClient.post<ChangelogEntry>("/build/changelog", input, undefined, changelogEntryContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog() }),
   });
 }
 
@@ -335,7 +350,7 @@ export function useUpdateChangelogEntry() {
     mutationKey: ["projects", "changelog", "update"],
     mutationFn: ({ entryId, ...input }: UpdateChangelogEntryInput & { entryId: number }) =>
       apiClient.patch<ChangelogEntry>(`/build/changelog/${entryId}`, input, undefined, changelogEntryContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog() }),
   });
 }
 
@@ -345,7 +360,7 @@ export function useDeleteChangelogEntry() {
     mutationKey: ["projects", "changelog", "delete"],
     mutationFn: (entryId: number) =>
       apiClient.delete<void>(`/build/changelog/${entryId}`, undefined, undefined, noContentLazy),
-    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog() }),
   });
 }
 

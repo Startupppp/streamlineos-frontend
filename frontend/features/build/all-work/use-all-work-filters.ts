@@ -7,6 +7,7 @@ import {
   useBuildListUrlState,
   parsePriorityParam,
   parseTicketTypeParam,
+  BUILD_LIST_FILTER_PARAMS,
   type BuildListGrouping,
   type BuildListSortField,
   type BuildListSortDirection,
@@ -72,12 +73,9 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
   }, [scopeMine, setListParams]);
 
   const handleClearFilters = useCallback(() => {
-    setListParams({
-      q: null, status: null, priority: null, type: null,
-      assigneeId: null, labels: null, projectIds: null, projectId: null,
-      cycleId: null, dueDateFrom: null, dueDateTo: null,
-      scope: null, cursor: null,
-    });
+    const cleared: Record<string, string | null> = { scope: null, cursor: null };
+    for (const param of BUILD_LIST_FILTER_PARAMS) cleared[param] = null;
+    setListParams(cleared);
   }, [setListParams]);
 
   return {

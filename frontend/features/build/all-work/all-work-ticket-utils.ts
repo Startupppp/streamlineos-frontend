@@ -96,7 +96,7 @@ export function toTableTicket(t: AllWorkTicket): TableRow {
   };
 }
 
-export function groupByProject(tickets: AllWorkTicket[]): TicketGroup[] {
+function groupByProject(tickets: AllWorkTicket[]): TicketGroup[] {
   const map = new Map<number, TicketGroup>();
   for (const t of tickets) {
     if (t.projectId === null) continue;
@@ -116,7 +116,7 @@ export function groupByProject(tickets: AllWorkTicket[]): TicketGroup[] {
   return Array.from(map.values());
 }
 
-export function groupByStatus(tickets: AllWorkTicket[]): TicketGroup[] {
+function groupByStatus(tickets: AllWorkTicket[]): TicketGroup[] {
   const map = new Map<string, AllWorkTicket[]>();
   for (const t of tickets) {
     const key = t.status;
@@ -131,7 +131,7 @@ export function groupByStatus(tickets: AllWorkTicket[]): TicketGroup[] {
   }));
 }
 
-export function groupByPriority(tickets: AllWorkTicket[]): TicketGroup[] {
+function groupByPriority(tickets: AllWorkTicket[]): TicketGroup[] {
   const map = new Map<string, AllWorkTicket[]>();
   for (const t of tickets) {
     const key = t.priority ?? "NONE";
@@ -146,7 +146,7 @@ export function groupByPriority(tickets: AllWorkTicket[]): TicketGroup[] {
   }));
 }
 
-export function groupByAssignee(tickets: AllWorkTicket[]): TicketGroup[] {
+function groupByAssignee(tickets: AllWorkTicket[]): TicketGroup[] {
   const map = new Map<string, AllWorkTicket[]>();
   for (const t of tickets) {
     const key = t.assigneeId ?? "__unassigned__";

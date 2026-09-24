@@ -28,3 +28,19 @@ export const incidentUpdateSchema = z.object({
 });
 
 export type IncidentUpdateValues = z.infer<typeof incidentUpdateSchema>;
+
+export const incidentDecisionSchema = z.object({
+  decision: z.string().min(1, "Decision is required"),
+  rationale: z.string(),
+});
+
+export type IncidentDecisionValues = z.infer<typeof incidentDecisionSchema>;
+
+export const incidentFollowUpSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string(),
+  ownerId: z.string(),
+  dueAt: z.string(),
+});
+
+export type IncidentFollowUpValues = z.infer<typeof incidentFollowUpSchema>;

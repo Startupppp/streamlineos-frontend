@@ -46,6 +46,9 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const lastSavedAtRef = useRef<string | undefined>(undefined);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const saveSequenceRef = useRef(0);
+  const enqueueSaveRef = useRef<
+    ((field: Record<string, unknown>) => void) | null
+  >(null);
 
   const {
     data: ticket,
@@ -98,12 +101,26 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     onSuccess: (data) => {
       lastSavedAtRef.current = data.updatedAt;
     },
-    onError: (error) => {
+    onError: (error, variables) => {
       if (isApiError(error) && getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT") {
-        toast.warning("This ticket was changed elsewhere — refreshed with the latest version.");
         if (ticketId !== null) {
-          queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) });
+          void queryClient.invalidateQueries({
+            queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
+          });
         }
+        const patch: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(variables)) {
+          if (key !== "ticketId" && key !== "expectedUpdatedAt") patch[key] = value;
+        }
+        toast.warning(
+          "This ticket changed elsewhere. Your edit was not saved — the latest version is shown.",
+          {
+            action: {
+              label: "Reapply",
+              onClick: () => enqueueSaveRef.current?.(patch),
+            },
+          },
+        );
         return;
       }
       toast.error(getErrorMessage(error));
@@ -148,6 +165,10 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     },
     [ticketId, canUpdate, updateTicketMutation],
   );
+
+  useEffect(() => {
+    enqueueSaveRef.current = enqueueSave;
+  }, [enqueueSave]);
 
   const autoSave = useCallback(
     (field: Record<string, unknown>) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCycles, useCreateCycle } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -141,7 +142,10 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   const upcomingCycles = cycles?.filter((c) => c.status === "draft") ?? [];
   const completedCycles = cycles?.filter((c) => c.status === "completed") ?? [];
 
-  const [showCompleted, setShowCompleted] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const showCompleted = searchParams.get("completed") === "1";
 
   const createMutation = useCreateCycle();
 
@@ -165,10 +169,13 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     [form],
   );
 
-  const handleToggleCompleted = useCallback(
-    () => setShowCompleted((v) => !v),
-    [],
-  );
+  const handleToggleCompleted = useCallback(() => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (showCompleted) next.delete("completed");
+    else next.set("completed", "1");
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams, showCompleted]);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleRetry = useCallback(() => {
     void refetch();
@@ -319,7 +326,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                     <Label htmlFor="name">Name</Label>
                     <Input
                       id="name"
-                      placeholder="e.g. Sprint 1, Q3 Planning..."
+                      placeholder="e.g. Cycle 1, Q3 Planning..."
                       {...form.register("name")}
                     />
                     {form.formState.errors.name && (

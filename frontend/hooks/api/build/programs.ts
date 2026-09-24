@@ -5,8 +5,8 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
-const programListContract = lazyContract(() =>
-  import("@/hooks/api/build/portfolios-schema").then((m) => m.programListContract),
+const programPageContract = lazyContract(() =>
+  import("@/hooks/api/build/portfolios-schema").then((m) => m.programPageContract),
 );
 const programRowContract = lazyContract(() =>
   import("@/hooks/api/build/portfolios-schema").then((m) => m.programRowContract),
@@ -16,13 +16,16 @@ const noContentContract = lazyContract(() =>
 );
 import { useCan } from "@/hooks/api/access";
 import type {
-  Program,
   CreateProgramInput,
+  Program,
+  ProgramsPage,
   UpdateProgramInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ListFilters {
+  cursor?: string;
+  limit?: number;
   status?: string;
   portfolioId?: number;
 }
@@ -30,13 +33,16 @@ interface ListFilters {
 export function usePrograms(filters?: ListFilters) {
   const canView = useCan("build:programs:view");
   const params: Record<string, string> = {};
+  if (filters?.cursor) params["cursor"] = filters.cursor;
+  if (filters?.limit) params["limit"] = String(filters.limit);
   if (filters?.status) params["status"] = filters.status;
   if (filters?.portfolioId) params["portfolioId"] = String(filters.portfolioId);
-  return useQuery<Program[]>({
+  return useQuery<ProgramsPage>({
     queryKey: buildWorkQueryKeys.projects.programs.list(
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: ({ signal }) => apiClient.get<Program[]>("/build/programs", params, signal, programListContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProgramsPage>("/build/programs", params, signal, programPageContract),
     enabled: canView,
     staleTime: 60_000,
   });

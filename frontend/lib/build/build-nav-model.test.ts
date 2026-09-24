@@ -451,3 +451,23 @@ describe("buildOrganizationNavGroups", () => {
     }
   });
 });
+
+describe("scope catalogs own the settings destination that BuildScopeSelector links to", () => {
+  it("project settings live on the catalog, so the scope selector can read the href instead of rebuilding it", () => {
+    const settings = buildScopeCatalog(
+      resolveBuildScope("/build/42/backlog"),
+    ).settings;
+
+    expect(settings).not.toBeNull();
+    expect(settings?.href).toBe("/build/42/settings");
+    expect(settings?.requiredPermission).toBe("build:update");
+  });
+
+  it("organization settings live on the catalog, so the scope selector can read the href instead of rebuilding it", () => {
+    const settings = buildScopeCatalog(ORGANIZATION_BUILD_SCOPE).settings;
+
+    expect(settings).not.toBeNull();
+    expect(settings?.href).toBe("/build/settings/integrations");
+    expect(settings?.requiredPermission).toBe("integrations:git:view");
+  });
+});

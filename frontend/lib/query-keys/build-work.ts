@@ -230,16 +230,20 @@ export const buildWorkQueryKeys = {
       params === undefined
         ? ([...base, "projects", "portfolios", "list"] as const)
         : ([...base, "projects", "portfolios", "list", params] as const),
-      detail: (portfolioId: number) =>
-        [...base, "projects", "portfolios", "detail", portfolioId] as const,
+      detail: (portfolioId: number, params?: QueryKeyParams) =>
+        params === undefined
+          ? ([...base, "projects", "portfolios", "detail", portfolioId] as const)
+          : ([...base, "projects", "portfolios", "detail", portfolioId, params] as const),
     },
     programs: {
       list: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "projects", "programs", "list"] as const)
         : ([...base, "projects", "programs", "list", params] as const),
-      detail: (programId: number) =>
-        [...base, "projects", "programs", "detail", programId] as const,
+      detail: (programId: number, params?: QueryKeyParams) =>
+        params === undefined
+          ? ([...base, "projects", "programs", "detail", programId] as const)
+          : ([...base, "projects", "programs", "detail", programId, params] as const),
     },
     managedProducts: {
       list: (params?: QueryKeyParams) =>

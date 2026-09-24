@@ -6,7 +6,6 @@ import {
   mockUseAllWork,
   mockSearchParamsContainer,
   mockDefaultDisplayOptions,
-  mockMakeCursorPaginationStub,
   MockMyWorkContentStub,
   mockPageWrapperStub,
   mockPageTabsToolbarStub,
@@ -137,10 +136,6 @@ jest.mock("@/hooks/api/build/build-tickets-subresource-schema", () => ({
 
 jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
-}));
-
-jest.mock("@/hooks/common/use-cursor-pagination", () => ({
-  useCursorPagination: () => mockMakeCursorPaginationStub(),
 }));
 
 import { render, screen } from "@testing-library/react";

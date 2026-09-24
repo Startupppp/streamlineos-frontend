@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -9,9 +9,14 @@ import type {
   Incident,
   IncidentDetail,
   IncidentUpdate,
+  IncidentDecision,
+  IncidentFollowUpAction,
   CreateIncidentInput,
   UpdateIncidentInput,
   AddIncidentUpdateInput,
+  AddIncidentDecisionInput,
+  CreateIncidentFollowUpActionInput,
+  UpdateIncidentFollowUpActionInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -27,6 +32,12 @@ const incidentDetailContract = lazyContract(() =>
 );
 const incidentUpdateRowContract = lazyContract(() =>
   import("@/hooks/api/build/incidents-schema").then((m) => m.incidentUpdateRowContract),
+);
+const incidentDecisionRowContract = lazyContract(() =>
+  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentDecisionRowContract),
+);
+const incidentFollowUpActionRowContract = lazyContract(() =>
+  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentFollowUpActionRowContract),
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -125,6 +136,80 @@ export function useAddIncidentUpdate() {
         queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
       });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
+    },
+  });
+}
+
+export function useAddIncidentDecision() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:incidents:manage", {
+    mutationKey: ["projects", "incidents", "addDecision"],
+    mutationFn: ({
+      projectId,
+      incidentId,
+      ...data
+    }: AddIncidentDecisionInput & { projectId: number; incidentId: number }) =>
+      apiClient.post<IncidentDecision>(
+        `/build/${projectId}/incidents/${incidentId}/decisions`,
+        data,
+        undefined,
+        incidentDecisionRowContract,
+      ),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
+      });
+    },
+  });
+}
+
+export function useAddIncidentFollowUpAction() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:incidents:manage", {
+    mutationKey: ["projects", "incidents", "addFollowUpAction"],
+    mutationFn: ({
+      projectId,
+      incidentId,
+      ...data
+    }: CreateIncidentFollowUpActionInput & { projectId: number; incidentId: number }) =>
+      apiClient.post<IncidentFollowUpAction>(
+        `/build/${projectId}/incidents/${incidentId}/follow-ups`,
+        data,
+        undefined,
+        incidentFollowUpActionRowContract,
+      ),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
+      });
+    },
+  });
+}
+
+export function useUpdateIncidentFollowUpAction() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:incidents:manage", {
+    mutationKey: ["projects", "incidents", "updateFollowUpAction"],
+    mutationFn: ({
+      projectId,
+      incidentId,
+      followUpActionId,
+      ...data
+    }: UpdateIncidentFollowUpActionInput & {
+      projectId: number;
+      incidentId: number;
+      followUpActionId: number;
+    }) =>
+      apiClient.patch<IncidentFollowUpAction>(
+        `/build/${projectId}/incidents/${incidentId}/follow-ups/${followUpActionId}`,
+        data,
+        undefined,
+        incidentFollowUpActionRowContract,
+      ),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
+      });
     },
   });
 }

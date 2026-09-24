@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { ProgramFormSheet } from "./program-form-sheet";
 import type {
   Program,
@@ -61,6 +62,9 @@ const FILTER_DEFINITIONS = [
 export function ProgramsPage() {
   const canManage = useCan("build:programs:manage");
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+    listFilters.resetKey,
+  );
 
   const {
     open: createOpen,
@@ -72,6 +76,8 @@ export function ProgramsPage() {
 
   const statusValue = listFilters.value("status");
   const { data, isLoading, isError, error, refetch } = usePrograms({
+    cursor,
+    limit: PAGE_SIZE,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
   });
   const { data: portfoliosPage } = usePortfolios();
@@ -100,7 +106,7 @@ export function ProgramsPage() {
     [portfolios],
   );
 
-  const rows = useMemo(() => data ?? [], [data]);
+  const rows = useMemo(() => data?.data ?? [], [data]);
   const search = listFilters.debouncedSearch.trim().toLowerCase();
   const displayed = useMemo(() => {
     if (!search) return rows;
@@ -178,6 +184,10 @@ export function ProgramsPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleNextPage = useCallback(() => {
+    goNext(data?.pagination.nextCursor);
+  }, [data, goNext]);
 
   const handleEditRow = useCallback(
     (row: Program) => setEditTarget(row),
@@ -298,7 +308,14 @@ export function ProgramsPage() {
               minWidth="780px"
               mobileCard={renderMobileCard}
               className={PM_FILL_PANEL}
-              pagination={{ pageSize: PAGE_SIZE }}
+              pagination={{
+                mode: "cursor",
+                pageSize: PAGE_SIZE,
+                hasMore: Boolean(data?.pagination.hasMore),
+                hasPrevious,
+                onNext: handleNextPage,
+                onPrevious: goPrevious,
+              }}
             />
           </PageState>
         </PmSection>
