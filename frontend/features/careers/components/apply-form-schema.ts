@@ -12,13 +12,19 @@ interface FileLike {
   readonly name: string;
 }
 
+/**
+ * Structural rather than `instanceof File`, because the same schema is parsed
+ * under jsdom, where the `File` the test constructs is not the `File` this
+ * module would close over.
+ *
+ * Narrowed with `in`, which walks the prototype chain — `size` and `name` are
+ * accessors on `Blob.prototype`, so an own-property check would reject a real
+ * file.
+ */
 function isFileLike(value: unknown): value is FileLike {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as FileLike).size === "number" &&
-    typeof (value as FileLike).name === "string"
-  );
+  if (typeof value !== "object" || value === null) return false;
+  if (!("size" in value) || !("name" in value)) return false;
+  return typeof value.size === "number" && typeof value.name === "string";
 }
 
 /**
