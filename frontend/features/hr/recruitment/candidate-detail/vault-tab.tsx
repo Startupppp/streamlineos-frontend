@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { useCandidateVault } from "@/hooks/api/hr/recruitment";
 import type { BgvStatus as CandidateBgvStatus } from "@/types/hr";
 import { BgvTracker } from "./vault-bgv-tracker";
+import { AssessmentsCard } from "./assessments-card";
+import { VoiceScreensCard } from "./voice-screens-card";
 import { VaultUploadArea } from "./vault-upload-area";
 import { VaultDocumentList } from "./vault-document-list";
 import { VaultAccessLog } from "./vault-access-log";
@@ -83,6 +85,9 @@ export function VaultTab(props: VaultTabProps) {
           props.bgvCompletedAt ? String(props.bgvCompletedAt) : null
         }
       />
+
+      <AssessmentsCard candidateId={props.candidateId} />
+      <VoiceScreensCard candidateId={props.candidateId} />
 
       <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
         <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between border-b border-border">
