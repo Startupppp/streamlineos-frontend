@@ -97,7 +97,7 @@ export function useCreateTalentPool() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "create"],
-    mutationFn: (data: { name: string; description?: string }) =>
+    mutationFn: (data: { name: string; description?: string; tags?: string[] }) =>
       apiClient.post<TalentPoolRow>("/hr/recruitment/talent-pools", data, undefined, talentPoolRowC),
     onSuccess: () => qc.invalidateQueries({ queryKey: poolsKey }),
   });

@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useTalentPools,
-  useCreateTalentPool,
   useDeleteTalentPool,
   usePoolMembers,
   useAddPoolMember,
@@ -15,88 +14,23 @@ import { useCandidates } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { PlusIcon, TrashIcon, UserPlusIcon, XIcon } from "@animateicons/react/lucide";
+import { TrashIcon, UserPlusIcon, XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
-
-function CreatePoolSheet() {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const createPool = useCreateTalentPool();
-
-  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>): void { setName(e.target.value); }
-  function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>): void { setDescription(e.target.value); }
-  function handleCancel(): void { setOpen(false); }
-
-  function handleCreate(): void {
-    if (!name.trim()) {
-      toast.error("Pool name is required");
-      return;
-    }
-    createPool.mutate(
-      { name: name.trim(), description: description.trim() || undefined },
-      {
-        onSuccess: () => {
-          toast.success("Talent pool created");
-          setOpen(false);
-          setName("");
-          setDescription("");
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }
-
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <AnimatedIconButton icon={PlusIcon} iconSize={14} size="sm" className="gap-1.5">
-          New Pool
-        </AnimatedIconButton>
-      </SheetTrigger>
-      <SheetContent className="flex flex-col p-0 gap-0">
-        <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
-          <SheetTitle className="text-base font-semibold">New Talent Pool</SheetTitle>
-          <SheetDescription className="text-xs">Group candidates for future roles or ongoing sourcing.</SheetDescription>
-        </SheetHeader>
-        <SheetBody className="px-4 py-4 space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground/80">
-              Name<span className="text-status-danger-ink ml-0.5">*</span>
-            </label>
-            <Input placeholder="e.g. Future Engineers" value={name} onChange={handleNameChange} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground/80">Description</label>
-            <Textarea placeholder="What's this pool for?" value={description} onChange={handleDescriptionChange} rows={3} />
-          </div>
-        </SheetBody>
-        <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-          <Button variant="outline" className="flex-1 h-9" onClick={handleCancel}>Cancel</Button>
-          <LoadingButton className="flex-1 h-9" onClick={handleCreate} isPending={createPool.isPending} loadingText="Creating…">
-            Create Pool
-          </LoadingButton>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  );
-}
+import { CreatePoolSheet } from "./create-pool-sheet";
 
 function AddMemberSheet({ poolId }: { poolId: number }) {
   const [open, setOpen] = useState(false);
@@ -160,7 +94,13 @@ function AddMemberSheet({ poolId }: { poolId: number }) {
 }
 
 interface PoolButtonProps {
-  pool: { id: number; name: string; memberCount: number; description?: string | null };
+  pool: {
+    id: number;
+    name: string;
+    memberCount: number;
+    description?: string | null;
+    tags?: readonly string[];
+  };
   isSelected: boolean;
   onSelect: (id: number) => void;
 }
@@ -182,6 +122,26 @@ function PoolButton({ pool, isSelected, onSelect }: PoolButtonProps) {
       </div>
       {pool.description && (
         <TruncatedText text={pool.description} lines={2} className="text-xs text-muted-foreground mt-1" />
+      )}
+      {/*
+        Capped at four with a remainder count. A pool may carry twenty tags and
+        this button sits in a narrow column — wrapping all of them would push
+        the pool names apart and make the list harder to scan than the tags
+        make it easier.
+      */}
+      {pool.tags && pool.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-2">
+          {pool.tags.slice(0, 4).map((tag) => (
+            <Badge key={tag} variant="outline" className="text-micro">
+              {tag}
+            </Badge>
+          ))}
+          {pool.tags.length > 4 && (
+            <span className="text-micro text-muted-foreground self-center">
+              +{pool.tags.length - 4}
+            </span>
+          )}
+        </div>
       )}
     </button>
   );

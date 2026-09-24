@@ -168,6 +168,8 @@ export const humanResourcesQueryKeys = {
     emailSequences: () => [...base, "hr", "emailSequences"] as const,
     emailSequence: (emailSequenceId: number) =>
       [...base, "hr", "emailSequence", emailSequenceId] as const,
+    emailSequenceMetrics: (emailSequenceId: number) =>
+      [...base, "hr", "emailSequence", emailSequenceId, "metrics"] as const,
     pipelineAutomations: () => [...base, "hr", "pipelineAutomations"] as const,
     referrals: () => [...base, "hr", "referrals"] as const,
     talentPools: () => [...base, "hr", "talentPools"] as const,

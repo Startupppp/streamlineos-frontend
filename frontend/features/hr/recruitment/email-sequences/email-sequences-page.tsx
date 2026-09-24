@@ -15,6 +15,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Badge } from "@/components/ui/badge";
+import { SequenceOutcomeRow } from "./sequence-outcome-row";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -320,6 +321,10 @@ function SequenceCard({ sequence, togglingId, onToggle, onEdit, onDelete }: Sequ
               {sequence.creator && <span>by {sequence.creator.name}</span>}
               <span>{format(new Date(sequence.createdAt), "MMM d, yyyy")}</span>
             </div>
+            <SequenceOutcomeRow
+              sequenceId={sequence.id}
+              enrollments={sequence.enrollments ?? []}
+            />
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Switch
