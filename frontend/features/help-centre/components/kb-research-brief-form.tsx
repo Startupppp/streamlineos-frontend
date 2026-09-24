@@ -3,7 +3,10 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { kbResearchBriefSchema, type KbResearchBriefFormValues } from "./kb-research-brief-form-schema";
+import {
+  kbResearchBriefSchema,
+  type KbResearchBriefFormValues,
+} from "./kb-research-brief-form-schema";
 import {
   Form,
   FormControl,
@@ -65,7 +68,10 @@ export function KbResearchBriefForm({ basePath }: KbResearchBriefFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="flex items-end gap-3">
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="flex items-end gap-3"
+      >
         <FormField
           control={form.control}
           name="topic"
@@ -83,7 +89,7 @@ export function KbResearchBriefForm({ basePath }: KbResearchBriefFormProps) {
             </FormItem>
           )}
         />
-        {spaces && spaces.data.length > 0 && (
+        {spaces && spaces.length > 0 && (
           <FormField
             control={form.control}
             name="spaceId"
@@ -101,7 +107,7 @@ export function KbResearchBriefForm({ basePath }: KbResearchBriefFormProps) {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="all">All spaces</SelectItem>
-                    {spaces.data.map((s) => (
+                    {spaces.map((s) => (
                       <SelectItem key={s.id} value={String(s.id)}>
                         {s.name}
                       </SelectItem>
