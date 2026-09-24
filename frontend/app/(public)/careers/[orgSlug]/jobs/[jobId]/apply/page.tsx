@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { publicGetNoStore } from "@/lib/public-fetch";
 import { publicJobDetailContract } from "@/lib/public-schema";
 import { ApplyFormIsland } from "@/features/careers/components/apply-form-island";
+import { JobProse } from "@/features/careers/components/job-prose";
 
 type Props = { params: Promise<{ orgSlug: string; jobId: string }> };
 
@@ -47,7 +48,7 @@ export default async function ApplyPage({ params }: Props) {
   const deadline = job.applicationDeadline ?? job.closingDate;
 
   return (
-    <main className="min-h-dvh bg-background">
+    <main className="candidate-surface min-h-dvh bg-background">
       <div className="max-w-xl mx-auto px-4 py-8">
         <div className="mb-6">
           <Link
@@ -80,12 +81,15 @@ export default async function ApplyPage({ params }: Props) {
           )}
         </div>
 
-        {job.description && (
-          <div className="mb-6 rounded-lg border px-4 py-4">
-            <p className="text-sm font-medium mb-1.5">About this role</p>
-            <p className="text-sm text-muted-foreground whitespace-pre-line">{job.description}</p>
-          </div>
-        )}
+        {/*
+          All three, not just the description. `requirements` and `benefits`
+          are written by the employer, served by this endpoint and were shown
+          nowhere on the public site — a candidate applied without ever reading
+          what the role asks for or what it pays for.
+        */}
+        {job.description && <JobProse title="About this role" html={job.description} />}
+        {job.requirements && <JobProse title="What we are looking for" html={job.requirements} />}
+        {job.benefits && <JobProse title="What we offer" html={job.benefits} />}
 
         <ApplyFormIsland
           orgSlug={orgSlug}

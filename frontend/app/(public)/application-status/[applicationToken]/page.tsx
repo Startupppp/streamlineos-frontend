@@ -50,7 +50,7 @@ export default async function ApplicationStatusPage({ params }: Props) {
   if (!data) return notFound();
 
   return (
-    <main className="min-h-dvh bg-background">
+    <main className="candidate-surface min-h-dvh bg-background">
       <div className="max-w-xl mx-auto px-4 py-12">
         <Card>
           <CardHeader className="pb-3">

@@ -1901,3 +1901,55 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --shadow-card: var(--elevation-card);
   --shadow-raised: var(--elevation-raised);
 }
+
+/*
+  Candidate-facing pages, at the width they are actually used.
+
+  Everything a candidate touches — the careers list, the apply form, the status
+  page, the offer, the interview booking — arrives from a link in an email or a
+  message, which is read on a phone. Measured at 390px on 2026-09-24: every
+  control on the apply form was 36px tall, the consent checkbox was 16px, and
+  every text input was 14px.
+
+  The font size is the one that costs applications. iOS Safari zooms the whole
+  page when a focused control is under 16px and does NOT zoom back out, so a
+  candidate who taps "Full name" on an iPhone spends the rest of the form
+  pinching. It is one line and nobody writing a field notices it is missing.
+
+  44px is the tap-target floor from both Apple's HIG and WCAG 2.5.5. This is a
+  media query rather than a class on each control because a control added next
+  week has to inherit it — a per-component size is a decision every future
+  author has to remember, and they will not.
+*/
+@media (max-width: 639px) {
+  .candidate-surface input:not([type="checkbox"]):not([type="radio"]),
+  .candidate-surface select,
+  .candidate-surface textarea {
+    font-size: 1rem;
+    min-height: 2.75rem;
+  }
+
+  .candidate-surface textarea {
+    /* A textarea's own rows decide its height; only the floor is raised. */
+    min-height: 5.5rem;
+  }
+
+  .candidate-surface button:not([data-slot="checkbox"]),
+  .candidate-surface a[role="button"] {
+    min-height: 2.75rem;
+  }
+
+  /*
+    The consent box. Still under 44px, because a checkbox that size next to one
+    line of text looks broken — the label is `htmlFor`-bound and is itself the
+    larger target, so the pair clears the floor even though the box does not.
+  */
+  .candidate-surface [data-slot="checkbox"] {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+  }
+
+  .candidate-surface label[for] {
+    min-height: 1.5rem;
+  }
+}
