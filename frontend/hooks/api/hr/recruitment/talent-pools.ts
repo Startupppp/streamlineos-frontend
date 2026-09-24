@@ -83,19 +83,19 @@ const poolsKey = humanResourcesQueryKeys.hr.talentPools();
 const poolMembersKey = (poolId: number) => ["hr", "talentPools", poolId, "members"] as const;
 
 export function useTalentPools() {
-  const canEmployees = useCan("hr:employees:view");
+  const canRequisitions = useCan("hr:requisitions:view");
   return useQuery({
     queryKey: poolsKey,
     queryFn: ({ signal }) =>
       apiClient.get<TalentPool[]>("/hr/recruitment/talent-pools", undefined, signal, talentPoolListC),
     staleTime: 60_000,
-    enabled: canEmployees,
+    enabled: canRequisitions,
   });
 }
 
 export function useCreateTalentPool() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "create"],
     mutationFn: (data: { name: string; description?: string }) =>
       apiClient.post<TalentPoolRow>("/hr/recruitment/talent-pools", data, undefined, talentPoolRowC),
@@ -105,7 +105,7 @@ export function useCreateTalentPool() {
 
 export function useDeleteTalentPool() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "delete"],
     mutationFn: (poolId: number) =>
       apiClient.delete<void>(
@@ -119,7 +119,7 @@ export function useDeleteTalentPool() {
 }
 
 export function usePoolMembers(poolId: number, params?: PoolMembersParams) {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: [...humanResourcesQueryKeys.hr.hrTalentPoolMembersAll(poolId), params] as const,
     queryFn: ({ signal }) => {
       const search: { cursor?: string; limit?: number } = {};
@@ -140,7 +140,7 @@ export function usePoolMembers(poolId: number, params?: PoolMembersParams) {
 
 export function useAddPoolMember(poolId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "add-member", poolId],
     mutationFn: (data: { candidateId: number; notes?: string }) =>
       apiClient.post<TalentPoolMemberRow>(
@@ -158,7 +158,7 @@ export function useAddPoolMember(poolId: number) {
 
 export function useRemovePoolMember(poolId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "remove-member", poolId],
     mutationFn: (candidateId: number) =>
       apiClient.delete<void>(

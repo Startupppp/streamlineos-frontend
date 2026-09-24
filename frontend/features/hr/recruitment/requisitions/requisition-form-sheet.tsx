@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { optionalNumericSelectChange } from "@/lib/numeric-field";
 import { requisitionSchema, type RequisitionFormValues } from "./requisition-schema";
 
 interface RequisitionFormSheetProps {
@@ -145,7 +146,10 @@ export function RequisitionFormSheet({ open, onClose }: RequisitionFormSheetProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Link to Headcount Request (Optional)</FormLabel>
-                  <Select onValueChange={(v) => field.onChange(v ? parseInt(v) : undefined)} value={field.value?.toString() || ""}>
+                  <Select
+                    onValueChange={optionalNumericSelectChange(field.onChange)}
+                    value={field.value?.toString() || ""}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select an approved headcount..." />

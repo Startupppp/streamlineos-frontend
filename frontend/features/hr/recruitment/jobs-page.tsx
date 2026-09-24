@@ -144,11 +144,23 @@ export function JobsPage() {
       const platforms: JobBoardPlatform[] = ["LINKEDIN", "NAUKRI", "INDEED"];
       publishToBoards.mutate({ jobId: id, platforms }, {
         onSuccess: (data) => {
-          if (data.publishedCount > 0) {
-            toast.success(`Posted to ${data.publishedCount} platform${data.publishedCount !== 1 ? "s" : ""}`);
-          } else {
-            toast.error("No connected platforms available. Configure integrations in Settings.");
+          if (data.postedCount > 0) {
+            toast.success(`Posted to ${data.postedCount} board${data.postedCount !== 1 ? "s" : ""}`);
+            return;
           }
+          /**
+           * No board was posted to, and the recruiter is told WHICH problem it
+           * is. "Posted to N platforms" used to appear whenever an oauth token
+           * happened to be saved, for an API call that reached nobody.
+           */
+          const blocked = data.results.filter((r) => r.status === "BLOCKED");
+          const reasons = [...new Set(blocked.map((r) => r.message))];
+          toast.error(reasons[0] ?? "No board accepted this job.", {
+            description:
+              reasons.length > 1
+                ? reasons.slice(1).join(" ")
+                : blocked.map((r) => r.platform).join(", "),
+          });
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       });

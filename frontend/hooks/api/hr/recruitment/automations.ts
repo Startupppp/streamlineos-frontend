@@ -64,7 +64,7 @@ interface ToggleAutomationInput {
 }
 
 export function useRecruitmentAutomations() {
-  const can = useCan("hr:employees:view");
+  const can = useCan("hr:requisitions:view");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.pipelineAutomations(),
     queryFn: ({ signal }) =>
@@ -77,7 +77,7 @@ export function useRecruitmentAutomations() {
 export function useCreateRecruitmentAutomation() {
   const qc = useQueryClient();
   return useAuthorizedMutation<PipelineAutomation, Error, CreateAutomationInput>(
-    "hr:employees:manage",
+    "hr:requisitions:manage",
     {
       mutationKey: ["hr", "recruitment", "automations", "create"],
       mutationFn: (data) =>
@@ -92,7 +92,7 @@ export function useCreateRecruitmentAutomation() {
 export function useToggleRecruitmentAutomation() {
   const qc = useQueryClient();
   return useAuthorizedMutation<PipelineAutomation, Error, ToggleAutomationInput>(
-    "hr:employees:manage",
+    "hr:requisitions:manage",
     {
       mutationKey: ["hr", "recruitment", "automations", "toggle"],
       mutationFn: ({ automationId, isActive }) =>
@@ -106,7 +106,7 @@ export function useToggleRecruitmentAutomation() {
 
 export function useDeleteRecruitmentAutomation() {
   const qc = useQueryClient();
-  return useAuthorizedMutation<{ success: boolean }, Error, number>("hr:employees:manage", {
+  return useAuthorizedMutation<{ success: boolean }, Error, number>("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "automations", "delete"],
     mutationFn: (automationId) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/automations/${automationId}`, undefined, undefined, automationSuccessContract),

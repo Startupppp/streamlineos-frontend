@@ -183,6 +183,9 @@ export interface AtsPipelineCandidate {
 export interface AtsPipelineStage {
   stage: CandidateStatus;
   total: number;
+  /** How many of `total` this response carries — the endpoint caps each stage. */
+  shown: number;
+  truncated: boolean;
   candidates: AtsPipelineCandidate[];
 }
 
