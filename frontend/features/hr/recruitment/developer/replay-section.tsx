@@ -14,6 +14,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCanState } from "@/hooks/api/access";
 import { useHrWebhooks } from "@/hooks/api/hr/hr-webhooks";
 import {
   useReplaySandboxEvent,
@@ -29,6 +30,15 @@ import {
  * real hire by whatever is listening on the other end.
  */
 export function ReplaySection() {
+  /*
+    FE-47. `useHrWebhooks` is gated on this key, and a disabled Query v5 read
+    reports `isPending: true, isFetching: false` — so `isLoading` is false and
+    the list is empty, which is indistinguishable from an organisation that has
+    configured no webhooks. Without this check a denied viewer would be told
+    "No webhooks configured" and go looking for a button they are not allowed
+    to have.
+  */
+  const manageState = useCanState("hr:integrations:manage");
   const { data: subscriptions = [], isLoading } = useHrWebhooks({ limit: 50 });
   const { data: catalogue } = useSandboxCatalogue();
   const replay = useReplaySandboxEvent();
@@ -58,6 +68,7 @@ export function ReplaySection() {
     );
   }, [event, replay, subscriptionId]);
 
+  if (manageState === "denied") return null;
   if (isLoading) return null;
 
   return (
