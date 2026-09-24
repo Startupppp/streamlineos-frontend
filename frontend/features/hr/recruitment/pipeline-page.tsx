@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { KanbanSquare, TableIcon } from "lucide-react";
 import { UserPlusIcon } from "@animateicons/react/lucide";
 import type { CandidateStatus } from "@/types/hr";
+import type { RejectionDetails } from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
 
 type PipelineViewMode = "kanban" | "table";
 
@@ -35,9 +36,9 @@ export function RecruitmentPipelinePage() {
   const handleOpenAdd = useCallback(() => setAddOpen(true), []);
 
   const handleStageChange = useCallback(
-    (candidateId: number, newStage: CandidateStatus) => {
+    (candidateId: number, newStage: CandidateStatus, rejection?: RejectionDetails) => {
       updateStage.mutate(
-        { candidateId, stage: newStage },
+        { candidateId, stage: newStage, ...rejection },
         {
           onSuccess: (res) => {
             if (res.changed) {
@@ -102,6 +103,7 @@ export function RecruitmentPipelinePage() {
         <PipelineKanban
           stages={pipeline?.stages ?? []}
           onStageChange={handleStageChange}
+          isRejecting={updateStage.isPending}
           isLoading={isLoading}
         />
       )}

@@ -25,9 +25,16 @@ const publicOfferRespondContract = lazyContract(() =>
 interface Props {
   offer: PublicOffer;
   token: string;
+  /**
+   * Read-only content the server rendered, slotted between the terms and the
+   * Accept button. Kept as children rather than pulled in here so the
+   * compensation breakdown stays in the first HTML: this page arrives from an
+   * email link on a phone, and the numbers are why it was opened.
+   */
+  children?: React.ReactNode;
 }
 
-export function OfferActionIsland({ offer, token }: Props) {
+export function OfferActionIsland({ offer, token, children }: Props) {
   const router = useRouter();
   const [responding, setResponding] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
@@ -120,6 +127,8 @@ export function OfferActionIsland({ offer, token }: Props) {
           </div>
         )}
       </div>
+
+      {children}
 
       {offer.notes && (
         <div className="rounded-lg border px-4 py-3 text-sm text-muted-foreground">

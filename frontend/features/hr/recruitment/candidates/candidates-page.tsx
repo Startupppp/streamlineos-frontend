@@ -38,6 +38,8 @@ import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recr
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { CandidateComparisonDialog } from "@/components/hr/recruitment/candidate-comparison-dialog";
 import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add-candidate-sheet";
+import { RejectCandidateDialog } from "@/features/hr/recruitment/reject-candidate-dialog";
+import type { RejectionDetails } from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
 import { EditCandidateSheet } from "@/features/hr/recruitment/candidates-list/edit-candidate-sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
@@ -89,6 +91,10 @@ export function CandidatesPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [pendingReject, setPendingReject] = useState<{
+    candidateId: number;
+    candidateName: string;
+  } | null>(null);
 
   const setFilter = useCallback(
     (key: string, value: string | null) => {
@@ -130,6 +136,21 @@ export function CandidatesPage() {
 
   const handleStatusChange = useCallback(
     (id: number, status: CandidateStatus) => {
+      /*
+        A reject goes through the dialog, never straight to the mutation. The
+        endpoint refuses one that carries no reason, so firing here would turn
+        picking "Rejected" in the card's dropdown into a 422 toast.
+      */
+      if (status === "REJECTED") {
+        const candidate = filteredCandidates.find((c) => c.id === id);
+        setPendingReject({
+          candidateId: id,
+          candidateName: candidate
+            ? `${candidate.firstName} ${candidate.lastName}`
+            : `Candidate #${id}`,
+        });
+        return;
+      }
       updateCandidateStage.mutate(
         { candidateId: id, stage: status },
         {
@@ -138,8 +159,25 @@ export function CandidatesPage() {
         },
       );
     },
-    [updateCandidateStage],
+    [updateCandidateStage, filteredCandidates],
   );
+
+  const handleConfirmReject = useCallback(
+    (rejection: RejectionDetails) => {
+      if (!pendingReject) return;
+      updateCandidateStage.mutate(
+        { candidateId: pendingReject.candidateId, stage: "REJECTED", ...rejection },
+        {
+          onSuccess: () => toast.success("Candidate rejected"),
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+      setPendingReject(null);
+    },
+    [pendingReject, updateCandidateStage],
+  );
+
+  const handleCancelReject = useCallback(() => setPendingReject(null), []);
 
   const openEditSheet = useCallback((candidate: Candidate) => {
     setEditingCandidate(candidate);
@@ -401,6 +439,12 @@ export function CandidatesPage() {
         </div>
       </PageWrapper>
 
+      <RejectCandidateDialog
+        candidateName={pendingReject?.candidateName ?? null}
+        isPending={updateCandidateStage.isPending}
+        onCancel={handleCancelReject}
+        onConfirm={handleConfirmReject}
+      />
       <ConfirmSheet
         open={bulkRejectOpen}
         onOpenChange={setBulkRejectOpen}

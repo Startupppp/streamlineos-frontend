@@ -1,4 +1,5 @@
 import type { EnrollmentStatus } from "@/hooks/api/hr/recruitment/email-sequences-schema";
+import type { RejectionReason } from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
 export type JobPostingStatus = "DRAFT" | "OPEN" | "PAUSED" | "CLOSED" | "FILLED";
 export type HiringFlowRoundType = "HR_SCREENING" | "TECHNICAL" | "MANAGER" | "CULTURAL_FIT" | "FINAL" | "CUSTOM";
 export type HiringFlowRoundMode = "VIDEO" | "PHONE" | "ONSITE";
@@ -310,6 +311,14 @@ export interface UpdateCandidateInput {
   status?: CandidateStatus;
   notes?: string;
   rating?: number;
+  /**
+   * Required by the API when `status` becomes `REJECTED`. The candidate detail
+   * page rejects through this endpoint rather than the stage one, so leaving
+   * these off here would have made the profile card the one screen that could
+   * still reject somebody without saying why.
+   */
+  rejectionReason?: RejectionReason;
+  rejectionNote?: string;
 }
 
 export interface CreateInterviewInput {

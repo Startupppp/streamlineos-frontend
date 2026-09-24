@@ -8,6 +8,16 @@ import {
 
 export const NO_HIRING_FLOW = "none";
 
+/**
+ * The picker's "start from scratch" option.
+ *
+ * Radix refuses `value=""` on a `SelectItem` — an empty value is how it spells
+ * "cleared" — so an explicit sentinel stands in for "no template", exactly as
+ * `NO_HIRING_FLOW` does one field over. It never leaves the form: the picker
+ * reads it as "apply nothing" and the submit payload has no template field at all.
+ */
+export const NO_JOB_TEMPLATE = "none";
+
 export const SCREENING_QUESTION_TYPES = ["TEXT", "YES_NO", "SINGLE_SELECT", "NUMBER"] as const;
 
 export const screeningQuestionSchema = z.object({
@@ -28,7 +38,7 @@ export const INTERVIEW_ROUND_OPTIONS = [
   { value: "FINAL_ROUND", label: "Final Round" },
 ] as const;
 
-const JOB_TYPES = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP", "FREELANCE", "TEMPORARY", "CONSULTANT", "APPRENTICESHIP", "COMMISSION_BASED"] as const;
+export const JOB_TYPES = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP", "FREELANCE", "TEMPORARY", "CONSULTANT", "APPRENTICESHIP", "COMMISSION_BASED"] as const;
 const WORK_MODES = ["ONSITE", "REMOTE", "HYBRID"] as const;
 const SALARY_TYPES = ["MONTHLY", "ANNUAL", "HOURLY"] as const;
 const STATUSES = ["DRAFT", "OPEN", "CLOSED"] as const;
@@ -123,6 +133,12 @@ export const createJobFormSchema = z
 
     hiringManager: z.string().min(2, "Hiring Manager is required").max(100),
     hiringFlowId: z.string().optional(),
+    /**
+     * A string, not a number, because the sentinel above shares the field. It
+     * records which template seeded the form so the picker can show its name;
+     * nothing is submitted from it.
+     */
+    jobTemplateId: z.string().optional(),
     interviewRounds: z.array(z.string()).min(1, "Select at least one interview round"),
     questionBankMapping: z.string().min(1, "Question Bank Mapping is required"),
 
