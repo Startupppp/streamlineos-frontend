@@ -16,6 +16,7 @@ import {
 } from "@/hooks/api/hr/recruitment/integrations";
 import { IntegrationCard } from "./integration-card";
 import { InboundSecretDialog, type IssuedSecret } from "./inbound-secret-dialog";
+import { SourcingExtensionCard } from "./sourcing-extension-card";
 
 const FAMILY_TITLE: Record<RecruitmentIntegration["family"], string> = {
   "job-board": "Job boards",
@@ -172,6 +173,19 @@ export function RecruitmentIntegrationsPage() {
     >
       <PageState resolution={pageState} loading={<LoadingSkeleton />} onRetry={handleRetry}>
         <div className="space-y-6">
+          {/*
+            First, because it is the one thing on this page a recruiter can turn
+            on today without waiting on a vendor. Burying it under ten provider
+            families that mostly cannot run would read as though nothing here
+            works.
+          */}
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold text-foreground">Sourcing</h2>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <SourcingExtensionCard />
+            </div>
+          </section>
+
           {grouped.map(({ family, entries }) => (
             <section key={family} className="space-y-3">
               <h2 className="text-sm font-semibold text-foreground">{FAMILY_TITLE[family]}</h2>

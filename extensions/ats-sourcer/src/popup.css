@@ -1,0 +1,158 @@
+:root {
+  color-scheme: light dark;
+  --surface: #ffffff;
+  --ink: #111827;
+  --ink-muted: #6b7280;
+  --rule: #e5e7eb;
+  --accent: #1f2937;
+  --accent-ink: #ffffff;
+  --danger: #b42318;
+  --ok: #067647;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #111827;
+    --ink: #f9fafb;
+    --ink-muted: #9ca3af;
+    --rule: #374151;
+    --accent: #f9fafb;
+    --accent-ink: #111827;
+    --danger: #fda29b;
+    --ok: #75e0a7;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 360px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.panel {
+  padding: 14px;
+}
+
+.title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status {
+  margin: 0 0 10px;
+  color: var(--ink-muted);
+}
+
+.status[data-tone="error"] {
+  color: var(--danger);
+}
+
+.status[data-tone="known"] {
+  color: var(--ok);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.label {
+  color: var(--ink-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.profile-url {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.consent {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.consent input {
+  margin-top: 2px;
+}
+
+.save {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.result {
+  margin: 10px 0 0;
+  padding: 8px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.result[data-tone="error"] {
+  color: var(--danger);
+}
+
+.settings-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
