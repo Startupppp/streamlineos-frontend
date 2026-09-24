@@ -133,9 +133,9 @@ export const changeRequestListContract = z.union([
     data: rows,
     pagination: {
       limit: rows.length,
-      hasMore: false as boolean,
-      nextCursor: null as string | null,
-    },
+      hasMore: false,
+      nextCursor: null,
+    } satisfies z.infer<typeof crPagePaginationContract>,
   })),
   z.object({
     data: z.array(changeRequestRowContract),

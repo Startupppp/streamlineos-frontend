@@ -1,6 +1,7 @@
+import type { ComponentProps } from "react";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
+import type { ProjectBoardContent } from "./project-board-content";
 import type { FilterState as WorkloadFilterState } from "./workload-types";
-import type { ProjectStatus, BoardMember } from "./use-board-url-state";
 
 export const DISPLAY_OPTIONS: DisplayOptions = {
   columnBy: "status",
@@ -48,7 +49,7 @@ export function buildBaseProps(
   truncation: { isTruncated: boolean; isFetchingMore?: boolean; onLoadMore?: () => void } = {
     isTruncated: false,
   },
-) {
+): ComponentProps<typeof ProjectBoardContent> {
   return {
     view: "board" as const,
     filteredTickets,
@@ -56,19 +57,16 @@ export function buildBaseProps(
     onClearSearch: noop,
     projectId: 1,
     projectKey: "TEST",
-    statuses: [] as ProjectStatus[],
-    wipLimits: {} as Record<string, number>,
-    members: [] as BoardMember[],
+    statuses: [],
+    wipLimits: {},
+    members: [],
     displayOptions: DISPLAY_OPTIONS,
     hideCompleted: false,
     hasActiveFilters: true,
     workloadFilters: WORKLOAD_FILTERS,
     onClearWorkloadFilters: noop,
     onTicketSelect: noop,
-    onWorkloadFilterChange: noop as <K extends keyof WorkloadFilterState>(
-      key: K,
-      value: WorkloadFilterState[K],
-    ) => void,
+    onWorkloadFilterChange: noop,
     cycles: [],
     selectedIds: new Set<string | number>(),
     onBulkStatus: noop,
@@ -77,13 +75,13 @@ export function buildBaseProps(
     onBulkCycle: noop,
     onBulkParent: noop,
     onClearSelection: noop,
-    onSelectionChange: noop as (sel: Set<string | number>) => void,
+    onSelectionChange: noop,
     isTruncated: truncation.isTruncated,
     isFetchingMore: truncation.isFetchingMore ?? false,
     onLoadMore: truncation.onLoadMore ?? noop,
     isLoading: false,
     isError: false,
-    error: undefined as unknown,
+    error: undefined,
     onRetry: noop,
   };
 }

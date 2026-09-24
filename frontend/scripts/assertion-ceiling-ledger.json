@@ -262,11 +262,7 @@
       "nonNull": 0
     },
     "features/build/approvals/request-approval-sheet.tsx": {
-      "as": 3,
-      "nonNull": 0
-    },
-    "features/build/customers/use-customer-display-prefs.ts": {
-      "as": 1,
+      "as": 2,
       "nonNull": 0
     },
     "features/build/forms/components/form-submissions-tab.tsx": {
@@ -277,15 +273,7 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/build/forms/public-form-api.ts": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/build/intake/public-intake-api.ts": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/build/managed-products/managed-product-detail-page.tsx": {
       "as": 1,
       "nonNull": 0
     },
@@ -301,27 +289,11 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/build/my-work/my-work-page.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/build/project-list/projects-page.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/build/project-list/use-display-prefs.ts": {
       "as": 1,
       "nonNull": 0
     },
     "features/build/qa/test-run-sheet.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/build/settings/custom-fields-settings.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/build/settings/project-settings-page.tsx": {
       "as": 1,
       "nonNull": 0
     },

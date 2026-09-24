@@ -49,6 +49,14 @@ type IncidentFilters = {
   severity?: string;
 };
 
+type IncidentPageParam = {
+  updatesCursor?: number;
+  decisionsCursor?: number;
+  followUpActionsCursor?: number;
+};
+
+const INITIAL_INCIDENT_PAGE_PARAM: IncidentPageParam = {};
+
 export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   const canView = useCan("build:incidents:view");
   const params: Record<string, string> = {};
@@ -83,11 +91,7 @@ export function useIncident(projectId?: number, incidentId?: number) {
         incidentDetailContract,
       );
     },
-    initialPageParam: {} as {
-      updatesCursor?: number;
-      decisionsCursor?: number;
-      followUpActionsCursor?: number;
-    },
+    initialPageParam: INITIAL_INCIDENT_PAGE_PARAM,
     getNextPageParam: (last) => {
       const pagination = last.childrenPagination;
       if (
