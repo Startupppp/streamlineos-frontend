@@ -22,6 +22,7 @@ import {
   useUpdateCandidateBgv,
   type BgvStatus,
 } from "@/hooks/api/hr/recruitment";
+import { BgvProvenance } from "./bgv-provenance";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -115,16 +116,17 @@ export function BgvTracker({
       </CardHeader>
       <CardContent className="p-4 pt-2 space-y-3">
         {/*
-          Provenance, stated rather than left to be assumed. Every value on this
-          card is typed in by whoever is handling the candidate — there is no
-          background-check integration behind it, so a "Cleared" badge with no
-          attribution reads as a claim the platform is making and verifying.
-          It is not one.
+          Provenance from the server, per candidate, rather than one hardcoded
+          sentence for all of them.
+
+          This used to read "StreamlineOS does not run this check or receive a
+          result from the agency" for every candidate. That was true of every
+          organisation at the time and is no longer true by construction: a
+          connected agency pushes a signed verdict, and the row now records
+          whether this particular clearance came from one. A blanket sentence
+          would be wrong in exactly the case where being wrong matters.
         */}
-        <p className="text-xs text-muted-foreground">
-          Recorded by your team. StreamlineOS does not run this check or receive
-          a result from the agency.
-        </p>
+        <BgvProvenance candidateId={candidateId} />
         <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
           {bgvInitiatedAt && (
             <span className="flex items-center gap-1">
