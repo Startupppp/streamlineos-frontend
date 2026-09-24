@@ -20,6 +20,9 @@ jest.mock("@/hooks/api/kb", () => ({
     isLoading: false,
     isError: false,
     refetch: jest.fn(),
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
   }),
   useDeleteKbPageTemplate: () => ({ mutate: jest.fn(), isPending: false }),
 }));

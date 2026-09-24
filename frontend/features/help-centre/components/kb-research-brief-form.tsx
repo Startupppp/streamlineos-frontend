@@ -3,7 +3,10 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { kbResearchBriefSchema, type KbResearchBriefFormValues } from "./kb-research-brief-form-schema";
+import {
+  kbResearchBriefSchema,
+  type KbResearchBriefFormValues,
+} from "./kb-research-brief-form-schema";
 import {
   Form,
   FormControl,
@@ -34,7 +37,11 @@ function selectSpaceId(
   };
 }
 
-export function KbResearchBriefForm() {
+interface KbResearchBriefFormProps {
+  basePath: string;
+}
+
+export function KbResearchBriefForm({ basePath }: KbResearchBriefFormProps) {
   const router = useRouter();
   const createMutation = useCreateResearchBrief();
   const { data: spacesPage } = useKbSpaces();
@@ -52,7 +59,7 @@ export function KbResearchBriefForm() {
         onSuccess: (data) => {
           toast.success("Research brief queued");
           form.reset();
-          router.push(`/support/kb/research-briefs/${data.briefId}`);
+          router.push(`${basePath}/${data.briefId}`);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
@@ -61,7 +68,10 @@ export function KbResearchBriefForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="flex items-end gap-3">
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="flex items-end gap-3"
+      >
         <FormField
           control={form.control}
           name="topic"

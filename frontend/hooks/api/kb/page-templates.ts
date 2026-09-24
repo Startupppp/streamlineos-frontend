@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -29,8 +30,15 @@ export type CreateKbPageTemplateInput = {
   description?: string;
 };
 
-const kbPageTemplateListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-templates-schema").then((m) => m.kbPageTemplateListContract),
+export type KbPageTemplatePage = {
+  data: KbPageTemplate[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
+
+const kbPageTemplateListPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-templates-schema").then(
+    (m) => m.kbPageTemplateListPageContract,
+  ),
 );
 
 const kbPageTemplateSingleContract = lazyContract(() =>
@@ -39,12 +47,25 @@ const kbPageTemplateSingleContract = lazyContract(() =>
 
 export function useKbPageTemplates() {
   const canViewPages = useCan("kb:pages:view");
-  return useQuery({
+  const query = useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates(),
-    queryFn: ({ signal }) => apiClient.get<KbPageTemplate[]>("/kb/page-templates", undefined, signal, kbPageTemplateListContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbPageTemplatePage>(
+        "/kb/page-templates",
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
+        signal,
+        kbPageTemplateListPageContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canViewPages,
     staleTime: 300_000,
   });
+
+  return {
+    ...query,
+    data: query.data?.pages.flatMap((page) => page.data),
+  };
 }
 
 export function useCreateKbPageTemplate() {

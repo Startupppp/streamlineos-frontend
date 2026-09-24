@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -15,11 +16,12 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useKbResearchBrief, useRateResearchBrief } from "@/hooks/api/kb/research-briefs";
+import { useKbResearchBrief, useRateResearchBrief, useRetryResearchBrief, useCancelResearchBrief } from "@/hooks/api/kb/research-briefs";
 import type { KbResearchBriefCitation, KbResearchBriefStatus } from "@/types/kb";
 
 interface KbResearchBriefDetailProps {
   briefId: number;
+  basePath: string;
 }
 
 const STATUS_LABELS: Record<KbResearchBriefStatus, string> = {
@@ -100,8 +102,10 @@ function BriefFeedback({ briefId, currentRating }: { briefId: number; currentRat
   );
 }
 
-export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
+export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDetailProps) {
   const { data: brief, isLoading, error, refetch } = useKbResearchBrief(briefId);
+  const retryMutation = useRetryResearchBrief();
+  const cancelMutation = useCancelResearchBrief();
   const [showFullReport, setShowFullReport] = useState(false);
 
   const citations = useMemo(() => {
@@ -124,7 +128,7 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
     return `${brief.report.slice(0, 600)}…`;
   }, [brief, showFullReport]);
 
-  function handleRetry() {
+  function handleRefetch() {
     void refetch();
   }
 
@@ -132,16 +136,25 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
     setShowFullReport((prev) => !prev);
   }
 
+  function handleRetry() {
+    retryMutation.mutate(briefId, { onError: (e) => toast.error(getErrorMessage(e)) });
+  }
+
+  function handleCancel() {
+    cancelMutation.mutate(briefId, { onError: (e) => toast.error(getErrorMessage(e)) });
+  }
+
   if (isLoading) return <LoadingState variant="form" rows={6} />;
   if (error) {
-    return <ErrorState description={getErrorMessage(error)} onRetry={handleRetry} />;
+    return <ErrorState description={getErrorMessage(error)} onRetry={handleRefetch} />;
   }
+
   if (!brief) {
     return (
       <EmptyState
         title="Research brief not found"
         description="This brief may have been deleted, or the link is out of date."
-        action={{ label: "Back to research briefs", href: "/support/kb/research-briefs" }}
+        action={{ label: "Back to research briefs", href: basePath }}
       />
     );
   }
@@ -180,6 +193,32 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
             <div className="rounded-lg bg-destructive/5 border border-destructive/20 px-3 py-2.5">
               <p className="text-label text-destructive">{brief.errorMessage}</p>
             </div>
+          )}
+
+          {brief.status === "failed" && (
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleRetry}
+              isPending={retryMutation.isPending}
+              loadingText="Retrying…"
+            >
+              Retry
+            </LoadingButton>
+          )}
+
+          {brief.status === "queued" && (
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs text-destructive hover:text-destructive"
+              onClick={handleCancel}
+              isPending={cancelMutation.isPending}
+              loadingText="Cancelling…"
+            >
+              Cancel
+            </LoadingButton>
           )}
 
           {brief.sourceCount > 0 && (

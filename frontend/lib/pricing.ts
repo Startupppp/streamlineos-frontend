@@ -202,6 +202,14 @@ type SavingsBreakdown = {
   savingsPct: number;
 };
 
+/** Round to a whole percent. Never print 100% while a rupee is still due. */
+function savingsPercent(savings: number, baseline: number): number {
+  if (baseline <= 0) return 0;
+  const pct = Math.round((savings / baseline) * 100);
+  if (pct >= 100 && savings < baseline) return 99;
+  return pct;
+}
+
 export function calculateSavingsVsAllInOne(
   seats: number,
   billingPeriod: BillingPeriod = "annual",
@@ -217,9 +225,7 @@ export function calculateSavingsVsAllInOne(
     competitorAnnual,
     streamlineAnnual,
     savings: competitorAnnual - streamlineAnnual,
-    savingsPct: Math.round(
-      ((competitorAnnual - streamlineAnnual) / competitorAnnual) * 100,
-    ),
+    savingsPct: savingsPercent(competitorAnnual - streamlineAnnual, competitorAnnual),
   };
 }
 
@@ -236,9 +242,7 @@ export function calculateSavingsVsStack(seats: number) {
     stackPerSeat,
     streamlineAnnual,
     savings: stackAnnual - streamlineAnnual,
-    savingsPct: Math.round(
-      ((stackAnnual - streamlineAnnual) / stackAnnual) * 100,
-    ),
+    savingsPct: savingsPercent(stackAnnual - streamlineAnnual, stackAnnual),
   };
 }
 

@@ -73,6 +73,133 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 | S22 | Async scale — queue lanes, admission, SLOs, DR drills | 5 | P0/P1 | NOT STARTED |
 | S23 | Observability — dashboards, alerts, cost budgets, runbooks | 0/5 | P0 | NOT STARTED |
 
+## S14/S15 Analytics + Content Health — built, but the routes did not exist
+
+The most serious finding was **BE-01**: `KbWikiAnalyticsController`, `KbWikiAnalyticsService`, `KbContentHealthController` and `KbContentHealthService` were registered in **no module**. The code compiled, the tests passed, the route-classification gate passed — and the routes did not exist at runtime. `check:module-registration` reported clean because it counts module classes reachable from `AppModule`, and an unregistered controller is not a module. Every green gate on those routes was vacuous until registration landed.
+
+Now registered in `KbWikiModule`; `check:module-registration` reports 259/259 reachable and `check:route-classification` `UNDECLARED: 0`.
+
+### Three vacuous tests, rewritten
+
+Two content-health tests asserted only `expect(result.data).toHaveLength(0)` for the `overdue_review` and `broken_link` signals — an empty fixture returning nothing, which passes whether or not the query is correct (BE-141). Each now has a positive counterpart proving the signal returns a page when one matches, plus a test that renders the SQL and asserts the predicate actually reaches `kb_page_reviews` / `kb_page_links` rather than whatever table happened to be mocked.
+
+The `counts` test asserted six counts of 3 from a mock that returns 3 for any query — it could not distinguish six different predicates from one predicate run six times. It now renders all six outer predicates and asserts they are distinct, and that the rendered SQL reaches both EXISTS tables.
+
+Writing those tests surfaced two facts about the service worth recording: the `exists()` subquery consumes the *first* `db.select()` call, so a call-ordered mock hands the outer query the wrong chain; and the two EXISTS signals render an identical outer predicate (`… and exists $2`), so a "six distinct predicates" assertion is wrong — five is the honest number, with the difference carried inside the subqueries.
+
+### `check:unbounded-reads` — the FALSE-POSITIVE classification was checked, not taken on faith
+
+The lane added `kb-content-health.service.ts` to `unbounded-reads-classification.json` as FALSE-POSITIVE. Verified: both flagged lines are `.select({ present: sql\`1\` })` inside correlated `exists()` subqueries. Postgres stops an EXISTS at the first matching row, and the outer query carries `limit + 1`. A LIMIT inside an EXISTS would be noise. The classification stands.
+
+## Frontend defects found by reading test output rather than its exit code
+
+Three `features/wiki/` suites were red and one class of warning was being ignored:
+
+- **`react-markdown` was never transformed.** Two suites could not run at all — `SyntaxError: Unexpected token 'export'`. `next/jest` only exempts `transpilePackages`, and under pnpm the ESM tree is nested in `.pnpm/`, so the default allowlist misses it. The whole `react-markdown` / `micromark` / `mdast` / `unist` dependency tree is now spliced into `transformIgnorePatterns`.
+- **A dead branch in `importJobDisplayName`.** The count checks ran before the title checks, so every title branch below them was unreachable — an import of one page always rendered "1 page" instead of its title. The tests describing the intended behaviour had been failing since they were written. Branches reordered.
+- **Three dialogs had no accessible description.** `BulkDecideResultsDialog`, `ApproveDialog` and `RejectDialog` rendered `DialogContent` with no `DialogDescription`, which Radix warns about because a screen reader gets a title and nothing else. All three now describe what the dialog does.
+
+The `<span> cannot be a child of <select>` warning was **not** a production defect — it comes from a `Select` test double in `wiki-search-page.test.tsx`. Recorded so nobody "fixes" the component.
+
+## S12 Templates — the backend already existed; the defect was the read bound
+
+No new module was needed. `kb-page-templates.{controller,service}.ts` already served the three routes the frontend calls, with both permission keys present in both catalogs. The lane correctly refused to build a parallel API and wrote the missing tests instead.
+
+The real finding was **BE-24**: the service declared `const TEMPLATE_LIST_CAP = 200`, both exceeding the 100-row cap and redeclaring a cap that exists as the exported `PAGE_SIZE_CAP`.
+
+Simply lowering 200 → 100 would have been a regression, not a fix. The route had **no pagination at all**, so the limit was the entire reachable set: an org with 150 templates would have silently lost 50 of them. The cap and the pagination are one decision, not two.
+
+So the list is now cursor-paginated: keyset on `(name, id)` ascending via `keysetAfterValue`, `limit + 1` to detect a further page, `PAGE_SIZE_CAP` enforced by the shared `pageSizeField`. The frontend hook moved to `useInfiniteQuery` and still exposes a flat array, so the page component's existing code is unchanged, and a "Load more templates" control makes everything past the first page reachable.
+
+An existing BITE test asserted `toHaveBeenCalledWith(200)` — a spec pinning the exact number rather than the property. Its name says "list is bounded", which is the invariant worth keeping, so it now asserts `limit + 1` and a companion test pins the bound to `PAGE_SIZE_CAP`.
+
+## Migration journal — two entries out of order, deliberately NOT corrected
+
+`kb-version-append-only-migration.spec.ts` fails, and it is right to fail. Two entries sit earlier in the journal array than `1078` while carrying a later `when`:
+
+| idx | when | tag |
+|---|---|---|
+| 717 | 1803000010169 | `0464a_gl_kernel` |
+| 726 | 1803000010178 | `0271a_waitlist_admission` |
+
+`1078`'s `when` is `1803000010156`. Both are `a`-suffixed inserts, which is how this happened.
+
+**This is not fixed, on purpose.** BE-59 forbids renumbering an existing entry and BE-60 forbids editing an applied migration; a `when` is part of how the ledger is reconciled. Renumbering to make a test pass would edit the production migration ledger to silence a warning about the production migration ledger. The failing test is the correct state of the world until a human decides how to reconcile it.
+
+It is unrelated to Knowledge Base work — appending `1168`–`1171` at the end shifts no earlier entry. Everything else in `src/modules/kb/` passes: **149 of 150 suites, 1217 of 1218 tests.**
+
+## S17 public share tokens — a half-finished cutover that broke sharing outright
+
+An interrupted lane changed the *read* path to resolve share links by SHA-256 hash and left the *write* path untouched. The result was not a partial improvement; it was a total outage of the feature, in two independent ways:
+
+1. `setVisibility` minted a `public_token` and wrote only that column. `getPublicPage` looked the row up by `public_token_hash`, which was never populated. **Every newly created share link 404s.**
+2. The RLS policy `tenant_isolation` on `kb_pages`, built by `0384_rls_public_token_read.sql` from the pair `('kb_pages', 'public_token')`, compares the **plaintext** column against `app.current_public_token_or_null()`. The read path now sets that GUC to the **hash**. So even with the hash column populated, RLS would refuse the row. Both halves had to move together.
+
+### Why hash the token at all
+
+`public_token` is a bearer credential: possession of the string is the entire authorization to read the page. Stored in plaintext it is disclosed by anything that can read the row — a backup, a support query, a log line, a compromised read replica. Hashing at rest means a database read yields no usable link.
+
+### Why SHA-256 and not bcrypt
+
+BE-98a names `bcryptjs` as the hashing library and forbids `argon2` (not installed). That rule is about **passwords** — low-entropy secrets a human chose, where a deliberately slow hash is the defence against offline guessing. A share token is 24 random bytes (192 bits). There is nothing to guess, so slowness buys nothing, and bcrypt is actively wrong here: its output is salted per row, so it cannot be indexed and a lookup would have to `compare()` against every row in the table. SHA-256 is fast, deterministic, and indexable, which is exactly what a high-entropy lookup key needs. Recorded so the next reader does not "fix" this back to bcrypt.
+
+### What shipped
+
+- `kb-public-token.ts` — `newPublicToken()` and `hashPublicToken()`. One definition, shared by the writer and the reader; when those two disagree, sharing fails silently, which is precisely what happened.
+- `setVisibility` now writes `publicToken` **and** `publicTokenHash` in the same `SET`.
+- Migration `1171_kb_pages_public_token_hash` — adds the column, backfills `encode(digest(public_token,'sha256'),'hex')` for existing rows so live links keep working, adds the partial unique index, and **rebuilds the `tenant_isolation` policy to compare the hash column**. Rollback restores the plaintext policy and drops the column.
+- `kb-public-token.spec.ts` (5 tests) and `kb-page-visibility.spec.ts` (4 tests). One asserts the hash equals the exact hex SHA-256 the migration backfills with — the writer, the reader and the migration are pinned to the same value by a literal.
+
+### ⚠️ Hard deploy ordering — this code does not run before 1171
+
+`publicTokenHash` exists in the Drizzle schema but **not in production**. Deploying this code before applying `1171` makes `setVisibility` and `getPublicPage` raise `42703 undefined_column`. Apply 1171 first, then deploy. This is not a preference; it is the difference between a working feature and a 500.
+
+**Still open:** a second migration must later drop the plaintext `public_token` column and tighten the policy to the hash arm alone. It is deliberately not written yet — dropping the plaintext column is irreversible once the hash is the only copy, and it should follow a period with 1171 applied and sharing observed working.
+
+## Third pass — 2026-09-23, after a session restart orphaned four lanes
+
+The session process restarted mid-wave. Lanes H (Wiki Home), SP (Spaces), D (Page document + History) and AK (`/ask` removal) became unreachable — `ListAgents` no longer resolves them and `SendMessage` fails. **Their partial edits stayed on disk.** Treat an orphaned lane's output as unreviewed code by an unavailable author: nothing reported it, nothing verified it, and the only record of intent is the diff.
+
+The general rule this confirms: *a lane's work is not done when the lane stops. It is done when a gate you ran yourself, on the whole project, is green.*
+
+### What the orphaned lanes left broken
+
+| Defect | Where | Consequence if shipped |
+|---|---|---|
+| `canEdit` seam added without updating existing auth doubles | `kb-pages-tenant-isolation.spec.ts` | 1 test dead with `resolvePageAccess is not a function`; the cross-tenant control for pages stops running |
+| `KbSpacesService.list` gained a required `query` param | `kb-spaces-tenant-isolation.spec.ts` | 2 tests dead; the cross-tenant control for spaces stops running |
+| Constructor gained a 4th dependency (`KnowledgeAuthorizationService`) | same spec | same |
+| **Millisecond cursor truncation** | `kb-spaces.service.ts` | **the tenth instance of this defect in this repo** — see below |
+| Spaces list paginated without updating two clients | `hooks/api/kb/pages.ts:239`, `hooks/api/kb/search.ts:29` | `TS2339` + `TS7006`; and the search cache key silently truncated |
+
+### The microsecond cursor defect, again
+
+`KbSpacesService.list` built its cursor from `row.updatedAt.toISOString()` — millisecond precision — and compared it with `keysetBefore`, which binds a JS `Date`. A millisecond-truncated boundary names an instant up to 999µs **earlier** than the row it points at. Every space whose `updated_at` falls in that gap is skipped at the page boundary and never appears in any page.
+
+Fixed by the established pair: project `microsecondCursorValue(kbSpaces.updatedAt)` in the SELECT and compare with `keysetBeforeMicros`. The internal `updatedAtMicros` column is kept out of the returned rows so it never becomes part of the response contract.
+
+Pinned by `kb-spaces-cursor.spec.ts` (4 tests), including one that asserts the boundary is *not* `...500Z` and *not* `...500000` — a test that passes only if precision survives end to end.
+
+### A pagination cutover is not finished at the API boundary
+
+`useKbSpaces` began returning `{ data, pagination }`. Two callers still did `(spaces ?? []).map(s => s.id)` to build an ACL version used as a **query-cache key**. Beyond the type error, this truncated the key to one page: with the backend's default limit of 20, an org with more spaces produced a cache version blind to everything past the twentieth, so a permission change on space 21 would not bust the cache.
+
+Fixed by reading `page.data`, requesting 100, and appending a `~truncated` marker when `hasMore` is true so a truncated derivation is at least visible in the key. **Residual gap, deliberately recorded rather than hidden:** beyond 100 spaces the version is still blind. The real fix is a server-side ACL revision value rather than client-side enumeration of spaces; that is a backend change and is not in this slice.
+
+### BE-49 considered and deliberately not "fixed"
+
+`kb-spaces.service.ts` searches `name` with a leading-wildcard `ILIKE '%q%'`, which BE-49 forbids. A GIN trigram index would **not** help: under RLS every search operator is `proleakproof = false`, so the text qual is demoted to a post-filter and the GIN index cannot be used — measured elsewhere on this platform at 0.34ms owner vs 134.8ms under RLS. The standing decision is targeted `SECURITY DEFINER` id-probes, not wrapping every `ilike` site. The read here is already bounded by `inArray(kbSpaces.id, accessibleIds)` on a small per-org table, so it does not qualify. **No migration written.** Revisit only if spaces-per-org grows by orders of magnitude.
+
+### `kb-pages.service.ts` is under the cap for real now
+
+Reported by a lane as "shrinks 566 → 522, gate: check:file-sizes passes". It does not pass at 522 — the cap is 500. Extracted `fireKbMentionNotifications` to its own module; the file is now **496** and no longer appears in `check:file-sizes` output. `kb-spaces.service.ts` sits at **499** and will cross the cap on the next edit.
+
+`kb-search.service.ts` is 520 and over the cap, but `git diff HEAD` is clean for it — pre-existing, not this work.
+
+### Verified state after the repairs
+
+`npx jest src/modules/kb/wiki/` → **55 suites, 438 tests, all passing.**
+
 ## Second pass — 2026-09-23
 
 Both repos are on `main`. **A concurrent session is committing this work as it lands**, so `main` moves under you and `git show main:<file>` is not a pre-session baseline. The pre-session commit is `4d1ab519a`.
@@ -781,3 +908,187 @@ Recorded as they are decided, with the doc line that authorizes each.
 - Grant `expires_at` — **added only when the product ships expiry**, same source.
 - CRDT/OT collaborative editing — **requires measurement** per `04-backend-scale-architecture.md`.
 - Tenant cells, table partitioning, service extraction, external search engine — **conditional stages**; not activated without a demonstrated trigger.
+
+---
+
+## Fourth pass — 2026-09-24
+
+### The `kb_articles` cutover was lossy, and its own verification could not detect it
+
+The first draft of S21 backfilled `kb_articles` into `kb_pages` and then dropped the source
+table. `kb_pages` does not carry eleven of the columns `kb_articles` has: `slug`,
+`excerpt`, `category_id`, `views`, `helpful_count`, `not_helpful_count`, `seo_title`,
+`seo_description`, `review_interval_days`, `published_at`, `archived_at`.
+
+The backfill had nowhere to put any of them. The parity query compared **row counts**, so
+it would have reported a clean match while all eleven were discarded — and `1174`'s
+preflight compared counts too, so the last guard before an irreversible `DROP TABLE` was
+blind to the only failure that mattered.
+
+Consequences had it run: every existing help-centre URL breaks (`slug`), and all view and
+helpfulness history is destroyed with a 1-day unencrypted PITR window as the only recourse.
+
+Resolved by `1173a_kb_pages_article_columns` (adds the columns, `slug` distinct from the
+existing `public_slug`, partial unique index leading with `org_id`), a rewritten backfill,
+and a parity query plus 1174 preflight that compare **values, not counts**.
+
+**The interlock that caught it:** migrations are unappliable until journalled, because
+`--tag=` builds its queue from `_journal.json`. Withholding the journal entry is the
+cheapest available safety brake on a destructive migration. Use it.
+
+### Registering a controller does not make its route measurable
+
+The analytics and content-health controllers existed in no module — they compiled, passed
+their tests, and every gate was green, because an unregistered controller is invisible to
+the checks (BE-01). Registering them made the routes real, which then required route-budget
+entries that had never existed.
+
+`contracts/benchmark-manifest.json` was deliberately **not** given entries for them. That
+manifest replays a stored artefact; every existing KB entry carries real measured buffer
+counts and there is no "unmeasured" convention. Adding placeholder entries would make a
+replayed artefact lie. The five new routes correctly reduce coverage to PARTIAL instead.
+
+Likewise no logger was added to either service. Both are pure read-only query services;
+16 of 19 KB wiki services carry no logger, and the house pattern adds one only when there
+is something to log. Instrumentation with no call site is noise, not observability.
+
+### Import idempotency: a partial unique index does not constrain what it cannot see
+
+`1172` adds `external_id` + `external_source` with a partial unique index on
+`(org_id, external_source, external_id) WHERE external_id IS NOT NULL`, so a re-import
+upserts instead of duplicating.
+
+The first version left `external_source` optional. Postgres treats NULLs in a unique index
+as **distinct**, so a row with `external_id` set and `external_source` NULL enters the
+index but never conflicts — the upsert silently falls through to an insert and duplicates
+exactly as before, defeating the feature in the one case it looks like it should work.
+
+Closed at both levels: the Zod schema requires the two fields together, and
+`chk_kb_pages_external_ref_paired` enforces `(external_id IS NULL) = (external_source IS NULL)`
+in the database, where the route schema cannot reach.
+
+### Microsecond cursor truncation — instances 11 and 12
+
+`kb-page-grants.service.ts` and `kb-sources.service.ts` both hand-rolled the keyset
+predicate (`lt(col, new Date(position.sortValue))` OR'd with an id tiebreak) instead of
+calling the shared helper, reintroducing the millisecond truncation. Both now use
+`keysetBeforeMicros` + `microsecondCursorValue`.
+
+`kb-page-reviews-query.service.ts` was deliberately **left alone** on the first attempt:
+its sort column `dueAt` is nullable with a sentinel, and `microsecondCursorValue` returns
+NULL for a NULL input, so a careless fix reorders or drops review rows — worse than the
+truncation it would fix. That file also carries a separate, larger defect: its keyset
+predicate is hardcoded ascending while `sortDir` flips at runtime, so a `desc` page either
+re-serves page 1 or skips the result set. A predicate that disagrees with its ORDER BY does
+not error; it returns wrong rows.
+
+### Gates hide each other
+
+Fixing the three uncovered response contracts moved `check:openapi-coverage` past its
+response-schema stage for the first time, which then revealed **six** pre-existing mutating
+routes with no request-body schema. The script exits at the first failing stage, so those
+six had never been reached. All six were bodyless action POSTs and took `@BodylessAction()`:
+two in KB (`spaces/:spaceId/archive`, `spaces/:spaceId/restore`), four outside it.
+
+A gate that fails early is not reporting one defect. It is reporting the first of an
+unknown number.
+
+`ap-document-pdf.controller.ts` correctly did **not** get a `@ResponseSchema`: it streams
+bytes through `@Res()` and never returns JSON, so a Zod response contract would be a lying
+contract. It declares `application/pdf` via `@ApiOkResponse` instead.
+
+### The ghost permission key was a typo, not a missing key
+
+`hr:recruitment:manage` did not exist in the catalog, so that route was permanently 403 —
+no role could ever be granted it. There is no `hr:recruitment:*` namespace at all. The
+sibling controller in the same directory guards the same candidate entity with
+`hr:employees:manage`, which does exist. Replaced rather than adding the ghost key to the
+catalog, which would have granted a permission nobody audited.
+
+### A widened type breaks fixtures that Jest will never notice
+
+The cutover work widened `ArticleRow` from 9 fields to 20 to carry the columns the backfill
+had been dropping. An existing spec built its article fixtures with the old 9 and was never
+updated — **11 `TS2345` errors**, none of which Jest could see, because ts-jest transpiles
+without typechecking. The suite stayed green. The lane that made the change reported its
+typecheck as clean.
+
+This is BE-138 in its second form. The rule is usually quoted for constructor *arity*, but
+any widened type does it: the only gate that sees the break is `tsc`, and a lane that greps
+its own tsc output can report "no matches" from a run that predated its last edit.
+
+Independently re-run `tsc` after every lane, with `--max-old-space-size=10240`. At 8192 it
+dies exit 134 printing no type errors at all, which reads as a passing build.
+
+### `git diff HEAD` stops proving anything when a peer session is committing
+
+Partway through this pass, `git status` in both repos went to **zero** uncommitted files. Nothing
+was lost — a peer session had committed the work (`ec12d601d` share tokens + migrations,
+`e405138f7` brief-to-page). But it silently invalidated the standing technique for separating a
+regression from a pre-existing failure: once your own work is in `HEAD`, `git diff --quiet HEAD`
+reports it as "unchanged", which reads exactly like "not mine".
+
+Pin the comparison to a commit from **before the session started**, not to `HEAD`. The frontend
+baseline here was `942466cf7`.
+
+That distinction mattered immediately. `heavy-module-lazy-boundaries` fails because
+`page-document.tsx` pulls `plate-value-convert` into the project-wiki route's first-load graph,
+and `page-document.tsx` *was* edited this pass — so against `HEAD` it looked like ours. Against
+the real baseline, the eager import sits at line 40 of the unchanged original and the entire
+chain below the route was already eager; our edit adds three lines threading `projectId`. The
+failure predates the work. All ten red frontend suites are pre-existing.
+
+### Convert-to-page had to go on the wiki side
+
+`KbWikiModule` already imports `KbRetrievalModule`, so putting brief→page conversion in retrieval
+would have closed an import cycle, and BE-10 forbids hiding one behind `forwardRef`. The
+dependency only runs one way: retrieval now exports `KbResearchBriefService`, and
+`KbBriefToPageService` lives in wiki, where `KbPagesService` already is. It resolves the brief
+through `getById`, so the brief's tenant scoping and citation re-check still run — the converter
+does not re-implement either.
+
+### Registering a route makes it a published contract, with obligations
+
+Fixing BE-01 on the analytics and content-health controllers and giving three upload routes a
+response schema had a consequence nobody asked for: those operations became **published**, and
+`check:contract-registry` requires every published operation to declare a version or deprecation
+window, a named consumer, an idempotency/replay rule and a parameter baseline.
+
+Four KB routes were closed by `pnpm registry:generate` (the registry is generated output and is
+never hand-edited). The fifth, `POST /careers/resumes/upload`, needed a hand-authored term.
+
+The honest declaration is `at-least-once-unfenced`. `CareersService.uploadResume` does a bare
+`INSERT` into `candidate_documents_vault` with no unique constraint and no conflict handling. The
+storage key is deterministic (`candidateId/fileName`) so the object overwrites, but the vault row
+does not — a client that retries after a timeout gets a second document row pointing at the same
+object. That mode exists in `published-contract-terms.json` precisely so a gate can pass while
+leaving the defect visible; inventing a fence that does not exist would have been the easy lie.
+
+Two related process notes:
+- `check:response-contracts` does **not** exist in the backend. It is a frontend script and passes
+  there. Running it from `backend/` yields "Command not found" and exit 1, which reads exactly like
+  a failing gate. Check that a gate exists in the repo you are standing in before reporting it red.
+- Round-tripping a hand-authored JSON file through `JSON.parse`/`JSON.stringify` re-encodes
+  non-ASCII (literal `—` becomes `—`) and can reorder keys, producing a diff of churn around
+  a one-entry change. Insert into the text instead and re-parse only to validate.
+
+### The AI job queue stranded work on every worker crash
+
+`ai_jobs` carries `locked_by`/`locked_at`, but **nothing ever read `locked_at`**. `claimBatch`
+selects only `status = 'QUEUED'`, so a job whose worker died — OOM, deploy, eviction — stayed
+`RUNNING` forever: never retried, never dead-lettered, never surfaced as failed.
+
+`reclaimExpiredLeases` closes it. Two details matter more than the query: the reclaim **increments
+`attempts`**, or a job that reliably kills its worker is reclaimed in an infinite loop; and a
+reclaimed job at `max_attempts` goes to `DEAD` rather than back to `QUEUED`.
+
+A per-tenant fairness rewrite of `claimBatch` was written and then **deliberately reverted**.
+`ai_jobs` is shared by KB, CRM, Build and chat, and there is no database here to test a claim-query
+rewrite against. Rendering the SQL before trusting it showed the rewrite had dropped the
+`status = 'QUEUED'` re-check from inside the `FOR UPDATE` subquery — the re-check is what makes
+EvalPlanQual skip a row another worker just committed, so two workers could have claimed one job.
+Thirty-two passing mocked tests did not see it; reading the generated SQL did.
+
+`claimBatch` is now byte-identical to its pre-session form. Fairness stays unbuilt until it can be
+exercised against a real queue. `1175_ai_jobs_expired_lease_index` supports the reclaim and is
+written, reversible, and deliberately unjournalled.

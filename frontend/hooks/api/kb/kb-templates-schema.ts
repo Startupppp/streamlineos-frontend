@@ -14,3 +14,12 @@ const kbPageTemplateContract = z.object({
 
 export const kbPageTemplateListContract = z.array(kbPageTemplateContract);
 export const kbPageTemplateSingleContract = kbPageTemplateContract;
+
+export const kbPageTemplateListPageContract = z.object({
+  data: z.array(kbPageTemplateContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});

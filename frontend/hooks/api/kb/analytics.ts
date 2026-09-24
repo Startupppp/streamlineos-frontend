@@ -87,3 +87,59 @@ export function useKbContentGaps(range?: KbAnalyticsRange) {
     enabled: canViewAnalytics,
   });
 }
+
+const wikiPageStatsContract = lazyContract(() =>
+  import("@/hooks/api/kb/analytics-schema").then((m) => m.wikiPageStatsContract),
+);
+
+const wikiStalePagesContract = lazyContract(() =>
+  import("@/hooks/api/kb/analytics-schema").then((m) => m.wikiStalePagesContract),
+);
+
+const wikiContributorsContract = lazyContract(() =>
+  import("@/hooks/api/kb/analytics-schema").then((m) => m.wikiContributorsContract),
+);
+
+export interface WikiAnalyticsParams {
+  cursor?: string;
+  limit?: number;
+  from?: string;
+  to?: string;
+  spaceId?: number;
+}
+
+export function useWikiPageStats(params?: WikiAnalyticsParams) {
+  const canViewAnalytics = useCan("kb:analytics:view");
+  const queryParams: Record<string, unknown> = { ...params };
+  return useQuery({
+    queryKey: ["knowledge", "kb", "wikiPageStats", queryParams] as const,
+    queryFn: ({ signal }) =>
+      apiClient.get("/kb/wiki/analytics/page-stats", queryParams, signal, wikiPageStatsContract),
+    staleTime: 5 * 60_000,
+    enabled: canViewAnalytics,
+  });
+}
+
+export function useWikiStalePages(params?: WikiAnalyticsParams) {
+  const canViewAnalytics = useCan("kb:analytics:view");
+  const queryParams: Record<string, unknown> = { ...params };
+  return useQuery({
+    queryKey: ["knowledge", "kb", "wikiStalePages", queryParams] as const,
+    queryFn: ({ signal }) =>
+      apiClient.get("/kb/wiki/analytics/stale-pages", queryParams, signal, wikiStalePagesContract),
+    staleTime: 5 * 60_000,
+    enabled: canViewAnalytics,
+  });
+}
+
+export function useWikiContributors(params?: WikiAnalyticsParams) {
+  const canViewAnalytics = useCan("kb:analytics:view");
+  const queryParams: Record<string, unknown> = { ...params };
+  return useQuery({
+    queryKey: ["knowledge", "kb", "wikiContributors", queryParams] as const,
+    queryFn: ({ signal }) =>
+      apiClient.get("/kb/wiki/analytics/contributors", queryParams, signal, wikiContributorsContract),
+    staleTime: 5 * 60_000,
+    enabled: canViewAnalytics,
+  });
+}

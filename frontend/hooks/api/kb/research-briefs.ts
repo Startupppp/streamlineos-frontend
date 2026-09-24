@@ -84,3 +84,29 @@ export function useRateResearchBrief() {
     },
   });
 }
+
+export function useRetryResearchBrief() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:view", {
+    mutationKey: ["kb", "research-briefs", "retry"],
+    mutationFn: (briefId: number) =>
+      apiClient.post<{ briefId: number; jobId: number }>(`/kb/research-briefs/${briefId}/retry`, {}, undefined, kbResearchBriefEnqueueContract),
+    onSuccess: (_, briefId) => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
+    },
+  });
+}
+
+export function useCancelResearchBrief() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:view", {
+    mutationKey: ["kb", "research-briefs", "cancel"],
+    mutationFn: (briefId: number) =>
+      apiClient.delete<void>(`/kb/research-briefs/${briefId}`, undefined, undefined),
+    onSuccess: (_, briefId) => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
+    },
+  });
+}

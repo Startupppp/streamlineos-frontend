@@ -23,9 +23,10 @@ const STATUS_MAP: Record<KbResearchBriefStatus, StatusConfig> = {
 
 interface KbResearchBriefCardProps {
   brief: KbResearchBriefListItem;
+  basePath: string;
 }
 
-export function KbResearchBriefCard({ brief }: KbResearchBriefCardProps) {
+export function KbResearchBriefCard({ brief, basePath }: KbResearchBriefCardProps) {
   const router = useRouter();
   const statusConfig = STATUS_MAP[brief.status];
 
@@ -38,10 +39,10 @@ export function KbResearchBriefCard({ brief }: KbResearchBriefCardProps) {
   }, [brief.createdAt]);
 
   function handleClick() {
-    router.push(`/support/kb/research-briefs/${brief.id}`);
+    router.push(`${basePath}/${brief.id}`);
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       handleClick();

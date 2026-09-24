@@ -23,7 +23,11 @@ function BriefListSkeleton() {
   );
 }
 
-export function KbResearchBriefsPageContent() {
+interface KbResearchBriefsPageContentProps {
+  basePath: string;
+}
+
+export function KbResearchBriefsPageContent({ basePath }: KbResearchBriefsPageContentProps) {
   const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useKbResearchBriefs();
   const allBriefs = data?.pages.flatMap((p) => p.items) ?? [];
@@ -42,7 +46,7 @@ export function KbResearchBriefsPageContent() {
       subtitle="AI-synthesized reports from your knowledge base"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <KbResearchBriefForm />
+        <KbResearchBriefForm basePath={basePath} />
 
         {isLoading ? (
           <BriefListSkeleton />
@@ -62,7 +66,7 @@ export function KbResearchBriefsPageContent() {
         ) : (
           <div className="flex flex-1 min-h-0 flex-col gap-2">
             {allBriefs.map((brief) => (
-              <KbResearchBriefCard key={brief.id} brief={brief} />
+              <KbResearchBriefCard key={brief.id} brief={brief} basePath={basePath} />
             ))}
             {hasNextPage && (
               <div className="flex justify-center pt-2">

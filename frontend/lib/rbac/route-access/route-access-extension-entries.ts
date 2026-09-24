@@ -160,10 +160,10 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/kb/articles" },
   },
   {
-    prefix: "/support/kb/research-briefs",
+    prefix: "/knowledge/research-briefs",
     permission: "kb:pages:view",
     reason:
-      "Research briefs are Knowledge pages, not helpdesk articles. The list page already self-gated on kb:pages:view while its own [briefId] detail resolved to the Helpdesk gate by prefix, so a holder of kb:pages:view saw the list and was denied every row.",
+      "Research briefs live under the Knowledge product. Without this entry the prefix resolves to the generic /knowledge gate, which carries no explicit permission and lets the layout guard alone; a holder of kb:pages:view who lacks an unrelated product-level key was denied.",
     backendRoute: { method: "get", path: "/kb/research-briefs" },
   },
   {

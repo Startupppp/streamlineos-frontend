@@ -42,6 +42,7 @@ interface PageDocumentHeaderProps {
   onApplyImprovement?: (text: string) => void;
   onInsertSummary?: (text: string) => void;
   onOpenCover: () => void;
+  projectId?: number;
 }
 
 export default function PageDocumentHeader({
@@ -53,6 +54,7 @@ export default function PageDocumentHeader({
   onApplyImprovement,
   onInsertSummary,
   onOpenCover,
+  projectId,
 }: PageDocumentHeaderProps) {
   const router = useRouter();
   const deletePage = useDeleteKbPage();
@@ -100,10 +102,14 @@ export default function PageDocumentHeader({
   }
 
   function handleConfirmDelete() {
+    const afterDeleteHref =
+      projectId !== undefined && projectId > 0
+        ? `/build/${projectId}/wiki`
+        : KNOWLEDGE_BASE;
     deletePage.mutate(pageId, {
       onSuccess: () => {
         toast.success("Page moved to trash");
-        router.push(KNOWLEDGE_BASE);
+        router.push(afterDeleteHref);
       },
       onError: () => toast.error("Failed to delete page"),
     });
@@ -135,7 +141,7 @@ export default function PageDocumentHeader({
   return (
     <>
       <div className="flex min-w-0 items-center justify-between gap-3">
-        <PageDocumentBreadcrumb page={page} saveState={saveState} />
+        <PageDocumentBreadcrumb page={page} saveState={saveState} projectId={projectId} />
         <PageDocumentToolbar
           page={page}
           pageId={pageId}

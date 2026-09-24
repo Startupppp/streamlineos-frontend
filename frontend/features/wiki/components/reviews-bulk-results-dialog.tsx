@@ -3,6 +3,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -48,6 +49,10 @@ export function BulkDecideResultsDialog({
           <DialogTitle>
             {succeeded} succeeded · {failures.length} failed
           </DialogTitle>
+          <DialogDescription>
+            The reviews listed below were not decided. Each shows why it was
+            skipped.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2 py-2 max-h-64 overflow-y-auto">
           {failures.map((failure) => (
@@ -59,7 +64,10 @@ export function BulkDecideResultsDialog({
                 {failure.pageTitle}
               </span>
               {failure.outcome !== "succeeded" && (
-                <Badge variant="outline" className="shrink-0 text-dense text-status-danger-ink border-status-danger-rule">
+                <Badge
+                  variant="outline"
+                  className="shrink-0 text-dense text-status-danger-ink border-status-danger-rule"
+                >
                   {OUTCOME_LABELS[failure.outcome]}
                 </Badge>
               )}
@@ -70,7 +78,9 @@ export function BulkDecideResultsDialog({
           <Button type="button" variant="outline" size="sm" onClick={onDismiss}>
             Dismiss
           </Button>
-          {failures.some((f) => f.outcome === "denied" || f.outcome === "conflict") ? null : (
+          {failures.some(
+            (f) => f.outcome === "denied" || f.outcome === "conflict",
+          ) ? null : (
             <Button type="button" size="sm" onClick={handleRetry}>
               Retry {failures.length} failed
             </Button>
