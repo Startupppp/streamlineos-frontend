@@ -27,6 +27,7 @@ interface KanbanColumnProps {
   /** How many of `total` the endpoint actually sent for this stage. */
   shown: number;
   truncated: boolean;
+  roundLabel: string | null;
   isRejected: boolean;
   onCardClick: (candidate: AtsPipelineCandidate) => void;
 }
@@ -37,6 +38,7 @@ const KanbanColumn = memo(function KanbanColumn({
   total,
   shown,
   truncated,
+  roundLabel,
   isRejected,
   onCardClick,
 }: KanbanColumnProps) {
@@ -48,7 +50,14 @@ const KanbanColumn = memo(function KanbanColumn({
       )}>
         <div className="flex items-center gap-2">
           <span className={cn("h-2 w-2 rounded-full", col.dot)} />
-          <span className={cn("text-xs font-semibold tracking-wide", col.headerText)}>{col.label}</span>
+          <span className="min-w-0">
+            <span className={cn("block text-xs font-semibold tracking-wide", col.headerText)}>{col.label}</span>
+            {roundLabel && (
+              <span className="block truncate text-micro text-white/80" title={roundLabel}>
+                {roundLabel}
+              </span>
+            )}
+          </span>
         </div>
         <span
           className={cn(
@@ -143,7 +152,7 @@ export function PipelineKanban({
 
   const stageMap = Object.fromEntries(stages.map((s) => [s.stage, s.candidates]));
   const stageCounts = Object.fromEntries(
-    stages.map((s) => [s.stage, { total: s.total, shown: s.shown, truncated: s.truncated }]),
+    stages.map((s) => [s.stage, { total: s.total, shown: s.shown, truncated: s.truncated, roundLabel: s.roundLabel ?? null }]),
   );
 
   const handleCardClick = useCallback((candidate: AtsPipelineCandidate) => {
@@ -244,6 +253,7 @@ export function PipelineKanban({
               total={stageCounts[col.id]?.total ?? 0}
               shown={stageCounts[col.id]?.shown ?? 0}
               truncated={stageCounts[col.id]?.truncated ?? false}
+              roundLabel={stageCounts[col.id]?.roundLabel ?? null}
               isRejected={col.id === "REJECTED"}
               onCardClick={handleCardClick}
             />
