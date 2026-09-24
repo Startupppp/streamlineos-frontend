@@ -168,6 +168,17 @@ export const humanResourcesQueryKeys = {
     emailSequences: () => [...base, "hr", "emailSequences"] as const,
     emailSequence: (emailSequenceId: number) =>
       [...base, "hr", "emailSequence", emailSequenceId] as const,
+    emailSequenceMetrics: (emailSequenceId: number) =>
+      [...base, "hr", "emailSequence", emailSequenceId, "metrics"] as const,
+    /** Conversion over a window, keyed by the window so two ranges do not share a cache entry. */
+    recruitingAnalytics: (from: string, to: string) =>
+      [...base, "hr", "recruitingAnalytics", from, to] as const,
+    candidateVoiceScreens: (candidateId: number) =>
+      [...base, "hr", "candidate", candidateId, "voiceScreens"] as const,
+    candidateIdentity: (candidateId: number) =>
+      [...base, "hr", "recruitment", "candidates", candidateId, "identity"] as const,
+    candidateWhatsapp: (candidateId: number) =>
+      [...base, "hr", "candidate", candidateId, "whatsapp"] as const,
     pipelineAutomations: () => [...base, "hr", "pipelineAutomations"] as const,
     referrals: () => [...base, "hr", "referrals"] as const,
     talentPools: () => [...base, "hr", "talentPools"] as const,
@@ -351,6 +362,13 @@ export const humanResourcesQueryKeys = {
     hrTalentPoolMembersAll: (poolId: number) =>
       [...base, "hr", "talentPools", poolId, "members"] as const,
     hrInternalJobs: [...base, "hr", "recruitment", "internal-jobs"] as const,
+    internalMyApplications: [...base, "hr", "recruitment", "internal-mobility", "mine"] as const,
+    internalApprovals: [...base, "hr", "recruitment", "internal-mobility", "approvals"] as const,
+    internalApprovalDecision: [...base, "hr", "recruitment", "internal-mobility", "decide"] as const,
+    atsSandboxEvents: [...base, "hr", "recruitment", "developer", "events"] as const,
+    atsDirectorySync: [...base, "hr", "recruitment", "developer", "directory-sync"] as const,
+    atsSandboxDeliveries: [...base, "hr", "recruitment", "developer", "deliveries"] as const,
+    atsSandboxReplay: [...base, "hr", "recruitment", "developer", "replay"] as const,
     hrAssignedInterviews: (page: number) =>
       [...base, "hr", "me", "assigned-interviews", page] as const,
     hrDevicesAll: [...base, "hr", "enterprise", "comp", "devices"] as const,

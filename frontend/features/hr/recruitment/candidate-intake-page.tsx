@@ -98,6 +98,12 @@ const SOURCE_OPTIONS = [
   { value: "DIRECT", label: "Direct" },
   { value: "JOB_PORTAL", label: "Job portal" },
   { value: "CAMPUS", label: "Campus" },
+  /*
+    `INTERNAL` is written by the internal-mobility apply path and was
+    missing from every list on this side, so an employee who applied for an
+    internal opening became a candidate this filter could not select.
+  */
+  { value: "INTERNAL", label: "Internal" },
 ];
 
 export function CandidateIntakePage() {

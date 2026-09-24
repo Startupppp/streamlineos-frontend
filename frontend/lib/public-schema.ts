@@ -1,23 +1,26 @@
 import { z } from "zod";
 
+/**
+ * The candidate's own view of their application.
+ *
+ * Six coarse statuses rather than the pipeline's seven. The endpoint's token
+ * travels in a URL — into mail archives, browser history and referrer headers —
+ * so the response carries a first name and nothing else that identifies anyone.
+ */
 export const publicApplicationStatusContract = z.object({
-  status: z.string(),
+  status: z.enum(["received", "in_review", "interview", "offer", "hired", "rejected"]),
+  statusText: z.string(),
   appliedAt: z.string().nullable(),
   updatedAt: z.string(),
-  job: z
-    .object({
-      title: z.string().nullable(),
-      location: z.string().nullable(),
-      type: z.string().nullable(),
-    })
-    .nullable(),
-  candidate: z
-    .object({
-      firstName: z.string(),
-      lastName: z.string().nullable(),
-      email: z.string().nullable(),
-    })
-    .nullable(),
+  jobTitle: z.string(),
+  jobLocation: z.string().nullable(),
+  jobType: z.string().nullable(),
+  organisationName: z.string(),
+  candidateFirstName: z.string(),
+  /** A live self-schedule link, when there is one to act on. */
+  bookingUrl: z.string().nullable(),
+  /** A live offer awaiting an answer, when there is one. */
+  offerUrl: z.string().nullable(),
 });
 
 export const publicJobListContract = z.object({
@@ -43,8 +46,50 @@ export const publicJobListContract = z.object({
   ),
 });
 
+/**
+ * The screening questions a careers form has to render. `knockoutAnswer` is
+ * deliberately absent from the payload — publishing the passing answer would
+ * tell every applicant what to say.
+ */
+export const publicScreeningQuestionContract = z.object({
+  id: z.string(),
+  question: z.string(),
+  type: z.enum(["TEXT", "YES_NO", "SINGLE_SELECT", "NUMBER"]),
+  required: z.boolean(),
+  options: z.array(z.string()).optional(),
+});
+
+export const publicJobDetailContract = z.object({
+  org: z.object({
+    id: z.string(),
+    name: z.string().nullable(),
+    logo: z.string().nullable(),
+  }),
+  job: z.object({
+    id: z.number().int(),
+    title: z.string(),
+    location: z.string().nullable(),
+    type: z.string().nullable(),
+    experience: z.string().nullable(),
+    salaryMin: z.string().nullable(),
+    salaryMax: z.string().nullable(),
+    openings: z.number().int(),
+    applicationDeadline: z.string().nullable(),
+    createdAt: z.string(),
+    description: z.string().nullable(),
+    requirements: z.string().nullable(),
+    benefits: z.string().nullable(),
+    closingDate: z.string().nullable(),
+    screeningQuestions: z.array(publicScreeningQuestionContract).nullable(),
+  }),
+});
+
 export const publicJobApplicationContract = z.object({
   trackingToken: z.string(),
+  /** True when this email had already applied; the token is the first one's. */
+  duplicate: z.boolean(),
+  resumeStored: z.boolean(),
+  resumeReason: z.string().nullable(),
 });
 
 export const publicOfferDetailContract = z.object({

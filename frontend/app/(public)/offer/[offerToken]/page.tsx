@@ -12,7 +12,7 @@ type Props = { params: Promise<{ offerToken: string }> };
 
 function ExpiredState() {
   return (
-    <main className="min-h-dvh bg-background flex items-center justify-center px-4">
+    <main className="candidate-surface min-h-dvh bg-background flex items-center justify-center px-4">
       <Card className="w-full max-w-md text-center">
         <CardContent className="py-10">
           <svg className="h-10 w-10 mx-auto mb-4 text-muted-foreground opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -32,7 +32,7 @@ function AlreadyRespondedState({ offer }: { offer: PublicOffer }) {
   const countered = offer.offerStatus === "COUNTERED";
 
   return (
-    <main className="min-h-dvh bg-background flex items-center justify-center px-4">
+    <main className="candidate-surface min-h-dvh bg-background flex items-center justify-center px-4">
       <Card className="w-full max-w-md text-center">
         <CardContent className="py-10">
           <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${accepted ? "bg-status-success-surface" : declined ? "bg-status-danger-surface" : countered ? "bg-status-info-surface" : "bg-muted"}`}>
@@ -82,7 +82,7 @@ export default async function OfferAcceptancePage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-dvh bg-background">
+    <main className="candidate-surface min-h-dvh bg-background">
       <div className="max-w-lg mx-auto px-4 py-12">
         <Card>
           <CardHeader className="pb-3">

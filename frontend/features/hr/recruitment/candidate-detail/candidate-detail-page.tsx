@@ -58,7 +58,7 @@ export function CandidateDetailPage() {
 
   const { data: scorecardTemplates } = useScorecardTemplates();
   const generateCompositeScore = useGenerateCandidateCompositeScore();
-  const canManage = useCan("hr:employees:manage");
+  const canManage = useCan("hr:requisitions:manage");
 
   const firstJobPostingId = candidate?.applications?.[0]?.jobPostingId;
   const aiActions = useCandidateAiActions({ candidateId: id, firstJobPostingId });

@@ -24,6 +24,9 @@ const SOURCE_COLORS: Record<string, string> = {
   DIRECT: "bg-muted text-muted-foreground",
   JOB_PORTAL: "bg-category-amber-surface text-category-amber-ink",
   CAMPUS: "bg-category-emerald-surface text-category-emerald-ink",
+  // Internal moves read as their own thing on the board; they are the one
+  // source where the candidate is already an employee.
+  INTERNAL: "bg-category-violet-surface text-category-violet-ink",
 };
 
 function getSourceColor(source: string) {

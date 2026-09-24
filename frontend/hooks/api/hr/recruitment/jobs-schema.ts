@@ -59,13 +59,36 @@ export const createJobPostingContract = jobPostingRowContract;
 
 export const updateJobPostingContract = z.object({ success: z.literal(true) });
 
-export const publishJobContract = z.object({
-  results: z.array(z.object({
+/**
+ * One outcome per board. There is no `PUBLISHED` member, because no adapter
+ * exists that could produce one — the API answers `BLOCKED` with a code the UI
+ * turns into the specific thing the recruiter has to do next.
+ */
+export const jobBoardOutcomeContract = z.discriminatedUnion("status", [
+  z.object({
     platform: z.string(),
-    status: z.string(),
-  })),
-  publishedCount: z.number().int(),
-  externalIds: z.record(z.string(), z.string()),
+    status: z.literal("BLOCKED"),
+    code: z.enum(["no-integration", "inactive", "needs-keys", "not-implemented"]),
+    message: z.string(),
+  }),
+  z.object({
+    platform: z.string(),
+    status: z.literal("QUEUED"),
+    postingId: z.number().int(),
+  }),
+  z.object({
+    platform: z.string(),
+    status: z.literal("FAILED"),
+    message: z.string(),
+    httpStatus: z.number().int().nullable(),
+  }),
+]);
+
+export const publishJobContract = z.object({
+  results: z.array(jobBoardOutcomeContract),
+  queuedCount: z.number().int(),
+  blockedCount: z.number().int(),
+  failedCount: z.number().int(),
 });
 
 export const duplicateJobPostingContract = jobPostingRowContract;

@@ -18,7 +18,7 @@ import { VendorCard } from "@/features/hr/recruitment/vendors/vendor-card";
 import { ErrorState } from "@/components/shared/error-state";
 
 export function VendorsPage() {
-  const isHr = useCan("hr:employees:manage");
+  const isHr = useCan("hr:requisitions:manage");
 
   const { data: vendors = [], isLoading, isError, refetch } = useRecruitmentVendors();
   const deleteVendor = useDeleteVendor();

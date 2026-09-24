@@ -321,7 +321,7 @@ export function useInterviewQuestions(filters?: {
   if (filters?.q) params.set("q", filters.q);
   const qs = params.toString();
 
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:interviews:view", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "interviewQuestions", filters] as const,
     queryFn: ({ signal }) =>
       apiClient.get<InterviewQuestion[]>(`/hr/interview-questions${qs ? `?${qs}` : ""}`, undefined, signal, interviewQuestionListContract),
