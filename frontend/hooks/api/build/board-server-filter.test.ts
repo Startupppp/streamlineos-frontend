@@ -16,7 +16,7 @@ jest.mock("@tanstack/react-query", () => ({
 jest.mock("react", () => ({
   ...jest.requireActual("react"),
   useMemo: (fn: () => unknown) => fn(),
-  useEffect: jest.fn(),
+  useEffect: (effect: () => void) => effect(),
 }));
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
@@ -149,6 +149,45 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/1/tickets",
       expect.objectContaining({ orderBy: "rank", orderDir: "asc", limit: 100 }),
+      forwardedSignal,
+      expect.any(Function),
+    );
+  });
+
+  it("does not fetch a next page until the caller explicitly requests it", () => {
+    const fetchNextPage = jest.fn();
+    mockInfiniteQuery.mockReturnValue({
+      data: { pages: [{ data: [{ id: 1 }] }] },
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+
+    const result = useProjectBoardTickets(1);
+
+    expect(result.data).toEqual([{ id: 1 }]);
+    expect(result.isTruncated).toBe(true);
+    expect(fetchNextPage).not.toHaveBeenCalled();
+    void result.fetchNextPage();
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes due-date bounds to the server", () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client");
+    (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
+
+    const opts = useCaptureQueryOptions(7, {
+      dueDateFrom: "2026-01-01",
+      dueDateTo: "2026-01-31",
+    });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/build/7/tickets",
+      expect.objectContaining({
+        dueDateFrom: "2026-01-01",
+        dueDateTo: "2026-01-31",
+      }),
       forwardedSignal,
       expect.any(Function),
     );

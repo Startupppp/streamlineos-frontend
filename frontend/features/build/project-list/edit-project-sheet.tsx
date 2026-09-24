@@ -46,7 +46,7 @@ import { MemberPicker } from "@/components/members/member-picker";
 import {
   MembersSelector,
   ReassignDialog,
-} from "@/features/build/settings/project-members-section";
+} from "@/features/build/settings/project-member-selector";
 import {
   editProjectSchema,
   toProjectPriority,

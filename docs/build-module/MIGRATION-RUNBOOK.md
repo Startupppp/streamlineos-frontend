@@ -1,10 +1,8 @@
 # Migration runbook — Sprint/Cycle and QA Bug contraction
 
-Every **code** precondition for all six remaining phases is met and merged. What is not met is
-**deployment**, and that is the only thing standing between this runbook and execution.
+**Status:** the Sprint/Cycle and QA Bug contraction described here was executed in production on 2026-09-22. Do not rerun these files. This document is retained for rollback reasoning and for the ordering rules that apply to future destructive migrations. Current migration state lives in [RELEASE-STATUS.md](./RELEASE-STATUS.md); migration `1177_roadmap_search_id_probe` is not covered by this runbook.
 
-These files live in `backend/migrations/sql/` and are deliberately **not journalled**, so `db:migrate`
-can never pick them up. They are applied by hand, one at a time, in the order below.
+These phase files live in `backend/migrations/sql/` and were deliberately not journalled, so they required explicit one-at-a-time execution in the order below.
 
 ---
 
@@ -19,11 +17,11 @@ no overlap window and no safe ordering without a lockstep deploy.
 A **declaration** must be removed *before* the column is dropped, not after. Drizzle names every declared
 column in its INSERT column list — with `default` as the value, even when the TypeScript object never
 mentions the field — so a declaration that outlives its column raises `42703` on every insert and every
-bare select. This is the opposite of what `lane-1-cycle-cutover.md` originally said.
+bare select. An earlier cutover plan stated the reverse; this rule is the corrected authority.
 
 ---
 
-## Preconditions, and their current state
+## Preconditions recorded for the completed contraction
 
 | # | Precondition | State |
 |---|---|---|
@@ -31,15 +29,11 @@ bare select. This is the opposite of what `lane-1-cycle-cutover.md` originally s
 | P2 | No Drizzle declaration names those columns | **MET** |
 | P3 | No application code reads or writes `build.sprints` | **MET** |
 | P4 | No application code writes `build.bugs` | **MET** |
-| P5 | The merged code is **deployed to production** | **NOT MET — blocks everything below** |
-| P6 | `b-qa-bug-03-verify.sql` returns 0 for all 14 checks | **NOT RUN** — read-only, needs a connection |
-| P7 | Every `tickets.sprint_id` value is archived in `build.sprint_binding_archive` | **UNVERIFIED** — phase 04's own DO-block enforces it and aborts if unmet |
+| P5 | The merged code is deployed to production | **MET before execution** |
+| P6 | `b-qa-bug-03-verify.sql` returns 0 for all 14 checks | **MET before execution** |
+| P7 | Every `tickets.sprint_id` value is archived in `build.sprint_binding_archive` | **MET by the phase 04 guard** |
 
-**P5 is not a formality.** Production runs the code that existed before this work. That code reads
-`tickets.sprint_id` on nearly every Build read path. Applying phase 04 before the deploy drops the column
-under a running reader and raises `42703` on live traffic. Phase 04's guard is a *data* check; it will
-not stop this, and `lane-1-cycle-cutover.md` says so in its own words: the application cutover is the only
-thing standing between phase 04 and an outage.
+**P5 is not a formality.** Applying a destructive migration before the matching code deploy drops an object under a running reader and raises `42703` on live traffic. A data guard cannot prove application compatibility.
 
 ---
 
@@ -71,7 +65,7 @@ Take a snapshot before step 3. The precedent in this repo is a named RDS snapsho
 | Step | Action | Reversible? |
 |---|---|---|
 | 1 | **Deploy** the merged backend and frontend **together** | n/a |
-| 2 | Browser-verify against the deployed build — `FINAL-BROWSER-QA.md` | n/a |
+| 2 | Browser-verify the deployed release candidate and record evidence in `RELEASE-STATUS.md` | n/a |
 | 3 | Snapshot the cluster | n/a |
 | 4 | `b-qa-bug-03-verify.sql` — 14 read-only checks, all must return 0 | read-only |
 | 5 | `a-sprint-cycle-04-detach.sql` — drops `sprint_id` from 4 tables | `-rollback.sql`, but dropped values survive only in `sprint_binding_archive` |

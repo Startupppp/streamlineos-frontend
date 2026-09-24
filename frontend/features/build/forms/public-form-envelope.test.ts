@@ -38,7 +38,7 @@ import { isContractViolation, parseApiResponse } from "@/lib/api-envelope";
 import {
   fetchPublicForm,
   submitPublicForm,
-} from "@/features/build/forms/public-form-api";
+} from "@/hooks/api/build/public-form";
 import { submitIntake } from "@/features/build/intake/public-intake-api";
 
 /** Exactly what `getFormByToken` returns, before the interceptor sees it. */
@@ -240,6 +240,18 @@ describe("the real call sites resolve the payload, not the envelope", () => {
 
     await expect(fetchPublicForm("tok")).rejects.toThrow(
       "Form not found or no longer active",
+    );
+  });
+
+  it("fetchPublicForm forwards the query abort signal without sending credentials", async () => {
+    stubFetch(WIRE_BODY);
+    const signal = new AbortController().signal;
+
+    await fetchPublicForm("tok", signal);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/public/forms/tok"),
+      expect.objectContaining({ signal, credentials: "omit" }),
     );
   });
 

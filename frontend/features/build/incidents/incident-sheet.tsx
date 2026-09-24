@@ -2,43 +2,19 @@
 
 import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch, type Control, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  incidentFormSchema,
-  type IncidentFormValues,
-} from "@/features/build/incidents/incident-schema";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetClose,
-  SheetBody,
-} from "@/components/ui/sheet";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { incidentFormSchema, type IncidentFormValues } from "@/features/build/incidents/incident-schema";
+import { Sheet, SheetBody, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import dynamic from "next/dynamic";
-
 const TiptapEditor = dynamic(
   () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
   {
@@ -48,28 +24,16 @@ const TiptapEditor = dynamic(
     ),
   },
 );
-import {
-  useCreateIncident,
-  useUpdateIncident,
-} from "@/hooks/api/build/incidents";
+import { useCreateIncident, useUpdateIncident } from "@/hooks/api/build/incidents";
 import { useProject } from "@/hooks/api/build/projects";
+import { useReleases } from "@/hooks/api/build/releases";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
-import type {
-  Incident,
-  IncidentSeverity,
-  IncidentStatus,
-} from "@/types/projects";
+import type { Incident, IncidentDetail, IncidentSeverity, IncidentStatus } from "@/hooks/api/build/incidents-schema";
 
 const SEVERITIES: IncidentSeverity[] = ["critical", "high", "medium", "low"];
-const STATUSES: IncidentStatus[] = [
-  "detected",
-  "investigating",
-  "mitigating",
-  "resolved",
-  "postmortem",
-  "closed",
-];
+const STATUSES: IncidentStatus[] = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"];
+const NO_RELEASE = "none";
 const STATUS_LABELS: Record<IncidentStatus, string> = {
   detected: "Detected",
   investigating: "Investigating",
@@ -86,33 +50,90 @@ const DEFAULT_VALUES: IncidentFormValues = {
   status: "detected",
   impact: "",
   ownerId: "",
+  rootCause: "",
+  customerComms: "",
   detectedAt: "",
   responseDueAt: "",
   resolutionDueAt: "",
   linkedTicketId: "",
+  releaseId: "",
+  followUpWaiverReason: "",
 };
 
 function toLocalDt(iso: string | null): string {
   if (!iso) return "";
   return iso.slice(0, 16);
 }
+function IncidentInputField({
+  control,
+  name,
+  label,
+  type,
+  placeholder,
+}: {
+  control: Control<IncidentFormValues>;
+  name: FieldPath<IncidentFormValues>;
+  label: string;
+  type?: string;
+  placeholder?: string;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel className="text-dense">{label}</FormLabel>
+          <FormControl>
+            <Input {...field} type={type} placeholder={placeholder} className="text-dense" />
+          </FormControl>
+          <FormMessage className="text-micro" />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function IncidentTextareaField({
+  control,
+  name,
+  label,
+  placeholder,
+}: {
+  control: Control<IncidentFormValues>;
+  name: FieldPath<IncidentFormValues>;
+  label: string;
+  placeholder: string;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel className="text-dense">{label}</FormLabel>
+          <FormControl>
+            <Textarea {...field} className="min-h-[72px] resize-none text-dense" placeholder={placeholder} />
+          </FormControl>
+          <FormMessage className="text-micro" />
+        </FormItem>
+      )}
+    />
+  );
+}
 
 interface IncidentSheetProps {
   projectId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editIncident: Incident | null;
+  editIncident: Incident | IncidentDetail | null;
 }
 
-export function IncidentSheet({
-  projectId,
-  open,
-  onOpenChange,
-  editIncident,
-}: IncidentSheetProps) {
+export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: IncidentSheetProps) {
   const create = useCreateIncident();
   const update = useUpdateIncident();
   const { data: project } = useProject(projectId);
+  const { data: releases = [] } = useReleases(projectId);
   const projectKey = project?.key ?? "";
 
   const form = useForm<IncidentFormValues>({
@@ -120,9 +141,7 @@ export function IncidentSheet({
     defaultValues: DEFAULT_VALUES,
   });
   useRegisterDirtyState(open && form.formState.isDirty);
-
-  const INCIDENT_SEVERITIES = ["critical", "high", "medium", "low"] as const;
-  const INCIDENT_STATUSES = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"] as const;
+  const selectedStatus = useWatch({ control: form.control, name: "status" });
 
   useEffect(() => {
     if (!open) return;
@@ -130,10 +149,12 @@ export function IncidentSheet({
       form.reset({
         title: editIncident.title,
         description: editIncident.description ?? "",
-        severity: INCIDENT_SEVERITIES.find((v) => v === editIncident.severity) ?? "medium",
-        status: INCIDENT_STATUSES.find((v) => v === editIncident.status) ?? "detected",
+        severity: SEVERITIES.find((value) => value === editIncident.severity) ?? "medium",
+        status: STATUSES.find((value) => value === editIncident.status) ?? "detected",
         impact: editIncident.impact ?? "",
         ownerId: editIncident.ownerId ?? "",
+        rootCause: editIncident.rootCause ?? "",
+        customerComms: editIncident.customerComms ?? "",
         detectedAt: toLocalDt(editIncident.detectedAt),
         responseDueAt: toLocalDt(editIncident.responseDueAt),
         resolutionDueAt: toLocalDt(editIncident.resolutionDueAt),
@@ -141,6 +162,8 @@ export function IncidentSheet({
           editIncident.linkedTicketId != null
             ? String(editIncident.linkedTicketId)
             : "",
+        releaseId: editIncident.releaseId != null ? String(editIncident.releaseId) : "",
+        followUpWaiverReason: "",
       });
     } else {
       form.reset(DEFAULT_VALUES);
@@ -148,6 +171,16 @@ export function IncidentSheet({
   }, [open, editIncident, form]);
 
   function handleSubmit(values: IncidentFormValues) {
+    const followUpActions = editIncident && "followUpActions" in editIncident
+      ? editIncident.followUpActions
+      : [];
+    const unresolvedFollowUps = followUpActions.filter(
+      (action) => action.status === "open" || action.status === "in_progress",
+    ).length;
+    if (editIncident && values.status === "closed" && unresolvedFollowUps > 0 && !values.followUpWaiverReason.trim()) {
+      form.setError("followUpWaiverReason", { message: "Explain why unresolved follow-ups can be waived" });
+      return;
+    }
     const input = {
       projectId,
       title: values.title,
@@ -156,6 +189,8 @@ export function IncidentSheet({
       status: values.status,
       impact: values.impact || undefined,
       ownerId: values.ownerId || undefined,
+      rootCause: values.rootCause || undefined,
+      customerComms: values.customerComms || undefined,
       detectedAt: values.detectedAt
         ? new Date(values.detectedAt).toISOString()
         : undefined,
@@ -168,11 +203,18 @@ export function IncidentSheet({
       linkedTicketId: values.linkedTicketId
         ? Number(values.linkedTicketId)
         : undefined,
+      releaseId: values.releaseId && values.releaseId !== NO_RELEASE
+        ? Number(values.releaseId)
+        : undefined,
     };
 
     if (editIncident) {
       update.mutate(
-        { ...input, incidentId: editIncident.id },
+        {
+          ...input,
+          incidentId: editIncident.id,
+          followUpWaiverReason: values.followUpWaiverReason.trim() || undefined,
+        },
         {
           onSuccess: () => {
             toast.success("Incident updated");
@@ -300,22 +342,25 @@ export function IncidentSheet({
                 />
               </div>
 
-              <FormField
+              <IncidentInputField
                 control={form.control}
                 name="impact"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-dense">Impact</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        className="text-dense"
-                        placeholder="Who / what is affected?"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-micro" />
-                  </FormItem>
-                )}
+                label="Impact"
+                placeholder="Who / what is affected?"
+              />
+
+              <IncidentTextareaField
+                control={form.control}
+                name="rootCause"
+                label="Root cause"
+                placeholder="What caused the incident?"
+              />
+
+              <IncidentTextareaField
+                control={form.control}
+                name="customerComms"
+                label="Customer communication"
+                placeholder="What has been communicated?"
               />
 
               <FormField
@@ -339,56 +384,23 @@ export function IncidentSheet({
               />
 
               <div className="grid grid-cols-3 gap-3">
-                <FormField
+                <IncidentInputField
                   control={form.control}
                   name="detectedAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-dense">Detected at</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="datetime-local"
-                          className="text-dense"
-                        />
-                      </FormControl>
-                      <FormMessage className="text-micro" />
-                    </FormItem>
-                  )}
+                  label="Detected at"
+                  type="datetime-local"
                 />
-                <FormField
+                <IncidentInputField
                   control={form.control}
                   name="responseDueAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-dense">Response due</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="datetime-local"
-                          className="text-dense"
-                        />
-                      </FormControl>
-                      <FormMessage className="text-micro" />
-                    </FormItem>
-                  )}
+                  label="Response due"
+                  type="datetime-local"
                 />
-                <FormField
+                <IncidentInputField
                   control={form.control}
                   name="resolutionDueAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-dense">Resolution due</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="datetime-local"
-                          className="text-dense"
-                        />
-                      </FormControl>
-                      <FormMessage className="text-micro" />
-                    </FormItem>
-                  )}
+                  label="Resolution due"
+                  type="datetime-local"
                 />
               </div>
 
@@ -413,6 +425,53 @@ export function IncidentSheet({
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="releaseId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-dense">Affected release</FormLabel>
+                    <Select value={field.value || NO_RELEASE} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="No release" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={NO_RELEASE}>No release</SelectItem>
+                        {releases.map((release) => (
+                          <SelectItem key={release.id} value={String(release.id)}>
+                            {release.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-micro" />
+                  </FormItem>
+                )}
+              />
+
+              {editIncident &&
+              "followUpActions" in editIncident &&
+              selectedStatus === "closed" &&
+              editIncident.followUpActions.some(
+                (action) => action.status === "open" || action.status === "in_progress",
+              ) ? (
+                <FormField
+                  control={form.control}
+                  name="followUpWaiverReason"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-dense">Closure waiver</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} className="text-dense min-h-[72px] resize-none" placeholder="Why can unresolved follow-ups be waived?" />
+                      </FormControl>
+                      <FormMessage className="text-micro" />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
             </SheetBody>
 
             <SheetFooter className="px-5 py-3 border-t shrink-0">

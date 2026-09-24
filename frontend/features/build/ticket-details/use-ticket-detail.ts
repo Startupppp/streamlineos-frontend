@@ -41,7 +41,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [localTitle, setLocalTitle] = useState("");
-  const [syncedTitleId, setSyncedTitleId] = useState<number | null>(null);
+  const [syncedTitleVersion, setSyncedTitleVersion] = useState<string | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedAtRef = useRef<string | undefined>(undefined);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -112,12 +112,25 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
         for (const [key, value] of Object.entries(variables)) {
           if (key !== "ticketId" && key !== "expectedUpdatedAt") patch[key] = value;
         }
+        async function handleReapply() {
+          const latest = await refetchTicket();
+          if (!latest.data?.updatedAt) {
+            toast.error(
+              latest.error
+                ? getErrorMessage(latest.error)
+                : "The latest ticket could not be loaded. Try again.",
+            );
+            return;
+          }
+          lastSavedAtRef.current = new Date(latest.data.updatedAt).toISOString();
+          enqueueSaveRef.current?.(patch);
+        }
         toast.warning(
           "This ticket changed elsewhere. Your edit was not saved — the latest version is shown.",
           {
             action: {
               label: "Reapply",
-              onClick: () => enqueueSaveRef.current?.(patch),
+              onClick: handleReapply,
             },
           },
         );
@@ -188,8 +201,9 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     [enqueueSave],
   );
 
-  if (ticket && ticket.id !== syncedTitleId) {
-    setSyncedTitleId(ticket.id);
+  const titleVersion = ticket ? `${ticket.id}:${ticket.updatedAt}:${ticket.title}` : null;
+  if (ticket && syncedTitleVersion !== titleVersion) {
+    setSyncedTitleVersion(titleVersion);
     setLocalTitle(ticket.title);
   }
 

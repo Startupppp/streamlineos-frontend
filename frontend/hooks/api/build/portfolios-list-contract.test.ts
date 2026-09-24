@@ -4,6 +4,7 @@ import { portfolioPageContract, programPageContract } from "./portfolios-schema"
 
 const PORTFOLIOS_SERVICE = "src/modules/build/portfolios/portfolios.service.ts";
 const PROGRAMS_SERVICE = "src/modules/build/portfolios/programs.service.ts";
+const LAST_PAGE = { limit: 50, hasMore: false, nextCursor: null };
 
 function projectionKeys(relativePath: string, method: string): string[] {
   const source = readFileSync(backendPath(relativePath), "utf8");
@@ -11,6 +12,12 @@ function projectionKeys(relativePath: string, method: string): string[] {
   const selectAt = source.indexOf(".select({", start);
   const block = source.slice(selectAt, source.indexOf(".from(", selectAt));
   return [...block.matchAll(/^\s{8}(\w+):/gm)].map((match) => match[1]!);
+}
+
+function firstRowKeys<T extends object>(rows: T[]): string[] {
+  const row = rows[0];
+  if (row === undefined) throw new Error("Expected a parsed contract row");
+  return Object.keys(row);
 }
 
 const PORTFOLIO_ROW = {
@@ -53,46 +60,53 @@ describe("the portfolio and program list contracts describe the rows their endpo
 
   it("asks for no column the portfolio projection omits, which is what threw once a portfolio existed", () => {
     const projected = new Set(projectionKeys(PORTFOLIOS_SERVICE, "async listPortfolios("));
-    const required = Object.keys(portfolioPageContract.shape.data.element.shape);
+    const required = firstRowKeys(portfolioPageContract.parse({
+      data: [PORTFOLIO_ROW],
+      pagination: LAST_PAGE,
+    }).data);
     expect(required.filter((key) => !projected.has(key))).toEqual([]);
   });
 
   it("asks for no column the program projection omits, which is what threw once a program existed", () => {
     const projected = new Set(projectionKeys(PROGRAMS_SERVICE, "async listPrograms("));
-    const required = Object.keys(programPageContract.shape.data.element.shape);
+    const required = firstRowKeys(programPageContract.parse({
+      data: [PROGRAM_ROW],
+      pagination: LAST_PAGE,
+    }).data);
     expect(required.filter((key) => !projected.has(key))).toEqual([]);
   });
 
   it("keeps projectCount on both lists, so each page's count column reads the server value not a stripped zero", () => {
     expect(portfolioPageContract.parse({
       data: [PORTFOLIO_ROW],
-      pagination: { limit: 50, hasMore: false, nextCursor: null },
+      pagination: LAST_PAGE,
     }).data[0]?.projectCount).toBe(2);
     expect(programPageContract.parse({
       data: [PROGRAM_ROW],
-      pagination: { limit: 50, hasMore: false, nextCursor: null },
+      pagination: LAST_PAGE,
     }).data[0]?.projectCount).toBe(4);
   });
 
   it("rejects a status the portfolio pgEnum never emits, where the previous z.string() waved it through", () => {
     expect(() => portfolioPageContract.parse({
       data: [{ ...PORTFOLIO_ROW, status: "ACTIVE" }],
-      pagination: { limit: 50, hasMore: false, nextCursor: null },
+      pagination: LAST_PAGE,
     })).toThrow();
   });
 
   it("rejects a health value outside the portfolio health pgEnum on both lists", () => {
     expect(() => portfolioPageContract.parse({
       data: [{ ...PORTFOLIO_ROW, health: "green" }],
-      pagination: { limit: 50, hasMore: false, nextCursor: null },
+      pagination: LAST_PAGE,
     })).toThrow();
     expect(() => programPageContract.parse({
       data: [{ ...PROGRAM_ROW, health: "green" }],
-      pagination: { limit: 50, hasMore: false, nextCursor: null },
+      pagination: LAST_PAGE,
     })).toThrow();
   });
 
   it("describes the program list as a cursor page, matching the keyset the service now returns", () => {
-    expect(Object.keys(programPageContract.shape)).toEqual(["data", "pagination"]);
+    const page = programPageContract.parse({ data: [], pagination: LAST_PAGE });
+    expect(Object.keys(page)).toEqual(["data", "pagination"]);
   });
 });

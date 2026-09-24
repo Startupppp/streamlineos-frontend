@@ -174,13 +174,16 @@ async function get<T>(
 async function post<T>(
   url: string,
   data?: unknown,
-  opts?: { authenticated?: boolean },
+  opts?: { authenticated?: boolean; headers?: Record<string, string> },
 ): Promise<T> {
   const res = await portalFetch(
     buildUrl(url),
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(opts?.headers ?? {}),
+      },
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
     opts?.authenticated ?? true,

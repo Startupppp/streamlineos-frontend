@@ -292,6 +292,7 @@ export function useUpdateFeedbackPost() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback() });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot });
     },
   });
 }
@@ -305,6 +306,7 @@ export function useMergeFeedbackPost() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback() });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot });
     },
   });
 }
@@ -318,6 +320,7 @@ export function useDeleteFeedbackPost() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback() });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemRoot });
     },
   });
 }

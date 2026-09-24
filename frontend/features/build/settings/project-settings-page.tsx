@@ -23,9 +23,9 @@ import {
 import {
   MembersSelector,
   ReassignDialog,
-  DangerZoneSection,
-  ProjectMemberRolesSection,
-} from "@/features/build/settings/project-members-section";
+} from "@/features/build/settings/project-member-selector";
+import { DangerZoneSection } from "@/features/build/settings/danger-zone-section";
+import { ProjectMemberRolesSection } from "@/features/build/settings/project-member-roles-section";
 import { CustomFieldsSettings } from "@/features/build/settings/custom-fields-settings";
 import { LabelsSettings } from "@/features/build/settings/labels-settings";
 import { StatusesSettings } from "@/features/build/settings/statuses-settings";

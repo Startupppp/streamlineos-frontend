@@ -198,6 +198,46 @@ it("uses storage events when BroadcastChannel is unavailable and survives denied
   await waitFor(() => expect(mutation.result.current.data).toBe("After"));
 });
 
+it("throttles focus and visibility refreshes to active Build queries when BroadcastChannel exists", async () => {
+  const tab = connect();
+  const buildKey = buildWorkQueryKeys.projects.ticket(42);
+  const unrelatedKey = accountingAndSupportQueryKeys.accounting.all;
+  const buildQueryFn = jest.fn(async () => "Build");
+  const unrelatedQueryFn = jest.fn(async () => "Accounting");
+  const buildObserver = new QueryObserver(tab.client, {
+    queryKey: buildKey,
+    queryFn: buildQueryFn,
+    staleTime: Infinity,
+  });
+  const unrelatedObserver = new QueryObserver(tab.client, {
+    queryKey: unrelatedKey,
+    queryFn: unrelatedQueryFn,
+    staleTime: Infinity,
+  });
+  cleanups.push(buildObserver.subscribe(() => {}));
+  cleanups.push(unrelatedObserver.subscribe(() => {}));
+  await waitFor(() => expect(buildQueryFn).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(unrelatedQueryFn).toHaveBeenCalledTimes(1));
+  expect(TabChannel.channels.size).toBe(1);
+  const now = jest.spyOn(Date, "now").mockReturnValue(20_000);
+  jest.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+
+  window.dispatchEvent(new Event("focus"));
+
+  await waitFor(() => expect(buildQueryFn).toHaveBeenCalledTimes(2));
+  expect(unrelatedQueryFn).toHaveBeenCalledTimes(1);
+
+  now.mockReturnValue(20_001);
+  document.dispatchEvent(new Event("visibilitychange"));
+  await act(async () => {});
+  expect(buildQueryFn).toHaveBeenCalledTimes(2);
+
+  now.mockReturnValue(35_001);
+  document.dispatchEvent(new Event("visibilitychange"));
+  await waitFor(() => expect(buildQueryFn).toHaveBeenCalledTimes(3));
+  expect(unrelatedQueryFn).toHaveBeenCalledTimes(1);
+});
+
 it("notifies peers when the server commits but a local success callback throws", async () => {
   const tabA = connect();
   const tabB = connect();

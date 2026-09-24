@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 const mockReplace = jest.fn();
 const mockSearchParamsContainer = { current: new URLSearchParams() };
@@ -9,10 +10,6 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/build/1/backlog",
   useSearchParams: () => mockSearchParamsContainer.current,
   notFound: jest.fn(() => null),
-}));
-
-jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: { user: { id: "user-1" } } }),
 }));
 
 jest.mock("sonner", () => ({
@@ -139,6 +136,9 @@ const READY_TICKETS = {
   isError: false,
   error: undefined,
   refetch: jest.fn(),
+  isTruncated: false,
+  fetchNextPage: jest.fn(),
+  isFetchingNextPage: false,
 };
 
 beforeEach(() => {
@@ -276,101 +276,63 @@ describe("ProjectBacklogPage — project error path", () => {
   });
 });
 
-describe("ProjectBacklogPage — every filter the shared bar writes is applied, not just the five it used to read", () => {
-  const TICKETS = {
-    data: [
-      {
-        id: 1,
-        title: "todo-high-due-early",
-        status: "TODO",
-        type: "TASK",
-        priority: "HIGH",
-        assigneeId: "user-1",
-        cycleId: 7,
-        dueDate: "2026-01-10T00:00:00.000Z",
-        labels: [{ id: 1, ticketId: 1, labelId: 11, createdAt: null }],
-      },
-      {
-        id: 2,
-        title: "doing-low-due-late",
-        status: "IN_PROGRESS",
-        type: "BUG",
-        priority: "LOW",
-        assigneeId: null,
-        cycleId: null,
-        dueDate: "2026-03-20T00:00:00.000Z",
-        labels: [{ id: 2, ticketId: 2, labelId: 22, createdAt: null }],
-      },
-      {
-        id: 3,
-        title: "done-urgent-no-due",
-        status: "DONE",
-        type: "TASK",
-        priority: "URGENT",
-        assigneeId: "user-9",
-        cycleId: 7,
-        dueDate: null,
-        labels: [],
-      },
-    ],
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-  };
+describe("ProjectBacklogPage — server filtering and cursor pagination", () => {
+  it("forwards every shared filter to the server query", () => {
+    mockSearchParamsContainer.current = new URLSearchParams(
+      "q=login&status=TODO,DONE&priority=HIGH,URGENT&type=TASK,BUG&assigneeId=@me,__unassigned__&labels=11,22&cycle=7,8&dueDateFrom=2026-01-01&dueDateTo=2026-02-01",
+    );
 
-  function renderWith(query: string) {
-    mockSearchParamsContainer.current = new URLSearchParams(query);
-    mockUseProjectBoardTickets.mockReturnValue(TICKETS);
     renderPage();
-    return screen
-      .getAllByTestId("data-table-row")
-      .map((node) => node.textContent);
-  }
 
-  it("matches either value of a two-value status filter instead of comparing against the comma-joined string", () => {
-    expect(renderWith("status=TODO,DONE")).toEqual([
-      "todo-high-due-early",
-      "done-urgent-no-due",
-    ]);
+    expect(mockUseProjectBoardTickets).toHaveBeenCalledWith(1, {
+      q: "login",
+      status: "TODO,DONE",
+      priority: "HIGH,URGENT",
+      type: "TASK,BUG",
+      assigneeId: "@me,__unassigned__",
+      labels: "11,22",
+      cycle: "7,8",
+      dueDateFrom: "2026-01-01",
+      dueDateTo: "2026-02-01",
+    });
   });
 
-  it("matches either value of a two-value priority filter", () => {
-    expect(renderWith("priority=HIGH,URGENT")).toEqual([
-      "todo-high-due-early",
-      "done-urgent-no-due",
-    ]);
+  it("renders the server page without filtering the loaded subset again", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("status=TODO");
+    mockUseProjectBoardTickets.mockReturnValue({
+      ...READY_TICKETS,
+      data: [{ id: 9, title: "server-authoritative", status: "DONE", type: "TASK" }],
+    });
+
+    renderPage();
+
+    expect(screen.getByText("server-authoritative")).toBeInTheDocument();
   });
 
-  it("matches either value of a two-value type filter", () => {
-    expect(renderWith("type=TASK,BUG")).toHaveLength(3);
+  it("loads the next cursor page only when the user asks", async () => {
+    const fetchNextPage = jest.fn();
+    mockUseProjectBoardTickets.mockReturnValue({
+      ...READY_TICKETS,
+      isTruncated: true,
+      fetchNextPage,
+    });
+    renderPage();
+    expect(fetchNextPage).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: /load more/i }));
+
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 
-  it("narrows the table for a due-date range rather than rendering a chip over an unfiltered table", () => {
-    expect(renderWith("dueDateFrom=2026-01-01&dueDateTo=2026-02-01")).toEqual([
-      "todo-high-due-early",
-    ]);
-  });
+  it("keeps the load-more action disabled while the next page is loading", () => {
+    mockUseProjectBoardTickets.mockReturnValue({
+      ...READY_TICKETS,
+      isTruncated: true,
+      isFetchingNextPage: true,
+    });
 
-  it("narrows the table for a label filter", () => {
-    expect(renderWith("labels=22")).toEqual(["doing-low-due-late"]);
-  });
+    renderPage();
 
-  it("narrows the table for a cycle filter", () => {
-    expect(renderWith("cycle=7")).toEqual([
-      "todo-high-due-early",
-      "done-urgent-no-due",
-    ]);
-  });
-
-  it("resolves the @me assignee sentinel against the signed-in user instead of dropping every row", () => {
-    expect(renderWith("assigneeId=@me")).toEqual(["todo-high-due-early"]);
-  });
-
-  it("treats a multi-value assignee filter as a union rather than letting __unassigned__ swallow the other picks", () => {
-    expect(renderWith("assigneeId=__unassigned__,user-9")).toEqual([
-      "doing-low-due-late",
-      "done-urgent-no-due",
-    ]);
+    expect(screen.getByRole("button", { name: /load more/i })).toBeDisabled();
   });
 });

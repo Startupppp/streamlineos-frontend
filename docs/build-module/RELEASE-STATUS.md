@@ -1,13 +1,25 @@
 # Build module — Release Status
 
 **Date:** 2026-09-24
-**Authority:** This file supersedes all earlier Build module status documents. See the Historical documents section at the bottom for the eleven prior ledgers.
+**Authority:** This is the single Build release-status document. Point-in-time execution ledgers and browser handoffs have been removed; durable product contracts remain in the numbered documents and canonical page specs.
+
+## Current branch reconciliation
+
+Verified from `codex/build-final-completion` on 2026-09-24:
+
+- `frontend/lib/build/build-route-manifest.ts` contains 65 entries, all `KEEP`.
+- `frontend/app/(authenticated)/build/**/page.tsx` contains the same 65 physical pages.
+- `/build/[projectId]/intake` is one of those canonical routes; Forms and Triage remain separate live pages.
+- The branch contains uncommitted Build implementation work. That work has not yet completed current-branch browser verification.
+- Backend migrations `1177_roadmap_search_id_probe` and `1178_project_programs_list_indexes` are applied to production and ledger-recorded; the verified production evidence is in section 2.
+
+Unless a row explicitly says current branch, SHA-tagged gate and browser results below are previous-release evidence and must be rerun before this branch is released.
 
 ---
 
-## 1. Production frontend / API mismatch
+## 1. Previous-release frontend / API mismatch
 
-**State: FIX MERGED AND BUILD-VERIFIED; NOT YET LIVE — BLOCKED on Vercel**
+**State: POINT-IN-TIME RECORD; CURRENT DEPLOYMENT NOT REVERIFIED IN THIS DOCUMENTATION PASS**
 
 | Fact | Detail |
 |---|---|
@@ -26,7 +38,7 @@
 
 ## 2. Migrations
 
-**State: DONE — applied to production 2026-09-23, all postconditions verified**
+**State: PREVIOUS RELEASE BASELINE VERIFIED; CURRENT BUILD MIGRATIONS 1177 AND 1178 VERIFIED IN PRODUCTION**
 
 | Fact | Detail |
 |---|---|
@@ -39,6 +51,10 @@
 | Defect found and fixed 2026-09-24 | Journalling 1165–1167 at idx 1048–1050 renumbered 1168 and 1169 but left **1170 still at idx 1050**, colliding with 1167. `check:migration-discipline` was failing `[journal-dup-idx]`. Fixed in `ce8bc7ad5` (1170 → idx 1053). |
 | Gates (at `d4ac1d6df`) | `check:migration-discipline` PASS (926 SQL files, 0 new violations); `check:migration-chain` PASS; `check:migration-rollback` PASS; `check:migration-ledger` PASS **against production** — 928 rows / 926 entries, 3 pending, 5 known orphan rows (ids 909–913) below the watermark |
 | Deliberately not applied | `1168_kb_page_grants`, `1169_kb_page_collection_indexes`, `1170_kb_page_reviews_derive_overdue` — the 3 "pending" above. All from KB work outside this release. They sit *above* the watermark, so they are pending, not stranded. |
+| Current Build safety snapshot | `streamlineos-pre-build-1177-1178-20260924-1` was confirmed `AVAILABLE` before application to the production Aurora PostgreSQL 18.4 cluster. |
+| Current Build migrations applied | `1177_roadmap_search_id_probe` and `1178_project_programs_list_indexes` were applied and ledger-recorded at `created_at` `1803000010691` and `1803000010701`, respectively. Exact local SHA-256 hashes matched the ledger. |
+| Current Build catalog postconditions | All 11 expected indexes exist. `app.search_roadmap_item_ids` and `app.search_project_program_ids` exist, are `SECURITY DEFINER`, and are executable by `streamline_app`. |
+| Current Build tenant isolation | Both search functions scope through `app.current_org_id()`; the production cross-tenant probe returned `0`. |
 
 ---
 
@@ -108,14 +124,16 @@ Measured at frontend `f83e1b5ad` / backend `d4ac1d6df`.
 
 Two corrections to earlier revisions of this table:
 
-- **`check:route-census` does not exist.** No script by that name is defined in either `package.json`. Any earlier row claiming it passed was reporting a gate that was never run. The real coverage comes from `check:routes`, `check:module-manifest` and `check:route-thinness`.
+- **Current-branch route census:** `pnpm check:route-census` passes on 2026-09-24: 74 Build-owned routes total, 65 authenticated Build pages, 65 canonical access patterns, and 0 weak cold-load gates. This focused result does not imply the other release gates were rerun.
 - **The frontend Build suite figure was wrong, for a fixable reason.** Four contract specs read backend service files off disk to verify projection alignment, and a frontend-only worktree has no `backend/`, so they errored with `ENOENT` and were counted as failures. Exporting `STREAMLINE_BACKEND_ROOT=<backend worktree>` makes all four pass. They fail identically on `main`; there was never a defect.
 
 ---
 
 ## 7. Active live routes
 
-Verified 2026-09-23 in `frontend/app/(authenticated)/build/[projectId]/`:
+The census contains 74 Build-owned routes: 65 authenticated `/build/**` pages plus nine portal/public collaboration pages. The authenticated manifest and physical page tree agree exactly, and every manifest decision is `KEEP`. The table below calls out the Intake/Forms/Triage distinction because earlier planning documents conflicted on it; the full inventory is in [01-ia-navigation.md](./01-ia-navigation.md).
+
+Verified 2026-09-24 in `frontend/app/(authenticated)/build/[projectId]/`:
 
 | Route | Source file | Status |
 |---|---|---|
@@ -123,13 +141,15 @@ Verified 2026-09-23 in `frontend/app/(authenticated)/build/[projectId]/`:
 | `/build/[projectId]/forms` | `forms/page.tsx` | **LIVE** |
 | `/build/[projectId]/triage` | `triage/page.tsx` | **LIVE** |
 
-Earlier planning documents (`01-ia-navigation.md`, `10-project-intake.md`) recorded a disposition to consolidate and remove the `intake` route in favour of `/forms` and `/triage`. That removal is **NOT in scope for this release**. All three routes are currently live product routes.
+Intake is the operational request queue, Forms owns form definition and publication, and Triage owns broader evidence classification. All three are canonical live product routes.
 
 Use project id `6` as the QA sandbox for any manual verification. Project `5` does not exist in the active organisation.
 
 ---
 
 ## 8. Real-browser verification
+
+**Current branch status: PENDING.** The evidence below belongs to the earlier fixed build at `f83e1b5ad`. It must not be used as proof for the uncommitted implementation currently on `codex/build-final-completion`.
 
 Production cannot be updated (section 1, blocker 2), so the fix was verified two ways: the **failure** was reproduced on live production, and the **fix** was proven against the same live production API and database.
 
@@ -178,20 +198,11 @@ At **375px only**, on `/build/6`, `/build/6/cycles`, `/build/6/triage` and `/bui
 
 ---
 
-## Historical documents
+## Documentation authority
 
-The following eleven files are point-in-time records from sessions on 2026-09-21 and 2026-09-22. Their environment facts (commit SHAs, route counts, database states, migration states) reflect the time they were written and are no longer current.
-
-| File | Covers | Session date |
-|---|---|---|
-| [ACCESS-ROUTE-CLOSURE-STATUS.md](./ACCESS-ROUTE-CLOSURE-STATUS.md) | `/build/access` route removal | 2026-09-22 |
-| [DEAD-BUILD-SURFACE-STATUS.md](./DEAD-BUILD-SURFACE-STATUS.md) | Dead redirect route and file removal | 2026-09-22 |
-| [FINAL-CLOSURE-STATUS.md](./FINAL-CLOSURE-STATUS.md) | Authorization, cold-load gates, migration chain (closure phase) | 2026-09-21 |
-| [FINAL-SPRINT-REMOVAL-STATUS.md](./FINAL-SPRINT-REMOVAL-STATUS.md) | Sprint identity removal; migrations 04/05/06 applied to production | 2026-09-22 |
-| [IMPLEMENTATION-STATUS.md](./IMPLEMENTATION-STATUS.md) | Wave 0/1 coordinator ledger | 2026-09-22 |
-| [NEXT-CLOSURE-STATUS.md](./NEXT-CLOSURE-STATUS.md) | Sprint/Cycle + QA Bug cutover; workload, inbox, migrations 1149–1151 | 2026-09-22 |
-| [PHASE-1-STATUS.md](./PHASE-1-STATUS.md) | Post-closure workstreams; UX hardening; production execution 2026-09-22 | 2026-09-22 |
-| [PHASE-2-DATA-MODEL-STATUS.md](./PHASE-2-DATA-MODEL-STATUS.md) | Sprint/Cycle + QA Bug design; composite FK static verification | 2026-09-22 |
-| [PHASE-2-STATUS.md](./PHASE-2-STATUS.md) | Migrations 1141/1142 applied to production RDS | 2026-09-22 |
-| [PHASE-3-STATUS.md](./PHASE-3-STATUS.md) | My Work / Inbox / All Work / settings navigation consolidation | 2026-09-22 |
-| [PHASE-4-STATUS.md](./PHASE-4-STATUS.md) | Client portal, discovery chain, FE-123 browser verification | 2026-09-22 |
+- Product direction and boundaries: [00-overview.md](./00-overview.md).
+- Canonical route inventory and navigation: [01-ia-navigation.md](./01-ia-navigation.md).
+- Schema and migration design: [02-schemas.md](./02-schemas.md) and [MIGRATION-RUNBOOK.md](./MIGRATION-RUNBOOK.md).
+- Current priorities: [06-prioritized-backlog.md](./06-prioritized-backlog.md).
+- Removed or refused surfaces: [99-kill-list.md](./99-kill-list.md).
+- Unresolved decisions only: [99-open-questions.md](./99-open-questions.md).

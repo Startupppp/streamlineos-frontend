@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { Incident } from "@/types/projects";
+import type { Incident } from "@/hooks/api/build/incidents-schema";
 import { getSlaState } from "./sla";
 
 function TimerRow({

@@ -37,9 +37,17 @@ describe("parsers reject values the backend enum would refuse", () => {
     expect(parsePriorityParam("CATASTROPHIC")).toBeUndefined();
   });
 
+  it("preserves valid multi-select priorities and drops invalid duplicates", () => {
+    expect(parsePriorityParam("high,urgent,high,unknown")).toBe("HIGH,URGENT");
+  });
+
   it("drops an unknown ticket type instead of forwarding it", () => {
     expect(parseTicketTypeParam("bug")).toBe("BUG");
     expect(parseTicketTypeParam("INCIDENT")).toBeUndefined();
+  });
+
+  it("preserves valid multi-select ticket types and drops invalid duplicates", () => {
+    expect(parseTicketTypeParam("bug,story,bug,incident")).toBe("BUG,STORY");
   });
 
   it("falls back when sort, direction or grouping is not in the enum", () => {
@@ -111,6 +119,13 @@ describe("useBuildListUrlState", () => {
       dueDateTo: "2026-02-01",
     });
     expect(result.current.hasActiveFilters).toBe(true);
+  });
+
+  it("forwards multi-select priority and type filters without collapsing them", () => {
+    setUrl("priority=high,urgent&type=bug,story");
+    const { result } = renderHook(() => useBuildListUrlState());
+    expect(result.current.filters.priority).toBe("HIGH,URGENT");
+    expect(result.current.filters.type).toBe("BUG,STORY");
   });
 
   it("forwards cycleId, which the previous My Work reader dropped", () => {

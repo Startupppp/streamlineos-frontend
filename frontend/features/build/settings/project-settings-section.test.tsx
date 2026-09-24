@@ -63,10 +63,16 @@ jest.mock("@/hooks/api/invoices/project-invoice-line-detail", () => ({
   }),
 }));
 
-jest.mock("@/features/build/settings/project-members-section", () => ({
+jest.mock("@/features/build/settings/project-member-selector", () => ({
   MembersSelector: () => <div data-testid="members-selector" />,
   ReassignDialog: () => null,
+}));
+
+jest.mock("@/features/build/settings/danger-zone-section", () => ({
   DangerZoneSection: () => <div data-testid="danger-zone-section" />,
+}));
+
+jest.mock("@/features/build/settings/project-member-roles-section", () => ({
   ProjectMemberRolesSection: () => null,
 }));
 

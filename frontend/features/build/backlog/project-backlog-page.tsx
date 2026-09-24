@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useCallback, useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useProject, useCycles } from "@/hooks/api";
 import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/build";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build";
@@ -17,6 +16,8 @@ import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -48,10 +49,6 @@ import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import { useCan } from "@/hooks/api/access";
 
-function toDueDay(value: string | null): string | null {
-  return value ? value.slice(0, 10) : null;
-}
-
 interface ProjectBacklogPageProps {
   projectId: string;
 }
@@ -59,37 +56,9 @@ interface ProjectBacklogPageProps {
 export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPageProps) {
   const canUpdate = useCan("build:tickets:update");
   const projectId = parseInt(projectIdStr);
-  const {
-    data,
-    isLoading: projectLoading,
-    isError: projectError,
-    error: projectErrorValue,
-    refetch: refetchProject,
-  } = useProject(projectId);
-  const {
-    data: boardTickets,
-    isLoading: ticketsLoading,
-    isError: ticketsError,
-    error: ticketsErrorValue,
-    refetch: refetchTickets,
-  } = useProjectBoardTickets(projectId);
-  const isLoading = projectLoading || ticketsLoading;
-  const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
-  const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
-  const { data: cycles } = useCycles(projectId);
-  const bulkUpdate = useBulkUpdateTickets(projectId);
   const searchParams = useSearchParams();
   const router = useRouter();
   const { setListParams } = useBuildListUrlState();
-
-  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
-
-  const ticketParam = searchParams.get("ticket");
-  const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
-
-  const { data: session } = useSession();
-  const currentUserId = session?.user?.id ?? null;
-
   const {
     q,
     selectedStatuses,
@@ -103,72 +72,55 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     activeFilterCount,
   } = useTicketFilterParams();
   const filtersActive = Boolean(q) || activeFilterCount > 0;
+  const backlogFilters = {
+    q: q || undefined,
+    status:
+      selectedStatuses.length > 0 ? selectedStatuses.join(",") : undefined,
+    priority:
+      selectedPriorities.length > 0
+        ? selectedPriorities.join(",")
+        : undefined,
+    type: selectedTypes.length > 0 ? selectedTypes.join(",") : undefined,
+    assigneeId:
+      selectedAssignees.length > 0
+        ? selectedAssignees.join(",")
+        : undefined,
+    labels:
+      selectedLabels.length > 0 ? selectedLabels.join(",") : undefined,
+    cycle:
+      selectedCycles.length > 0 ? selectedCycles.join(",") : undefined,
+    dueDateFrom: dueDateFrom || undefined,
+    dueDateTo: dueDateTo || undefined,
+  };
+  const {
+    data,
+    isLoading: projectLoading,
+    isError: projectError,
+    error: projectErrorValue,
+    refetch: refetchProject,
+  } = useProject(projectId);
+  const {
+    data: boardTickets,
+    isLoading: ticketsLoading,
+    isError: ticketsError,
+    error: ticketsErrorValue,
+    refetch: refetchTickets,
+    isTruncated,
+    fetchNextPage: fetchMoreTickets,
+    isFetchingNextPage: isFetchingMoreTickets,
+  } = useProjectBoardTickets(projectId, backlogFilters);
+  const isLoading = projectLoading || ticketsLoading;
+  const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
+  const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
+  const { data: cycles } = useCycles(projectId);
+  const bulkUpdate = useBulkUpdateTickets(projectId);
+
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+
+  const ticketParam = searchParams.get("ticket");
+  const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
 
   const tickets = useMemo(() => boardTickets ?? [], [boardTickets]);
-
-  const filteredTickets = useMemo(() => {
-    let result = tickets;
-    if (q) {
-      const lower = q.toLowerCase();
-      result = result.filter(
-        (t) => t.title?.toLowerCase().includes(lower) || t.description?.toLowerCase().includes(lower),
-      );
-    }
-    if (selectedStatuses.length > 0)
-      result = result.filter((t) => selectedStatuses.includes(t.status));
-    if (selectedPriorities.length > 0)
-      result = result.filter(
-        (t) => t.priority !== null && selectedPriorities.includes(t.priority),
-      );
-    if (selectedTypes.length > 0)
-      result = result.filter((t) => selectedTypes.includes(t.type));
-    if (selectedAssignees.length > 0) {
-      result = result.filter((t) =>
-        selectedAssignees.some((id) => {
-          if (id === "__unassigned__") return !t.assigneeId;
-          if (id === "@me") return currentUserId !== null && t.assigneeId === currentUserId;
-          return t.assigneeId === id;
-        }),
-      );
-    }
-    if (selectedLabels.length > 0) {
-      result = result.filter((t) =>
-        (t.labels ?? []).some((mapping) =>
-          selectedLabels.includes(String(mapping.labelId)),
-        ),
-      );
-    }
-    if (selectedCycles.length > 0) {
-      result = result.filter(
-        (t) => t.cycleId !== null && selectedCycles.includes(String(t.cycleId)),
-      );
-    }
-    if (dueDateFrom) {
-      result = result.filter((t) => {
-        const due = toDueDay(t.dueDate);
-        return due !== null && due >= dueDateFrom;
-      });
-    }
-    if (dueDateTo) {
-      result = result.filter((t) => {
-        const due = toDueDay(t.dueDate);
-        return due !== null && due <= dueDateTo;
-      });
-    }
-    return result;
-  }, [
-    tickets,
-    q,
-    selectedStatuses,
-    selectedPriorities,
-    selectedTypes,
-    selectedAssignees,
-    selectedLabels,
-    selectedCycles,
-    dueDateFrom,
-    dueDateTo,
-    currentUserId,
-  ]);
 
   const members = useMemo(() => {
     if (!data?.members) return [];
@@ -236,6 +188,10 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [handleBulkUpdate],
   );
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
+  const handleLoadMore = useCallback(
+    () => void fetchMoreTickets(),
+    [fetchMoreTickets],
+  );
 
   const handleSelectionChange = useCallback((sel: Set<string | number>) => {
     setSelectedIds(sel);
@@ -257,7 +213,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     isLoading,
     isError: ticketsError,
     error: ticketsErrorValue,
-    isEmpty: filteredTickets.length === 0,
+    isEmpty: tickets.length === 0,
   });
 
   const columns = useMemo<DataTableColumn<Ticket>[]>(
@@ -422,11 +378,6 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           />
         ) : null}
 
-        {/*
-          A 500 on GET /build/:id/tickets flattens to `[]` here, so the table
-          used to render "No tickets yet" over a project with thousands and
-          people created duplicates.
-        */}
         <PageState
           resolution={resolution}
           loading={<DataTableSkeleton mobileCards rows={12} headers={BACKLOG_TABLE_HEADERS} className="flex-1 min-h-0" />}
@@ -445,7 +396,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
         >
           <PmPanel className="min-w-0 flex-1 min-h-0 flex flex-col">
             <DataTable
-              data={filteredTickets}
+              data={tickets}
               columns={columns}
               getRowKey={(ticket) => ticket.id}
               onRowClick={handleRowClick}
@@ -458,6 +409,24 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
               mobileCard={renderMobileCard}
               className="border-0 rounded-none flex-1 min-h-0"
             />
+            {isTruncated ? (
+              <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border/40 px-3 py-2">
+                <ListTruncationNotice
+                  shown={tickets.length}
+                  hint="Load more to see additional tickets."
+                  className="flex-1 border-0 px-0 py-0"
+                />
+                <LoadingButton
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  isPending={isFetchingMoreTickets}
+                  onClick={handleLoadMore}
+                >
+                  Load more
+                </LoadingButton>
+              </div>
+            ) : null}
           </PmPanel>
         </PageState>
       </PmPageShell>

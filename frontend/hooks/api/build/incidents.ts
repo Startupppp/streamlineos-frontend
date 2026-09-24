@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -17,7 +18,7 @@ import type {
   AddIncidentDecisionInput,
   CreateIncidentFollowUpActionInput,
   UpdateIncidentFollowUpActionInput,
-} from "@/types/projects";
+} from "@/hooks/api/build/incidents-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 
@@ -59,18 +60,76 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
     queryFn: ({ signal }) => apiClient.get<Incident[]>(`/build/${projectId}/incidents`, params, signal, incidentListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
+    refetchOnWindowFocus: "always",
   });
 }
 
 export function useIncident(projectId?: number, incidentId?: number) {
   const canView = useCan("build:incidents:view");
-  return useQuery<IncidentDetail>({
+  const query = useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.incidents.detail(projectId ?? 0, incidentId ?? 0),
-    queryFn: ({ signal }) =>
-      apiClient.get<IncidentDetail>(`/build/${projectId}/incidents/${incidentId}`, undefined, signal, incidentDetailContract),
+    queryFn: ({ signal, pageParam }) => {
+      const params: Record<string, string> = { limit: "100" };
+      if (pageParam.updatesCursor !== undefined)
+        params.updatesCursor = String(pageParam.updatesCursor);
+      if (pageParam.decisionsCursor !== undefined)
+        params.decisionsCursor = String(pageParam.decisionsCursor);
+      if (pageParam.followUpActionsCursor !== undefined)
+        params.followUpActionsCursor = String(pageParam.followUpActionsCursor);
+      return apiClient.get<IncidentDetail>(
+        `/build/${projectId}/incidents/${incidentId}`,
+        params,
+        signal,
+        incidentDetailContract,
+      );
+    },
+    initialPageParam: {} as {
+      updatesCursor?: number;
+      decisionsCursor?: number;
+      followUpActionsCursor?: number;
+    },
+    getNextPageParam: (last) => {
+      const pagination = last.childrenPagination;
+      if (
+        !pagination.updates.hasMore &&
+        !pagination.decisions.hasMore &&
+        !pagination.followUpActions.hasMore
+      )
+        return undefined;
+      return {
+        updatesCursor: pagination.updates.hasMore
+          ? pagination.updates.nextCursor ?? undefined
+          : last.updates.at(-1)?.id ?? 1,
+        decisionsCursor: pagination.decisions.hasMore
+          ? pagination.decisions.nextCursor ?? undefined
+          : last.decisions.at(-1)?.id ?? 1,
+        followUpActionsCursor: pagination.followUpActions.hasMore
+          ? pagination.followUpActions.nextCursor ?? undefined
+          : last.followUpActions.at(-1)?.id ?? 1,
+      };
+    },
     enabled: canView && !!projectId && !!incidentId,
-    staleTime: 60_000,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always",
   });
+  const data = useMemo(() => {
+    const pages = query.data?.pages;
+    if (!pages?.length) return undefined;
+    const first = pages[0];
+    const last = pages.at(-1) ?? first;
+    const unique = <T extends { id: number }>(rows: T[]) =>
+      Array.from(new Map(rows.map((row) => [row.id, row])).values());
+    return {
+      ...first,
+      updates: unique(pages.flatMap((page) => page.updates)),
+      decisions: unique(pages.flatMap((page) => page.decisions)),
+      followUpActions: unique(pages.flatMap((page) => page.followUpActions)),
+      childrenPagination: last.childrenPagination,
+    } satisfies IncidentDetail;
+  }, [query.data]);
+  return { ...query, data };
 }
 
 export function useCreateIncident() {

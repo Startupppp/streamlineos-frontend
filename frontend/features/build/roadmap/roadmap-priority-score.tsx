@@ -22,11 +22,6 @@ interface RoadmapPriorityScoreProps {
  * present. When it is not, the plain RICE score stands and the reason travels
  * with it, so a weighted number is never implied by its absence.
  */
-/**
- * What the linked accounts are worth, and how much of that the backend actually
- * knows. A null total is "no linked account told us its value" and is rendered
- * as unknown; it is never shown as a zero, which would read as "worth nothing".
- */
 function LinkedRevenueBadge({ tierWeighting }: { tierWeighting: RoadmapTierWeighting }) {
   const display = useOrgDisplay();
   const { linkedRevenue, revenueKnownAccountCount, linkedAccountCount } = tierWeighting;

@@ -210,6 +210,7 @@ function makeRisk(overrides: Partial<Risk>): Risk {
     ownerId: null,
     mitigation: null,
     linkedTicketId: null,
+    createdBy: null,
     deletedAt: null,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",

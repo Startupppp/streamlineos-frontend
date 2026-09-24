@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { portalApiClient } from "@/lib/portal-api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import type {
@@ -8,6 +9,7 @@ import type { SubmitChangeRequestResponse } from "@/features/portal/lib/portal-t
 
 export function useSubmitChangeRequest(projectId: number) {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
 
   return useMutation({
     mutationKey: ["portal", "projects", projectId, "change-requests"],
@@ -15,11 +17,13 @@ export function useSubmitChangeRequest(projectId: number) {
       portalApiClient.post<SubmitChangeRequestResponse>(
         `/portal/v1/projects/${projectId}/change-requests`,
         input,
+        operation.configFor(input),
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.portal.projectOverview(projectId),
       });
+      operation.settle();
     },
   });
 }

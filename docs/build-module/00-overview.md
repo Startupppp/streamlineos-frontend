@@ -82,7 +82,7 @@ A child company is a separate Organization. The Organization is selected globall
 | The project sidebar links Cycles to `/build/1/sprints`; that route has no page and renders the Projects surface | Production route and `frontend/app/(authenticated)/build/[projectId]/cycles/page.tsx` | P0 |
 | `/build/6/workload` canonicalizes to `/build/6?view=workload`, while a physical workload page also exists | Production redirect and `frontend/app/(authenticated)/build/[projectId]/workload/page.tsx` | P0 |
 | My Work, Templates, Backlog, Intake, Files, and Analytics rendered another surface or an under-specified generic surface during the crawl | Production routes listed in each page specification | P0/P1 |
-| Production exposes 83 authenticated Build pages, while primary project navigation contains nine direct destinations plus 26 tools under More tools | Route census and production project sidebar | P1 |
+| Current code owns 74 Build routes: 65 authenticated Build pages plus nine portal/public collaboration pages | `pnpm check:route-census`; `frontend/lib/build/build-route-manifest.ts` | Evidence |
 | Organization Command Center showed two projects and 84 open issues, proving production data is sufficient for organization and project audit | `/build/command-center` | Evidence |
 | Several list pages remained on skeletons during a bounded wait, obscuring empty/error/slow distinctions | `/build/managed-products`, `/build/portfolios`, `/build/programs`, `/build/teams` | P0 |
 
@@ -133,8 +133,8 @@ Build owns projects, work items, cycles, delivery planning, project governance, 
 - `04-shared-components.md`: deep shared modules and their interfaces.
 - `05-performance-caching.md`: endpoint risks, caching, invalidation, optimistic and realtime rules.
 - `06-prioritized-backlog.md`: P0/P1/P2 dependency order and effort.
-- `07-claude-parallel-execution.md`: worktree-based parallel implementation prompts, status rules, review, and integration flow.
-- `10-*.md`: 109 self-contained page implementation specifications covering 92 physical Build-owned routes and 17 target routes.
+- `08-build-os-flowcharts.md`: current audience flows, capability map, and competitive positioning.
+- `10-*.md`: self-contained contracts for canonical live pages and approved target pages; redirect-only duplicate-route specs are removed.
 - `99-kill-list.md`: features and routes to remove or refuse.
 - `99-open-questions.md`: unresolved decisions only.
 

@@ -6,25 +6,14 @@ import { useProject } from "@/hooks/api";
 import { useViews, useProjectBoardTickets } from "@/hooks/api/build";
 import { useBugs } from "@/hooks/api/build/bugs";
 import { useBoardSavedViews } from "./use-board-saved-views";
-import {
-  applyDisplayOptionParams,
-  hydrateDisplayOptions,
-  useDisplayOptions,
-  writeDisplayOptionParams,
-} from "./use-display-options";
+import { applyDisplayOptionParams, hydrateDisplayOptions, useDisplayOptions, writeDisplayOptionParams } from "./use-display-options";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { parseViewType, type ViewType } from "./view-switcher";
 import { fromSavedViewLayout } from "@/lib/build/view-types";
-import {
-  INITIAL_FILTERS,
-  type FilterState as WorkloadFilterState,
-} from "./workload-types";
+import { INITIAL_FILTERS, type FilterState as WorkloadFilterState } from "./workload-types";
 import type { KanbanTicket } from "@/features/build/shared/types";
 import { mapBoardTicketToKanban } from "@/features/build/my-tickets/map-board-ticket";
-import {
-  filterHiddenCompletedTickets,
-  getCompletedStatusNames,
-} from "@/features/build/shared/completed-status";
+import { filterHiddenCompletedTickets, getCompletedStatusNames } from "@/features/build/shared/completed-status";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { currentSearchParams } from "@/lib/current-search-params";
 

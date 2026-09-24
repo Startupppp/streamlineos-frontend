@@ -76,10 +76,10 @@ Organization
 ## Migration order
 
 1. **Done.** `1159_build_remove_pm_workspaces` dropped `build.pm_workspaces`, `build.pm_workspace_memberships`, every `pm_workspace_id` column, and renamed `build.project_workspace_members` to `build.build_members`.
-2. Reconcile Sprint/Cycle records into one Cycle identity; migrate ticket references, permissions, events, saved views, reports, and URLs.
-3. Migrate independent QA bugs to canonical `WorkItem.type=BUG`, preserving evidence links and activity.
+2. **Done.** Reconcile Sprint/Cycle records into one Cycle identity; migrate ticket references, permissions, events, saved views, reports, and URLs.
+3. **Done.** Migrate independent QA bugs to canonical `WorkItem.type=BUG`, preserving evidence links and activity.
 4. Version saved-view filters and rewrite removed route/layout references.
-5. Consolidate intake submissions under Form/Triage provenance.
+5. Keep the Intake queue while normalizing request provenance across published Forms, public Intake, and Triage.
 6. Add missing composite tenant foreign keys and partial indexes online.
 7. Introduce audit/outbox fields before moving writers.
 8. Remove duplicate tables/columns only after parity reports and rollback windows close.

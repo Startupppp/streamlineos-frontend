@@ -8,6 +8,7 @@ import { Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -16,18 +17,15 @@ import { useIncident, useDeleteIncident } from "@/hooks/api/build/incidents";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
+import { useReleases } from "@/hooks/api/build/releases";
+import { useTicket } from "@/hooks/api/build/ticket-queries";
 import { IncidentSlaPanel } from "./incident-sla-panel";
 import { IncidentTimeline } from "./incident-timeline";
 import { IncidentSheet } from "./incident-sheet";
 import { IncidentDecisions } from "./incident-decisions";
 import { IncidentFollowUps } from "./incident-follow-ups";
 
-/**
- * Two ladders, and both lost their orange rung: `high` and `investigating` were
- * orange before the migration, and with no orange status they collapsed onto
- * the amber below them. Everything else here means its status and keeps it.
- */
 const SEVERITY_STYLES: Record<string, string> = {
   critical: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
   high: "text-category-orange-ink border-category-orange-rule",
@@ -91,10 +89,17 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
     isError,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useIncident(projectId, incidentId);
-  const { data: membersData } = useOrgMembers(1, 100);
+  const { data: members = [] } = useProjectMembers(projectId);
+  const { data: releases = [], isLoading: releasesLoading } = useReleases(projectId);
+  const { data: linkedTicket, isLoading: linkedTicketLoading } = useTicket(
+    projectId,
+    incident?.linkedTicketId ?? 0,
+  );
   const deleteIncident = useDeleteIncident();
-  const members = membersData?.data ?? [];
 
   const pageState = usePageState({
     permission: "build:incidents:view",
@@ -110,6 +115,9 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   const handleDeleteConfirm = useCallback(() => {
     deleteIncident.mutate(
@@ -162,7 +170,11 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
 
   if (!incident) return null;
 
-  const owner = members.find((m) => m.userId === incident.ownerId);
+  const owner = members.find((member) => member.id === incident.ownerId);
+  const release = releases.find((item) => item.id === incident.releaseId);
+  const unresolvedFollowUps = incident.followUpActions.filter(
+    (action) => action.status === "open" || action.status === "in_progress",
+  ).length;
 
   return (
     <PageWrapper
@@ -193,18 +205,30 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
           <InfoSection label="Customer Comms" value={incident.customerComms} />
           <div className="space-y-1">
             <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Owner</p>
-            <p className="text-xs">{owner ? (owner.name ?? owner.email) : "—"}</p>
+            <p className="text-xs">{owner ? (owner.name ?? owner.email) : "Unassigned"}</p>
           </div>
           {incident.linkedTicketId ? (
             <div className="space-y-1">
               <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Linked Ticket</p>
-              <Badge variant="outline" className="text-micro font-mono">#{incident.linkedTicketId}</Badge>
+              <Badge variant="outline" className="max-w-full text-micro">
+                {linkedTicket
+                  ? `${linkedTicket.project?.key ?? "Ticket"}-${linkedTicket.ticketNumber}: ${linkedTicket.title}`
+                  : linkedTicketLoading
+                    ? "Loading ticket…"
+                    : "Linked ticket unavailable"}
+              </Badge>
             </div>
           ) : null}
           {incident.releaseId ? (
             <div className="space-y-1">
               <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Affected Release</p>
-              <Badge variant="outline" className="text-micro font-mono">#{incident.releaseId}</Badge>
+              <Badge variant="outline" className="text-micro">
+                {release
+                  ? `${release.name} (${release.version})`
+                  : releasesLoading
+                    ? "Loading release…"
+                    : "Release unavailable"}
+              </Badge>
             </div>
           ) : null}
         </div>
@@ -214,6 +238,7 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
           incidentId={incidentId}
           updates={incident.updates}
           canManage={canManage}
+          unresolvedFollowUps={unresolvedFollowUps}
         />
 
         <IncidentFollowUps
@@ -221,6 +246,7 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
           incidentId={incidentId}
           actions={incident.followUpActions}
           canManage={canManage}
+          members={members}
         />
 
         <IncidentDecisions
@@ -228,7 +254,22 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
           incidentId={incidentId}
           decisions={incident.decisions}
           canManage={canManage}
+          members={members}
         />
+
+        {hasNextPage ? (
+          <div className="flex justify-center border-t pt-4">
+            <LoadingButton
+              type="button"
+              variant="outline"
+              onClick={handleLoadMore}
+              isPending={isFetchingNextPage}
+              loadingText="Loading…"
+            >
+              Load older activity
+            </LoadingButton>
+          </div>
+        ) : null}
       </div>
 
       <IncidentSheet

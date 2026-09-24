@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCycles, useCreateCycle } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
@@ -11,14 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { formatShortDate } from "@/lib/date-utils";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetBody,
-} from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -26,20 +19,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Calendar,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
-  AlertTriangle,
-} from "lucide-react";
+import { AlertTriangle, ArrowRight, Calendar, CheckCircle2, Clock } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import {
-  PlusIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-} from "@animateicons/react/lucide";
+import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from "@animateicons/react/lucide";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -47,11 +30,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import {
-  clearEndIfInvalid,
-  planningEndPickerProps,
-  planningStartPickerProps,
-} from "@/lib/date-constraints";
+import { clearEndIfInvalid, planningEndPickerProps, planningStartPickerProps } from "@/lib/date-constraints";
 import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-refinements";
 import type { Cycle } from "@/types/projects";
 
@@ -59,43 +38,17 @@ const DESCRIPTION_MAX = 500;
 
 const createCycleSchema = z
   .object({
-    name: z
-      .string()
-      .min(1, "Name is required")
-      .transform((v) => v.trim())
-      .pipe(
-        z
-          .string()
-          .min(2, "Name must be at least 2 characters")
-          .max(100, "Name must be 100 characters or fewer")
-          .regex(
-            /[A-Za-z0-9]/,
-            "Name must contain at least one letter or number",
-          ),
-      ),
-    description: z
-      .string()
-      .max(
-        DESCRIPTION_MAX,
-        `Description must be ${DESCRIPTION_MAX} characters or fewer`,
-      )
-      .optional(),
+    name: z.string().min(1, "Name is required").transform((v) => v.trim()).pipe(
+      z.string().min(2, "Name must be at least 2 characters").max(100, "Name must be 100 characters or fewer")
+        .regex(/[A-Za-z0-9]/, "Name must contain at least one letter or number"),
+    ),
+    description: z.string().max(DESCRIPTION_MAX, `Description must be ${DESCRIPTION_MAX} characters or fewer`).optional(),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
   })
   .superRefine((data, ctx) => {
-    refineNotBeforeToday(
-      data.startDate,
-      ctx,
-      "startDate",
-      "Start date cannot be in the past",
-    );
-    refineNotBeforeToday(
-      data.endDate,
-      ctx,
-      "endDate",
-      "End date cannot be in the past",
-    );
+    refineNotBeforeToday(data.startDate, ctx, "startDate", "Start date cannot be in the past");
+    refineNotBeforeToday(data.endDate, ctx, "endDate", "End date cannot be in the past");
     refineDateOrder(data, ctx, {
       mode: "after",
       message: "End date must be after start date",
@@ -104,12 +57,7 @@ const createCycleSchema = z
 
 type CreateCycleForm = z.infer<typeof createCycleSchema>;
 
-const FORM_DEFAULTS: CreateCycleForm = {
-  name: "",
-  description: "",
-  startDate: "",
-  endDate: "",
-};
+const FORM_DEFAULTS: CreateCycleForm = { name: "", description: "", startDate: "", endDate: "" };
 
 function hasDuplicateName(cycles: Cycle[] | undefined, name: string): boolean {
   if (!cycles || !name.trim()) return false;
@@ -117,21 +65,16 @@ function hasDuplicateName(cycles: Cycle[] | undefined, name: string): boolean {
   return cycles.some((c) => c.name.trim().toLowerCase() === trimmed);
 }
 
-interface CyclesPageProps {
-  projectId: number;
+function FormError({ message }: { message?: string }) {
+  return message ? <p className="mt-1 text-xs text-destructive" aria-live="polite">{message}</p> : null;
 }
 
+type CyclesPageProps = { projectId: number };
 export function CyclesPage({ projectId }: CyclesPageProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const canManage = useCan("build:workspace:manage");
 
-  const {
-    error,
-    refetch,
-    isError,
-    isLoading,
-    data: cycles,
-  } = useCycles(projectId);
+  const { error, refetch, isError, isLoading, data: cycles } = useCycles(projectId);
   const pageState = usePageState({
     error,
     isError,
@@ -181,17 +124,11 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     void refetch();
   }, [refetch]);
 
-  const {
-    iconRef: completedChevronRef,
-    hoverHandlers: completedChevronHoverHandlers,
-  } = useAnimatedIcon();
+  const { iconRef: completedChevronRef, hoverHandlers: completedChevronHoverHandlers } = useAnimatedIcon();
 
   const watchedStartDate = form.watch("startDate");
   const startPickerBounds = planningStartPickerProps();
-  const endPickerBounds = planningEndPickerProps({
-    mode: "after",
-    startDate: watchedStartDate,
-  });
+  const endPickerBounds = planningEndPickerProps({ mode: "after", startDate: watchedStartDate });
 
   const handleSetStartDate = useCallback(
     (v: string) => {
@@ -228,11 +165,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     [createMutation, projectId, form],
   );
 
-  if (
-    pageState.kind !== "ready" &&
-    pageState.kind !== "empty" &&
-    pageState.kind !== "loading"
-  ) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
       <PageWrapper title="Cycles">
         <PageState
@@ -267,10 +200,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
           <div className="space-y-2">
             <Skeleton className="h-3 w-20" />
             {Array.from({ length: 2 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-card border border-border rounded-lg p-4 flex items-center justify-between"
-              >
+              <div key={i} className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
                 <div className="space-y-1.5">
                   <Skeleton className="h-4 w-36" />
                   <Skeleton className="h-3 w-44" />
@@ -287,10 +217,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     );
   }
 
-  const hasCycles =
-    activeCycles.length > 0 ||
-    upcomingCycles.length > 0 ||
-    completedCycles.length > 0;
+  const hasCycles = activeCycles.length > 0 || upcomingCycles.length > 0 || completedCycles.length > 0;
 
   return (
     <PageWrapper
@@ -309,19 +236,12 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                 New Cycle
               </AnimatedIconButton>
             </SheetTrigger>
-            <SheetContent
-              side="right"
-              className="sm:max-w-md p-0 flex flex-col gap-0"
-            >
+            <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
               <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
                 <SheetTitle>Create Cycle</SheetTitle>
               </SheetHeader>
               <SheetBody className="px-6 py-5">
-                <form
-                  id="cycle-form"
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-5"
-                >
+                <form id="cycle-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                   <div className="space-y-1.5">
                     <Label htmlFor="name">Name</Label>
                     <Input
@@ -329,11 +249,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                       placeholder="e.g. Cycle 1, Q3 Planning..."
                       {...form.register("name")}
                     />
-                    {form.formState.errors.name && (
-                      <p className="text-xs text-destructive mt-1" aria-live="polite">
-                        {form.formState.errors.name.message}
-                      </p>
-                    )}
+                    <FormError message={form.formState.errors.name?.message} />
                     {!form.formState.errors.name && showDuplicateWarning && (
                       <p className="text-xs text-status-warning-ink flex items-center gap-1 mt-1" aria-live="polite">
                         <AlertTriangle className="h-3 w-3 shrink-0" />A cycle
@@ -361,11 +277,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                       {...form.register("description")}
                       rows={3}
                     />
-                    {form.formState.errors.description && (
-                      <p className="text-xs text-destructive mt-1" aria-live="polite">
-                        {form.formState.errors.description.message}
-                      </p>
-                    )}
+                    <FormError message={form.formState.errors.description?.message} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -379,11 +291,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                         fromYear={startPickerBounds.fromYear}
                         toYear={startPickerBounds.toYear}
                       />
-                      {form.formState.errors.startDate && (
-                        <p className="text-xs text-destructive mt-1" aria-live="polite">
-                          {form.formState.errors.startDate.message}
-                        </p>
-                      )}
+                      <FormError message={form.formState.errors.startDate?.message} />
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="endDate">End Date</Label>
@@ -396,11 +304,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                         fromYear={endPickerBounds.fromYear}
                         toYear={endPickerBounds.toYear}
                       />
-                      {form.formState.errors.endDate && (
-                        <p className="text-xs text-destructive mt-1" aria-live="polite">
-                          {form.formState.errors.endDate.message}
-                        </p>
-                      )}
+                      <FormError message={form.formState.errors.endDate?.message} />
                     </div>
                   </div>
                 </form>

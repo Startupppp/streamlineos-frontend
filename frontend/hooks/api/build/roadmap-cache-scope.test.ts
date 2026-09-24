@@ -2,17 +2,6 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 
-/**
- * Every roadmap mutation used to invalidate `roadmap.all`, so deleting one
- * changelog entry refetched the roadmap board and every feedback page. The
- * breadth is pinned here per mutation, because the cheap mistake is to widen
- * one back to `all` while fixing an unrelated staleness bug.
- *
- * The rule the split follows: a feedback post feeds its roadmap item's demand
- * signal and tier weighting, so feedback writes DO move the board. A changelog
- * entry feeds neither, so changelog writes move only the changelog.
- */
-
 const SOURCE = readFileSync(join(__dirname, "roadmap.ts"), "utf8");
 
 function invalidationsIn(hookName: string): string {
@@ -67,6 +56,7 @@ describe("roadmap cache invalidation is scoped to the reports a write actually c
       const body = invalidationsIn(hook);
       expect(body).toContain("roadmap.feedback()");
       expect(body).toContain("roadmap.items()");
+      expect(body).toContain("roadmap.itemRoot");
     },
   );
 
@@ -90,6 +80,12 @@ describe("the narrowed keys still prefix-match what they must reach", () => {
     const item = knowledgeAndSurveysQueryKeys.roadmap.item(7);
     const signals = knowledgeAndSurveysQueryKeys.roadmap.itemSignals(7);
     expect(signals.slice(0, item.length)).toEqual([...item]);
+  });
+
+  it("invalidating the item root reaches every item signal query", () => {
+    const itemRoot = knowledgeAndSurveysQueryKeys.roadmap.itemRoot;
+    const signals = knowledgeAndSurveysQueryKeys.roadmap.itemSignals(7);
+    expect(signals.slice(0, itemRoot.length)).toEqual([...itemRoot]);
   });
 
   it("invalidating the board with no params reaches every filtered board page", () => {

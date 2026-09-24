@@ -59,16 +59,25 @@ export const BUILD_LIST_SHAPE_PARAMS = [
 
 export const BUILD_LIST_CURSOR_PARAM = "cursor";
 
-export function parsePriorityParam(raw: string | null): string | undefined {
+function parseEnumCsv(raw: string | null, allowed: ReadonlySet<string>): string | undefined {
   if (!raw) return undefined;
-  const upper = raw.toUpperCase();
-  return VALID_PRIORITIES.has(upper) ? upper : undefined;
+  const values = Array.from(
+    new Set(
+      raw
+        .split(",")
+        .map((value) => value.trim().toUpperCase())
+        .filter((value) => allowed.has(value)),
+    ),
+  );
+  return values.length > 0 ? values.join(",") : undefined;
+}
+
+export function parsePriorityParam(raw: string | null): string | undefined {
+  return parseEnumCsv(raw, VALID_PRIORITIES);
 }
 
 export function parseTicketTypeParam(raw: string | null): string | undefined {
-  if (!raw) return undefined;
-  const upper = raw.toUpperCase();
-  return VALID_TICKET_TYPES.has(upper) ? upper : undefined;
+  return parseEnumCsv(raw, VALID_TICKET_TYPES);
 }
 
 export function parseSortField(

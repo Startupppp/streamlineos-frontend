@@ -1,4 +1,4 @@
-import type { Incident } from "@/types/projects";
+import type { Incident } from "@/hooks/api/build/incidents-schema";
 
 export interface SlaState {
   responseBreached: boolean;

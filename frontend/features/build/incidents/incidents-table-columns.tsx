@@ -16,7 +16,7 @@ import {
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { Incident } from "@/types/projects";
+import type { Incident } from "@/hooks/api/build/incidents-schema";
 import type { OrgMember } from "@/hooks/api/organization";
 import { getSlaState } from "./sla";
 

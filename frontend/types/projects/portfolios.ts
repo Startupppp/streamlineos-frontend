@@ -86,18 +86,6 @@ export interface Program {
 
 export type ProgramsPage = CursorPage<Program>;
 
-export interface ProgramLinkedProject {
-  id: number;
-  name: string;
-  key: string;
-  status: ProjectStatus;
-  addedAt: string;
-}
-
-export interface ProgramDetail extends Program {
-  projects: CursorPage<ProgramLinkedProject>;
-}
-
 export interface CreateProgramInput {
   name: string;
   description?: string;

@@ -21,17 +21,23 @@ import {
   incidentDecisionSchema,
   type IncidentDecisionValues,
 } from "@/features/build/incidents/incident-schema";
-import type { IncidentDecision } from "@/types/projects";
+import type { IncidentDecision } from "@/hooks/api/build/incidents-schema";
+import type { ProjectMemberRecord } from "@/types/projects";
+import { formatDateTime } from "@/lib/date-utils";
 
-const DecisionEntry = memo(function DecisionEntry({ decision }: { decision: IncidentDecision }) {
+const DecisionEntry = memo(function DecisionEntry({
+  decision,
+  members,
+}: {
+  decision: IncidentDecision;
+  members: ProjectMemberRecord[];
+}) {
+  const member = members.find((item) => item.id === decision.decidedBy);
+  const author = member?.name ?? member?.email ?? (decision.decidedBy ? "Former member" : "System");
   return (
     <div className="space-y-0.5 border-l-2 border-border py-0.5 pl-3">
       <p className="text-micro text-muted-foreground">
-        {decision.decidedBy ?? "System"} ·{" "}
-        {new Date(decision.createdAt).toLocaleString(undefined, {
-          dateStyle: "medium",
-          timeStyle: "short",
-        })}
+        {author} · {formatDateTime(decision.createdAt)}
       </p>
       <p className="whitespace-pre-wrap text-xs text-foreground">{decision.decision}</p>
       {decision.rationale ? (
@@ -125,11 +131,13 @@ export function IncidentDecisions({
   incidentId,
   decisions,
   canManage,
+  members,
 }: {
   projectId: number;
   incidentId: number;
   decisions: IncidentDecision[];
   canManage: boolean;
+  members: ProjectMemberRecord[];
 }) {
   const sorted = useMemo(
     () =>
@@ -150,7 +158,7 @@ export function IncidentDecisions({
       )}
 
       {sorted.map((d) => (
-        <DecisionEntry key={d.id} decision={d} />
+        <DecisionEntry key={d.id} decision={d} members={members} />
       ))}
 
       {canManage && <AddDecisionForm projectId={projectId} incidentId={incidentId} />}

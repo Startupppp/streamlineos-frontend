@@ -77,6 +77,7 @@ describe("incident detail contract carries the postmortem collections", () => {
     });
     expect(parsed.decisions).toHaveLength(1);
     expect(parsed.decisions[0]?.decision).toBe("Fail over to the secondary region");
+    expect(parsed.childrenPagination.decisions.hasMore).toBe(false);
   });
 
   it("keeps the followUpActions array instead of stripping it as an unknown key", () => {
