@@ -54,8 +54,6 @@ export const knowledgeAndSurveysQueryKeys = {
       [...base, "kb", "pages", pageId, "record-links"] as const,
     importJobs: () => [...base, "kb", "import-jobs"] as const,
     exportJobs: () => [...base, "kb", "export-jobs"] as const,
-    articleMigrationPreview: () =>
-      [...base, "kb", "article-migration", "preview"] as const,
     pageAnalytics: () => [...base, "kb", "pageAnalytics"] as const,
     knowledgeGaps: (range?: QueryKeyParams) =>
       range === undefined

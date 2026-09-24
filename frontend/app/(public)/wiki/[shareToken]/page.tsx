@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
+import { cache, type CSSProperties } from "react";
 import { format } from "date-fns";
 import { PublicPageContentLoader } from "@/features/wiki/components/public-page-content-loader";
 import { BACKEND_URL } from "@/lib/backend-url";
@@ -62,23 +62,26 @@ function extractData(raw: unknown): PublicWikiData | null {
       : typeof d.content === "object" && d.content !== null
         ? (d.content as Record<string, unknown>)
         : null,
-    updatedAt: typeof d.updatedAt === "string" ? d.updatedAt : new Date().toISOString(),
+    updatedAt:
+      typeof d.updatedAt === "string" ? d.updatedAt : new Date().toISOString(),
   };
 }
 
-async function fetchPageData(shareToken: string): Promise<PublicWikiData | null> {
-  try {
-    const res = await fetch(`${BACKEND_URL}/public/wiki/${shareToken}`, {
-      cache: "no-store",
-      headers: withCorrelation(new Headers()),
-    });
-    if (!res.ok) return null;
-    const raw: unknown = await res.json();
-    return extractData(raw);
-  } catch {
-    return null;
-  }
-}
+const fetchPageData = cache(
+  async (shareToken: string): Promise<PublicWikiData | null> => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/public/wiki/${shareToken}`, {
+        cache: "no-store",
+        headers: withCorrelation(new Headers()),
+      });
+      if (!res.ok) return null;
+      const raw: unknown = await res.json();
+      return extractData(raw);
+    } catch {
+      return null;
+    }
+  },
+);
 
 type Props = { params: Promise<{ shareToken: string }> };
 
@@ -125,8 +128,7 @@ export default async function PublicWikiPage({ params }: Props) {
           </h1>
         </div>
         <p className="text-xs text-muted-foreground mb-8">
-          Last updated{" "}
-          {format(new Date(data.updatedAt), "MMM d, yyyy")}
+          Last updated {format(new Date(data.updatedAt), "MMM d, yyyy")}
         </p>
         <PublicPageContentLoader content={data.content} />
       </div>
