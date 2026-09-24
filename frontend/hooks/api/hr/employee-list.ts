@@ -32,6 +32,8 @@ export type HrEmployeeCountsParams = Pick<HrEmployeesParams, "search" | "departm
 
 export interface HrEmployeeCounts {
   active: number;
+  /** Invited, account created, never accepted — not headcount. */
+  pending: number;
   inactive: number;
 }
 
