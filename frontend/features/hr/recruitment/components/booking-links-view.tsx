@@ -18,6 +18,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
+import { FindATimeSection } from "@/features/hr/recruitment/scheduling/find-a-time-section";
 
 const STATUS_BADGE: Record<HrBookingLink["status"], { label: string; className: string }> = {
   pending: { label: "Pending", className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
@@ -205,6 +206,15 @@ export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
       title="Interview Booking Links"
       subtitle="Manage self-scheduling links sent to candidates"
     >
+      {/*
+        Above the list, because it is what a recruiter opens this page to do
+        before sending a link: work out which times to offer. The list below is
+        what they come back to afterwards.
+      */}
+      <div className="mb-4">
+        <FindATimeSection />
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <DataTable
