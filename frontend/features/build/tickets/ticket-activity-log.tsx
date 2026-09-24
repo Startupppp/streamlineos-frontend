@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useState } from "react";
-import { formatDistanceToNow } from "date-fns";
+import { formatRelativeTime } from "@/lib/date-utils";
 import {
   Activity,
   ArrowRight,
@@ -56,9 +56,7 @@ interface ActivityItemProps {
 const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
   const Icon = ACTION_ICONS[entry.action] ?? History;
   const actorName = entry.user?.name ?? "Someone";
-  const timeAgo = entry.createdAt
-    ? formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })
-    : "";
+  const timeAgo = formatRelativeTime(entry.createdAt);
   const showTransition = !!(entry.fromValue || entry.toValue);
 
   return (

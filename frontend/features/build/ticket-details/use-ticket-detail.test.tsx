@@ -1,11 +1,14 @@
 import { act, renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
+import { ApiError } from "@/lib/api-envelope";
 import { useTicketDetail } from "./use-ticket-detail";
 
 const mockMutateAsync = jest.fn();
 let mockUpdateOptions: {
   onSuccess?: (data: { updated: boolean; updatedAt: string }) => void;
+  onError?: (error: unknown, variables: Record<string, unknown>) => void;
 } = {};
 
 jest.mock("@/hooks/api", () => ({
@@ -116,4 +119,46 @@ it("serializes rapid ticket updates with the latest server version", async () =>
   });
 
   expect(result.current.saving).toBe(false);
+});
+
+it("offers a reapply action on a version conflict instead of silently dropping the edit", async () => {
+  const conflict = new ApiError("conflict", 409, "PROJECTS_TICKET_CONFLICT");
+  mockMutateAsync.mockImplementation((variables: Record<string, unknown>) => {
+    mockUpdateOptions.onError?.(conflict, variables);
+    return Promise.reject(conflict);
+  });
+
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const { result } = renderHook(
+    () => useTicketDetail({ projectId: 5, ticketId: 7 }),
+    { wrapper: wrapper(client) },
+  );
+
+  await act(async () => {
+    result.current.autoSave({ status: "IN_PROGRESS" });
+    await Promise.resolve();
+  });
+
+  const warn = (toast as unknown as { warning: jest.Mock }).warning;
+  expect(warn).toHaveBeenCalled();
+  const [, options] = warn.mock.calls[0] as [
+    string,
+    { action: { label: string; onClick: () => void } },
+  ];
+  expect(options.action.label).toBe("Reapply");
+
+  mockMutateAsync.mockClear();
+  mockMutateAsync.mockImplementation(() =>
+    Promise.resolve({ updated: true, updatedAt: "2026-09-15T11:00:00.000Z" }),
+  );
+  await act(async () => {
+    options.action.onClick();
+    await Promise.resolve();
+  });
+
+  expect(mockMutateAsync).toHaveBeenCalledWith(
+    expect.objectContaining({ ticketId: 7, status: "IN_PROGRESS" }),
+  );
 });

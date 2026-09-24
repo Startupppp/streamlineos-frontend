@@ -27,7 +27,7 @@ interface BulkPayload {
   assigneeId?: string;
 }
 
-async function fanOutBulk(payload: BulkPayload): Promise<void> {
+async function fanOutBulk(payload: BulkPayload): Promise<number[]> {
   const calls = [...payload.ticketsByProject.entries()].map(
     ([projectId, ticketIds]) =>
       apiClient
@@ -78,6 +78,10 @@ async function fanOutBulk(payload: BulkPayload): Promise<void> {
     const firstError = otherFailures[0]?.reason;
     toast.error(getErrorMessage(firstError));
   }
+
+  return succeeded
+    .filter((r) => r.value.updated > 0)
+    .map((r) => r.value.projectId);
 }
 
 export interface UseMyWorkBulkReturn {
@@ -142,11 +146,16 @@ export function useMyWorkBulk(
       if (ticketsByProject.size === 0) return;
       setIsPendingBulk(true);
       fanOutBulk({ ticketsByProject, ...partial })
-        .then(() => {
+        .then((updatedProjectIds) => {
+          for (const projectId of updatedProjectIds) {
+            queryClient.invalidateQueries({
+              queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+            });
+          }
           queryClient.invalidateQueries({
             queryKey: buildWorkQueryKeys.projects.allWorkAll,
           });
-          setTableSelection(new Set());
+          if (updatedProjectIds.length > 0) setTableSelection(new Set());
         })
         .finally(() => setIsPendingBulk(false));
     },

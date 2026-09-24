@@ -1,12 +1,19 @@
 "use client";
 
 import { useMemo, useCallback, useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { useProject, useCycles } from "@/hooks/api";
 import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/build";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build";
-import { notFound, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CreateTicketDialog } from "@/features/build/tickets/create-ticket-dialog";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
+import {
+  TICKET_FILTER_SPEC,
+  useTicketFilterParams,
+} from "@/features/build/shared/use-ticket-filter-params";
+import { categoryParams } from "@/components/list-view/list-filter-spec";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -41,19 +48,9 @@ import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import { useCan } from "@/hooks/api/access";
 
-const BACKLOG_FILTER_PARAMS = [
-  "q",
-  "status",
-  "priority",
-  "type",
-  "assigneeId",
-  "labels",
-  "cycle",
-  "projectIds",
-  "dueDateFrom",
-  "dueDateTo",
-  "page",
-] as const;
+function toDueDay(value: string | null): string | null {
+  return value ? value.slice(0, 10) : null;
+}
 
 interface ProjectBacklogPageProps {
   projectId: string;
@@ -83,20 +80,29 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   const bulkUpdate = useBulkUpdateTickets(projectId);
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { setListParams } = useBuildListUrlState();
 
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
 
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
 
-  const q = searchParams.get("q") ?? "";
-  const filterStatus = searchParams.get("status") ?? "";
-  const filterPriority = searchParams.get("priority") ?? "";
-  const filterType = searchParams.get("type") ?? "";
-  const filterAssigneeId = searchParams.get("assigneeId") ?? "";
-  const filtersActive = Boolean(
-    q || filterStatus || filterPriority || filterType || filterAssigneeId,
-  );
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id ?? null;
+
+  const {
+    q,
+    selectedStatuses,
+    selectedPriorities,
+    selectedTypes,
+    selectedAssignees,
+    selectedLabels,
+    selectedCycles,
+    dueDateFrom,
+    dueDateTo,
+    activeFilterCount,
+  } = useTicketFilterParams();
+  const filtersActive = Boolean(q) || activeFilterCount > 0;
 
   const tickets = useMemo(() => boardTickets ?? [], [boardTickets]);
 
@@ -108,17 +114,61 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
         (t) => t.title?.toLowerCase().includes(lower) || t.description?.toLowerCase().includes(lower),
       );
     }
-    if (filterStatus) result = result.filter((t) => t.status === filterStatus);
-    if (filterPriority) result = result.filter((t) => t.priority === filterPriority);
-    if (filterType) result = result.filter((t) => t.type === filterType);
-    if (filterAssigneeId) {
-      const assigneeSet = new Set(filterAssigneeId.split(",").filter(Boolean));
+    if (selectedStatuses.length > 0)
+      result = result.filter((t) => selectedStatuses.includes(t.status));
+    if (selectedPriorities.length > 0)
+      result = result.filter(
+        (t) => t.priority !== null && selectedPriorities.includes(t.priority),
+      );
+    if (selectedTypes.length > 0)
+      result = result.filter((t) => selectedTypes.includes(t.type));
+    if (selectedAssignees.length > 0) {
       result = result.filter((t) =>
-        assigneeSet.has("__unassigned__") ? !t.assigneeId : t.assigneeId != null && assigneeSet.has(t.assigneeId),
+        selectedAssignees.some((id) => {
+          if (id === "__unassigned__") return !t.assigneeId;
+          if (id === "@me") return currentUserId !== null && t.assigneeId === currentUserId;
+          return t.assigneeId === id;
+        }),
       );
     }
+    if (selectedLabels.length > 0) {
+      result = result.filter((t) =>
+        (t.labels ?? []).some((mapping) =>
+          selectedLabels.includes(String(mapping.labelId)),
+        ),
+      );
+    }
+    if (selectedCycles.length > 0) {
+      result = result.filter(
+        (t) => t.cycleId !== null && selectedCycles.includes(String(t.cycleId)),
+      );
+    }
+    if (dueDateFrom) {
+      result = result.filter((t) => {
+        const due = toDueDay(t.dueDate);
+        return due !== null && due >= dueDateFrom;
+      });
+    }
+    if (dueDateTo) {
+      result = result.filter((t) => {
+        const due = toDueDay(t.dueDate);
+        return due !== null && due <= dueDateTo;
+      });
+    }
     return result;
-  }, [tickets, q, filterStatus, filterPriority, filterType, filterAssigneeId]);
+  }, [
+    tickets,
+    q,
+    selectedStatuses,
+    selectedPriorities,
+    selectedTypes,
+    selectedAssignees,
+    selectedLabels,
+    selectedCycles,
+    dueDateFrom,
+    dueDateTo,
+    currentUserId,
+  ]);
 
   const members = useMemo(() => {
     if (!data?.members) return [];
@@ -192,11 +242,10 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   }, []);
 
   const handleClearFilters = useCallback(() => {
-    const next = new URLSearchParams(searchParams.toString());
-    for (const param of BACKLOG_FILTER_PARAMS) next.delete(param);
-    const qs = next.toString();
-    router.replace(qs ? `?${qs}` : "?", { scroll: false });
-  }, [router, searchParams]);
+    const cleared: Record<string, string | null> = { q: null, page: null };
+    for (const param of categoryParams(TICKET_FILTER_SPEC)) cleared[param] = null;
+    setListParams(cleared);
+  }, [setListParams]);
 
   const handleRowClick = useCallback(
     (ticket: Ticket) => handleTicketSelect(ticket.id),
@@ -326,7 +375,18 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     );
   }
 
-  if (!data) return notFound();
+  if (!data)
+    return (
+      <PageWrapper title="Backlog">
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="projects"
+          title="Project unavailable"
+          description="This project could not be loaded. Pick another project to carry on."
+          action={{ label: "All Projects", href: "/build" }}
+        />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper
@@ -337,6 +397,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
         <div className={PM_TOOLBAR}>
           <TicketFilterBar
             className="w-full"
+            projectId={projectId}
             members={members}
             statuses={data?.statuses}
           />

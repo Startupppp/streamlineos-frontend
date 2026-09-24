@@ -10,7 +10,7 @@ import { Pencil } from "lucide-react";
 import { SendIcon, LinkIcon, Trash2Icon, XIcon, CirclePlusIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatRelativeTime } from "@/lib/date-utils";
 import type { TicketComment, CommentReaction } from "@/types/projects";
 import { MentionTextarea, type MentionUser } from "@/features/build/comments/mention-textarea";
 import { EmojiReactionBar, type ReactionGroup } from "@/features/build/comments/emoji-reaction-bar";
@@ -94,9 +94,7 @@ function CommentItemComponent({
   onCreateIssue,
 }: CommentItemProps) {
   const user = comment.user;
-  const timeAgo = comment.createdAt
-    ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })
-    : "";
+  const timeAgo = formatRelativeTime(comment.createdAt);
   const isEdited =
     comment.updatedAt &&
     comment.createdAt &&

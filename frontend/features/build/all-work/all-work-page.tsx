@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useState, useEffect } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { UserIcon } from "@animateicons/react/lucide";
@@ -87,24 +87,25 @@ export function AllWorkPage() {
 
   const groups = useMemo(() => groupTickets(tickets, grouping), [tickets, grouping]);
 
-  const [cursorTrail, setCursorTrail] = useState<(string | null)[]>([null]);
+  const [storedTrail, setStoredTrail] = useState<(string | null)[]>([null]);
+  const cursorTrail = useMemo(
+    () =>
+      storedTrail[storedTrail.length - 1] === cursor ? storedTrail : [cursor],
+    [cursor, storedTrail],
+  );
   const hasPrevious = cursorTrail.length > 1;
   const pageNumber = cursorTrail.length;
 
-  useEffect(() => {
-    if (cursor === null) setCursorTrail([null]);
-  }, [cursor]);
-
   const handleNext = useCallback(() => {
     if (!nextCursor) return;
-    setCursorTrail((t) => [...t, nextCursor]);
+    setStoredTrail([...cursorTrail, nextCursor]);
     setCursor(nextCursor);
-  }, [nextCursor, setCursor]);
+  }, [cursorTrail, nextCursor, setCursor]);
 
   const handlePrev = useCallback(() => {
     if (cursorTrail.length <= 1) return;
     const newTrail = cursorTrail.slice(0, -1);
-    setCursorTrail(newTrail);
+    setStoredTrail(newTrail);
     setCursor(newTrail[newTrail.length - 1] ?? null);
   }, [cursorTrail, setCursor]);
 
@@ -171,7 +172,7 @@ export function AllWorkPage() {
     (v: Parameters<typeof handleViewChange>[0]) => {
       handleViewChange(v, () => {
         setTableSelection(new Set());
-        setCursorTrail([null]);
+        setStoredTrail([null]);
       });
     },
     [handleViewChange, setTableSelection],

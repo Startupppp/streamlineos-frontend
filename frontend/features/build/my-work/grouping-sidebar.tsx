@@ -1,7 +1,9 @@
 "use client";
 
-import { memo, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { memo, useCallback, useMemo, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
+import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
+import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import {
   Drawer,
   DrawerContent,
@@ -16,18 +18,6 @@ import { cn } from "@/lib/utils";
 import type { AllWorkTicket } from "@/types/projects";
 
 const PRIORITY_ORDER = ["URGENT", "HIGH", "MEDIUM", "LOW"] as const;
-const PRIORITY_LABELS: Record<string, string> = {
-  URGENT: "Urgent",
-  HIGH: "High",
-  MEDIUM: "Medium",
-  LOW: "Low",
-};
-const PRIORITY_COLORS: Record<string, string> = {
-  URGENT: "bg-status-danger-fill",
-  HIGH: "bg-status-warning-fill",
-  MEDIUM: "bg-status-warning-fill",
-  LOW: "bg-status-info-fill",
-};
 
 interface GroupRow {
   key: string;
@@ -40,14 +30,14 @@ interface SidebarRowProps {
   row: GroupRow;
   isActive: boolean;
   onToggle: (key: string) => void;
-  colorDotClass?: string;
+  leading?: ReactNode;
 }
 
 const SidebarRow = memo(function SidebarRow({
   row,
   isActive,
   onToggle,
-  colorDotClass,
+  leading,
 }: SidebarRowProps) {
   function handleClick() {
     onToggle(row.key);
@@ -64,8 +54,8 @@ const SidebarRow = memo(function SidebarRow({
           : "text-foreground hover:bg-muted/60",
       )}
     >
-      {colorDotClass ? (
-        <span className={cn("h-2 w-2 shrink-0 rounded-full", colorDotClass)} />
+      {leading ? (
+        leading
       ) : row.color ? (
         <span
           className="h-2 w-2 shrink-0 rounded-full"
@@ -96,9 +86,8 @@ function GroupingSidebarBody({
   isLoading,
   className,
 }: GroupingSidebarBodyProps) {
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { setListParams } = useBuildListUrlState();
 
   const labelsParam = searchParams.get("labels") ?? "";
   const priorityParam = searchParams.get("priority") ?? "";
@@ -117,27 +106,14 @@ function GroupingSidebarBody({
     [projectIdsParam],
   );
 
-  const setParam = useCallback(
-    (key: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    },
-    [router, pathname, searchParams],
-  );
-
   const toggleMulti = useCallback(
     (key: string, current: string[], value: string) => {
       const next = current.includes(value)
         ? current.filter((v) => v !== value)
         : [...current, value];
-      setParam(key, next.join(","));
+      setListParams({ [key]: next.join(",") || null });
     },
-    [setParam],
+    [setListParams],
   );
 
   function handleToggleLabel(id: string) {
@@ -180,7 +156,7 @@ function GroupingSidebarBody({
     }
     return PRIORITY_ORDER.filter((p) => counts.has(p)).map((p) => ({
       key: p,
-      label: PRIORITY_LABELS[p] ?? p,
+      label: p.charAt(0) + p.slice(1).toLowerCase(),
       count: counts.get(p) ?? 0,
     }));
   }, [tickets]);
@@ -239,7 +215,7 @@ function GroupingSidebarBody({
                   row={row}
                   isActive={selectedPriorities.includes(row.key)}
                   onToggle={handleTogglePriority}
-                  colorDotClass={PRIORITY_COLORS[row.key]}
+                  leading={<PriorityBadge priority={row.key} />}
                 />
               ))
             )}

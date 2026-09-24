@@ -6,7 +6,6 @@ import {
   mockUseAllWork,
   mockSearchParamsContainer,
   mockDefaultDisplayOptions,
-  mockMakeCursorPaginationStub,
   MockMyWorkContentStub,
   mockPageWrapperStub,
   mockPageTabsToolbarStub,
@@ -16,6 +15,7 @@ import {
   accessDenied,
   defaultAllWork,
   withData,
+  withDataCursor,
 } from "./my-work-page-test-harness";
 
 jest.mock("next/navigation", () => ({
@@ -142,11 +142,7 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
-jest.mock("@/hooks/common/use-cursor-pagination", () => ({
-  useCursorPagination: () => mockMakeCursorPaginationStub(),
-}));
-
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MyWorkPage } from "./my-work-page";
 
 beforeEach(() => {
@@ -265,5 +261,63 @@ describe("MyWorkPage — pagination resets on filter change", () => {
       ([f]: [{ cursor?: string }]) => f?.cursor === undefined,
     );
     expect(callWithoutCursor).toBeTruthy();
+  });
+});
+
+describe("MyWorkPage — Previous walks back one page instead of jumping to the first", () => {
+  function syncUrlFromLastReplace() {
+    const calls = mockReplace.mock.calls;
+    const last = calls[calls.length - 1] as [string] | undefined;
+    const url = last?.[0] ?? "/build/my-work";
+    const query = url.includes("?") ? url.slice(url.indexOf("?") + 1) : "";
+    mockSearchParamsContainer.current = new URLSearchParams(query);
+  }
+
+  it("sends the previous cursor from the walked trail, not a cleared cursor", () => {
+    mockUseAllWork.mockReturnValue(withDataCursor("c1"));
+    const view = render(<MyWorkPage />);
+
+    expect(screen.getByTestId("page-number").textContent).toBe("1");
+    expect(screen.getByTestId("has-previous").textContent).toBe("false");
+
+    screen.getByTestId("next-page").click();
+    syncUrlFromLastReplace();
+    expect(mockSearchParamsContainer.current.get("cursor")).toBe("c1");
+    mockUseAllWork.mockReturnValue(withDataCursor("c2"));
+    view.rerender(<MyWorkPage />);
+
+    expect(screen.getByTestId("page-number").textContent).toBe("2");
+
+    screen.getByTestId("next-page").click();
+    syncUrlFromLastReplace();
+    expect(mockSearchParamsContainer.current.get("cursor")).toBe("c2");
+    mockUseAllWork.mockReturnValue(withDataCursor("c3"));
+    view.rerender(<MyWorkPage />);
+
+    expect(screen.getByTestId("page-number").textContent).toBe("3");
+
+    screen.getByTestId("previous-page").click();
+    syncUrlFromLastReplace();
+    expect(mockSearchParamsContainer.current.get("cursor")).toBe("c1");
+    view.rerender(<MyWorkPage />);
+    expect(screen.getByTestId("page-number").textContent).toBe("2");
+  });
+
+  it("drops a stale cursor when the tab changes so one tab's keyset never pages another", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("cursor=c9");
+    mockUseAllWork.mockReturnValue(withDataCursor("c10"));
+    render(<MyWorkPage />);
+
+    const trigger = screen.getByRole("tab", { name: "Created" });
+    fireEvent.mouseDown(trigger);
+    fireEvent.focus(trigger);
+    fireEvent.click(trigger);
+
+    const calls = mockReplace.mock.calls;
+    const last = calls[calls.length - 1] as [string] | undefined;
+    expect(last?.[0]).toBeDefined();
+    const url = last?.[0] ?? "";
+    expect(url).toContain("tab=created");
+    expect(url).not.toContain("cursor=");
   });
 });

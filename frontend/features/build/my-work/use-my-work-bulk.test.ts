@@ -26,7 +26,15 @@ jest.mock("@/lib/api-envelope", () => ({
 
 jest.mock("@/lib/query-keys/build-work", () => ({
   buildWorkQueryKeys: {
-    projects: { allWorkAll: ["build", "all-work"] },
+    projects: {
+      allWorkAll: ["build", "all-work"],
+      tickets: ({ projectId }: { projectId: number }) => [
+        "build",
+        "projects",
+        projectId,
+        "tickets",
+      ],
+    },
   },
 }));
 
