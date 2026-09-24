@@ -44,6 +44,8 @@ export interface LinkedDocumentListParams {
   limit?: number;
   /** Anything but "active" is for publishers; anyone else is refused with 403. */
   status?: LinkedDocumentStatus | "all";
+  /** Words to find in a document's name, description, category and tags. Two or more characters; the server answers 404 while search is switched off. */
+  q?: string;
 }
 
 export interface LinkedDocumentList {
@@ -56,6 +58,7 @@ export function useLinkedDocuments(params?: LinkedDocumentListParams, options?: 
     limit: params?.limit ?? 30,
     ...(params?.cursor ? { cursor: params.cursor } : {}),
     ...(params?.status && params.status !== "active" ? { status: params.status } : {}),
+    ...(params?.q ? { q: params.q } : {}),
   };
   return useGatedQuery("kb:pages:view", {
     queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments(queryParams),

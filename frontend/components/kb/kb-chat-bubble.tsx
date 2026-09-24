@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { BookOpenTextIcon } from "@animateicons/react/lucide";
+import { Building2 } from "lucide-react";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -62,6 +63,13 @@ export function ChatBubble({
   );
 }
 
+function citationKey(citation: KbAskCitation): string {
+  if (citation.kind === "page") return `page-${citation.pageId}`;
+  if (citation.kind === "source") return `source-${citation.sourceId}`;
+  if (citation.kind === "document") return `document-${citation.linkedDocumentId}`;
+  return `article-${citation.articleId}`;
+}
+
 function Citations({
   citations,
   onCitation,
@@ -71,12 +79,7 @@ function Citations({
 }) {
   const seen = new Set<string>();
   const unique = citations.filter((citation) => {
-    const key =
-      citation.kind === "page"
-        ? `page-${citation.pageId}`
-        : citation.kind === "source"
-          ? `source-${citation.sourceId}`
-          : `article-${citation.articleId}`;
+    const key = citationKey(citation);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -101,6 +104,21 @@ function Citations({
               >
                 <BookOpenTextIcon size={11} />
                 <TruncatedText text={(citation.title ?? "").trim() || "Untitled page"} />
+              </button>
+            );
+          }
+          if (citation.kind === "document") {
+            return (
+              <button
+                key={`document-${citation.linkedDocumentId}`}
+                type="button"
+                data-linked-document-id={citation.linkedDocumentId}
+                aria-label={`HR document: ${(citation.title ?? "").trim() || "Company document"}`}
+                onClick={onCitation}
+                className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-accent transition-colors hover:bg-muted"
+              >
+                <Building2 className="h-[11px] w-[11px] shrink-0" aria-hidden="true" />
+                <TruncatedText text={(citation.title ?? "").trim() || "Company document"} />
               </button>
             );
           }

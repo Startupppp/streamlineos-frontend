@@ -54,6 +54,13 @@ export type KbAskCitation =
       title: string;
       spaceId: number | null;
       updatedAt: string;
+    }
+  | {
+      kind: "document";
+      linkedDocumentId: number;
+      title: string;
+      spaceId: null;
+      updatedAt: string;
     };
 
 export interface KbAskResponse {

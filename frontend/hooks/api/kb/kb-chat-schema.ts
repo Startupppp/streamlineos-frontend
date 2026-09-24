@@ -23,6 +23,13 @@ const kbAskCitationContract = z.discriminatedUnion("kind", [
     spaceId: z.number().int().nullable(),
     updatedAt: z.string(),
   }),
+  z.object({
+    kind: z.literal("document"),
+    linkedDocumentId: z.number().int(),
+    title: z.string(),
+    spaceId: z.null(),
+    updatedAt: z.string(),
+  }),
 ]);
 
 const kbConversationContract = z.object({

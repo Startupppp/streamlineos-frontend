@@ -27,7 +27,7 @@ import {
   useUploadKbSource,
   useDeleteKbSource,
 } from "@/hooks/api/kb/sources";
-import { pageHref } from "@/lib/knowledge-routes";
+import { companyDocumentHref, pageHref } from "@/lib/knowledge-routes";
 import { KbSourcesSheet } from "@/features/wiki/components/kb-sources-sheet";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";
@@ -228,6 +228,8 @@ export default function KnowledgeBasePage() {
   function handleCitationClick(e: React.MouseEvent<HTMLButtonElement>) {
     const pageId = Number(e.currentTarget.dataset.pageId);
     if (pageId) router.push(pageHref(pageId));
+    const linkedDocumentId = Number(e.currentTarget.dataset.linkedDocumentId);
+    if (linkedDocumentId) router.push(companyDocumentHref(linkedDocumentId));
   }
 
   function handleToggleConversations() {

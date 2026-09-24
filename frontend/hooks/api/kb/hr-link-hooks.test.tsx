@@ -120,6 +120,16 @@ describe("useLinkedDocuments", () => {
     await waitFor(() => expect(mockGet).toHaveBeenCalledWith("/kb/linked-documents", { limit: 30, status: "unpublished" }, expect.anything(), expect.anything()));
   });
 
+  it("passes the words of a search, and leaves them out when there are none", async () => {
+    mockGet.mockResolvedValue({ data: [], pagination: { limit: 10, hasMore: false, nextCursor: null } });
+
+    renderHook(() => useLinkedDocuments({ q: "leave policy", limit: 10 }), { wrapper });
+    renderHook(() => useLinkedDocuments({ limit: 12 }), { wrapper });
+
+    await waitFor(() => expect(mockGet).toHaveBeenCalledWith("/kb/linked-documents", { limit: 10, q: "leave policy" }, expect.anything(), expect.anything()));
+    await waitFor(() => expect(mockGet).toHaveBeenCalledWith("/kb/linked-documents", { limit: 12 }, expect.anything(), expect.anything()));
+  });
+
   it("does not ask at all while the caller holds it back", () => {
     renderHook(() => useLinkedDocuments({ limit: 6 }, { enabled: false }), { wrapper });
 

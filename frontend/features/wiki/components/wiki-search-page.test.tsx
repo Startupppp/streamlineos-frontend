@@ -25,6 +25,13 @@ jest.mock("@/hooks/api/kb/search", () => ({
   useKbPageFullSearch: jest.fn(),
 }));
 
+const mockFlags = jest.fn(() => ({ link: false, search: false, ai: false }));
+jest.mock("@/hooks/api/kb/hr-link-config", () => ({ useHrKbLinkFlags: () => mockFlags() }));
+
+jest.mock("@/features/wiki/components/wiki-search-company-documents", () => ({
+  WikiSearchCompanyDocuments: ({ query }: { query: string }) => <div data-testid="company-documents-group">{query}</div>,
+}));
+
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: jest.fn(),
 }));
@@ -216,6 +223,39 @@ beforeEach(() => {
     refetch: jest.fn(),
   });
   usePageState.mockReturnValue({ kind: "ready" });
+  mockFlags.mockReturnValue({ link: false, search: false, ai: false });
+});
+
+describe("WikiSearchPage — company documents group", () => {
+  it("hands the query to the company documents group, which decides for itself whether to show", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=leave"));
+    setupSearch([mockSearchResult()]);
+
+    render(<WikiSearchPage />);
+
+    expect(screen.getByTestId("company-documents-group")).toHaveTextContent("leave");
+  });
+
+  it("says 'No pages found', not 'No results', when company documents are searched too, so a group below is not contradicted", () => {
+    mockFlags.mockReturnValue({ link: true, search: true, ai: false });
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=leave"));
+    setupSearch([]);
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<WikiSearchPage />);
+
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("No pages found");
+  });
+
+  it("keeps saying 'No results' while company documents are not searched, exactly as before", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=leave"));
+    setupSearch([]);
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<WikiSearchPage />);
+
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("No results");
+  });
 });
 
 describe("WikiSearchPage — first-empty vs filtered-empty", () => {
