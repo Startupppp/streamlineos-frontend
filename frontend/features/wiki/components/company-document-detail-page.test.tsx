@@ -147,6 +147,15 @@ describe("CompanyDocumentDetailPage", () => {
     expect(screen.queryByRole("button", { name: "Open file" })).not.toBeInTheDocument();
   });
 
+  it("tells a publisher why an entry was withdrawn, in the words of the person who withdrew it", () => {
+    mockCan.mockReturnValue(true);
+    loaded(detail({ status: "unpublished", unpublishReason: "Replaced by the 2026 handbook.", audiences: [] }));
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByText(/This entry was withdrawn: Replaced by the 2026 handbook\. Employees can no longer see it\./)).toBeInTheDocument();
+  });
+
   it("explains why a withdrawn entry shows no details, rather than showing a blank page", () => {
     mockCan.mockReturnValue(true);
     loaded(detail({ name: null, description: null, category: null, tags: [], documentType: null, effectiveDate: null, version: null, fileName: null, fileSize: null, mimeType: null, hasFile: false, status: "unpublished" }));

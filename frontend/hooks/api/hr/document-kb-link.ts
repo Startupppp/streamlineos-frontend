@@ -84,12 +84,18 @@ export function usePublishDocumentToKb() {
   });
 }
 
+export interface WithdrawDocumentInput {
+  documentId: number;
+  /** Why it is being taken out, in the publisher's words. It goes on the entry and into the audit log. */
+  reason: string;
+}
+
 export function useWithdrawDocumentFromKb() {
   const refresh = useRefreshAfterLinkChange();
   return useAuthorizedMutation("hr:documents:publish", {
     mutationKey: ["hr", "documents", "kbWithdraw"],
-    mutationFn: (documentId: number) =>
-      apiClient.delete<DocumentKbLinkState>(`/hr/documents/${documentId}/kb-link`, undefined, undefined, linkLazy),
+    mutationFn: ({ documentId, reason }: WithdrawDocumentInput) =>
+      apiClient.delete<DocumentKbLinkState>(`/hr/documents/${documentId}/kb-link`, { reason }, undefined, linkLazy),
     onSuccess: refresh,
   });
 }

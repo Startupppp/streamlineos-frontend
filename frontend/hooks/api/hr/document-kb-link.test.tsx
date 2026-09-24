@@ -97,16 +97,16 @@ describe("usePublishDocumentToKb and useWithdrawDocumentFromKb", () => {
     expect(mockPost).toHaveBeenCalledWith("/hr/documents/7/kb-link", { audiences: [{ kind: "DEPARTMENT", refId: "d1" }] }, undefined, expect.anything());
   });
 
-  it("withdraw deletes the entry's link and refreshes every list that could show it", async () => {
+  it("withdraw deletes the entry's link with the reason given, and refreshes every list that could show it", async () => {
     mockDelete.mockResolvedValue(state);
     const spy = jest.spyOn(client, "invalidateQueries");
 
     const { result } = renderHook(() => useWithdrawDocumentFromKb(), { wrapper });
     await act(async () => {
-      await result.current.mutateAsync(7);
+      await result.current.mutateAsync({ documentId: 7, reason: "Superseded by the 2026 handbook" });
     });
 
-    expect(mockDelete).toHaveBeenCalledWith("/hr/documents/7/kb-link", undefined, undefined, expect.anything());
+    expect(mockDelete).toHaveBeenCalledWith("/hr/documents/7/kb-link", { reason: "Superseded by the 2026 handbook" }, undefined, expect.anything());
     expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
   });
 

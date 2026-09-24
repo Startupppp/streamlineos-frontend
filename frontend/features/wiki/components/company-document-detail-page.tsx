@@ -19,6 +19,7 @@ import { formatFileSize } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_COMPANY_DOCUMENTS } from "@/lib/knowledge-routes";
 import { REMOVED_DOCUMENT_TITLE, linkedDocumentTitle } from "@/features/wiki/lib/linked-document-title";
+import { humanWithdrawalReason } from "@/lib/linked-document-withdrawal";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 
 interface CompanyDocumentDetailPageProps {
@@ -40,6 +41,7 @@ function audienceLabel(audience: NonNullable<LinkedDocumentDetail["audiences"]>[
 }
 
 function PublisherNotes({ detail }: { detail: LinkedDocumentDetail }) {
+  const reason = humanWithdrawalReason(detail.unpublishReason);
   return (
     <div className="flex flex-col gap-3">
       {detail.status === "source_removed" ? (
@@ -54,7 +56,9 @@ function PublisherNotes({ detail }: { detail: LinkedDocumentDetail }) {
           <AlertDescription>
             {detail.unpublishReason === "source_no_longer_publishable"
               ? "The document stopped being shareable, so this entry was taken down."
-              : "This entry was withdrawn. Employees can no longer see it."}
+              : reason !== null
+                ? `This entry was withdrawn: ${reason} Employees can no longer see it.`
+                : "This entry was withdrawn. Employees can no longer see it."}
           </AlertDescription>
         </Alert>
       ) : null}

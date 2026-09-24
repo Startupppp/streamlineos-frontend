@@ -116,15 +116,52 @@ describe("DocumentKbLinkPanel", () => {
     expect(screen.getByText("Nobody would see it yet")).toBeInTheDocument();
   });
 
-  it("removes a live entry only after confirmation", async () => {
+  it("removes a live entry only after confirmation, and sends the reason that was typed", async () => {
     renderPanel(stateFixture({ link: liveLink }));
 
     fireEvent.click(screen.getByRole("button", { name: "Remove from Knowledge Base" }));
     expect(mockWithdraw).not.toHaveBeenCalled();
-    fireEvent.click(await screen.findByRole("button", { name: "Remove" }));
+    fireEvent.change(await screen.findByLabelText("Reason"), { target: { value: "  Replaced by the 2026 handbook  " } });
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
 
-    await waitFor(() => expect(mockWithdraw).toHaveBeenCalledWith(7));
+    await waitFor(() => expect(mockWithdraw).toHaveBeenCalledWith({ documentId: 7, reason: "Replaced by the 2026 handbook" }));
     expect(mockToast.success).toHaveBeenCalledWith(expect.stringContaining("removed"));
+  });
+
+  it("will not remove an entry without a reason, and says why, so the audit log always has one", async () => {
+    renderPanel(stateFixture({ link: liveLink }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove from Knowledge Base" }));
+    fireEvent.change(await screen.findByLabelText("Reason"), { target: { value: "   " } });
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+
+    expect(await screen.findByText(/say why it is being taken out/i)).toBeInTheDocument();
+    expect(mockWithdraw).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
+  });
+
+  it("starts each removal with an empty reason, not the last one", async () => {
+    renderPanel(stateFixture({ link: liveLink }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove from Knowledge Base" }));
+    fireEvent.change(await screen.findByLabelText("Reason"), { target: { value: "first" } });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove from Knowledge Base" }));
+
+    expect(await screen.findByLabelText("Reason")).toHaveValue("");
+  });
+
+  it("shows what a person wrote when they withdrew an entry, and not the server's own code", () => {
+    renderPanel(stateFixture({ link: { ...liveLink, status: "unpublished", unpublishReason: "Replaced by the 2026 handbook" }, publishable: true }));
+
+    expect(screen.getByText(/has been withdrawn: Replaced by the 2026 handbook/)).toBeInTheDocument();
+  });
+
+  it("does not present the code for an unexplained withdrawal as if someone had written it", () => {
+    renderPanel(stateFixture({ link: { ...liveLink, status: "unpublished", unpublishReason: "manual" }, publishable: true }));
+
+    expect(screen.getByText("This document was shared before and has been withdrawn.")).toBeInTheDocument();
+    expect(screen.queryByText(/manual/)).not.toBeInTheDocument();
   });
 
   it("shows the message and a copyable reference when the server refuses to add", async () => {

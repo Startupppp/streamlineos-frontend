@@ -1,12 +1,15 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ErrorReference } from "@/components/shared/error-reference";
 import { SourceBadge } from "@/components/shared/source-badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Form } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +22,9 @@ import {
 } from "@/hooks/api/hr/document-kb-link";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { companyDocumentHref } from "@/lib/knowledge-routes";
+import { humanWithdrawalReason } from "@/lib/linked-document-withdrawal";
+import { DocumentWithdrawFormFields } from "./document-withdraw-form-fields";
+import { documentWithdrawSchema, type DocumentWithdrawValues } from "./document-withdraw-schema";
 
 interface DocumentKbLinkPanelProps {
   documentId: number;
@@ -43,9 +49,13 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
   const withdraw = useWithdrawDocumentFromKb();
   const [confirming, setConfirming] = useState<"add" | "remove" | null>(null);
   const [failure, setFailure] = useState<unknown>(null);
+  const withdrawForm = useForm<DocumentWithdrawValues>({ resolver: zodResolver(documentWithdrawSchema), defaultValues: { reason: "" } });
 
   const handleAskAdd = useCallback(() => setConfirming("add"), []);
-  const handleAskRemove = useCallback(() => setConfirming("remove"), []);
+  const handleAskRemove = useCallback(() => {
+    withdrawForm.reset({ reason: "" });
+    setConfirming("remove");
+  }, [withdrawForm]);
   const handleConfirmChange = useCallback((open: boolean) => { if (!open) setConfirming(null); }, []);
 
   const handleConfirmAdd = useCallback(async () => {
@@ -61,18 +71,22 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
     }
   }, [documentId, documentName, publish]);
 
-  const handleConfirmRemove = useCallback(async () => {
-    setFailure(null);
-    try {
-      await withdraw.mutateAsync(documentId);
-      toast.success(`"${documentName}" was removed from the Knowledge Base.`);
-      setConfirming(null);
-    } catch (error) {
-      setFailure(error);
-      setConfirming(null);
-      toast.error(getErrorMessage(error));
-    }
-  }, [documentId, documentName, withdraw]);
+  const handleConfirmRemove = useCallback(
+    () =>
+      withdrawForm.handleSubmit(async ({ reason }) => {
+        setFailure(null);
+        try {
+          await withdraw.mutateAsync({ documentId, reason });
+          toast.success(`"${documentName}" was removed from the Knowledge Base.`);
+          setConfirming(null);
+        } catch (error) {
+          setFailure(error);
+          setConfirming(null);
+          toast.error(getErrorMessage(error));
+        }
+      })(),
+    [documentId, documentName, withdraw, withdrawForm],
+  );
 
   if (state.isError)
     return (
@@ -88,6 +102,7 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
 
   const { link, publishable, blockers, documentAudiences } = state.data;
   const live = link?.status === "active";
+  const withdrawnReason = link ? humanWithdrawalReason(link.unpublishReason) : null;
 
   return (
     <section aria-label="Knowledge Base" className="flex flex-col gap-3 rounded-md border border-border p-3">
@@ -107,7 +122,9 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
         <p className="text-sm text-muted-foreground">
           {link.unpublishReason === "source_no_longer_publishable"
             ? "This document was shared before, and taken down when it stopped being shareable."
-            : "This document was shared before and has been withdrawn."}
+            : withdrawnReason !== null
+              ? `This document was shared before and has been withdrawn: ${withdrawnReason}`
+              : "This document was shared before and has been withdrawn."}
         </p>
       ) : (
         <p className="text-sm text-muted-foreground">Employees cannot see this document in the Knowledge Base.</p>
@@ -172,6 +189,13 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
         onOpenChange={handleConfirmChange}
         title={`Remove "${documentName}" from the Knowledge Base?`}
         description="Employees stop seeing it on their next request. The HR document itself is not touched."
+        content={
+          <Form {...withdrawForm}>
+            <div className="px-0 pb-2">
+              <DocumentWithdrawFormFields form={withdrawForm} />
+            </div>
+          </Form>
+        }
         confirmLabel="Remove"
         destructive
         isPending={withdraw.isPending}
