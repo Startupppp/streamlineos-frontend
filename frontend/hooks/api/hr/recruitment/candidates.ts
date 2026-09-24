@@ -511,11 +511,11 @@ export function useBulkRejectCandidates() {
 }
 
 export function useRecruitmentAnalytics() {
-  const canInterviews = useCan("hr:interviews:view");
+  const canViewRequisitions = useCan("hr:requisitions:view");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.all, "recruitmentAnalytics"] as const,
     queryFn: ({ signal }) => apiClient.get<RecruitmentAnalytics>("/hr/recruitment/analytics", undefined, signal, recruitmentAnalyticsContract),
     staleTime: 2 * 60_000,
-    enabled: canInterviews,
+    enabled: canViewRequisitions,
   });
 }
