@@ -16,3 +16,4 @@ export * from "./research-briefs";
 export * from "./page-ai";
 export * from "./article-ai";
 export * from "./page-collection";
+export * from "./content-health";

@@ -72,11 +72,11 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 | S14 | Analytics — permission-safe, minimum cohort, drill-down | 4 | P1 | LANDED — registered in KbWikiModule (BE-01) |
 | S15 | Content Health — `/knowledge/wiki/manage` | 4 | P1 | LANDED — registered in KbWikiModule (BE-01) |
 | S16 | Ask KB — scope, citations, fallback, budgets | 1/4 | P0/P1 | IN PROGRESS |
-| S17 | Public page — `/wiki/[shareToken]` | 3 | P0 | LANDED — 404/hash/rate-limit verified; token VERSIONING still open |
+| S17 | Public page — `/wiki/[shareToken]` | 3 | P0 | **VERIFIED — token versioning closed by 1192, applied** |
 | S18 | Project wiki adapters | 2 | P0 | BUILT — adapter suites green; checkbox list not re-audited |
 | S19 | Research Briefs moved under Knowledge | 4 | P1 | LANDED — one controller repo-wide; no duplicate left to remove |
 | S20 | `/ask` removal, redirects, aliases | 6 | P0 | VERIFIED — surface deleted, redirect live, not shadowed |
-| S21 | `kb_articles` cutover + destructive contraction | 6 | P1 | NOT STARTED |
+| S21 | `kb_articles` cutover + destructive contraction | 6 | P1 | **VERIFIED — measured against production, ninth pass** |
 | S22 | Async scale — queue lanes, admission, SLOs, DR drills | 5 | P0/P1 | NOT STARTED |
 | S23 | Observability — dashboards, alerts, cost budgets, runbooks | 0/5 | P0 | NOT STARTED |
 
@@ -947,7 +947,8 @@ Record the exact command and its real output in each slice's evidence block. Do 
 | Backend typecheck | `pnpm typecheck` (`tsc --noEmit -p tsconfig.build.json`, `--max-old-space-size=10240`) | Currently **clean**. The only gate that sees an arity change (BE-138). 10240 MB, not 8192 — at 8192 it dies exit 134 printing no type errors (BE-139). |
 | Backend test typecheck | `pnpm typecheck:test` | **21 pre-existing errors**, zero in `modules/kb`. Run after any signature change. |
 | Backend tests | `npx jest <path>` | `*e2e-spec.ts` runs only under `pnpm test:e2e` (BE-137). Never run the full suite while parallel agents are editing. |
-| Migration proof | `pnpm db:apply-one --tag=<tag>` | **BLOCKED on IAM.** Needs `APPLY_ONE_ALLOW_REMOTE=1`. Never `pnpm db:migrate` — it applies every pending migration. |
+| Migration proof | `node D:/agent-work/mig-iam.mjs src/scripts/run-pending-migrations.mjs --tag=<tag> [--dry-run]` | **NOT blocked.** The IAM reading was never a credential problem — the scripts hand `DATABASE_URL` to `postgres()` and never mint a token, so `28P01` means "no token", not "wrong password". The wrapper mints one and spawns the real script. Never `pnpm db:migrate` — it queues every journal entry in array order against a ledger that is reconciled, not replayed. |
+| Migration **applied**? | same wrapper + a probe joining `drizzle.__drizzle_migrations` on sha256 **and** `created_at = when` | A `--dry-run` "already recorded, skipping" is a **tag** match and does not prove the recorded bytes are the bytes on disk. After any migration file is edited, only the hash settles it. |
 | Frontend typecheck | _to be confirmed from `frontend/package.json`_ | frontend tsconfig excludes tests |
 | Frontend tests | _to be confirmed_ | jest `roots` exclude `test/`; specs live under `src/**` |
 | Lint | _to be confirmed_ | two frontend gates are already red on `main` — confirm pre-existing before attributing |
@@ -1791,3 +1792,145 @@ Red and **not** KB-owned:
   either repo. Every DB-backed proof would run against the live cluster.
 - **S21 has not run.** Its precondition is S01–S20 all `VERIFIED`, which this pass does not
   establish.
+
+## Ninth pass — 2026-09-24, S21 was already closed and two documents said otherwise
+
+### The runbook and this ledger both described a world that no longer existed
+
+`MIGRATION-RUNBOOK.md` opened with *"nine applied, **1174 deliberately rolled back and pending
+again**"* and an outstanding-work section claiming *"47 non-spec files carry 750 references"*.
+The slice index here carried S21 as `NOT STARTED`. **All three statements were false**, and
+acting on any of them would have meant re-applying an applied contraction migration or
+re-doing a completed code move.
+
+Measured directly against production Aurora over the IAM wrapper:
+
+| Check | Result |
+|---|---|
+| All eight `kb_article*` tables | **absent** |
+| `kb_page_tags` · `_translations` · `_feedback` · `_restrictions` | **present, `relrowsecurity = true`** |
+| `kb_page_versions` · `_comments` · `_attachments` · `kb_pages` | present, RLS armed |
+| `kb_article_chunks.attachment_id` | **`bigint`** — the widening only the rename revision performs |
+| `kb_article_chunks.article_id` | gone; `page_id` remains |
+| `kb_article_status` / `kb_article_visibility` | **both enums dropped** |
+| `kb_pages` rows | 21 |
+
+### A tag-match skip would have proved nothing; the hash is what closed it
+
+`run-pending-migrations.mjs --tag=1174… --dry-run` reports *already recorded, skipping*. That
+alone was **not** sufficient evidence, because 1174's file had been rewritten from the
+drop-all-eight revision to the rename revision — so a tag-only skip could equally have meant
+"the OLD bytes are recorded and the new ones will never run", which is exactly the failure
+[[an-out-of-order-apply-strands-earlier-migrations]] describes.
+
+Resolved by joining on **both** the sha256 and `created_at = when`, for all ten:
+
+```
+tag                                        when            disk-sha  db-sha    verdict
+1168_kb_page_grants                        1803000010591   cd96f057  cd96f057  MATCH
+1169_kb_page_collection_indexes            1803000010601   6161a8b5  6161a8b5  MATCH
+1170_kb_page_reviews_derive_overdue        1803000010611   25e0b9a3  25e0b9a3  MATCH
+1171_kb_pages_public_token_hash            1803000010621   5598b945  5598b945  MATCH
+1172_kb_pages_external_id                  1803000010631   960ed8cc  960ed8cc  MATCH
+1172a_kb_pages_article_columns             1803000010641   07cb570e  07cb570e  MATCH
+1173_kb_articles_cutover_expand            1803000010651   76ab82a6  76ab82a6  MATCH
+1174_kb_articles_cutover_contract          1803000010661   811baaf0  811baaf0  MATCH
+1175_ai_jobs_expired_lease_index           1803000010671   d0fe4d7a  d0fe4d7a  MATCH
+1176_kb_pages_revoke_dormant_share_tokens  1803000010681   af1750de  af1750de  MATCH
+
+ledger rows: 948   journal entries: 948
+```
+
+`811baaf0…` is the hash of the rename revision now on disk. The bytes that ran are the bytes
+in the tree.
+
+### The code half was closed too, and the "750 references" number was three orders out
+
+`grep -rn kbArticles backend/src/db/` returns **nothing** — the Drizzle schema does not define
+the table at all, so no code can read it and still compile, and `pnpm typecheck` is clean.
+The help-centre kept its routes and filenames and reads `kb_pages`; `assertCanViewArticle`
+(`kb-access.service.ts:90`) reads `kb_page_restrictions`.
+
+**Thirteen** `kbArticle*` identifiers survive repo-wide, not 750:
+
+- 2 are constructor injections of `KbArticlesService` in `support-kb-gap.service.ts` — a
+  service that still exists and writes to `kb_pages`. Legitimate.
+- 11 are **stale test doubles** mocking `db.query.kbArticles` / `db.query.kbArticleAttachments`
+  — properties the real object no longer has, in
+  `kb-departed-actor.spec.ts`, `kb-lifecycle-deindex.spec.ts`, `kb-s10-fixes.spec.ts`,
+  `kb-doc-ai-buffered-connection-release.spec.ts`. Dead weight, not live reads. Queued for
+  removal once the lanes editing those directories report. See
+  [[actor-migration-leaves-stale-test-doubles]].
+
+### Three mandatory surfaces are genuinely unbuilt, and one of them was marked LANDED
+
+Measured by listing the route tree rather than reading the slice table:
+
+1. **`/knowledge/wiki/manage` (Content Health) has no frontend at all.**
+   `find frontend/app -path '*knowledge*' -iname '*manage*'` returns nothing, and nothing in
+   the app renders the string "Content Health". S15 was marked `LANDED — registered in
+   KbWikiModule` on the strength of the **backend** controller alone. The backend half is real
+   (`kb-content-health.controller.ts`, two routes under `kb:pages:manage`, counts + id-cursor
+   signals). The user-visible half does not exist. This is the exact error the fourth pass
+   already named — *"registering a controller does not make its route measurable"* — repeated
+   one slice later.
+
+2. **Content Health is missing three required signal types.** The spec requires stale, unowned,
+   unverified, empty, broken-link, **overexposed**, **duplicate/contradiction candidates**,
+   **unanswered searches**, and overdue reviews. `contentHealthSignalTypeEnum` declares six;
+   the three in bold are absent.
+
+3. **The project wiki `history` adapter does not exist.** `build/[projectId]/wiki/page.tsx` and
+   `.../wiki/[pageId]/page.tsx` are on disk; there is no `history` route, though the spec
+   requires "project wiki home/page/history adapters" and the canonical
+   `/knowledge/wiki/doc/[pageId]/history` is built and can be adapted.
+
+Every other mandatory surface in the catalogue resolves to a real `page.tsx`, including the
+`/knowledge` redirect, chat, wiki home, private, shared, spaces + `[spaceId]`, templates,
+reviews, import, analytics, trash, doc + history, search, research briefs + detail, the two
+project wiki adapters, and `(public)/wiki/[shareToken]`.
+
+### S17 closed — `1192_kb_pages_public_token_revision` written, journalled and applied
+
+The one genuine S17 gap the eighth pass found is closed. `kb_pages` gains
+`public_token_revision integer NOT NULL DEFAULT 1`; `publicTokenColumnsFor` now carries a
+`bumpRevision` flag set on mint and on any move away from `public`, and cleared on a re-share
+of a page that is already public with a live token, so a rotation or revocation increments and
+an idempotent re-share does not. The public controller emits
+`ETag: "<updatedAt>-<revision>"` and `Cache-Control: public, no-cache`, which is what the
+slice's "cache headers keyed by token revision" and "rotation/revocation purges CDN/cache"
+requirements had nothing to key on before.
+
+The revision is destructured off the row **before** the body is returned, so it never appears
+in API output and is never logged — checked against the diff, not taken from the report.
+`getPublicPage` declares `updatedAt: Date` non-nullable and 404s before the header is built,
+so the `ETag` cannot be constructed from a missing date.
+
+Applied to production and verified independently of the runner's own claim:
+
+```
+column: {"column_name":"public_token_revision","data_type":"integer","is_nullable":"NO","column_default":"1"}
+ledger rows at when=1803000010707: 1
+  id=954 hash=2f78c4d7 disk=2f78c4d7 MATCH
+ledger rows: 949   journal entries: 949
+revision distribution: 1:21
+```
+
+Exactly one row at that `when`, hash matching disk, and totals still equal — so no duplicate of
+the kind [[ledger-hash-match-says-unapplied-when-the-file-changed]] describes was created.
+
+Journal entry assigned by the orchestrator, not the lane: `idx` 1076, `when` 1803000010707,
+appended preserving the file's **CRLF** endings and re-parsed before writing.
+
+**Ordering note:** the column was applied *before* the code that reads it is pushed. Reversing
+that is the 1171 failure — `getPublicPage` projects `publicTokenRevision`, so a deploy ahead of
+the migration raises `42703` on every public page read. The backend was 0 commits ahead of
+`origin/main` at the time of the apply, so nothing was deployed into the gap.
+
+### The lesson
+
+Two authored documents and one status table all drifted the same direction — describing
+outstanding work that had been completed — because each was written at the moment a decision
+was made and never re-measured after it was carried out. **A document that records an intention
+reads identically to one that records an outcome.** The only thing that separated them here was
+querying the database. Re-measure before acting on any "pending" claim in this pack.

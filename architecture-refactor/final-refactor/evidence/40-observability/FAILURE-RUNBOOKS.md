@@ -644,6 +644,52 @@ See `#provider-outage` when `embedding_unavailable` accounts for the cluster.
 
 ---
 
+## #kb-ask
+
+**Alert id:** `kb-ask` — owner: `knowledge-team` — severity: high
+
+**What it measures:** The fault ratio for `kb.ask.operation` spans over the most recent one-hour window. A fault is any outcome in `credits_exhausted`, `provider_unavailable`, or `error`. The alert fires only when at least two faults occur **and** the fault ratio exceeds 5 %.
+
+**Span name:** `kb.ask.operation`
+
+**Outcome vocabulary:**
+
+- `answered` — a complete answer with at least one grounded citation. Healthy.
+- `no_context` — the retrieval step found zero usable chunks; the model was not called. Healthy, but a persistent high rate signals index coverage problems.
+- `degraded` — the model ran but returned a low-confidence answer (provider marked it as degraded). Counted separately for trend analysis; not a fault by default.
+- `credits_exhausted` — the organization has no AI credits. Billing state, not a defect; surfaced as a fault so a tenant losing Ask capability is visible to the platform team.
+- `provider_unavailable` — the embedding or completion provider returned a retryable failure or a timeout. Points to the provider, not to KB logic.
+- `error` — a defect or a database failure inside the Ask path. Investigate.
+
+**Dimensions on every span:** `kb.ask.outcome`, `kb.ask.duration_ms`, `kb.ask.citations`, `kb.ask.candidates`, `kb.ask.degraded`, `org.id`. None carries user query text or result content.
+
+**First five minutes**
+
+```bash
+# 1. Outcome histogram, fault ratio and latency percentiles over the window
+node backend/src/scripts/alert-kb-ask.mjs --log=app.log --hours=1
+
+# 2. If provider_unavailable dominates, check the AI gateway seam
+node backend/src/scripts/alert-p95.mjs --log=app.log | head -20
+
+# 3. If credits_exhausted dominates, identify the tenant
+node backend/src/scripts/alert-tenant-cost.mjs --hours=24
+
+# 4. A high no_context rate (check noContextRatio in the output) means
+#    retrieval found nothing — inspect the indexing alert next
+node backend/src/scripts/alert-kb-indexing.mjs --log=app.log --hours=1
+```
+
+See `#provider-outage` when `provider_unavailable` accounts for the cluster.
+
+**Containment:** The Ask path is additive — a failed Ask returns an error response; it does not corrupt the knowledge base or the user's data. Rate-limit the tenant's Ask endpoint if `credits_exhausted` is the dominant outcome and the tenant is in a trial state.
+
+**Recovery:** For `provider_unavailable`, restore provider connectivity; no replay is needed because Ask is stateless and the next user request will succeed. For `credits_exhausted`, top up AI credits or communicate the billing state to the tenant. For `error`, correlate on `correlation.id` and read the accompanying `ERROR_REPORT` span to identify the defect. Streaming (`streamAsk`) and batch (`ask`) share the same metrics class and the same span name; the outcome histogram does not distinguish them.
+
+**Verification:** `alert-kb-ask.mjs --hours=1` exits 0 with `fired: false`, and the outcome histogram shows `answered` or `no_context`. An exit code of 2 is **not** a pass — it means no `kb.ask.operation` span reached the log, so either the window is empty or `KbAskMetrics` is unwired in `KbAskService`.
+
+---
+
 ## Incident response process
 
 On-call rotation, severity-to-escalation matrix, customer communication criteria and the post-incident review template are in [INCIDENT-RESPONSE.md](./INCIDENT-RESPONSE.md). That document also records the two operational limitations of the current alert delivery system (no-auth webhook, local suppression file) that affect escalation planning before production.

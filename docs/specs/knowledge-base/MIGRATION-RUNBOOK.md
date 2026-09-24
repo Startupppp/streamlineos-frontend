@@ -1,26 +1,58 @@
 # KB migration runbook — 1168 … 1176
 
-## Current state: nine applied, **1174 deliberately rolled back and pending again**
+## Current state: **all ten applied, 1174 included. The cutover is closed.**
 
-1174 was applied, then rolled back the same day once the scale of the code cutover was
-measured. The rollback restored all eight tables with their policies and grants, and its
-ledger row (id 938, `created_at` 1803000010661) was deleted in the same transaction, so
-`--tag=1174_kb_articles_cutover_contract --dry-run` reports *would apply (17 stmts)* again.
+> **Measured 2026-09-24 against production Aurora. This supersedes every "1174 is pending"
+> and "47 files / 750 references" statement below.** Those paragraphs are kept only because
+> they explain why each migration is shaped the way it is — they no longer describe the
+> world. Do **not** re-apply 1174 on the strength of them.
 
-Verified after the restore: all eight tables readable as `streamline_app` with the tenant
-GUC set, **`42501` without it** — so RLS is armed, not merely present. `kb_article_chunks`
-124, `kb_events` 32, `kb_pages` 20, all five inbound foreign keys re-attached, the share
-token and its hash untouched.
+The rename revision of 1174 is applied and recorded. Probed directly:
 
-⚠ **`check:migration-ledger` now exits 1**, reporting *1 entry below the watermark that will
-NEVER apply: 1174*. 1176's `when` (…10681) sits above 1174's (…10661), which is the trap
-that stranded 1154–1157. **It is wrong here.** `run-pending-migrations.mjs` says so in its
-own source — *"the watermark filter was a silent data-loss bug … the watermark is now
-reported for context and decides nothing"* — and a dry-run confirms 1174 would apply. The
-gate models watermark semantics the runner abandoned. It goes green when 1174 is re-applied.
+| Check | Result |
+|---|---|
+| All eight `kb_article*` tables | **absent** |
+| `kb_page_tags` · `_translations` · `_feedback` · `_restrictions` | **present, `relrowsecurity = true`** |
+| `kb_page_versions` · `_comments` · `_attachments` · `kb_pages` | present, RLS armed |
+| `kb_article_chunks.attachment_id` | **`bigint`** (the widening 1174 performs) |
+| `kb_article_chunks.article_id` | gone; `page_id` remains |
+| `kb_article_status` / `kb_article_visibility` enums | **both dropped** |
+| `kb_pages` rows | 21 |
 
-Re-apply 1174 only when nothing deployed reads `kb_articles`. See the code-cutover section
-below.
+Ledger integrity, checked the way [[an-out-of-order-apply-strands-earlier-migrations]]
+requires — **by hash *and* by `created_at = when`**, not by tag:
+
+```
+tag                                        when            disk-sha  db-sha    verdict
+1168_kb_page_grants                        1803000010591   cd96f057  cd96f057  MATCH
+1169_kb_page_collection_indexes            1803000010601   6161a8b5  6161a8b5  MATCH
+1170_kb_page_reviews_derive_overdue        1803000010611   25e0b9a3  25e0b9a3  MATCH
+1171_kb_pages_public_token_hash            1803000010621   5598b945  5598b945  MATCH
+1172_kb_pages_external_id                  1803000010631   960ed8cc  960ed8cc  MATCH
+1172a_kb_pages_article_columns             1803000010641   07cb570e  07cb570e  MATCH
+1173_kb_articles_cutover_expand            1803000010651   76ab82a6  76ab82a6  MATCH
+1174_kb_articles_cutover_contract          1803000010661   811baaf0  811baaf0  MATCH
+1175_ai_jobs_expired_lease_index           1803000010671   d0fe4d7a  d0fe4d7a  MATCH
+1176_kb_pages_revoke_dormant_share_tokens  1803000010681   af1750de  af1750de  MATCH
+
+ledger rows: 948   journal entries: 948
+```
+
+1174's recorded hash is `811baaf0…`, which is the sha256 of the **rename revision** now on
+disk — so the bytes that ran are the bytes in the tree, and a `--dry-run` correctly reports
+*already recorded, skipping*. A tag-only skip would have proved nothing here; the hash is
+what closes it.
+
+### The code half is closed too
+
+The backend Drizzle schema no longer defines `kbArticles` **at all** — `grep -rn kbArticles
+src/db/` returns nothing, so no code can read the dropped table and still compile. The
+help-centre kept its route surface and its file names and now reads `kb_pages`;
+`assertCanViewArticle` reads `kb_page_restrictions`. Thirteen `kbArticle*` identifiers
+survive repo-wide: two are injections of `KbArticlesService` (a service that still exists and
+writes to `kb_pages`) and the other eleven are **stale test doubles** mocking
+`db.query.kbArticles`, a property the real object no longer has. They are dead weight, not
+live reads — see [[actor-migration-leaves-stale-test-doubles]].
 
 ## Applied 2026-09-24 — all nine, verified
 
@@ -71,7 +103,11 @@ Because all eight tables were empty when 1174 ran, **for this database a structu
 is a complete restore.** The file's own header keeps the general warning, which still holds
 anywhere the tables hold rows.
 
-### ⚠ The outstanding half of the cutover is code, not schema
+### ~~⚠ The outstanding half of the cutover is code, not schema~~ — **CLOSED, superseded**
+
+> **This section is historical.** The code move described here has been completed and the
+> migration is applied. `kbArticles` is absent from `src/db/` entirely. Read the measured
+> state at the top of this file, not the counts below.
 
 `kb_articles` is restored and 1174 is pending again, so nothing is broken right now. What
 remains is moving the code. **47 non-spec files carry 750 references** — `kbArticles` 522,

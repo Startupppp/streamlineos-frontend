@@ -6630,6 +6630,10 @@ Distinguish queued/no claimant from stalled running/expired lease. Inspect worke
 
 Read the `kb.outcome` histogram before anything else; provider unavailability, tenant credit exhaustion and an application defect share one span and have three different owners. An unindexed page is invisible to vector search, not leaked — retrieval remains filtered by the SQL ACL predicate. Do not disable the ingestion consumer to silence the alert; that converts a visible fault into a silent outbox backlog. Recover by fixing the source and letting the checkpointed resumption re-drive, which re-pays only for chunks that never landed. Verify a populated window: exit 2 means nothing was measured, not health. Full detection, containment and recovery steps are in `#kb-indexing` of the observability failure runbooks.
 
+### kb-ask
+
+Read the `kb.ask.outcome` histogram first; `credits_exhausted` routes to billing, `provider_unavailable` routes to the AI gateway, and `error` routes to the defect tracker. A failed Ask returns an error response — it does not corrupt the knowledge base or the user's data. A high `noContextRatio` alongside a healthy fault ratio means retrieval found nothing; investigate the indexing alert next. Verify a populated window: exit 2 means nothing was measured, not health. Streaming (`streamAsk`) and batch (`ask`) share the same span; the histogram does not distinguish them. Full detection, containment and recovery steps are in `#kb-ask` of the observability failure runbooks.
+
 ### tenant-ctx-errors
 
 Inspect sanitized populated logs and classify guard, request, after-commit, detached worker or sweep caller. A 42501 can have several causes; verify the actual role/GUC/privilege failure instead of assuming missing context or no leak. Restore the correct explicit tenant transaction and current membership/authorization using canonical helpers. Durable effects remain in the existing outbox. Reproduce negative controls and verify actual affected writes without suppressing the error.
