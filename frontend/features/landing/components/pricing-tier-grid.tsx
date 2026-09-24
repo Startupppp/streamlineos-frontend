@@ -32,8 +32,8 @@ const TIER_SUMMARY: Record<PricingTier["id"], string[]> = {
   ],
   professional: [
     "All apps",
-    "AI assistance",
-    "CRM & recruitment",
+    "Up to 50 seats",
+    "CRM, recruitment, AI",
     "Priority support",
   ],
   enterprise: [
@@ -91,7 +91,6 @@ function PricingCard({
   period: BillingPeriod;
   index: number;
 }) {
-  const isFree = tier.monthly === 0;
   const displayPrice =
     period === "annual" ? tier.priceLabel.annual : tier.priceLabel.monthly;
   const comparePrice =
@@ -140,12 +139,10 @@ function PricingCard({
               {displayPrice}
             </motion.span>
           </AnimatePresence>
-          <span className="text-sm text-muted-foreground">
-            {isFree ? tier.period : "/ user / mo"}
-          </span>
+          <span className="text-sm text-muted-foreground">{tier.period}</span>
         </div>
 
-        {period === "annual" && !isFree && tier.monthly && tier.annual ? (
+        {period === "annual" && tier.monthly && tier.annual ? (
           <p className="mt-2 text-xs font-medium text-status-success-ink">
             Save {PRICING.annualDiscountPct}% vs monthly
           </p>
