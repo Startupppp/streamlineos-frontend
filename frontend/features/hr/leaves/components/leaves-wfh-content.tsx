@@ -33,6 +33,7 @@ import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCheckIcon, HouseIcon, PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { downloadBlob } from "@/lib/download-blob";
 import { ErrorState } from "@/components/shared";
 import { LeaveRequestSheet } from "@/features/hr/leaves/leave-request-sheet";
 import { WfhRequestSheet } from "@/features/hr/leaves/wfh-request-sheet";
@@ -148,10 +149,11 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   ).length;
 
   async function handleExportExcel() {
-    if (myLeaveRequests.length === 0) {
-      toast.error("No leave requests to export");
-      return;
-    }
+    // Was: refuse with "No leave requests to export" and produce nothing. An
+    // empty result is a result — a person exporting an empty month wants the
+    // file, to hand on or to fill in — and an error toast for it reads as a
+    // broken button. The workbook is written either way; with no rows it is the
+    // header, which states what the export would have contained.
     try {
       const ExcelJS = (await import("exceljs")).default;
       const workbook = new ExcelJS.Workbook();
@@ -181,17 +183,14 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `leave-requests-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      toast.success("Leave requests exported!");
-    } catch {
-      toast.error("Failed to export");
+      downloadBlob(blob, `leave-requests-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+      toast.success(
+        myLeaveRequests.length === 0
+          ? "Exported an empty sheet — no leave requests match this view"
+          : `Exported ${myLeaveRequests.length} leave request${myLeaveRequests.length === 1 ? "" : "s"}`,
+      );
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }
 
