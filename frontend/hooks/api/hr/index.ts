@@ -19,6 +19,7 @@ export * from "./document-templates";
 export * from "./hr-settings";
 export * from "./assets";
 export * from "./documents";
+export * from "./document-classification";
 export * from "./handbook";
 export * from "./shifts";
 export * from "./rosters";

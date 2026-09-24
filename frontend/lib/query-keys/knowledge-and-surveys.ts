@@ -4,6 +4,7 @@ export const knowledgeAndSurveysQueryKeys = {
   kb: {
     all: [...base, "kb"] as const,
     kbPages: () => [...base, "kb", "pages"] as const,
+    hrLinkConfig: () => [...base, "kb", "hrLinkConfig"] as const,
     pagesTree: () => [...base, "kb", "pages", "tree"] as const,
     pagesTreeByProject: (projectId: number) =>
       [...base, "kb", "pages", "tree", "project", projectId] as const,
