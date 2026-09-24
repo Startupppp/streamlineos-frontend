@@ -415,7 +415,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
                 }
                 secondaryAction={
                   canManage && !listFilters.isFiltered
-                    ? { label: "Sprint Planning", onClick: handleSchedulePlanning }
+                    ? { label: "Cycle Planning", onClick: handleSchedulePlanning }
                     : undefined
                 }
                 className={PM_FILL_PANEL}

@@ -30,7 +30,7 @@ export function MeetingBasicFields() {
           <FormItem>
             <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Sprint 12 Planning" className="text-sm" />
+              <Input {...field} placeholder="Cycle 12 Planning" className="text-sm" />
             </FormControl>
             <FormMessage />
           </FormItem>
