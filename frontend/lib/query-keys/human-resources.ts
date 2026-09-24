@@ -360,6 +360,9 @@ export const humanResourcesQueryKeys = {
     hrTalentPoolMembersAll: (poolId: number) =>
       [...base, "hr", "talentPools", poolId, "members"] as const,
     hrInternalJobs: [...base, "hr", "recruitment", "internal-jobs"] as const,
+    internalMyApplications: [...base, "hr", "recruitment", "internal-mobility", "mine"] as const,
+    internalApprovals: [...base, "hr", "recruitment", "internal-mobility", "approvals"] as const,
+    internalApprovalDecision: [...base, "hr", "recruitment", "internal-mobility", "decide"] as const,
     hrAssignedInterviews: (page: number) =>
       [...base, "hr", "me", "assigned-interviews", page] as const,
     hrDevicesAll: [...base, "hr", "enterprise", "comp", "devices"] as const,

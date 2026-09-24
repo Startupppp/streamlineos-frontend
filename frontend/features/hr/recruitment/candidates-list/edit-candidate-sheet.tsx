@@ -232,6 +232,7 @@ export function EditCandidateSheet({
                           <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
                           <SelectItem value="JOB_PORTAL">Job Portal</SelectItem>
                           <SelectItem value="CAMPUS">Campus</SelectItem>
+                          <SelectItem value="INTERNAL">Internal</SelectItem>
                           <SelectItem value="NAUKRI">Naukri</SelectItem>
                           <SelectItem value="CAREERS_PAGE">Careers Page</SelectItem>
                         </SelectContent>

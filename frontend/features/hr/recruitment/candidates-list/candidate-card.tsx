@@ -94,6 +94,7 @@ const SOURCE_LABELS: Record<string, string> = {
   CAMPUS: "Campus",
   CAREERS_PAGE: "Careers Page",
   NAUKRI: "Naukri",
+  INTERNAL: "Internal",
 };
 
 export function getStageConfig(status: CandidateStatus | null) {
