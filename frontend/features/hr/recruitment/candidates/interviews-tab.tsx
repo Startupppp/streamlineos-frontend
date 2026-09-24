@@ -1,13 +1,14 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, ClipboardCheck, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, ClipboardCheck, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ScorecardForm } from "@/components/hr/recruitment/scorecard-form";
 import type { ScorecardTemplate } from "@/hooks/api/hr/recruitment";
+import { TranscriptPanel } from "@/features/hr/recruitment/interviews/transcript/transcript-panel";
 
 interface Interview {
   id: number;
@@ -32,6 +33,14 @@ const InterviewRow = memo(function InterviewRow({
   onToggle,
 }: InterviewRowProps) {
   const handleToggle = useCallback(() => onToggle(interview.id), [onToggle, interview.id]);
+
+  /*
+    Local rather than lifted like the scorecard's: the transcript panel is
+    audited on read, so it must not open because a sibling row did. Each row
+    owns whether its own transcript has been asked for.
+  */
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const handleToggleTranscript = useCallback(() => setTranscriptOpen((open) => !open), []);
 
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -65,11 +74,26 @@ const InterviewRow = memo(function InterviewRow({
             Scorecard
             {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs gap-1"
+            onClick={handleToggleTranscript}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            Transcript
+            {transcriptOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </Button>
         </div>
       </div>
       {isExpanded && (
         <div className="border-t bg-muted/20 p-4">
           <ScorecardForm interviewId={interview.id} template={defaultTemplate} />
+        </div>
+      )}
+      {transcriptOpen && (
+        <div className="border-t bg-muted/20 p-4">
+          <TranscriptPanel interviewId={interview.id} />
         </div>
       )}
     </div>
