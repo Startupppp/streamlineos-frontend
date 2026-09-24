@@ -175,7 +175,8 @@ export function FilesPage({ projectId }: FilesPageProps) {
       }
       const reader = new FileReader();
       reader.onload = () => {
-        const raw = reader.result as string;
+        const raw = reader.result;
+        if (typeof raw !== "string") return;
         const base64 = raw.includes(",") ? raw.slice(raw.indexOf(",") + 1) : raw;
         uploadFile.mutate(
           { fileName: file.name, mimeType: file.type, contentBase64: base64 },

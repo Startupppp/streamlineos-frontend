@@ -6,13 +6,13 @@ import type { Notification } from "@/types/notifications";
 
 function isInputTarget(e: KeyboardEvent): boolean {
   const target = e.target;
-  if (!(target instanceof Element)) return false;
+  if (!(target instanceof HTMLElement)) return false;
   const tag = target.tagName.toLowerCase();
   return (
     tag === "input" ||
     tag === "textarea" ||
     tag === "select" ||
-    (target as HTMLElement).isContentEditable
+    target.isContentEditable
   );
 }
 

@@ -24,18 +24,23 @@ async function executeBulk(
 ): Promise<void> {
   const chunks = chunkIds(ids, BULK_CHUNK_SIZE);
   const results = await Promise.allSettled(chunks.map((chunk) => mutate(chunk)));
-  const failed = results.filter((r) => r.status === "rejected");
-  if (failed.length > 0 && failed.length < chunks.length) {
+  const failed = results.filter(
+    (result): result is PromiseRejectedResult => result.status === "rejected",
+  );
+  if (failed.length === 0) return;
+  if (failed.length < chunks.length) {
     toast.warning(
       `Completed for ${chunks.length - failed.length} of ${chunks.length} groups. Some failed.`,
     );
-  } else if (failed.length > 0 && failed.length === chunks.length) {
-    const reason = (failed[0] as PromiseRejectedResult).reason;
-    if (isApiError(reason) && reason.status === 409) {
-      toast.error("Conflict: some notifications were modified. Please refresh and try again.");
-    } else {
-      toast.error(getErrorMessage(reason));
-    }
+    return;
+  }
+  const firstFailure = failed[0];
+  if (firstFailure === undefined) return;
+  const reason: unknown = firstFailure.reason;
+  if (isApiError(reason) && reason.status === 409) {
+    toast.error("Conflict: some notifications were modified. Please refresh and try again.");
+  } else {
+    toast.error(getErrorMessage(reason));
   }
 }
 

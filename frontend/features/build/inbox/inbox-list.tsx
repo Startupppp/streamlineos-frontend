@@ -106,8 +106,8 @@ export function InboxList({
     onSelect(notification);
   }
   function handleTabChange(value: string) {
-    const next = value as NotificationSection;
-    if (SECTION_FILTERS.some((f) => f.value === next)) { onSectionChange?.(next); onFilterChange?.(); }
+    const next = SECTION_FILTERS.find((filter) => filter.value === value)?.value;
+    if (next !== undefined) { onSectionChange?.(next); onFilterChange?.(); }
   }
   function handleMarkAll() { markAllRead(); }
   function handleRetry() { void refetch(); }

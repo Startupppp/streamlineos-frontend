@@ -16,11 +16,13 @@ export type DelegateApprovalValues = z.infer<typeof delegateApprovalSchema>;
 
 const TITLE_REGEX = /\S/;
 
+const APPROVAL_ENTITY_TYPES: [ApprovalEntityType, ...ApprovalEntityType[]] = [
+  "task", "milestone", "budget", "release",
+  "change_request", "timesheet",
+];
+
 export const requestApprovalSchema = z.object({
-  entityType: z.enum([
-    "task", "milestone", "budget", "release",
-    "change_request", "timesheet",
-  ] as [ApprovalEntityType, ...ApprovalEntityType[]]),
+  entityType: z.enum(APPROVAL_ENTITY_TYPES),
   entityId: z.string().min(1, "Select an item"),
   title: z
     .string()
