@@ -147,6 +147,31 @@ describe("CompanyDocumentDetailPage", () => {
     expect(screen.queryByRole("button", { name: "Open file" })).not.toBeInTheDocument();
   });
 
+  it("explains why a withdrawn entry shows no details, rather than showing a blank page", () => {
+    mockCan.mockReturnValue(true);
+    loaded(detail({ name: null, description: null, category: null, tags: [], documentType: null, effectiveDate: null, version: null, fileName: null, fileSize: null, mimeType: null, hasFile: false, status: "unpublished" }));
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByRole("heading", { name: "Details no longer shown" })).toBeInTheDocument();
+    expect(screen.getByText("The details are hidden")).toBeInTheDocument();
+    expect(screen.getByText(/can no longer be shared with the company/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open file" })).not.toBeInTheDocument();
+  });
+
+  it("does not add that explanation to a removed entry, or to a withdrawn one that still has its details", () => {
+    mockCan.mockReturnValue(true);
+    loaded(detail({ name: null, description: null, category: null, tags: [], status: "source_removed", hasFile: false }));
+    const { unmount } = render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+    expect(screen.queryByText("The details are hidden")).not.toBeInTheDocument();
+    unmount();
+
+    loaded(detail({ status: "unpublished" }));
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+    expect(screen.queryByText("The details are hidden")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Code of Conduct" })).toBeInTheDocument();
+  });
+
   it("says it was not found, without saying whether it exists, when the server answers 404", () => {
     loaded(undefined, { isError: true, error: new ApiError("Not found", 404, "NOT_FOUND", {}, "/kb/linked-documents/31") });
     mockPageState.mockReturnValue({ kind: "empty" });

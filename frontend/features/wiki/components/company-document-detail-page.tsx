@@ -18,13 +18,12 @@ import { useLinkedDocument, useOpenLinkedDocument, type LinkedDocumentDetail } f
 import { formatFileSize } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_COMPANY_DOCUMENTS } from "@/lib/knowledge-routes";
+import { REMOVED_DOCUMENT_TITLE, linkedDocumentTitle } from "@/features/wiki/lib/linked-document-title";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 
 interface CompanyDocumentDetailPageProps {
   linkedDocumentId: number;
 }
-
-const REMOVED_TITLE = "Removed document";
 
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -104,7 +103,7 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
     />
   );
 
-  const title = data?.name ?? REMOVED_TITLE;
+  const title = data ? linkedDocumentTitle(data) : REMOVED_DOCUMENT_TITLE;
   return (
     <PageWrapper
       title={title}
@@ -131,6 +130,14 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
               {data.status !== "active" ? <SemanticBadge tone="warning" label={data.status === "unpublished" ? "Withdrawn" : "Source removed"} /> : null}
               {data.versionMode === "PINNED" && data.pinnedVersion !== null ? <SemanticBadge tone="neutral" label={`Pinned to v${data.pinnedVersion}`} /> : null}
             </div>
+            {data.name === null && data.status === "unpublished" ? (
+              <Alert>
+                <AlertTitle>The details are hidden</AlertTitle>
+                <AlertDescription>
+                  This HR document can no longer be shared with the company, so its name, description and file are not shown here, even to you. Once it can be shared again, add it back from the document in HR.
+                </AlertDescription>
+              </Alert>
+            ) : null}
             {data.description ? <p className="max-w-prose text-sm text-foreground">{data.description}</p> : null}
             <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Fact label="Category">{data.category ?? "—"}</Fact>

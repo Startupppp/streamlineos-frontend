@@ -18,6 +18,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useLinkedDocuments, type LinkedDocumentItem, type LinkedDocumentStatus } from "@/hooks/api/kb/linked-documents";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { companyDocumentHref } from "@/lib/knowledge-routes";
+import { linkedDocumentTitle } from "@/features/wiki/lib/linked-document-title";
 import { kbFormatDate, kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 
 const PAGE_LIMIT = 30;
@@ -33,7 +34,7 @@ function NameCell(row: LinkedDocumentItem) {
   return (
     <div className="flex min-w-0 items-center gap-2">
       <Link href={companyDocumentHref(row.id)} className="truncate font-medium text-foreground hover:underline">
-        {row.name ?? "Removed document"}
+        {linkedDocumentTitle(row)}
       </Link>
       <SourceBadge kind="hr-document" />
       {row.status !== "active" ? <SemanticBadge tone="warning" size="xs" label={STATUS_LABELS[row.status]} /> : null}

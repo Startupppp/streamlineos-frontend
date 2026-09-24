@@ -134,6 +134,18 @@ describe("CompanyDocumentsPage", () => {
     expect(mockReplace).toHaveBeenCalledWith(expect.not.stringContaining("status="), expect.anything());
   });
 
+  it("titles a withdrawn entry whose document can no longer be shared as hidden, not as removed", () => {
+    mockCan.mockImplementation((key) => key === "hr:documents:publish");
+    mockList.mockReturnValue(listing([item({ id: 32, name: null, status: "unpublished", hasFile: false }), item({ id: 33, name: null, status: "source_removed", hasFile: false })]));
+    mockPageState.mockReturnValue({ kind: "ready" });
+
+    render(<CompanyDocumentsPage />);
+
+    expect(screen.getAllByText("Details no longer shown")).toHaveLength(1);
+    expect(screen.getAllByText("Removed document")).toHaveLength(1);
+    expect(screen.getByText("Withdrawn")).toBeInTheDocument();
+  });
+
   it("shows a skeleton while loading", () => {
     mockList.mockReturnValue(listing([], { data: undefined, isLoading: true }));
     mockPageState.mockReturnValue({ kind: "loading" });
