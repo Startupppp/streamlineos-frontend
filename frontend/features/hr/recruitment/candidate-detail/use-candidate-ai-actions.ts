@@ -15,7 +15,7 @@ interface UseCandidateAiActionsParams {
 }
 
 export function useCandidateAiActions({ candidateId, firstJobPostingId }: UseCandidateAiActionsParams): AiAction[] {
-  const canManage = useCan("hr:employees:manage");
+  const canManage = useCan("hr:requisitions:manage");
   const scoreCandidateMutation = useAIScoreCandidate();
   const interviewKitMutation = useAIInterviewKit();
   const interviewNotesSummaryMutation = useAIInterviewNotesSummary();

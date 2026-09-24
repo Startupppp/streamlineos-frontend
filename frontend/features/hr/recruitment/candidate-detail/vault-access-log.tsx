@@ -14,7 +14,7 @@ interface VaultAccessLogProps {
 }
 
 export function VaultAccessLog({ candidateId }: VaultAccessLogProps) {
-  const isHr = useCan("hr:employees:manage");
+  const isHr = useCan("hr:requisitions:manage");
 
   const { data: logs, isLoading } = useVaultAccessLogs(isHr ? candidateId : 0);
 

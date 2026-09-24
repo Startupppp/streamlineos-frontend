@@ -19,12 +19,12 @@ const updateReferralStatusC = lazyContract(() =>
 );
 
 export function useAllReferrals() {
-  const canEmployees = useCan("hr:requisitions:view");
+  const canRequisitions = useCan("hr:requisitions:view");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.referrals(),
     queryFn: ({ signal }) => apiClient.get<CandidateReferral[]>("/hr/recruitment/referrals", undefined, signal, allReferralsListC),
     staleTime: 60_000,
-    enabled: canEmployees,
+    enabled: canRequisitions,
   });
 }
 

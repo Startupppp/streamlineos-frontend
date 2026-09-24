@@ -31,22 +31,27 @@ import {
   useUpdateJobBoardPosting,
   useDeleteJobBoardPosting,
   type JobBoardPostingStatus,
+  SETTABLE_POSTING_STATUSES,
   type JobBoardPosting,
 } from "@/hooks/api/hr/recruitment";
 
-const STATUS_OPTIONS: JobBoardPostingStatus[] = [
-  "DRAFT",
-  "POSTED",
-  "EXPIRED",
-  "CLOSED",
-];
+const STATUS_OPTIONS: readonly JobBoardPostingStatus[] = SETTABLE_POSTING_STATUSES;
 
+/**
+ * `STATUS_OPTIONS` above is what a recruiter may set by hand on a row they are
+ * tracking themselves. The four below are written by the distribution pipeline
+ * and are deliberately NOT offered in that menu: nobody should be able to mark
+ * a posting `LIVE` from this screen, because live means a board returned an id
+ * and only the outbox consumer can know that.
+ */
 const STATUS_BADGE: Record<JobBoardPostingStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground",
-  POSTED:
-    "bg-status-success-surface text-status-success-ink",
-  EXPIRED:
-    "bg-status-warning-surface text-status-warning-ink",
+  POSTED: "bg-status-success-surface text-status-success-ink",
+  LIVE: "bg-status-success-surface text-status-success-ink",
+  QUEUED: "bg-status-info-surface text-status-info-ink",
+  BLOCKED: "bg-muted text-muted-foreground",
+  FAILED: "bg-status-danger-surface text-status-danger-ink",
+  EXPIRED: "bg-status-warning-surface text-status-warning-ink",
   CLOSED: "bg-status-danger-surface text-status-danger-ink",
 };
 
@@ -275,6 +280,17 @@ export function ExternalBoardsSheet({
                     />
                   </div>
                 </div>
+                {posting.statusDetail && (
+                  <p className="text-dense text-muted-foreground">
+                    {/*
+                      Why this board is where it is — the blocked code, or the
+                      vendor's own refusal. Without it a FAILED badge is a dead
+                      end: the recruiter cannot tell an expired key from a
+                      rejected description.
+                    */}
+                    {posting.statusDetail}
+                  </p>
+                )}
                 <div className="flex items-center gap-3 text-dense text-muted-foreground">
                   <span>{posting.applicantCount} applicants</span>
                   <span>{posting.qualifiedCount} qualified</span>

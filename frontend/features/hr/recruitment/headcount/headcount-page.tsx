@@ -280,7 +280,7 @@ function RequestCard({
 
 export function HeadcountPage() {
   const router = useRouter();
-  const isHr = useCan("hr:employees:manage");
+  const isHr = useCan("hr:requisitions:manage");
 
   const { data: requests = [], isLoading, isError, refetch } = useHeadcountRequests();
 

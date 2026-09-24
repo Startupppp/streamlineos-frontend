@@ -4,6 +4,7 @@ export const talentPoolListItemContract = z.object({
   id: z.number().int(),
   name: z.string(),
   description: z.string().nullable(),
+  tags: z.array(z.string()),
   createdAt: z.string(),
   memberCount: z.number().int(),
 });
@@ -15,6 +16,7 @@ export const talentPoolRowContract = z.object({
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
+  tags: z.array(z.string()),
   createdBy: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),

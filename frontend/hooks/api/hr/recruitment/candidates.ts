@@ -185,7 +185,7 @@ function candidateQueryParams(params: CandidatesParams | undefined, limit: numbe
 export function useCandidates(params?: CandidatesParams) {
   const queryParams = candidateQueryParams(params, params?.limit ?? 100);
 
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.candidates(queryParams),
     queryFn: async ({ signal }): Promise<Candidate[]> => {
       const res = await apiClient.get<CandidatesListResponse>(
@@ -204,7 +204,7 @@ export function useCandidates(params?: CandidatesParams) {
 export function useCandidatesPage(params?: CandidatesParams) {
   const queryParams = candidateQueryParams(params, params?.limit ?? 20);
 
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: [...humanResourcesQueryKeys.hr.candidates(queryParams), "page"] as const,
     queryFn: ({ signal }): Promise<CandidatesListResponse> =>
       apiClient.get<CandidatesListResponse>(
@@ -232,7 +232,7 @@ export interface DuplicateCandidateGroup {
 }
 
 export function useCandidateDuplicates() {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "candidateDuplicates"] as const,
     queryFn: ({ signal }) =>
       apiClient.get<DuplicateCandidateGroup[]>(
@@ -247,7 +247,7 @@ export function useCandidateDuplicates() {
 
 export function useLinkDuplicateCandidate() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "link-duplicate"],
     mutationFn: ({ candidateId, duplicateOfId }: { candidateId: number; duplicateOfId: number }) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/link-duplicate`, { duplicateOfId }, undefined, candidateSuccessContract),
@@ -260,7 +260,7 @@ export function useLinkDuplicateCandidate() {
 
 export function useBulkShortlistCandidates() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "bulk-shortlist"],
     mutationFn: (candidateIds: number[]) =>
       apiClient.post<{ shortlisted: number; skipped: number }>("/hr/recruitment/candidates/bulk-shortlist", { candidateIds }, undefined, bulkShortlistContract),
@@ -272,7 +272,7 @@ export function useBulkShortlistCandidates() {
 }
 
 export function useCandidate(candidateId: number) {
-  const canView = useCan("hr:employees:view");
+  const canView = useCan("hr:requisitions:view");
   const enabled = canView && Number.isFinite(candidateId) && candidateId > 0;
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.candidate(candidateId),
@@ -290,7 +290,7 @@ export function useCandidate(candidateId: number) {
 
 export function useGenerateCandidateAiScore() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "ai-score"],
     mutationFn: (candidateId: number) =>
       apiClient.post<AiScoreResult>(
@@ -307,7 +307,7 @@ export function useGenerateCandidateAiScore() {
 }
 
 export function useGenerateCandidateCompositeScore() {
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "composite-score"],
     mutationFn: (candidateId: number) =>
       apiClient.post<CompositeScoreResult>(
@@ -321,7 +321,7 @@ export function useGenerateCandidateCompositeScore() {
 
 export function useCreateCandidate() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "create"],
     mutationFn: (data: CreateCandidateInput) =>
       apiClient.post<Candidate>("/hr/recruitment/candidates", data, undefined, candidateCreateContract),
@@ -334,7 +334,7 @@ export function useCreateCandidate() {
 
 export function useUpdateCandidate() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "update"],
     mutationFn: ({ candidateId, ...data }: UpdateCandidateInput & { candidateId: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}`, data, undefined, candidateSuccessContract),
@@ -348,7 +348,7 @@ export function useUpdateCandidate() {
 
 export function useDeleteCandidate() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "delete"],
     mutationFn: (candidateId: number) =>
       apiClient.delete<void>(`/hr/recruitment/candidates/${candidateId}`, undefined, undefined, noContentC),
@@ -362,7 +362,7 @@ export function useDeleteCandidate() {
 
 export function useCreateApplication() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "applications", "create"],
     mutationFn: ({ candidateId, ...data }: { candidateId: number; jobPostingId: number; coverLetter?: string }) =>
       apiClient.post<CandidateApplication>(
@@ -379,18 +379,18 @@ export function useCreateApplication() {
 }
 
 export function useAtsKanban() {
-  const canEmployees = useCan("hr:employees:view");
+  const canRequisitions = useCan("hr:requisitions:view");
   return useQuery({
     queryKey: ATS_KANBAN_KEY,
     queryFn: ({ signal }) => apiClient.get<AtsPipelineResponse>("/hr/recruitment/pipeline", undefined, signal, pipelineContract),
     staleTime: 2 * 60_000,
-    enabled: canEmployees,
+    enabled: canRequisitions,
   });
 }
 
 export function useUpdateCandidateStage() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "update-stage"],
     mutationFn: ({ candidateId, stage }: { candidateId: number; stage: CandidateStatus }) =>
       apiClient.patch<{ id: number; stage: CandidateStatus; changed: boolean }>(
@@ -413,6 +413,9 @@ export function useUpdateCandidateStage() {
                 ...s,
                 candidates: withoutCandidate,
                 total: hadCandidate ? Math.max(0, s.total - 1) : s.total,
+                // `shown` is what this column renders; it moves with the cards,
+                // or the board's "N of M" would drift from the list beneath it.
+                shown: withoutCandidate.length,
               };
             }
             const moved = previous.stages
@@ -423,8 +426,9 @@ export function useUpdateCandidateStage() {
                   ...s,
                   candidates: [moved, ...withoutCandidate],
                   total: hadCandidate ? s.total : s.total + 1,
+                  shown: withoutCandidate.length + 1,
                 }
-              : { ...s, candidates: withoutCandidate };
+              : { ...s, candidates: withoutCandidate, shown: withoutCandidate.length };
           }),
         };
         qc.setQueryData<AtsPipelineResponse>(ATS_KANBAN_KEY, next);
@@ -448,7 +452,7 @@ export function useUpdateCandidateStage() {
 
 export function useBulkRejectCandidates() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "bulk-reject"],
     mutationFn: (data: BulkRejectInput) =>
       apiClient.post<BulkRejectResult>(

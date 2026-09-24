@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { requirePermission } from "@/lib/rbac/require-permission";
 import {
   Workflow, ClipboardList, BookOpen, Zap, Clock, Mail, FileSignature,
-  BarChart3, Users, PieChart, FileBarChart, type LucideIcon,
+  BarChart3, Users, PieChart, FileBarChart, Plug, type LucideIcon,
 } from "lucide-react";
 
 interface SettingsLink {
@@ -28,6 +28,17 @@ const SECTIONS: SettingsSection[] = [
       { label: "Question Bank", description: "Curated interview questions by role and difficulty.", href: "/hr/recruitment/question-bank", icon: BookOpen },
       { label: "Pipeline Automations", description: "Trigger actions automatically on pipeline events.", href: "/hr/recruitment/automations", icon: Zap },
       { label: "Interview SLAs", description: "Max hours allowed per stage before an SLA breach.", href: "/hr/recruitment/sla", icon: Clock },
+    ],
+  },
+  {
+    title: "Connections",
+    links: [
+      {
+        label: "Integrations",
+        description: "Job boards, calendars, assessments and background checks — and what each one can actually do.",
+        href: "/hr/recruitment/integrations",
+        icon: Plug,
+      },
     ],
   },
   {

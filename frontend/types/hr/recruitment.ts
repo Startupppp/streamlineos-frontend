@@ -1,3 +1,4 @@
+import type { EnrollmentStatus } from "@/hooks/api/hr/recruitment/email-sequences-schema";
 export type JobPostingStatus = "DRAFT" | "OPEN" | "PAUSED" | "CLOSED" | "FILLED";
 export type HiringFlowRoundType = "HR_SCREENING" | "TECHNICAL" | "MANAGER" | "CULTURAL_FIT" | "FINAL" | "CUSTOM";
 export type HiringFlowRoundMode = "VIDEO" | "PHONE" | "ONSITE";
@@ -183,6 +184,9 @@ export interface AtsPipelineCandidate {
 export interface AtsPipelineStage {
   stage: CandidateStatus;
   total: number;
+  /** How many of `total` this response carries — the endpoint caps each stage. */
+  shown: number;
+  truncated: boolean;
   candidates: AtsPipelineCandidate[];
 }
 
@@ -367,7 +371,12 @@ export interface CreateReferralInput {
 }
 
 export type EmailSequenceTrigger = "MANUAL" | "CANDIDATE_ADDED" | "APPLICATION_RECEIVED" | "STAGE_CHANGED" | "OFFER_SENT";
-export type EmailSequenceEnrollmentStatus = "ACTIVE" | "COMPLETED" | "UNSUBSCRIBED" | "BOUNCED";
+/**
+ * Derived from the contract rather than restated, so this type cannot fall
+ * behind the parser the way it did: it listed four values while the backend had
+ * been writing a fifth, `HELD_NO_CONSENT`, and the enum threw on parse.
+ */
+export type EmailSequenceEnrollmentStatus = EnrollmentStatus;
 
 export interface EmailSequenceStep {
   id: number;

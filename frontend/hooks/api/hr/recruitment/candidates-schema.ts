@@ -206,6 +206,13 @@ export const compositeScoreResultSchema = z.object({
 export const pipelineStageSchema = z.object({
   stage: z.enum(["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"]),
   total: z.number().int(),
+  /**
+   * How many of `total` this response actually carries, and whether the column
+   * is cut. The endpoint caps each stage, so a board that printed `total` over
+   * a short list was claiming to show candidates it had never sent.
+   */
+  shown: z.number().int(),
+  truncated: z.boolean(),
   candidates: z.array(
     z.object({
       id: z.number().int(),

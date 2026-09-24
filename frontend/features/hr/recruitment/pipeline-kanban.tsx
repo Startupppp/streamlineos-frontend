@@ -32,6 +32,9 @@ interface KanbanColumnProps {
   col: ColumnConfig;
   items: AtsPipelineCandidate[];
   total: number;
+  /** How many of `total` the endpoint actually sent for this stage. */
+  shown: number;
+  truncated: boolean;
   isRejected: boolean;
   onCardClick: (candidate: AtsPipelineCandidate) => void;
 }
@@ -40,6 +43,8 @@ const KanbanColumn = memo(function KanbanColumn({
   col,
   items,
   total,
+  shown,
+  truncated,
   isRejected,
   onCardClick,
 }: KanbanColumnProps) {
@@ -53,11 +58,23 @@ const KanbanColumn = memo(function KanbanColumn({
           <span className={cn("h-2 w-2 rounded-full", col.dot)} />
           <span className={cn("text-xs font-semibold tracking-wide", col.headerText)}>{col.label}</span>
         </div>
-        <span className={cn(
-          "inline-flex items-center justify-center rounded-full min-w-[22px] h-5 px-1.5 text-dense font-bold bg-white/25",
-          col.headerText
-        )}>
-          {total}
+        <span
+          className={cn(
+            "inline-flex items-center justify-center rounded-full min-w-[22px] h-5 px-1.5 text-dense font-bold bg-white/25",
+            col.headerText
+          )}
+          title={
+            truncated
+              ? `Showing ${shown} of ${total} candidates in this stage`
+              : `${total} candidate${total === 1 ? "" : "s"} in this stage`
+          }
+        >
+          {/*
+            The endpoint caps each stage, so printing `total` over a shorter
+            list claimed candidates this board never received. When the column
+            is cut, say both numbers.
+          */}
+          {truncated ? `${shown}/${total}` : total}
         </span>
       </div>
 
@@ -88,6 +105,12 @@ const KanbanColumn = memo(function KanbanColumn({
                   <p className="text-micro text-muted-foreground font-medium">Drop here</p>
                 </div>
               )}
+              {truncated && (
+                <p className="text-micro text-muted-foreground text-center pt-1">
+                  {total - shown} more in this stage are not shown here. Filter the candidate list
+                  to reach them.
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -116,7 +139,9 @@ export function PipelineKanban({
   } | null>(null);
 
   const stageMap = Object.fromEntries(stages.map((s) => [s.stage, s.candidates]));
-  const stageTotals = Object.fromEntries(stages.map((s) => [s.stage, s.total]));
+  const stageCounts = Object.fromEntries(
+    stages.map((s) => [s.stage, { total: s.total, shown: s.shown, truncated: s.truncated }]),
+  );
 
   const handleCardClick = useCallback((candidate: AtsPipelineCandidate) => {
     setSelectedCandidate(candidate);
@@ -152,13 +177,13 @@ export function PipelineKanban({
   }, []);
 
   const FLOW_STAGES = [
-    { label: "New", color: "bg-muted text-muted-foreground", count: stageTotals["NEW"] ?? 0 },
-    { label: "Screening", color: "bg-status-info-surface text-status-info-ink", count: stageTotals["SCREENING"] ?? 0 },
-    { label: "Interview", color: "bg-status-warning-surface text-status-warning-ink", count: stageTotals["INTERVIEW"] ?? 0 },
-    { label: "Offer", color: "bg-status-info-surface text-status-info-ink", count: stageTotals["OFFER"] ?? 0 },
-    { label: "Hired", color: "bg-status-success-surface text-status-success-ink", count: stageTotals["HIRED"] ?? 0 },
+    { label: "New", color: "bg-muted text-muted-foreground", count: stageCounts["NEW"]?.total ?? 0 },
+    { label: "Screening", color: "bg-status-info-surface text-status-info-ink", count: stageCounts["SCREENING"]?.total ?? 0 },
+    { label: "Interview", color: "bg-status-warning-surface text-status-warning-ink", count: stageCounts["INTERVIEW"]?.total ?? 0 },
+    { label: "Offer", color: "bg-status-info-surface text-status-info-ink", count: stageCounts["OFFER"]?.total ?? 0 },
+    { label: "Hired", color: "bg-status-success-surface text-status-success-ink", count: stageCounts["HIRED"]?.total ?? 0 },
   ];
-  const rejectedCount = stageTotals["REJECTED"] ?? 0;
+  const rejectedCount = stageCounts["REJECTED"]?.total ?? 0;
 
   if (isLoading) {
     return (
@@ -212,7 +237,9 @@ export function PipelineKanban({
               key={col.id}
               col={col}
               items={stageMap[col.id] ?? []}
-              total={stageTotals[col.id] ?? 0}
+              total={stageCounts[col.id]?.total ?? 0}
+              shown={stageCounts[col.id]?.shown ?? 0}
+              truncated={stageCounts[col.id]?.truncated ?? false}
               isRejected={col.id === "REJECTED"}
               onCardClick={handleCardClick}
             />

@@ -35,12 +35,21 @@ export const PRIORITY_STYLES: Record<string, string> = {
   URGENT: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
+/**
+ * The five statuses a requisition can actually hold.
+ *
+ * `PUBLISHED` and `CLOSED` were in here and are not in the backend's
+ * `REQUISITION_STATUSES` — a requisition is never published, a job posting is,
+ * and there is no CLOSED transition. `FILLED` was missing, which is the one a
+ * requisition reaches on its own: the last opening on its job going means the
+ * hire marks it FILLED, and that outcome was falling through this map onto the
+ * DRAFT-shaped fallback.
+ */
 export const STATUS_STYLES: Record<string, { badge: string; label: string; dot: string }> = {
   DRAFT: { badge: "bg-muted text-muted-foreground border-border", label: "Draft", dot: "bg-muted-foreground/50" },
   PENDING_APPROVAL: { badge: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule", label: "Pending Approval", dot: "bg-status-warning-fill" },
   APPROVED: { badge: "bg-status-success-surface text-status-success-ink border-status-success-rule", label: "Approved", dot: "bg-status-success-fill" },
-  PUBLISHED: { badge: "bg-status-info-surface text-status-info-ink border-status-info-rule", label: "Published", dot: "bg-status-info-fill" },
-  CLOSED: { badge: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule", label: "Closed", dot: "bg-status-danger-fill" },
+  FILLED: { badge: "bg-status-info-surface text-status-info-ink border-status-info-rule", label: "Filled", dot: "bg-status-info-fill" },
   REJECTED: { badge: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule", label: "Rejected", dot: "bg-status-danger-fill" },
 };
 
@@ -49,7 +58,8 @@ export const STATUS_TABS = [
   { label: "Draft", value: "DRAFT" },
   { label: "Pending Approval", value: "PENDING_APPROVAL" },
   { label: "Approved", value: "APPROVED" },
-  { label: "Closed", value: "CLOSED" },
+  { label: "Filled", value: "FILLED" },
+  { label: "Rejected", value: "REJECTED" },
 ];
 
 const TYPE_LABELS: Record<string, string> = {

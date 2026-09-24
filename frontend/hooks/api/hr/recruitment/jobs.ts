@@ -59,15 +59,27 @@ const jobShareLinksC = lazyContract(() =>
 export type JobBoardPlatform = "LINKEDIN" | "NAUKRI" | "INDEED";
 
 
-interface PublishResult {
-  platform: string;
-  status: string;
-}
+export type JobBoardOutcome =
+  | {
+      platform: string;
+      status: "BLOCKED";
+      code: "no-integration" | "inactive" | "needs-keys" | "not-implemented";
+      message: string;
+    }
+  /**
+   * The only positive answer a publish request can give, because at the moment
+   * it returns nothing has been sent: the backend queues the work onto the
+   * outbox and a consumer is what talks to the board. Follow `postingId` on the
+   * board-postings list to see whether it became LIVE or FAILED.
+   */
+  | { platform: string; status: "QUEUED"; postingId: number }
+  | { platform: string; status: "FAILED"; message: string; httpStatus: number | null };
 
-interface PublishJobResult {
-  results: PublishResult[];
-  publishedCount: number;
-  externalIds: Record<string, string>;
+export interface PublishJobResult {
+  results: JobBoardOutcome[];
+  queuedCount: number;
+  blockedCount: number;
+  failedCount: number;
 }
 
 export interface SourcePortal {
@@ -120,7 +132,7 @@ export type JobPostingsParams = {
  * Hooks normalize to a flat JobPosting[] so list UIs keep working.
  */
 export function useJobPostings(params?: JobPostingsParams) {
-  const canEmployees = useCan("hr:employees:view");
+  const canRequisitions = useCan("hr:requisitions:view");
   const pageSize = params?.pageSize ?? 100;
   const queryParams = {
     ...(params?.status ? { status: params.status } : {}),
@@ -139,7 +151,7 @@ export function useJobPostings(params?: JobPostingsParams) {
       return res.items;
     },
     staleTime: 2 * 60_000,
-    enabled: canEmployees,
+    enabled: canRequisitions,
   });
 }
 
@@ -151,7 +163,7 @@ export function useJobPostingsPage(params?: JobPostingsParams) {
     ...(params?.cursor ? { cursor: params.cursor } : {}),
     pageSize,
   };
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: [...humanResourcesQueryKeys.hr.jobPostings(queryParams), "page"] as const,
     queryFn: ({ signal }): Promise<JobPostingsPage> => {
       return apiClient.get<JobPostingsPage>(
@@ -167,7 +179,7 @@ export function useJobPostingsPage(params?: JobPostingsParams) {
 
 export function useJobPosting(jobId: number) {
   const enabled = Number.isFinite(jobId) && jobId > 0;
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.jobPosting(jobId),
     queryFn: ({ signal }) =>
       apiClient.get<JobPosting>(`/hr/recruitment/jobs/${jobId}`, undefined, signal, jobPostingDetailC),
@@ -180,7 +192,7 @@ const JOB_POSTINGS_ROOT = [...humanResourcesQueryKeys.hr.all, "jobPostings"] as 
 
 export function useCreateJobPosting() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "create"],
     mutationFn: (data: CreateJobPostingInput) =>
       apiClient.post<JobPosting>("/hr/recruitment/jobs", data, undefined, createJobPostingC),
@@ -193,7 +205,7 @@ export function useCreateJobPosting() {
 
 export function useUpdateJobPosting() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "update"],
     mutationFn: ({ jobId, ...data }: UpdateJobPostingInput & { jobId: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/jobs/${jobId}`, data, undefined, updateJobPostingC),
@@ -207,7 +219,7 @@ export function useUpdateJobPosting() {
 
 export function useDeleteJobPosting() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "delete"],
     mutationFn: (jobId: number) =>
       apiClient.delete<void>(`/hr/recruitment/jobs/${jobId}`, undefined, undefined, noContentC),
@@ -220,7 +232,7 @@ export function useDeleteJobPosting() {
 
 export function useDuplicateJobPosting() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "duplicate"],
     mutationFn: (jobId: number) =>
       apiClient.post<JobPosting>(`/hr/recruitment/jobs/${jobId}/duplicate`, {}, undefined, duplicateJobPostingC),
@@ -233,7 +245,7 @@ export function useDuplicateJobPosting() {
 
 export function usePublishJobToBoards() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:employees:manage", {
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "publish"],
     mutationFn: ({ jobId, platforms }: { jobId: number; platforms: JobBoardPlatform[] }) =>
       apiClient.post<PublishJobResult>(`/hr/recruitment/jobs/${jobId}/publish`, { platforms }, undefined, publishJobC),
@@ -264,7 +276,7 @@ export function useUpsertSourcePortal() {
 }
 
 export function useJobShareLinks(jobId: number) {
-  return useGatedQuery("hr:employees:view", {
+  return useGatedQuery("hr:requisitions:view", {
     queryKey: [...humanResourcesQueryKeys.hr.all, "jobShare", jobId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<JobShareLinks>(`/hr/recruitment/jobs/${jobId}/share`, undefined, signal, jobShareLinksC),

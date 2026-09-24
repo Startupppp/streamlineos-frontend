@@ -206,6 +206,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                           <SelectItem value="NAUKRI">Naukri</SelectItem>
                           <SelectItem value="CAREERS_PAGE">Careers Page</SelectItem>
                           <SelectItem value="CAMPUS">Campus</SelectItem>
+                          <SelectItem value="INTERNAL">Internal</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
