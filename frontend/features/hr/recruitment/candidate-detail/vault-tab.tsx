@@ -11,6 +11,7 @@ import { useCandidateVault } from "@/hooks/api/hr/recruitment";
 import type { BgvStatus as CandidateBgvStatus } from "@/types/hr";
 import { BgvTracker } from "./vault-bgv-tracker";
 import { AssessmentsCard } from "./assessments-card";
+import { IdentityCard } from "./identity-card";
 import { VoiceScreensCard } from "./voice-screens-card";
 import { VaultUploadArea } from "./vault-upload-area";
 import { VaultDocumentList } from "./vault-document-list";
@@ -88,6 +89,11 @@ export function VaultTab(props: VaultTabProps) {
 
       <AssessmentsCard candidateId={props.candidateId} />
       <VoiceScreensCard candidateId={props.candidateId} />
+      {/*
+        Beside the background check, because they answer adjacent questions and
+        a recruiter refused an offer by the identity gate looks here first.
+      */}
+      <IdentityCard candidateId={props.candidateId} />
 
       <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
         <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between border-b border-border">
