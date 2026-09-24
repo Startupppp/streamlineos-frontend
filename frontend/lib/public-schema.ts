@@ -1,23 +1,26 @@
 import { z } from "zod";
 
+/**
+ * The candidate's own view of their application.
+ *
+ * Six coarse statuses rather than the pipeline's seven. The endpoint's token
+ * travels in a URL — into mail archives, browser history and referrer headers —
+ * so the response carries a first name and nothing else that identifies anyone.
+ */
 export const publicApplicationStatusContract = z.object({
-  status: z.string(),
+  status: z.enum(["received", "in_review", "interview", "offer", "hired", "rejected"]),
+  statusText: z.string(),
   appliedAt: z.string().nullable(),
   updatedAt: z.string(),
-  job: z
-    .object({
-      title: z.string().nullable(),
-      location: z.string().nullable(),
-      type: z.string().nullable(),
-    })
-    .nullable(),
-  candidate: z
-    .object({
-      firstName: z.string(),
-      lastName: z.string().nullable(),
-      email: z.string().nullable(),
-    })
-    .nullable(),
+  jobTitle: z.string(),
+  jobLocation: z.string().nullable(),
+  jobType: z.string().nullable(),
+  organisationName: z.string(),
+  candidateFirstName: z.string(),
+  /** A live self-schedule link, when there is one to act on. */
+  bookingUrl: z.string().nullable(),
+  /** A live offer awaiting an answer, when there is one. */
+  offerUrl: z.string().nullable(),
 });
 
 export const publicJobListContract = z.object({
