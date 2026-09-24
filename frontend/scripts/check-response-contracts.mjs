@@ -144,6 +144,15 @@ const BASELINE = {
 const UNRESOLVED_ROUTE_FILES = new Map([
   ["hooks/api/chat-core-read.ts", 1],
   ["hooks/common/use-file-url.ts", 1],
+  // `downloadExportJob` runs the create -> poll -> download contract for an
+  // export card, and takes the three routes as a descriptor because different
+  // modules mount the job at different paths. The two seam calls it makes — the
+  // create POST and the status GET — read those paths from the descriptor, so no
+  // route rule can see them here. They ARE literals where the card is declared:
+  // `features/*/settings/import-export-entities.ts`, which is where a route rule
+  // should look. It is registered rather than hidden so that a third seam call
+  // appearing in this file fails the gate.
+  ["lib/download-export-job.ts", 2],
 ]);
 
 /**
