@@ -1,12 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 
-export default function KbResearchBriefDetailLoading() {
+export default function KnowledgeResearchBriefDetailLoading() {
   return (
     <PageWrapper
       title="Research Brief"
       subtitle="AI-synthesized report"
-      backHref="/support/kb/research-briefs"
+      backHref="/knowledge/research-briefs"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="rounded-xl border border-border bg-card p-4 space-y-4">

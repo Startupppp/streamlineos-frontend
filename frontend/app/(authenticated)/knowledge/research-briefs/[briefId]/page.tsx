@@ -7,8 +7,8 @@ interface PageProps {
   params: Promise<{ briefId: string }>;
 }
 
-export default async function KbResearchBriefPage({ params }: PageProps) {
-  await enforceRouteAccess("/support/kb/research-briefs/[briefId]");
+export default async function KnowledgeResearchBriefPage({ params }: PageProps) {
+  await enforceRouteAccess("/knowledge/research-briefs/[briefId]");
   const { briefId } = await params;
   const id = Number(briefId);
   if (!Number.isInteger(id) || id <= 0) notFound();
@@ -16,9 +16,9 @@ export default async function KbResearchBriefPage({ params }: PageProps) {
     <PageWrapper
       title="Research Brief"
       subtitle="AI-synthesized report"
-      backHref="/support/kb/research-briefs"
+      backHref="/knowledge/research-briefs"
     >
-      <KbResearchBriefDetail briefId={id} />
+      <KbResearchBriefDetail briefId={id} basePath="/knowledge/research-briefs" />
     </PageWrapper>
   );
 }

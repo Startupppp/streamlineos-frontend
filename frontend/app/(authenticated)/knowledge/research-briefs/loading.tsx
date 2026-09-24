@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 
-export default function KbResearchBriefsLoading() {
+export default function KnowledgeResearchBriefsLoading() {
   return (
     <PageWrapper
       title="Research Briefs"
