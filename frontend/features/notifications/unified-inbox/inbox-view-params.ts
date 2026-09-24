@@ -131,8 +131,8 @@ export function parseInboxFilterState(
   const group = parseGrouping(params.get("group"));
   const from = params.get("from") ?? "";
   const to = params.get("to") ?? "";
-  const module = params.get("module") ?? "";
-  return { view, q, unreadOnly, category, priority, kindOverride, group, from, to, module };
+  const moduleParam = params.get("module") ?? "";
+  return { view, q, unreadOnly, category, priority, kindOverride, group, from, to, module: moduleParam };
 }
 
 export interface InboxQueryParams {
@@ -142,6 +142,8 @@ export interface InboxQueryParams {
   unreadOnly?: boolean;
   category?: string;
   priority?: string;
+  eventKeys?: string[];
+  module?: string;
   triage?: "active" | "later" | "done";
 }
 
@@ -161,6 +163,8 @@ export function buildQueryParams(state: InboxFilterState): InboxQueryParams {
   if (state.unreadOnly) params.unreadOnly = true;
   if (state.category) params.category = state.category;
   if (state.priority) params.priority = state.priority;
+  if (state.view === "mentions") params.eventKeys = [...MENTION_EVENT_KEYS];
+  if (state.module) params.module = state.module;
   return params;
 }
 

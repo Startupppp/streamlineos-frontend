@@ -8,7 +8,8 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbReviewType = "approval" | "freshness";
-export type KbReviewStatus = "pending" | "approved" | "rejected" | "expired";
+export type KbReviewStatus = "pending" | "approved" | "rejected";
+export type KbReviewStatusFilter = KbReviewStatus | "overdue";
 
 export type KbPageReview = {
   id: number;
@@ -17,6 +18,7 @@ export type KbPageReview = {
   pageTitle: string | null;
   type: KbReviewType;
   status: KbReviewStatus;
+  isOverdue: boolean;
   requestedById: string | null;
   requestedByMembershipId: number | null;
   reviewerId: string | null;
@@ -30,6 +32,15 @@ export type KbPageReview = {
   updatedAt: string;
 };
 
+export type KbPageReviewPage = {
+  data: KbPageReview[];
+  pagination: {
+    limit: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+  };
+};
+
 export type ApproveReviewInput = {
   note?: string;
 };
@@ -38,17 +49,43 @@ export type RejectReviewInput = {
   note: string;
 };
 
+export type BulkDecideReviewsInput =
+  | { ids: number[]; decision: "approved"; note?: string }
+  | { ids: number[]; decision: "rejected"; note: string };
+
+export type BulkDecideResultItem = {
+  id: number;
+  outcome: "succeeded" | "denied" | "conflict" | "notFound";
+};
+
 export type KbPageReviewsParams = {
-  status?: string;
-  type?: string;
+  status?: KbReviewStatusFilter;
+  type?: KbReviewType;
+  reviewer?: string;
+  dueFrom?: string;
+  dueTo?: string;
+  spaceId?: number;
+  cursor?: string;
+  limit?: number;
+  sortDir?: "asc" | "desc";
 };
 
 const kbPageReviewListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-reviews-schema").then((m) => m.kbPageReviewListContract),
+  import("@/hooks/api/kb/kb-reviews-schema").then(
+    (m) => m.kbPageReviewListContract,
+  ),
 );
 
 const kbPageReviewContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-reviews-schema").then((m) => m.kbPageReviewContract),
+  import("@/hooks/api/kb/kb-reviews-schema").then(
+    (m) => m.kbPageReviewContract,
+  ),
+);
+
+const kbPageReviewBulkDecideContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-reviews-schema").then(
+    (m) => m.kbPageReviewBulkDecideContract,
+  ),
 );
 
 export function useKbPageReviews(params?: KbPageReviewsParams) {
@@ -56,7 +93,13 @@ export function useKbPageReviews(params?: KbPageReviewsParams) {
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews(queryParams),
-    queryFn: ({ signal }) => apiClient.get<KbPageReview[]>("/kb/page-reviews", queryParams, signal, kbPageReviewListContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<KbPageReviewPage>(
+        "/kb/page-reviews",
+        queryParams,
+        signal,
+        kbPageReviewListContract,
+      ),
     staleTime: 30_000,
     enabled: canViewReviews,
   });
@@ -66,11 +109,20 @@ export function useApprovePageReview() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:reviews:manage", {
     mutationKey: ["kb", "pageReviews", "approve"],
-    mutationFn: ({ reviewId, ...body }: ApproveReviewInput & { reviewId: number }) =>
-      apiClient.post<KbPageReview>(`/kb/page-reviews/${reviewId}/approve`, body, undefined, kbPageReviewContract),
+    mutationFn: ({
+      reviewId,
+      ...body
+    }: ApproveReviewInput & { reviewId: number }) =>
+      apiClient.post<KbPageReview>(
+        `/kb/page-reviews/${reviewId}/approve`,
+        body,
+        undefined,
+        kbPageReviewContract,
+      ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviewsDue() });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews(),
+      });
     },
   });
 }
@@ -79,11 +131,39 @@ export function useRejectPageReview() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:reviews:manage", {
     mutationKey: ["kb", "pageReviews", "reject"],
-    mutationFn: ({ reviewId, ...body }: RejectReviewInput & { reviewId: number }) =>
-      apiClient.post<KbPageReview>(`/kb/page-reviews/${reviewId}/reject`, body, undefined, kbPageReviewContract),
+    mutationFn: ({
+      reviewId,
+      ...body
+    }: RejectReviewInput & { reviewId: number }) =>
+      apiClient.post<KbPageReview>(
+        `/kb/page-reviews/${reviewId}/reject`,
+        body,
+        undefined,
+        kbPageReviewContract,
+      ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviewsDue() });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews(),
+      });
+    },
+  });
+}
+
+export function useBulkDecidePageReviews() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:reviews:manage", {
+    mutationKey: knowledgeAndSurveysQueryKeys.kb.pageReviewsBulkDecide(),
+    mutationFn: (body: BulkDecideReviewsInput) =>
+      apiClient.post<{ results: BulkDecideResultItem[] }>(
+        "/kb/page-reviews/bulk-decide",
+        body,
+        undefined,
+        kbPageReviewBulkDecideContract,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews(),
+      });
     },
   });
 }

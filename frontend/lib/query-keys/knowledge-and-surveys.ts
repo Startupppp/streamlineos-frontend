@@ -10,6 +10,10 @@ export const knowledgeAndSurveysQueryKeys = {
     pagesRecent: () => [...base, "kb", "pages", "recent"] as const,
     pagesFavorites: () => [...base, "kb", "pages", "favorites"] as const,
     pagesTrash: () => [...base, "kb", "pages", "trash"] as const,
+    pagesTrashList: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "pages", "trash"] as const)
+        : ([...base, "kb", "pages", "trash", params] as const),
     pagesSearch: (searchQuery: string, aclVersion: string) =>
       [...base, "kb", "pages", "search", searchQuery, aclVersion] as const,
     page: (pageId: number) => [...base, "kb", "pages", pageId] as const,
@@ -44,6 +48,8 @@ export const knowledgeAndSurveysQueryKeys = {
         ? ([...base, "kb", "pageReviews"] as const)
         : ([...base, "kb", "pageReviews", params] as const),
     pageReviewsDue: () => [...base, "kb", "pageReviewsDue"] as const,
+    pageReviewsBulkDecide: () =>
+      [...base, "kb", "pageReviews", "bulk-decide"] as const,
     pageRecordLinks: (pageId: number) =>
       [...base, "kb", "pages", pageId, "record-links"] as const,
     importJobs: () => [...base, "kb", "import-jobs"] as const,
@@ -67,6 +73,10 @@ export const knowledgeAndSurveysQueryKeys = {
       [...base, "kb", "research-brief", researchBriefId] as const,
     settings: () => [...base, "kb", "settings"] as const,
     sources: () => [...base, "kb", "sources"] as const,
+    pageCollection: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "page-collection"] as const)
+        : ([...base, "kb", "page-collection", params] as const),
   },
 
   roadmap: {
@@ -129,7 +139,13 @@ export const knowledgeAndSurveysQueryKeys = {
     assessmentAttempts: (surveyId: number, params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "surveys", "assessmentAttempts", surveyId] as const)
-        : ([...base, "surveys", "assessmentAttempts", surveyId, params] as const),
+        : ([
+            ...base,
+            "surveys",
+            "assessmentAttempts",
+            surveyId,
+            params,
+          ] as const),
     certificates: (surveyId: number) =>
       [...base, "surveys", "certificates", surveyId] as const,
     liveSession: (sessionId: number) =>
@@ -149,5 +165,4 @@ export const knowledgeAndSurveysQueryKeys = {
     automations: (surveyId: number) =>
       [...base, "surveys", "automations", surveyId] as const,
   },
-
 } as const;

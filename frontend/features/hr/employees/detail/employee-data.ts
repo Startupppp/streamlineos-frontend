@@ -14,6 +14,7 @@ const employeeEmploymentSchema = z
     employeeNumber: z.string(),
     lifecycleStatus: z.string(),
     workerType: z.string(),
+    departmentId: z.string().nullable(),
     designation: z.string().nullable(),
     joiningDate: z.string().nullable(),
     probationEndDate: z.string().nullable(),

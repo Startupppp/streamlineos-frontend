@@ -62,6 +62,7 @@ jest.mock("@/hooks/api/dashboard", () => ({
   useLeavesToday: () => ({ data: { data: [], total: 0, hasMore: false }, isLoading: false }),
   useUpcomingHolidays: () => ({ data: [], isLoading: false }),
   useCrmPulse: () => ({ data: null, isLoading: false, error: null, refetch: jest.fn() }),
+  useTodayActivities: () => ({ data: [], isLoading: false, error: null, refetch: jest.fn() }),
 }));
 
 jest.mock("@/features/dashboard/use-dashboard-access", () => ({

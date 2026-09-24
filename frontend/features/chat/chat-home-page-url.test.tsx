@@ -32,6 +32,7 @@ jest.mock("@/features/chat/chat-shell", () => ({
 
 jest.mock("@/features/chat/chat-shell-layout", () => ({
   getChatConversationListPaneClassName: () => "flex",
+  getChatMessagePaneClassName: () => "flex",
 }));
 
 jest.mock("@/features/chat/chat-lazy-fallbacks", () => ({
@@ -57,10 +58,6 @@ jest.mock("@/features/chat/new-dm-dialog", () => ({
 
 jest.mock("@/features/chat/new-group-dialog", () => ({
   NewGroupDialog: () => null,
-}));
-
-jest.mock("@/components/layout/shell-variant-context", () => ({
-  useShellVariant: () => "desktop",
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({

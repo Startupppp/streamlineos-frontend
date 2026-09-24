@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import type React from "react";
 import {
   Bell,
   BellOff,
@@ -36,9 +35,12 @@ import {
   useUnfavoriteChannel,
   useUnmuteChannel,
 } from "@/hooks/api/chat-personal-b";
-import type { ChatNotificationPreference } from "@/types/chat";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
 import type { Channel } from "./chat-types";
+import {
+  CHAT_NOTIFICATION_OPTIONS,
+  isChatNotificationPreference,
+} from "./chat-notification-preferences";
 
 const MUTE_DURATIONS: { value: "15m" | "1h" | "8h" | "24h" | "forever"; label: string }[] = [
   { value: "15m", label: "For 15 minutes" },
@@ -48,37 +50,7 @@ const MUTE_DURATIONS: { value: "15m" | "1h" | "8h" | "24h" | "forever"; label: s
   { value: "forever", label: "Until turned back on" },
 ];
 
-const NOTIFICATION_OPTIONS: { value: ChatNotificationPreference; label: string }[] = [
-  { value: "DEFAULT", label: "Use Default" },
-  { value: "ALL", label: "All Messages" },
-  { value: "MENTIONS", label: "Mentions Only" },
-  { value: "NOTHING", label: "Nothing" },
-];
-
-function isNotificationPreference(value: string): value is ChatNotificationPreference {
-  return NOTIFICATION_OPTIONS.some((option) => option.value === value);
-}
-
 type MuteDuration = (typeof MUTE_DURATIONS)[number]["value"];
-
-function MuteDurationItem({
-  duration,
-  label,
-  onMute,
-}: {
-  duration: MuteDuration;
-  label: string;
-  onMute: (duration: MuteDuration) => void;
-}) {
-  const handleSelect = useCallback(
-    (event: Event) => {
-      event.preventDefault();
-      onMute(duration);
-    },
-    [onMute, duration],
-  );
-  return <DropdownMenuItem onSelect={handleSelect}>{label}</DropdownMenuItem>;
-}
 
 export function ChannelItemMenu({
   channel,
@@ -143,11 +115,6 @@ export function ChannelItemMenu({
     [muteChannel, channel.id],
   );
 
-  const handleMuteDuration = useCallback(
-    (duration: MuteDuration) => { void handleMute(duration); },
-    [handleMute],
-  );
-
   const handleUnmute = useCallback(
     async (event: Event) => {
       event.preventDefault();
@@ -164,7 +131,7 @@ export function ChannelItemMenu({
   const handleNotificationPreferenceChange = useCallback(
     async (value: string) => {
       try {
-        if (!isNotificationPreference(value)) return;
+        if (!isChatNotificationPreference(value)) return;
         await setNotificationPreference.mutateAsync({
           channelId: channel.id,
           preference: value,
@@ -196,10 +163,6 @@ export function ChannelItemMenu({
     },
     [onStartCall, channel.id],
   );
-
-  const handleStopPropagation = useCallback((event: React.SyntheticEvent) => {
-    event.stopPropagation();
-  }, []);
 
   const handleOpenInvite = useCallback((event: Event) => {
     event.preventDefault();
@@ -278,7 +241,7 @@ export function ChannelItemMenu({
                 value={notificationPreference}
                 onValueChange={handleNotificationPreferenceChange}
               >
-                {NOTIFICATION_OPTIONS.map((option) => (
+                {CHAT_NOTIFICATION_OPTIONS.map((option) => (
                   <DropdownMenuRadioItem key={option.value} value={option.value}>
                     {option.label}
                   </DropdownMenuRadioItem>

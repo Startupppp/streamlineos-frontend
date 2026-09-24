@@ -1,3 +1,8 @@
+> **HISTORICAL — point-in-time record, 2026-09-22**
+> The environment facts inside this document (commit SHAs, route counts, branch states, test counts) are point-in-time and no longer current. For current release status see [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+
+---
+
 # Build Implementation Status
 
 Coordinator-owned. Workers never edit this file. `DONE` requires: PR merged into the integration branch, acceptance criteria checked, targeted tests pass, integration checks pass, no unresolved P0/P1 review finding.

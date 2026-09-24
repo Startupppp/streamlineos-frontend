@@ -215,49 +215,6 @@ export const acceptCandidateScoreContract = z.object({
   accepted: z.literal(true),
 });
 
-const fieldDiffSchema = z.object({
-  added: z.array(z.string()),
-  removed: z.array(z.string()),
-  changed: z.array(z.string()),
-});
-
-const citationSchema = z.object({
-  id: z.union([z.string(), z.number()]),
-  title: z.string(),
-  href: z.string().optional(),
-  snippet: z.string().optional(),
-  freshness: z.string().optional(),
-});
-
-const aiSummarySnapshotSchema = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  entityType: z.string(),
-  entityId: z.string(),
-  summary: z.string(),
-  structured: z.object({
-    highlights: z.array(z.string()),
-    blockers: z.array(z.string()),
-    nextActions: z.array(z.string()),
-  }),
-  citations: z.array(citationSchema).nullable(),
-  correlationId: z.string().nullable(),
-  generatedBy: z.string().nullable(),
-  createdAt: wireDate(),
-});
-
-export const aiSummarySnapshotContract = aiSummarySnapshotSchema;
-
-export const snapshotWithDiffNullableContract = z.object({
-  snapshot: aiSummarySnapshotSchema,
-  diff: z.object({
-    highlights: fieldDiffSchema,
-    blockers: fieldDiffSchema,
-    nextActions: fieldDiffSchema,
-    isSameSnapshot: z.boolean(),
-  }).nullable(),
-}).nullable();
-
 export const confirmActionContract = z.object({
   ok: z.literal(true),
   result: z.record(z.string(), z.unknown()),

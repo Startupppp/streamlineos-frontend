@@ -1,3 +1,8 @@
+> **HISTORICAL — point-in-time record, 2026-09-22**
+> The environment facts inside this document (commit SHAs, route counts, branch state) are point-in-time and no longer current. For current release status see [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+
+---
+
 # Next closure status — `/build/access` removal
 
 Branch `build/access-route-removal` · commit `54e73a9` · worktree `D:/projects/personal/slos-access-removal`.

@@ -131,7 +131,7 @@ jest.mock("./inbox-virtual-list", () => ({
 }));
 
 jest.mock("./inbox-toolbar", () => {
-  const { createElement: ce } = require("react") as typeof import("react");
+  const { createElement: ce } = jest.requireActual<typeof import("react")>("react");
   const views = [
     { value: "primary", label: "All" },
     { value: "notifications", label: "Notifications" },
@@ -389,6 +389,19 @@ describe("buildQueryParams — view → backend params mapping", () => {
       kindOverride: ["notification", "mail"],
     });
     expect(params.kinds).toEqual(["notification", "mail"]);
+  });
+
+  it("mentions narrows notifications by event key before pagination", () => {
+    const params = buildQueryParams(state("mentions"));
+    expect(params.eventKeys).toEqual(expect.arrayContaining([
+      "build.comment.mention",
+      "chat.message.mention",
+    ]));
+  });
+
+  it("module flows through to the unified inbox query", () => {
+    const params = buildQueryParams({ ...state("primary"), module: "crm" });
+    expect(params.module).toBe("crm");
   });
 });
 

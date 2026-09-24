@@ -22,3 +22,34 @@ export const kbSearchResponseContract = z.object({
 
 export type KbSearchItem = z.infer<typeof kbSearchItemContract>;
 export type KbSearchApiResponse = z.infer<typeof kbSearchResponseContract>;
+
+export const kbPageFullSearchItemContract = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  spaceId: z.number().int().nullable(),
+  projectId: z.number().int().nullable(),
+  status: z.string(),
+  trustState: z.string(),
+  visibility: z.string(),
+  contentType: z.string(),
+  updatedAt: z.string(),
+  snippet: z.string(),
+});
+
+export const kbPageFullSearchFacetsContract = z.object({
+  status: z.array(z.object({ value: z.string(), count: z.number().int() })),
+  space: z.array(
+    z.object({ spaceId: z.number().int().nullable(), count: z.number().int() }),
+  ),
+});
+
+export const kbPageFullSearchResponseContract = z.object({
+  items: z.array(kbPageFullSearchItemContract),
+  hasMore: z.boolean(),
+  limit: z.number().int(),
+  facets: kbPageFullSearchFacetsContract.nullable(),
+});
+
+export type KbPageFullSearchItem = z.infer<typeof kbPageFullSearchItemContract>;
+export type KbPageFullSearchFacets = z.infer<typeof kbPageFullSearchFacetsContract>;
+export type KbPageFullSearchResponse = z.infer<typeof kbPageFullSearchResponseContract>;

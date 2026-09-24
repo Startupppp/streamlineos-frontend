@@ -33,13 +33,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/ai/executive-brief" },
   },
   {
-    prefix: "/ask",
-    permission: "kb:pages:view",
-    reason:
-      "Matches the backend gate on the KB ask endpoints. Knowledge Base reading is a member default, so this denies nobody who keeps platform core.",
-    backendRoute: { method: "post", path: "/kb/ask" },
-  },
-  {
     prefix: "/blog/access",
     permission: "blog:access:view",
     reason:
@@ -87,6 +80,13 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     product: "administration",
     permission: "notifications:broadcasts:view",
     reason: "Canonical settings route for broadcast administration. Mirrors /notifications/broadcasts which remains as a compatibility redirect.",
+  },
+  {
+    prefix: "/knowledge/wiki/search",
+    permission: "kb:pages:view",
+    reason:
+      "Full-text page search. Matches the backend gate on GET /kb/pages/full-search (kb:pages:view). Navigation has an entry for it. The key is the one the page's own read declares.",
+    backendRoute: { method: "get", path: "/kb/pages/full-search" },
   },
   {
     prefix: "/knowledge/wiki/import",
@@ -143,13 +143,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     permission: "directory:workers:view",
     reason:
       "Workforce administration records are not the people directory. Root §8 places workers under organization governance and excludes them from the universal directory surface.",
-  },
-  {
-    prefix: "/chat/settings",
-    product: "administration",
-    permission: "chat:org-settings:manage",
-    reason:
-      "Organisation-wide chat configuration is administrative. Only org owners and admins hold chat:org-settings:manage; it is org-only and cannot be delegated.",
   },
   {
     prefix: "/build/managed-products/[managedProductId]/projects",

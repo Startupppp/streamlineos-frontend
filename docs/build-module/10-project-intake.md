@@ -8,6 +8,7 @@
 - **Decision:** Migrate the user job to `/build/[projectId]/forms and /build/[projectId]/triage`, preserve deep links temporarily, then remove this physical route.
 - **User job:** Turn submissions into prioritized work without duplicates.
 - **Evidence:** `frontend/app/(authenticated)/build/[projectId]/intake/page.tsx`; Project 6 rendered the All Projects surface.
+- **Note (2026-09-23):** This removal is NOT in scope for the current release. All three routes — `/intake`, `/forms`, and `/triage` — exist as live product routes. Verified: `intake/page.tsx`, `forms/page.tsx`, and `triage/page.tsx` all exist under `frontend/app/(authenticated)/build/[projectId]/`. See [RELEASE-STATUS.md](./RELEASE-STATUS.md) section 7.
 
 ## Product contract
 

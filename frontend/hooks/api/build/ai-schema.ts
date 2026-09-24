@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-const ticketSuggestionContract = z.object({
-  title: z.string(),
-  type: z.string(),
-  priority: z.string(),
-  description: z.string(),
-});
-
 export const projectSummaryContract = z.object({
   summary: z.string(),
   highlights: z.array(z.string()),
@@ -18,90 +11,6 @@ export const projectSummaryContract = z.object({
     blocked: z.number().int(),
     overdue: z.number().int(),
   }).passthrough(),
-});
-
-const riskEvidenceSchema = z.object({
-  totalTasks: z.number().int(),
-  done: z.number().int(),
-  inProgress: z.number().int(),
-  blocked: z.number().int(),
-  overdue: z.number().int(),
-});
-
-export const projectRisksContract = z.object({
-  risks: z.array(z.object({
-    title: z.string(),
-    severity: z.enum(["high", "medium", "low"]),
-    rationale: z.string(),
-    mitigation: z.string(),
-  })),
-  evidence: riskEvidenceSchema,
-});
-
-export const projectClientUpdateContract = z.object({
-  headline: z.string(),
-  body: z.string(),
-  sections: z.array(z.object({ heading: z.string(), content: z.string() })),
-});
-
-export const projectPlanContract = z.object({
-  summary: z.string(),
-  milestones: z.array(z.object({
-    name: z.string(),
-    tasks: z.array(z.object({
-      title: z.string(),
-      estimateHours: z.number(),
-      priority: z.enum(["high", "medium", "low"]),
-    })),
-  })),
-  suggestions: z.literal(true),
-});
-
-export const projectExtractTasksContract = z.object({
-  tasks: z.array(z.object({
-    title: z.string(),
-    priority: z.enum(["high", "medium", "low"]),
-    suggestedAssignee: z.string(),
-    dueHint: z.string(),
-  })),
-  suggestions: z.literal(true),
-});
-
-export const projectAskContract = z.object({
-  answer: z.string(),
-  confidence: z.enum(["high", "medium", "low"]),
-  evidence: riskEvidenceSchema,
-});
-
-export const weeklyUpdateContract = z.object({
-  headline: z.string(),
-  completedHighlights: z.array(z.string()),
-  blockers: z.array(z.string()),
-  upcomingFocus: z.array(z.string()),
-  citations: z.array(z.object({
-    source: z.enum(["ticket", "blocker", "risk", "decision", "discussion"]),
-    label: z.string(),
-  })),
-  dateRange: z.object({ startDate: z.string(), endDate: z.string() }),
-  suggestions: z.literal(true),
-});
-
-export const changeImpactContract = z.object({
-  headline: z.string(),
-  scopeImpact: z.string(),
-  scheduleImpact: z.string(),
-  budgetImpact: z.string(),
-  riskSummary: z.array(z.string()),
-  pendingApprovals: z.array(z.string()),
-  citations: z.array(z.object({
-    source: z.enum(["change_request", "risk", "approval", "plan"]),
-    label: z.string(),
-  })),
-  evidence: z.object({
-    openChangeRequests: z.number().int(),
-    openRisks: z.number().int(),
-    pendingApprovals: z.number().int(),
-  }),
 });
 
 export const summarizeTicketContract = z.object({

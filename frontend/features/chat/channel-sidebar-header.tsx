@@ -55,7 +55,7 @@ export function ChannelSidebarHeader({
   searchInputRef,
 }: ChannelSidebarHeaderProps) {
   return (
-    <div className={cn("px-4 pt-3 pb-2", isCollapsed && "md:hidden")}>
+    <div className={cn("px-3 pt-3 pb-2 sm:px-4", isCollapsed && "lg:hidden")}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
@@ -68,7 +68,7 @@ export function ChannelSidebarHeader({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-0.5">
+        <div className="hidden items-center gap-0.5 lg:flex">
           <SidebarSearchButton
             type="button"
             onClick={onOpenChatSearch}
@@ -110,6 +110,7 @@ export function ChannelSidebarHeader({
 
       <SearchInput
         ref={searchInputRef}
+        fill
         placeholder={showArchived ? "Search archived chats..." : "Search conversations..."}
         value={search}
         onValueChange={onSearchChange}

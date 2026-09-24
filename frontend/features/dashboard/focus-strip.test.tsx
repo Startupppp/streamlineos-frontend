@@ -106,7 +106,7 @@ describe("FocusStrip — actionable items", () => {
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
     const link = screen.getByRole("link", { name: /5 notifications/i });
-    expect(link).toHaveAttribute("href", "/me/inbox");
+    expect(link).toHaveAttribute("href", "/inbox?view=notifications");
   });
 
   it("shows unread mail with a link to the mail inbox", () => {
@@ -115,7 +115,7 @@ describe("FocusStrip — actionable items", () => {
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
     const link = screen.getByRole("link", { name: /2 unread messages/i });
-    expect(link).toHaveAttribute("href", "/me/inbox?kind=mail");
+    expect(link).toHaveAttribute("href", "/inbox?view=mail");
   });
 
   it("shows timesheet exception when hours logged but not submitted", () => {
@@ -129,7 +129,7 @@ describe("FocusStrip — actionable items", () => {
     };
     render(<FocusStrip access={baseAccess} />);
     const link = screen.getByRole("link", { name: /timesheet not submitted/i });
-    expect(link).toHaveAttribute("href", "/me/timesheet");
+    expect(link).toHaveAttribute("href", "/timesheets");
   });
 
   it("does NOT show timesheet item when timesheet is already submitted", () => {
@@ -155,7 +155,7 @@ describe("FocusStrip — actionable items", () => {
     };
     render(<FocusStrip access={baseAccess} />);
     const link = screen.getByRole("link", { name: /2 upcoming events/i });
-    expect(link).toHaveAttribute("href", "/me/calendar");
+    expect(link).toHaveAttribute("href", "/calendar");
   });
 });
 

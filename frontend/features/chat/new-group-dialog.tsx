@@ -5,22 +5,13 @@ import Image from "next/image";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
   DialogBody,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Camera,
-  Globe,
-  Hash,
-  Lock,
-  Loader2,
-  Users,
-} from "lucide-react";
+import { Camera, Globe, Hash, Lock, Loader2, Users } from "lucide-react";
 import { ChevronRightIcon, UsersIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
@@ -39,6 +30,7 @@ const storageUploadContract = lazyContract(() =>
 );
 import { MemberPicker } from "@/components/shared";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ChatDialogHeader } from "./chat-dialog-header";
 
 type ChannelKind = "GROUP" | "PUBLIC" | "PRIVATE";
 
@@ -95,14 +87,17 @@ export function NewGroupDialog({
     avatarInputRef.current?.click();
   }, []);
 
-  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(
-      e.target.value
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, ""),
-    );
-  }, []);
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setName(
+        e.target.value
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, ""),
+      );
+    },
+    [],
+  );
 
   const handleDescriptionChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value),
@@ -114,7 +109,9 @@ export function NewGroupDialog({
 
   const handleToggleMember = useCallback((userId: string) => {
     setSelectedIds((prev) =>
-      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId],
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId],
     );
   }, []);
 
@@ -130,7 +127,11 @@ export function NewGroupDialog({
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", "chat-avatars");
-      const data = await apiClient.upload<{ key: string }>("/storage/upload", formData, storageUploadContract);
+      const data = await apiClient.upload<{ key: string }>(
+        "/storage/upload",
+        formData,
+        storageUploadContract,
+      );
       if (data.key) setAvatarUrl(data.key);
       else toast.error("Upload failed");
     } catch (error) {
@@ -203,22 +204,21 @@ export function NewGroupDialog({
         </DialogTrigger>
       )}
       <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
-        <DialogHeader className="shrink-0 border-b border-border px-4 py-3">
-          <DialogTitle className="text-base">
-            {step === "info" ? "Create Channel" : "Add Members"}
-          </DialogTitle>
-        </DialogHeader>
+        <ChatDialogHeader
+          title={step === "info" ? "Create channel" : "Add members"}
+          description="Create a focused space for a team or topic."
+        />
 
         {step === "info" ? (
           <DialogBody className="space-y-4 px-4 py-4">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {CHANNEL_KINDS.map((kind) => (
                 <button
                   key={kind.value}
                   type="button"
                   onClick={() => setChannelKind(kind.value)}
                   className={cn(
-                    "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 text-center transition-all",
+                    "flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-all sm:flex-col sm:gap-1.5 sm:text-center",
                     channelKind === kind.value
                       ? "border-primary bg-primary/5 text-foreground"
                       : "border-border/40 text-muted-foreground hover:border-border hover:bg-muted/30",
@@ -287,7 +287,9 @@ export function NewGroupDialog({
                 />
               </div>
               {!name.trim() && name !== "" && (
-                <p className="mt-1 text-xs text-destructive">Channel name is required</p>
+                <p className="mt-1 text-xs text-destructive">
+                  Channel name is required
+                </p>
               )}
             </div>
 
@@ -318,7 +320,9 @@ export function NewGroupDialog({
         ) : (
           <>
             <DialogBody className="space-y-3 px-4 py-4">
-              <Label className="text-xs font-medium text-muted-foreground">Members</Label>
+              <Label className="text-xs font-medium text-muted-foreground">
+                Members
+              </Label>
               <MemberPicker
                 mode="multi"
                 values={selectedIds}
@@ -327,7 +331,11 @@ export function NewGroupDialog({
               />
             </DialogBody>
             <div className="flex shrink-0 gap-2 border-t border-border px-4 py-3">
-              <Button variant="outline" onClick={handleGoToInfo} className="h-9 flex-1">
+              <Button
+                variant="outline"
+                onClick={handleGoToInfo}
+                className="h-9 flex-1"
+              >
                 Back
               </Button>
               <LoadingButton

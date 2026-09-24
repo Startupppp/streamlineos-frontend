@@ -11,6 +11,7 @@ export const uninvoicedEntryContract = z.object({
   currency: z.string().nullable(),
   description: z.string().nullable(),
   invoiceLineDetail: invoiceLineDetailContract.nullable(),
+  invoicingStatus: z.enum(["UNINVOICED", "INVOICE_DRAFTED", "INVOICED"]),
 });
 
 export const uninvoicedEntriesResponseContract = z.object({

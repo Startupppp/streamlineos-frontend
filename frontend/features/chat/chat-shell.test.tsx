@@ -1,6 +1,7 @@
 import { getChatMobileBottomNavClassName } from "@/components/layout/mobile/chat-mobile-chrome-layout";
 import {
   getChatConversationListPaneClassName,
+  getChatMessagePaneClassName,
   getChatSidebarClassName,
 } from "./chat-shell-layout";
 
@@ -60,7 +61,7 @@ describe("getChatSidebarClassName", () => {
   });
 
   it("keeps the collapsed rail desktop-only", () => {
-    expect(getChatSidebarClassName(true)).toContain("md:w-[3.5rem]");
+    expect(getChatSidebarClassName(true)).toContain("lg:w-[3.5rem]");
     expect(getChatSidebarClassName(true)).not.toContain("w-14");
   });
 });
@@ -69,21 +70,37 @@ describe("getChatConversationListPaneClassName", () => {
   it("fills the width when the mobile conversation list is the active view", () => {
     const className = getChatConversationListPaneClassName(false, true);
     expect(className).toContain("w-full");
+    expect(className).toContain("lg:w-[340px]");
+    expect(className).not.toContain("md:w-[300px]");
     expect(className.split(/\s+/)).not.toContain("hidden");
     expect(isVisibleAt(className, 360)).toBe(true);
   });
 
-  it("hides below lg when a conversation is open, keeping the desktop widths", () => {
+  it("hides below lg when a conversation is open, keeping only desktop widths", () => {
     const className = getChatConversationListPaneClassName(false, false);
     expect(className).toContain("hidden lg:flex");
-    expect(className).toContain("md:w-[300px]");
     expect(className).toContain("lg:w-[340px]");
+    expect(className).not.toContain("md:w-[300px]");
   });
 
-  it("uses the collapsed rail width when collapsed", () => {
+  it("uses the collapsed rail width only where the desktop pane exists", () => {
     expect(getChatConversationListPaneClassName(true, false)).toContain(
-      "md:w-[3.5rem]",
+      "lg:w-[3.5rem]",
     );
+  });
+});
+
+describe("getChatMessagePaneClassName", () => {
+  it("hides the empty message pane below lg while the conversation list is active", () => {
+    const className = getChatMessagePaneClassName(true);
+    expect(className).toContain("hidden lg:flex");
+    expect(isVisibleAt(className, 768)).toBe(false);
+    expect(isVisibleAt(className, 1024)).toBe(true);
+  });
+
+  it("shows the message pane at every width once a conversation is open", () => {
+    const className = getChatMessagePaneClassName(false);
+    for (const width of WIDTHS) expect(isVisibleAt(className, width)).toBe(true);
   });
 });
 

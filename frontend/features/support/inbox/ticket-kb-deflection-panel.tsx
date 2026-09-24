@@ -29,7 +29,8 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
     { q: ticketTitle, pageSize: 4 },
     { enabled: open },
   );
-  const { data: spaces } = useKbSpaces();
+  const { data: spacesPage } = useKbSpaces();
+  const spaces = spacesPage?.data;
   const { mutate: createMutate, isPending: createPending } = useCreateKbArticleFromTicket();
 
   const handleToggle = useCallback(() => setOpen((v) => !v), []);

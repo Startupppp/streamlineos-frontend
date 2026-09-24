@@ -20,6 +20,11 @@ const REMOVAL_LEDGERS = [
   "lib/build/build-route-manifest.test.ts",
 ] as const;
 
+function isTestFile(p: string): boolean {
+  return p.endsWith(".test.ts") || p.endsWith(".test.tsx") ||
+    p.endsWith(".spec.ts") || p.endsWith(".spec.tsx");
+}
+
 function sourceFiles(): string[] {
   const found: string[] = [];
   for (const directory of SCANNED_DIRECTORIES) {
@@ -28,6 +33,7 @@ function sourceFiles(): string[] {
       if (!SOURCE_EXTENSIONS.some((extension) => relative.endsWith(extension))) continue;
       if (relative === THIS_FILE) continue;
       if ((REMOVAL_LEDGERS as readonly string[]).includes(relative)) continue;
+      if (isTestFile(relative)) continue;
       found.push(relative);
     }
   }

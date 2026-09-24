@@ -55,6 +55,10 @@ export const billingInvoiceDraftResponseContract = z.object({
   amount: z.number(),
 });
 
+export const billingReleaseDraftResponseContract = z.object({
+  releasedEntryIds: z.array(z.number()),
+});
+
 export const billingRatePreviewResponseContract = z.object({
   billRate: z.number().nullable(),
   costRate: z.number().nullable(),

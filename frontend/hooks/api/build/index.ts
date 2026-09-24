@@ -23,6 +23,7 @@ export * from "./ticket-search";
 export * from "./qa";
 export * from "./bugs";
 export * from "./change-requests";
+export * from "./change-request-affected-items";
 export * from "./client-portal";
 export * from "./approvals";
 export * from "./ai";

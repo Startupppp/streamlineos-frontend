@@ -1,173 +1,204 @@
 "use client";
 
-import { PageWrapper } from "@/components/ui/page-wrapper";
-
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { DataTable } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@/components/ui/data-table.types";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
+import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  useKbPagesTrash,
-  useRestoreKbPage,
-  useHardDeleteKbPage,
-  useEmptyKbTrash,
-} from "@/hooks/api/kb";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCan } from "@/hooks/api/access";
+import { useKbPagesTrash, useEmptyKbTrash } from "@/hooks/api/kb";
 import {
-  KbRotateCcwIcon,
-  KbTrash2Icon,
-} from "@/features/wiki/lib/kb-icons";
+  useKbBulkRestorePages,
+  useKbBulkPurgePages,
+} from "@/hooks/api/kb/pages";
+import { KbRotateCcwIcon, KbTrash2Icon } from "@/features/wiki/lib/kb-icons";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
-import {
-  WikiPageCard,
-  WIKI_PAGE_CARD_GRID_CLASS,
-} from "@/features/wiki/components/wiki-page-card";
 import { TrashRetentionSection } from "@/features/wiki/components/trash-retention-section";
+import { getErrorMessage } from "@/lib/get-error-message";
 
-function TrashRow({ page }: { page: KbPageListItem }) {
-  const restore = useRestoreKbPage();
-  const hardDelete = useHardDeleteKbPage();
-  const [confirmOpen, setConfirmOpen] = useState(false);
-
-  function handleRestore() {
-    restore.mutate(page.id, {
-      onSuccess: () => toast.success("Page restored"),
-      onError: () => toast.error("Failed to restore page"),
-    });
-  }
-
-  function handleDeleteForeverClick() {
-    setConfirmOpen(true);
-  }
-
-  function handleConfirmDelete() {
-    hardDelete.mutate(page.id, {
-      onSuccess: () => toast.success("Page permanently deleted"),
-      onError: () => toast.error("Failed to delete page"),
-    });
-  }
-
-  function handleConfirmOpenChange(open: boolean) {
-    setConfirmOpen(open);
-  }
-
-  return (
-    <>
-      <WikiPageCard
-        title={page.title}
-        icon={page.icon}
-        coverImage={page.coverImage}
-        subtitle={`Deleted ${page.deletedAt ? kbTimeAgo(page.deletedAt) : ""}`}
-      >
-        <div className="flex shrink-0 items-center gap-1">
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={handleRestore}
-            disabled={restore.isPending}
-            className="gap-1 text-xs"
-          >
-            <KbRotateCcwIcon className="h-3 w-3" />
-            Restore
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={handleDeleteForeverClick}
-            disabled={hardDelete.isPending}
-            className="gap-1 text-xs text-destructive hover:text-destructive"
-          >
-            <KbTrash2Icon className="h-3 w-3" />
-            Delete forever
-          </Button>
-        </div>
-      </WikiPageCard>
-
-      <AlertDialog open={confirmOpen} onOpenChange={handleConfirmOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Permanently delete this page?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. &ldquo;{page.title || "Untitled"}
-              &rdquo; will be permanently removed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDelete}
-              disabled={hardDelete.isPending}
-            >
-              Delete forever
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-}
+const DEFAULT_LIMIT = 50;
 
 function TrashSkeleton() {
   return (
-    <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-      {Array.from({ length: 5 }).map((_, skeletonIndex) => (
-        <Skeleton key={skeletonIndex} className="h-28 w-full rounded-lg" />
+    <div className="space-y-2">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton key={i} className="h-12 w-full rounded-md" />
       ))}
     </div>
   );
 }
 
 export default function TrashPage() {
-  const { data: pages = [], isLoading, isError } = useKbPagesTrash();
-  const emptyTrash = useEmptyKbTrash();
+  const searchParams = useSearchParams();
+  const { update: updateFilters, isPending: filtersPending } = useUrlFilters({
+    pageParam: "cursor",
+  });
+
+  const q = searchParams.get("q") ?? undefined;
+  const spaceIdRaw = searchParams.get("spaceId");
+  const spaceId = spaceIdRaw ? Number(spaceIdRaw) : undefined;
+
+  const [searchDraft, setSearchDraft] = useState(q ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cursorState = useCursorPagination();
+  const params = {
+    cursor: cursorState.cursor,
+    limit: DEFAULT_LIMIT,
+    q: q || undefined,
+    spaceId,
+  };
+
+  const { data, isLoading, isError, error, refetch } = useKbPagesTrash(params);
+
   const canPurge = useCan("kb:pages:purge");
   const canManageSettings = useCan("kb:settings:manage");
-  const [emptyConfirmOpen, setEmptyConfirmOpen] = useState(false);
+  const pageState = usePageState({
+    permission: "kb:pages:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !isLoading && !isError && (data?.data.length ?? 0) === 0,
+  });
 
-  function handleEmptyTrashClick() {
-    setEmptyConfirmOpen(true);
+  const emptyTrash = useEmptyKbTrash();
+  const bulkRestore = useKbBulkRestorePages();
+  const bulkPurge = useKbBulkPurgePages();
+
+  const [selected, setSelected] = useState<Set<string | number>>(new Set());
+  const [emptyConfirmOpen, setEmptyConfirmOpen] = useState(false);
+  const [bulkPurgeConfirmOpen, setBulkPurgeConfirmOpen] = useState(false);
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setSearchDraft(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      cursorState.reset();
+      updateFilters({ q: value || null });
+    }, 350);
   }
 
-  function handleConfirmEmptyTrash() {
+  function handleEmptyTrash() {
     emptyTrash.mutate(undefined, {
-      onSuccess: (data) =>
-        toast.success(`Emptied trash — ${data.purgedCount} page${data.purgedCount === 1 ? "" : "s"} permanently deleted`),
-      onError: () => toast.error("Failed to empty trash"),
+      onSuccess: (d) =>
+        toast.success(
+          `Emptied trash — ${d.purgedCount} page${d.purgedCount === 1 ? "" : "s"} permanently deleted`,
+        ),
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+    setEmptyConfirmOpen(false);
+  }
+
+  function handleBulkRestore() {
+    const ids = [...selected].map(Number);
+    bulkRestore.mutate(ids, {
+      onSuccess: () => {
+        toast.success(
+          `Restored ${ids.length} page${ids.length === 1 ? "" : "s"}`,
+        );
+        setSelected(new Set());
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
-  function handleEmptyConfirmOpenChange(open: boolean) {
-    setEmptyConfirmOpen(open);
+  function handleBulkPurge() {
+    const ids = [...selected].map(Number);
+    bulkPurge.mutate(ids, {
+      onSuccess: () => {
+        toast.success(
+          `Permanently deleted ${ids.length} page${ids.length === 1 ? "" : "s"}`,
+        );
+        setSelected(new Set());
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+    setBulkPurgeConfirmOpen(false);
   }
 
-  const actions =
-    canPurge && pages.length > 0 ? (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleEmptyTrashClick}
-        disabled={emptyTrash.isPending}
-        className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-      >
-        Empty Trash
-      </Button>
-    ) : undefined;
+  const selectedCount = selected.size;
+  const pageCount = data?.data.length ?? 0;
+
+  const actions = (
+    <div className="flex items-center gap-2">
+      {selectedCount > 0 && (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleBulkRestore}
+            disabled={bulkRestore.isPending}
+          >
+            <KbRotateCcwIcon className="mr-1.5 h-3.5 w-3.5" />
+            Restore {selectedCount}
+          </Button>
+          {canPurge && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={bulkPurge.isPending}
+              onClick={() => setBulkPurgeConfirmOpen(true)}
+              className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+            >
+              <KbTrash2Icon className="mr-1.5 h-3.5 w-3.5" />
+              Purge {selectedCount}
+            </Button>
+          )}
+        </>
+      )}
+      {canPurge && pageCount > 0 && selectedCount === 0 && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setEmptyConfirmOpen(true)}
+          disabled={emptyTrash.isPending}
+          className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+        >
+          Empty Trash
+        </Button>
+      )}
+    </div>
+  );
+
+  const columns: DataTableColumn<KbPageListItem>[] = [
+    {
+      key: "title",
+      header: "Page",
+      cell: (row) => (
+        <div className="flex items-center gap-2 min-w-0">
+          {row.icon && (
+            <span className="shrink-0 text-base leading-none">{row.icon}</span>
+          )}
+          <span className="truncate font-medium">
+            {row.title || "Untitled"}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "deletedAt",
+      header: "Deleted",
+      cell: (row) => (
+        <span className="tabular-nums text-muted-foreground text-sm">
+          {row.deletedAt ? kbTimeAgo(row.deletedAt) : ""}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <>
@@ -178,57 +209,103 @@ export default function TrashPage() {
       >
         <div className="space-y-4">
           {canManageSettings ? <TrashRetentionSection /> : null}
-          {isLoading && <TrashSkeleton />}
-          {!isLoading && isError && (
-            <EmptyState
-              illustration={
-                <KbTrash2Icon className="w-8 text-muted-foreground" />
-              }
-              title="Could not load trash"
-              description="There was a problem fetching deleted pages."
-              className={CONTENT_FILL_PANEL}
+
+          <div className="flex gap-2">
+            <Input
+              type="search"
+              placeholder="Search deleted pages…"
+              value={searchDraft}
+              onChange={handleSearchChange}
+              className="max-w-sm"
+              aria-label="Search deleted pages"
             />
-          )}
-          {!isLoading && !isError && pages.length === 0 && (
-            <EmptyState
-              illustration={
-                <KbTrash2Icon className="w-8 text-muted-foreground" />
+          </div>
+
+          <PageState
+            resolution={pageState}
+            loading={<TrashSkeleton />}
+            empty={
+              <div className="flex flex-col items-center gap-3 py-16 text-center">
+                <KbTrash2Icon className="h-8 w-8 text-muted-foreground" />
+                <p className="text-sm font-medium">Trash is empty</p>
+                <p className="text-sm text-muted-foreground">
+                  Deleted pages will appear here and can be restored or
+                  permanently removed.
+                </p>
+              </div>
+            }
+            onRetry={refetch}
+          >
+            <DataTable
+              data={data?.data ?? []}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              isLoading={isLoading || filtersPending}
+              selection={{
+                selected,
+                onChange: setSelected,
+                getRowLabel: (row) => row.title || "Untitled",
+              }}
+              pagination={{
+                mode: "cursor",
+                pageSize: DEFAULT_LIMIT,
+                pageNumber: cursorState.pageNumber,
+                hasMore: data?.pagination.hasMore ?? false,
+                hasPrevious: cursorState.hasPrevious,
+                onNext: () => cursorState.goNext(data?.pagination.nextCursor),
+                onPrevious: cursorState.goPrevious,
+              }}
+              mobileCard={(row) => (
+                <div className="flex items-center justify-between gap-2 p-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {row.icon && (
+                      <span className="shrink-0 text-base">{row.icon}</span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {row.title || "Untitled"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {row.deletedAt ? kbTimeAgo(row.deletedAt) : ""}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              emptyState={
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <KbTrash2Icon className="h-6 w-6 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    No matching deleted pages
+                  </p>
+                </div>
               }
-              title="Trash is empty"
-              description="Deleted pages will appear here and can be restored or permanently removed."
-              className={CONTENT_FILL_PANEL}
             />
-          )}
-          {!isLoading && !isError && pages.length > 0 && (
-            <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-              {pages.map((page) => (
-                <TrashRow key={page.id} page={page} />
-              ))}
-            </div>
-          )}
+          </PageState>
         </div>
       </PageWrapper>
 
-      <AlertDialog open={emptyConfirmOpen} onOpenChange={handleEmptyConfirmOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Empty the trash?</AlertDialogTitle>
-            <AlertDialogDescription>
-              All {pages.length} page{pages.length === 1 ? "" : "s"} in the trash will be permanently deleted. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmEmptyTrash}
-              disabled={emptyTrash.isPending}
-            >
-              Empty Trash
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={emptyConfirmOpen}
+        onOpenChange={setEmptyConfirmOpen}
+        title="Empty the trash?"
+        description={`All ${pageCount} page${pageCount === 1 ? "" : "s"} in the trash will be permanently deleted. This cannot be undone.`}
+        confirmLabel="Empty Trash"
+        destructive
+        isPending={emptyTrash.isPending}
+        onConfirm={handleEmptyTrash}
+      />
+
+      <ConfirmDialog
+        open={bulkPurgeConfirmOpen}
+        onOpenChange={setBulkPurgeConfirmOpen}
+        title={`Permanently delete ${selectedCount} page${selectedCount === 1 ? "" : "s"}?`}
+        description="This cannot be undone. The selected pages will be permanently removed along with their history, attachments, and index entries."
+        confirmLabel="Delete Forever"
+        destructive
+        isPending={bulkPurge.isPending}
+        onConfirm={handleBulkPurge}
+      />
     </>
   );
 }
