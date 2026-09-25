@@ -18,18 +18,26 @@ import { downloadExport } from "@/lib/download-export";
 const POLL_INTERVAL_MS = 1_500;
 const POLL_TIMEOUT_MS = 120_000;
 
-export type ExportJobStatus = "pending" | "running" | "completed" | "failed" | string;
+export type ExportJobStatus = "pending" | "running" | "completed" | "failed" | "expired" | string;
 
+/** The fields read from the backend's job view (`expenseExportJobViewSchema`). */
 export interface ExportJobSnapshot {
   id: string;
   status: ExportJobStatus;
-  error?: string | null;
+  errorMessage?: string | null;
 }
 
 export class ExportJobFailedError extends Error {
   constructor(label: string, reason: string | null | undefined) {
     super(reason?.trim() ? `The ${label} export failed: ${reason}` : `The ${label} export failed.`);
     this.name = "ExportJobFailedError";
+  }
+}
+
+export class ExportJobExpiredError extends Error {
+  constructor(label: string) {
+    super(`The ${label} export expired before it was downloaded. Start a new export.`);
+    this.name = "ExportJobExpiredError";
   }
 }
 
@@ -66,7 +74,7 @@ export interface DownloadExportJobOptions {
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 function isTerminal(status: ExportJobStatus): boolean {
-  return status === "completed" || status === "failed";
+  return status === "completed" || status === "failed" || status === "expired";
 }
 
 export async function downloadExportJob(
@@ -93,7 +101,8 @@ export async function downloadExportJob(
     );
   }
 
-  if (job.status === "failed") throw new ExportJobFailedError(options.label, job.error);
+  if (job.status === "failed") throw new ExportJobFailedError(options.label, job.errorMessage);
+  if (job.status === "expired") throw new ExportJobExpiredError(options.label);
 
   // The same guard the synchronous path uses: a finished job that hands back an
   // empty body or an error page must not be saved as the export.

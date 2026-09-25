@@ -90,10 +90,28 @@ describe("downloadExportJob", () => {
 
   it("raises the server's reason when the job fails, and saves nothing", async () => {
     post.mockResolvedValue({ id: "job-3", status: "pending" });
-    get.mockResolvedValue({ id: "job-3", status: "failed", error: "No expenses in range" });
+    // The backend's job view carries `errorCode` / `errorMessage` (expenseExportJobViewSchema), never `error`.
+    get.mockResolvedValue({ id: "job-3", status: "failed", errorCode: "EMPTY", errorMessage: "No expenses in range" });
 
     await expect(downloadExportJob(base)).rejects.toBeInstanceOf(ExportJobFailedError);
     await expect(downloadExportJob(base)).rejects.toThrow(/No expenses in range/);
+    expect(downloadExport).not.toHaveBeenCalled();
+  });
+
+  it("stops at an expired job and says so, instead of polling until the timeout", async () => {
+    post.mockResolvedValue({ id: "job-6", status: "pending" });
+    get.mockResolvedValue({ id: "job-6", status: "expired", errorCode: null, errorMessage: null });
+
+    let polls = 0;
+    const wait = () => {
+      polls += 1;
+      return Promise.resolve();
+    };
+    let clock = 0;
+    await expect(
+      downloadExportJob({ ...base, wait, now: () => (clock += 10_000) }),
+    ).rejects.toThrow(/expired/);
+    expect(polls).toBe(1);
     expect(downloadExport).not.toHaveBeenCalled();
   });
 
