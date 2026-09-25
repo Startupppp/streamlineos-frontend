@@ -1,7 +1,9 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Check, Circle, CircleDot } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Check, Circle, CircleDot, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -19,7 +21,50 @@ function StepIcon({ status }: { status: HrSetupStep["status"] }) {
   return <Circle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />;
 }
 
-export function HrStartHereChecklist({ signals }: { signals: HrSetupSignals }) {
+// Dismissal is a per-viewer convenience, so browser storage is enough: a
+// cleared browser shows the checklist again, which is harmless.
+const dismissListeners = new Set<() => void>();
+
+function dismissedKey(orgId: string): string {
+  return `hr_start_here_dismissed_${orgId}`;
+}
+
+function readDismissed(orgId: string | undefined): boolean {
+  if (!orgId) return false;
+  try {
+    return localStorage.getItem(dismissedKey(orgId)) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function subscribeDismissed(callback: () => void): () => void {
+  dismissListeners.add(callback);
+  return () => {
+    dismissListeners.delete(callback);
+  };
+}
+
+function persistDismissed(orgId: string | undefined): void {
+  if (!orgId) return;
+  try {
+    localStorage.setItem(dismissedKey(orgId), "true");
+  } catch {
+    return;
+  }
+  dismissListeners.forEach((listener) => listener());
+}
+
+export function HrStartHereChecklist({ signals }: { signals: HrSetupSignals | null }) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? undefined;
+  const dismissed = useSyncExternalStore(
+    subscribeDismissed,
+    () => readDismissed(orgId),
+    () => false,
+  );
+
+  if (!signals || dismissed) return null;
   const steps = hrStartHereSteps(signals);
   const progress = hrSetupProgress(steps);
 
@@ -29,7 +74,21 @@ export function HrStartHereChecklist({ signals }: { signals: HrSetupSignals }) {
     <Card className="border-dashed">
       <CardContent className="space-y-4 p-4">
         <div className="space-y-1">
-          <h2 className="text-sm font-semibold text-foreground">Start here</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-foreground">Start here</h2>
+            {orgId ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 text-muted-foreground"
+                onClick={() => persistDismissed(orgId)}
+                aria-label="Dismiss setup checklist"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            ) : null}
+          </div>
           <p className="max-w-prose text-xs leading-relaxed text-muted-foreground">
             {progress.known > 0
               ? `${progress.done} of ${progress.known} done. Work through these in order — each one unblocks the next.`
