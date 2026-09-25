@@ -10,8 +10,32 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { RichPageContent, RichPanel, RichSectionHeader } from "@/components/shared/rich-surface";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useManagerHome } from "@/hooks/api/hr/manager-home";
+import type { ManagerHome } from "@/hooks/api/hr/manager-home-schema";
 import { TeamApprovalsList } from "./team-approvals-list";
 import { TeamRoster } from "./team-roster";
+import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
+import { cn } from "@/lib/utils";
+
+const LEAVE_STATUS: Record<ManagerHome["upcomingLeave"][number]["status"], { label: string; tone: StatusTone }> = {
+  APPROVED: { label: "Approved", tone: "success" },
+  PENDING: { label: "Pending", tone: "warning" },
+  REJECTED: { label: "Rejected", tone: "danger" },
+  CANCELLED: { label: "Cancelled", tone: "neutral" },
+};
+
+/** The row's own status from the API, so the list evidences its "Approved" heading (HRMS-E2E-021). */
+function LeaveStatusBadge({ status }: { status: ManagerHome["upcomingLeave"][number]["status"] }) {
+  const { label, tone } = LEAVE_STATUS[status];
+  const classes = statusToneClasses(tone);
+  return (
+    <span
+      aria-label={`Leave status: ${label}`}
+      className={cn("rounded-full border px-2 py-0.5 text-micro", classes.surface, classes.ink, classes.rule)}
+    >
+      {label}
+    </span>
+  );
+}
 
 function ManagerHomeSkeleton() {
   return (
@@ -69,7 +93,10 @@ export function ManagerHomePage() {
                   <ul className="divide-y divide-border">
                     {data.upcomingLeave.map((leave) => (
                       <li key={`${leave.userId}-${leave.startDate}`} className="flex items-center justify-between gap-3 py-2">
-                        <span className="text-sm text-foreground">{leave.name}</span>
+                        <span className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm text-foreground truncate">{leave.name}</span>
+                          <LeaveStatusBadge status={leave.status} />
+                        </span>
                         <span className="text-dense text-muted-foreground tabular-nums">
                           {format(parseISO(leave.startDate), "MMM d")}
                           {leave.endDate !== leave.startDate ? ` – ${format(parseISO(leave.endDate), "MMM d")}` : ""}

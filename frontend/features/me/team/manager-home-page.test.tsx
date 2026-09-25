@@ -63,7 +63,7 @@ function home(overrides: Partial<ManagerHome> = {}): ManagerHome {
       { periodId: 30, userId: "usr-ben", name: "Ben", periodStart: "2026-09-07", periodEnd: "2026-09-13", status: "OPEN" },
       { periodId: 31, userId: "usr-ben", name: "Ben", periodStart: "2026-09-14", periodEnd: "2026-09-20", status: "REJECTED" },
     ],
-    upcomingLeave: [{ userId: "usr-asha", name: "Asha", startDate: "2026-09-20", endDate: "2026-09-22", leaveTypeId: 1 }],
+    upcomingLeave: [{ userId: "usr-asha", name: "Asha", startDate: "2026-09-20", endDate: "2026-09-22", leaveTypeId: 1, status: "APPROVED" }],
     probationDue: [{ userId: "usr-asha", name: "Asha", probationEndDate: "2026-10-01", daysLeft: 10 }],
     ...overrides,
   };
@@ -119,6 +119,22 @@ describe("ManagerHomePage — a reporting manager's one view", () => {
     expect(screen.getByText(/10 days left/)).toBeInTheDocument();
     expect(screen.getByText(/Sep 7 – Sep 13 · open/)).toBeInTheDocument();
     expect(screen.getByText(/Sep 20 – Sep 22/)).toBeInTheDocument();
+  });
+
+  it("prints each upcoming leave's own status, so the list evidences its heading (HRMS-E2E-021)", () => {
+    mockUseManagerHome.mockReturnValue({ data: home(), isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    render(<ManagerHomePage />);
+    expect(screen.getByLabelText("Leave status: Approved")).toBeInTheDocument();
+  });
+
+  it("shows a non-approved status as it is instead of hiding it under the Approved heading", () => {
+    const pending = { userId: "usr-asha", name: "Asha", startDate: "2026-09-20", endDate: "2026-09-22", leaveTypeId: 1, status: "PENDING" as const };
+    mockUseManagerHome.mockReturnValue({ data: home({ upcomingLeave: [pending] }), isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    render(<ManagerHomePage />);
+    expect(screen.getByLabelText("Leave status: Pending")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Leave status: Approved")).not.toBeInTheDocument();
   });
 
   it("says plainly when nothing is waiting", () => {

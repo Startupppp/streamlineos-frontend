@@ -45,7 +45,16 @@ export const managerHomeContract = z.object({
       status: z.string(),
     }),
   ),
-  upcomingLeave: z.array(z.object({ userId: z.string(), name: z.string(), startDate: z.string(), endDate: z.string(), leaveTypeId: z.number().nullable() })),
+  upcomingLeave: z.array(
+    z.object({
+      userId: z.string(),
+      name: z.string(),
+      startDate: z.string(),
+      endDate: z.string(),
+      leaveTypeId: z.number().nullable(),
+      status: z.enum(["PENDING", "APPROVED", "REJECTED", "CANCELLED"]),
+    }),
+  ),
   probationDue: z.array(z.object({ userId: z.string(), name: z.string().nullable(), probationEndDate: z.string(), daysLeft: z.number() })),
 });
 
