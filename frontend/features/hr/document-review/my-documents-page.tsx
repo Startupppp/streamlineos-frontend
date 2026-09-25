@@ -4,14 +4,15 @@ import { useCallback, useState } from "react";
 import { FileClock, FileWarning } from "lucide-react";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { useMyOnboardingDocs } from "@/hooks/api/hr/documents";
-import { getErrorMessage } from "@/lib/get-error-message";
 import type { MyOnboardingDocStatus } from "@/hooks/api/hr/documents";
 import { UploadDocSheet } from "@/features/hr/document-review/upload-doc-sheet";
 
@@ -49,6 +50,16 @@ function DocumentsSkeleton() {
 export function MyDocumentsPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const documents = useMyOnboardingDocs();
+  const canUpload = useCan("self:onboarding-docs");
+  const pageState = usePageState({
+    permission: "self:onboarding-docs",
+    isLoading: documents.isLoading,
+    isError: documents.isError,
+    error: documents.error,
+    isEmpty: (documents.data?.data.length ?? 0) === 0,
+  });
+  const { refetch } = documents;
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const handleOpenUpload = useCallback(() => setUploadOpen(true), []);
 
@@ -59,34 +70,29 @@ export function MyDocumentsPage() {
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
-        <AnimatedIconButton icon={UploadIcon} onClick={handleOpenUpload}>
-          Upload Document
-        </AnimatedIconButton>
+        canUpload ? (
+          <AnimatedIconButton icon={UploadIcon} onClick={handleOpenUpload}>
+            Upload Document
+          </AnimatedIconButton>
+        ) : undefined
       }
     >
-      {documents.isLoading ? <DocumentsSkeleton /> : null}
-
-      {documents.isError ? (
-        <ErrorState
-          className={PAGE_BODY_EMPTY_CLASS}
-          title="Documents unavailable"
-          description={getErrorMessage(documents.error)}
-          onRetry={documents.refetch}
-        />
-      ) : null}
-
-      {!documents.isLoading && !documents.isError && documents.data?.data.length === 0 ? (
-        <EmptyState
-          illustrationPreset="documents"
-          title="No documents requested"
-          description="Your organization has not requested any employment documents."
-          className={PAGE_BODY_EMPTY_CLASS}
-        />
-      ) : null}
-
-      {!documents.isLoading && !documents.isError && documents.data?.data.length ? (
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        className={PAGE_BODY_EMPTY_CLASS}
+        loading={<DocumentsSkeleton />}
+        empty={
+          <EmptyState
+            illustrationPreset="documents"
+            title="No documents requested"
+            description="Your organization has not requested any employment documents."
+            className={PAGE_BODY_EMPTY_CLASS}
+          />
+        }
+      >
         <div className="min-h-0 flex-1 divide-y overflow-y-auto rounded-xl border border-border bg-card">
-          {documents.data.data.map((document) => {
+          {(documents.data?.data ?? []).map((document) => {
             const needsAttention =
               document.status === "PENDING" ||
               document.status === "REJECTED" ||
@@ -120,7 +126,7 @@ export function MyDocumentsPage() {
             );
           })}
         </div>
-      ) : null}
+      </PageState>
 
       <UploadDocSheet
         open={uploadOpen}

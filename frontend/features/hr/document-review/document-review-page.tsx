@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -52,7 +53,10 @@ function useDocReviewSummary(cursor: string | undefined, search: string, status:
 }
 
 export function DocumentReviewPage() {
-  const canReview = useCan("hr:employees:manage");
+  // PATCH /hr/onboarding-docs/:docId is `hr:onboarding:manage`
+  // (hr-onboarding-docs-admin.controller.ts:121); hr:employees:manage was the
+  // wrong key, so reviewers without it saw no Approve / Re-upload.
+  const canReview = useCan("hr:onboarding:manage");
 
   const [reviewUserId, setReviewUserId] = useState<string | null>(null);
   const [reviewUserName, setReviewUserName] = useState<string | null>(null);
@@ -65,13 +69,17 @@ export function DocumentReviewPage() {
   const cursor = cursorHistory.at(-1);
 
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
-  const { data, isLoading, isFetching, isError, refetch } = useDocReviewSummary(
+  const { data, isLoading, isFetching, isError, error, refetch } = useDocReviewSummary(
     cursor,
     debouncedSearch,
     statusFilter,
   );
 
   const list = data?.data ?? [];
+  // The summary read is disabled without hr:onboarding:manage while the route
+  // only requires hr:documents:view, so a documents viewer used to see an
+  // empty table instead of a denial (FE-47).
+  const pageState = usePageState({ permission: "hr:onboarding:manage", isLoading, isError, error });
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
@@ -108,18 +116,17 @@ export function DocumentReviewPage() {
     setReviewUserName(null);
   }, []);
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper title="Document Review" subtitle="Review employee onboarding documents">
-        <ErrorState title="Failed to load document review data" onRetry={handleRetry} />
-      </PageWrapper>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <PageWrapper title="Document Review" subtitle="Review employee onboarding documents">
-        <Skeleton className="flex-1 rounded-lg" />
+        <PageState
+          resolution={pageState}
+          onRetry={handleRetry}
+          className="flex-1"
+          loading={<Skeleton className="flex-1 rounded-lg" />}
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }
@@ -132,7 +139,7 @@ export function DocumentReviewPage() {
         <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput placeholder="Search employees..." value={searchQuery} onValueChange={handleSearchChange} />
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
+            <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
