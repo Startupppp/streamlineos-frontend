@@ -76,6 +76,7 @@ Current release-candidate checks:
 - `check:route-access-contract`: pass.
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
+- Fresh static gate rerun passed: route-access contract (215 permission keys), feature-cycle scan (46 features / 3,883 files), PM Workspace removal (1,989 source files / 3,641 chunks), route thinness (595 authenticated modules, zero in-scope thick), and permission binding (2,620 Build-relevant bindings with no Build-owned mismatch).
 - Fresh route-bundle measurement for build `PEsKaTy3mZOzL9HoUw7Zu`: 13 routes measured, zero pending measurements, seven first-load JS budget breaches; the gate fails with the breaches visible rather than treating them as inconclusive. Deferring the module switcher and chat mobile navigation reduced `/build/inbox` from 620,256 to 609,551 bytes and `/build/my-work` from 655,347 to 644,642 bytes; `/inbox` and `/chat` now pass their first-load budgets.
 - Playwright `e2e/build-list-responsive.spec.ts`: 31/31 Chromium checks passed at 375px, 768px, and 1280px, covering overflow, focus return, filter drawers, pagination reachability, responsive cards/tables, loading, and empty states. The latest rerun is hydration-clean.
 - `git diff --check`: pass.
