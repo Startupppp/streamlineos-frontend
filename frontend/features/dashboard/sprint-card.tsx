@@ -15,6 +15,7 @@ import { sprintStatusColors } from "@/lib/theme-constants";
 const SPRINT_DANGER_DAYS = 2;
 
 interface SprintSummary {
+  id: number;
   projectId?: number;
   name: string;
   projectName: string;
