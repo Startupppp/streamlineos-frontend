@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,14 +31,16 @@ export function ErrorRetry({
       <span className="flex-1 text-muted-foreground truncate">
         {getErrorMessage(error)}
       </span>
-      <button
+      <Button
         type="button"
+        variant="link"
+        size="sm"
         onClick={onRetry}
-        className="shrink-0 flex items-center gap-0.5 text-status-info-ink hover:underline"
+        className="h-auto shrink-0 gap-1 p-0 text-xs text-status-info-ink"
       >
         <RefreshCcw className="h-3 w-3" />
         Retry
-      </button>
+      </Button>
     </div>
   );
 }

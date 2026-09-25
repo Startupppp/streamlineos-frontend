@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useMemo } from "react";
 import {
@@ -73,14 +74,16 @@ export function HrHubActivity({
             <span className="flex-1 text-muted-foreground truncate">
               {getErrorMessage(firstError)}
             </span>
-            <button
+            <Button
               type="button"
+              variant="link"
+              size="sm"
               onClick={onRetry}
-              className="shrink-0 flex items-center gap-0.5 text-status-info-ink hover:underline"
+              className="h-auto shrink-0 gap-1 p-0 text-xs text-status-info-ink"
             >
               <RefreshCcw className="h-3 w-3" />
               Retry
-            </button>
+            </Button>
           </div>
         ) : rows.length === 0 ? (
           <p className="p-4 text-xs text-muted-foreground">
