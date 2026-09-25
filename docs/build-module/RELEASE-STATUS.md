@@ -88,7 +88,7 @@ Current release-candidate checks:
 The candidate was exercised through a real authenticated browser against the production API.
 
 - The current audit verified the authenticated production ticket route `/build/6/tickets/BQS-2` in the real browser.
-- A complete org/project parent-route matrix and mobile matrix are not reverified in this audit.
+- The local candidate was directly loaded through all 65 authenticated Build page routes from the route snapshot: 25 organization routes and 40 project routes, including representative detail IDs; no visible runtime-error signal or browser console error was observed. A production full matrix and the mobile matrix remain open.
 - Issues actions no longer clip at 375 px.
 - Ticket properties start closed on mobile, open only on explicit action, and expose a visible close control.
 - Programs and My Work preserve deep-linked URL state.
@@ -103,23 +103,19 @@ The candidate was exercised through a real authenticated browser against the pro
   `/build/inbox?view=drafts`, `/build/6/backlog`, and
   `/build/command-center` without a visible runtime error; the canonical
   page heading is `Command Center`.
-- A local port `1000` UI smoke traversed 16 authenticated organization routes,
-  including Projects, Command Center, My Work, Inbox, All Work, Goals,
-  Managed Products, Portfolios, Programs, Roadmap, Teams, Templates,
-  Approvals, and Build settings, without a visible runtime-error or failed-load
-  surface.
-- A second local port `1000` UI smoke traversed 29 project routes under
-  `/build/6`, including delivery, collaboration, QA, governance, settings,
-  and reporting surfaces, without a visible runtime-error or not-found surface.
+- The 65-route local matrix included Projects, Command Center, My Work, Inbox,
+  All Work, Goals, Managed Products, Portfolios, Programs, Roadmap, Teams,
+  Templates, Approvals, Build settings, and all 40 project routes under
+  `/build/6`, without a visible runtime-error or failed-load surface.
 - Local port `1000` view-switcher verification routed `/build/6/issues` to
   `/calendar?q=login&status=TODO&cycle=7&projectId=6&source=build`; the unified
   Calendar surface rendered with no browser console errors.
 - A mismatched project ticket URL `/build/5/tickets/BQS-2` resolved to the
   unavailable-scope state and Page Not Found surface without exposing ticket
   data or crashing the shell.
-- The local port `1000` candidate renders `Command Center`; the production
-  browser still renders the prior `Home` heading, so the latest frontend
-  deployment remains unverified.
+- Both the local port `1000` candidate and production `/build/command-center`
+  render the canonical `Command Center` heading; the production smoke for that
+  route is current, while the complete production matrix remains open.
 - Local port `1000` malformed enum deep links such as
   `/build/6/issues?priority=NOT_A_PRIORITY&type=NOT_A_TYPE` now remove the
   invalid parameters and remain on the Issues page without an error state.
