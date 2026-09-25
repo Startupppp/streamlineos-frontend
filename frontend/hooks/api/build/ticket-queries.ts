@@ -163,12 +163,23 @@ export function useSubtasks(
   });
 }
 
-export function useTicketColumnCounts(projectId: number) {
+export function useTicketColumnCounts(projectId: number, filters?: BoardFilters) {
   const canView = useCan("build:tickets:view");
+  const params: Record<string, unknown> = {};
+  if (filters?.q) params.search = filters.q;
+  if (filters?.status) params.status = filters.status;
+  if (filters?.priority) params.priority = filters.priority;
+  if (filters?.type) params.type = filters.type;
+  if (filters?.assigneeId) params.assigneeId = filters.assigneeId;
+  if (filters?.labels) params.labelIds = filters.labels;
+  if (filters?.cycle) params.cycleId = filters.cycle;
+  if (filters?.module) params.moduleIds = filters.module;
+  if (filters?.dueDateFrom) params.dueDateFrom = filters.dueDateFrom;
+  if (filters?.dueDateTo) params.dueDateTo = filters.dueDateTo;
   return useQuery<Record<string, number>>({
-    queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
+    queryKey: buildWorkQueryKeys.projects.columnCounts(projectId, params),
     queryFn: ({ signal }) =>
-      apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`, undefined, signal, columnCountsLazy),
+      apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`, params, signal, columnCountsLazy),
     enabled: canView && projectId > 0,
     staleTime: 30_000,
   });
