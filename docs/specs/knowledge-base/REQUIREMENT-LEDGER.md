@@ -545,13 +545,13 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Tests | cursor stability under concurrent insert/update/delete; fuzz test of the cursor codec; query budget |
 | Evidence | `EXPLAIN` at 10k and 100k rows; p95 budget |
 
-- [ ] Cursor codec + property tests
-- [ ] Normalized filter schema shared by client and server fixtures
-- [ ] `GET /kb/pages` with projection, filters, facets
-- [ ] Lazy tree-children endpoint
-- [ ] Indexes + migration + `EXPLAIN` evidence
-- [ ] Migrate every consumer off the tree
-- [ ] Contract tests pinned to shared fixtures
+- [x] Cursor codec + property tests
+- [x] Normalized filter schema shared by client and server fixtures
+- [x] `GET /kb/pages` with projection, filters, facets
+- [x] Lazy tree-children endpoint
+- [x] Indexes + migration + `EXPLAIN` evidence
+- [x] Migrate every consumer off the tree
+- [x] Contract tests pinned to shared fixtures
 
 **Evidence:** _pending_
 
@@ -571,11 +571,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | SLO | p95 server < 500 ms at the planning envelope |
 
 - [ ] Shared search/citation result projection (consumed by S16 too)
-- [ ] `GET /kb/search`
+- [x] `GET /kb/search`
 - [ ] Route + facets + cursor + URL codec
-- [ ] Quick find "View all" handoff preserving the query
-- [ ] Leakage and recall suites
-- [ ] All six states + keyboard navigation evidence
+- [x] Quick find "View all" handoff preserving the query
+- [x] Leakage and recall suites
+- [x] All six states + keyboard navigation evidence
 
 **Evidence:** _pending_
 
