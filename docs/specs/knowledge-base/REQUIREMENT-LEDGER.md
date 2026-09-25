@@ -683,8 +683,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Separately gated import/export tabs
 - [ ] Format/size validation and help; title, target space/parent, default visibility, duplicate policy
 - [ ] Dry-run summary; progress; per-item errors; retry; cancel before processing
-- [ ] Cursor job histories; expiring download indicator; audit event
-- [ ] Uploads scanned; jobs idempotent; partial import reports created/skipped/failed and resumes without duplicates
+- [x] Cursor job histories; expiring download indicator; audit event
+- [x] Uploads scanned; jobs idempotent; partial import reports created/skipped/failed and resumes without duplicates
 - [ ] Remove client slicing of job history and any synchronous parsing/indexing on the request connection
 
 **Evidence:** _pending_
