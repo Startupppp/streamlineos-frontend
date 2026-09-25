@@ -83,6 +83,7 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 **FE-58.** Check the inventory before writing anything: [UI-KIT.md](./UI-KIT.md#import-index) → the feature barrel → `components/shared` → `components/ui`.
 **FE-59.** Extend the existing primitive. A component duplicating one is a defect — there is exactly one `DataTable`, one `TablePagination`, one `LoadingButton`, one `AiActionsMenu`, one editor per class of surface.
 **FE-60.** Promote a component to `components/shared` (or `components/ui` for a primitive) on its second consumer, and update every importer.
+**FE-126.** **Delete pass-through wrappers; never write one.** If a function's entire body is a call to one other **exported** function forwarding the same arguments, it has no reason to exist — delete it and have every caller import the callee directly. The same holds for a file whose only export is such a wrapper: delete the file, not just the function. *Why:* it adds an import hop, a second name for one behaviour, and a place for the two to drift, while providing no seam — a wrapper earns its keep only by narrowing a type, binding an argument, adapting a shape, or hiding a module-private value. **The exemption that matters:** a function wrapping a *module-private* `Set`/`Map`/regex/array (`isPlanGatedModule` → `PLAN_GATED_MODULES.has`) is encapsulation, not indirection — it keeps the data structure unexported. Keep those.
 **FE-61.** Never import feature → feature. (gate: check:import-direction, check:feature-cycles)
 **FE-62.** Add a row to [UI-KIT.md](./UI-KIT.md#import-index) in the same change that adds or extends a shared component.
 **FE-63.** Deep-import `ErrorState`/`LoadingState`/`NoPermissionState` from the leaf in `app/**` route files, not the barrel. *Why:* the barrel drags `react-hook-form` across the client boundary — ~10–11 KB gzipped for nothing.
@@ -147,6 +148,7 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 ## 8. Performance & Accessibility
 
 **FE-112.** Never render an unbounded collection. Use server pagination or `react-window` v2. An `items.map(...)` with no pagination, `slice` or windowing is a hang-risk bug.
+**FE-125.** **Never ship a "Load more" / "Show more" button.** A paginated surface takes exactly one of two forms: **numbered pagination** via `TablePagination` / `DataTable`'s `pagination` prop when the read has a total, or **infinite scroll** (an `IntersectionObserver` sentinel calling `fetchNextPage`) when it does not. *Why:* a manual reveal button hides how much is left, makes position unrecoverable on reload, gives no route to page 7, and grows the mounted DOM without bound — it is the failure mode FE-112 exists to prevent, wearing a button. A keyset list has no total, so it gets infinite scroll or `TablePagination mode="cursor"` (prev/next) — never a faked page count (FE-105, BE-25). 45 surfaces still carry a reveal button; that count may only shrink.
 **FE-113.** Lazy-load heavy client components with `next/dynamic` — editors, charts, maps, kanban, anything inside a dialog or sheet.
 **FE-114.** Memoize only what you measured. `React.memo` for components rendered many times per screen with stable props; `useMemo` only for genuinely expensive derivations; `useCallback` only for a memoized child or a dependency.
 **FE-115.** Never `useMemo` an object or array literal, or anything Query already caches. Reach for `staleTime`/`select`.
@@ -177,6 +179,8 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 8. **FE-06** — no new business `route.ts`.
 9. **FE-92** — no raw hex or arbitrary visual value.
 10. No `any`, no `as X`, no `@ts-ignore`. (gate: check:type-assertions — hard zero)
+11. **FE-125** — no "Load more" button. Numbered pagination when there is a total, infinite scroll when there is not.
+12. **FE-126** — no pass-through wrapper. A function that only forwards to another exported function is deleted, not reviewed.
 
 ## Definition of Done — frontend task
 
