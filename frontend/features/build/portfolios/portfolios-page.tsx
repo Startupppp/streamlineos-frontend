@@ -77,6 +77,7 @@ export function PortfoliosPage() {
   const { data, isLoading, isError, error, refetch } = usePortfolios({
     cursor,
     limit: PAGE_SIZE,
+    search: listFilters.debouncedSearch.trim() || undefined,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
   });
   const { data: membersRes } = useOrgMembers(1, 100);
@@ -96,11 +97,7 @@ export function PortfoliosPage() {
   );
 
   const rows = useMemo(() => data?.data ?? [], [data]);
-  const search = listFilters.debouncedSearch.trim().toLowerCase();
-  const displayed = useMemo(() => {
-    if (!search) return rows;
-    return rows.filter((row) => row.name.toLowerCase().includes(search));
-  }, [rows, search]);
+  const displayed = rows;
 
   const resolution = usePageState({
     permission: "build:portfolios:view",

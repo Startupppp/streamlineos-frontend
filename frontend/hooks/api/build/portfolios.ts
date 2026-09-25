@@ -35,6 +35,7 @@ const noContentLazy = lazyContract(() =>
 interface ListFilters {
   cursor?: string;
   limit?: number;
+  search?: string;
   status?: string;
 }
 
@@ -43,6 +44,7 @@ export function usePortfolios(filters?: ListFilters) {
   const params: Record<string, string> = {};
   if (filters?.cursor) params["cursor"] = filters.cursor;
   if (filters?.limit) params["limit"] = String(filters.limit);
+  if (filters?.search) params["q"] = filters.search;
   if (filters?.status) params["status"] = filters.status;
   return useQuery<PortfoliosPage>({
     queryKey: buildWorkQueryKeys.projects.portfolios.list(Object.keys(params).length > 0 ? params : undefined),
