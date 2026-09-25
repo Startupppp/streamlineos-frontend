@@ -145,6 +145,8 @@ export function RoadmapListPage() {
               >
                 <RoadmapTab
                   search={listFilters.debouncedSearch}
+                  cursor={listFilters.cursor}
+                  onCursorChange={listFilters.setCursor}
                   createOpen={roadmapCreateOpen}
                   onCreateOpenChange={handleRoadmapCreateOpenChange}
                 />
@@ -153,13 +155,19 @@ export function RoadmapListPage() {
                 value="feedback"
                 className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto")}
               >
-                <FeedbackTab search={listFilters.debouncedSearch} />
+                <FeedbackTab
+                  search={listFilters.debouncedSearch}
+                  cursor={listFilters.cursor}
+                  onCursorChange={listFilters.setCursor}
+                />
               </TabsContent>
               <TabsContent
                 value="changelog"
                 className={cn(TABS_CONTENT_PAGE_BODY_CLASS, "overflow-y-auto")}
               >
                 <ChangelogTab
+                  cursor={listFilters.cursor}
+                  onCursorChange={listFilters.setCursor}
                   createOpen={changelogCreateOpen}
                   onCreateOpenChange={handleChangelogCreateOpenChange}
                 />

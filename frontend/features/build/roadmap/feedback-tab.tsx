@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import {
   useFeedbackPosts,
@@ -22,6 +22,8 @@ import { MergeFeedbackDialog } from "./merge-feedback-dialog";
 
 interface FeedbackTabProps {
   search: string;
+  cursor?: string | null;
+  onCursorChange?: (cursor: string | null) => void;
 }
 
 function FeedbackListSkeleton() {
@@ -41,12 +43,15 @@ function FeedbackListSkeleton() {
   );
 }
 
-export function FeedbackTab({ search }: FeedbackTabProps) {
-  const pager = useCursorPager(search.trim());
+export function FeedbackTab({
+  search,
+  cursor = null,
+  onCursorChange = () => {},
+}: FeedbackTabProps) {
   const isFiltered = search.trim().length > 0;
 
   const { data, isLoading, isError, error, refetch } = useFeedbackPosts(
-    isFiltered ? { search: search.trim(), cursor: pager.cursor } : { cursor: pager.cursor },
+    isFiltered ? { search: search.trim(), cursor: cursor ?? undefined } : { cursor: cursor ?? undefined },
   );
   const { data: roadmapData } = useRoadmapItems();
   const deletePost = useDeleteFeedbackPost();
@@ -58,7 +63,7 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
     isLoading,
     isError,
     error,
-    isEmpty: (data?.data ?? []).length === 0 && !pager.hasPrevious,
+    isEmpty: (data?.data ?? []).length === 0 && !cursor,
   });
 
   const handleSetMergeTarget = useCallback((post: FeedbackPost) => {
@@ -93,12 +98,12 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
   }
 
   const handleNext = useCallback(() => {
-    pager.goNext(data?.pagination.nextCursor);
-  }, [pager, data?.pagination.nextCursor]);
+    onCursorChange(data?.pagination.nextCursor ?? null);
+  }, [data?.pagination.nextCursor, onCursorChange]);
 
   const handlePrev = useCallback(() => {
-    pager.goPrevious();
-  }, [pager]);
+    onCursorChange(null);
+  }, [onCursorChange]);
 
   const hasNext = data?.pagination.hasMore ?? false;
 
@@ -140,7 +145,7 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
         mode="cursor"
         rowCount={(data?.data ?? []).length}
         hasMore={hasNext}
-        hasPrevious={pager.hasPrevious}
+        hasPrevious={Boolean(cursor)}
         onNext={handleNext}
         onPrevious={handlePrev}
       />

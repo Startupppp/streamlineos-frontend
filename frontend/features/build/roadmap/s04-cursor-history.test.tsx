@@ -63,22 +63,43 @@ describe("RoadmapTab S04 cursor history", () => {
   });
 
   it("walks from the first page to the last page and back without inventing a cursor", async () => {
-    render(<RoadmapTab search="" />);
+    let cursor: string | null = null;
+    const onCursorChange = (next: string | null) => {
+      cursor = next;
+    };
+    const view = render(
+      <RoadmapTab search="" cursor={cursor} onCursorChange={onCursorChange} />,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    view.rerender(
+      <RoadmapTab search="" cursor={cursor} onCursorChange={onCursorChange} />,
+    );
     expect(mockUseRoadmapItems.mock.calls.at(-1)?.[0]).toEqual({ cursor: "cursor-2" });
     expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
 
     fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    view.rerender(
+      <RoadmapTab search="" cursor={cursor} onCursorChange={onCursorChange} />,
+    );
     expect(mockUseRoadmapItems.mock.calls.at(-1)?.[0]).toEqual({ cursor: undefined });
   });
 
   it("resets cursor history when the list filter changes", async () => {
-    const view = render(<RoadmapTab search="" />);
+    let cursor: string | null = null;
+    const onCursorChange = (next: string | null) => {
+      cursor = next;
+    };
+    const view = render(
+      <RoadmapTab search="" cursor={cursor} onCursorChange={onCursorChange} />,
+    );
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
 
     await act(async () => {
-      view.rerender(<RoadmapTab search="second" />);
+      cursor = null;
+      view.rerender(
+        <RoadmapTab search="second" cursor={cursor} onCursorChange={onCursorChange} />,
+      );
     });
 
     await waitFor(() => {

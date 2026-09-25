@@ -36,7 +36,9 @@ export interface UseBuildListFiltersOptions {
 export interface BuildListFiltersState {
   search: string;
   debouncedSearch: string;
+  cursor: string | null;
   setSearch: (value: string) => void;
+  setCursor: (cursor: string | null) => void;
   value: (param: string) => string;
   isActive: (param: string) => boolean;
   setValue: (param: string, value: string) => void;
@@ -102,6 +104,7 @@ export function useBuildListFilters(
   }, [filters, readValue]);
 
   const urlSearch = withSearch ? (searchParams.get(searchParam) ?? "") : "";
+  const cursor = searchParams.get(BUILD_LIST_CURSOR_PARAM);
   const [search, setSearchState] = useState(urlSearch);
   const [appliedUrlSearch, setAppliedUrlSearch] = useState(urlSearch);
 
@@ -131,6 +134,21 @@ export function useBuildListFilters(
       writeParams({ [param]: value === sentinel ? null : value });
     },
     [values, writeParams],
+  );
+
+  const setCursor = useCallback(
+    (nextCursor: string | null) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (nextCursor) next.set(BUILD_LIST_CURSOR_PARAM, nextCursor);
+      else next.delete(BUILD_LIST_CURSOR_PARAM);
+      const query = next.toString();
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
+      });
+    },
+    [pathname, router, searchParams],
   );
 
   const clearAll = useCallback(() => {
@@ -174,7 +192,9 @@ export function useBuildListFilters(
   return {
     search,
     debouncedSearch,
+    cursor,
     setSearch: setSearchState,
+    setCursor,
     value,
     isActive,
     setValue,

@@ -173,7 +173,7 @@ Ordered by dependency on the closure stages above.
 - **Owner:** frontend
 - **Depends on:** none
 - **Acceptance:** every Build list route reads and writes state through the shared hook; keyset cursors match their `ORDER BY`.
-- **Evidence:** `frontend/features/build/shared/use-build-list-url-state.ts` is the canonical serializer used by the shared filter hook and its existing consumers; the organization project directory now uses it in `frontend/features/build/project-list/projects-page.tsx` (pushed in `92e278a23`) with focused URL-state coverage. Domain-specific state remains intentionally separate for Inbox, Cycles, Feedbucket, Reports, and detail overlays; the remaining collection audit is still open.
+- **Evidence:** `frontend/features/build/shared/use-build-list-url-state.ts` is the canonical serializer used by the shared filter hook and its existing consumers; the organization project directory uses it in `frontend/features/build/project-list/projects-page.tsx` (pushed in `92e278a23`), and Roadmap tab pagination now writes the shared `cursor` parameter through `frontend/features/build/shared/use-build-list-filters.ts`. Focused URL-state, roadmap, and cursor-history coverage passes 68 tests. Domain-specific state remains intentionally separate for Inbox, Cycles, Feedbucket, Reports, and detail overlays; the remaining collection audit is still open.
 - **Effort:** 4–6 d
 
 #### P1-3 — Canonical Issues explorer residual — **DONE FOR CURRENT RELEASE**

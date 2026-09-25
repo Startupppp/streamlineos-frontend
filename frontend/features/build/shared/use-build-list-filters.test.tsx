@@ -78,6 +78,15 @@ describe("useBuildListFilters", () => {
     expect(params.has("page")).toBe(false);
   });
 
+  it("writes and clears a keyset cursor without disturbing active filters", () => {
+    setUrl("q=login&status=open");
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setCursor("cursor-2"));
+    expect(lastParams().toString()).toBe("q=login&status=open&cursor=cursor-2");
+    act(() => result.current.setCursor(null));
+    expect(lastParams().toString()).toBe("q=login&status=open");
+  });
+
   it("holds a keystroke out of the URL until the debounce elapses", () => {
     const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
     act(() => result.current.setSearch("lo"));

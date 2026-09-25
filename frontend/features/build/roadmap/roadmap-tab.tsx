@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -18,6 +18,8 @@ import { RoadmapItemSheet } from "./roadmap-item-sheet";
 
 interface RoadmapTabProps {
   search: string;
+  cursor?: string | null;
+  onCursorChange?: (cursor: string | null) => void;
   createOpen?: boolean;
   onCreateOpenChange?: (open: boolean) => void;
 }
@@ -36,20 +38,22 @@ function RoadmapBoardSkeleton() {
   );
 }
 
-export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTabProps) {
-  const pager = useCursorPager(search.trim());
-
+export function RoadmapTab({
+  search,
+  cursor = null,
+  onCursorChange = () => {},
+  createOpen,
+  onCreateOpenChange,
+}: RoadmapTabProps) {
   const { data, isLoading, isError, error, refetch } = useRoadmapItems(
-    search.trim()
-      ? { search: search.trim(), cursor: pager.cursor }
-      : { cursor: pager.cursor },
+      search.trim() ? { search: search.trim(), cursor: cursor ?? undefined } : { cursor: cursor ?? undefined },
   );
   const deleteItem = useDeleteRoadmapItem();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ScorableRoadmapItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(null);
 
-  const isEmpty = (data?.data ?? []).length === 0 && !pager.hasPrevious;
+  const isEmpty = (data?.data ?? []).length === 0 && !cursor;
 
   const resolution = usePageState({
     permission: "build:roadmap:view",
@@ -115,12 +119,12 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
   }
 
   const handleNext = useCallback(() => {
-    pager.goNext(data?.pagination.nextCursor);
-  }, [pager, data?.pagination.nextCursor]);
+    onCursorChange(data?.pagination.nextCursor ?? null);
+  }, [data?.pagination.nextCursor, onCursorChange]);
 
   const handlePrev = useCallback(() => {
-    pager.goPrevious();
-  }, [pager]);
+    onCursorChange(null);
+  }, [onCursorChange]);
 
   const hasNext = data?.pagination.hasMore ?? false;
 
@@ -176,7 +180,7 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
             mode="cursor"
             rowCount={(data?.data ?? []).length}
             hasMore={hasNext}
-            hasPrevious={pager.hasPrevious}
+            hasPrevious={Boolean(cursor)}
             onNext={handleNext}
             onPrevious={handlePrev}
           />
