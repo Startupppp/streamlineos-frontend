@@ -69,7 +69,7 @@ export function useAddReaction(projectId: number, ticketId: number) {
         reactionLazy,
       ),
     onMutate: async (variables) => {
-      const ticketKey = buildWorkQueryKeys.projects.ticket(ticketId);
+      const ticketKey = buildWorkQueryKeys.projects.ticket(projectId, ticketId);
       await qc.cancelQueries({ queryKey: ticketKey });
       const previousComments = qc.getQueryData<Ticket | null>(ticketKey)?.comments;
       qc.setQueryData<Ticket | null>(ticketKey, (current) =>
@@ -84,7 +84,7 @@ export function useAddReaction(projectId: number, ticketId: number) {
     },
     onError: (_error, _variables, context) => {
       if (!context?.previousComments) return;
-      qc.setQueryData<Ticket | null>(buildWorkQueryKeys.projects.ticket(ticketId), (current) =>
+      qc.setQueryData<Ticket | null>(buildWorkQueryKeys.projects.ticket(projectId, ticketId), (current) =>
         patchComments(current, () => context.previousComments ?? []),
       );
     },
@@ -105,7 +105,7 @@ export function useRemoveReaction(projectId: number, ticketId: number) {
         noContentLazy,
       ),
     onMutate: async (variables) => {
-      const ticketKey = buildWorkQueryKeys.projects.ticket(ticketId);
+      const ticketKey = buildWorkQueryKeys.projects.ticket(projectId, ticketId);
       await qc.cancelQueries({ queryKey: ticketKey });
       const previousComments = qc.getQueryData<Ticket | null>(ticketKey)?.comments;
       qc.setQueryData<Ticket | null>(ticketKey, (current) =>
@@ -120,7 +120,7 @@ export function useRemoveReaction(projectId: number, ticketId: number) {
     },
     onError: (_error, _variables, context) => {
       if (!context?.previousComments) return;
-      qc.setQueryData<Ticket | null>(buildWorkQueryKeys.projects.ticket(ticketId), (current) =>
+      qc.setQueryData<Ticket | null>(buildWorkQueryKeys.projects.ticket(projectId, ticketId), (current) =>
         patchComments(current, () => context.previousComments ?? []),
       );
     },

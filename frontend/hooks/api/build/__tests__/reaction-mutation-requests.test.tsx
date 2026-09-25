@@ -22,7 +22,7 @@ const del = jest.mocked(apiClient.delete);
 
 const TICKET_ID = 7;
 const PROJECT_ID = 3;
-const ticketKey = buildWorkQueryKeys.projects.ticket(TICKET_ID);
+const ticketKey = buildWorkQueryKeys.projects.ticket(PROJECT_ID, TICKET_ID);
 
 function comment(id: number): TicketComment {
   return {

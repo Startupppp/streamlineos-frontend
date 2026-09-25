@@ -73,18 +73,20 @@ export function LabelPicker({
 
   const addLabel = useAddLabelToTicket({
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
-      });
+      if (projectId !== undefined)
+        queryClient.invalidateQueries({
+          queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+        });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const removeLabel = useRemoveLabelFromTicket({
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
-      });
+      if (projectId !== undefined)
+        queryClient.invalidateQueries({
+          queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+        });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });

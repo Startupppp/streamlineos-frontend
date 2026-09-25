@@ -202,7 +202,7 @@ export function invalidateBuildViews(
   });
   for (const ticketId of ticketIds) {
     void client.invalidateQueries({
-      queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
+      queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId),
     });
     void client.invalidateQueries({
       queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),

@@ -119,7 +119,7 @@ export function useUpdateTicket(
       ),
     onMutate: async (variables) => {
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);
-      const ticketKey = buildWorkQueryKeys.projects.ticket(variables.ticketId);
+      const ticketKey = buildWorkQueryKeys.projects.ticket(projectId, variables.ticketId);
       await Promise.all([
         queryClient.cancelQueries({ queryKey: detailKey }),
         queryClient.cancelQueries({ queryKey: ticketKey }),
@@ -206,7 +206,7 @@ export function useUpdateTicket(
           : ticket;
       patchTicketCollections(queryClient, projectId, applyServerVersion);
       queryClient.setQueryData<Ticket | null>(
-        buildWorkQueryKeys.projects.ticket(variables.ticketId),
+        buildWorkQueryKeys.projects.ticket(projectId, variables.ticketId),
         (current) => (current ? applyServerVersion(current) : current),
       );
       queryClient.setQueryData<ProjectWithDetails | null>(

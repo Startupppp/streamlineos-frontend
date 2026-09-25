@@ -236,7 +236,7 @@ export function useRankTicket<TContext = unknown>(
           : ticket;
       patchTicketCollections(queryClient, variables.projectId, applyServerRank);
       queryClient.setQueryData<Ticket | null>(
-        buildWorkQueryKeys.projects.ticket(data.id),
+        buildWorkQueryKeys.projects.ticket(variables.projectId, data.id),
         (current) => (current ? applyServerRank(current) : current),
       );
       options?.onSuccess?.(data, variables, context, mutationContext);
@@ -303,7 +303,7 @@ export function useBulkUpdateTickets(projectId: number) {
     onMutate: async (variables) => {
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);
       const ticketKeys = variables.ticketIds.map((ticketId) =>
-        buildWorkQueryKeys.projects.ticket(ticketId),
+        buildWorkQueryKeys.projects.ticket(projectId, ticketId),
       );
       await Promise.all([
         queryClient.cancelQueries({
@@ -340,7 +340,7 @@ export function useBulkUpdateTickets(projectId: number) {
       const previousTickets = new Map<number, Ticket | null | undefined>();
       const optimisticTickets = new Map<number, Ticket | null | undefined>();
       for (const ticketId of variables.ticketIds) {
-        const queryKey = buildWorkQueryKeys.projects.ticket(ticketId);
+        const queryKey = buildWorkQueryKeys.projects.ticket(projectId, ticketId);
         const previous = queryClient.getQueryData<Ticket | null>(queryKey);
         previousTickets.set(ticketId, previous);
         if (previous) queryClient.setQueryData(queryKey, patch(previous));
@@ -398,7 +398,7 @@ export function useBulkUpdateTickets(projectId: number) {
         const optimistic = context.optimisticTickets.get(ticketId);
         if (!previous || !optimistic) continue;
         queryClient.setQueryData<Ticket | null>(
-          buildWorkQueryKeys.projects.ticket(ticketId),
+          buildWorkQueryKeys.projects.ticket(projectId, ticketId),
           (current) =>
             current
               ? rollbackTicketFields(current, previous, optimistic)

@@ -107,7 +107,7 @@ export function useTicket(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<Ticket | null>({
-    queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
+    queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<Ticket | null>(`/build/${projectId}/tickets/${ticketId}`, undefined, signal, ticketDetailLazy),
     enabled: canView && !!ticketId && !!projectId,
@@ -130,7 +130,7 @@ export function useTicketByKey(
         `/build/${projectId}/tickets/key/${ticketNumber}`, undefined, signal, ticketDetailLazy,
       );
       if (ticket) {
-        queryClient.setQueryData(buildWorkQueryKeys.projects.ticket(ticket.id), ticket);
+        queryClient.setQueryData(buildWorkQueryKeys.projects.ticket(projectId, ticket.id), ticket);
       }
       return ticket;
     },

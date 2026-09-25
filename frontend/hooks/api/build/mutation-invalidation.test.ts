@@ -159,7 +159,7 @@ describe("useUpdateTicket — invalidation contract", () => {
   });
 
   it("keeps the optimistic ticket cache and refreshes activity without a detail refetch", async () => {
-    client.setQueryData(queryKeys.projects.ticket(9), {
+    client.setQueryData(queryKeys.projects.ticket(42, 9), {
       id: 9,
       title: "Before",
       updatedAt: "2026-09-15T10:00:00.000Z",
@@ -172,12 +172,12 @@ describe("useUpdateTicket — invalidation contract", () => {
       await result.current.mutateAsync({ ticketId: 9, title: "After" });
     });
 
-    expect(client.getQueryData(queryKeys.projects.ticket(9))).toMatchObject({
+    expect(client.getQueryData(queryKeys.projects.ticket(42, 9))).toMatchObject({
       title: "After",
       updatedAt: "2026-09-15T10:01:00.000Z",
     });
     expect(invalidateSpy).not.toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: queryKeys.projects.ticket(9) }),
+      expect.objectContaining({ queryKey: queryKeys.projects.ticket(42, 9) }),
     );
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: queryKeys.ticketActivity.list(9),

@@ -105,7 +105,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
       if (isApiError(error) && getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT") {
         if (ticketId !== null) {
           void queryClient.invalidateQueries({
-            queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
+            queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId),
           });
         }
         const patch: Record<string, unknown> = {};

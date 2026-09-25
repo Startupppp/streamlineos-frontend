@@ -90,7 +90,7 @@ it("tab B refetches a successful Build mutation with no matching cache entry in 
   const tabA = connect();
   const tabB = connect();
   const { mutation, read } = mutationIn(tabA.client);
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   const queryFn = jest.fn(async () => read());
   const observer = new QueryObserver(tabB.client, { queryKey, queryFn, staleTime: Infinity });
   cleanups.push(observer.subscribe(() => {}));
@@ -109,7 +109,7 @@ it("marks inactive Build and report caches stale without touching another tenant
   const tabB = connect();
   const otherOrg = connect(authenticatedScope("org-b", "member-a"));
   const otherUser = connect(authenticatedScope("org-a", "member-b"));
-  const ticketKey = buildWorkQueryKeys.projects.ticket(42);
+  const ticketKey = buildWorkQueryKeys.projects.ticket(9, 42);
   const reportKey = buildWorkQueryKeys.projectReports.velocity(9);
   const unrelatedKey = accountingAndSupportQueryKeys.accounting.all;
   for (const { client } of [tabB, otherOrg, otherUser]) {
@@ -156,7 +156,7 @@ it("refetches peer custom-field definitions, ticket values and project automatio
 it("does not signal a failed mutation or receive messages after provider cleanup", async () => {
   const tabA = connect();
   const tabB = connect();
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   tabB.client.setQueryData(queryKey, "Before");
   const failed = mutationIn(tabA.client, true);
   await act(async () => {
@@ -174,7 +174,7 @@ it("ignores invalid payloads and unauthenticated scopes", () => {
   connect("unauthenticated");
   connect(authenticatedScope("", "member-a"));
   expect(TabChannel.channels.size).toBe(1);
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   tab.client.setQueryData(queryKey, "Before");
   for (const channel of TabChannel.channels)
     channel.dispatchEvent(new MessageEvent("message", { data: { ticket: "untrusted" } }));
@@ -184,7 +184,7 @@ it("ignores invalid payloads and unauthenticated scopes", () => {
 it("uses storage events when BroadcastChannel is unavailable and survives denied storage", async () => {
   Object.defineProperty(globalThis, "BroadcastChannel", { value: undefined, configurable: true });
   const tab = connect();
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   tab.client.setQueryData(queryKey, "Before");
   const key = `streamlineos:build-cache:${scope}`;
   window.dispatchEvent(new StorageEvent("storage", { key, newValue: "build:changed" }));
@@ -200,7 +200,7 @@ it("uses storage events when BroadcastChannel is unavailable and survives denied
 
 it("throttles focus and visibility refreshes to active Build queries when BroadcastChannel exists", async () => {
   const tab = connect();
-  const buildKey = buildWorkQueryKeys.projects.ticket(42);
+  const buildKey = buildWorkQueryKeys.projects.ticket(9, 42);
   const unrelatedKey = accountingAndSupportQueryKeys.accounting.all;
   const buildQueryFn = jest.fn(async () => "Build");
   const unrelatedQueryFn = jest.fn(async () => "Accounting");
@@ -241,7 +241,7 @@ it("throttles focus and visibility refreshes to active Build queries when Broadc
 it("notifies peers when the server commits but a local success callback throws", async () => {
   const tabA = connect();
   const tabB = connect();
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   tabA.client.setQueryData(queryKey, "Before");
   tabB.client.setQueryData(queryKey, "Before");
   const { mutation, read } = mutationIn(tabA.client, false, () => { throw new Error("UI callback failed"); });
@@ -271,7 +271,7 @@ it("falls back to storage when the browser refuses to open a channel", async () 
 it.each(["unmount", "scope-switch"])("notifies the original scope after sender %s with a mutation in flight", async (change) => {
   const originalPeer = connect();
   const nextOrgPeer = connect(authenticatedScope("org-b", "member-a"));
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   originalPeer.client.setQueryData(queryKey, "Before");
   nextOrgPeer.client.setQueryData(queryKey, "Before");
   let commit = () => {};
@@ -303,7 +303,7 @@ it.each(["unmount", "scope-switch"])("notifies the original scope after sender %
 it("a private draft autosave does not make every other tab refetch the Build cache", async () => {
   const tabA = connect();
   const tabB = connect();
-  const queryKey = buildWorkQueryKeys.projects.ticket(42);
+  const queryKey = buildWorkQueryKeys.projects.ticket(9, 42);
   tabB.client.setQueryData(queryKey, "Before");
   function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={tabA.client}>{children}</QueryClientProvider>;

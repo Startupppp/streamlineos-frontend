@@ -54,7 +54,7 @@ export function useUpdateComment() {
           commentEditResultLazy,
         ),
       onMutate: async (variables) => {
-        const ticketKey = buildWorkQueryKeys.projects.ticket(variables.ticketId);
+        const ticketKey = buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId);
         await queryClient.cancelQueries({ queryKey: ticketKey });
         const previousComments = queryClient.getQueryData<Ticket | null>(ticketKey)?.comments;
         const editedAt = new Date().toISOString();
@@ -72,7 +72,7 @@ export function useUpdateComment() {
       onError: (_error, variables, context) => {
         if (!context?.previousComments) return;
         queryClient.setQueryData<Ticket | null>(
-          buildWorkQueryKeys.projects.ticket(variables.ticketId),
+          buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId),
           (current) => patchComments(current, () => context.previousComments ?? []),
         );
       },
@@ -99,7 +99,7 @@ export function useDeleteComment() {
           noContentContract,
         ),
       onMutate: async (variables) => {
-        const ticketKey = buildWorkQueryKeys.projects.ticket(variables.ticketId);
+        const ticketKey = buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId);
         await queryClient.cancelQueries({ queryKey: ticketKey });
         const previousComments = queryClient.getQueryData<Ticket | null>(ticketKey)?.comments;
         queryClient.setQueryData<Ticket | null>(ticketKey, (current) =>
@@ -114,7 +114,7 @@ export function useDeleteComment() {
       onError: (_error, variables, context) => {
         if (!context?.previousComments) return;
         queryClient.setQueryData<Ticket | null>(
-          buildWorkQueryKeys.projects.ticket(variables.ticketId),
+          buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId),
           (current) => patchComments(current, () => context.previousComments ?? []),
         );
       },

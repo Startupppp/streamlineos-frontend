@@ -85,7 +85,7 @@ export function useAddComment(
       ),
     onMutate: async (variables) => {
       const tempId = -Date.now();
-      const ticketKey = buildWorkQueryKeys.projects.ticket(variables.ticketId);
+      const ticketKey = buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId);
       await queryClient.cancelQueries({ queryKey: ticketKey });
       const ticket = queryClient.getQueryData<Ticket | null>(ticketKey);
       const previousComments = ticket?.comments ?? [];
@@ -161,7 +161,7 @@ export function useAddComment(
     },
     onSettled: (data, error, variables, context, mutFnCtx) => {
       if (error)
-        queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId) });
+        queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId) });
       queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId) });
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
@@ -179,7 +179,7 @@ export function useAddLabelToTicket(
       apiClient.post<{ success: boolean }>(`/build/${projectId}/tickets/${ticketId}/labels`, { labelId }, undefined, successLazy),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId),
       });
       if (variables.projectId) {
         queryClient.invalidateQueries({
@@ -207,7 +207,7 @@ export function useRemoveLabelFromTicket(
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId),
       });
       if (variables.projectId) {
         queryClient.invalidateQueries({
@@ -260,7 +260,7 @@ export function useAddAttachment(
       }, undefined, attachmentCreateResultLazy),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.projectId, variables.ticketId),
       });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },

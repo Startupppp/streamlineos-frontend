@@ -1,5 +1,5 @@
 "use client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -27,6 +27,6 @@ export function useSetRecurrence(projectId: number, ticketId: number) {
         isRecurring: rule !== null,
         recurrenceRule: rule,
       }, undefined, ticketUpdateResultLazy),
-    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId) }),
   });
 }
