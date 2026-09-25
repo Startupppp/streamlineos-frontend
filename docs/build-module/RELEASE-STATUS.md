@@ -95,6 +95,9 @@ The candidate was exercised through a real authenticated browser against the pro
 - Local port `1000` browser checks also rendered `/build/my-work`,
   `/build/inbox?view=drafts`, `/build/6/backlog`, and
   `/build/command-center` without a visible runtime error.
+- A mismatched project ticket URL `/build/5/tickets/BQS-2` resolved to the
+  unavailable-scope state and Page Not Found surface without exposing ticket
+  data or crashing the shell.
 
 Some detail pages have no production fixture rows for forms, incidents, meetings, QA runs, wiki pages, goals, portfolios, managed products, or teams. Their authenticated parent empty states passed; no production business data was created solely for testing.
 
