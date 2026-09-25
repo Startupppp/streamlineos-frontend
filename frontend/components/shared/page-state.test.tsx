@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { ApiError } from "@/lib/api-envelope";
 import { PageState } from "./page-state";
 
 const loading = <div data-testid="skeleton" />;
@@ -116,5 +117,16 @@ describe("PageState", () => {
     );
 
     expect(screen.queryByText("body")).not.toBeInTheDocument();
+  });
+
+  it("shows the request id of a failed load, so the person can quote it", () => {
+    const failure = new ApiError("Server error", 500, "INTERNAL", { correlationId: "req-3b1c" }, "/hr/documents");
+    render(
+      <PageState resolution={{ kind: "error", error: failure }} loading={loading}>
+        <div>body</div>
+      </PageState>,
+    );
+
+    expect(screen.getByText("req-3b1c")).toBeInTheDocument();
   });
 });

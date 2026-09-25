@@ -74,6 +74,7 @@ export function PageState({
               : undefined
           }
           description={getErrorMessage(resolution.error)}
+          error={resolution.error}
           onRetry={onRetry}
         />
       );

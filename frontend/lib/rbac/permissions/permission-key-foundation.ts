@@ -28,6 +28,7 @@ export type FoundationPermissionKey =
   | "hr:assets:manage"
   | "hr:documents:view"
   | "hr:documents:manage"
+  | "hr:documents:publish"
   | "hr:performance:view"
   | "hr:performance:manage"
   | "hr:goals:view"

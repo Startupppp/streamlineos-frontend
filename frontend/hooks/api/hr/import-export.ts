@@ -40,6 +40,10 @@ export interface HrImportJob {
   totalRows: number;
   validRows: number;
   errorRows: number;
+  /** What a commit did with its valid rows: `validRows` split into new, changed and already-there. Zero before a commit. */
+  createdRows: number;
+  updatedRows: number;
+  unchangedRows: number;
   errors: HrImportError[] | null;
   createdBy: string | null;
   committedAt: string | null;

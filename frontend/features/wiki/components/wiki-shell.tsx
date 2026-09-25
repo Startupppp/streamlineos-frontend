@@ -19,6 +19,7 @@ import {
   KNOWLEDGE_BASE,
   pageHref,
 } from "@/lib/knowledge-routes";
+import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
 import { KbStarIcon } from "@/features/wiki/lib/kb-icons";
 
 export default function WikiShell({ children }: { children: React.ReactNode }) {
@@ -30,6 +31,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const canViewAnalytics = useCan("kb:analytics:view");
   const canViewReviews = useCan("kb:reviews:view");
   const canManageContent = useCan("kb:pages:manage");
+  const hrKbLink = useHrKbLinkFlags();
   const [quickFindOpen, setQuickFindOpen] = useState(false);
   const createParamConsumedRef = useRef(false);
   const { isCollapsed: collapsed } = useShellSidebarCollapse();
@@ -81,6 +83,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     canViewAnalytics,
     canViewReviews,
     canManageContent,
+    showCompanyDocuments: hrKbLink.link,
   };
 
   const sidebarInner = () => {

@@ -18,6 +18,7 @@ import { useKbAsk, useKbAiAnswerFeedback } from "@/hooks/api/kb/ask";
 import { isAiStreamAbort } from "@/hooks/api/ai-text-stream";
 import { usePublicAskSupportKb, type KbAnswer } from "@/hooks/api/support/kb-rag";
 import type { KbAskResponse, KbAskCitation } from "@/types/kb";
+import { companyDocumentHref } from "@/lib/knowledge-routes";
 
 type KbAskPanelProps =
   | { mode: "authed"; articleId?: number; className?: string }
@@ -33,6 +34,9 @@ function buildCitations(citations: KbAskCitation[]): Citation[] {
     }
     if (c.kind === "page") {
       return { id: `p-${c.pageId}`, title: c.title, freshness };
+    }
+    if (c.kind === "document") {
+      return { id: `d-${c.linkedDocumentId}`, title: c.title, href: companyDocumentHref(c.linkedDocumentId), freshness };
     }
     return { id: `s-${c.sourceId}`, title: c.title, freshness };
   });

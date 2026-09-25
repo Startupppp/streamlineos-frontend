@@ -274,6 +274,8 @@ export const hrDocumentsListContract = z.object({
       parentDocumentId: z.number().int().nullable(),
       isPublic: z.boolean(),
       isActive: z.boolean(),
+      classification: z.enum(["PERSONAL", "CONFIDENTIAL", "RESTRICTED", "INTERNAL"]),
+      effectiveDate: z.string().nullable(),
       expiryDate: z.string().nullable(),
       expiryReminderSent: z.boolean(),
       tags: z.array(z.string()),

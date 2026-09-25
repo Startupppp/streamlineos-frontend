@@ -29,3 +29,8 @@ export const KB_MANAGE = `${KNOWLEDGE_BASE}/manage`;
 export const KB_REVIEWS = `${KNOWLEDGE_BASE}/reviews`;
 export const KB_IMPORT = `${KNOWLEDGE_BASE}/import`;
 export const KB_SEARCH = `${KNOWLEDGE_BASE}/search`;
+export const KB_COMPANY_DOCUMENTS = `${KNOWLEDGE_BASE}/company-documents`;
+
+export function companyDocumentHref(linkedDocumentId: number): string {
+  return `${KB_COMPANY_DOCUMENTS}/${linkedDocumentId}`;
+}

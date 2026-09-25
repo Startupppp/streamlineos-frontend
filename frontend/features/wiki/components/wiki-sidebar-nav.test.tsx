@@ -6,6 +6,21 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/knowledge/wiki",
 }));
 
+describe("WikiSidebarNav — company documents", () => {
+  it("does not list company documents unless HR documents are switched on", () => {
+    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} />);
+
+    expect(screen.queryByRole("link", { name: "Company documents" })).toBeNull();
+  });
+
+  it("lists company documents next to the other places a reader browses once they are switched on", () => {
+    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} showCompanyDocuments />);
+
+    expect(screen.getByRole("link", { name: "Company documents" })).toHaveAttribute("href", "/knowledge/wiki/company-documents");
+    expect(screen.getByRole("link", { name: "Private" })).toBeInTheDocument();
+  });
+});
+
 describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
   it("keeps Ask KB as a list destination, not a tab", () => {
     renderWithProviders(
