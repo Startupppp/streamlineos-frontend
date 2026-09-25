@@ -11,6 +11,7 @@ import {
 import type { EmployeePreviewSnapshot } from "../lib/preview-snapshot";
 import { StepRail } from "./step-rail";
 import { MobileProgressBar } from "./mobile-progress-bar";
+import { AdminDeferBanner } from "./admin-defer-banner";
 import { BrandColumn } from "./brand-column";
 
 type EmployeeOnboardingShellProps = {
@@ -80,6 +81,11 @@ export function EmployeeOnboardingShell({
               {STEP_SUBTITLES[currentStepId]}
             </p>
           </div>
+
+          {/* HRMS-E2E-020. In the header rather than on one step, because every
+              /hr URL redirects here: an administrator must be able to leave from
+              wherever the wizard put them, not only from the last page of it. */}
+          <AdminDeferBanner />
         </>
       }
     >

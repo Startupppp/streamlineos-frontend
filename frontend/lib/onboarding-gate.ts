@@ -1,6 +1,16 @@
 const GATE_COOKIE_MAX_AGE = 5 * 60;
 
-export type GateCookieBase = "org-setup-done" | "onboarding-done";
+/**
+ * HRMS-E2E-020. `onboarding-deferred` is deliberately separate from
+ * `onboarding-done`: an ORG_ADMIN who presses "I'll do this later" has not
+ * completed the wizard, and writing the "done" marker would tell the rest of
+ * the product they had. `userOnboardingCompletedAt` stays null, the wizard stays
+ * reachable, and nothing downstream is led to believe the bank details exist.
+ */
+export type GateCookieBase =
+  | "org-setup-done"
+  | "onboarding-done"
+  | "onboarding-deferred";
 
 export function gateCookieName(base: GateCookieBase, scopeId: string): string {
   return `${base}--${scopeId}`;
