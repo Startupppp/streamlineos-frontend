@@ -73,12 +73,19 @@ export function DocumentTable({
           if (!response.ok)
             throw new Error(`Failed to fetch ${doc.fileName ?? doc.name}`);
           const blob = await response.blob();
+          // An empty body is a failed fetch, not an empty document (HRMS-E2E-009).
+          if (blob.size === 0)
+            throw new Error(`${doc.fileName ?? doc.name} came back empty`);
           zip.file(doc.fileName ?? `${doc.name}.bin`, blob);
         }),
       );
       const failed = results.filter(
         (downloadResult) => downloadResult.status === "rejected",
       ).length;
+      if (failed === filesWithUrl.length) {
+        toast.error(`None of the ${failed} files could be downloaded. Nothing was saved.`);
+        return;
+      }
       const zipBlob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(zipBlob);
       const anchor = document.createElement("a");
