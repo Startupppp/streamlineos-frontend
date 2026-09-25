@@ -201,7 +201,6 @@ export function ProjectSettingsPage({ params }: PageProps) {
           onSuccess: () => {
             reassignmentsRef.current = {};
             toast.success("Project settings updated");
-            router.push(`/build/${projectId}`);
           },
           onError: (mutationError) => {
             toast.error(getErrorMessage(mutationError));

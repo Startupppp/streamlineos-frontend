@@ -43,11 +43,14 @@ export const SprintCard = memo(function SprintCard({ summary, isLoading, error, 
           Active Sprint
         </CardTitle>
         {summary?.projectId && (
-          <Link href={`/build/${summary.projectId}`}>
-            <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary" aria-label="View sprint project">
+          <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary" asChild>
+            <Link
+              href={`/build/${summary.projectId}/issues?cycle=${summary.id}`}
+              aria-label="View active sprint issues"
+            >
               <ArrowUpRight className="h-4 w-4" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         )}
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden px-4 pt-0 pb-4" aria-live="polite">
