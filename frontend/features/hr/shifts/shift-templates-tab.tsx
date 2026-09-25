@@ -17,6 +17,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrShifts, useDeleteShift, type ShiftTemplate } from "@/hooks/api/hr/shifts";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { titleCaseLabel } from "@/lib/title-case";
+import { formatTime } from "@/lib/format-utils";
 
 interface Props {
   canManage: boolean;
@@ -127,7 +128,7 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
             <div className="space-y-1 text-xs text-muted-foreground">
               <div className="flex items-center justify-between">
                 <span>Hours</span>
-                <span className="font-medium text-foreground">{shift.startTime} – {shift.endTime}</span>
+                <span className="font-medium text-foreground">{formatTime(shift.startTime)} – {formatTime(shift.endTime)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Break</span>

@@ -67,3 +67,15 @@ describe("shift template name display case", () => {
     expect(screen.getByLabelText("Delete Morning Shift")).toBeInTheDocument();
   });
 });
+
+describe("shift template hours display", () => {
+  it("renders clock times without the seconds the API sends", () => {
+    render(<ShiftTemplatesTab canManage onEdit={jest.fn()} />);
+    expect(screen.getByText("09:00 AM – 06:00 PM")).toBeInTheDocument();
+  });
+
+  it("does not print the raw seconds-bearing value", () => {
+    render(<ShiftTemplatesTab canManage onEdit={jest.fn()} />);
+    expect(screen.queryByText(/09:00:00/)).not.toBeInTheDocument();
+  });
+});
