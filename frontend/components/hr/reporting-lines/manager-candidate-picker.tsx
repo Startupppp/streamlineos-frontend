@@ -100,6 +100,7 @@ export function ManagerCandidatePicker({
       knownMembers={known}
       onSearchChange={setSearch}
       onOpenChange={setOpen}
+      searchLabel="Search managers"
       excludeUserId={excludeUserId}
       excludeUserIds={excludeUserIds}
       placeholder={placeholder}

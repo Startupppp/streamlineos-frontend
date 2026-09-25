@@ -147,7 +147,7 @@ describe("Reporting line editor — change-warning UI (PRD D4)", () => {
     line = makeLine({ primaryChangesLast24h: 3, changeThreshold: 3 });
     await openEditor();
     expect(screen.getByRole("status")).toHaveTextContent("changed 3 times in the last 24 hours (limit 3)");
-    expect(screen.getByRole("textbox", { name: /Reason \*/ })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /Reason \*/ })).toHaveAttribute("aria-required", "true");
   });
 
   it("leaves the authority decision to the server for a viewer without override", async () => {
@@ -175,6 +175,13 @@ describe("Reporting line editor — change-warning UI (PRD D4)", () => {
       primaryManagerUserId: "u-new",
       reason: "Team reorganisation",
     });
+  });
+
+  it("marks the top-level reason required and drops the manager helper for a top-level role", async () => {
+    await openEditor();
+    await userEvent.click(screen.getByLabelText("Top-level role — no reporting manager"));
+    expect(screen.getByPlaceholderText("e.g. Founder and chief executive")).toHaveAttribute("aria-required", "true");
+    expect(screen.getByText("Not used for a top-level role: this person reports to nobody.")).toBeInTheDocument();
   });
 
   it("toasts warning sentences, never raw codes", async () => {

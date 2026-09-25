@@ -108,6 +108,11 @@ describe("review decision payloads", () => {
     expect(mutate).not.toHaveBeenCalled();
   });
 
+  it("marks the decision reason required for assistive tech", () => {
+    render(<ReportingRequestReviewSheet requestId="req-1" onOpenChange={jest.fn()} />);
+    expect(screen.getByRole("textbox", { name: /reason|what the employee/i })).toHaveAttribute("aria-required", "true");
+  });
+
   it("labels a rejection reason as visible to the employee", async () => {
     const user = userEvent.setup();
     render(<ReportingRequestReviewSheet requestId="req-1" onOpenChange={jest.fn()} />);

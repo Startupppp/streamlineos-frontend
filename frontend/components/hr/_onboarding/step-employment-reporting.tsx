@@ -153,9 +153,11 @@ export function StepEmploymentReporting({ form }: StepEmploymentReportingProps) 
                 />
               </FormControl>
               <FormDescription className="text-xs">
-                {primaryRef && primaryRef.userId === primaryId
-                  ? `${primaryRef.name}${describeManager(primaryRef) ? ` · ${describeManager(primaryRef)}` : ""}. Approves this employee's leave, time and expenses.`
-                  : "Assigned automatically by policy if left blank."}
+                {topLevelRole
+                  ? "Not used for a top-level role: this person reports to nobody."
+                  : primaryRef && primaryRef.userId === primaryId
+                    ? `${primaryRef.name}${describeManager(primaryRef) ? ` · ${describeManager(primaryRef)}` : ""}. Approves this employee's leave, time and expenses.`
+                    : "Assigned automatically by policy if left blank."}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -185,7 +187,7 @@ export function StepEmploymentReporting({ form }: StepEmploymentReportingProps) 
                     Reason <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Founder and chief executive" {...field} value={field.value ?? ""} />
+                    <Input placeholder="e.g. Founder and chief executive" aria-required="true" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -112,7 +112,7 @@ export function ReviewDecisionFormFields({ form, request }: ReviewDecisionFormFi
           <FormItem>
             <FormLabel>{DECISION_REASON_LABEL[decision]}</FormLabel>
             <FormControl>
-              <Textarea rows={3} maxLength={1000} {...field} />
+              <Textarea rows={3} maxLength={1000} aria-required="true" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

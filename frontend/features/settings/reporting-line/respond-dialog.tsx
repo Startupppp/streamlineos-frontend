@@ -55,7 +55,7 @@ export function RespondDialog({ requestId, hrQuestion, onOpenChange }: RespondDi
             <FormItem>
               <FormLabel>Your reply</FormLabel>
               <FormControl>
-                <Textarea rows={4} maxLength={EMPLOYEE_REASON_MAX} {...field} />
+                <Textarea rows={4} maxLength={EMPLOYEE_REASON_MAX} aria-required="true" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

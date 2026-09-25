@@ -86,7 +86,7 @@ export function ReportIssueDialog({ open, onOpenChange, currentManagerName, onDu
                 <FormItem>
                   <FormLabel>What is wrong?</FormLabel>
                   <FormControl>
-                    <Textarea rows={4} maxLength={EMPLOYEE_REASON_MAX} {...field} />
+                    <Textarea rows={4} maxLength={EMPLOYEE_REASON_MAX} aria-required="true" {...field} />
                   </FormControl>
                   <FormDescription className="text-xs tabular-nums">
                     {reasonLength} / {EMPLOYEE_REASON_MAX} characters (at least 20)

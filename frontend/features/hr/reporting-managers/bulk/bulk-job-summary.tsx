@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CheckCircle2, AlertTriangle, XCircle, Rows3 } from "lucide-react";
 import { toast } from "sonner";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard } from "@/components/ui/stat-card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadReportingLineBulkJobFailures } from "@/hooks/api/hr/reporting-line-bulk-jobs";
@@ -40,7 +40,8 @@ export function BulkJobSummary({ job }: { job: BulkJobSummaryData }) {
   const unapplied = unappliedRowCount(job);
   return (
     <div className="flex flex-col gap-3">
-      <StatCardGrid cols={4}>
+      {/* 2 columns on a phone, 4 from md: StatCardGrid scrolls sideways, which hid "Not applied" at 375. */}
+      <div data-testid="bulk-job-summary" className="grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Rows" value={job.rowCount} icon={Rows3} />
         {committed ? (
           <StatCard label="Committed" value={job.committedCount} icon={CheckCircle2} tone="emerald" />
@@ -54,7 +55,7 @@ export function BulkJobSummary({ job }: { job: BulkJobSummaryData }) {
           icon={XCircle}
           tone={unapplied > 0 ? "red" : "emerald"}
         />
-      </StatCardGrid>
+      </div>
       {unapplied > 0 ? (
         <div className="flex">
           <FailuresDownloadButton jobId={job.jobId} />

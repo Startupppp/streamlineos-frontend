@@ -113,4 +113,11 @@ describe("ManagerCandidatePicker — accessible manager selection", () => {
     await user.keyboard("{Escape}");
     expect(screen.getByRole("combobox")).toHaveTextContent("Asha Rao");
   });
+
+  it("names its search box", async () => {
+    const user = userEvent.setup();
+    render(<ManagerCandidatePicker value={null} onChange={jest.fn()} />);
+    await user.click(screen.getByRole("combobox"));
+    expect(screen.getByRole("combobox", { name: "Search managers" })).toBeInTheDocument();
+  });
 });

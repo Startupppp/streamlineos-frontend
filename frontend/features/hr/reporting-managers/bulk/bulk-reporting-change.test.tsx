@@ -5,6 +5,7 @@ import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { BulkPreviewForm } from "./bulk-preview-form";
 import { BulkCommitPanel } from "./bulk-commit-panel";
 import { BulkReportingChangePage } from "./bulk-reporting-change-page";
+import { BulkJobSummary } from "./bulk-job-summary";
 
 const createMutate = jest.fn();
 const commitMutate = jest.fn();
@@ -163,5 +164,31 @@ describe("bulk reporting change page access", () => {
     render(<BulkReportingChangePage />);
     expect(screen.queryByText("wizard")).not.toBeInTheDocument();
     expect(screen.queryByText("Recent jobs")).not.toBeInTheDocument();
+  });
+});
+
+describe("BulkJobSummary at phone width", () => {
+  it("wraps its four counts onto a 2-column grid so Not applied is never off-screen", () => {
+    render(
+      <BulkJobSummary
+        job={{
+          jobId: "j-1",
+          status: "COMMITTED",
+          jobReason: "Reorg",
+          rowCount: 14,
+          readyCount: 13,
+          warningCount: 0,
+          errorCount: 1,
+          committedCount: 13,
+          requiresConfirmation: true,
+          confirmationPhrase: "CONFIRM 13",
+          createdAt: "2026-09-26T00:00:00Z",
+          committedAt: "2026-09-26T00:01:00Z",
+        }}
+      />,
+    );
+    const grid = screen.getByTestId("bulk-job-summary");
+    expect(grid).toHaveClass("grid-cols-2", "md:grid-cols-4");
+    expect(within(grid).getByText("Not applied")).toBeInTheDocument();
   });
 });

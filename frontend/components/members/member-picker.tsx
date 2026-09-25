@@ -44,6 +44,8 @@ interface MemberPickerBaseProps {
    * search moved on). Used only to label the selection, never listed.
    */
   knownMembers?: MemberOption[];
+  /** Accessible name of the search box inside the list. */
+  searchLabel?: string;
   /**
    * Set by `FormControl` so the field's `<FormLabel>` names the trigger; with an
    * id the placeholder stops being the accessible name.
@@ -109,6 +111,7 @@ export function MemberPicker(props: MemberPickerProps) {
     onSearchChange,
     onOpenChange,
     knownMembers,
+    searchLabel = "Search members",
     id,
     "aria-describedby": ariaDescribedBy,
     "aria-invalid": ariaInvalid,
@@ -214,7 +217,7 @@ export function MemberPicker(props: MemberPickerProps) {
             {multiTrigger}
           </PopoverTrigger>
           <PopoverContent className={popoverContentClass} align={contentAlign}>
-            <Command shouldFilter={false}>
+            <Command shouldFilter={false} label={searchLabel}>
               <CommandInput
                 placeholder="Search members…"
                 className="text-xs"
@@ -296,7 +299,7 @@ export function MemberPicker(props: MemberPickerProps) {
         {singleTrigger}
       </PopoverTrigger>
       <PopoverContent className={popoverContentClass} align={contentAlign}>
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} label={searchLabel}>
           <CommandInput
             placeholder="Search members…"
             className="text-xs"

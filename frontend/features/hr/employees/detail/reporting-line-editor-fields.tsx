@@ -134,7 +134,11 @@ export function ReportingLineEditorFields({ form, employeeUserId, maxSecondaryMa
                 disabled={topLevel}
               />
             </FormControl>
-            <FormDescription>Approves leave, time and expenses from the effective date. Requests already waiting keep their approver.</FormDescription>
+            <FormDescription>
+              {topLevel
+                ? "Not used for a top-level role: this person reports to nobody."
+                : "Approves leave, time and expenses from the effective date. Requests already waiting keep their approver."}
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -159,7 +163,7 @@ export function ReportingLineEditorFields({ form, employeeUserId, maxSecondaryMa
             <FormItem>
               <FormLabel>Reason <span className="text-destructive">*</span></FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Founder and chief executive" {...field} />
+                <Input placeholder="e.g. Founder and chief executive" aria-required="true" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -205,7 +209,7 @@ export function ReportingLineEditorFields({ form, employeeUserId, maxSecondaryMa
               Reason {reasonRequired ? <span className="text-destructive">*</span> : "(optional)"}
             </FormLabel>
             <FormControl>
-              <Textarea rows={3} placeholder="Why the reporting line is changing" {...field} />
+              <Textarea rows={3} placeholder="Why the reporting line is changing" aria-required={reasonRequired} {...field} />
             </FormControl>
             <FormDescription>Recorded in the audit trail. Visible to HR, not to the employee or managers.</FormDescription>
             <FormMessage />

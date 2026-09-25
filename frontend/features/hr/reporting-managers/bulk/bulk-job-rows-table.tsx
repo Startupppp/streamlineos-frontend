@@ -27,6 +27,7 @@ function RowReasonCell({ row }: { row: BulkJobRow }) {
       <Input
         {...register(rowReasonKey(row.rowNumber))}
         aria-label={`Reason for ${row.employee?.name ?? row.employeeEmail}`}
+        aria-required="true"
         aria-invalid={message ? true : undefined}
         aria-describedby={message ? errorId : undefined}
         placeholder="Why (10+ characters)"

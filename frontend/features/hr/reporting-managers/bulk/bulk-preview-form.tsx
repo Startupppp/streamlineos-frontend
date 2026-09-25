@@ -61,7 +61,7 @@ export function BulkPreviewForm({ source, onPreviewed }: BulkPreviewFormProps) {
             <FormItem>
               <FormLabel>Reason for this change</FormLabel>
               <FormControl>
-                <Textarea rows={3} placeholder="e.g. Engineering reorganisation into platform and product teams" {...field} />
+                <Textarea rows={3} placeholder="e.g. Engineering reorganisation into platform and product teams" aria-required="true" {...field} />
               </FormControl>
               <FormDescription>Recorded on every employee&apos;s audit trail.</FormDescription>
               <FormMessage />
