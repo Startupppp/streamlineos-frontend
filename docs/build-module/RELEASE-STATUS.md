@@ -89,7 +89,7 @@ Current release-candidate checks:
 The candidate was exercised through a real authenticated browser against the production API.
 
 - The current audit verified the authenticated production ticket route `/build/6/tickets/BQS-2` in the real browser.
-- The authenticated production desktop sweep covered the 65 canonical org/project pages in parallel batches on 2026-09-25. Managed-product roadmap, portfolio detail, and team detail now render without console errors. Meeting and QA run detail with nonexistent fixture ID `1` render recoverable page states; the currently deployed bundle still reports those expected 404 rejections, so production must be rechecked after `1eb35ebf2` deploys.
+- The authenticated production desktop sweep covered the 65 canonical org/project pages in parallel batches on 2026-09-25. Managed-product roadmap, portfolio detail, team detail, project Meeting detail, and QA Run detail with fixture ID `1` now render their recoverable states without console errors. The full matrix remains open for mobile coverage and deployment-identity evidence.
 - The mobile matrix remains open.
 - Issues actions no longer clip at 375 px.
 - Ticket properties start closed on mobile, open only on explicit action, and expose a visible close control.
@@ -150,7 +150,7 @@ Completed:
 - Portfolio and managed-product list services now reject malformed cursors with a bounded `400`; the local UI remains stable against the currently deployed older API, which still treats that input as the first page.
 - Goal list and detail responses now resolve owner membership IDs to tenant-scoped user projections in one batch for collections, avoiding the previous always-unassigned response.
 - The production-domain unauthenticated `/build` smoke passed with the expected sign-in redirect and no console errors.
-- The current browser observation passed for `/build/6/tickets/BQS-2`; the desktop matrix has been exercised, but its final pass remains open until the latest frontend deployment is observed with the expected-404 telemetry fix.
+- The current browser observation passed for `/build/6/tickets/BQS-2`; the corrected stale-detail routes were rechecked after rollout and are clean. The desktop matrix is exercised, but the release pass remains open until mobile coverage and deployment identity are recorded.
 - Production `/build/portfolios?q=platform`, `/build/managed-products`, `/build/goals`, and `/build/command-center` were rechecked in the real browser without visible errors.
 - Local port `1000` browser verification rechecked `/build/inbox?view=drafts` and `/build/command-center`; both rendered their canonical headings without visible runtime errors.
 
