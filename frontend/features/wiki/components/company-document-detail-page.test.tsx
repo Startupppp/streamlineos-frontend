@@ -153,7 +153,38 @@ describe("CompanyDocumentDetailPage", () => {
 
     render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
 
-    expect(screen.getByText(/This entry was withdrawn: Replaced by the 2026 handbook\. Employees can no longer see it\./)).toBeInTheDocument();
+    expect(screen.getByText("This entry was withdrawn, and employees can no longer see it. Reason given: Replaced by the 2026 handbook.")).toBeInTheDocument();
+  });
+
+  it("puts the reason last, so a reason with no full stop still reads as a sentence", () => {
+    mockCan.mockReturnValue(true);
+    loaded(detail({ status: "unpublished", unpublishReason: "Replaced by the 2026 handbook", audiences: [] }));
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByText("This entry was withdrawn, and employees can no longer see it. Reason given: Replaced by the 2026 handbook")).toBeInTheDocument();
+  });
+
+  it("does not present the server's own codes as a reason", () => {
+    mockCan.mockReturnValue(true);
+    loaded(detail({ status: "unpublished", unpublishReason: "manual", audiences: [] }));
+    const { unmount } = render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+    expect(screen.getByText("This entry was withdrawn. Employees can no longer see it.")).toBeInTheDocument();
+    expect(screen.queryByText(/Reason given/)).not.toBeInTheDocument();
+    unmount();
+
+    loaded(detail({ status: "unpublished", unpublishReason: null, audiences: [] }));
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+    expect(screen.getByText("This entry was withdrawn. Employees can no longer see it.")).toBeInTheDocument();
+  });
+
+  it("keeps the reason out of the page for someone who cannot publish", () => {
+    mockCan.mockReturnValue(false);
+    loaded(detail({ status: "unpublished", unpublishReason: "Contains an outdated salary table" }));
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.queryByText(/outdated salary table/)).not.toBeInTheDocument();
   });
 
   it("explains why a withdrawn entry shows no details, rather than showing a blank page", () => {

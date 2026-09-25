@@ -7,7 +7,7 @@ export const documentWithdrawSchema = z.object({
     .string()
     .trim()
     .min(1, "Say why it is being taken out, so the audit log can show it.")
-    .max(WITHDRAW_REASON_MAX_LENGTH, `Keep it under ${WITHDRAW_REASON_MAX_LENGTH} characters.`),
+    .max(WITHDRAW_REASON_MAX_LENGTH, `Keep it to ${WITHDRAW_REASON_MAX_LENGTH} characters or fewer.`),
 });
 
 export type DocumentWithdrawValues = z.infer<typeof documentWithdrawSchema>;

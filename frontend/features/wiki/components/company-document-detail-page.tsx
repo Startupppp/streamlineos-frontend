@@ -19,7 +19,7 @@ import { formatFileSize } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_COMPANY_DOCUMENTS } from "@/lib/knowledge-routes";
 import { REMOVED_DOCUMENT_TITLE, linkedDocumentTitle } from "@/features/wiki/lib/linked-document-title";
-import { humanWithdrawalReason } from "@/lib/linked-document-withdrawal";
+import { WITHDRAWAL_CODE_NOT_SHAREABLE, humanWithdrawalReason } from "@/lib/linked-document-withdrawal";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 
 interface CompanyDocumentDetailPageProps {
@@ -53,11 +53,11 @@ function PublisherNotes({ detail }: { detail: LinkedDocumentDetail }) {
       {detail.status === "unpublished" ? (
         <Alert>
           <AlertTitle>Withdrawn</AlertTitle>
-          <AlertDescription>
-            {detail.unpublishReason === "source_no_longer_publishable"
+          <AlertDescription className="break-words">
+            {detail.unpublishReason === WITHDRAWAL_CODE_NOT_SHAREABLE
               ? "The document stopped being shareable, so this entry was taken down."
               : reason !== null
-                ? `This entry was withdrawn: ${reason} Employees can no longer see it.`
+                ? `This entry was withdrawn, and employees can no longer see it. Reason given: ${reason}`
                 : "This entry was withdrawn. Employees can no longer see it."}
           </AlertDescription>
         </Alert>

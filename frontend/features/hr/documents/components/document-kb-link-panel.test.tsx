@@ -149,12 +149,35 @@ describe("DocumentKbLinkPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Remove from Knowledge Base" }));
 
     expect(await screen.findByLabelText("Reason")).toHaveValue("");
+    expect(mockWithdraw).not.toHaveBeenCalled();
+  });
+
+  it("keeps the reason that was typed when the removal fails, so it is not written twice", async () => {
+    mockWithdraw.mockRejectedValue(new ApiError("Could not reach the service.", 503, "UNAVAILABLE", { correlationId: "req-w1" }, "/hr/documents/7/kb-link"));
+    renderPanel(stateFixture({ link: liveLink }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove from Knowledge Base" }));
+    fireEvent.change(await screen.findByLabelText("Reason"), { target: { value: "Replaced by the 2026 handbook" } });
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+
+    expect(await screen.findByText("Not done")).toBeInTheDocument();
+    expect(screen.getByText("req-w1")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Remove from Knowledge Base" }));
+
+    expect(await screen.findByLabelText("Reason")).toHaveValue("Replaced by the 2026 handbook");
   });
 
   it("shows what a person wrote when they withdrew an entry, and not the server's own code", () => {
     renderPanel(stateFixture({ link: { ...liveLink, status: "unpublished", unpublishReason: "Replaced by the 2026 handbook" }, publishable: true }));
 
     expect(screen.getByText(/has been withdrawn: Replaced by the 2026 handbook/)).toBeInTheDocument();
+  });
+
+  it("does not show a withdrawal reason to someone who may not publish documents", () => {
+    mockCan.mockReturnValue(false);
+    renderPanel(stateFixture({ link: { ...liveLink, status: "unpublished", unpublishReason: "Contains an outdated salary table" }, publishable: true }));
+
+    expect(screen.getByText("This document was shared before and has been withdrawn.")).toBeInTheDocument();
+    expect(screen.queryByText(/outdated salary table/)).not.toBeInTheDocument();
   });
 
   it("does not present the code for an unexplained withdrawal as if someone had written it", () => {

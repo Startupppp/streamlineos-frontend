@@ -22,7 +22,7 @@ import {
 } from "@/hooks/api/hr/document-kb-link";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { companyDocumentHref } from "@/lib/knowledge-routes";
-import { humanWithdrawalReason } from "@/lib/linked-document-withdrawal";
+import { WITHDRAWAL_CODE_NOT_SHAREABLE, humanWithdrawalReason } from "@/lib/linked-document-withdrawal";
 import { DocumentWithdrawFormFields } from "./document-withdraw-form-fields";
 import { documentWithdrawSchema, type DocumentWithdrawValues } from "./document-withdraw-schema";
 
@@ -52,11 +52,16 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
   const withdrawForm = useForm<DocumentWithdrawValues>({ resolver: zodResolver(documentWithdrawSchema), defaultValues: { reason: "" } });
 
   const handleAskAdd = useCallback(() => setConfirming("add"), []);
-  const handleAskRemove = useCallback(() => {
-    withdrawForm.reset({ reason: "" });
-    setConfirming("remove");
-  }, [withdrawForm]);
-  const handleConfirmChange = useCallback((open: boolean) => { if (!open) setConfirming(null); }, []);
+  const handleAskRemove = useCallback(() => setConfirming("remove"), []);
+  // Cancelling drops what was typed. A removal that FAILED closes the dialog without going through here, so the reason survives and is there when it is opened again.
+  const handleConfirmChange = useCallback(
+    (open: boolean) => {
+      if (open) return;
+      if (confirming === "remove") withdrawForm.reset({ reason: "" });
+      setConfirming(null);
+    },
+    [confirming, withdrawForm],
+  );
 
   const handleConfirmAdd = useCallback(async () => {
     setFailure(null);
@@ -78,6 +83,7 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
         try {
           await withdraw.mutateAsync({ documentId, reason });
           toast.success(`"${documentName}" was removed from the Knowledge Base.`);
+          withdrawForm.reset({ reason: "" });
           setConfirming(null);
         } catch (error) {
           setFailure(error);
@@ -102,7 +108,8 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
 
   const { link, publishable, blockers, documentAudiences } = state.data;
   const live = link?.status === "active";
-  const withdrawnReason = link ? humanWithdrawalReason(link.unpublishReason) : null;
+  // Free text a publisher wrote: shown to publishers only, like the same note on the entry itself.
+  const withdrawnReason = canPublish && link ? humanWithdrawalReason(link.unpublishReason) : null;
 
   return (
     <section aria-label="Knowledge Base" className="flex flex-col gap-3 rounded-md border border-border p-3">
@@ -119,8 +126,8 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
           <Link href={companyDocumentHref(link.id)} className="underline">See it there</Link>.
         </p>
       ) : link?.status === "unpublished" || link?.status === "source_removed" ? (
-        <p className="text-sm text-muted-foreground">
-          {link.unpublishReason === "source_no_longer_publishable"
+        <p className="break-words text-sm text-muted-foreground">
+          {link.unpublishReason === WITHDRAWAL_CODE_NOT_SHAREABLE
             ? "This document was shared before, and taken down when it stopped being shareable."
             : withdrawnReason !== null
               ? `This document was shared before and has been withdrawn: ${withdrawnReason}`

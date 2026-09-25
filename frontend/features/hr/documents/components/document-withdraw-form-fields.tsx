@@ -19,9 +19,9 @@ export function DocumentWithdrawFormFields({ form }: DocumentWithdrawFormFieldsP
         <FormItem>
           <FormLabel>Reason</FormLabel>
           <FormControl>
-            <Textarea {...field} rows={3} maxLength={WITHDRAW_REASON_MAX_LENGTH} placeholder="For example: replaced by the 2026 handbook" />
+            <Textarea {...field} rows={3} placeholder="For example: replaced by the 2026 handbook" />
           </FormControl>
-          <FormDescription>Publishers can read this on the entry, and it is recorded with your name and the time.</FormDescription>
+          <FormDescription>Up to {WITHDRAW_REASON_MAX_LENGTH} characters. Publishers can read this on the entry, and it is recorded with your name and the time.</FormDescription>
           <FormMessage />
         </FormItem>
       )}
