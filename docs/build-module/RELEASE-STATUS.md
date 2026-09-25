@@ -134,7 +134,9 @@ These failures are measured and are not Build-owned:
 
 Completed:
 
-- Frontend `origin/main` currently contains the documented Build changes; the deployment identity for the latest commit was not queried in this audit.
+- Frontend `origin/main` contains `13663e4d0` (portfolio search is sent as the server-side `q` parameter; the prior malformed-filter and board-count fixes remain in the same release line).
+- Backend `origin/main` contains `b709ba20b`, including the Build portfolio `q` schema, tenant-scoped `ilike` predicate, and focused contract coverage.
+- The portfolio list UI renders its loading and empty states locally on port `1000`; authenticated verification of a non-empty server-filtered result remains deployment-dependent until the backend release containing `b5733da7c` is live.
 - The production-domain unauthenticated `/build` smoke passed with the expected sign-in redirect and no console errors.
 - The current browser observation passed for `/build/6/tickets/BQS-2`; the full production route matrix remains open.
 
