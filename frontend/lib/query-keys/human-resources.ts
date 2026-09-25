@@ -255,7 +255,9 @@ export const humanResourcesQueryKeys = {
     managerCoverage: () => [...base, "hr", "reportingLines", "coverage"] as const,
     reportingManagerPolicy: () => [...base, "hr", "reportingManagerPolicy"] as const,
     managerCandidates: (q: string, excludeUserId?: string) =>
-      [...base, "hr", "reportingLines", "managerCandidates", { q, excludeUserId: excludeUserId ?? null }] as const,
+      excludeUserId === undefined
+        ? ([...base, "hr", "reportingLines", "managerCandidates", q] as const)
+        : ([...base, "hr", "reportingLines", "managerCandidates", q, excludeUserId] as const),
     reportingManagerRequests: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "reportingManagerRequests"] as const)
