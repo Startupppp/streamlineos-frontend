@@ -42,6 +42,7 @@ import {
   groupProjects,
   sortProjects,
 } from "@/features/build/project-list/project-list-shaping";
+import { buildListSearchParams } from "@/features/build/shared/use-build-list-url-state";
 
 export { filterVisibleProjects };
 
@@ -109,13 +110,14 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") params.delete(key);
-        else params.set(key, value);
-      }
+      const params = buildListSearchParams(searchParams, updates, {
+        resetCursor: true,
+      });
       startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        const query = params.toString();
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
       });
     },
     [searchParams, router, pathname],
