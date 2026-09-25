@@ -92,7 +92,7 @@ Current release-candidate checks:
   frontend release commits are `daa52469a`, `b6e5753e4`, and `8c4b7ed8a` on
   `origin/main`.
 - Build-owned unsafe assertion findings: zero. The assertion gate still reports unrelated pre-existing Inventory, HR, Wiki, editor, and infrastructure debt.
-- The Build status-contrast sweep is pushed in frontend commit `e9ee068e6`; the follow-up Kanban WIP badge coverage fix is pushed in `ca1d40463`. The focused Kanban and saved-view matrix passes 10/10 tests, and the full frontend type-check remains green.
+- The Build status-contrast sweep is pushed in frontend commit `e9ee068e6`; the follow-up Kanban WIP badge coverage fix is pushed in `ca1d40463`. The current Build-owned token audit has 164 strong text-token usages and 46 remaining intentional icon-only/non-text usages. The focused accessibility matrix passes 9/9 tests, the Kanban and saved-view matrix passes 10/10 tests, and the full frontend type-check remains green.
 - Build-owned gated-read findings: zero. The gate still reports two unrelated HR recruitment reads.
 - The dead-code classifier reports no Build deletion candidate. Its current dead files are in Knowledge Base, outside this release.
 - Filtered column-count reads now accept and apply the same validated board filter contract as board rows, including search, status, priority, assignee, labels, cycle, module, epic, and due-date filters. Explicit zero aggregates remain zero instead of falling back to loaded-row counts. Focused backend aggregate/schema tests pass 34/34; focused frontend filter/board/count tests pass 33/33.
