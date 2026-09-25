@@ -6,7 +6,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { PmPageShell, PmSection, PM_FILL_SECTION } from "@/components/pm-chrome";
 import { InboxList } from "./inbox-list";
-import { InboxDraftsPanel } from "./inbox-drafts-panel";
 import { useInboxUrlState } from "./use-inbox-url-state";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
 import type { Notification, NotificationSection, NotificationCategory } from "@/types/notifications";
@@ -14,6 +13,10 @@ import { cn } from "@/lib/utils";
 
 const InboxPreviewPane = dynamic(
   () => import("./inbox-preview-pane").then((m) => ({ default: m.InboxPreviewPane })),
+  { ssr: false },
+);
+const InboxDraftsPanel = dynamic(
+  () => import("./inbox-drafts-panel").then((m) => ({ default: m.InboxDraftsPanel })),
   { ssr: false },
 );
 

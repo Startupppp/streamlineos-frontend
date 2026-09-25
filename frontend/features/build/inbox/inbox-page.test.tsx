@@ -1,10 +1,19 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Notification } from "@/types/notifications";
 import { InboxPage } from "./inbox-page";
 
-jest.mock("next/dynamic", () => () => () => null);
+jest.mock("next/dynamic", () => (loader: () => Promise<{ default: React.ComponentType }>) => {
+  const LazyComponent = React.lazy(loader);
+  return function DynamicComponent(props: Record<string, unknown>) {
+    return (
+      <React.Suspense fallback={null}>
+        <LazyComponent {...props} />
+      </React.Suspense>
+    );
+  };
+});
 
 let mockSearchParams = new URLSearchParams();
 
@@ -138,10 +147,10 @@ describe("InboxPage", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("renders the drafts panel when view=drafts is in the URL", () => {
+  it("renders the drafts panel when view=drafts is in the URL", async () => {
     mockSearchParams = new URLSearchParams("view=drafts");
     render(<InboxPage />);
-    expect(screen.getByTestId("inbox-drafts-panel")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("inbox-drafts-panel")).toBeInTheDocument());
     expect(screen.queryByTestId("inbox-list")).not.toBeInTheDocument();
   });
 
