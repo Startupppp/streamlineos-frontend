@@ -1,4 +1,4 @@
-import { AtsDeveloperSandboxPage } from "@/features/hr/recruitment/developer/developer-sandbox-page";
+import { AtsDeveloperSandboxPage } from "@/features/recruitment/developer/developer-sandbox-page";
 
 export default function Page() {
   return <AtsDeveloperSandboxPage />;

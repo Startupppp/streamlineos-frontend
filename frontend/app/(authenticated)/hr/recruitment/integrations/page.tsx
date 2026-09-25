@@ -1,4 +1,4 @@
-import { RecruitmentIntegrationsPage } from "@/features/hr/recruitment/integrations/integrations-page";
+import { RecruitmentIntegrationsPage } from "@/features/recruitment/integrations/integrations-page";
 
 export default function Page() {
   return <RecruitmentIntegrationsPage />;

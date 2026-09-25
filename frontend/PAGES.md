@@ -357,41 +357,41 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/hr/comp-off` · **HR** · hooks: `→ features/hr/comp-off`
 
 ### Recruitment
-- `/hr/recruitment` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/jobs` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/recruitment/jobs/new` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/jobs/[jobId]/edit` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/candidates` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: in the reproduced React #419 set (jsdom chunk reached through a shared import); fixed by the sanitiser boundary. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/recruitment/candidates/[candidateId]` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/candidates/import` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/candidates/intake` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/pipeline` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/recruitment/interviews` · **HR** · hooks: `→ features/hr/recruitment` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
-- `/hr/recruitment/offers` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/offer-templates` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the preview sheet renders `SanitizedHtml` instead of an inline `DOMPurify.sanitize`; this route was in the reproduced React #419 set
-- `/hr/recruitment/requisitions` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/talent-pools` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/headcount` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/analytics` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/diversity-report` · **HR** · hooks: `requirePermission("hr:sensitive:view")` (server), `useDiversityReport` (`useGatedQuery("hr:sensitive:view")` → `GET /hr/recruitment/diversity-report`), `usePageState` + `PageWrapper state=`, `→ features/hr/recruitment`. 2026-09-21 (FE#134): the page's state resolves through `usePageState({ permission: "hr:sensitive:view", …, error, isEmpty })`, so access-loading is a skeleton, denial is `DeniedView`, a failed read is `ErrorState` with the backend message, and "No applicant data found" appears only for a permitted, finished read with `total === 0`; removed from `denial-is-not-emptiness.known.json`.
-- `/hr/recruitment/scorecard-analytics` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/scorecard-templates` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/question-bank` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/hiring-flows` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/booking-links` · **HR** · hooks: `→ features/hr/recruitment` (2026-09-21: `loading.tsx` is titled "Interview Booking Links" with the page's subtitle)
-- `/hr/recruitment/email-sequences` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/automations` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/recruiters` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/vendors` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/internal-jobs` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/referrals` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/refer` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/sla` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/sla-report` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/interviewer-performance` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/inbox` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/reports` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/settings` · **HR** · hooks: `→ features/hr/recruitment`
+- `/hr/recruitment` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/jobs` · **HR** · hooks: `→ features/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/hr/recruitment/jobs/new` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/jobs/[jobId]/edit` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/candidates` · **HR** · hooks: `→ features/recruitment` — 2026-09-21: in the reproduced React #419 set (jsdom chunk reached through a shared import); fixed by the sanitiser boundary. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/hr/recruitment/candidates/[candidateId]` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/candidates/import` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/candidates/intake` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/pipeline` · **HR** · hooks: `→ features/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/hr/recruitment/interviews` · **HR** · hooks: `→ features/recruitment` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/hr/recruitment/offers` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/offer-templates` · **HR** · hooks: `→ features/recruitment` — 2026-09-21: the preview sheet renders `SanitizedHtml` instead of an inline `DOMPurify.sanitize`; this route was in the reproduced React #419 set
+- `/hr/recruitment/requisitions` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/talent-pools` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/headcount` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/analytics` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/diversity-report` · **HR** · hooks: `requirePermission("hr:sensitive:view")` (server), `useDiversityReport` (`useGatedQuery("hr:sensitive:view")` → `GET /hr/recruitment/diversity-report`), `usePageState` + `PageWrapper state=`, `→ features/recruitment`. 2026-09-21 (FE#134): the page's state resolves through `usePageState({ permission: "hr:sensitive:view", …, error, isEmpty })`, so access-loading is a skeleton, denial is `DeniedView`, a failed read is `ErrorState` with the backend message, and "No applicant data found" appears only for a permitted, finished read with `total === 0`; removed from `denial-is-not-emptiness.known.json`.
+- `/hr/recruitment/scorecard-analytics` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/scorecard-templates` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/question-bank` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/hiring-flows` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/booking-links` · **HR** · hooks: `→ features/recruitment` (2026-09-21: `loading.tsx` is titled "Interview Booking Links" with the page's subtitle)
+- `/hr/recruitment/email-sequences` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/automations` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/recruiters` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/vendors` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/internal-jobs` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/referrals` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/refer` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/sla` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/sla-report` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/interviewer-performance` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/inbox` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/reports` · **HR** · hooks: `→ features/recruitment`
+- `/hr/recruitment/settings` · **HR** · hooks: `→ features/recruitment`
 
 ### Performance & Engagement
 - `/hr/performance` · **HR** · hooks: `→ features/hr/performance` — 2026-09-21: React #419 came in through `@/components/ai`'s barrel (`AiFailureBody` import pulled `AiInlinePreview` → `isomorphic-dompurify` → bundled jsdom across the client boundary); the preview now renders through `SanitizedHtml`. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
@@ -1038,6 +1038,6 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/vendor-portal/[vendorPortalToken]` · **Inventory/Accounting** · hooks: `→ features/vendor-portal`
 - `/sign/[recipientToken]` · **Sign (public signing)** · hooks: `→ features/sign`
 - `/s/[collectorToken]` · **Platform (short link)** · hooks: redirect
-- `/refer/[orgId]` · **HR (public referral)** · hooks: `→ features/hr/recruitment`
-- `/refer/link/[referralToken]` · **HR (public referral)** · hooks: `→ features/hr/recruitment`
+- `/refer/[orgId]` · **HR (public referral)** · hooks: `→ features/recruitment`
+- `/refer/link/[referralToken]` · **HR (public referral)** · hooks: `→ features/recruitment`
 - `/unsubscribe/[unsubscribeToken]` · **Platform (public)** · hooks: `usePublicUnsubscribe` — email unsubscribe flow; four states: loading, success, error, already-unsubscribed

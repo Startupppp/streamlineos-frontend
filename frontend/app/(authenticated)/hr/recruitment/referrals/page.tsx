@@ -1,8 +1,8 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { InternalReferralsTab } from "@/features/hr/recruitment/referrals/internal-referrals-tab";
-import { ExternalReferralsTab } from "@/features/hr/recruitment/referrals/external-referrals-tab";
-import { InviteReferrersSheet } from "@/features/hr/recruitment/referrals/invite-referrers-sheet";
+import { InternalReferralsTab } from "@/features/recruitment/referrals/internal-referrals-tab";
+import { ExternalReferralsTab } from "@/features/recruitment/referrals/external-referrals-tab";
+import { InviteReferrersSheet } from "@/features/recruitment/referrals/invite-referrers-sheet";
 
 export default async function ReferralsHRPage() {
   return (

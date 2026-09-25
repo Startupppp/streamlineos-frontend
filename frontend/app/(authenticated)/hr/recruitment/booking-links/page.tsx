@@ -1,5 +1,5 @@
 import { requirePermission } from "@/lib/rbac/require-permission";
-import { BookingLinksView } from "@/features/hr/recruitment/components/booking-links-view";
+import { BookingLinksView } from "@/features/recruitment/components/booking-links-view";
 import { BRAND_URL } from "@/lib/branding";
 
 export default async function RecruitmentBookingLinksRoute() {

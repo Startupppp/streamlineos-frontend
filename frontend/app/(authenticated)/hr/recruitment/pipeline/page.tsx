@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { RecruitmentPipelinePage } from "@/features/hr/recruitment/pipeline-page";
+import { RecruitmentPipelinePage } from "@/features/recruitment/pipeline-page";
 import PipelineLoading from "./loading";
 
 export default function Page() {

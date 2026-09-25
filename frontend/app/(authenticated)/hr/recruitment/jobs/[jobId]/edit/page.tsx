@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { CreateJobForm } from "@/features/hr/recruitment/jobs/create-job-form";
+import { CreateJobForm } from "@/features/recruitment/jobs/create-job-form";
 import { useJobPosting } from "@/hooks/api/hr/recruitment";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useGenerateJobDescription } from "@/hooks/api/ai";

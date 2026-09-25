@@ -54,7 +54,7 @@ const BASELINE = {
     "features/build/meetings/meetings-list-page.tsx": 4,
     "features/calendar/event-recurrence-editor.tsx": 4,
     "features/hr/forms/components/field-config-panel.tsx": 4,
-    "features/hr/recruitment/jobs/create-job-form/publishing-settings-sections.tsx": 4,
+    "features/recruitment/jobs/create-job-form/publishing-settings-sections.tsx": 4,
   } as Record<string, number>,
 } as const;
 

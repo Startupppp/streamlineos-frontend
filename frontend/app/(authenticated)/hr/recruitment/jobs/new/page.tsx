@@ -1,5 +1,5 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { CreateJobForm } from "@/features/hr/recruitment/jobs/create-job-form";
+import { CreateJobForm } from "@/features/recruitment/jobs/create-job-form";
 
 export default async function NewJobPage() {
   return (

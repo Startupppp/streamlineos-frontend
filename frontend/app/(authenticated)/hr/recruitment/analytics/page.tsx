@@ -21,10 +21,10 @@ import {
   useRecruitmentAnalytics,
 } from "@/hooks/api/hr/recruitment";
 import { ErrorState } from "@/components/shared/error-state";
-import { ConversionSection } from "@/features/hr/recruitment/analytics/conversion-section";
+import { ConversionSection } from "@/features/recruitment/analytics/conversion-section";
 
 const RecruitmentAnalyticsCharts = dynamic(
-  () => import("@/features/hr/recruitment/components/recruitment-analytics-charts").then((m) => ({ default: m.RecruitmentAnalyticsCharts })),
+  () => import("@/features/recruitment/components/recruitment-analytics-charts").then((m) => ({ default: m.RecruitmentAnalyticsCharts })),
   {
     ssr: false,
     loading: () => (

@@ -1,4 +1,4 @@
-import { RecruitmentCommandCenterPage } from "@/features/hr/recruitment/command-center-page";
+import { RecruitmentCommandCenterPage } from "@/features/recruitment/command-center-page";
 
 export default function Page() {
   return <RecruitmentCommandCenterPage />;
