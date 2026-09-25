@@ -81,6 +81,7 @@ Current release-candidate checks:
 - Build-owned unsafe assertion findings: zero. The assertion gate still reports unrelated pre-existing Inventory, HR, Wiki, editor, and infrastructure debt.
 - Build-owned gated-read findings: zero. The gate still reports two unrelated HR recruitment reads.
 - The dead-code classifier reports no Build deletion candidate. Its current dead files are in Knowledge Base, outside this release.
+- Filtered column-count reads now accept and apply the same validated board filter contract as board rows, including search, status, priority, assignee, labels, cycle, module, epic, and due-date filters. Focused backend aggregate/schema tests pass 34/34; focused frontend filter/board tests pass 29/29.
 
 ## Browser verification
 
@@ -107,6 +108,9 @@ The candidate was exercised through a real authenticated browser against the pro
 - A mismatched project ticket URL `/build/5/tickets/BQS-2` resolved to the
   unavailable-scope state and Page Not Found surface without exposing ticket
   data or crashing the shell.
+- Local port `1000` remains the browser verification target for the current
+  candidate; production behavior for the new filtered aggregate endpoint stays
+  pending until the backend deployment containing its release commit is observed.
 
 Some detail pages have no production fixture rows for forms, incidents, meetings, QA runs, wiki pages, goals, portfolios, managed products, or teams. Their authenticated parent empty states passed; no production business data was created solely for testing.
 
