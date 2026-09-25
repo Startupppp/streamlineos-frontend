@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
 import { MY_WORK_VIEWS } from "./my-work-view";
-import { MyWorkContent } from "./my-work-content";
 import { MyWorkSortControl } from "./my-work-sort-control";
 import { useMyWorkBulk } from "./use-my-work-bulk";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
@@ -47,6 +46,10 @@ const DisplayOptionsPanel = dynamic(
     default: m.DisplayOptionsPanel,
   })),
   { ssr: false },
+);
+const MyWorkContent = dynamic(
+  () => import("./my-work-content").then((m) => ({ default: m.MyWorkContent })),
+  { loading: () => null },
 );
 
 const DISPLAY_STORAGE_ID = -1;
