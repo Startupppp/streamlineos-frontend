@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
 import type { HrReportingManagerRequest } from "@/hooks/api/hr/reporting-manager-requests-schema";
+import { describeReportingWarning } from "@/components/hr/reporting-lines/reporting-line-warnings";
 import { ReportingRequestReviewSheet } from "./reporting-request-review-sheet";
 import { reviewDecisionSchema, toReviewPayload } from "./review-decision-schema";
 
@@ -132,10 +133,13 @@ describe("review decision payloads", () => {
 
 describe("review outcomes", () => {
   it("reports warnings and a past-tense success", async () => {
-    mutate.mockImplementation((_input, options) => options.onSuccess({ request: makeRequest(), warnings: ["Fourth change today"] }));
+    mutate.mockImplementation((_input, options) =>
+      options.onSuccess({ request: makeRequest(), warnings: ["PRIMARY_CHANGE_THRESHOLD_EXCEEDED"] }),
+    );
     await decide(/Approve/, "Ok");
     await waitFor(() => expect(toastSuccess).toHaveBeenCalledWith("Approved — Eli Park's reporting manager was changed"));
-    expect(toastWarning).toHaveBeenCalledWith("Fourth change today");
+    expect(toastWarning).toHaveBeenCalledWith(describeReportingWarning("PRIMARY_CHANGE_THRESHOLD_EXCEEDED"));
+    expect(toastWarning).not.toHaveBeenCalledWith("PRIMARY_CHANGE_THRESHOLD_EXCEEDED");
   });
 
   it("reloads the request when it changed underneath the reviewer (409)", async () => {
@@ -153,5 +157,17 @@ describe("review outcomes", () => {
     expect(screen.getByText("Approved")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Record decision" })).not.toBeInTheDocument();
     expect(screen.queryByRole("radio")).not.toBeInTheDocument();
+  });
+
+  it("describes the drawer to assistive tech, open or resolved (no Radix 'Missing Description')", () => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { unmount } = render(<ReportingRequestReviewSheet requestId="req-1" onOpenChange={jest.fn()} />);
+    expect(screen.getByRole("dialog")).toHaveAccessibleDescription(/Nothing changes until you record a decision/);
+    unmount();
+    request = makeRequest({ status: "REJECTED", reviewReason: "No" });
+    render(<ReportingRequestReviewSheet requestId="req-1" onOpenChange={jest.fn()} />);
+    expect(screen.getByRole("dialog")).toHaveAccessibleDescription(/Nothing changes until you record a decision/);
+    expect(warn.mock.calls.flat().join(" ")).not.toMatch(/Missing `Description`/);
+    warn.mockRestore();
   });
 });

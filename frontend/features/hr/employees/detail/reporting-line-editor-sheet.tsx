@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { describeReportingWarnings } from "@/components/hr/reporting-lines/reporting-line-warnings";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -35,12 +36,6 @@ interface ReportingLineEditorSheetProps {
   line: ReportingLineView;
 }
 
-function sameSecondaries(a: ReportingLineEditorValues["secondaryManagers"], b: ReportingLineEditorValues["secondaryManagers"]): boolean {
-  const key = (list: ReportingLineEditorValues["secondaryManagers"]) =>
-    list.map((entry) => `${entry.managerUserId}|${entry.label.trim()}`).join(",");
-  return key(a) === key(b);
-}
-
 function ScheduledSecondaries({ entries }: { entries: ReportingLineView["secondary"] }) {
   if (entries.length === 0) return null;
   return (
@@ -57,9 +52,7 @@ function ScheduledSecondaries({ entries }: { entries: ReportingLineView["seconda
           </li>
         ))}
       </ul>
-      <p className="text-xs text-muted-foreground">
-        These keep their start date. Changing the additional managers below replaces this schedule.
-      </p>
+      <p className="text-xs text-muted-foreground">These keep their start date when you save.</p>
     </section>
   );
 }
@@ -85,6 +78,7 @@ export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, l
   // Read once at mount (the sheet mounts per open), like the defaults.
   const [today] = useState(getTodayString);
   const [initial] = useState(() => editorDefaults(line, today));
+  const [scheduled] = useState(() => upcomingSecondaries(line, today));
   const form = useForm<ReportingLineEditorValues>({
     resolver: zodResolver(reportingLineEditorSchema),
     defaultValues: initial,
@@ -108,11 +102,10 @@ export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, l
   }
 
   function handleSubmit(values: ReportingLineEditorValues) {
-    const secondariesChanged = !sameSecondaries(values.secondaryManagers, initial.secondaryManagers);
-    setLine.mutate(editorPayload(employeeUserId, values, { secondariesChanged }), {
+    setLine.mutate(editorPayload(employeeUserId, values, scheduled), {
       onSuccess: (result) => {
         toast.success(values.effectiveFrom ? "Reporting line change scheduled" : "Reporting line updated");
-        for (const warning of result.warnings) toast.warning(warning);
+        for (const sentence of describeReportingWarnings(result.warnings)) toast.warning(sentence);
         onOpenChange(false);
       },
       onError: (error) => {
@@ -157,7 +150,7 @@ export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, l
               canOverride={canOverride}
             />
           ) : null}
-          <ScheduledSecondaries entries={upcomingSecondaries(line, today)} />
+          <ScheduledSecondaries entries={scheduled} />
           <ReportingLineEditorFields
             form={form}
             employeeUserId={employeeUserId}

@@ -123,29 +123,29 @@ export function editorDefaults(line: ReportingLineView, today: string): Reportin
 
 /**
  * The PUT body (CONTRACT §4.4). Blank optional fields are omitted.
- * `secondaryManagers` is the desired full set, and the server re-dates every line
- * in it from the effective date — so it is sent only when the user changed the
- * set (or a top-level role ends them); otherwise it is omitted, meaning "unchanged".
+ * `secondaryManagers` is the full intended set: the current ones as edited plus
+ * the scheduled ones the form shows read-only. The server keeps the existing
+ * current or scheduled line of every manager still in the set (only a label
+ * change replaces one), so nothing is re-dated; a top-level role ends them all.
  */
 export function editorPayload(
   employeeUserId: string,
   values: ReportingLineEditorValues,
-  { secondariesChanged }: { secondariesChanged: boolean },
+  scheduled: ReadonlyArray<SecondaryEntry>,
 ): SetReportingLineInput {
+  const edited = values.secondaryManagers.map((entry) => ({
+    managerUserId: entry.managerUserId,
+    ...(entry.label ? { label: entry.label } : {}),
+  }));
+  const kept = new Set(edited.map((entry) => entry.managerUserId));
+  const stillScheduled = scheduled
+    .filter((entry) => !kept.has(entry.manager.userId))
+    .map((entry) => ({ managerUserId: entry.manager.userId, ...(entry.label ? { label: entry.label } : {}) }));
   return {
     employeeUserId,
     primaryManagerUserId: values.topLevel ? null : values.primaryManagerUserId,
     ...(values.topLevel ? { topLevelReason: values.topLevelReason } : {}),
-    ...(values.topLevel
-      ? { secondaryManagers: [] }
-      : secondariesChanged
-        ? {
-            secondaryManagers: values.secondaryManagers.map((entry) => ({
-              managerUserId: entry.managerUserId,
-              ...(entry.label ? { label: entry.label } : {}),
-            })),
-          }
-        : {}),
+    secondaryManagers: values.topLevel ? [] : [...edited, ...stillScheduled],
     ...(values.effectiveFrom ? { effectiveFrom: values.effectiveFrom } : {}),
     ...(values.reason ? { reason: values.reason } : {}),
     ...(values.emergency ? { emergency: true } : {}),

@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { describeReportingWarnings } from "@/components/hr/reporting-lines/reporting-line-warnings";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { ErrorState } from "@/components/shared/error-state";
@@ -27,6 +28,7 @@ import {
 } from "./review-decision-schema";
 
 const TITLE = "Review reporting-manager request";
+const DESCRIPTION = "An employee asked HR to check who they report to. Nothing changes until you record a decision.";
 
 export function isOpenRequest(status: HrReportingManagerRequest["status"]): boolean {
   return status === "PENDING" || status === "MORE_INFO_REQUIRED";
@@ -104,7 +106,7 @@ export function ReportingRequestReviewSheet({ requestId, onOpenChange }: Reporti
       {
         onSuccess: (result) => {
           toast.success(decisionToast(values.decision, request.employee.name));
-          for (const warning of result.warnings) toast.warning(warning);
+          for (const sentence of describeReportingWarnings(result.warnings)) toast.warning(sentence);
           onOpenChange(false);
         },
         onError: (mutationError) => {
@@ -121,7 +123,7 @@ export function ReportingRequestReviewSheet({ requestId, onOpenChange }: Reporti
 
   if (!request || !isOpenRequest(request.status)) {
     return (
-      <AppSheet open={open} onOpenChange={onOpenChange} title={TITLE}>
+      <AppSheet open={open} onOpenChange={onOpenChange} title={TITLE} description={DESCRIPTION}>
         {isLoading ? (
           <div className="flex flex-col gap-3">
             <Skeleton className="h-40 w-full rounded-xl" />
@@ -149,6 +151,7 @@ export function ReportingRequestReviewSheet({ requestId, onOpenChange }: Reporti
       open={open}
       onOpenChange={onOpenChange}
       title={TITLE}
+      description={DESCRIPTION}
       resolver={zodResolver(reviewDecisionSchema)}
       defaultValues={defaultValues}
       onSubmit={handleSubmit}

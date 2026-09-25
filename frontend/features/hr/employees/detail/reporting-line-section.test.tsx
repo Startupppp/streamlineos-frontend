@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReportingLineView } from "@/hooks/api/hr/reporting-lines-schema";
 import { ApiError } from "@/lib/api-envelope";
+import { describeReportingWarning } from "@/components/hr/reporting-lines/reporting-line-warnings";
 import { ReportingLineSection } from "./reporting-line-section";
 import { editorPayload, requiresChangeReason, reportingLineEditorSchema, editorDefaults, upcomingSecondaries } from "./reporting-line-editor-schema";
 
@@ -176,6 +177,18 @@ describe("Reporting line editor — change-warning UI (PRD D4)", () => {
     });
   });
 
+  it("toasts warning sentences, never raw codes", async () => {
+    setLine.mockImplementation((_input: unknown, handlers: { onSuccess: (r: unknown) => void }) =>
+      handlers.onSuccess({ line, warnings: ["EMERGENCY_OVERRIDE"] }),
+    );
+    await openEditor();
+    await userEvent.click(screen.getByRole("combobox", { name: "Primary reporting manager" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    const { toast } = jest.requireMock<{ toast: { warning: jest.Mock } }>("sonner");
+    await waitFor(() => expect(toast.warning).toHaveBeenCalledWith(describeReportingWarning("EMERGENCY_OVERRIDE")));
+    expect(toast.warning).not.toHaveBeenCalledWith("EMERGENCY_OVERRIDE");
+  });
+
   it("puts a server refusal on its field", async () => {
     setLine.mockImplementation((_input: unknown, handlers: { onError: (e: unknown) => void }) =>
       handlers.onError(new ApiError("That would create a reporting loop.", 400, "PRIMARY_CYCLE")),
@@ -204,22 +217,26 @@ describe("Reporting line editor — scheduled additional managers (never re-date
     expect(within(dialog).getByText(/starts/i)).toHaveTextContent(/Oct/);
   });
 
-  it("does not send additional managers when only the primary changed, so a scheduled one keeps its date", async () => {
+  it("sends the full intended set, scheduled managers included, so the server keeps their lines", async () => {
     line = makeLine({ secondary: [CURRENT_SECONDARY, SCHEDULED_SECONDARY] });
     await openEditor();
+    expect(screen.queryByText(/replaces this schedule/)).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("combobox", { name: "Primary reporting manager" }));
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(setLine).toHaveBeenCalled());
-    expect(setLine.mock.calls[0]?.[0]).not.toHaveProperty("secondaryManagers");
+    expect(setLine.mock.calls[0]?.[0].secondaryManagers).toEqual([
+      { managerUserId: "u-21", label: "Project" },
+      { managerUserId: "u-22", label: "Project" },
+    ]);
   });
 
-  it("sends the edited set when additional managers change", async () => {
-    line = makeLine({ secondary: [CURRENT_SECONDARY] });
+  it("drops a removed current manager but keeps the scheduled one", async () => {
+    line = makeLine({ secondary: [CURRENT_SECONDARY, SCHEDULED_SECONDARY] });
     await openEditor();
     await userEvent.click(screen.getByRole("button", { name: "Remove additional manager 1" }));
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(setLine).toHaveBeenCalled());
-    expect(setLine.mock.calls[0]?.[0]).toMatchObject({ secondaryManagers: [] });
+    expect(setLine.mock.calls[0]?.[0].secondaryManagers).toEqual([{ managerUserId: "u-22", label: "Project" }]);
   });
 });
 
@@ -246,7 +263,7 @@ describe("editor schema", () => {
 
   it("sends top-level as a null primary with its reason and no secondaries", () => {
     const values = { ...editorDefaults(makeLine(), "2026-09-26"), topLevel: true, topLevelReason: "Founder", effectiveFrom: "2026-10-01" };
-    expect(editorPayload("u-emp", values, { secondariesChanged: false })).toEqual({
+    expect(editorPayload("u-emp", values, [SCHEDULED_SECONDARY])).toEqual({
       employeeUserId: "u-emp",
       primaryManagerUserId: null,
       topLevelReason: "Founder",
