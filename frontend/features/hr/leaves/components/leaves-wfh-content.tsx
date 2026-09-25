@@ -48,6 +48,7 @@ import { WfhTabContent } from "./wfh-tab-content";
 import { LeaveApprovalsContent } from "./leave-approvals";
 import { LeavesSummaryStrip, buildAvailableHint } from "./leaves-summary-strip";
 import { LeavesThisWeekCard } from "./leaves-this-week-card";
+import { approvedDaysInYear } from "@/features/hr/leaves/leave-date-helpers";
 import type {
   LeaveBalance,
   LeaveType,
@@ -145,13 +146,23 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     (sum, b) => Math.round((sum + Number(b.balance ?? 0)) * 10) / 10,
     0,
   );
-  const availableHint = buildAvailableHint(balances, joiningDate);
+  // V-045. "No leave policy is set up yet" must key on whether the org has a
+  // configured leave type, not on whether this viewer holds balance rows — a
+  // configured policy nobody has used has zero balances too.
+  // PROVISIONAL: the backend flag wins; the configured-types fallback keeps the
+  // page honest until /me/time-off ships it.
+  const noPolicyConfigured =
+    contextData?.noPolicyConfigured ?? leaveTypes.length === 0;
+  const availableHint = buildAvailableHint(
+    balances,
+    joiningDate,
+    noPolicyConfigured,
+  );
   const pendingCount = myLeaveRequests.filter(
     (r) => r.status === "PENDING",
   ).length;
-  const approvedCount = myLeaveRequests.filter(
-    (r) => r.status === "APPROVED",
-  ).length;
+  // V-045. Days, not requests — the card says "Approved (YTD)".
+  const approvedDays = approvedDaysInYear(myLeaveRequests);
 
   // HRMS-E2E-022. The export follows the eye: the view is derived from the
   // active tab, so an admin on Approvals exports the team rows in front of them
@@ -243,7 +254,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                 totalAvailable={totalAvailable}
                 availableHint={availableHint}
                 pendingCount={pendingCount}
-                approvedCount={approvedCount}
+                approvedDays={approvedDays}
               />
 
               <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide">

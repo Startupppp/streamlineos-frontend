@@ -38,6 +38,8 @@ export interface LeaveContextResult {
     image?: string | null;
   }>;
   approvalRoute: ApprovalRoute;
+  /** V-045. Optional until the backend half lands. */
+  noPolicyConfigured?: boolean;
 }
 
 export interface LeaveRequestsPage {

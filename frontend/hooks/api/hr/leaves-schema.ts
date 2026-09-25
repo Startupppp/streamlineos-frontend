@@ -128,6 +128,11 @@ export const leaveContextContract = z.object({
     }),
   ),
   approvalRoute: approvalRouteContract,
+  /**
+   * V-045. True when the org has configured no leave type at all. Optional
+   * until the backend half lands; the page falls back to `types.length === 0`.
+   */
+  noPolicyConfigured: z.boolean().optional(),
 });
 
 const idCursorPageInfoSchema = z.object({
