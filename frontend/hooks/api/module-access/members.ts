@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { useCan } from "@/hooks/api/access";
+import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
 import type { CursorPaginatedResult, DataScope, MemberGrant, ModuleMember, ModuleMemberCandidate } from "./types";
 import { viewKey, manageKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
@@ -81,6 +81,7 @@ export function useAddModuleMember(moduleKey: string) {
           exact: true,
         });
       }
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }
@@ -114,6 +115,7 @@ export function useUpdateModuleMember(moduleKey: string) {
           exact: true,
         });
       }
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }
@@ -142,6 +144,7 @@ export function useRemoveModuleMember(moduleKey: string) {
           exact: true,
         });
       }
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }
@@ -202,6 +205,7 @@ export function useModuleMemberGrants(
 
 export function useSetModuleMemberGrants(moduleKey: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation<
     { success: true; granted: number },
     Error,
@@ -230,6 +234,7 @@ export function useSetModuleMemberGrants(moduleKey: string) {
       void queryClient.invalidateQueries({
         queryKey: platformCoreQueryKeys.access.me(),
       });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 }

@@ -133,18 +133,21 @@ export const useRole = (
 
 export const useDeleteRole = () => {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useAuthorizedMutation<{ success: boolean }, Error, number>("settings:rbac:manage", {
     mutationKey: ["roles", "delete"],
     mutationFn: (id) =>
       apiClient.delete<{ success: boolean }>(`/roles/${id}`, undefined, undefined, roleSuccessContract),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 };
 
 export const useUpdateRole = (roleId: number) => {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useAuthorizedMutation<{ success: boolean }, Error, { name: string }>("settings:rbac:manage", {
     mutationKey: ["roles", "update", roleId],
     mutationFn: ({ name }) =>
@@ -154,16 +157,21 @@ export const useUpdateRole = (roleId: number) => {
       queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.roles.detail(roleId),
       });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
     },
   });
 };
 
 export function useMaterializeRoleTemplate() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useAuthorizedMutation<Role, Error, { templateId: string }>("settings:rbac:manage", {
     mutationKey: ["roles", "materialize-template"],
     mutationFn: (data) => apiClient.post<Role>("/roles/templates", data, undefined, roleContract),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
+      if (session?.orgId) signalAccessInvalidation(session.orgId);
+    },
   });
 }
 
