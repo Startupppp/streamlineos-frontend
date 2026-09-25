@@ -35,7 +35,8 @@ import {
 } from "@/hooks/api/hr/engagement";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { AnonymitySuppressedNotice } from "@/components/shared/anonymity-suppressed-notice";
 
 const pollSchema = z.object({
@@ -203,6 +204,8 @@ function PollCard({
 
 export function PollsTab() {
   const { data: polls, isLoading, isError, error, refetch } = useEngagementPolls();
+  const pageState = usePageState({ permission: "hr:engagement:view", isLoading, isError, error });
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
   const canManage = useCan("hr:engagement:manage");
   const createPoll = useCreatePoll();
 
@@ -253,16 +256,21 @@ export function PollsTab() {
     [createPoll, handleReset],
   );
 
-  if (isLoading) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
-      <div className="space-y-3">
-        {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-lg" />)}
-      </div>
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        className="flex-1"
+        loading={
+          <div className="space-y-3">
+            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-lg" />)}
+          </div>
+        }
+      >
+        {null}
+      </PageState>
     );
-  }
-
-  if (isError) {
-    return <ErrorState className="flex-1" title="Couldn't load polls" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   return (

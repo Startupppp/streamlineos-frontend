@@ -16,6 +16,10 @@ jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: undefined }),
 }));
 
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => ({ kind: "ready" }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
 }));

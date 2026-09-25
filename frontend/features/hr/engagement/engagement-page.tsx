@@ -48,6 +48,7 @@ import {
 } from "@/lib/person-display";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { MoodCheckinWidget } from "@/features/hr/engagement/mood-checkin-widget";
+import { MOODS } from "@/features/hr/engagement/mood-scale";
 import {
   RecognitionFeed,
   BadgesGrid,
@@ -99,6 +100,13 @@ function useCreateRecognition() {
       apiClient.post("/hr/recognition", data, undefined, recognitionRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrRecognition }),
   });
+}
+
+function MoodIcon({ mood }: { mood: number }) {
+  const entry = MOODS.find((m) => m.value === mood);
+  if (!entry) return null;
+  const Icon = entry.icon;
+  return <Icon className="h-5 w-5 shrink-0 text-foreground" aria-label={entry.label} role="img" />;
 }
 
 function MoodSparkline({ data }: { data: { date: string; avgMood: number }[] }) {
@@ -277,6 +285,8 @@ function RecognitionTab() {
     refetch: refetchRec,
   } = useRecognitions();
   const createRecognition = useCreateRecognition();
+  // POST /hr/recognition is `hr:engagement:view` (engagement.controller.ts:127).
+  const canGiveKudos = useCan("hr:engagement:view");
   const [kudosOpen, setKudosOpen] = useState(false);
 
   function handleGiveKudos(): void {
@@ -298,10 +308,12 @@ function RecognitionTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">Kudos Feed</p>
-        <Button size="sm" className="gap-1.5" onClick={handleGiveKudos}>
-          <Heart className="h-3.5 w-3.5" />
-          Give Kudos
-        </Button>
+        {canGiveKudos && (
+          <Button size="sm" className="gap-1.5" onClick={handleGiveKudos}>
+            <Heart className="h-3.5 w-3.5" />
+            Give Kudos
+          </Button>
+        )}
       </div>
 
       <RecognitionFeed
@@ -310,7 +322,7 @@ function RecognitionTab() {
         isError={recError}
         error={recErrorData}
         onRetry={() => void refetchRec()}
-        onGiveKudos={handleGiveKudos}
+        onGiveKudos={canGiveKudos ? handleGiveKudos : undefined}
       />
 
       <div className="space-y-3">
@@ -338,8 +350,6 @@ function RecognitionTab() {
 function MoodTab() {
   const { data: history, isLoading, isError, error, refetch } = useMyMoodHistory();
 
-  const MOODS = ["", "😞", "😕", "😐", "🙂", "😄"];
-
   function handleRetry(): void {
     void refetch();
   }
@@ -364,7 +374,7 @@ function MoodTab() {
           <div className="space-y-1">
             {history.slice(0, 14).map((entry) => (
               <div key={entry.id} className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-muted/50">
-                <span className="text-lg">{MOODS[entry.mood]}</span>
+                <MoodIcon mood={entry.mood} />
                 <span className="text-xs text-muted-foreground w-24 shrink-0">{entry.date}</span>
                 {entry.note && <TruncatedText text={entry.note} className="text-xs text-foreground" />}
               </div>
