@@ -67,9 +67,8 @@ export const goalStatsContract = z.object({
 });
 
 /**
- * `goalDetailSchema` — full goal with keyResults, updates, links. Only
- * `GET /goals/:goalId` answers this; `PATCH` and check-in declare it but return
- * the bare row, so they take `goalRowContract`.
+ * `goalDetailSchema` — full goal with keyResults, updates, links. GET, PATCH,
+ * and check-in for `/goals/:goalId` answer this shape.
  */
 export const goalDetailContract = goalRowContract.extend({
   owner: goalOwnerContract.nullable(),

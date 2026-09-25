@@ -1536,7 +1536,7 @@ packet's write set):
 |---|---|
 | `features/build/goals/key-result-row.tsx:27-29` | **Fixed 2026-09-25** — the "Check in" button is now rendered only when the parent goal detail has `build:goals:manage`; the dialog mount is gated by the same capability and a focused denial regression covers the row. |
 | `features/build/goals/constants.ts:92` | **Fixed 2026-09-25** — `keyResultPercent` now preserves one decimal place before clamping, matching the backend's unrounded-per-KR average and preventing 99.5% from displaying as 100%. |
-| `hooks/api/goals.ts` + `goals-schema.ts` | `useUpdateGoal`/`useCheckIn` type their response as the bare `goalRowContract`, but `update` and `checkIn` actually return the full `GoalDetail` via `getGoal()`. Inert today (no consumer reads the returned value) but the contract comment is factually wrong and will mislead the first consumer |
+| `hooks/api/goals.ts` + `goals-schema.ts` | **Fixed 2026-09-25** — `useUpdateGoal` and `useCheckIn` now validate the full `GoalDetail` returned by the backend, including key results, updates, and links. |
 
 ### Findings banked for cycles 15–16 (read-only audit, unverified by coordinator)
 

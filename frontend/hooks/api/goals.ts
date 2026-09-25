@@ -180,7 +180,7 @@ export function useUpdateGoal() {
   return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["update", "goal"],
     mutationFn: ({ id, ...input }: UpdateGoalInput & { id: number }) =>
-      apiClient.patch<GoalRow>(`/goals/${id}`, input, undefined, goalRowContract),
+      apiClient.patch<GoalDetail>(`/goals/${id}`, input, undefined, goalDetailC),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(variables.id) });
@@ -205,7 +205,7 @@ export function useCheckIn(goalId: number) {
   return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["check", "in"],
     mutationFn: (input: CheckInInput) =>
-      apiClient.post<GoalRow>(`/goals/${goalId}/check-in`, input, undefined, goalRowContract),
+      apiClient.post<GoalDetail>(`/goals/${goalId}/check-in`, input, undefined, goalDetailC),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });
       qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
