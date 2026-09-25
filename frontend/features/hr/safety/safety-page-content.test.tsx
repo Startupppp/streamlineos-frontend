@@ -9,6 +9,11 @@ jest.mock("next/dynamic", () => () => () => null);
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useAccess: () => ({ data: { scopes: { "hr:safety:view": "all" }, modules: {}, isOrgOwner: false }, isLoading: false }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 jest.mock("@/hooks/api/hr/safety", () => ({
