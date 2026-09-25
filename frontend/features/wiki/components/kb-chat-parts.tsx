@@ -2,8 +2,12 @@
 
 import { AlertTriangle, CheckCircle2, Clock, MessageSquareWarning } from "lucide-react";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
+import { statusToneClasses } from "@/lib/design-tokens";
 import type { ChatMessage } from "@/components/kb/kb-chat-bubble";
 import type { KbAskCitationWithParts } from "@/hooks/api/kb/ask-result-schema";
+
+const warningTone = statusToneClasses("warning");
+const successTone = statusToneClasses("success");
 
 export type KbHistoryRow =
   | { type: "sep"; id: string; label: string }
@@ -97,12 +101,12 @@ export function InsufficientEvidenceBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+      className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${warningTone.rule} ${warningTone.surface} ${warningTone.inkStrong}`}
     >
       <MessageSquareWarning className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
       <div>
         <p className="font-semibold">No relevant content found</p>
-        <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-300">
+        <p className={`mt-0.5 text-xs ${warningTone.ink}`}>
           The knowledge base does not contain anything that answers this question. Consider uploading relevant files or adding a note.
         </p>
       </div>
@@ -163,7 +167,7 @@ export function FreshnessTag({ updatedAt }: FreshnessTagProps) {
   return (
     <span
       aria-label={label}
-      className={`inline-flex items-center gap-0.5 text-micro ${stale ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}
+      className={`inline-flex items-center gap-0.5 text-micro ${stale ? warningTone.ink : "text-muted-foreground"}`}
     >
       <Clock className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
       {label}
@@ -180,7 +184,7 @@ export function VerificationBadge({ verified }: VerificationBadgeProps) {
   return (
     <span
       aria-label="Verified source"
-      className="inline-flex items-center gap-0.5 text-micro text-emerald-600 dark:text-emerald-400"
+      className={`inline-flex items-center gap-0.5 text-micro ${successTone.ink}`}
     >
       <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
       Verified
@@ -196,7 +200,7 @@ export function DisagreementBanner({ summary }: DisagreementBannerProps) {
   return (
     <div
       role="note"
-      className="mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
+      className={`mt-2 flex items-start gap-2 rounded-lg border px-3 py-2 text-xs ${warningTone.rule} ${warningTone.surface} ${warningTone.ink}`}
     >
       <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       <span><span className="font-semibold">Sources disagree:</span> {summary}</span>
