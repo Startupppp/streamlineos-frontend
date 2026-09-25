@@ -55,19 +55,25 @@ Migration: `backend/migrations/1212_kb_indexed_bytes_quota.sql` + its rollback.
 - [x] Streaming stop and retry; network-loss recovery; copy; helpful/unhelpful; report wrong or
       stale; create knowledge gap.
 - [x] Conversation rail: new, search, rename, delete, cursor-paginated.
-- [ ] Tenant quotas enforced and surfaced: requests, tokens, concurrent streams, **indexed bytes**,
+- [x] Tenant quotas enforced and surfaced: requests, tokens, concurrent streams, **indexed bytes**,
       research jobs. `1212` adds the indexed-bytes accounting, tenant-leading, with a rollback and
       a postcondition.
-      **REOPENED by the orchestrator 2026-09-25.** `1212` is applied to production (journal idx
-      1094, table verified present) but **nothing reads or writes it.** `grep -rn` across
-      `backend/src` and `backend/test` for `kb_indexed_bytes_quota`, `indexedBytes`, `limit_bytes`
-      and the literal `536870912` returns zero hits. The migration landed; the enforcement it
-      exists to serve was never written, so this session's own opening statement — "one tenant can
-      index without bound" — is still true. Writing the table is not enforcing the quota.
-      Remaining work: reserve/consume `indexed_bytes` on the source-indexing path before accepting
-      a new source, refuse over-cap with a 402 naming the limit (BE-23), and initialise the row on
-      first write. The 402 surface already exists (`knowledge-base-page.tsx:235-238`) and is inert
-      until something raises it.
+      **REOPENED by the orchestrator 2026-09-25**, then closed the same day in `cb0169dc3`.
+      `1212` was applied to production (journal idx 1094) but nothing read or wrote it, so the
+      session's own opening statement — "one tenant can index without bound" — was still true.
+      Now: `KbIndexedBytesQuotaService.reserve` runs inside the same transaction that inserts the
+      `kb_sources` row and emits the outbox event, as one conditional `UPDATE … WHERE
+      indexed_bytes + n <= limit_bytes`, so two concurrent uploads cannot both pass the cap
+      (BE-125). Over-cap raises `KbIndexedBytesQuotaExceededException` — 402,
+      `KB_INDEXED_BYTES_QUOTA_EXCEEDED`, `details: { limitBytes }` — which arms the surface at
+      `knowledge-base-page.tsx:235-238` that was inert until something raised it.
+
+      **Defect found and fixed during verification.** Bytes were released only on the two
+      synchronous indexing failures, which made this a lifetime cumulative cap, not a usage cap:
+      an org that deleted every source still could not index. Deleting a source
+      (`kb-sources.service.ts:remove`) and reaping one stuck in `processing`
+      (`kb-stuck-source-reaper.service.ts`) now return their bytes too, both measured by
+      `kbSourceIndexedBytes` so the reservation and the release cannot drift apart.
 - [x] Over-quota is a clear, actionable state with the limit named — not a generic error.
 - [x] `kb:ai:generate` plus read access required on generation routes; history routes stay on
       `kb:pages:view`. `kb-ask-generate-permission.spec.ts` pins this — keep it passing.
