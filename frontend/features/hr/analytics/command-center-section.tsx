@@ -156,7 +156,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
     [leaveTrends],
   );
 
-  const leaveTypeColors = ["#1d4ed8", "#06b6d4", "#60a5fa", "#8b5cf6", "#10b981"];
+  const leaveTypeColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--status-success-fill)"];
 
   function handleAttritionDrilldown() {
     openDrilldown("attrition", "Attrition");

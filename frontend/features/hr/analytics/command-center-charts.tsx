@@ -152,7 +152,7 @@ export function PayrollCostChart({ data, formatCurrency }: PayrollCostChartProps
         <Line
           type="monotone"
           dataKey="grossTotal"
-          stroke="#1d4ed8"
+          stroke="var(--chart-1)"
           strokeWidth={2}
           dot={false}
           name="Gross Total"
