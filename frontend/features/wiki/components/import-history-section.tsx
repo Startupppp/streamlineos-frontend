@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 import { useKbImportJobs } from "@/hooks/api/kb";
@@ -108,19 +108,12 @@ export function ImportHistorySection() {
             </Link>
             .
           </p>
-          {hasNextPage ? (
-            <LoadingButton
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full"
-              isPending={isFetchingNextPage}
-              loadingText="Loading…"
-              onClick={handleLoadMore}
-            >
-              Load more
-            </LoadingButton>
-          ) : null}
+          <InfiniteScrollSentinel
+            hasNextPage={hasNextPage ?? false}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={handleLoadMore}
+            label="Load more import jobs"
+          />
         </div>
       )}
     </PageSection>

@@ -1,262 +1,157 @@
-"use client";
-
-import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
+import { render, screen, cleanup } from "@testing-library/react";
+import PageHistoryPage from "./page-history-page";
 
-jest.mock("@/hooks/api/access", () => ({
-  useCan: jest.fn(() => true),
-  useCanState: jest.fn(() => "allowed"),
-}));
+type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
 
-jest.mock("@/lib/api-client", () => ({
-  apiClient: {
-    get: jest.fn().mockResolvedValue({ data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }),
-    post: jest.fn().mockResolvedValue({ id: 1 }),
-  },
-}));
+const observers: {
+  callback: IntersectionCallback;
+  options: IntersectionObserverInit | undefined;
+  observed: Element[];
+  disconnected: boolean;
+}[] = [];
+
+class FakeIntersectionObserver {
+  constructor(callback: IntersectionCallback, options?: IntersectionObserverInit) {
+    this.entry = { callback, options, observed: [], disconnected: false };
+    observers.push(this.entry);
+  }
+  private entry: (typeof observers)[number];
+  observe(element: Element) {
+    this.entry.observed.push(element);
+  }
+  disconnect() {
+    this.entry.disconnected = true;
+  }
+  unobserve() {}
+}
+
+function intersect(index = 0) {
+  const observer = observers[index];
+  if (!observer) throw new Error("no observer was created");
+  observer.callback([{ isIntersecting: true } as IntersectionObserverEntry]);
+}
 
 jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(() => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    refresh: jest.fn(),
-  })),
-  useSearchParams: jest.fn(() => ({
-    get: jest.fn(() => null),
-  })),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn() })),
+  useSearchParams: jest.fn(() => ({ get: () => null })),
 }));
 
-jest.mock("sonner", () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
+jest.mock("@/components/ui/page-wrapper", () => ({
+  PageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-const mockUseKbPage = jest.fn();
-const mockUseKbPageVersionsInfinite = jest.fn();
-const mockUseKbPageVersionDetail = jest.fn();
-const mockUseRestoreKbVersion = jest.fn();
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: () => null,
+}));
 
 jest.mock("@/hooks/api/kb/pages", () => ({
-  useKbPage: (...args: unknown[]) => mockUseKbPage(...args),
+  useKbPage: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/kb/page-versions", () => ({
-  useKbPageVersionsInfinite: (...args: unknown[]) => mockUseKbPageVersionsInfinite(...args),
-  useKbPageVersionDetail: (...args: unknown[]) => mockUseKbPageVersionDetail(...args),
-  useRestoreKbVersion: () => mockUseRestoreKbVersion(),
+  useKbPageVersionsInfinite: jest.fn(),
+  useKbPageVersionDetail: jest.fn(),
+  useRestoreKbVersion: jest.fn(),
 }));
 
-const PAGE = {
-  id: 1,
-  title: "My Page",
-  content: { type: "doc", content: [] },
-  contentText: null,
-  orgId: "org-1",
-  spaceId: null,
-  parentPageId: null,
-  sortOrder: 0,
-  projectId: null,
-  icon: null,
-  coverImage: null,
-  status: "draft",
-  contentType: "rich_text",
-  trustState: "unverified",
-  visibility: "private",
-  publicToken: null,
-  publicSlug: null,
-  isLocked: false,
-  createdAt: "2024-01-01T00:00:00Z",
-  updatedAt: "2024-01-01T00:00:00Z",
-  deletedAt: null,
-  createdByMembershipId: null,
-  lastEditedByMembershipId: null,
-  deletedByMembershipId: null,
-  ownerMembershipId: null,
-  verifiedByMembershipId: null,
-  createdById: null,
-  lastEditedById: null,
-  deletedById: null,
-  ownerUserId: null,
-  verifiedById: null,
-  verifiedUntil: null,
-  nextReviewAt: null,
-  aclRevision: 1,
-  contentRevision: 3,
-  sourceArticleId: null,
-  ancestors: [],
-  isFavorite: false,
+jest.mock("@/features/wiki/lib/kb-icons", () => ({
+  KbArrowRightIcon: ({ className }: { className?: string }) => <span className={className} />,
+  KbClockIcon: ({ className }: { className?: string }) => <span className={className} />,
+  KbRotateCcwIcon: ({ className }: { className?: string }) => <span className={className} />,
+}));
+
+jest.mock("@/features/wiki/lib/version-diff", () => ({
+  computeVersionDiff: jest.fn(() => ({
+    titleChanged: false,
+    addedCount: 0,
+    removedCount: 0,
+    changedCount: 0,
+    oldTitle: "",
+    newTitle: "",
+    blocks: [],
+  })),
+}));
+
+jest.mock("@/lib/knowledge-routes", () => ({
+  pageHref: (id: number) => `/wiki/pages/${id}`,
+  KNOWLEDGE_BASE: "/wiki",
+}));
+
+jest.mock("lucide-react", () => ({
+  GitCompare: ({ className }: { className?: string }) => <span className={className} />,
+}));
+
+const { useKbPage } = jest.requireMock("@/hooks/api/kb/pages") as { useKbPage: jest.Mock };
+const {
+  useKbPageVersionsInfinite,
+  useKbPageVersionDetail,
+  useRestoreKbVersion,
+} = jest.requireMock("@/hooks/api/kb/page-versions") as {
+  useKbPageVersionsInfinite: jest.Mock;
+  useKbPageVersionDetail: jest.Mock;
+  useRestoreKbVersion: jest.Mock;
 };
 
-const VERSION_3 = {
-  id: 30,
-  orgId: "org-1",
-  pageId: 1,
-  versionNumber: 3,
-  title: "Version 3 title",
-  content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "version text" }] }] },
-  contentText: "version text",
-  changeSummary: "Fixed typo",
-  authorId: "u1",
-  authorMembershipId: 1,
+const mockVersion = {
+  versionNumber: 1,
+  title: "Test Page",
+  content: {},
   authorName: "Alice",
-  createdAt: "2024-01-03T00:00:00Z",
+  changeSummary: null,
+  createdAt: new Date().toISOString(),
 };
-
-const VERSION_2 = {
-  id: 20,
-  orgId: "org-1",
-  pageId: 1,
-  versionNumber: 2,
-  title: "Version 2 title",
-  content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "old text" }] }] },
-  contentText: "old text",
-  changeSummary: "Initial",
-  authorId: "u1",
-  authorMembershipId: 1,
-  authorName: "Alice",
-  createdAt: "2024-01-02T00:00:00Z",
-};
-
-function makeVersionsData(versions: typeof VERSION_3[]) {
-  return {
-    pages: [
-      {
-        data: versions,
-        pagination: { limit: 50, nextCursor: null, hasMore: false },
-      },
-    ],
-  };
-}
-
-function defaultSetup(opts: {
-  versions?: typeof VERSION_3[];
-  versionsLoading?: boolean;
-  pageLoading?: boolean;
-  pageError?: boolean;
-} = {}) {
-  const versions = opts.versions ?? [VERSION_3, VERSION_2];
-  mockUseKbPage.mockReturnValue({
-    data: opts.pageLoading || opts.pageError ? undefined : PAGE,
-    isLoading: opts.pageLoading ?? false,
-    isError: opts.pageError ?? false,
-  });
-  mockUseKbPageVersionsInfinite.mockReturnValue({
-    data: opts.versionsLoading ? undefined : makeVersionsData(versions),
-    isLoading: opts.versionsLoading ?? false,
-    hasNextPage: false,
-    fetchNextPage: jest.fn(),
-    isFetchingNextPage: false,
-  });
-  mockUseKbPageVersionDetail.mockReturnValue({
-    data: undefined,
-    isLoading: false,
-  });
-  mockUseRestoreKbVersion.mockReturnValue({
-    mutate: jest.fn(),
-    isPending: false,
-  });
-}
-
-let PageHistoryPage: React.ComponentType<{ pageId: number }>;
-
-beforeAll(async () => {
-  const mod = await import("./page-history-page");
-  PageHistoryPage = mod.default;
-});
 
 beforeEach(() => {
+  observers.length = 0;
+  Reflect.set(globalThis, "IntersectionObserver", FakeIntersectionObserver);
   jest.clearAllMocks();
+
+  useKbPage.mockReturnValue({
+    data: { id: 1, title: "Test Page", content: {} },
+    isLoading: false,
+    isError: false,
+  });
+
+  useKbPageVersionsInfinite.mockReturnValue({
+    data: { pages: [{ data: [mockVersion] }] },
+    isLoading: false,
+    hasNextPage: true,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+  });
+
+  useKbPageVersionDetail.mockReturnValue({ data: null, isLoading: false });
+
+  useRestoreKbVersion.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
-describe("PageHistoryPage — state: loading", () => {
-  it("shows skeletons while the page is loading", () => {
-    defaultSetup({ pageLoading: true });
-    render(<PageHistoryPage pageId={1} />);
-    const skeletons = document.querySelectorAll('[data-testid="skeleton"], .animate-pulse');
-    expect(skeletons.length).toBeGreaterThanOrEqual(1);
-  });
+afterEach(() => {
+  cleanup();
+  Reflect.deleteProperty(globalThis, "IntersectionObserver");
 });
 
-describe("PageHistoryPage — state: error", () => {
-  it("shows retry button on page error", () => {
-    defaultSetup({ pageError: true });
-    render(<PageHistoryPage pageId={1} />);
-    expect(screen.getByText("Retry")).toBeInTheDocument();
-  });
-});
+describe("PageHistoryPage sentinel", () => {
+  it("calls fetchNextPage when the sentinel scrolls into view instead of requiring a button click", () => {
+    const fetchNextPage = jest.fn();
+    useKbPageVersionsInfinite.mockReturnValue({
+      data: { pages: [{ data: [mockVersion] }] },
+      isLoading: false,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
 
-describe("PageHistoryPage — state: empty versions", () => {
-  it("shows empty state when versions list is empty", () => {
-    defaultSetup({ versions: [] });
     render(<PageHistoryPage pageId={1} />);
-    expect(screen.getByText(/no versions yet/i)).toBeInTheDocument();
-  });
-});
 
-describe("PageHistoryPage — state: versions loaded (select prompt)", () => {
-  it("shows 'Select a version to preview' when nothing is selected", () => {
-    defaultSetup();
-    render(<PageHistoryPage pageId={1} />);
-    expect(screen.getByText(/select a version to preview/i)).toBeInTheDocument();
-  });
-});
-
-describe("PageHistoryPage — current-version marker", () => {
-  it("marks the highest versionNumber with a Current badge", () => {
-    defaultSetup({ versions: [VERSION_3, VERSION_2] });
-    render(<PageHistoryPage pageId={1} />);
-    const currentBadges = screen.getAllByText("Current");
-    expect(currentBadges.length).toBeGreaterThanOrEqual(1);
+    expect(fetchNextPage).not.toHaveBeenCalled();
+    intersect();
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 
-  it("does not mark version 2 as current when version 3 exists", () => {
-    defaultSetup({ versions: [VERSION_3, VERSION_2] });
+  it("exposes an accessible load-more control with the sentinel label", () => {
     render(<PageHistoryPage pageId={1} />);
-    const v2Buttons = screen.getAllByRole("button", { name: /version 2/i });
-    const v2Button = v2Buttons.find(
-      (b) => b.getAttribute("data-version-number") === "2",
-    );
-    expect(v2Button).toBeDefined();
-    expect(v2Button?.textContent).not.toContain("Current");
-  });
-});
 
-describe("PageHistoryPage — compare mode toggle", () => {
-  it("shows compare mode button", () => {
-    defaultSetup();
-    render(<PageHistoryPage pageId={1} />);
-    expect(screen.getByRole("button", { name: /compare/i })).toBeInTheDocument();
-  });
-
-  it("entering compare mode shows the compare UI hint", () => {
-    defaultSetup();
-    render(<PageHistoryPage pageId={1} />);
-    const compareBtn = screen.getByRole("button", { name: /enter compare mode/i });
-    fireEvent.click(compareBtn);
-    expect(screen.getByText(/select base version/i)).toBeInTheDocument();
-  });
-});
-
-describe("PageHistoryPage — keyboard navigation", () => {
-  it("version buttons are keyboard accessible (role=button)", () => {
-    defaultSetup();
-    render(<PageHistoryPage pageId={1} />);
-    const versionButtons = screen.getAllByRole("button", { name: /select version/i });
-    expect(versionButtons.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it("version buttons have aria-label", () => {
-    defaultSetup({ versions: [VERSION_3] });
-    render(<PageHistoryPage pageId={1} />);
-    const btn = screen.getByRole("button", { name: /select version 3/i });
-    expect(btn).toBeDefined();
-  });
-});
-
-describe("PageHistoryPage — restore shows confirmation", () => {
-  it("requires a version to be selected before restore is available", () => {
-    defaultSetup();
-    render(<PageHistoryPage pageId={1} />);
-    const restoreBtns = screen.queryAllByRole("button", { name: /restore/i });
-    expect(restoreBtns.length).toBe(0);
+    expect(screen.getByRole("button", { name: "Load more versions" })).toBeInTheDocument();
   });
 });

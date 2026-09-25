@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -446,18 +447,13 @@ export default function PageHistoryPage({
                       </button>
                     );
                   })}
-                  {hasNextPage && (
-                    <LoadingButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleLoadMore}
-                      isPending={isFetchingNextPage}
-                      loadingText="Loading…"
-                      className="w-full text-xs h-8 text-muted-foreground"
-                    >
-                      Load more versions
-                    </LoadingButton>
-                  )}
+                  <InfiniteScrollSentinel
+                    hasNextPage={hasNextPage ?? false}
+                    isFetchingNextPage={isFetchingNextPage}
+                    onLoadMore={handleLoadMore}
+                    label="Load more versions"
+                    rootMargin="0px"
+                  />
                 </div>
               </ScrollArea>
             </div>

@@ -3,8 +3,8 @@
 import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -82,6 +82,10 @@ export default function TemplatesPage() {
 
   function handleRetryTemplates() {
     void refetchTemplates();
+  }
+
+  function handleLoadMore() {
+    void fetchNextPage();
   }
 
   function handleTabChange(value: string) {
@@ -216,17 +220,12 @@ export default function TemplatesPage() {
                 />
               ))}
             </div>
-            {hasNextPage ? (
-              <div className="mt-4 flex justify-center">
-                <Button
-                  variant="outline"
-                  onClick={() => void fetchNextPage()}
-                  disabled={isFetchingNextPage}
-                >
-                  {isFetchingNextPage ? "Loading…" : "Load more templates"}
-                </Button>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage ?? false}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+              label="Load more templates"
+            />
           </PageState>
         </TabsContent>
       </Tabs>

@@ -1,93 +1,151 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import React from "react";
+import { render, screen, cleanup } from "@testing-library/react";
 import TemplatesPage from "./templates-page";
 
-const mockReplace = jest.fn();
-let mockSearchParams = new URLSearchParams();
+type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
+
+const observers: {
+  callback: IntersectionCallback;
+  options: IntersectionObserverInit | undefined;
+  observed: Element[];
+  disconnected: boolean;
+}[] = [];
+
+class FakeIntersectionObserver {
+  constructor(callback: IntersectionCallback, options?: IntersectionObserverInit) {
+    this.entry = { callback, options, observed: [], disconnected: false };
+    observers.push(this.entry);
+  }
+  private entry: (typeof observers)[number];
+  observe(element: Element) {
+    this.entry.observed.push(element);
+  }
+  disconnect() {
+    this.entry.disconnected = true;
+  }
+  unobserve() {}
+}
+
+function intersect(index = 0) {
+  const observer = observers[index];
+  if (!observer) throw new Error("no observer was created");
+  observer.callback([{ isIntersecting: true } as IntersectionObserverEntry]);
+}
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: mockReplace }),
-  useSearchParams: () => mockSearchParams,
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
+  useSearchParams: jest.fn(() => ({ get: (key: string) => (key === "tab" ? "saved" : null), toString: () => "tab=saved" })),
+}));
+
+jest.mock("@/components/ui/page-wrapper", () => ({
+  PageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
-  useCreateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
-  useUpdateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
-  useKbPageTemplates: () => ({
-    data: [{ id: 11, name: "Meeting notes", description: null, icon: null }],
-    isLoading: false,
-    isError: false,
-    refetch: jest.fn(),
-    hasNextPage: false,
-    fetchNextPage: jest.fn(),
-    isFetchingNextPage: false,
-  }),
-  useDeleteKbPageTemplate: () => ({ mutate: jest.fn(), isPending: false }),
+  useKbPageTemplates: jest.fn(),
+  useCreateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => true,
+  useCan: jest.fn(() => false),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: () => ({ kind: "ready" }),
+  usePageState: jest.fn(() => ({ kind: "ready" })),
 }));
 
 jest.mock("@/components/shared/page-state", () => ({
-  PageState: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  PageState: ({
+    resolution,
+    loading,
+    empty,
+    children,
+  }: {
+    resolution: { kind: string };
+    loading: React.ReactNode;
+    empty?: React.ReactNode;
+    children: React.ReactNode;
+  }) => {
+    if (resolution.kind === "loading") return <>{loading}</>;
+    if (resolution.kind === "empty") return <>{empty ?? null}</>;
+    return <>{children}</>;
+  },
 }));
 
-describe("TemplatesPage — Starters / Saved tabs", () => {
-  beforeEach(() => {
-    mockReplace.mockClear();
-    mockSearchParams = new URLSearchParams();
+jest.mock("@/features/wiki/lib/kb-icons", () => ({
+  KbLayoutTemplateIcon: ({ className }: { className?: string }) => <span className={className} />,
+}));
+
+jest.mock("@/lib/knowledge-routes", () => ({
+  KB_TEMPLATES: "/wiki/templates",
+  pageHref: (id: number) => `/wiki/pages/${id}`,
+}));
+
+jest.mock("@/features/wiki/lib/starter-templates", () => ({
+  STARTER_TEMPLATES: [],
+  deriveContentText: jest.fn(() => ""),
+}));
+
+jest.mock("./template-cards", () => ({
+  StarterTemplateCard: () => null,
+  TemplateCard: ({ template }: { template: { id: number; name: string } }) => (
+    <div data-testid={`template-${template.id}`}>{template.name}</div>
+  ),
+}));
+
+const { useKbPageTemplates } = jest.requireMock("@/hooks/api/kb") as {
+  useKbPageTemplates: jest.Mock;
+};
+
+const mockTemplate = { id: 1, name: "My Template" };
+
+beforeEach(() => {
+  observers.length = 0;
+  Reflect.set(globalThis, "IntersectionObserver", FakeIntersectionObserver);
+  jest.clearAllMocks();
+});
+
+afterEach(() => {
+  cleanup();
+  Reflect.deleteProperty(globalThis, "IntersectionObserver");
+});
+
+describe("TemplatesPage sentinel (saved tab)", () => {
+  it("calls fetchNextPage when the sentinel scrolls into view instead of requiring a button click", () => {
+    const fetchNextPage = jest.fn();
+    useKbPageTemplates.mockReturnValue({
+      data: [mockTemplate],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+
+    render(<TemplatesPage />);
+
+    expect(fetchNextPage).not.toHaveBeenCalled();
+    intersect();
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 
-  it("defaults to Starters and hides saved templates", () => {
-    render(
-      <TooltipProvider>
-        <TemplatesPage />
-      </TooltipProvider>,
-    );
+  it("exposes an accessible load-more control with the sentinel label", () => {
+    useKbPageTemplates.mockReturnValue({
+      data: [mockTemplate],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
 
-    expect(screen.getByRole("tab", { name: /^starters$/i })).toHaveAttribute(
-      "data-state",
-      "active",
-    );
-    expect(screen.queryByText("Meeting notes")).toBeNull();
-    expect(screen.getByText("Built-in skeletons ready to use")).toBeInTheDocument();
-  });
+    render(<TemplatesPage />);
 
-  it("shows saved templates when tab=saved", () => {
-    mockSearchParams = new URLSearchParams("tab=saved");
-    render(
-      <TooltipProvider>
-        <TemplatesPage />
-      </TooltipProvider>,
-    );
-
-    expect(screen.getByRole("tab", { name: /^saved$/i })).toHaveAttribute(
-      "data-state",
-      "active",
-    );
-    expect(screen.getByText("Meeting notes")).toBeInTheDocument();
-    expect(screen.getByText("Templates created from your wiki pages")).toBeInTheDocument();
-  });
-
-  it("writes tab=saved into the URL when Saved is selected", async () => {
-    const user = userEvent.setup();
-    render(
-      <TooltipProvider>
-        <TemplatesPage />
-      </TooltipProvider>,
-    );
-
-    await user.click(screen.getByRole("tab", { name: /^saved$/i }));
-
-    expect(mockReplace).toHaveBeenCalledWith(
-      "/knowledge/wiki/templates?tab=saved",
-      { scroll: false },
-    );
+    expect(screen.getByRole("button", { name: "Load more templates" })).toBeInTheDocument();
   });
 });

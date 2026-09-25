@@ -8,8 +8,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
-  KbChevronUpIcon,
-  KbLoader2Icon,
   KbMessageCircleIcon,
   KbMoreHorizontalIcon,
   KbPenLineIcon,
@@ -18,6 +16,7 @@ import {
   KbXIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { SidebarAnimatedNavIcon, useAnimatedNavIconHover } from "@/components/layout/sidebar/sidebar-animated-nav";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import type { KbConversation } from "@/hooks/api/kb/chat-history";
 
 function conversationDateGroup(updatedAt: string): string {
@@ -115,7 +114,6 @@ export function KbConversationList({
   const cancelRenameRef = useRef(false);
   const newChatIcon = useAnimatedNavIconHover();
   const closeIcon = useAnimatedNavIconHover();
-  const loadMoreIcon = useAnimatedNavIconHover();
 
   const groups = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -266,24 +264,13 @@ export function KbConversationList({
                 ))}
               </div>
             ))}
-            {hasNextPage && (
-              <button
-                type="button"
-                onClick={onLoadMore}
-                disabled={isFetchingNextPage}
-                className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
-                {...loadMoreIcon.animatedNavHoverHandlers}
-              >
-                {isFetchingNextPage ? (
-                  <KbLoader2Icon className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <>
-                    <SidebarAnimatedNavIcon icon={KbChevronUpIcon} iconRef={loadMoreIcon.iconRef} className="h-3.5 w-3.5" />
-                    Load more
-                  </>
-                )}
-              </button>
-            )}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={onLoadMore}
+              label="Load more conversations"
+              rootMargin="0px"
+            />
           </>
         )}
         </div>

@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useKbExportJobs } from "@/hooks/api/kb";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -84,19 +84,12 @@ export function ExportJobsCard() {
           {jobs.map((job) => (
             <JobRow key={job.id} job={job} />
           ))}
-          {hasNextPage ? (
-            <LoadingButton
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full"
-              isPending={isFetchingNextPage}
-              loadingText="Loading…"
-              onClick={handleLoadMore}
-            >
-              Load more
-            </LoadingButton>
-          ) : null}
+          <InfiniteScrollSentinel
+            hasNextPage={hasNextPage ?? false}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={handleLoadMore}
+            label="Load more export jobs"
+          />
         </div>
       )}
     </>
