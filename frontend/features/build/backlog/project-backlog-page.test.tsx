@@ -134,11 +134,11 @@ jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => String(e),
 }));
 
-const mockBuildTicketDetailUrl = jest.fn<ReturnType<BuildTicketDetailUrl>, Parameters<BuildTicketDetailUrl>>(
+const mockBuildTicketDetailUrl = jest.fn<ReturnType<typeof BuildTicketDetailUrl>, Parameters<typeof BuildTicketDetailUrl>>(
   () => null,
 );
 jest.mock("@/features/build/ticket-details/build-ticket-detail-url", () => ({
-  buildTicketDetailUrl: (...args: Parameters<BuildTicketDetailUrl>) => mockBuildTicketDetailUrl(...args),
+  buildTicketDetailUrl: (...args: Parameters<typeof BuildTicketDetailUrl>) => mockBuildTicketDetailUrl(...args),
 }));
 
 import { ProjectBacklogPage } from "./project-backlog-page";
