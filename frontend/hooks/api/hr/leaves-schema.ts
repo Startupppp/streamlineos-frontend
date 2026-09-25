@@ -12,6 +12,8 @@ const leaveTypeRowSchema = z.object({
   name: z.string(),
   daysPerYear: z.number().int(),
   carryForward: z.boolean(),
+  /** V-049. The configured policy's own name. Optional until the backend half lands. */
+  policyName: z.string().nullish(),
 });
 
 const leaveRequestRowSchema = z.object({
