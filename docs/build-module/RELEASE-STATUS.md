@@ -111,6 +111,9 @@ The candidate was exercised through a real authenticated browser against the pro
 - Local port `1000` malformed enum deep links such as
   `/build/6/issues?priority=NOT_A_PRIORITY&type=NOT_A_TYPE` now remove the
   invalid parameters and remain on the Issues page without an error state.
+- The shared ticket-filter path used by Backlog also drops malformed enum
+  values before building its request; its focused regression is included in
+  the current frontend test matrix.
 - Local port `1000` remains the browser verification target for the current
   candidate; production behavior for the new filtered aggregate endpoint stays
   pending until the backend deployment containing its release commit is observed.
