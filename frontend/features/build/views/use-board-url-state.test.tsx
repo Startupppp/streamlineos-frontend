@@ -166,6 +166,52 @@ describe("useBoardUrlState — ticket round trips preserve issue collection stat
   });
 });
 
+describe("useBoardUrlState — Calendar has one canonical owner", () => {
+  it("normalizes an Issues calendar deep link to the unified Calendar without rendering the local calendar layout", () => {
+    mockViews = [
+      {
+        id: 9,
+        name: "Saved list",
+        layoutType: "list",
+        filters: { status: "DONE" },
+        isPinned: false,
+      },
+    ];
+    setParams({ view: "calendar", viewId: "9", status: "TODO" });
+
+    const { result } = renderHook(() => useBoardUrlState(1));
+
+    expect(result.current.view).toBe("board");
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    expect(mockReplace).toHaveBeenLastCalledWith(
+      "/calendar?source=build&projectId=1",
+    );
+  });
+
+  it("opens the unified Calendar when Calendar is selected from Issues", () => {
+    setParams({
+      view: "list",
+      q: "login",
+      status: "TODO",
+      cycle: "7",
+      viewId: "9",
+      ticket: "22",
+      comment: "8",
+    });
+
+    const { result } = renderHook(() => useBoardUrlState(42));
+
+    act(() => {
+      result.current.handleViewChange("calendar");
+    });
+
+    expect(mockPush).toHaveBeenCalledWith(
+      "/calendar?q=login&status=TODO&cycle=7&source=build&projectId=42",
+    );
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+});
+
 describe("useBoardUrlState — grouping, sort and column config survive a copied link", () => {
   it("reads groupBy, orderBy, rowBy, columnBy and completed straight off the URL so a shared link reproduces the sender's grouping", () => {
     setParams({

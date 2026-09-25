@@ -316,10 +316,11 @@ inert, which is what was added:
   no `beforePopState`); breadcrumb and Back-button navigation was unguarded across
   every `PageWrapper` `backHref` page and the ticket parent link, and was repaired
   in commit `8374d53a2` with `components/ui/page-wrapper-unsaved-guard.test.tsx`.
-  **Still open, and the reason this box is unticked:** programmatic `router.push`
-  navigation is not guarded — `features/build/command-center/use-keyboard-shortcuts.ts`
-  (owned by another lane) and row-click handlers in `features/build/backlog/`,
-  `features/build/drafts/` and `features/build/my-work/`.
+  Programmatic `router.push` navigation is now guarded for the command-center
+  keyboard shortcuts, backlog row clicks, drafts row clicks, and My Work row
+  clicks. Focused regression coverage exists beside each repaired surface.
+  **Still open, and the reason this box is unticked:** the browser-Back
+  interception still needs real-browser evidence.
   Stale symbol: the evidence above names `useRegisterBuildDirtyState`; the hook was
   renamed to `useRegisterDirtyState` in `3ff0b057a` and now lives at
   `components/shared/dirty-state-context.tsx`, not under `features/build/navigation/`.

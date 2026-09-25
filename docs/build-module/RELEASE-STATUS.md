@@ -34,7 +34,7 @@ complete product definition of done.
 
 ## Backend and authorization
 
-- Backend release commit `f139e315f` is contained in backend `origin/main`, deployed, and healthy at `https://api.streamlineos.in/health`.
+- Backend release commit `b358a2238` is contained in backend `origin/main`; the health endpoint responds 200 at `https://api.streamlineos.in/health`. The latest analytics, project-bound workflow-read, bounded ticket-detail relation, checklist-item read, malformed ticket-filter, and bounded-search validation fixes are pushed and await the normal deployment rollout.
 - The current authorization census covers 49 controllers and 325 handlers:
   - `VULNERABLE=0`
   - `NEEDS-REVIEW=0`
@@ -71,6 +71,13 @@ Current release-candidate checks:
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
 - `git diff --check`: pass.
+- Latest frontend Build navigation fixes are on `origin/main` at `b2c605b69`:
+  backlog, My Work, draft, and keyboard shortcut navigation now use the shared
+  dirty-state guard; focused regressions pass.
+- The Build view switcher now routes Calendar to the unified `/calendar` surface
+  with `source=build` and `projectId`, and the local Build calendar renderer was
+  removed. Direct `/build/:projectId/issues?view=calendar` links are normalized
+  to the same canonical route; focused URL-state and view-render tests pass.
 - Build-owned unsafe assertion findings: zero. The assertion gate still reports unrelated pre-existing Inventory, HR, Wiki, editor, and infrastructure debt.
 - Build-owned gated-read findings: zero. The gate still reports two unrelated HR recruitment reads.
 - The dead-code classifier reports no Build deletion candidate. Its current dead files are in Knowledge Base, outside this release.
@@ -89,6 +96,17 @@ The candidate was exercised through a real authenticated browser against the pro
 - Workspace text is absent; the remaining `All of Build / Organization` selector is intentional organization scope, not a module-level workspace.
 - Earlier smoke evidence for `/build`, `/build/6/issues`, and `/build/6/tickets/BQS-1` is retained as historical evidence; it is not a substitute for the current full matrix.
 - The current browser observation rendered `/build/6/tickets/BQS-2` with ticket data and no visible error state.
+- The local browser direct link `/build/6/issues?view=calendar` normalized to the unified `/calendar?projectId=6` surface after the Calendar source deep-link handler ran, with no console errors.
+- Focused backend schema evidence covers oversized direct URL searches: project Issues, All Work, and organization ticket search reject terms over 200 characters and trim valid terms.
+- Local port `1000` browser checks also rendered `/build/my-work`,
+  `/build/inbox?view=drafts`, `/build/6/backlog`, and
+  `/build/command-center` without a visible runtime error.
+- Local port `1000` view-switcher verification routed `/build/6/issues` to
+  `/calendar?q=login&status=TODO&cycle=7&projectId=6&source=build`; the unified
+  Calendar surface rendered with no browser console errors.
+- A mismatched project ticket URL `/build/5/tickets/BQS-2` resolved to the
+  unavailable-scope state and Page Not Found surface without exposing ticket
+  data or crashing the shell.
 
 Some detail pages have no production fixture rows for forms, incidents, meetings, QA runs, wiki pages, goals, portfolios, managed products, or teams. Their authenticated parent empty states passed; no production business data was created solely for testing.
 

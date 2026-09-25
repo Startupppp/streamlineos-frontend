@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 export function useKeyboardShortcuts(
   onCreateProject: () => void,
   onCreateIssue: () => void,
 ) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const [pendingKey, setPendingKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,13 +42,13 @@ export function useKeyboardShortcuts(
 
       if (pendingKey === "g" && e.key === "m") {
         setPendingKey(null);
-        router.push("/build/my-work");
+        requestLeave(() => router.push("/build/my-work"));
         return;
       }
 
       if (pendingKey === "g" && e.key === "p") {
         setPendingKey(null);
-        router.push("/build");
+        requestLeave(() => router.push("/build"));
         return;
       }
 
@@ -70,5 +72,5 @@ export function useKeyboardShortcuts(
       document.removeEventListener("keydown", handleKeyDown);
       clearTimeout(timer);
     };
-  }, [pendingKey, onCreateProject, onCreateIssue, router]);
+  }, [pendingKey, onCreateProject, onCreateIssue, requestLeave, router]);
 }
