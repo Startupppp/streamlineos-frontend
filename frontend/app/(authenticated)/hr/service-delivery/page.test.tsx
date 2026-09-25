@@ -10,6 +10,7 @@ const scopes: Record<string, true> = {};
 let accessLoaded = true;
 
 jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => accessLoaded && scopes[key] === true,
   useCanState: (key: string) => (!accessLoaded ? "loading" : scopes[key] ? "granted" : "denied"),
   useAccess: () => ({
     data: accessLoaded ? { scopes, isOrgOwner: false, modules: { hr: true } } : undefined,

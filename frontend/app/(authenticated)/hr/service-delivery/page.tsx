@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { useCanState } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import {
   useServiceDeliveryOpsInbox,
   useServiceDeliveryMyItems,
@@ -74,6 +74,8 @@ export default function ServiceDeliveryPage() {
   const myAccess = useCanState("hr:helpdesk:view");
   const canOps = opsAccess === "granted";
   const canMy = myAccess === "granted";
+  // FE-55: the quick links go to server-gated routes; hide the ones that 403.
+  const canSafety = useCan("hr:safety:view");
   const {
     data: ops,
     isLoading: opsLoading,
@@ -188,12 +190,16 @@ export default function ServiceDeliveryPage() {
                 <Link href="/hr/cases" className="underline underline-offset-2">
                   Cases
                 </Link>
-                <Link href="/hr/safety" className="underline underline-offset-2">
-                  Safety
-                </Link>
-                <Link href="/hr/helpdesk" className="underline underline-offset-2">
-                  Employee support
-                </Link>
+                {canSafety && (
+                  <Link href="/hr/safety" className="underline underline-offset-2">
+                    Safety
+                  </Link>
+                )}
+                {canMy && (
+                  <Link href="/hr/helpdesk" className="underline underline-offset-2">
+                    Employee support
+                  </Link>
+                )}
               </div>
             </div>
             <div className="max-h-[32rem] overflow-y-auto">
