@@ -76,7 +76,8 @@ Current release-candidate checks:
   dirty-state guard; focused regressions pass.
 - The Build view switcher now routes Calendar to the unified `/calendar` surface
   with `source=build` and `projectId`, and the local Build calendar renderer was
-  removed; focused URL-state and view-render tests pass.
+  removed. Direct `/build/:projectId/issues?view=calendar` links are normalized
+  to the same canonical route; focused URL-state and view-render tests pass.
 - Build-owned unsafe assertion findings: zero. The assertion gate still reports unrelated pre-existing Inventory, HR, Wiki, editor, and infrastructure debt.
 - Build-owned gated-read findings: zero. The gate still reports two unrelated HR recruitment reads.
 - The dead-code classifier reports no Build deletion candidate. Its current dead files are in Knowledge Base, outside this release.
