@@ -5,7 +5,7 @@
 
 This document tracks the current production-release checklist, not total Build
 product completion. The full normative PRD remains open: the current source
-tree contains 25 checked and 629 unchecked acceptance boxes across the Build
+tree contains 27 checked and 627 unchecked acceptance boxes across the Build
 module and sidebar PRDs. Do not report this release checklist as full PRD
 completion; use `docs/specs/build/module/README.md` and its child PRDs for the
 complete product definition of done.
