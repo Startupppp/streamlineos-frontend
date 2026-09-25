@@ -190,3 +190,8 @@ it("renders the plan upgrade link the backend sent with a 402 MODULE_NOT_ENABLED
     "/settings/billing",
   );
 });
+
+it("renders the canonical Command Center heading", () => {
+  render(<CommandCenterPage />);
+  expect(screen.getByRole("heading", { name: "Command Center" })).toBeInTheDocument();
+});

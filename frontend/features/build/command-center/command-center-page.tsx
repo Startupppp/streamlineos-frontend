@@ -179,7 +179,7 @@ export function CommandCenterPage() {
   return (
     <>
       <PageWrapper
-        title="Home"
+        title="Command Center"
         subtitle={isReady ? "Your issues, projects, and shortcuts" : undefined}
         contentClassName="pb-0 sm:pb-0"
         actions={
