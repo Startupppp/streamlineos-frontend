@@ -503,7 +503,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Owner-transfer action + audit event
 - [ ] Browser evidence for all six states
 
-**Evidence:** _pending_
+**Evidence:** Playwright intercepted-network spec at `frontend/e2e-intercepted/kb-my-pages-states.spec.ts`; five of six states captured under `frontend/e2e-intercepted/screenshots/` at 1280x800 and 375x812. The error state fails: the correlation id is not visible to the user.
 
 ---
 
