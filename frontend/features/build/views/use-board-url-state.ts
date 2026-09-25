@@ -19,6 +19,10 @@ import {
   buildTicketDetailUrl,
 } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { currentSearchParams } from "@/lib/current-search-params";
+import {
+  parsePriorityParam,
+  parseTicketTypeParam,
+} from "../shared/use-build-list-url-state";
 
 export type ProjectStatus = {
   id: number;
@@ -58,8 +62,10 @@ export function useBoardUrlState(
   const viewId = searchParams.get("viewId");
   const q = searchParams.get("q") ?? "";
   const filterStatus = searchParams.get("status") ?? "";
-  const filterPriority = searchParams.get("priority") ?? "";
-  const filterType = searchParams.get("type") ?? "";
+  const rawPriority = searchParams.get("priority");
+  const rawType = searchParams.get("type");
+  const filterPriority = parsePriorityParam(rawPriority) ?? "";
+  const filterType = parseTicketTypeParam(rawType) ?? "";
   const filterAssigneeId = searchParams.get("assigneeId") ?? "";
   const filterLabels = searchParams.get("labels") ?? "";
   const filterCycle = searchParams.get("cycle") ?? "";
@@ -99,6 +105,22 @@ export function useBoardUrlState(
       filterModule,
     ],
   );
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams.toString());
+    let changed = false;
+    if (rawPriority && !filterPriority) {
+      next.delete("priority");
+      changed = true;
+    }
+    if (rawType && !filterType) {
+      next.delete("type");
+      changed = true;
+    }
+    if (!changed) return;
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [filterPriority, filterType, pathname, rawPriority, rawType, router, searchParams]);
 
   // `isError` travels with the rows: the ticket list flattens `query.data?.pages`
   // into `[]`, so a 500 on GET /build/:id/tickets is indistinguishable

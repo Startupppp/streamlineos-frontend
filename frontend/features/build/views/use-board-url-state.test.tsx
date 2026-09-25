@@ -15,6 +15,7 @@ const mockCreateViewMutate = jest.fn();
 const mockUpdateViewMutate = jest.fn();
 let mockViews: unknown[] = [];
 let mockBoardTickets: unknown[] = [];
+let mockBoardFilters: Record<string, unknown> | undefined;
 
 jest.mock("@/hooks/api", () => ({
   useProject: () => ({
@@ -26,7 +27,9 @@ jest.mock("@/hooks/api/build", () => ({
   useViews: () => ({ data: mockViews }),
   useCreateView: () => ({ mutate: mockCreateViewMutate, isPending: false }),
   useUpdateView: () => ({ mutate: mockUpdateViewMutate, isPending: false }),
-  useProjectBoardTickets: () => ({
+  useProjectBoardTickets: (_projectId: number, filters: Record<string, unknown>) => {
+    mockBoardFilters = filters;
+    return {
     data: mockBoardTickets,
     isLoading: false,
     isError: false,
@@ -35,7 +38,8 @@ jest.mock("@/hooks/api/build", () => ({
     isTruncated: false,
     fetchNextPage: jest.fn(),
     isFetchingNextPage: false,
-  }),
+    };
+  },
 }));
 
 let mockQaMatches: Array<{ id: number }> | undefined = undefined;
@@ -68,6 +72,7 @@ function setParams(init: Record<string, string>) {
 beforeEach(() => {
   mockViews = [];
   mockBoardTickets = [];
+  mockBoardFilters = undefined;
   mockQaMatches = undefined;
   mockUseBugs.mockClear();
   setParams({});
@@ -79,6 +84,24 @@ beforeEach(() => {
 });
 
 describe("useBoardUrlState — saving a view persists every filter the board was showing", () => {
+  it("fails closed for malformed enum filters instead of sending a request that crashes the page", () => {
+    setParams({ priority: "NOT_A_PRIORITY", type: "NOT_A_TYPE" });
+
+    renderHook(() => useBoardUrlState(1));
+
+    expect(mockBoardFilters).toEqual({
+      q: undefined,
+      status: undefined,
+      priority: undefined,
+      type: undefined,
+      assigneeId: undefined,
+      labels: undefined,
+      cycle: undefined,
+      module: undefined,
+    });
+    expect(mockReplace).toHaveBeenCalledWith("/build/1/issues", { scroll: false });
+  });
+
   it("carries the cycle and module filters into the saved view, so re-opening it does not silently widen the result set", () => {
     setParams({
       q: "login",
