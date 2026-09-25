@@ -8,13 +8,13 @@ jest.mock("next/navigation", () => ({
 
 describe("WikiSidebarNav — company documents", () => {
   it("does not list company documents unless HR documents are switched on", () => {
-    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} />);
+    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} />);
 
     expect(screen.queryByRole("link", { name: "Company documents" })).toBeNull();
   });
 
   it("lists company documents next to the other places a reader browses once they are switched on", () => {
-    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} showCompanyDocuments />);
+    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} showCompanyDocuments />);
 
     expect(screen.getByRole("link", { name: "Company documents" })).toHaveAttribute("href", "/knowledge/wiki/company-documents");
     expect(screen.getByRole("link", { name: "Private" })).toBeInTheDocument();
