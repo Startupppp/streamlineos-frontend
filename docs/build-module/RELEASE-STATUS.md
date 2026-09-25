@@ -142,6 +142,7 @@ Completed:
 - The production-domain unauthenticated `/build` smoke passed with the expected sign-in redirect and no console errors.
 - The current browser observation passed for `/build/6/tickets/BQS-2`; the full production route matrix remains open.
 - Production `/build/portfolios?q=platform` was rechecked in the real browser after rollout and rendered the filtered empty state without a visible error.
+- Production `/build/managed-products` and `/build/goals` were rechecked in the real browser and rendered their authenticated empty states without visible errors.
 
 ## Acceptance criteria
 
