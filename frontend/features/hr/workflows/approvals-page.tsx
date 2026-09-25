@@ -109,7 +109,7 @@ function InstanceRow({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
-      className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/30 cursor-pointer group transition-colors"
+      className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/30 cursor-pointer group transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
       {...activationProps(handleClick)}
     >
       <div className="flex-1 min-w-0 space-y-1">
@@ -160,7 +160,7 @@ function InstanceRow({
         ) : null}
       </div>
 
-      <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">
         {showActions && (
           <span className="text-xs text-muted-foreground">Click to review</span>
         )}
