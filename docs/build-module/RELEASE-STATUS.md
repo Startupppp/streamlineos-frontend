@@ -136,11 +136,12 @@ Completed:
 
 - Frontend `origin/main` contains `13663e4d0` (portfolio search is sent as the server-side `q` parameter; the prior malformed-filter and board-count fixes remain in the same release line).
 - Backend `origin/main` contains `b709ba20b`, including the Build portfolio `q` schema, tenant-scoped `ilike` predicate, and focused contract coverage.
-- The portfolio list UI renders its loading and empty states locally on port `1000`; authenticated verification of a non-empty server-filtered result remains deployment-dependent until the backend release containing `b5733da7c` is live.
+- The portfolio list UI renders its loading and empty states locally on port `1000`; authenticated production verification of `/build/portfolios?q=platform` now reaches the server-filtered empty state without a runtime error.
 - Portfolio and managed-product list services now reject malformed cursors with a bounded `400`; the local UI remains stable against the currently deployed older API, which still treats that input as the first page.
 - Goal list and detail responses now resolve owner membership IDs to tenant-scoped user projections in one batch for collections, avoiding the previous always-unassigned response.
 - The production-domain unauthenticated `/build` smoke passed with the expected sign-in redirect and no console errors.
 - The current browser observation passed for `/build/6/tickets/BQS-2`; the full production route matrix remains open.
+- Production `/build/portfolios?q=platform` was rechecked in the real browser after rollout and rendered the filtered empty state without a visible error.
 
 ## Acceptance criteria
 
