@@ -56,22 +56,22 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 
 | # | Slice | Phase | Priority | Status |
 |---:|---|---|---|---|
-| S01 | `KnowledgeAuthorization` + `kb_page_grants` schema | 1 | P0 | IN PROGRESS |
+| S01 | `KnowledgeAuthorization` + `kb_page_grants` schema | 1 | P0 | **NEAR-DONE — seam shipped, 1168 applied, EXPLAIN captured; 2 items open (fuzz test, article-restriction arm)** |
 | S02 | My pages — server-side ownership | 1 | P0 | LANDED — needs final gate sweep |
 | S03 | Shared with me — explicit grants | 1 | P0 | LANDED — needs final gate sweep |
 | S04 | `KnowledgeCollection` + canonical `GET /kb/pages` + cursor codec | 2 | P0 | LANDED — EXPLAIN evidence blocked on IAM |
 | S05 | Full Search — `/knowledge/wiki/search` | 2 | P0 | LANDED — needs final gate sweep |
-| S06 | Wiki Home rebuilt on list projection | 2 | P0 | IN PROGRESS |
-| S07 | Spaces list + detail, server counts, archive/restore, lazy tree | 2/3 | P0 | IN PROGRESS |
-| S08 | Page document — trust header, action model, offline/conflict | 3 | P0 | IN PROGRESS |
-| S09 | History — diff + append-only restore | 3 | P0 | IN PROGRESS |
+| S06 | Wiki Home rebuilt on list projection | 2 | P0 | **PARTIAL — URL state + flat cursor list + all 6 states shipped; the shell still downloads the whole tree (see twelfth pass)** |
+| S07 | Spaces list + detail, server counts, archive/restore, lazy tree | 2/3 | P0 | **PARTIAL — move-target authz hole CLOSED; 404 recovery, retry, archive impact, member count, archive labelling landed; members sheet + lazy hierarchy open** |
+| S08 | Page document — trust header, action model, offline/conflict | 3 | P0 | **PARTIAL — revision safety, 404 indistinguishability and no-Web-Storage all proven; action descriptor, offline, editor features open** |
+| S09 | History — diff + append-only restore | 3 | P0 | **PARTIAL — append-only restore proven at three layers; `/build` history redirect landed; current marker, 2-version compare, semantic diff open** |
 | S10 | Reviews — derived overdue, URL filters, bulk decide | 4 | P0/P1 | LANDED — needs final gate sweep |
 | S11 | Trash — cursor, bulk restore/purge, resumable purge ledger | 3 | P0 | **CLOSED — purge ledger shipped by 1193, applied and verified** |
 | S12 | Templates — URL state, preview, saved-template lifecycle | 3 | P1 | LANDED — backend pre-existed; BE-24 cap+pagination fixed |
 | S13 | Import & Export — validation, dry-run, resumable jobs | 3 | P0 | BUILT — controller + suites green; checkbox list not re-audited |
 | S14 | Analytics — permission-safe, minimum cohort, drill-down | 4 | P1 | LANDED — registered in KbWikiModule (BE-01) |
 | S15 | Content Health — `/knowledge/wiki/manage` | 4 | P1 | **BUILT — page shipped, 8 of 10 signals; see tenth pass** |
-| S16 | Ask KB — scope, citations, fallback, budgets | 1/4 | P0/P1 | IN PROGRESS |
+| S16 | Ask KB — scope, citations, fallback, budgets | 1/4 | P0/P1 | **PARTIAL — page-citation coverage gap CLOSED; `kb:ai:generate` now gates generation (1203); `kb_ai_interactions`, scope sheet, answer parts open** |
 | S17 | Public page — `/wiki/[shareToken]` | 3 | P0 | **VERIFIED — token versioning closed by 1192, applied** |
 | S18 | Project wiki adapters | 2 | P0 | BUILT — adapter suites green; checkbox list not re-audited |
 | S19 | Research Briefs moved under Knowledge | 4 | P1 | LANDED — one controller repo-wide; no duplicate left to remove |
@@ -382,15 +382,17 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Define the interface and domain types — `core/authorization/knowledge-authorization.types.ts`
 - [x] Canonical scope builder — `core/authorization/knowledge-page-scope.ts`
 - [x] Scope/fingerprint spec, including a characterization test pinning the legacy gap
-- [x] Expansion migration `1165_kb_page_grants` + rollback + journal entry (idx 1048)
+- [x] Expansion migration `1168_kb_page_grants` + rollback + journal entry (idx 1051) — renamed from 1165; the 1165 tag now belongs to `1165_build_automation_run_history`
 - [x] `KnowledgeAuthorizationService` — `resolvePageAccess`, `resolveSpaceAccess`, `permissionFingerprint`, actor standing
 - [x] Collapsed duplicate space/role computation out of `KbAccessService` into the authorization module
 - [x] Registered in `KbCoreModule` (BE-01)
-- [x] `pnpm typecheck` clean; `pnpm typecheck:test` has 21 errors, **0 in `modules/kb`**
-- [ ] **BLOCKED** Apply migration 1165 — IAM credential required (see environment table)
-- [ ] **BLOCKED** `EXPLAIN (ANALYZE, BUFFERS)` evidence — same credential
+- [x] `pnpm typecheck` clean; `pnpm typecheck:test` **now also clean — the 21 errors are gone** (2026-09-25)
+- [x] Apply migration `1168_kb_page_grants` — applied 2026-09-24, hash `cd96f057` matched. The "IAM credential" blocker was never real; see the environment table.
+- [x] `EXPLAIN (ANALYZE, BUFFERS)` evidence — captured 2026-09-25, see below
 - [x] Migrated `KbPageStatusService` (7 call sites) to per-action canonical checks
-- [ ] Replace the remaining legacy call sites — queue below
+- [x] Replace the remaining legacy call sites — **source complete**, measured 2026-09-25: all 16 queued services inject `KnowledgeAuthorizationService` and hold zero `pageVisibleTo` references. The 16 `queued` cells in the table below are stale. One production caller survives by deliberate deferral: `retrieval/kb-page-access.util.ts` via `wiki/kb-object-access.ts`.
+- [ ] Property/fuzz test of the access predicate — `fast-check` is installed but `knowledge-page-scope.spec.ts` is 20 hand-written cases; no `fc.property` anywhere in `modules/kb`
+- [ ] Fold `buildArticleRestrictionPredicate` (`retrieval/kb-article-restriction-predicate.ts`) into the seam or scope it out explicitly — it builds an independent `kb_page_restrictions` ACL arm outside `KnowledgeAuthorizationService`, so the "no caller rebuilds the predicate" invariant is not yet whole
 
 **Call-site migration: source complete.** All 18 services now take their authorization from `KnowledgeAuthorizationService`. `pnpm typecheck` on source is clean. Executed as five parallel lanes with non-overlapping file ownership, then four follow-up lanes to repair spec fallout.
 
@@ -726,7 +728,14 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [ ] Tenant quotas: requests, tokens, concurrent streams, indexed bytes, research jobs
 - [ ] Remove confidence percentages, uncited prose, hidden auto-selected sources, drafts in browser storage
 
-**Coverage gap found during the S01 lane work.** `kb-ask-tenant-isolation.spec.ts` and `kb-ask-citation-restriction.spec.ts` exercise only the **article** isolation paths (`kb_articles`, `kb_article_restrictions`). They never reach `auth.visiblePagePredicate`, because that is consulted only when **page** citations are present — and no test in either spec produces one. So the Ask cross-tenant guards currently prove nothing about page citations, which are the `kb_pages`-backed half of the product and a P0 leakage surface. Add page-citation cases to both specs as part of this slice; do not assume the article cases cover them.
+**Coverage gap found during the S01 lane work — CLOSED, re-measured 2026-09-25.** The gap was real: both Ask isolation specs exercised only the **article** paths and never reached `auth.visiblePagePredicate`, which is consulted only when **page** citations are present. It is now closed on both sides, each with a negative/positive pair:
+
+| Spec | What it now proves |
+|---|---|
+| `kb-ask-tenant-isolation.spec.ts:78-169` | a retrieval double returning `kind: "page"` drives the page-visibility query; a cross-tenant page is never cited (`:136`), and an accessible one **is** (`:151`) |
+| `kb-ask-citation-restriction.spec.ts:252-313` | `visiblePagePredicate` mocked to `sql\`false\`` redacts a cited page on re-open (`:284`); mocked to `sql\`true\`` it passes (`:299`) |
+
+⚠️ **Residual weakness, not the original gap.** The page-path fake `makeDbForRevocation` (`kb-ask-citation-restriction.spec.ts:269-282`) returns rows from a constructor flag and never compiles the `WHERE`, unlike the article path at `:103-133` which renders it through `PgDialect`. So the guards are *exercised* but the predicate's **content** is still unproven for pages. Make the page fake compile the predicate before treating this as fully closed.
 
 **Evidence:** _pending_
 
@@ -2088,3 +2097,95 @@ Three of four Vercel projects report `failure` with description **"Deployment ra
 retry in 24 hours"**, not a build error. `streamlineos-frontend` — the project that serves
 `www.streamlineos.in` — builds and deploys normally. Read the status `description`, never the
 state alone.
+
+## Twelfth pass — 2026-09-25: a production outage, six audits, and the gaps that remain
+
+### The whole wiki was down, and every gate was green
+
+A signed-in sweep of eight `/knowledge/*` surfaces found `/knowledge/chat` healthy and **all six `/knowledge/wiki/*` routes rendering "Something went wrong — Failed to load the wiki"**. One cause: `GET /kb/hr-link/config` returned 500.
+
+`KbHrLinkFlagsService.getStored` selects `hrms_kb_link_enabled`, `hrms_kb_search_enabled` and `hrms_kb_ai_enabled` from `kb_settings`. Migration **1200** adds those columns, and 1200 was journalled, its call site deployed by Railway, and **never applied**. Postgres raised `42703`; `kb_linked_documents` raised `42P01` for the same reason. Reproduced directly against production before any change:
+
+```
+REPRODUCED: 42703 - column "hrms_kb_link_enabled" does not exist
+kb_linked_documents: 42P01 - relation "kb_linked_documents" does not exist
+```
+
+**1197–1202 were all in this state.** `src/db/schema/hr/documents.ts:32` declares `documents.classification` `NOT NULL` while the column did not exist, so Documents/HR carried the identical landmine. All six applied one `--tag=` at a time, then verified; the six wiki routes now return real content with zero console errors.
+
+This is the [[pending-migration-plus-live-call-site-is-a-deploy-landmine]] class at full severity. **The lesson worth keeping: no gate in either repo compares the journal against the production ledger for tags whose call sites are already deployed.** `check:migration-chain` passes because the chain is internally consistent; it never asks whether the running code needs a tag that is missing.
+
+### The error policy turned a flag outage into a section outage
+
+`readErrorReachesBoundary` (`frontend/lib/query-error-policy.ts:3`) sends any read error with no cached data to the route error boundary. `useHrKbLinkConfig` is mounted on every wiki page via `WikiShell`, and already had a semantic default (`ALL_OFF`) — it should never have been boundary-bound. It now carries `INLINE_READ_ERROR`, so a failing flag endpoint degrades to "feature off" instead of destroying the section.
+
+Guarded by `hooks/api/kb/hr-link-hooks.test.tsx` under a QueryClient carrying the **production** `throwOnError` policy, with a positive control. The negative was rewritten once: the first version waited on `mockGet` and passed without the fix — a control that could not bite. It now waits on `isError` and fails without the fix, verified both ways.
+
+### S07 — a real authorization hole in page move
+
+`KbPageTreeService.move` authorized the page being moved and checked the **target parent for existence and tenancy only**. Anyone with `edit` on a page could reparent it under any page in the organisation, including one inside a space they cannot read. The target now goes through `assertPageAccess(user, targetParentId, "edit")`, which also collapses hidden and missing into the same 404 instead of the distinguishable `"Target parent page not found"`.
+
+`kb-page-tree-tenant-isolation.spec.ts` gained a negative/positive pair. The pre-existing move test passed `parentPageId: null`, so **the target branch never executed** — the checklist item read as covered and was not.
+
+### S16 — spending AI credit is no longer inferred from reading a page
+
+`POST /kb/ask` and `/kb/ask/stream` were gated on `kb:pages:view`. They now require `kb:ai:generate`. Measured first, because the naive change would have revoked Ask from everyone: **23 roles held `kb:pages:view`, 0 held `kb:ai:generate`.** Migration **1203** grants the key to exactly those roles, copying `scope` per row, with a postcondition that fails if any role can read but not Ask. After apply: 23/23, zero gap, `scope` preserved. Behaviour today is identical; the capability is separately revocable from now on. History routes deliberately stay on `kb:pages:view`, pinned by `kb-ask-generate-permission.spec.ts`.
+
+### `EXPLAIN (ANALYZE, BUFFERS)` on the grant lookup — S01 evidence, captured at last
+
+Run as `streamline_app` with the tenant GUC set, so RLS is armed:
+
+```
+->  Index Scan Backward using idx_kb_page_grants_org_page_live on public.kb_page_grants
+      Index Cond: (org_id = '871a...'::text)
+      Filter: ((access = ANY ('{view,comment,edit,manage}')) AND ((membership_id = 3) OR (role = ANY ('{kb-reader,kb-editor}'))))
+One-Time Filter: (app.current_org_id() = '871a...'::text)
+Planning Time: 4.210 ms   Execution Time: 0.134 ms
+```
+
+Both the scope query and the single-page lookup reach `idx_kb_page_grants_org_page_live`; the RLS policy degenerates to a one-time filter rather than a per-row call. ⚠️ **`kb_page_grants` currently holds 0 rows, so this proves the index is reachable and the policy is not per-row — it does not prove behaviour at cardinality.** The acceptance claim is not closed until the plan is re-taken against a seeded population.
+
+### Six KB suites were red on stale doubles
+
+`kb-multi-store-purge.ts` gained `onConflictDoNothing` and a `kb_page_purge_ledger` read that six suites' doubles never modelled. Doubles repaired with no assertion weakened; one spec's journal-order expectation was made **stricter** (an exact two-tag list of baselined splices, so a third would fail). **179 suites / 1536 tests green, from 173 / 1523 with 13 failures.**
+
+### What six parallel audits found that the checkboxes did not say
+
+Measured against code, not against the ledger. Only genuine gaps listed.
+
+| Slice | Open, with the file that must change |
+|---|---|
+| S01 | no property/fuzz test of the predicate; `buildArticleRestrictionPredicate` is a second ACL arm outside the seam |
+| S06 | `wiki-shell.tsx:28` calls `useKbPagesTree()` for the whole tenant on every wiki page — `/kb/pages/tree` returns every visible page capped at `MAX_TREE_NODES = 2000` with no cursor and **no `hasMore`**, so it truncates silently; no action-descriptor module exists; card view has no pager |
+| S07 | no members sheet (`GET /kb/spaces/:id/members` exists, unconsumed); no lazy hierarchy — `/kb/pages/tree` takes only `projectId`, no `spaceId`/`parentId`/`cursor`; `askIndexed` is `pageCount > 0`, not a real index measurement; no test file for either page |
+| S08 | 11 actions exist but through bespoke handlers on 3 surfaces; linked records unreachable below 1280px (`page-right-panel.tsx:58` is `hidden xl:flex`); no offline signal; no save timestamp; Export serializes client-side and bypasses `kb:pages:export` |
+| S09 | no current-version marker; single-version select only; diff is word-count + first-divergence, not block-level; restore writes no audit entry; no `?version=` deep link |
+| S16 | `kb_ai_interactions` **does not exist** — the record is spread across 5 unjoinable tables and `kb_events` has no `correlation_id`, so one Ask cannot be reconstructed; no pre-send source scope sheet; 1 of 6 answer parts rendered; indexed-bytes quota absent |
+
+### Landed this pass
+
+- Migrations `1197`–`1202` applied to production; `1203_kb_ai_generate_grant` written, journalled (idx 1087), applied and verified.
+- Move target authorization + negative/positive spec pair.
+- `kb:ai:generate` on both Ask generation routes + route-key spec.
+- `INLINE_READ_ERROR` on the wiki flag read + biting regression pair.
+- `/build/:projectId/wiki/:pageId/history` redirect in `next.config.ts` (the route was deleted by `bb7bde9f1` with no replacement; nothing linked to it, but a bookmark 404'd).
+- Space detail: a 404 now reaches the "Space not found" recovery node instead of the generic error — that branch was **unreachable dead UI**, because a 404 arrives as `isError`, never `isEmpty`. Retry wired on both space surfaces.
+- Archive impact preview wired into the archive dialog (`useKbSpaceArchiveImpact` existed with zero consumers); member count rendered; the card's "Delete" button relabelled Archive/Restore to match what it actually calls.
+- Wiki Home cards gained the trust badge and an "Owner missing" badge; first-run gained the third affordance, Import (`EmptyState` gained an optional `tertiaryAction`).
+- Six KB suites repaired; `check:named-handlers` fixed; permission catalogue and vendored OpenAPI re-synced.
+
+### Verification run
+
+Backend `pnpm typecheck` and `typecheck:test` both clean — **the 21 `typecheck:test` errors recorded in S01 are gone.** `check:permission-keys`, `check:route-classification` (UNDECLARED 0), `check:module-registration` (259/259), `check:migration-discipline`, `check:migration-immutability`, `check:migration-chain` all pass. Frontend `type-check`, `type-check:specs`, `check:empty-states`, `check:page-state-usage`, `check:gated-reads`, `check:permission-binding`, `check:permission-catalog`, `check:contract-vendor`, `check:icon-labels` and `check:named-handlers` all pass.
+
+**Pre-existing and NOT caused by this pass, with evidence:**
+
+| Gate | Failure | Evidence it is not ours |
+|---|---|---|
+| `check:migration-rollback` | 12 missing rollbacks | all are `1177`–`1190`, HRMS; no KB tag is flagged |
+| `check:set-null-migration-text` | 3 composite SET NULL without a column list | all in `1165`/`1166`, Build |
+| `check:contract-parity` | 8 fields the frontend demands | all on `GET /hr/recruitment/analytics`, from the peer HRMS merge; **zero KB findings** |
+| `check:type-assertions` | 19 stale ceiling entries | spans accounting/hr/surveys/timesheets/crm; `import-page.tsx` is listed and was never touched this pass |
+| `components/ui/__tests__/contrast-tokens.test.ts` | 2 WCAG pairs unresolvable | no CSS file is modified anywhere in the tree |
+
+The `check:contract-parity` finding is a real defect in another module: the frontend requires 8 fields — `window`, `timeToFillDays`, `sources`, `interviewerLoad`, `offers`, `empty`, and two `funnel[]` conversions — that `GET /hr/recruitment/analytics` does not declare. Raised, not fixed; it is outside Knowledge Base scope.

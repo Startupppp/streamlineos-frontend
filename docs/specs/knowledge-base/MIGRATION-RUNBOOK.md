@@ -1,4 +1,4 @@
-# KB migration runbook — 1168 … 1176
+# KB migration runbook — 1168 … 1176, and 1197 … 1203
 
 ## Current state: **all ten applied, 1174 included. The cutover is closed.**
 
@@ -512,3 +512,49 @@ node D:/agent-work/mig-iam.mjs src/scripts/run-pending-migrations.mjs --tag=1175
 ```
 
 The reclaim works without it — just slower. Nothing breaks if you never apply it.
+
+## 2026-09-25 — 1197 … 1203 applied, and why the wiki was down until they were
+
+`1197`–`1202` were journalled and their call sites deployed, but **none had been applied**. The
+Knowledge Base felt it first and hardest: `GET /kb/hr-link/config` reads three `kb_settings`
+columns that `1200` adds, so it raised `42703`, the read reached the route error boundary, and
+**every `/knowledge/wiki/*` page rendered "Failed to load the wiki".** `kb_linked_documents`
+raised `42P01` for the same reason, and `documents.classification` was declared `NOT NULL` in
+`src/db/schema/hr/documents.ts:32` against a column that did not exist.
+
+Applied one `--tag=` at a time, in journal order, with the IAM wrapper:
+
+| Tag | Owner | Result |
+|---|---|---|
+| `1197_build_cycle_permissions` | Build | ALREADY APPLIED |
+| `1198_document_classification` | Documents | applied — 4 statements |
+| `1199_document_audiences_and_versions` | Documents | applied — 39 statements |
+| `1200_kb_linked_documents` | **KB** | applied — 48 statements; this is the one that ended the outage |
+| `1201_kb_linked_document_guard` | **KB** | applied — 9 statements (needs `documents.classification`, so it needs 1198) |
+| `1202_hr_document_publishable_excludes_self_uploads` | HR | applied — 2 statements |
+| `1203_kb_ai_generate_grant` | **KB** | written this pass, journalled idx 1087, applied — 4 statements |
+
+Verified afterwards against production: `kb_linked_documents`, `kb_linked_document_audiences`,
+`document_audiences`, `document_versions` all present; `documents.classification` present;
+`kb_settings` carries all three `hrms_*` switches; `app.hr_document_is_publishable` present; and
+the three queries that reproduced the outage now succeed.
+
+### 1203 is a permission backfill, and it was measured before it was written
+
+Moving the Ask routes from `kb:pages:view` to `kb:ai:generate` would have revoked Ask from every
+non-owner: **23 roles held `kb:pages:view`, 0 held `kb:ai:generate`.** 1203 grants the key to
+exactly the roles that already hold `kb:pages:view`, copying `scope` per row so a role limited to
+its own data stays limited, and ends with a postcondition that raises if any role can still read a
+page but not Ask. After apply: 23 / 23, zero gap, `scope` = `all` preserved.
+
+Expand-then-contract order matters here and was respected: the grant landed **before** the code
+that requires it. Until the backend redeploys, the routes still accept `kb:pages:view` and nobody
+notices; after it, everyone who could Ask still can.
+
+### The gate that does not exist
+
+`check:migration-chain` passes on an unapplied tag, because the chain is internally consistent.
+Nothing in either repo asks the question that actually matters: **is any journalled tag missing
+from the production ledger while its call site is already deployed?** Railway ships every backend
+push; migrations are applied by hand. That gap is what produced this outage, and it will produce
+the next one. → [[pending-migration-plus-live-call-site-is-a-deploy-landmine]]
