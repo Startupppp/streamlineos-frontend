@@ -10,11 +10,14 @@ import {
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import {
+  BUILD_LIST_CURSOR_PARAM,
+  buildListSearchParams,
+} from "./use-build-list-url-state";
 
 export const BUILD_FILTER_ALL = "all";
 export const BUILD_SEARCH_DEBOUNCE_MS = 300;
 export const BUILD_LIST_SEARCH_PARAM = "q";
-const CURSOR_PARAM = "cursor";
 const PAGE_PARAM = "page";
 
 export interface BuildListFilterDefinition {
@@ -61,12 +64,10 @@ export function useBuildListFilters(
 
   const writeParams = useCallback(
     (updates: Record<string, string | null>) => {
-      const next = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") next.delete(key);
-        else next.set(key, value);
-      }
-      next.delete(CURSOR_PARAM);
+      const next = buildListSearchParams(searchParams, updates, {
+        resetCursor: true,
+      });
+      next.delete(BUILD_LIST_CURSOR_PARAM);
       next.delete(PAGE_PARAM);
       const query = next.toString();
       startTransition(() => {
