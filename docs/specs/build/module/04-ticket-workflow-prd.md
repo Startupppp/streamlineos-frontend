@@ -265,7 +265,7 @@ Completion preview includes:
   explicit.
 - [ ] **BLD-04-029** undo is offered only while no incompatible downstream
   write has occurred.
-- [ ] **BLD-04-038** iteration completion derives all completed states from the
+- [x] **BLD-04-038** iteration completion derives all completed states from the
   workflow category and contains no hard-coded status name.
 
 ## Ticket Detail
