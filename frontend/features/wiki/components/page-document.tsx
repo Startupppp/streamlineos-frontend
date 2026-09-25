@@ -312,7 +312,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             ) : null}
           </div>
 
-          <div className="mx-auto w-full min-w-0 max-w-[46rem] px-4 pb-16 pt-5 sm:px-8 sm:pt-6">
+          <div className="mx-auto w-full min-w-0 max-w-[46rem] px-4 pb-12 pt-3 sm:px-8">
             {conflict ? (
               <div className="mb-5">
                 <PageEditConflict
@@ -332,26 +332,15 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
               </div>
             ) : null}
 
-            <div className="group/title mb-5">
-              <PageDocumentPropertyActions
-                icon={page.icon}
-                hasCover={Boolean(page.coverImage)}
-                isEditable={isEditable}
-                onIconChange={handleIconChange}
-                onOpenCover={handleOpenCover}
-              />
-
+            <div className="group/title mb-2 flex items-center gap-2">
               {page.icon ? (
-                <div className="mb-2">
-                  <PageIconPicker
-                    icon={page.icon}
-                    isEditable={isEditable}
-                    onIconChange={handleIconChange}
-                    variant="hero"
-                  />
-                </div>
+                <PageIconPicker
+                  icon={page.icon}
+                  isEditable={isEditable}
+                  onIconChange={handleIconChange}
+                  variant="inline"
+                />
               ) : null}
-
               <textarea
                 ref={titleRef}
                 value={localTitle}
@@ -359,11 +348,18 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
                 onKeyDown={handleTitleKeyDown}
                 onMouseDown={handleTitleMouseDown}
                 placeholder="Untitled"
-                className="w-full resize-none overflow-hidden border-0 bg-transparent text-left text-[1.75rem] font-semibold leading-tight tracking-tight text-foreground outline-none placeholder:text-muted-foreground/70 sm:text-4xl sm:leading-[1.15]"
+                className="min-w-0 flex-1 resize-none overflow-hidden border-0 bg-transparent py-0 text-left text-3xl font-semibold leading-tight tracking-tight text-foreground outline-none placeholder:text-muted-foreground/70"
                 rows={1}
                 style={{ height: "auto" }}
                 readOnly={!isEditable}
                 aria-label="Page title"
+              />
+              <PageDocumentPropertyActions
+                icon={page.icon}
+                hasCover={Boolean(page.coverImage)}
+                isEditable={isEditable}
+                onIconChange={handleIconChange}
+                onOpenCover={handleOpenCover}
               />
             </div>
 

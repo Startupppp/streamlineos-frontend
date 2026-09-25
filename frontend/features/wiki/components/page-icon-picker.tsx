@@ -50,7 +50,7 @@ export default function PageIconPicker({
       <span
         className={cn(
           "leading-none shrink-0",
-          variant === "hero" ? "text-5xl" : "text-4xl",
+          variant === "hero" ? "text-5xl" : "text-3xl",
         )}
       >
         {icon}
@@ -82,7 +82,7 @@ export default function PageIconPicker({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+            className="h-7 gap-1 px-1.5 text-xs text-muted-foreground hover:text-foreground"
             aria-label="Add icon"
           >
             <KbSmileIcon className="h-3.5 w-3.5" aria-hidden />
@@ -93,7 +93,7 @@ export default function PageIconPicker({
             type="button"
             className={cn(
               "leading-none shrink-0 transition-opacity hover:opacity-80",
-              isHero ? "text-5xl" : "text-4xl",
+              isHero ? "text-5xl" : "text-3xl",
             )}
             aria-label="Change page icon"
           >
