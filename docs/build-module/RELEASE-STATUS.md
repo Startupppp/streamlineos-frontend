@@ -34,7 +34,7 @@ complete product definition of done.
 
 ## Backend and authorization
 
-- Backend release commit `e0ef5cfff` is contained in backend `origin/main`; the health endpoint responds 200 at `https://api.streamlineos.in/health`. The latest analytics and project-bound workflow-read fixes are pushed and await the normal deployment rollout.
+- Backend release commit `768f15297` is contained in backend `origin/main`; the health endpoint responds 200 at `https://api.streamlineos.in/health`. The latest analytics, project-bound workflow-read, and bounded ticket-detail relation fixes are pushed and await the normal deployment rollout.
 - The current authorization census covers 49 controllers and 325 handlers:
   - `VULNERABLE=0`
   - `NEEDS-REVIEW=0`
