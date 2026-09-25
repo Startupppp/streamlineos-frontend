@@ -5,7 +5,7 @@
 
 This document tracks the current production-release checklist, not total Build
 product completion. The full normative PRD remains open: the current source
-tree contains 36 checked and 618 unchecked acceptance boxes across the Build
+tree contains 39 checked and 615 unchecked acceptance boxes across the Build
 module and sidebar PRDs. Do not report this release checklist as full PRD
 completion; use `docs/specs/build/module/README.md` and its child PRDs for the
 complete product definition of done.
@@ -34,7 +34,7 @@ complete product definition of done.
 
 ## Backend and authorization
 
-- Backend release commit `2f26c9841` is contained in backend `origin/main`; the health endpoint responds 200 at `https://api.streamlineos.in/health`. The latest analytics, project-bound workflow-read, bounded ticket-detail relation, checklist-item read, malformed ticket-filter, bounded-search validation, and filtered column-count fixes are pushed and await the normal deployment rollout.
+- Backend release commit `b709ba20b` is contained in backend `origin/main`; the health endpoint responds 200 at `https://api.streamlineos.in/health`. The latest analytics, project-bound workflow-read, bounded ticket-detail relation, checklist-item read, malformed ticket-filter, bounded-search validation, filtered column-count, and portfolio-search fixes are pushed and await the normal deployment rollout.
 - The current authorization census covers 49 controllers and 325 handlers:
   - `VULNERABLE=0`
   - `NEEDS-REVIEW=0`
@@ -71,7 +71,7 @@ Current release-candidate checks:
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
 - `git diff --check`: pass.
-- Latest frontend Build navigation, filtered board-count, and malformed-filter normalization fixes are on `origin/main` at `1c09bd20d`:
+- Latest frontend Build navigation, filtered board-count, malformed-filter normalization, and portfolio-search fixes are on `origin/main` at `1f2b1e63a`:
   backlog, My Work, draft, and keyboard shortcut navigation now use the shared
   dirty-state guard; focused regressions pass.
 - The Build view switcher now routes Calendar to the unified `/calendar` surface
