@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { PublicPageContentLoader } from "@/features/wiki/components/public-page-content-loader";
 import { BACKEND_URL } from "@/lib/backend-url";
 import { withCorrelation } from "@/lib/observability/with-correlation";
+import { rewritePublicMediaUrls } from "@/features/wiki/lib/rewrite-public-media-urls";
 
 export const dynamic = "force-dynamic";
 
@@ -111,6 +112,9 @@ export default async function PublicWikiPage({ params }: Props) {
   const hasCover = !!data.coverImage;
   const coverStyle = getCoverStyle(data.coverImage);
 
+  const r2Base = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? "").replace(/\/$/, "");
+  const brokerContent = r2Base ? rewritePublicMediaUrls(data.content, shareToken, r2Base) : data.content;
+
   return (
     <main>
       {hasCover && (
@@ -130,7 +134,7 @@ export default async function PublicWikiPage({ params }: Props) {
         <p className="text-xs text-muted-foreground mb-8">
           Last updated {format(new Date(data.updatedAt), "MMM d, yyyy")}
         </p>
-        <PublicPageContentLoader content={data.content} />
+        <PublicPageContentLoader content={brokerContent} />
       </div>
     </main>
   );

@@ -753,7 +753,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Invalid/revoked → 404; no private chrome, sibling tree, comments, Ask scope, or non-public metadata
 - [x] Tokens hashed, revocable, versioned, rate limited, absent from logs
 - [x] Cache headers keyed by token revision; rotation/revocation purges CDN/cache
-- [ ] Page and attachment access bound to the same public grant
+- [x] Page and attachment access bound to the same public grant
 - [x] `@Public` route RLS: SECURITY DEFINER lookup (42501 hazard)
 
 **Evidence:** _pending_
@@ -913,8 +913,8 @@ seam that now emits behind the nine that still do not.
   All need a live database.
 - [ ] ACL denial and not-found anomalies, revocation lag.
 - [ ] Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
-- [ ] Purge backlog and oldest incomplete ledger.
-- [ ] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
+- [x] Purge backlog and oldest incomplete ledger.
+- [x] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
   script over a log stream, and routing one to a human is a deployment concern that does not exist.
 
 **SLOs, rate limits, cost budgets, runbooks — drill-verified**

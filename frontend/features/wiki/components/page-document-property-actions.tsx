@@ -13,9 +13,7 @@ interface PageDocumentPropertyActionsProps {
 }
 
 /**
- * Page property actions live above the title (not between title and body).
- * Hidden until the title block is hovered/focused on pointer devices; always
- * visible on coarse pointers so touch users can still find them.
+ * Compact property actions sit on the same row as the title.
  */
 export function PageDocumentPropertyActions({
   icon,
@@ -28,7 +26,7 @@ export function PageDocumentPropertyActions({
   if (icon && hasCover) return null;
 
   return (
-    <div className="mb-1 flex max-h-8 flex-wrap items-center gap-1 overflow-hidden opacity-100 transition-[max-height,opacity,margin] duration-150 sm:mb-0 sm:max-h-0 sm:opacity-0 sm:group-hover/title:mb-1 sm:group-hover/title:max-h-8 sm:group-hover/title:opacity-100 sm:group-focus-within/title:mb-1 sm:group-focus-within/title:max-h-8 sm:group-focus-within/title:opacity-100">
+    <div className="flex shrink-0 items-center gap-0.5">
       {!icon ? (
         <PageIconPicker
           icon={null}
@@ -42,7 +40,7 @@ export function PageDocumentPropertyActions({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+          className="h-7 gap-1 px-1.5 text-xs text-muted-foreground hover:text-foreground"
           onClick={onOpenCover}
         >
           <KbImageIcon className="h-3.5 w-3.5" aria-hidden />

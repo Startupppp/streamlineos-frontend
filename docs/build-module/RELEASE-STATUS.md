@@ -10,6 +10,18 @@ module and sidebar PRDs (658 total, counted directly from the current PRD tree).
 completion; use `docs/specs/build/module/README.md` and its child PRDs for the
 complete product definition of done.
 
+## Checkout reconciliation
+
+The working checkout is ahead of the configured remote on more than one repository;
+this is not deployment evidence. The current local Build evidence includes backend
+commits `121c1727e` and `bb1f175fb`, plus frontend commits `6ffc21b48`,
+`cae206a6c`, and `b41041440`.
+The frontend and backend branches also contain unrelated Knowledge Base work that
+must remain separate. Treat a Build commit as deployed only after the deployment
+identity is read from the running service. Older commit hashes elsewhere in this
+document are retained as historical evidence for the release they describe and do
+not prove that the current checkout is deployed.
+
 ## Scope
 
 - The authenticated route manifest contains 65 canonical Build pages, all marked `KEEP`.
@@ -41,7 +53,7 @@ complete product definition of done.
   - `NEEDS-REVIEW=0`
   - `CLOSED=42`
   - `VERIFIED=283`
-- The generated Markdown and JSON census artifacts in the backend `docs/build-module/` match backend `origin/main`.
+- The generated Markdown and JSON census artifacts in the backend `docs/build-module/` match the current local backend Build source; remote deployment parity remains open.
 - The Build backend matrix passed 231 suites and 2,301 tests after refreshing authorization evidence and cursor-pagination expectations. Backend typecheck, build, permission-key validation, route-budget self-test, feature-cycle scan, and migration-discipline checks remain separately tracked.
 - Fresh P1-4 handoff verification passed 4 focused suites and 48 tests across quote lifecycle, quote tenant isolation, signed-envelope completion, and deal-linked project provisioning. The authenticated browser handoff remains open because this environment has no configured E2E tenant/session fixture.
 
@@ -103,6 +115,7 @@ Current release-candidate checks:
 - Build-owned unsafe assertion findings: zero. The assertion gate still reports unrelated pre-existing Inventory, HR, Wiki, editor, and infrastructure debt.
 - The Build status-contrast sweep is pushed in frontend commit `e9ee068e6`; the follow-up Kanban WIP badge coverage fix is pushed in `ca1d40463`. The current Build-owned token audit has 164 strong text-token usages and 46 remaining intentional icon-only/non-text usages. The focused accessibility matrix passes 9/9 tests, the Kanban and saved-view matrix passes 10/10 tests, and the full frontend type-check remains green.
 - Build-owned gated-read findings: zero. The gate still reports two unrelated HR recruitment reads.
+- The org-wide executive-brief Build health summary now computes its five scalar outputs in one tenant-scoped SQL aggregate, and resource-allocation user hydration is explicitly capped to the cursor page in backend commits `121c1727e` and `bb1f175fb`. Focused analytics and executive-brief coverage passes 32/32; production-shaped EXPLAIN evidence remains open.
 - The dead-code classifier reports no Build deletion candidate. Its current dead files are in Knowledge Base, outside this release.
 - Filtered column-count reads now accept and apply the same validated board filter contract as board rows, including search, status, priority, assignee, labels, cycle, module, epic, and due-date filters. Explicit zero aggregates remain zero instead of falling back to loaded-row counts. Focused backend aggregate/schema tests pass 34/34; focused frontend filter/board/count tests pass 33/33.
 - Build list queries no longer retain previous project rows while a new project scope is loading; focused scope-switch coverage passes 8/8.
