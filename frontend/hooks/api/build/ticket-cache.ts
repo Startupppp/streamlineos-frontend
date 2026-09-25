@@ -247,6 +247,10 @@ export function invalidateTicketUpdateViews(
   },
 ) {
   void client.invalidateQueries({
+    queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+    refetchType: "none",
+  });
+  void client.invalidateQueries({
     queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
     exact: true,
   });

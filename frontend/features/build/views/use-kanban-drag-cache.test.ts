@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, QueryObserver } from "@tanstack/react-query";
 import { createElement, useState, type ReactNode } from "react";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { queryKeys } from "@/lib/query-keys";
@@ -44,6 +44,13 @@ it.each([false, true])("persists drag on an infinite board and restores its page
   const original = { pages: [{ data: [ticket], pagination: { nextCursor: null } }], pageParams: [undefined] };
   const keys = [queryKeys.projects.tickets({ projectId: 42, view: "board" }), queryKeys.projects.tickets({ projectId: 42, view: "board", priority: "HIGH" })];
   for (const key of keys) client.setQueryData(key, original);
+  const queryFn = jest.fn(async () => original);
+  const observer = new QueryObserver(client, {
+    queryKey: keys[0],
+    queryFn,
+    staleTime: Infinity,
+  });
+  const unsubscribe = observer.subscribe(() => {});
   jest.mocked(apiClient.patch).mockReset();
   if (fails) jest.mocked(apiClient.patch).mockRejectedValue(new Error("conflict"));
   else jest.mocked(apiClient.patch).mockResolvedValue({ id: 1, rank: "a1", status: "DONE" });
@@ -57,5 +64,7 @@ it.each([false, true])("persists drag on an infinite board and restores its page
   await act(async () => result.current.onDragEnd({ draggableId: "1", type: "DEFAULT", reason: "DROP", mode: "FLUID", source: { droppableId: "OPEN", index: 0 }, destination: { droppableId: "DONE", index: 0 }, combine: null }));
   await waitFor(() => expect(apiClient.patch).toHaveBeenCalledTimes(1));
   for (const key of keys) await waitFor(() => expect(client.getQueryData(key)).toEqual(fails ? original : { ...original, pages: [{ ...original.pages[0], data: [{ ...ticket, rank: "a1", status: "DONE" }] }] }));
+  expect(queryFn).not.toHaveBeenCalled();
+  unsubscribe();
   client.clear();
 });
