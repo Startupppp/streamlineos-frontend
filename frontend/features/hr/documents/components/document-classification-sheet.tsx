@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -36,6 +36,14 @@ interface DocumentClassificationSheetProps {
   document: Document | null;
 }
 
+type AudienceFields = Pick<ClassificationFormValues, "audienceMode" | "departmentIds" | "locationIds">;
+
+/** A save that stopped part-way. `classificationSaved` says the first of its two requests went through. */
+interface SubmitFailure {
+  error: unknown;
+  classificationSaved: boolean;
+}
+
 const EMPTY_VALUES: ClassificationFormValues = {
   classification: "PERSONAL",
   effectiveDate: "",
@@ -63,7 +71,11 @@ export function DocumentClassificationSheet({ open, onOpenChange, document }: Do
   const view = useDocumentClassification(document?.id ?? null, { enabled: open });
   const classify = useClassifyDocument();
   const setAudiences = useSetDocumentAudiences();
-  const [submitError, setSubmitError] = useState<unknown>(null);
+  const [submitFailure, setSubmitFailure] = useState<SubmitFailure | null>(null);
+  // The audience the person is saving, kept until it is saved or the sheet closes. The classification request lands
+  // first and refreshes the view the form is reset from, so without this a failed audience request would put the
+  // old audience back and the person would have to choose it all again.
+  const unsavedAudience = useRef<{ documentId: number; audience: AudienceFields } | null>(null);
 
   const form = useForm<ClassificationFormValues>({
     resolver: zodResolver(classificationFormSchema),
@@ -72,11 +84,22 @@ export function DocumentClassificationSheet({ open, onOpenChange, document }: Do
 
   const loaded = view.data;
   useEffect(() => {
-    if (open && loaded) {
-      form.reset(formValuesFromView(loaded));
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSubmitError(null);
+    if (!open) {
+      unsavedAudience.current = null;
+      return;
     }
+    if (!loaded) return;
+    form.reset(formValuesFromView(loaded));
+    const unsaved = unsavedAudience.current;
+    if (unsaved && unsaved.documentId === loaded.documentId) {
+      // Still dirty against the server, so Save stays meaningful and closing still warns; the error stays on screen.
+      form.setValue("audienceMode", unsaved.audience.audienceMode, { shouldDirty: true });
+      form.setValue("departmentIds", unsaved.audience.departmentIds, { shouldDirty: true });
+      form.setValue("locationIds", unsaved.audience.locationIds, { shouldDirty: true });
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSubmitFailure(null);
   }, [open, loaded, form]);
 
   const blockers = useMemo(() => otherBlockers(loaded), [loaded]);
@@ -84,7 +107,7 @@ export function DocumentClassificationSheet({ open, onOpenChange, document }: Do
   const onSubmit = useCallback(
     async (values: ClassificationFormValues) => {
       if (!document || !loaded) return;
-      setSubmitError(null);
+      setSubmitFailure(null);
       const audiences = audiencesFromForm(values);
       const effectiveDate = values.effectiveDate === "" ? null : values.effectiveDate;
       const classificationChanged = values.classification !== loaded.classification;
@@ -97,7 +120,14 @@ export function DocumentClassificationSheet({ open, onOpenChange, document }: Do
         return;
       }
 
+      unsavedAudience.current = audienceChanged
+        ? {
+            documentId: document.id,
+            audience: { audienceMode: values.audienceMode, departmentIds: values.departmentIds, locationIds: values.locationIds },
+          }
+        : null;
       let linksTakenDown = 0;
+      let classificationSaved = false;
       try {
         if (classificationChanged || dateChanged) {
           const result = await classify.mutateAsync({
@@ -106,13 +136,15 @@ export function DocumentClassificationSheet({ open, onOpenChange, document }: Do
             effectiveDate,
           });
           linksTakenDown = result.linksTakenDown;
+          classificationSaved = true;
         }
         if (audienceChanged) await setAudiences.mutateAsync({ documentId: document.id, audiences });
       } catch (error) {
-        setSubmitError(error);
+        setSubmitFailure({ error, classificationSaved });
         toast.error(getErrorMessage(error));
         return;
       }
+      unsavedAudience.current = null;
       toast.success(
         `"${document.name}" is now ${classificationOption(values.classification).label.toLowerCase()}.${
           linksTakenDown > 0 ? ` ${takenDownMessage(linksTakenDown)}` : ""
@@ -125,7 +157,7 @@ export function DocumentClassificationSheet({ open, onOpenChange, document }: Do
   );
 
   const isPending = classify.isPending || setAudiences.isPending;
-  const handleSubmit = form.handleSubmit(onSubmit);
+  const handleSubmit = useCallback(() => form.handleSubmit(onSubmit)(), [form, onSubmit]);
 
   return (
     <HrSheet
@@ -169,12 +201,15 @@ export function DocumentClassificationSheet({ open, onOpenChange, document }: Do
               </Alert>
             ) : null}
             <DocumentClassificationFormFields canPublish={canPublish} sharingBlocked={blockers.length > 0} />
-            {submitError !== null ? (
+            {submitFailure !== null ? (
               <Alert variant="destructive">
-                <AlertTitle>Not saved</AlertTitle>
+                <AlertTitle>{submitFailure.classificationSaved ? "The audience was not saved" : "Not saved"}</AlertTitle>
                 <AlertDescription>
-                  <p>{getErrorMessage(submitError)}</p>
-                  <ErrorReference error={submitError} className="mt-2 justify-start" />
+                  <p>{getErrorMessage(submitFailure.error)}</p>
+                  {submitFailure.classificationSaved ? (
+                    <p>The classification was saved. The audience you chose is still selected: save again to retry it.</p>
+                  ) : null}
+                  <ErrorReference error={submitFailure.error} className="mt-2 justify-start" />
                 </AlertDescription>
               </Alert>
             ) : null}

@@ -8,7 +8,7 @@ const mockToast = { success: jest.fn(), error: jest.fn() };
 jest.mock("sonner", () => ({ toast: { success: (m: string) => mockToast.success(m), error: (m: string) => mockToast.error(m) } }));
 
 const mockCan = jest.fn<boolean, [string]>();
-jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan(key) }));
+jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan(key), useCanState: () => "granted" }));
 
 const mockView = jest.fn();
 const mockClassify = jest.fn();
@@ -22,11 +22,21 @@ jest.mock("@/hooks/api/hr/document-classification", () => ({
 jest.mock("./document-kb-link-panel", () => ({ DocumentKbLinkPanel: () => <div data-testid="kb-link-panel" /> }));
 jest.mock("./document-versions-panel", () => ({ DocumentVersionsPanel: () => <div data-testid="versions-panel" /> }));
 
+function mockUnitList(units: Array<{ id: string; name: string }>) {
+  return {
+    data: { data: units, pageInfo: { hasMore: false } },
+    isPending: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  };
+}
 jest.mock("@/hooks/api/org-hierarchy-units", () => ({
-  useOrgDepartments: () => ({ data: { data: [{ id: "d1", name: "Finance" }, { id: "d2", name: "Legal" }] }, isPending: false }),
+  useOrgDepartments: () => mockUnitList([{ id: "d1", name: "Finance" }, { id: "d2", name: "Legal" }]),
 }));
 jest.mock("@/hooks/api/org-hierarchy", () => ({
-  useOrgLocations: () => ({ data: { data: [{ id: "l1", name: "Pune" }] }, isPending: false }),
+  useOrgLocations: () => mockUnitList([{ id: "l1", name: "Pune" }]),
 }));
 
 function docFixture(over: Partial<Document> = {}): Document {
@@ -75,8 +85,11 @@ function viewFixture(over: Partial<DocumentClassificationView> = {}): DocumentCl
 function renderSheet(view: DocumentClassificationView | undefined, over: { document?: Document; onOpenChange?: jest.Mock } = {}) {
   mockView.mockReturnValue({ data: view, isError: false, error: null });
   const onOpenChange = over.onOpenChange ?? jest.fn();
-  render(<DocumentClassificationSheet open onOpenChange={onOpenChange} document={over.document ?? docFixture()} />);
-  return { onOpenChange };
+  const document = over.document ?? docFixture();
+  const { rerender } = render(<DocumentClassificationSheet open onOpenChange={onOpenChange} document={document} />);
+  /** Render again after changing what `mockView` returns: the sheet reads the cached view, and a save updates it. */
+  const refreshView = () => rerender(<DocumentClassificationSheet open onOpenChange={onOpenChange} document={document} />);
+  return { onOpenChange, refreshView };
 }
 
 const radio = (name: RegExp) => screen.getByRole("radio", { name });
@@ -224,6 +237,67 @@ describe("DocumentClassificationSheet", () => {
     expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
     expect(mockToast.error).toHaveBeenCalled();
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it("keeps the audience the person chose, and retries only the audience, when it fails to save after the classification did", async () => {
+    mockSetAudiences.mockRejectedValueOnce(
+      new ApiError("The audience could not be saved.", 500, "INTERNAL", { correlationId: "req-77" }, "/hr/documents/7/audiences"),
+    );
+    const { onOpenChange, refreshView } = renderSheet(viewFixture());
+    // The real hook writes the classification result into the cached view the moment the first request lands.
+    mockClassify.mockImplementation(async () => {
+      const saved = viewFixture({ classification: "INTERNAL", publishable: true, blockers: [] });
+      mockView.mockReturnValue({ data: saved, isError: false, error: null });
+      refreshView();
+      return { ...saved, linksTakenDown: 0 };
+    });
+
+    fireEvent.click(radio(/^internal/i));
+    fireEvent.click(await screen.findByRole("radio", { name: /selected departments or locations/i }));
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Legal" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Pune" }));
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    expect(await screen.findByText("The audience was not saved")).toBeInTheDocument();
+    expect(screen.getByText(/the classification was saved/i)).toBeInTheDocument();
+    expect(screen.getByText("req-77")).toBeInTheDocument();
+    expect(radio(/selected departments or locations/i)).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Legal" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Pune" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Finance" })).not.toBeChecked();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => expect(mockSetAudiences).toHaveBeenCalledTimes(2));
+    expect(mockSetAudiences).toHaveBeenLastCalledWith({
+      documentId: 7,
+      audiences: [{ kind: "DEPARTMENT", refId: "d2" }, { kind: "LOCATION", refId: "l1" }],
+    });
+    expect(mockClassify).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(mockToast.success).toHaveBeenCalledWith(expect.stringContaining("internal")));
+    expect(screen.queryByText("The audience was not saved")).not.toBeInTheDocument();
+  });
+
+  it("clears the effective date and sends null for it", async () => {
+    const shared = viewFixture({
+      classification: "INTERNAL",
+      effectiveDate: "2026-03-15",
+      publishable: true,
+      blockers: [],
+      audiences: [{ id: 1, kind: "ALL_EMPLOYEES", refId: null, label: null }],
+    });
+    mockClassify.mockResolvedValue({ ...shared, effectiveDate: null, linksTakenDown: 0 });
+    renderSheet(shared);
+
+    expect(screen.getByText("March 15th, 2026")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /clear effective date/i }));
+    expect(screen.getByText("No date")).toBeInTheDocument();
+    expect(screen.queryByText("March 15th, 2026")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => expect(mockClassify).toHaveBeenCalledWith({ documentId: 7, classification: "INTERNAL", effectiveDate: null }));
+    expect(mockSetAudiences).not.toHaveBeenCalled();
   });
 
   it("closes without calling the server when nothing was changed", async () => {

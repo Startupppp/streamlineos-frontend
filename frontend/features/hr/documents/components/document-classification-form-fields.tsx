@@ -2,8 +2,8 @@
 
 import { useCallback } from "react";
 import { useFormContext } from "react-hook-form";
+import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   FormControl,
@@ -13,14 +13,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useOrgDepartments } from "@/hooks/api/org-hierarchy-units";
-import { useOrgLocations } from "@/hooks/api/org-hierarchy";
 import {
   CLASSIFICATION_OPTIONS,
   type AudienceMode,
   type ClassificationFormValues,
   type ClassificationOption,
 } from "./document-classification-model";
+import { AudienceUnitPicker } from "./document-audience-unit-picker";
 
 interface ClassificationFieldsProps {
   /** Moving into Internal or Restricted needs the permission to publish documents. */
@@ -48,86 +47,6 @@ function ClassificationRadio({ option, disabledReason }: ClassificationRadioProp
   );
 }
 
-interface UnitCheckboxProps {
-  unitId: string;
-  name: string;
-  checked: boolean;
-  onToggle: (unitId: string, checked: boolean) => void;
-}
-
-function UnitCheckbox({ unitId, name, checked, onToggle }: UnitCheckboxProps) {
-  const handleCheckedChange = useCallback(
-    (next: boolean | "indeterminate") => onToggle(unitId, next === true),
-    [onToggle, unitId],
-  );
-  return (
-    <FormItem className="flex items-center gap-2">
-      <FormControl>
-        <Checkbox checked={checked} onCheckedChange={handleCheckedChange} />
-      </FormControl>
-      <FormLabel className="font-normal">{name}</FormLabel>
-    </FormItem>
-  );
-}
-
-interface UnitListProps {
-  field: "departmentIds" | "locationIds";
-  label: string;
-  units: ReadonlyArray<{ id: string; name: string }>;
-  emptyHint: string;
-}
-
-function UnitList({ field, label, units, emptyHint }: UnitListProps) {
-  const form = useFormContext<ClassificationFormValues>();
-  const selected = form.watch(field);
-
-  const handleToggle = useCallback(
-    (unitId: string, checked: boolean) => {
-      const current = form.getValues(field);
-      const next = checked ? [...new Set([...current, unitId])] : current.filter((id) => id !== unitId);
-      form.setValue(field, next, { shouldDirty: true, shouldValidate: true });
-    },
-    [field, form],
-  );
-
-  return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm font-medium text-foreground">{label}</legend>
-      {units.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{emptyHint}</p>
-      ) : (
-        <div className="grid gap-2 sm:grid-cols-2">
-          {units.map((unit) => (
-            <FormField
-              key={unit.id}
-              control={form.control}
-              name={field}
-              render={() => (
-                <UnitCheckbox unitId={unit.id} name={unit.name} checked={selected.includes(unit.id)} onToggle={handleToggle} />
-              )}
-            />
-          ))}
-        </div>
-      )}
-    </fieldset>
-  );
-}
-
-function AudienceUnitPicker() {
-  const departments = useOrgDepartments({ limit: 100 });
-  const locations = useOrgLocations({ limit: 100 });
-  const hint = departments.isPending && locations.isPending
-    ? "Loading…"
-    : "None to choose from. Departments and locations come from organisation settings.";
-
-  return (
-    <div className="flex flex-col gap-4 rounded-md border border-border p-3">
-      <UnitList field="departmentIds" label="Departments" units={departments.data?.data ?? []} emptyHint={hint} />
-      <UnitList field="locationIds" label="Locations" units={locations.data?.data ?? []} emptyHint={hint} />
-    </div>
-  );
-}
-
 const AUDIENCE_CHOICES: ReadonlyArray<{ value: AudienceMode; label: string; description: string }> = [
   { value: "HR_ONLY", label: "HR only", description: "Nobody outside HR sees it in the Knowledge Base yet." },
   { value: "ALL_EMPLOYEES", label: "All employees", description: "Every current employee." },
@@ -142,6 +61,11 @@ export function DocumentClassificationFormFields({ canPublish, sharingBlocked }:
 
   const handleEffectiveDateChange = useCallback(
     (value: string) => form.setValue("effectiveDate", value, { shouldDirty: true }),
+    [form],
+  );
+  // The date picker can only pick a date, never remove one; "" is what the form maps to null for the server.
+  const handleClearEffectiveDate = useCallback(
+    () => form.setValue("effectiveDate", "", { shouldDirty: true }),
     [form],
   );
 
@@ -180,7 +104,20 @@ export function DocumentClassificationFormFields({ canPublish, sharingBlocked }:
         name="effectiveDate"
         render={({ field }) => (
           <FormItem className="flex flex-col gap-2">
-            <FormLabel>Effective from</FormLabel>
+            <div className="flex items-center justify-between gap-2">
+              <FormLabel>Effective from</FormLabel>
+              {field.value !== "" ? (
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto p-0"
+                  aria-label="Clear effective date"
+                  onClick={handleClearEffectiveDate}
+                >
+                  Clear
+                </Button>
+              ) : null}
+            </div>
             <FormControl>
               <DatePicker value={field.value} onChange={handleEffectiveDateChange} placeholder="No date" />
             </FormControl>
