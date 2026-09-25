@@ -13,6 +13,12 @@ import {
 } from "@/hooks/api/hr/import-export";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { randomId } from "@/lib/random-id";
+import { useOrgStorageScope } from "@/lib/org-scoped-storage";
+import {
+  clearExportJobId,
+  loadExportJobId,
+  saveExportJobId,
+} from "@/features/hr/employees/employee-export-job-storage";
 
 interface EmployeeExportActionProps {
   filters: HrEmployeeExportFilters;
@@ -38,6 +44,16 @@ function exportButtonLabel(
 }
 
 export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
+  // `<orgId>::<userId>`, so the recovered job belongs to this person in this
+  // organisation and to nobody else.
+  const scope = useOrgStorageScope();
+  /**
+   * Ticket 04. Recovery is a read of the stored id and nothing else — it never
+   * POSTs, so returning to the page cannot create a second export. It happens in
+   * the effect below rather than in a lazy initialiser because this button is
+   * server-rendered, where `localStorage` does not exist: seeding state from it
+   * would make the first client render disagree with the server's markup.
+   */
   const [exportJobId, setExportJobId] = useState<string | null>(null);
   const lastNotice = useRef<string | null>(null);
   const createExport = useCreateHrEmployeeExportJob();
@@ -48,13 +64,24 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
     !exportJob.isError &&
     (job?.status === "pending" || job?.status === "running");
 
+  // Runs on mount (recovery after navigation or refresh) and again whenever the
+  // scope changes, which is how switching organisation drops the previous
+  // tenant's job instead of polling an id this tenant's server will refuse.
+  useEffect(() => {
+    setExportJobId(loadExportJobId(scope));
+    lastNotice.current = null;
+  }, [scope]);
+
   useEffect(() => {
     if (!exportJob.error) return;
+    // A stored id the server will not serve any more (purged, expired, or simply
+    // gone) must not nag on every visit.
+    clearExportJobId(scope);
     const message = getErrorMessage(exportJob.error);
     if (lastNotice.current === `error:${message}`) return;
     lastNotice.current = `error:${message}`;
     toast.error(message);
-  }, [exportJob.error]);
+  }, [exportJob.error, scope]);
 
   useEffect(() => {
     if (!job || lastNotice.current === `${job.id}:${job.status}`) return;
@@ -64,13 +91,15 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
     }
     if (job.status === "failed") {
       lastNotice.current = `${job.id}:${job.status}`;
+      clearExportJobId(scope);
       toast.error(job.errorMessage ?? "Employee export failed. Try again.");
     }
     if (job.status === "expired") {
       lastNotice.current = `${job.id}:${job.status}`;
+      clearExportJobId(scope);
       toast.info("This employee export expired. Create a new export.");
     }
-  }, [job]);
+  }, [job, scope]);
 
   const startExport = useCallback(() => {
     createExport.mutate(
@@ -78,23 +107,25 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
       {
         onSuccess: (createdJob) => {
           lastNotice.current = null;
+          saveExportJobId(scope, createdJob.id);
           setExportJobId(createdJob.id);
           toast.success("Employee export queued. You can keep working while it is prepared.");
         },
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
-  }, [createExport, filters]);
+  }, [createExport, filters, scope]);
 
   const download = useCallback(() => {
     if (!job || job.status !== "completed") return;
     downloadExport.mutate(job.id, {
       onError: (error) => {
+        clearExportJobId(scope);
         setExportJobId(null);
         toast.error(getErrorMessage(error));
       },
     });
-  }, [downloadExport, job]);
+  }, [downloadExport, job, scope]);
 
   const handleClick = useCallback(() => {
     if (exportJob.isError) {
