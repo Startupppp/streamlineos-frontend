@@ -69,6 +69,7 @@ Current release-candidate checks:
 - `pnpm build`: pass; all 482 application routes completed production compilation and page generation.
 - The canonical Windows `pnpm build` invocation now uses Node's cross-platform memory flag in frontend commit `c2ae44ac4`; it completed successfully with all 482 generated pages after the script fix.
 - Focused affected-surface matrix: 15 suites, 192 tests passed.
+- Build-only Jest matrix: 188 suites and 1,424 tests pass after aligning the portfolio detail assertion with the shared cursor paginator.
 - Workflow assertion-cleanup matrix: nine suites, 94 tests passed.
 - `check:pm-workspace-removal`: pass across source and built chunks.
 - `check:route-access-contract`: pass.
