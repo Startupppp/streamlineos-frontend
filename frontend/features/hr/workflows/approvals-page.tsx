@@ -16,7 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   CONTENT_FILL_PANEL,
@@ -227,13 +228,16 @@ export function HrApprovalsPage() {
   const actedPage = actedCursorHistory.length;
   const actedCursor = actedCursorHistory.at(-1);
 
-  const { data: inboxData, isLoading: inboxLoading, isError: inboxError, refetch: refetchInbox } = useWorkflowInbox();
+  const { data: inboxData, isLoading: inboxLoading, isError: inboxError, refetch: refetchInbox, access: inboxAccess } = useWorkflowInbox();
+  // The delegation endpoints are keyed on hr:workflows:view, not :approve (FE-44).
+  const canDelegate = useCan("hr:workflows:view");
   const {
     data: actedData,
     isLoading: actedLoading,
     isFetching: actedFetching,
     isError: actedError,
     refetch: refetchActed,
+    access: actedAccess,
   } = useWorkflowActed(
     { cursor: actedCursor, limit: 50 },
     { enabled: activeTab === "acted" },
@@ -284,15 +288,17 @@ export function HrApprovalsPage() {
       title="Approvals"
       subtitle="Review and act on pending approval requests"
       actions={
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleOpenDelegation}
-          className="gap-1.5"
-        >
-          <UserCheck className="h-4 w-4" />
-          My delegations
-        </Button>
+        canDelegate ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleOpenDelegation}
+            className="gap-1.5"
+          >
+            <UserCheck className="h-4 w-4" />
+            My delegations
+          </Button>
+        ) : undefined
       }
     >
       <motion.div
@@ -337,7 +343,14 @@ export function HrApprovalsPage() {
             ) : (
               <div className="flex min-h-0 flex-1 flex-col">
                 <PendingLeaveApprovals />
-                {pendingLeaveCount > 0 && inbox.length === 0 && !inboxLoading ? null : (
+                {inboxAccess.denied ? (
+                  pendingLeaveCount > 0 ? null : (
+                    <NoPermissionState
+                      permission="hr:workflows:approve"
+                      description="You can't approve workflow requests, so this queue can't be shown to you."
+                    />
+                  )
+                ) : pendingLeaveCount > 0 && inbox.length === 0 && !inboxLoading ? null : (
                   <InstanceList
                     instances={inbox}
                     isLoading={inboxLoading}
@@ -352,7 +365,9 @@ export function HrApprovalsPage() {
           </TabsContent>
 
           <TabsContent value="acted" className="flex min-h-0 flex-1 flex-col">
-            {actedError ? (
+            {actedAccess.denied ? (
+              <NoPermissionState permission="hr:workflows:approve" />
+            ) : actedError ? (
               <ErrorState
                 className="flex-1"
                 title="Couldn't load history"

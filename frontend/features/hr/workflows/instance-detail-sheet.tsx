@@ -27,6 +27,7 @@ import {
   type HrWorkflowInstanceStatus,
 } from "@/types/hr/workflows";
 import { getUserDisplayName } from "@/lib/person-display";
+import { useCan } from "@/hooks/api/access";
 
 const rejectSchema = z.object({ comment: z.string().min(1, "Comment is required") });
 type RejectForm = z.infer<typeof rejectSchema>;
@@ -61,6 +62,7 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
   const approve = useApproveInstance();
   const reject = useRejectInstance();
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const canApprove = useCan("hr:workflows:approve");
 
   const rejectForm = useForm<RejectForm>({
     resolver: zodResolver(rejectSchema),
@@ -75,7 +77,7 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
       { instanceId },
       {
         onSuccess: () => {
-          toast.success("Approved");
+          toast.success("Request approved");
           onClose();
         },
         onError: (err) => toast.error(getErrorMessage(err)),
@@ -89,7 +91,7 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
       { instanceId, comment: data.comment },
       {
         onSuccess: () => {
-          toast.success("Rejected");
+          toast.success("Request rejected");
           setShowRejectForm(false);
           onClose();
         },
@@ -98,11 +100,23 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
     );
   }, [reject, instanceId, onClose]);
 
+  function handleShowRejectForm() {
+    setShowRejectForm(true);
+  }
+
+  function handleHideRejectForm() {
+    setShowRejectForm(false);
+  }
+
+  function handleSheetOpenChange(open: boolean) {
+    if (!open) onClose();
+  }
+
   const statusCfg = instance ? STATUS_CONFIG[instance.status] : null;
-  const canAct = showActions && instance && (instance.status === "in_progress" || instance.status === "pending");
+  const canAct = showActions && canApprove && instance && (instance.status === "in_progress" || instance.status === "pending");
 
   return (
-    <Sheet open={instanceId !== null} onOpenChange={(v) => !v && onClose()}>
+    <Sheet open={instanceId !== null} onOpenChange={handleSheetOpenChange}>
       <SheetContent side="right" className="flex flex-col p-0 gap-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
           <div className="flex items-center gap-2">
@@ -220,7 +234,7 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
                             >
                               Confirm Reject
                             </LoadingButton>
-                            <Button variant="outline" size="sm" onClick={() => setShowRejectForm(false)}>
+                            <Button variant="outline" size="sm" onClick={handleHideRejectForm} disabled={reject.isPending}>
                               Cancel
                             </Button>
                           </div>
@@ -240,7 +254,8 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowRejectForm(true)}
+                          onClick={handleShowRejectForm}
+                          disabled={approve.isPending}
                           className="flex-1 text-destructive border-destructive hover:bg-destructive/10"
                         >
                           <XCircle className="h-3.5 w-3.5 mr-1" />
