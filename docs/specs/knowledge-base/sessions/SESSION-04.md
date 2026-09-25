@@ -82,16 +82,31 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       list. No change made; pre-existing state.
 - [x] No page body in Web Storage: keep `page-document-no-storage.test.ts` biting, and extend it
       across logout, org switch, and revocation.
-      Extended with tests (c) and (d) for API-call pattern. Logout/org-switch extension deferred —
-      those paths go through `lib/org-scoped-storage.tsx` which this session does not own.
+      Extended with tests (c) and (d) for API-call pattern. Logout/org-switch/revocation extension
+      completed 2026-09-25 as tests (e), (f) and (g) — 8/8 pass.
+      What the measurement found: `lib/org-scoped-storage.tsx` touches no storage at all. It is a
+      pure context provider handing out a scope string, and `QueryProvider` remounts the subtree on
+      `key={scope}`, so the previous scope's keys become **unreachable** rather than cleared.
+      Autosave holds pending content in refs and flushes to the API on unmount — there is no
+      storage fallback to leak. The only wiki storage writes are two UI-preference keys
+      (`wiki-right-panel-collapsed`, `wiki-nav-groups`), neither carrying content.
+      So there was no defect; the three tests exist to stop one being introduced — the realistic
+      regression is a well-meaning "rescue the draft to localStorage on a failed save".
 - [ ] Unauthorized and missing are indistinguishable 404s.
       DEFERRED: checked `kb-page-document.service.ts` — the endpoint uses NestJS's
       `NotFoundException` for both cases (no file ownership for that service in this session).
-- [ ] Mobile metadata and comments sheets; every desktop capability has a 375 px path.
-      PARTIAL: linked records now has a mobile Sheet path (`page-right-panel.tsx`). Metadata sheet
-      (`page-metadata-sheet.tsx`) is already a Sheet component triggered from toolbar; comments
-      sheet is similarly triggered via `onOpenComments` prop. No new mobile paths needed beyond the
-      panel fix.
+- [x] Mobile metadata and comments sheets; every desktop capability has a 375 px path.
+      Re-checked by enumeration 2026-09-25, because the original note asserted "no new mobile paths
+      needed" without listing the capabilities. All thirteen enumerated and each traced to a trigger:
+      `page-document.tsx:276` renders the sticky header at every breakpoint, and the toolbar
+      container at `page-document-toolbar.tsx:165` is `flex items-center gap-1.5 shrink-0` — no
+      `hidden`, no `md:`/`lg:` gate — so AI actions, share, and the "More options" menu (metadata,
+      comments, history) are all in the 375 px tab order. Linked records reaches mobile through the
+      `xl:hidden` floating trigger at `page-right-panel.tsx:184` (`aria-label="Open details panel"`).
+      The six trust-header fields render inline in a `flex flex-wrap`.
+      Verified in jsdom only: triggers exist, are not `aria-hidden`, are not inside desktop-only
+      containers. **Not** verified: real-browser focus behaviour and header overflow at 375 px with
+      a long breadcrumb — jsdom cannot see layout overflow.
 - [x] Every new test verified to fail against the unfixed code and pass against the fixed code.
 - [ ] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
       PENDING ORCHESTRATOR GATE — coordinator halted all full typechecks during session.

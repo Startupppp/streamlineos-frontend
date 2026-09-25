@@ -55,9 +55,19 @@ Migration: `backend/migrations/1212_kb_indexed_bytes_quota.sql` + its rollback.
 - [x] Streaming stop and retry; network-loss recovery; copy; helpful/unhelpful; report wrong or
       stale; create knowledge gap.
 - [x] Conversation rail: new, search, rename, delete, cursor-paginated.
-- [x] Tenant quotas enforced and surfaced: requests, tokens, concurrent streams, **indexed bytes**,
+- [ ] Tenant quotas enforced and surfaced: requests, tokens, concurrent streams, **indexed bytes**,
       research jobs. `1212` adds the indexed-bytes accounting, tenant-leading, with a rollback and
       a postcondition.
+      **REOPENED by the orchestrator 2026-09-25.** `1212` is applied to production (journal idx
+      1094, table verified present) but **nothing reads or writes it.** `grep -rn` across
+      `backend/src` and `backend/test` for `kb_indexed_bytes_quota`, `indexedBytes`, `limit_bytes`
+      and the literal `536870912` returns zero hits. The migration landed; the enforcement it
+      exists to serve was never written, so this session's own opening statement — "one tenant can
+      index without bound" — is still true. Writing the table is not enforcing the quota.
+      Remaining work: reserve/consume `indexed_bytes` on the source-indexing path before accepting
+      a new source, refuse over-cap with a 402 naming the limit (BE-23), and initialise the row on
+      first write. The 402 surface already exists (`knowledge-base-page.tsx:235-238`) and is inert
+      until something raises it.
 - [x] Over-quota is a clear, actionable state with the limit named — not a generic error.
 - [x] `kb:ai:generate` plus read access required on generation routes; history routes stay on
       `kb:pages:view`. `kb-ask-generate-permission.spec.ts` pins this — keep it passing.
