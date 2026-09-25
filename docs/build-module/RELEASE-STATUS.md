@@ -28,7 +28,7 @@ complete product definition of done.
 | 3. Planning and product management | Complete for the current release | Roadmap, Goals, Programs, Portfolios, Managed Products, Releases, Milestones, Reports, Analytics, and Workload parent routes passed authenticated browser verification. |
 | 4. Collaboration and external workflows | Complete for the current release | Client Portal, client access, change requests, Feedbucket, forms, approvals, updates, chat, and meetings parent routes passed authenticated browser verification. |
 | 5. Execution and governance | Complete for the current release | QA, incidents, risks, decisions, automations, webhooks, files, wiki, whiteboard, workflow settings, project settings, and integrations parent routes passed authenticated browser verification. |
-| 6. Performance and UX hardening | Partially verified | Build cache focus sync, mobile overflow, ticket-detail drawer behavior, contract parsing, route access, feature cycles, and workspace-removal checks are verified. The current production build has eight route-bundle budget breaches, including `/build/inbox` and `/build/my-work`; the bundle contract was remeasured against build `5NMve5o-mHy-mRYQjxN91`. The My Work lazy panel change did not lower the measured first-load total. |
+| 6. Performance and UX hardening | Partially verified | Build cache focus sync, mobile overflow, ticket-detail drawer behavior, contract parsing, route access, feature cycles, and workspace-removal checks are verified. Fresh build `pbXZoKVBF7wCmr_bCnlWo` measured all 13 declared route bundles and confirmed eight first-load JS breaches, including `/build/inbox` at 660,565 bytes and `/build/my-work` at 664,385 bytes against the 524,288-byte ceiling. The attempted Inbox lazy split regressed the existing render contract and was reverted. |
 | 7. Release verification | Partially verified | Authenticated production smoke passed for the ticket-detail route observed in this audit. Migration `1197` is verified; the live migration ledger has zero pending rows but still fails its orphan-row integrity gate, and current deployment identity and the full browser matrix remain open. |
 
 "Complete for the current release" does not mean the aspirational P1/P2 competitor backlog is finished. Those future product investments remain explicitly listed in `06-prioritized-backlog.md`.
@@ -66,7 +66,7 @@ Current release-candidate checks:
 
 - `pnpm type-check`: pass.
 - `pnpm type-check:specs`: pass.
-- `pnpm build`: pass; all 480 application routes completed production compilation and page generation.
+- `pnpm build`: pass; all 482 application routes completed production compilation and page generation.
 - The canonical Windows `pnpm build` invocation now uses Node's cross-platform memory flag in frontend commit `c2ae44ac4`; it completed successfully with all 482 generated pages after the script fix.
 - Focused affected-surface matrix: 15 suites, 192 tests passed.
 - Workflow assertion-cleanup matrix: nine suites, 94 tests passed.
@@ -74,6 +74,7 @@ Current release-candidate checks:
 - `check:route-access-contract`: pass.
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
+- Fresh route-bundle measurement for build `pbXZoKVBF7wCmr_bCnlWo`: 13 routes measured, zero pending measurements, eight first-load JS budget breaches; the gate fails with the breaches visible rather than treating them as inconclusive.
 - `git diff --check`: pass.
 - Latest frontend Build navigation, filtered board-count, malformed-filter normalization, portfolio-search, Command Center title consistency, retry-refresh, stale-detail recovery, expected missing-record telemetry, invalid project-id rejection, dirty-navigation protection, scope-switch stale-data fixes, project-scoped ticket-detail cache identity, cross-tab access/entitlement freshness hardening, and the All Work navigation typecheck fix are on `origin/main` at the current release commit:
   backlog, My Work, draft, and keyboard shortcut navigation now use the shared
