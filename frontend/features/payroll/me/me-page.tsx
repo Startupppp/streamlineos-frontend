@@ -213,7 +213,7 @@ export function MyPayrollPageContent() {
         filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
         filters={
           <>
-            <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3}>
+            <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3} stackOnMobile>
               <StatCard
                 label="Net Pay Last Month"
                 value={
@@ -269,13 +269,19 @@ export function MyPayrollPageContent() {
               />
             </StatCardGrid>
 
-            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide">
-              <TabsList className="shrink-0">
+            {/*
+              The tab strip wraps onto as many rows as it needs, at every width,
+              instead of scrolling. There are up to nine sections and the scroll
+              was hidden: "Salary Structure" was half a label at 390, and with
+              the sidebar open the last four tabs sat past the edge at 1024.
+            */}
+            <div className="flex min-w-0 flex-wrap items-stretch gap-2">
+              <TabsList className="h-auto min-h-9 shrink-0 flex-wrap justify-start overflow-visible">
                 {sections.map((section) => (
                   <TabsTrigger
                     key={section.id}
                     value={section.id}
-                    className="gap-1.5 whitespace-nowrap"
+                    className="flex-none gap-1.5 whitespace-nowrap"
                   >
                     {section.label}
                   </TabsTrigger>
