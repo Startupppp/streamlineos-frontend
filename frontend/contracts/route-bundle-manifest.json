@@ -56,8 +56,8 @@
     "/mail": {
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 509697,
-      "measuredPageChunkBytes": 55754,
+      "measuredFirstLoadJsBytes": 509639,
+      "measuredPageChunkBytes": 55769,
       "lazyLoadedModules": [
         "mail-compose-sheet",
         "mail-ai-compose-toolbar",
@@ -79,8 +79,8 @@
     "/inbox": {
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 522664,
-      "measuredPageChunkBytes": 68721,
+      "measuredFirstLoadJsBytes": 522613,
+      "measuredPageChunkBytes": 68743,
       "lazyLoadedModules": [
         "notification-detail-drawer"
       ],
@@ -100,8 +100,8 @@
     "/build/inbox": {
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 609624,
-      "measuredPageChunkBytes": 159256,
+      "measuredFirstLoadJsBytes": 609560,
+      "measuredPageChunkBytes": 159265,
       "lazyLoadedModules": [
         "inbox-ticket-preview"
       ],
@@ -122,8 +122,8 @@
     "/crm/inbox": {
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 591708,
-      "measuredPageChunkBytes": 134192,
+      "measuredFirstLoadJsBytes": 591642,
+      "measuredPageChunkBytes": 134194,
       "lazyLoadedModules": [],
       "note": "CRM inbox — deals and contact conversations. PASSES: 487kB < 614kB ceiling",
       "measuredCssBytes": 59021,
@@ -141,8 +141,8 @@
     "/support/inbox": {
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 668291,
-      "measuredPageChunkBytes": 177312,
+      "measuredFirstLoadJsBytes": 668238,
+      "measuredPageChunkBytes": 177327,
       "lazyLoadedModules": [
         "ticket-detail-with-ably",
         "create-ticket-dialog"
@@ -165,7 +165,7 @@
       "maxFontBytes": 131072,
       "maxThirdPartyBytes": 102400,
       "maxServerPayloadBytes": 40960,
-      "measuredFirstLoadJsBytes": 557919,
+      "measuredFirstLoadJsBytes": 557851,
       "measuredPageChunkBytes": 0,
       "lazyLoadedModules": [
         "clock-in-widget",
@@ -208,8 +208,8 @@
         "ai-actions-menu"
       ],
       "note": "Chat home — realtime surface; the widest client-state route in the shell. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size. 2026-09-04: measuredFirstLoadJsBytes 436828 -> 347566 and measuredPageChunkBytes 165602 -> 76342 (-89262 B gzip, -53.9% of the page-only figure), measured A/B on two production builds of the same commit.",
-      "measuredFirstLoadJsBytes": 505109,
-      "measuredPageChunkBytes": 51166,
+      "measuredFirstLoadJsBytes": 505057,
+      "measuredPageChunkBytes": 51187,
       "measuredScriptBytes": 495254,
       "measuredTotalBytes": 637866,
       "measuredCssBytes": 59021,
@@ -235,8 +235,8 @@
         "meeting-prep-panel"
       ],
       "note": "Unified calendar — one route serves every module's event sources. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 549928,
-      "measuredPageChunkBytes": 66097,
+      "measuredFirstLoadJsBytes": 549860,
+      "measuredPageChunkBytes": 66102,
       "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
       "measuredScriptBytes": 507589,
       "measuredTotalBytes": 650524,
@@ -275,8 +275,8 @@
         "settings-edit-name-form"
       ],
       "note": "Global administration landing. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 480451,
-      "measuredPageChunkBytes": 30175,
+      "measuredFirstLoadJsBytes": 480340,
+      "measuredPageChunkBytes": 30137,
       "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
       "measuredScriptBytes": 482030,
       "measuredTotalBytes": 624930,
@@ -294,8 +294,8 @@
         "grouping-sidebar"
       ],
       "note": "Build my-work — one of the heaviest first-load routes in the build (3.02 MB uncompressed). Current measurement is 664060 bytes gzip(9), above the 524288-byte default ceiling. The route inherits the default ceiling; the display-options panel is lazy-loaded, but this build did not reduce the measured first-load total. Reduce shared shell and view payload weight before changing the budget.",
-      "measuredFirstLoadJsBytes": 644715,
-      "measuredPageChunkBytes": 190774,
+      "measuredFirstLoadJsBytes": 644655,
+      "measuredPageChunkBytes": 190782,
       "measuredScriptBytes": 512444,
       "measuredTotalBytes": 656262,
       "measuredCssBytes": 59021,
@@ -319,8 +319,8 @@
         "lead-actions"
       ],
       "note": "CRM leads. The route's own first load is the header, stats, filters and the empty/error states; the board, the funnel, both sheets, the export dialog and the rendered table (with the tenant layout, the record projection and the row menu behind it) are all next/dynamic. It inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 619801,
-      "measuredPageChunkBytes": 162285,
+      "measuredFirstLoadJsBytes": 619752,
+      "measuredPageChunkBytes": 162304,
       "breachOwnerNote": "Breach CLOSED 2026-09-07 on build zDxhwA5Fv-cebeVFECmUD: measuredScriptBytes 541,869 -> 480,636 (43,652 under the 524,288 ceiling). The earlier note claimed the 541,869 figure was a stale 2026-09-02 capture that overstated; that is wrong and is retracted — the 2026-09-06 capture on build 0IC5b2bqJGAhjVaGKGF9O reproduced 541,869 exactly, so the breach was current. Three changes closed it, largest first: (1) Zod's whole runtime (239,553 B raw / 53,875 B gzip) had re-entered the FIRST LOAD OF EVERY AUTHENTICATED ROUTE through a value import of three contracts in hooks/api/notifications-inbox.ts, which the sidebar imports — the three are now lazyContract, the contracts still parse every response; (2) features/crm/leads/use-lead-mutations.ts imported the hooks/api/crm barrel for useCreateDeal, dragging 15 unrelated CRM hook modules and, through them, the aggregate lib/query-keys (185,016 B raw over 32 modules) — now a deep import, with hooks/api/crm/deals.ts and hooks/api/crm/metadata.ts taking their key slices directly; (3) the rendered table moved behind its own next/dynamic boundary (features/crm/leads/lead-record-table.tsx), deferring the tenant layout, the record projection and the row menu (80,307 B raw over 14 modules). Deterministic first-load chunk total fell 326,344 -> 312,714 B gzip(9); route-only additive 56,993 -> 40,882.",
       "byteCaptureNote": "Captured 2026-09-07 against a local production server (next start, NEXT_PUBLIC_API_URL pointed at the local API) with a minted session for a seeded CRM tenant carrying 960 leads; the driver's landed-path guard passed, so these are this route's own cold-cache bytes and not another page's. The 2026-09-02 run recorded no byte pass at all: it landed on /signin after a refused /me/access and the driver discards byte totals for a page it did not ask for.",
       "measuredScriptBytes": 480636,
@@ -351,8 +351,8 @@
       "measuredServerPayloadBytes": 23495,
       "measuredPostLoadScriptBytes": 189902,
       "measuredPostLoadTotalBytes": 228743,
-      "measuredFirstLoadJsBytes": 480170,
-      "measuredPageChunkBytes": 29894
+      "measuredFirstLoadJsBytes": 480113,
+      "measuredPageChunkBytes": 29910
     }
   },
   "budgetExceptions": [
@@ -400,6 +400,6 @@
     "singleProvenanceCapture2026_09_04": "SINGLE PROVENANCE as of 2026-09-04 — every measured* field on all 13 routes comes from ONE production build, h78Aubv4S3ix5PvUdHHKo (npx next build, exit 0, 466 static pages). measuredFirstLoadJsBytes and measuredPageChunkBytes were written by `node scripts/measure-route-bundles.mjs --write` off that build's .next; every over-the-wire field was written by `node scripts/measure-web-vitals.mjs --base-url=http://localhost:1777 --cookie-file=<local> --first-party-origins=http://localhost:1721 --routes=/dashboard --byte-routes=<13> --repeat=2 --write-manifest` against a `next start` of that same build, serverMode DERIVED production, authorization 'every measured sample rendered an authorized shell'. HARNESS CAVEAT, stated rather than hidden: the build was made with NEXTAUTH_URL/NEXT_PUBLIC_APP_URL=http://localhost:1777 and NEXT_PUBLIC_API_URL=http://localhost:1721 (a backend booted for this capture against the local scratch_t30_browser seed with CORS for :1777), because the repo .env points at :1500 where nothing listens and the backend already running on this machine answers CORS for :1000 and :3000 only, both of which were occupied. REPRODUCIBILITY, measured rather than assumed: the byte pass was run FOUR times back-to-back on this build and measuredScriptBytes came out BYTE-IDENTICAL on 11 of 13 routes every time. The two that move are /mail (507,379 / 520,682 / 507,379 / 514,538) and /chat (643,109 / 820,999 / 1,116,501 / 897,897). /chat's spread is the route's own behaviour, not instrument noise: it opens a realtime connection on mount, and how many of its next/dynamic surfaces resolve before the load event depends on whether a conversation auto-opens. The figure recorded here is the last run's; quote the range, not the point, when arguing about /chat. NEWLY REVEALED, not newly caused: /chat's measuredTotalBytes now breaches maxTotalBytes. The previous recorded 965,524 came from the 2026-09-03 capture on a different build; on this build /chat's cold-cache total measured 794,039 / 981,123 / 1,300,978 / 1,065,625 across the four runs, so it is over 1,048,576 in three of four. That is the first time this manifest's loosest budget has ever rejected anything.",
     "deferredSurfaces2026_09_04": "What moved on this build, measured on measuredFirstLoadJsBytes (gzip(9) over the route's client-reference manifest), against build jsZ4Sk8mVF-4XGtxc465O on the same machine: (1) the authenticated shell's branded loading screen now sits behind components/ui/app-loading-screen-lazy.tsx — the layout prefetches /me/access on the server and hydrates it, so on a normal load that Framer Motion composition is paid for and never rendered; (2) components/layout/mobile/mobile-shell-fab.tsx keeps only the button, and its sheet plus the account menu it opens live in mobile-shell-fab-panel.tsx, mounted on first open; (3) the workspace switcher's body (org-switcher-panel.tsx) and the account menu's body (user-avatar-menu-body.tsx) load on first open — Radix mounts a menu's content only while it is open, so a next/dynamic boundary inside the content is enough, and the trigger stays eager; (4) LeaveOrganizationDialog mounts on first request instead of on hydration; (5) /settings' security and MFA sections, both below the profile card, load after first paint via features/settings/settings-security-section.tsx. Together (1)-(4) took 6,543-7,065 B gzip and one chunk off EVERY one of the 13 governed routes; (5) took a further 39,477 B gzip and 5 chunks off /settings alone. All 13 routes are now inside maxFirstLoadJsBytes and maxPageChunkBytes; /build/my-work fell 550,153 -> 352,531 and /crm/leads 550,951 -> 350,104. NOT DONE, and priced so the decision has an owner: /chat's realtime SDK is 48,850 B encoded and cannot be deferred behind next/dynamic, because ably/react's useAbly() reads the client synchronously from context in nine chat modules and throws without a provider — deferring it needs a queueing shim, not a lazy boundary. Framer Motion (41,196 B gzip across two chunks) is on 461 of 462 built routes and cannot leave the shell while the 90 animated icons ship. lib/query-keys.ts is 12,888 B gzip in every first load and is not tree-shakeable — `queryKeys` is one object spread from 16 modules, and 481 files import it."
   },
-  "buildId": "njqfMniGviTkev35P452-",
-  "measuredAt": "2026-09-25T15:46:48.128Z"
+  "buildId": "9kF2UvxqDKQsMSSeU_4Ln",
+  "measuredAt": "2026-09-25T17:01:57.021Z"
 }
