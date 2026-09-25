@@ -44,6 +44,24 @@ function formatDate(val: unknown): string {
   return val.slice(0, 10);
 }
 
+interface ActivateVersionButtonProps {
+  versionId: number;
+  isPending: boolean;
+  disabled: boolean;
+  onActivate: (id: number) => void;
+}
+
+function ActivateVersionButton({ versionId, isPending, disabled, onActivate }: ActivateVersionButtonProps) {
+  function handleClick() {
+    onActivate(versionId);
+  }
+  return (
+    <LoadingButton size="sm" variant="outline" isPending={isPending} disabled={disabled} onClick={handleClick}>
+      Activate
+    </LoadingButton>
+  );
+}
+
 export function PolicyVersionsPage() {
   const canManage = useCan("hr:policies:manage");
 
@@ -77,6 +95,14 @@ export function PolicyVersionsPage() {
     setQueriedId(parsed);
   }, [idInput]);
 
+  function handleIdInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setIdInput(e.target.value);
+  }
+
+  function handleIdKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") handleSearch();
+  }
+
   const [activatingId, setActivatingId] = useState<number | null>(null);
 
   const handleActivate = useCallback(
@@ -97,7 +123,7 @@ export function PolicyVersionsPage() {
       subtitle="Browse version lineage and rollback policies, templates, and workflows"
     >
       <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
-      <div className="flex flex-1 min-h-0 flex-col gap-4 px-4 sm:px-6 py-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4 py-4">
         <div className={FILTER_TOOLBAR_ROW}>
           <Select
             value={entity}
@@ -115,11 +141,13 @@ export function PolicyVersionsPage() {
           <Input
             placeholder="Enter ID..."
             value={idInput}
-            onChange={(e) => setIdInput(e.target.value)}
-            className="text-xs w-32"
-            onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+            onChange={handleIdInputChange}
+            className="w-32"
+            inputMode="numeric"
+            aria-label={`${entity} ID`}
+            onKeyDown={handleIdKeyDown}
           />
-          <Button size="sm" className="text-xs" onClick={handleSearch}>
+          <Button type="button" size="sm" onClick={handleSearch}>
             View history
           </Button>
         </div>
@@ -168,16 +196,12 @@ export function PolicyVersionsPage() {
                   </Badge>
                   <span className="text-xs text-muted-foreground flex-1">{formatDate(dateVal)}</span>
                   {canManage && !isActiveVersion && entity === "policy" && (
-                    <LoadingButton
-                      size="sm"
-                      variant="outline"
-                      className="text-xs"
+                    <ActivateVersionButton
+                      versionId={item.id}
                       isPending={activate.isPending && activatingId === item.id}
                       disabled={activate.isPending}
-                      onClick={() => handleActivate(item.id)}
-                    >
-                      Activate
-                    </LoadingButton>
+                      onActivate={handleActivate}
+                    />
                   )}
                 </div>
               );

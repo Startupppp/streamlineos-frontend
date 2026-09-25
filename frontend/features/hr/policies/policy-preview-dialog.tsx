@@ -16,6 +16,8 @@ import { UserCombobox } from "@/components/ui/user-combobox";
 import { usePolicyPreview } from "@/hooks/api/hr/policies";
 import { SCOPE_TYPE_LABELS } from "@/types/hr/policies";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { getTodayString } from "@/lib/date-utils";
 
 interface Props {
   policyId: number;
@@ -25,18 +27,22 @@ interface Props {
 
 export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
   const [employeeId, setEmployeeId] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(getTodayString);
   const [queryParams, setQueryParams] = useState<{
     employeeId: string;
     date: string;
   } | null>(null);
 
-  const { data, isFetching } = usePolicyPreview(policyId, queryParams);
+  const { data, isFetching, isError, error } = usePolicyPreview(policyId, queryParams);
 
   const handleRun = useCallback(() => {
     if (!employeeId.trim() || !date) return;
     setQueryParams({ employeeId: employeeId.trim(), date });
   }, [employeeId, date]);
+
+  function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setDate(e.target.value);
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -63,15 +69,14 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
               </Label>
               <Input
                 type="date"
-                className="text-xs"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={handleDateChange}
               />
             </div>
           </div>
 
           <LoadingButton
-            className="w-full h-8 text-sm"
+            className="w-full"
             isPending={isFetching}
             loadingText="Evaluating..."
             onClick={handleRun}
@@ -82,7 +87,10 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
 
           {queryParams && !isFetching && (
             <div className="rounded-lg border border-border p-3 space-y-3 bg-muted/30">
-              {data ? (
+              {isError ? (
+                // An error is not "no policy matched".
+                <p className="text-xs text-destructive text-center py-2">{getErrorMessage(error)}</p>
+              ) : data ? (
                 <>
                   <div className="flex items-center justify-between gap-2 min-w-0">
                     <TruncatedText text={data.policy.name ?? ""} className="text-sm font-medium min-w-0 flex-1" />

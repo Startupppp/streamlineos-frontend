@@ -13,6 +13,9 @@ import type { HrPolicy } from "@/types/hr/policies";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PolicyConflictBanner } from "./policy-conflict-banner";
+import { isApiError } from "@/lib/api-envelope";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-border",
@@ -48,9 +51,9 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
           setForceArmed(false);
         },
         onError: (err) => {
-          const message = getErrorMessage(err);
-          toast.error(message);
-          if (message.toLowerCase().includes("conflict")) {
+          toast.error(getErrorMessage(err));
+          // FE-78: the backend answers a scope/date conflict with 409.
+          if (isApiError(err) && err.status === 409) {
             setForceArmed(true);
           }
         },
@@ -63,6 +66,14 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
       onSuccess: () => toast.success("Policy archived"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
+  }
+
+  function handleActivateClick() {
+    handleActivate(false);
+  }
+
+  function handleForceActivateClick() {
+    handleActivate(true);
   }
 
   const canActivateSafely = conflicts.data?.canActivate !== false;
@@ -99,7 +110,7 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
                   size="sm"
                   className="text-xs"
                   isPending={activate.isPending}
-                  onClick={() => handleActivate(false)}
+                  onClick={handleActivateClick}
                   disabled={conflicts.isLoading}
                 >
                   Activate
@@ -110,7 +121,7 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
                     variant="destructive"
                     className="text-xs"
                     isPending={activate.isPending}
-                    onClick={() => handleActivate(true)}
+                    onClick={handleForceActivateClick}
                   >
                     Force activate
                   </LoadingButton>
@@ -118,15 +129,20 @@ export function PolicyVersionHistory({ policy, canManage }: Props) {
               </>
             )}
             {policy.status !== "archived" && (
-              <LoadingButton
-                variant="outline"
-                size="sm"
-                className="text-xs text-muted-foreground"
+              <ConfirmDialog
+                trigger={
+                  <Button type="button" variant="outline" size="sm" className="text-xs text-muted-foreground">
+                    Archive
+                  </Button>
+                }
+                title="Archive this policy?"
+                description="An archived policy stops applying to employees."
+                confirmLabel="Archive"
+                destructive
+                keepOpenOnConfirm
                 isPending={archive.isPending}
-                onClick={handleArchive}
-              >
-                Archive
-              </LoadingButton>
+                onConfirm={handleArchive}
+              />
             )}
           </div>
         )}
