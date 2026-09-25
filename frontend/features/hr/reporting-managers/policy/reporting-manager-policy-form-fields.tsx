@@ -83,8 +83,12 @@ export function ReportingManagerPolicyFormFields({ form, defaultManager, readOnl
             <FormControl>
               <RadioGroup value={field.value} onValueChange={handleFallbackOrderChange} className="gap-3">
                 {FALLBACK_ORDER_OPTIONS.map((option) => (
-                  <label key={option.value} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3">
-                    <RadioGroupItem value={option.value} className="mt-0.5" />
+                  <label
+                    key={option.value}
+                    htmlFor={`fallback-order-${option.value}`}
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3"
+                  >
+                    <RadioGroupItem id={`fallback-order-${option.value}`} value={option.value} className="mt-0.5" />
                     <span className="flex flex-col gap-0.5">
                       <span className="text-sm font-medium">{option.label}</span>
                       <span className="text-dense text-muted-foreground">{option.description}</span>
