@@ -11,6 +11,14 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(currentQuery),
 }));
 
+let pageStateKind: "loading" | "denied" = "loading";
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () =>
+    pageStateKind === "denied"
+      ? { kind: "denied", permission: "hr:employees:view" }
+      : { kind: "loading" },
+}));
+
 jest.mock("./use-org-chart", () => ({
   useHrOrgChart: () => ({ isPending: true, isError: false, error: null, data: undefined, refetch: jest.fn() }),
 }));
@@ -20,6 +28,7 @@ describe("org chart search keeps every character the person types", () => {
     jest.useFakeTimers();
     replace.mockClear();
     currentQuery = "";
+    pageStateKind = "loading";
   });
 
   afterEach(() => {
@@ -51,5 +60,11 @@ describe("org chart search keeps every character the person types", () => {
 
     await user.type(input, "x");
     expect(input).toHaveValue("hhx");
+  });
+
+  it("tells a caller without hr:employees:view they are denied, not an endless skeleton", () => {
+    pageStateKind = "denied";
+    render(<OrgChartPage />);
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
   });
 });
