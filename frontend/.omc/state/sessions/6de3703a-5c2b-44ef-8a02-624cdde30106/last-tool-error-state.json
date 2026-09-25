@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"grep -n \\\"export const\\\\|PERMISSION\\\" lib/rbac/permissions.ts | head -20; wc -l lib/rbac/permissions.ts\",\"description\":\"Inspect permission catalog\"}",
-  "error": "Exit code 1\nugrep: warning: lib/rbac/permissions.ts: No such file or directory\nwc: lib/rbac/permissions.ts: open: No such file or directory",
-  "timestamp": "2026-09-25T20:57:52.218Z",
-  "retry_count": 1
-}
