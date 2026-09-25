@@ -201,6 +201,37 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     );
   });
 
+  it("sends the board filter predicate to column counts", () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client");
+    (apiClient.get as jest.Mock).mockResolvedValue({ TODO: 2 });
+
+    useTicketColumnCounts(7, {
+      q: "login",
+      status: "TODO,IN_PROGRESS",
+      priority: "HIGH",
+      cycle: "3",
+    });
+
+    const opts = mockQuery.mock.calls.at(-1)?.[0] as {
+      queryKey: unknown[];
+      queryFn: (ctx: { signal?: AbortSignal }) => unknown;
+    };
+    expect(JSON.stringify(opts.queryKey)).toContain("TODO,IN_PROGRESS");
+    void opts.queryFn({ signal: forwardedSignal });
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/build/7/tickets/column-counts",
+      expect.objectContaining({
+        search: "login",
+        status: "TODO,IN_PROGRESS",
+        priority: "HIGH",
+        cycleId: "3",
+      }),
+      forwardedSignal,
+      expect.any(Function),
+    );
+  });
+
   it("uses the project detail roster without mounting a duplicate members query", () => {
     const source = readFileSync(
       resolve(process.cwd(), "features", "build", "views", "use-board-url-state.ts"),

@@ -33,7 +33,7 @@ import {
   BOARD_COLUMN_VIRTUALIZATION_THRESHOLD,
 } from "./kanban-board-utils";
 import { useKanbanDrag } from "./use-kanban-drag";
-import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
+import { useTicketColumnCounts, type BoardFilters } from "@/hooks/api/build/ticket-queries";
 
 interface KanbanBoardProps {
   tickets: KanbanTicket[];
@@ -45,6 +45,7 @@ interface KanbanBoardProps {
   displayOptions?: DisplayOptions;
   hideCompleted?: boolean;
   hasActiveFilters?: boolean;
+  filters?: BoardFilters;
   selection?: ListSelection;
 }
 
@@ -58,13 +59,12 @@ export function KanbanBoard({
   displayOptions,
   hideCompleted = false,
   hasActiveFilters = false,
+  filters,
   selection,
 }: KanbanBoardProps) {
   const canManage = useCan("build:manage");
   const canUpdateTickets = useCan("build:tickets:update");
-  const { data: columnCountsData } = useTicketColumnCounts(
-    hasActiveFilters ? 0 : projectId,
-  );
+  const { data: columnCountsData } = useTicketColumnCounts(projectId, filters);
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [optimisticStatuses, setOptimisticStatuses] = useState(statuses);
   const [optimisticColumnOrder, setOptimisticColumnOrder] = useState<KanbanColumn[] | null>(null);
@@ -244,7 +244,7 @@ export function KanbanBoard({
                         canManage={canManage}
                         existingNames={existingNames}
                         wipLimit={wipLimits?.[col.id]}
-                        serverCount={hasActiveFilters ? undefined : columnCountsData?.[col.id]}
+                        serverCount={columnCountsData?.[col.id]}
                         displayOptions={displayOptions}
                         minHeightClass="min-h-[60px]"
                         stretch
@@ -303,7 +303,7 @@ export function KanbanBoard({
                       canManage={canManage}
                       existingNames={existingNames}
                       wipLimit={wipLimits?.[col.id]}
-                      serverCount={hasActiveFilters ? undefined : columnCountsData?.[col.id]}
+                      serverCount={columnCountsData?.[col.id]}
                       displayOptions={displayOptions}
                       showHeaderQuickAdd
                       dragHandleProps={

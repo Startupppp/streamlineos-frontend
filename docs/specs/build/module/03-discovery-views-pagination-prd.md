@@ -233,7 +233,7 @@ Rules:
   is loaded.
 - [ ] **BLD-03-018** board, table, list, and timeline share one record and
   mutation owner rather than parallel business logic.
-- [ ] **BLD-03-033** the general view switcher does not render local Calendar
+- [x] **BLD-03-033** the general view switcher does not render local Calendar
   or Gantt implementations; Calendar deep-links to `/calendar` and Gantt maps
   to the canonical Timeline layout.
 
@@ -312,7 +312,7 @@ Rules:
 
 - [ ] **BLD-03-026** filtered boards expose every matching item through
   per-column continuation.
-- [ ] **BLD-03-027** column counts accept the identical authorized filter
+- [x] **BLD-03-027** column counts accept the identical authorized filter
   contract as board rows.
 - [ ] **BLD-03-028** no UI labels loaded count as total count.
 - [ ] **BLD-03-029** lists remain responsive at 100, 1,000, 10,000, and

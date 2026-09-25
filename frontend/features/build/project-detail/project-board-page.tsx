@@ -70,6 +70,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     doneCount,
     showEmptyFilterState,
     hasActiveFilters,
+    boardFilters,
     activeView,
     createParamOpen,
     createDefaultCycleId,
@@ -268,6 +269,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         displayOptions={displayOptions}
         hideCompleted={hideCompleted}
         hasActiveFilters={hasActiveFilters}
+        boardFilters={boardFilters}
         workloadFilters={workloadFilters}
         capacityByMemberId={capacityByMemberId}
         onTicketSelect={handleTicketSelect}

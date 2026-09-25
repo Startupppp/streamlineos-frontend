@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { SearchX, WifiOff } from "lucide-react";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { ViewType } from "./view-switcher";
+import type { BoardFilters } from "@/hooks/api/build/ticket-queries";
 
 import { type FilterState as WorkloadFilterState, type MemberCapacityData } from "./workload-types";
 import type { Cycle } from "@/types/projects";
@@ -52,6 +53,7 @@ interface ProjectBoardContentProps {
   displayOptions: DisplayOptions;
   hideCompleted: boolean;
   hasActiveFilters: boolean;
+  boardFilters?: BoardFilters;
   workloadFilters: WorkloadFilterState;
   onTicketSelect: (id: number) => void;
   onWorkloadFilterChange: <K extends keyof WorkloadFilterState>(
@@ -92,6 +94,7 @@ export function ProjectBoardContent({
   displayOptions,
   hideCompleted,
   hasActiveFilters,
+  boardFilters,
   workloadFilters,
   onTicketSelect,
   onWorkloadFilterChange,
@@ -213,6 +216,7 @@ export function ProjectBoardContent({
               displayOptions={displayOptions}
               hideCompleted={hideCompleted}
               hasActiveFilters={hasActiveFilters}
+              filters={boardFilters}
             />
           </motion.div>
         );
