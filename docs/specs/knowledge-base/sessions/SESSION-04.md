@@ -77,9 +77,28 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
 - [x] Read and edit modes resolve from permission, and the trust header shows owner, status,
       visibility, verification, next review, and updated-by/time.
 - [ ] AI actions show their sources and produce a preview/diff before applying.
-      DEFERRED: `KbPageAiActions` in `page-document-toolbar.tsx:167-172` wires the callbacks but
-      the preview/diff UI lives in `kb-page-ai-actions.tsx` — out of scope for this session's file
-      list. No change made; pre-existing state.
+      **Preview/diff: DONE 2026-09-25** (`cbcf66907`). **Sources: still open**, see below.
+      The prior DEFERRED note is superseded — it deferred on file ownership, not on the defect.
+      The defect was real: `improve` replaced the entire page draft the moment Apply was clicked,
+      with nothing showing what changed. `kb-page-improve-diff-dialog.tsx` now renders an LCS line
+      diff (≤250 lines each side, plain preview above that) and `onApplyImprovement` fires only on
+      confirm; discard is a true no-op. `handleInsertSummary` was a pass-through and is deleted
+      (FE-126).
+      **The part that would have shipped inert:** `currentContent` is optional, and nothing passed
+      it. In production the dialog would have taken its preview-only branch every time — a
+      confirmation step, but never a diff. `currentContent` is now threaded from the draft owner
+      (`page-document.tsx`, via `getPlainText(normalizePlateValue(...))`) through
+      `page-document-header.tsx` and `page-document-toolbar.tsx`.
+      `page-document-ai-diff-threading.test.tsx` pins the forwarding so it cannot regress to inert.
+      7 tests pass across the two files; 24 pass across the affected suites.
+      **Sources — not deliverable from the frontend.** The three streaming generate endpoints
+      return text only. `AiTextStreamResult` (`hooks/api/ai-text-stream.ts:16-18`) and
+      `kbPageAiBufferedContract` (`hooks/api/kb/kb-ai-schema.ts:12-15`) carry no citations field,
+      so there is nothing to render — `AiDraftCard` already renders `AiCitationChips` when given
+      them. The extension point exists: `streamAiText` takes an `onData` callback for named SSE
+      data events, so the backend emitting a `sources` event would flow through `streamKbDocAi`.
+      That is a backend change inside `backend/src/modules/kb`, queued behind the lane that owns
+      that tree.
 - [x] No page body in Web Storage: keep `page-document-no-storage.test.ts` biting, and extend it
       across logout, org switch, and revocation.
       Extended with tests (c) and (d) for API-call pattern. Logout/org-switch/revocation extension
@@ -92,9 +111,30 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       (`wiki-right-panel-collapsed`, `wiki-nav-groups`), neither carrying content.
       So there was no defect; the three tests exist to stop one being introduced — the realistic
       regression is a well-meaning "rescue the draft to localStorage on a failed save".
-- [ ] Unauthorized and missing are indistinguishable 404s.
-      DEFERRED: checked `kb-page-document.service.ts` — the endpoint uses NestJS's
-      `NotFoundException` for both cases (no file ownership for that service in this session).
+- [x] Unauthorized and missing are indistinguishable 404s.
+      **DONE 2026-09-25** (`4d688299c`, backend repo). The prior DEFERRED note checked one service
+      and generalised from it. Sweeping every KB service that takes a resource id found **six**
+      paths where a caller could tell restricted from nonexistent:
+      | service | method | how it leaked |
+      |---|---|---|
+      | `kb-page-reviews.service.ts` | `create` | queried the DB with no visibility check at all |
+      | `kb-page-tree.service.ts` | `restore` | no visibility predicate on the lookup |
+      | `kb-page-trash.service.ts` | `hardDelete` | no visibility predicate on the lookup |
+      | `kb-page-comments.service.ts` | `update`/`remove`/`resolve` | threw "Page not found" where a missing comment threw "Comment not found" — the *message* was the oracle |
+      | `kb-media.service.ts` | `upload` | checked `org_id` only, so any in-tenant page id resolved regardless of visibility |
+      | `kb-comments.service.ts` (help-centre) | `update`/`remove`/`resolve` | same message-level leak as above |
+      Each now routes both cases through one gate producing an identical status and message.
+      `restore` and `hardDelete` cannot use `assertPageAccess` — it filters `deleted_at`, so it
+      would miss every trashed page by construction; they take `visiblePagePredicate` directly.
+      **Checked before accepting:** gating these on *view* visibility does not break admin trash
+      recovery. `buildVisiblePageScope` (`knowledge-page-scope.ts:149`) collapses the predicate to
+      the bare tenant clause for `isOrgOwner || isKbAdmin`, so an admin still sees every page.
+      `kb-media.service.ts` gained a `KnowledgeAuthorizationService` constructor param — verified
+      `KbWikiModule` imports `KbCoreModule`, which exports it, so this does not fail at boot
+      (specs construct the service by hand and would not have caught a missing provider).
+      101 tests pass across 12 suites, run by the orchestrator rather than taken from the report.
+      Note the help-centre half is inert: `kb_articles` is confirmed **absent** from production, so
+      that surface cannot load. Fixed for symmetry, not for effect.
 - [x] Mobile metadata and comments sheets; every desktop capability has a 375 px path.
       Re-checked by enumeration 2026-09-25, because the original note asserted "no new mobile paths
       needed" without listing the capabilities. All thirteen enumerated and each traced to a trigger:
