@@ -4,11 +4,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -52,26 +53,13 @@ interface KpiFormState {
   weight: string;
 }
 
-function KpiDeleteButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button
-      type="button"
-      aria-label="Delete KPI"
-      onClick={onClick}
-      className="ml-2 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={14} />
-    </button>
-  );
-}
-
 export function KpiLibraryTab() {
   const { data: kpis = [], isLoading, isError, error, refetch } = useKpis();
   const createKpi = useCreateKpi();
   const updateKpi = useUpdateKpi();
   const deleteKpi = useDeleteKpi();
+  const canManage = useCan("hr:performance:manage");
+  const pageState = usePageState({ permission: "hr:performance:view", isLoading, isError, error });
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
@@ -141,8 +129,7 @@ export function KpiLibraryTab() {
     return matchesSearch && matchesCat;
   });
 
-  if (isLoading) {
-    return (
+  const loadingSkeleton = (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="bg-card rounded-2xl border border-border p-5 space-y-3 animate-pulse">
@@ -152,14 +139,10 @@ export function KpiLibraryTab() {
           </div>
         ))}
       </div>
-    );
-  }
-
-  if (isError) {
-    return <ErrorState className="flex-1" title="Couldn't load KPIs" description={getErrorMessage(error)} onRetry={handleRetry} />;
-  }
+  );
 
   return (
+    <PageState resolution={pageState} loading={loadingSkeleton} onRetry={handleRetry} className="flex-1">
     <div className="space-y-4">
       <div className="flex items-center gap-2 justify-between">
         <div className={FILTER_TOOLBAR_ROW}>
@@ -180,13 +163,12 @@ export function KpiLibraryTab() {
             ))}
           </FilterPillGroup>
         </div>
+        {canManage && (
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <motion.div whileTap={{ scale: 0.97 }}>
-              <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2">
-                Add KPI
-              </AnimatedIconButton>
-            </motion.div>
+            <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2">
+              Add KPI
+            </AnimatedIconButton>
           </SheetTrigger>
           <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-[420px]">
             <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left gap-1">
@@ -219,19 +201,18 @@ export function KpiLibraryTab() {
                 <Label>Weight</Label>
                 <Input type="number" value={form.weight} onChange={(e) => handleFormChange("weight", e.target.value)} placeholder="1" />
               </div>
-              <motion.div whileTap={{ scale: 0.97 }}>
-                <LoadingButton
-                  className="w-full"
-                  onClick={handleCreate}
-                  isPending={createKpi.isPending}
-                  loadingText="Creating…"
-                >
-                  Create KPI
-                </LoadingButton>
-              </motion.div>
+              <LoadingButton
+                className="w-full"
+                onClick={handleCreate}
+                isPending={createKpi.isPending}
+                loadingText="Creating…"
+              >
+                Create KPI
+              </LoadingButton>
             </SheetBody>
           </SheetContent>
         </Sheet>
+        )}
       </div>
 
       {filtered.length === 0 ? (
@@ -243,7 +224,7 @@ export function KpiLibraryTab() {
               key={kpi.id}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.22, ease: "easeOut", delay: i * 0.06 }}
+              transition={{ duration: 0.22, ease: "easeOut", delay: Math.min(i, 8) * 0.04 }}
               className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3"
             >
               <div className="flex items-start justify-between">
@@ -253,7 +234,17 @@ export function KpiLibraryTab() {
                     <TruncatedText text={kpi.description} lines={2} className="text-xs text-muted-foreground mt-0.5" />
                   )}
                 </div>
-                <KpiDeleteButton onClick={() => setDeleteTarget({ id: kpi.id, name: kpi.name })} />
+                {canManage && (
+                  <AnimatedIconButton
+                    icon={Trash2Icon}
+                    iconSize={14}
+                    variant="ghost"
+                    size="icon"
+                    className="ml-2 text-muted-foreground hover:text-destructive"
+                    aria-label={`Delete KPI ${kpi.name}`}
+                    onClick={() => setDeleteTarget({ id: kpi.id, name: kpi.name })}
+                  />
+                )}
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <Badge className={`text-xs ${getCategoryColor(kpi.category)}`}>{kpi.category}</Badge>
@@ -266,14 +257,15 @@ export function KpiLibraryTab() {
                 {kpi.target && <div><span className="font-medium text-foreground">{kpi.target}</span><br />Target</div>}
                 <div><span className="font-medium text-foreground">{kpi.weight}</span><br />Weight</div>
               </div>
-              <Button
+              {canManage && <Button
                 size="sm"
                 variant="outline"
-                className={`w-full text-xs ${kpi.isActive ? "text-destructive border-destructive/30 hover:bg-destructive/10" : "text-status-success-ink border-status-success-rule hover:bg-status-success-surface"}`}
+                disabled={updateKpi.isPending}
+                className={`w-full ${kpi.isActive ? "text-destructive border-destructive/30 hover:bg-destructive/10" : "text-status-success-ink border-status-success-rule hover:bg-status-success-surface"}`}
                 onClick={() => handleToggleActive(kpi.id, kpi.isActive)}
               >
                 {kpi.isActive ? "Deactivate" : "Activate"}
-              </Button>
+              </Button>}
             </motion.div>
           ))}
         </div>
@@ -290,5 +282,6 @@ export function KpiLibraryTab() {
         isPending={deleteKpi.isPending}
       />
     </div>
+    </PageState>
   );
 }
