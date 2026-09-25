@@ -83,4 +83,32 @@ describe("Wiki page body must not reach Web Storage", () => {
     expect(src).not.toMatch(/function slateToHtml/);
     expect(src).toMatch(/apiClient\.post/);
   });
+
+  it("(e) logout transition — use-page-autosave.ts is storage-silent: pending content is flushed to the server on unmount and not persisted to localStorage or sessionStorage", () => {
+    const autosaveFile = path.join(WIKI_SRC, "components", "use-page-autosave.ts");
+    expect(fs.existsSync(autosaveFile)).toBe(true);
+    const src = fs.readFileSync(autosaveFile, "utf-8");
+    expect(src).not.toMatch(/localStorage\./);
+    expect(src).not.toMatch(/sessionStorage\./);
+  });
+
+  it("(f) org-switch transition — org-scoped-storage.tsx is a pure context provider: the scope-change on org switch does not read or write localStorage or sessionStorage", () => {
+    const storageLib = path.resolve(__dirname, "../../../lib/org-scoped-storage.tsx");
+    expect(fs.existsSync(storageLib)).toBe(true);
+    const src = fs.readFileSync(storageLib, "utf-8");
+    expect(src).not.toMatch(/localStorage\./);
+    expect(src).not.toMatch(/sessionStorage\./);
+  });
+
+  it("(g) access-revocation transition — no wiki source writes localStorage or sessionStorage with a dynamic or org-scoped key: a mid-session 403 cannot cause page content to persist in storage", () => {
+    const dynamicKeyPattern = /(?:localStorage|sessionStorage)\.setItem\s*\(\s*(?:`[^`]*\$\{|orgScopedStorageKey)/;
+    const violations: string[] = [];
+    for (const file of sourceFiles) {
+      const src = fs.readFileSync(file, "utf-8");
+      if (dynamicKeyPattern.test(src)) {
+        violations.push(path.relative(WIKI_SRC, file));
+      }
+    }
+    expect(violations).toHaveLength(0);
+  });
 });
