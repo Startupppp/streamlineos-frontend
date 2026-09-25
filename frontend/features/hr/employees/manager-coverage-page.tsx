@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type SyntheticEvent } from "react";
+import { useRouter } from "next/navigation";
 import { UserX, UserMinus, Repeat, Users } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -62,7 +63,14 @@ function AssignManagerCell({ userId, currentManagerUserId }: { userId: string | 
     );
   }
 
+  // The row opens the employee; the picker must not. React events bubble
+  // through the popover's portal, so stop them at this boundary.
+  function stopRowActivation(event: SyntheticEvent) {
+    event.stopPropagation();
+  }
+
   return (
+    <span onClick={stopRowActivation} onKeyDown={stopRowActivation}>
     <UserCombobox
       value={currentManagerUserId ?? ""}
       onChange={handleChange}
@@ -71,6 +79,7 @@ function AssignManagerCell({ userId, currentManagerUserId }: { userId: string | 
       disabled={updateProfile.isPending}
       className="w-56"
     />
+    </span>
   );
 }
 
@@ -139,6 +148,17 @@ export function ManagerCoveragePage() {
   const { data, isLoading, isError, error, refetch } = useManagerCoverage();
   const [tab, setTab] = useState<CoverageTab>("withoutManager");
   const canEdit = useCan("hr:employees:update");
+  const router = useRouter();
+
+  function openEmployee(userId: string | null) {
+    if (userId) router.push(`/hr/employees/${userId}`);
+  }
+  function handleEmployeeRowClick(row: { userId: string | null }) {
+    openEmployee(row.userId);
+  }
+  function handleManagerRowClick(row: { managerUserId: string | null }) {
+    openEmployee(row.managerUserId);
+  }
   const pageState = usePageState({ permission: "hr:employees:view", module: "hr", isLoading, isError, error });
 
   function handleRetry() {
@@ -199,6 +219,7 @@ export function ManagerCoveragePage() {
                   data={data.withoutManager}
                   columns={canEdit ? [...WITHOUT_MANAGER_COLUMNS, WITHOUT_MANAGER_ASSIGN_COLUMN] : WITHOUT_MANAGER_COLUMNS}
                   getRowKey={(row) => row.employmentId}
+                  onRowClick={handleEmployeeRowClick}
                   emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="Everyone has a manager" description="Every active employee reports to someone." />}
                   pagination={{ pageSize: 25 }}
                 />
@@ -209,6 +230,7 @@ export function ManagerCoveragePage() {
                   data={data.inactiveManager}
                   columns={canEdit ? [...INACTIVE_MANAGER_COLUMNS, INACTIVE_MANAGER_ASSIGN_COLUMN] : INACTIVE_MANAGER_COLUMNS}
                   getRowKey={(row, index) => `${row.userId ?? "employee"}-${index}`}
+                  onRowClick={handleEmployeeRowClick}
                   emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="All managers are active" description="No employee reports to an exited, suspended or deactivated manager." />}
                   pagination={{ pageSize: 25 }}
                 />
@@ -229,6 +251,7 @@ export function ManagerCoveragePage() {
                   data={data.overSpan}
                   columns={OVER_SPAN_COLUMNS}
                   getRowKey={(row, index) => `${row.managerUserId ?? "manager"}-${index}`}
+                  onRowClick={handleManagerRowClick}
                   emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="Spans of control are within limits" description={`No manager has more than ${data.spanOfControlLimit} direct reports.`} />}
                   pagination={{ pageSize: 25 }}
                 />
