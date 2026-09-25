@@ -39,6 +39,17 @@ export const incidentRowContract = z.object({
 
 export const incidentListContract = z.array(incidentRowContract);
 
+export const incidentPageContract = z.object({
+  data: z.array(incidentRowContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const incidentResponseContract = z.union([incidentPageContract, incidentListContract]);
+
 export const incidentUpdateRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),

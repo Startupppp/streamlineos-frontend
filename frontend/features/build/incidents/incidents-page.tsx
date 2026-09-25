@@ -76,7 +76,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const statusValue = listFilters.value("status");
   const severityValue = listFilters.value("severity");
 
-  const { data: incidents, isLoading, isError, error, refetch } = useIncidents(projectId, {
+  const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useIncidents(projectId, {
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     severity: severityValue !== BUILD_FILTER_ALL ? severityValue : undefined,
   });
@@ -86,7 +86,10 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const pageState = usePageState({ permission: "build:incidents:view", isLoading, isError, error });
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
-  const all = useMemo(() => incidents ?? [], [incidents]);
+  const all = useMemo(
+    () => (Array.isArray(data) ? data : data?.pages.flatMap((page) => page.data) ?? []),
+    [data],
+  );
 
   const displayed = useMemo(() => {
     const q = listFilters.debouncedSearch.trim().toLowerCase();
@@ -280,7 +283,14 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
               getRowKey={(row) => row.id}
               className={PM_FILL_PANEL}
               mobileCard={renderMobileCard}
-              pagination={{ pageSize: 25 }}
+              pagination={{
+                mode: "cursor",
+                pageSize: 25,
+                hasMore: Boolean(hasNextPage),
+                hasPrevious: false,
+                onNext: () => void fetchNextPage(),
+              }}
+              isLoading={isFetchingNextPage}
             />
           </PageState>
         </PmSection>

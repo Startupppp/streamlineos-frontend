@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -23,7 +23,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 
 const incidentListContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentListContract),
+  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentResponseContract),
 );
 const incidentRowContract = lazyContract(() =>
   import("@/hooks/api/build/incidents-schema").then((m) => m.incidentRowContract),
@@ -63,9 +63,21 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   if (filters?.status) params["status"] = filters.status;
   if (filters?.severity) params["severity"] = filters.severity;
 
-  return useQuery<Incident[]>({
+  return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.incidents.list(projectId ?? 0, filters),
-    queryFn: ({ signal }) => apiClient.get<Incident[]>(`/build/${projectId}/incidents`, params, signal, incidentListContract),
+    queryFn: async ({ pageParam, signal }) => {
+      const response = await apiClient.get<Incident[] | { data: Incident[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+        `/build/${projectId}/incidents`,
+        pageParam ? { ...params, cursor: pageParam } : params,
+        signal,
+        incidentListContract,
+      );
+      return Array.isArray(response)
+        ? { data: response, pagination: { limit: response.length || 100, hasMore: false, nextCursor: null } }
+        : response;
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,
     refetchOnWindowFocus: "always",
