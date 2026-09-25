@@ -192,6 +192,7 @@ export function SuccessionTab() {
   }
 
   return (
+    <>
     <PageState
       resolution={pageState}
       onRetry={handleRetry}
@@ -261,6 +262,8 @@ export function SuccessionTab() {
           />
         </div>
 
+    </div>
+    </PageState>
       <Dialog open={open} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0">
           <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
@@ -346,7 +349,6 @@ export function SuccessionTab() {
         onConfirm={handleConfirmRemove}
         isPending={remove.isPending}
       />
-    </div>
-    </PageState>
+    </>
   );
 }

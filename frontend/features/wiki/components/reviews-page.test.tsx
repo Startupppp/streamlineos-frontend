@@ -145,6 +145,7 @@ function makeReview(overrides: Partial<KbPageReview> = {}): KbPageReview {
     orgId: "org-1",
     pageId: 10,
     pageTitle: "Test Page",
+    pageTrustState: null,
     type: "approval",
     status: "pending",
     isOverdue: false,

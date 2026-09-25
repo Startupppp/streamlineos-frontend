@@ -33,6 +33,19 @@ import type { SkillsMatrixData } from "@/hooks/api/hr/employees";
 const mockUseSkillsMatrix = jest.fn<unknown, unknown[]>();
 const mockUseCan = jest.fn<boolean, unknown[]>(() => true);
 
+// The page now resolves its state through usePageState, which reads session,
+// access and entitlements; resolve it as granted so the test exercises the
+// page, not the provider tree.
+jest.mock("@/hooks/api/use-page-state", () => {
+  const { resolvePageState } = jest.requireActual<typeof import("@/lib/page-state/resolve-page-state")>(
+    "@/lib/page-state/resolve-page-state",
+  );
+  return {
+    usePageState: (options: Omit<Parameters<typeof resolvePageState>[0], "access">) =>
+      resolvePageState({ ...options, access: "granted" }),
+  };
+});
+
 jest.mock("@/hooks/api/hr", () => ({
   useSkillsMatrix: (...args: unknown[]) => mockUseSkillsMatrix(...args),
 }));

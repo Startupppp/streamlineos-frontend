@@ -190,7 +190,7 @@ export function LegalHoldsTable() {
       <ConfirmDialog
         open={pending !== null}
         onOpenChange={handleConfirmOpenChange}
-        title={pending?.kind === "release" ? `Release legal hold #${pending.hold.id}?` : `Delete legal hold #${pending?.hold.id ?? ""}?`}
+        title={pending?.kind === "release" ? "Release this legal hold?" : "Delete this legal hold?"}
         description={
           pending?.kind === "release"
             ? "Records under this hold stop being preserved and can be deleted or exported again."

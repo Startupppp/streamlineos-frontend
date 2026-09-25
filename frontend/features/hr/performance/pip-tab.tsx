@@ -342,6 +342,7 @@ export function PIPTab() {
   });
 
   return (
+    <>
     <PageState
       resolution={pageState}
       onRetry={handleRetry}
@@ -382,6 +383,8 @@ export function PIPTab() {
           ))}
         </div>
 
+    </div>
+    </PageState>
       <HrSheet
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
@@ -435,7 +438,6 @@ export function PIPTab() {
         onConfirm={handleConfirmTerminate}
         isPending={updatePIP.isPending}
       />
-    </div>
-    </PageState>
+    </>
   );
 }

@@ -174,6 +174,7 @@ export function MeetingsTab() {
   }, []);
 
   return (
+    <>
     <PageState
       resolution={pageState}
       onRetry={handleRetry}
@@ -237,6 +238,8 @@ export function MeetingsTab() {
           ))}
         </div>
 
+    </div>
+    </PageState>
       <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Schedule 1-on-1" onSubmit={handleCreate} submitLabel="Schedule" isPending={createMeeting.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee</label>
@@ -282,7 +285,6 @@ export function MeetingsTab() {
         onConfirm={handleDelete}
         isPending={deleteMeeting.isPending}
       />
-    </div>
-    </PageState>
+    </>
   );
 }

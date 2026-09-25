@@ -9,6 +9,19 @@ import type { TeamAttendanceEntry } from "@/types/hr";
  * attendance data at all is offered a route into setup rather than a dead end.
  */
 let canManage = true;
+// The page now resolves its state through usePageState, which reads session,
+// access and entitlements; resolve it as granted so the test exercises the
+// page, not the provider tree.
+jest.mock("@/hooks/api/use-page-state", () => {
+  const { resolvePageState } = jest.requireActual<typeof import("@/lib/page-state/resolve-page-state")>(
+    "@/lib/page-state/resolve-page-state",
+  );
+  return {
+    usePageState: (options: Omit<Parameters<typeof resolvePageState>[0], "access">) =>
+      resolvePageState({ ...options, access: "granted" }),
+  };
+});
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => canManage,
   useModuleEnabled: () => true,
