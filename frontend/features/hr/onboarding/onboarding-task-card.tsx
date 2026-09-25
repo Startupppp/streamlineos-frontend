@@ -46,33 +46,19 @@ export function OnboardingTaskCard({
     <Card className={done ? "opacity-70" : undefined}>
       <CardContent className="p-3">
         <div className="flex items-start gap-3">
-          {task.canComplete ? (
-            <button
-              type="button"
-              onClick={handleClick}
-              disabled={isPending}
-              aria-label={done ? `Mark "${task.title}" as pending` : `Mark "${task.title}" as complete`}
-              className="mt-0.5 shrink-0 transition-opacity hover:opacity-75 disabled:opacity-50"
-            >
-              {done ? (
-                <CheckCircle2 className="h-5 w-5 text-status-success-ink" />
-              ) : (
-                <Circle className="h-5 w-5 text-muted-foreground" />
-              )}
-            </button>
-          ) : (
-            <span
-              className="mt-0.5 shrink-0 text-muted-foreground"
-              aria-label={done ? "Completed" : `Assigned to ${task.ownerRole.replace("_", " ")}`}
-              role="img"
-            >
-              {done ? (
-                <CheckCircle2 className="h-5 w-5 text-status-success-ink" />
-              ) : (
-                <Circle className="h-5 w-5" />
-              )}
-            </span>
-          )}
+          {/* Status icon only: the circle used to be a second toggle for the
+              same mutation as the Mark button below (rubric test 4). */}
+          <span
+            className="mt-0.5 shrink-0 text-muted-foreground"
+            aria-label={done ? "Completed" : `Assigned to ${task.ownerRole.replace("_", " ")}`}
+            role="img"
+          >
+            {done ? (
+              <CheckCircle2 className="h-5 w-5 text-status-success-ink" />
+            ) : (
+              <Circle className="h-5 w-5" />
+            )}
+          </span>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
@@ -116,7 +102,7 @@ export function OnboardingTaskCard({
             <LoadingButton
               size="sm"
               variant={done ? "outline" : "default"}
-              className="shrink-0 h-7 text-xs"
+              className="shrink-0"
               isPending={isPending}
               onClick={handleClick}
             >

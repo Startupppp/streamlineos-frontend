@@ -29,7 +29,9 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import {
   useHrOnboardingTemplates,
@@ -245,7 +247,6 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
                               min={0}
                               step={1}
                               placeholder="Due (days after joining)"
-                              className="text-xs"
                               aria-label={`Step ${i + 1} due day`}
                               value={field.value}
                               onChange={(e) => field.onChange(e.target.valueAsNumber)}
@@ -295,6 +296,22 @@ export function OnboardingTemplatesTab() {
   const { data: templates, isLoading, isError, error, refetch } = useHrOnboardingTemplates();
   const { data: departments } = useOnboardingTemplateDepartments();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const canManage = useCan("hr:onboarding:manage");
+  const pageState = usePageState({
+    permission: "hr:onboarding:manage",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !templates || templates.length === 0,
+  });
+
+  function handleOpenSheet() {
+    setSheetOpen(true);
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
 
   const departmentName = (id: string | null) =>
     id ? (departments ?? []).find((d) => d.id === id)?.name ?? "Department" : "All departments";
@@ -306,30 +323,36 @@ export function OnboardingTemplatesTab() {
           Reusable onboarding plans with steps, owners, and due dates. Department-specific plans are applied
           automatically when launching onboarding for an employee in that department.
         </p>
-        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" className="gap-1.5 shrink-0" onClick={() => setSheetOpen(true)}>
-          Create plan
-        </AnimatedIconButton>
+        {canManage && (
+          <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1" size="sm" className="gap-1.5 shrink-0" onClick={handleOpenSheet}>
+            Create plan
+          </AnimatedIconButton>
+        )}
       </div>
 
-      {isLoading ? (
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        compact
+        loading={
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-lg" />
+            ))}
+          </div>
+        }
+        empty={
+          <EmptyState
+            illustrationPreset="documents"
+            title="No onboarding plans yet"
+            description="Create a plan to standardize onboarding steps for a department or your whole org."
+            action={canManage ? { label: "Create plan", onClick: handleOpenSheet } : undefined}
+            compact
+          />
+        }
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
-          ))}
-        </div>
-      ) : isError ? (
-        <ErrorState className="flex-1" title="Couldn't load onboarding plans" description={getErrorMessage(error)} onRetry={() => void refetch()} />
-      ) : !templates || templates.length === 0 ? (
-        <EmptyState
-          illustrationPreset="documents"
-          title="No onboarding plans yet"
-          description="Create a plan to standardize onboarding steps for a department or your whole org."
-          action={{ label: "Create plan", onClick: () => setSheetOpen(true) }}
-          compact
-        />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {templates.map((template) => (
+          {(templates ?? []).map((template) => (
             <Card key={template.id} className="rounded-2xl border border-border/70 bg-card/90 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-2">
@@ -351,7 +374,7 @@ export function OnboardingTemplatesTab() {
             </Card>
           ))}
         </div>
-      )}
+      </PageState>
 
       <CreateTemplateSheet open={sheetOpen} onOpenChange={setSheetOpen} />
     </div>

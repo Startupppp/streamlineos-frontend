@@ -22,6 +22,8 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
@@ -97,6 +99,9 @@ export const EmployeeDocumentsTab = forwardRef<
   const isLoading = docsLoading || typesLoading;
   const isError = docsFailed || typesFailed;
   const isWizard = variant === "wizard";
+  // Both reads are disabled without self:onboarding-docs, which used to land on
+  // "No documents required" (FE-47). Resolve the surface's permission first.
+  const accessState = usePageState({ permission: "self:onboarding-docs", isLoading: false, isError: false, error: null });
 
   const handleRetryLoad = useCallback(() => {
     void refetchDocs();
@@ -213,6 +218,10 @@ export const EmployeeDocumentsTab = forwardRef<
     },
     [uploadTarget, submitDoc],
   );
+
+  if (accessState.kind !== "ready") {
+    return <PageState resolution={accessState} loading={null} compact>{null}</PageState>;
+  }
 
   if (isLoading) {
     return (

@@ -15,61 +15,49 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+import { LoadingState } from "@/components/shared/loading-state";
 
 import { OnboardingWizard } from "@/components/hr/onboarding-wizard";
 import { OnboardingList } from "@/features/hr/onboarding/onboarding-list";
 import { EmployeeDocumentsTab } from "@/features/hr/onboarding/onboarding-detail-sheet";
 import { OnboardingTemplatesTab } from "@/features/hr/onboarding/onboarding-templates-tab";
 import { BulkOnboardPanel } from "@/features/hr/onboarding/bulk-onboard-panel";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 
 type NewEmployeeMode = "single" | "bulk";
+
+function isNewEmployeeMode(value: string): value is NewEmployeeMode {
+  return value === "single" || value === "bulk";
+}
 
 function NewEmployeeSection() {
   const [mode, setMode] = useState<NewEmployeeMode>("single");
 
-  return (
-    <div className="space-y-4">
-      <div
-        className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-muted/30 p-1 backdrop-blur-sm"
-        role="tablist"
-        aria-label="Onboard mode"
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "single"}
-          onClick={() => setMode("single")}
-          className={cn(
-            "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium transition-all duration-200",
-            mode === "single"
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground hover:bg-background/70",
-          )}
-        >
-          <UserPlus className="h-3.5 w-3.5" />
-          Single employee
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "bulk"}
-          onClick={() => setMode("bulk")}
-          className={cn(
-            "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium transition-all duration-200",
-            mode === "bulk"
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground hover:bg-background/70",
-          )}
-        >
-          <Users className="h-3.5 w-3.5" />
-          Bulk upload
-        </button>
-      </div>
+  function handleModeChange(value: string) {
+    if (isNewEmployeeMode(value)) setMode(value);
+  }
 
-      {mode === "single" ? <OnboardingWizard /> : <BulkOnboardPanel />}
-    </div>
+  // The shared Tabs primitive replaces a hand-rolled role="tab" pair that had
+  // no focus ring and no arrow-key navigation.
+  return (
+    <Tabs value={mode} onValueChange={handleModeChange} className="space-y-4">
+      <TabsList aria-label="Onboard mode">
+        <TabsTrigger value="single" className="gap-1.5">
+          <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
+          Single employee
+        </TabsTrigger>
+        <TabsTrigger value="bulk" className="gap-1.5">
+          <Users className="h-3.5 w-3.5" aria-hidden="true" />
+          Bulk upload
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="single" className="mt-0">
+        <OnboardingWizard />
+      </TabsContent>
+      <TabsContent value="bulk" className="mt-0">
+        <BulkOnboardPanel />
+      </TabsContent>
+    </Tabs>
   );
 }
 
@@ -157,7 +145,10 @@ function HrDocumentsTab({
 const VALID_TABS = ["workflow", "plans", "wizard", "documents", "probation"] as const;
 
 export function OnboardingListPage() {
-  const canManageOnboarding = useCan("hr:onboarding:manage");
+  // FE-42/43: useCan is false while access loads, which flashed the employee
+  // "My Documents" view at HR admins. Branch on the tri-state instead.
+  const manageState = useCanState("hr:onboarding:manage");
+  const canManageOnboarding = manageState === "granted";
   const canManageDocumentTypes = useCan("hr:documents:manage");
   const canReviewDocuments = useCan("hr:documents:view");
   const canViewProbation = useCan("hr:probation:view");
@@ -188,7 +179,9 @@ export function OnboardingListPage() {
       backHref={canManageOnboarding ? "/hr" : undefined}
       backLabel="Back to Employees"
     >
-      {canManageOnboarding ? (
+      {manageState === "loading" ? (
+        <LoadingState variant="list" rows={6} />
+      ) : canManageOnboarding ? (
         <Tabs defaultValue={initialTab} className="space-y-4">
           <TabsList className="rounded-xl border-border/70 bg-muted/30 backdrop-blur-sm">
             <TabsTrigger

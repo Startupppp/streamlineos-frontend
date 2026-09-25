@@ -129,11 +129,11 @@ export function DocumentChecklistRow({
           ? "bg-card/60"
           : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-card",
         isApproved
-          ? "border-l-emerald-500"
+          ? "border-l-status-success-rule"
           : status === "SUBMITTED"
-            ? "border-l-amber-400"
+            ? "border-l-status-warning-rule"
             : status === "REJECTED" || status === "RE_UPLOAD_REQUESTED"
-              ? "border-l-rose-400"
+              ? "border-l-status-danger-rule"
               : "border-l-border",
       )}
     >

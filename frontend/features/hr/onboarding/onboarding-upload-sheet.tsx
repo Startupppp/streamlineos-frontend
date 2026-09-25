@@ -163,7 +163,7 @@ export function UploadSheet({
           {selectedFile && (
             <button
               type="button"
-              className="text-dense text-muted-foreground hover:text-status-danger-ink underline block mx-auto mt-2 transition-colors duration-200"
+              className="text-dense text-muted-foreground hover:text-status-danger-ink underline block mx-auto mt-2 rounded-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               onClick={handleRemoveFile}
             >
               Remove file
