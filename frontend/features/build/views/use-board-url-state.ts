@@ -521,6 +521,7 @@ export function useBoardUrlState(
     doneCount,
     showEmptyFilterState,
     hasActiveFilters,
+    boardFilters,
     handleViewChange,
     handleClearSearch,
     handleQaFilterChange,
