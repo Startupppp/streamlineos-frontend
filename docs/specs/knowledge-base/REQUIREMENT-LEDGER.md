@@ -2033,3 +2033,58 @@ The `duplicate_candidate` count is the live read served by migration 1196's leak
 control that makes the check real is a bogus sibling route: signed in,
 `/knowledge/wiki/definitely-not-a-real-route` returns a true **404 "Page Not Found"** while
 `/knowledge/wiki/manage` returns 200. Only the signed-in pair proves the route shipped.
+
+## Eleventh pass — 2026-09-25, surface sweep of the deployed app
+
+Drove all 20 MANDATORY PRODUCT SURFACES against the **deployed** frontend with a minted session.
+19 rendered clean. One did not, and it was a real production defect.
+
+### `/knowledge/wiki/import` rendered the error boundary — FIXED
+
+`GET /kb/import-jobs` returns `cursorPageSchema(...)` → `{ data, pagination }`. The frontend
+declared `kbImportJobListContract = z.array(...)`, so `applyContract` raised
+`CONTRACT_VIOLATION` on an HTTP **200** and the page showed "Something went wrong". Identical
+mismatch on `/kb/export-jobs`; both live on this one page, which is why the whole surface died.
+
+Both hooks now follow the `page-templates` cursor pattern — `useInfiniteQuery` over the envelope,
+flattened for consumers — which also replaces a client-side `.slice()` cap with the **cursor
+history** the spec requires of import/export. Verified on production: the page now lists 4 real
+completed import jobs, 0 console errors, no contract error.
+
+**Why nothing caught it.** `import-page.test.tsx` mocks both hooks, so no test ever saw a real
+payload; `check:contract-parity` compares fields *within* an object and does not model a
+top-level array-vs-envelope difference — it reports nothing for these endpoints. Added
+`kb-import-schema.test.ts`, which parses the real envelope and **rejects the bare array**.
+
+Also deleted four dead bare-array contracts left behind when their endpoints moved to cursor
+envelopes. `kbSpaceListContract` sat directly beside the live `kbSpaceListPageContract` with zero
+references — that adjacency is how this defect class recurs.
+
+`/kb/pages` genuinely returns a bare array (`kbPageListSchema`, not `cursorPageSchema`), so its
+`z.array` contract is correct and was left alone.
+
+### Surfaces confirmed rendering on production
+
+`/knowledge` (307 → `/knowledge/chat`), `/knowledge/chat`, `/knowledge/wiki`, `private`, `shared`,
+`spaces`, `templates`, `reviews`, `import`, `analytics`, `trash`, `search`, `manage`,
+`doc/[pageId]`, `doc/[pageId]/history`, and the `/build/[projectId]/wiki` adapter.
+
+`kb_spaces` is empty for this org, so Spaces legitimately shows its first-empty state rather than
+a populated one. `doc/4` needs **>6 s but <25 s** to finish rendering a 97 k-character page — slow,
+not broken; at 6 s it is still all skeletons.
+
+### ⚠️ A mandatory surface was deleted by another session
+
+`app/(authenticated)/build/[projectId]/wiki/[pageId]/history/page.tsx` was removed in
+`bb7bde9f1` *"fix(build): close production release verification"* with **no replacement route and
+no redirect**, while MASTER-IMPLEMENTATION-PROMPT lists "project wiki home/page/history adapters"
+as mandatory. It was a 24-line adapter over `PageHistoryPage`. **Not restored here** — it is
+another session's deliberate change inside the Build module, and reverting it blind risks
+re-breaking their release gate. Flagged for a human decision.
+
+### Not a KB defect: the red Vercel sweep
+
+Three of four Vercel projects report `failure` with description **"Deployment rate limited —
+retry in 24 hours"**, not a build error. `streamlineos-frontend` — the project that serves
+`www.streamlineos.in` — builds and deploys normally. Read the status `description`, never the
+state alone.
