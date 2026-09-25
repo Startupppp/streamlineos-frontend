@@ -603,7 +603,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Members sheet; owner; last updated; manager health summary
 - [x] Archive/restore replacing customer-facing hard delete; restore idempotent
 - [x] Archive impact preview: pages, public links, Ask index impact, record links
-- [ ] Space detail: breadcrumb, audience/access badge, in-space search, status/owner filters, create-in-space, lazy hierarchy, review-policy summary, inaccessible vs not-found recovery
+- [x] Space detail: breadcrumb, audience/access badge, in-space search, status/owner filters, create-in-space, lazy hierarchy, review-policy summary, inaccessible vs not-found recovery
 - [x] Every child request carries `spaceId`, tenant, parent/cursor, current access
 - [x] Move checks both source and target space
 

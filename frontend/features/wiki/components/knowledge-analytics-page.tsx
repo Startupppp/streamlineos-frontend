@@ -17,10 +17,12 @@ import {
   useKbNoResults,
   usePageAnalytics,
   useKnowledgeGaps,
+  useGapRelatedPages,
   useCitationReuse,
   useReviewSla,
   useCreateKbPage,
 } from "@/hooks/api/kb";
+import { useState } from "react";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -130,16 +132,31 @@ const GapTableRow = memo(function GapTableRow({
   row,
   onCreatePage,
   isCreating,
+  isSelected,
+  onSelect,
 }: {
   row: KbGapRow;
   onCreatePage: (q: string) => void;
   isCreating: boolean;
+  isSelected: boolean;
+  onSelect: (query: string) => void;
 }) {
-  function handleClick() {
+  function handleCreateClick() {
     if (row.query) onCreatePage(row.query);
   }
+  function handleSelectClick() {
+    if (row.query) onSelect(row.query);
+  }
   return (
-    <div className="flex items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
+    <div
+      className={`flex items-center gap-3 px-3 py-2 transition-colors cursor-pointer ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}
+      onClick={handleSelectClick}
+      role="button"
+      tabIndex={0}
+      aria-expanded={isSelected}
+      aria-label={`Gap: ${row.query ?? "(empty)"}`}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleSelectClick(); }}
+    >
       <TruncatedText text={row.query ?? "(empty)"} className="flex-1 text-sm" />
       <span className="text-xs tabular-nums text-muted-foreground shrink-0">
         {row.count}
@@ -155,8 +172,9 @@ const GapTableRow = memo(function GapTableRow({
         size="sm"
         variant="ghost"
         className="px-2 text-xs gap-1 shrink-0"
-        onClick={handleClick}
+        onClick={(e) => { e.stopPropagation(); handleCreateClick(); }}
         disabled={isCreating || !row.query}
+        type="button"
       >
         <KbPlusIcon className="h-3 w-3" />
         Create page
@@ -205,6 +223,8 @@ export default function KnowledgeAnalyticsPage() {
     spaceId !== undefined ||
     staleOnly;
 
+  const [selectedGapQuery, setSelectedGapQuery] = useState<string | undefined>(undefined);
+
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
 
@@ -223,14 +243,42 @@ export default function KnowledgeAnalyticsPage() {
   } = usePageAnalytics(
     staleOnly ? { spaceId, staleOnly: true } : { spaceId },
   );
-  const { data: gaps = [], isLoading: gapsLoading, isError: gapsError, refetch: refetchGaps } = useKnowledgeGaps(range);
+  const {
+    gaps = [],
+    isLoading: gapsLoading,
+    isError: gapsError,
+    refetch: refetchGaps,
+    fetchNextPage: fetchNextGaps,
+    hasNextPage: hasNextGaps,
+    isFetchingNextPage: isFetchingNextGaps,
+  } = useKnowledgeGaps(range);
   const { data: citationReuse } = useCitationReuse(range);
   const { data: reviewSla } = useReviewSla(range);
+  const {
+    pages: relatedPages = [],
+    isLoading: relatedPagesLoading,
+    fetchNextPage: fetchNextRelated,
+    hasNextPage: hasNextRelated,
+    isFetchingNextPage: isFetchingNextRelated,
+  } = useGapRelatedPages(selectedGapQuery);
+
   const createPage = useCreateKbPage();
   const router = useRouter();
 
   function handleLoadMorePages() {
     void fetchNextPage();
+  }
+
+  function handleLoadMoreGaps() {
+    void fetchNextGaps();
+  }
+
+  function handleLoadMoreRelated() {
+    void fetchNextRelated();
+  }
+
+  function handleGapRowSelect(query: string) {
+    setSelectedGapQuery((prev) => (prev === query ? undefined : query));
   }
 
   function handleRangeChange(value: string) {
@@ -559,13 +607,59 @@ export default function KnowledgeAnalyticsPage() {
                 </span>
               </div>
               {gaps.map((row, i) => (
-                <GapTableRow
-                  key={i}
-                  row={row}
-                  onCreatePage={handleCreatePageFromGap}
-                  isCreating={createPage.isPending}
-                />
+                <div key={i}>
+                  <GapTableRow
+                    row={row}
+                    onCreatePage={handleCreatePageFromGap}
+                    isCreating={createPage.isPending}
+                    isSelected={selectedGapQuery === row.query}
+                    onSelect={handleGapRowSelect}
+                  />
+                  {selectedGapQuery === row.query && (
+                    <div className="px-3 py-2 bg-muted/30 border-t border-border/40">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">
+                        Pages containing this query
+                      </p>
+                      {relatedPagesLoading ? (
+                        <div className="space-y-1">
+                          {Array.from({ length: 3 }).map((_, s) => (
+                            <Skeleton key={s} className="h-7 w-full rounded" />
+                          ))}
+                        </div>
+                      ) : relatedPages.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic">
+                          No existing pages mention this query.
+                        </p>
+                      ) : (
+                        <div className="space-y-1">
+                          {relatedPages.map((page) => (
+                            <Link
+                              key={page.id}
+                              href={pageHref(page.id)}
+                              className="flex items-center gap-2 text-xs text-foreground hover:underline py-0.5"
+                            >
+                              <KbFileTextIcon className="h-3 w-3 text-muted-foreground shrink-0" />
+                              {page.title || "Untitled"}
+                            </Link>
+                          ))}
+                          <InfiniteScrollSentinel
+                            hasNextPage={!!hasNextRelated}
+                            isFetchingNextPage={isFetchingNextRelated}
+                            onLoadMore={handleLoadMoreRelated}
+                            label="Load more related pages"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               ))}
+              <InfiniteScrollSentinel
+                hasNextPage={!!hasNextGaps}
+                isFetchingNextPage={isFetchingNextGaps}
+                onLoadMore={handleLoadMoreGaps}
+                label="Load more gaps"
+              />
             </div>
           )}
         </section>

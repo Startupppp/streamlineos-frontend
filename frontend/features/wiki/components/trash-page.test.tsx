@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import TrashPage from "./trash-page";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 
@@ -75,6 +75,32 @@ jest.mock("@/hooks/common/use-cursor-pagination", () => ({
   })),
 }));
 
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembers: jest.fn(() => ({
+    data: {
+      data: [
+        { membershipId: 7, userId: "user-7", name: "Alice Chen", email: "alice@example.com", image: null, role: "member", joinedAt: "2024-01-01T00:00:00Z", totpEnabled: false },
+        { membershipId: 8, userId: "user-8", name: "Bob Smith", email: "bob@example.com", image: null, role: "member", joinedAt: "2024-01-02T00:00:00Z", totpEnabled: false },
+      ],
+      pagination: { hasMore: false, nextCursor: null, limit: 100 },
+    },
+    isLoading: false,
+  })),
+}));
+
+jest.mock("@/hooks/api/kb/spaces", () => ({
+  useKbSpaces: jest.fn(() => ({
+    data: {
+      data: [
+        { id: 1, name: "Engineering" },
+        { id: 2, name: "Product" },
+      ],
+      pagination: { hasMore: false, nextCursor: null, limit: 100 },
+    },
+    isLoading: false,
+  })),
+}));
+
 const { useKbPagesTrash } = jest.requireMock("@/hooks/api/kb") as {
   useKbPagesTrash: jest.Mock;
 };
@@ -104,11 +130,16 @@ beforeEach(() => {
 });
 
 describe("trash page deleted-by filter", () => {
-  it("renders a deleted-by filter input, so the backend deletedByMembershipId param has a frontend writer", () => {
+  it("renders a member select for deleted-by, so the backend deletedByMembershipId param has a named frontend writer", () => {
     render(<TrashPage />);
     expect(
-      screen.getByRole("spinbutton", { name: /deleted by membership id/i }),
+      screen.getByRole("combobox", { name: /deleted by member/i }),
     ).toBeInTheDocument();
+  });
+
+  it("member select shows member names so raw IDs are never visible on screen", () => {
+    render(<TrashPage />);
+    expect(screen.getByText("All members")).toBeInTheDocument();
   });
 
   it("passes deletedByMembershipId from the URL to the trash hook when the param is present", () => {
@@ -128,6 +159,38 @@ describe("trash page deleted-by filter", () => {
 
     expect(useKbPagesTrash).toHaveBeenCalledWith(
       expect.not.objectContaining({ deletedByMembershipId: expect.anything() }),
+    );
+  });
+});
+
+describe("trash page space filter", () => {
+  it("renders a space select, so the backend spaceId param has a frontend writer", () => {
+    render(<TrashPage />);
+    expect(
+      screen.getByRole("combobox", { name: /space/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("space select shows space names so raw IDs are never visible on screen", () => {
+    render(<TrashPage />);
+    expect(screen.getByText("All spaces")).toBeInTheDocument();
+  });
+
+  it("passes spaceId from the URL to the trash hook when the param is present", () => {
+    useSearchParams.mockReturnValue(new URLSearchParams("spaceId=1"));
+
+    render(<TrashPage />);
+
+    expect(useKbPagesTrash).toHaveBeenCalledWith(
+      expect.objectContaining({ spaceId: 1 }),
+    );
+  });
+
+  it("does not include spaceId in the hook params when the URL param is absent, so an empty filter is a no-op", () => {
+    render(<TrashPage />);
+
+    expect(useKbPagesTrash).toHaveBeenCalledWith(
+      expect.not.objectContaining({ spaceId: expect.anything() }),
     );
   });
 });

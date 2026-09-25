@@ -12,6 +12,13 @@ import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCan } from "@/hooks/api/access";
@@ -21,6 +28,9 @@ import {
   useKbBulkPurgePages,
   useKbTrashPurgeImpact,
 } from "@/hooks/api/kb/pages";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/lib/person-display";
 import { KbRotateCcwIcon, KbTrash2Icon } from "@/features/wiki/lib/kb-icons";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
@@ -28,6 +38,8 @@ import { TrashRetentionSection } from "@/features/wiki/components/trash-retentio
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const DEFAULT_LIMIT = 50;
+const ALL_MEMBERS_VALUE = "all";
+const ALL_SPACES_VALUE = "all";
 
 function TrashSkeleton() {
   return (
@@ -56,7 +68,6 @@ export default function TrashPage() {
 
   const [searchDraft, setSearchDraft] = useState(q ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [deletedByDraft, setDeletedByDraft] = useState(deletedByRaw ?? "");
 
   const cursorState = useCursorPagination();
   const params = {
@@ -68,6 +79,10 @@ export default function TrashPage() {
   };
 
   const { data, isLoading, isError, error, refetch } = useKbPagesTrash(params);
+  const { data: membersPage } = useOrgMembers(1, 100);
+  const members = membersPage?.data ?? [];
+  const { data: spacesPage } = useKbSpaces();
+  const spaces = spacesPage?.data ?? [];
 
   const canPurge = useCan("kb:pages:purge");
   const canManageSettings = useCan("kb:settings:manage");
@@ -101,11 +116,16 @@ export default function TrashPage() {
     }, 350);
   }
 
-  function handleDeletedByChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value;
-    setDeletedByDraft(value);
+  function handleMemberChange(value: string) {
     cursorState.reset();
-    updateFilters({ deletedByMembershipId: value || null });
+    updateFilters({
+      deletedByMembershipId: value === ALL_MEMBERS_VALUE ? null : value,
+    });
+  }
+
+  function handleSpaceChange(value: string) {
+    cursorState.reset();
+    updateFilters({ spaceId: value === ALL_SPACES_VALUE ? null : value });
   }
 
   function handleEmptyTrash() {
@@ -236,15 +256,45 @@ export default function TrashPage() {
               className="max-w-sm"
               aria-label="Search deleted pages"
             />
-            <Input
-              type="number"
-              min={1}
-              placeholder="Deleted by membership ID…"
-              value={deletedByDraft}
-              onChange={handleDeletedByChange}
-              className="max-w-xs"
-              aria-label="Deleted by membership ID"
-            />
+            <Select
+              value={
+                deletedByMembershipId !== undefined
+                  ? String(deletedByMembershipId)
+                  : ALL_MEMBERS_VALUE
+              }
+              onValueChange={handleMemberChange}
+            >
+              <SelectTrigger className="w-52" aria-label="Deleted by member">
+                <SelectValue placeholder="All members" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_MEMBERS_VALUE}>All members</SelectItem>
+                {members.map((member) => (
+                  <SelectItem
+                    key={member.membershipId}
+                    value={String(member.membershipId)}
+                  >
+                    {getUserDisplayName(member)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={spaceId !== undefined ? String(spaceId) : ALL_SPACES_VALUE}
+              onValueChange={handleSpaceChange}
+            >
+              <SelectTrigger className="w-52" aria-label="Space">
+                <SelectValue placeholder="All spaces" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_SPACES_VALUE}>All spaces</SelectItem>
+                {spaces.map((space) => (
+                  <SelectItem key={space.id} value={String(space.id)}>
+                    {space.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <PageState
