@@ -4,6 +4,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCallback, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import {
   useCandidate,
   useUpdateCandidate,
@@ -264,7 +265,7 @@ export function CandidateDetailPage() {
     >
       {candidate.duplicateOfId != null && (
         <div className="flex items-start gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 mb-4 text-sm">
-          <span className="text-status-warning-ink mt-0.5" aria-hidden="true">⚠</span>
+          <AlertTriangle className="h-4 w-4 shrink-0 text-status-warning-ink mt-0.5" aria-hidden="true" />
           <div className="flex-1">
             <span className="font-medium text-status-warning-ink">Duplicate candidate — </span>
             <span className="text-status-warning-ink">

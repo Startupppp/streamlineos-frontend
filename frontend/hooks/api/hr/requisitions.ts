@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -87,30 +88,30 @@ export function useCreateJobRequisition() {
 
 export function useSubmitRequisition() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:manage", {
+  return useAuthorizedIdempotentMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "submit"],
-    mutationFn: (requisitionId: number) =>
-      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${requisitionId}/submit`, undefined, undefined, submitRequisitionC),
+    mutationFn: (requisitionId: number, idempotencyKey: string) =>
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${requisitionId}/submit`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }, submitRequisitionC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }
 
 export function useApproveRequisition() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:manage", {
+  return useAuthorizedIdempotentMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "approve"],
-    mutationFn: (requisitionId: number) =>
-      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${requisitionId}/approve`, undefined, undefined, approveRequisitionC),
+    mutationFn: (requisitionId: number, idempotencyKey: string) =>
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${requisitionId}/approve`, undefined, { headers: { "Idempotency-Key": idempotencyKey } }, approveRequisitionC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }
 
 export function useRejectRequisition() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:manage", {
+  return useAuthorizedIdempotentMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "reject"],
-    mutationFn: ({ requisitionId, reason }: { requisitionId: number; reason: string }) =>
-      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${requisitionId}/reject`, { reason }, undefined, rejectRequisitionC),
+    mutationFn: ({ requisitionId, reason }: { requisitionId: number; reason: string }, idempotencyKey: string) =>
+      apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${requisitionId}/reject`, { reason }, { headers: { "Idempotency-Key": idempotencyKey } }, rejectRequisitionC),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.requisitions() }),
   });
 }

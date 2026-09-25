@@ -10,6 +10,7 @@ const noContentC = lazyContract(() =>
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   JobPosting,
@@ -245,10 +246,10 @@ export function useDuplicateJobPosting() {
 
 export function usePublishJobToBoards() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:manage", {
+  return useAuthorizedIdempotentMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "publish"],
-    mutationFn: ({ jobId, platforms }: { jobId: number; platforms: JobBoardPlatform[] }) =>
-      apiClient.post<PublishJobResult>(`/hr/recruitment/jobs/${jobId}/publish`, { platforms }, undefined, publishJobC),
+    mutationFn: ({ jobId, platforms }: { jobId: number; platforms: JobBoardPlatform[] }, idempotencyKey: string) =>
+      apiClient.post<PublishJobResult>(`/hr/recruitment/jobs/${jobId}/publish`, { platforms }, { headers: { "Idempotency-Key": idempotencyKey } }, publishJobC),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.jobPosting(vars.jobId) });

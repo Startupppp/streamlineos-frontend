@@ -317,7 +317,7 @@ export function RecruitmentCommandCenterPage() {
                                 </span>
                               </div>
                               <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div className="h-full rounded-full bg-primary/70 transition-all duration-700" style={{ width: `${pct}%` }} />
+                                <div className="h-full rounded-full bg-primary/70 transition-[width] duration-300" style={{ width: `${pct}%` }} />
                               </div>
                             </div>
                           );

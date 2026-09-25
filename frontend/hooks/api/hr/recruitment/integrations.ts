@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import type { z } from "zod";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -100,13 +101,13 @@ export function useDisconnectIntegration() {
  */
 export function useRotateInboundSecret() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:manage", {
+  return useAuthorizedIdempotentMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "integrations", "inbound-secret"],
-    mutationFn: (platform: string) =>
+    mutationFn: (platform: string, idempotencyKey: string) =>
       apiClient.post<RotatedInboundSecret>(
         `/hr/recruitment/integrations/${platform}/inbound-secret`,
         {},
-        undefined,
+        { headers: { "Idempotency-Key": idempotencyKey } },
         rotateInboundSecretC,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: integrationsKey }),

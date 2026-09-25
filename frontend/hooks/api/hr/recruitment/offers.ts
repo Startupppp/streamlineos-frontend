@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const allOffersPageC = lazyContract(() =>
@@ -290,10 +291,10 @@ export function useDeleteCandidateOffer(candidateId: number) {
 
 export function useSubmitOfferForApproval(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:offers:manage", {
+  return useAuthorizedIdempotentMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offers", "submit-approval", candidateId],
-    mutationFn: (offerId: number) =>
-      apiClient.post<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/submit-for-approval`, {}, undefined, submitOfferForApprovalC),
+    mutationFn: (offerId: number, idempotencyKey: string) =>
+      apiClient.post<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/submit-for-approval`, {}, { headers: { "Idempotency-Key": idempotencyKey } }, submitOfferForApprovalC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
@@ -301,10 +302,10 @@ export function useSubmitOfferForApproval(candidateId: number) {
 
 export function useApproveOffer(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:offers:approve", {
+  return useAuthorizedIdempotentMutation("hr:offers:approve", {
     mutationKey: ["hr", "recruitment", "offers", "approve", candidateId],
-    mutationFn: ({ offerId, remarks }: { offerId: number; remarks?: string }) =>
-      apiClient.post<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/approve`, { remarks }, undefined, approveOfferC),
+    mutationFn: ({ offerId, remarks }: { offerId: number; remarks?: string }, idempotencyKey: string) =>
+      apiClient.post<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/approve`, { remarks }, { headers: { "Idempotency-Key": idempotencyKey } }, approveOfferC),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
