@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/select";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useKbPageFullSearch } from "@/hooks/api/kb/search";
+import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
+import { WikiSearchCompanyDocuments } from "@/features/wiki/components/wiki-search-company-documents";
 import { pageHref } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { SearchSnippetText } from "@/features/wiki/lib/search-snippet-text";
@@ -114,6 +116,7 @@ function SearchResultCard({ item, refCallback, onFocus }: SearchResultCardProps)
 export default function WikiSearchPage() {
   const searchInputId = useId();
   const searchParams = useSearchParams();
+  const hrDocumentSearch = useHrKbLinkFlags().search;
   const { update } = useUrlFilters();
 
   const q = searchParams.get("q") ?? "";
@@ -296,7 +299,7 @@ export default function WikiSearchPage() {
           loading={<SearchSkeleton />}
           empty={
             <EmptyState
-              title={queryActive ? "No results" : "Search pages"}
+              title={queryActive ? (hrDocumentSearch ? "No pages found" : "No results") : "Search pages"}
               description={
                 queryActive
                   ? "Try a different query or clear your filters."
@@ -346,6 +349,7 @@ export default function WikiSearchPage() {
             </div>
           )}
         </PageState>
+        <WikiSearchCompanyDocuments query={q} />
       </div>
     </PageWrapper>
   );

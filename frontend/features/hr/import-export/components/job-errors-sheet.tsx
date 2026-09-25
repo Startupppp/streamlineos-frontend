@@ -41,7 +41,13 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
   const { data: detail, isLoading, isError, error, refetch } = useHrImportJob(open ? jobId : null);
   const job = detail?.job;
   const rollback = useRollbackImportJob();
-  const errorRows: ErrorRow[] = (job?.errors ?? []).map((e, i) => ({ ...e, _idx: i }));
+  // Every row that ended in error, whichever step it failed at: a row that failed at commit (an email that matches
+  // no employee) is only on the row itself, not in the job's validation summary.
+  const failedRows = detail?.errorRows ?? [];
+  const errorRows: ErrorRow[] =
+    failedRows.length > 0
+      ? failedRows.map((r, i) => ({ row: r.rowNumber, message: r.error ?? "Failed", _idx: i }))
+      : (job?.errors ?? []).map((e, i) => ({ ...e, _idx: i }));
 
   const handleRollback = useCallback(() => {
     if (!job) return;
@@ -111,7 +117,7 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
               {job.errorRows > 0 && errorRows.length > 0 && (
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-muted-foreground">
-                    Validation errors ({errorRows.length})
+                    Rows with errors ({errorRows.length}{job.errorRows > errorRows.length ? ` of ${job.errorRows}` : ""})
                   </p>
                   <DataTable
                     data={errorRows}

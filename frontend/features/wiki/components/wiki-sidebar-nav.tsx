@@ -7,6 +7,7 @@ import {
   KbBarChart2Icon,
   KbBookOpenTextIcon,
   KbClipboardCheckIcon,
+  KbFileTextIcon,
   KbLayoutGridIcon,
   KbLayoutTemplateIcon,
   KbLockIcon,
@@ -36,6 +37,7 @@ import {
   KNOWLEDGE_BASE,
   KB_ANALYTICS,
   KB_CHAT,
+  KB_COMPANY_DOCUMENTS,
   KB_IMPORT,
   KB_PRIVATE,
   KB_MANAGE,
@@ -67,6 +69,8 @@ interface WikiSidebarNavProps {
   canViewAnalytics: boolean;
   canViewReviews: boolean;
   canManageContent: boolean;
+  /** HR documents in the knowledge base are switched on for this tenant. */
+  showCompanyDocuments?: boolean;
 }
 
 interface WikiSidebarFooterProps {
@@ -89,9 +93,10 @@ function buildNavGroups({
   canViewAnalytics,
   canViewReviews,
   canManageContent,
+  showCompanyDocuments,
 }: Pick<
   WikiSidebarNavProps,
-  "canViewAnalytics" | "canViewReviews" | "canManageContent"
+  "canViewAnalytics" | "canViewReviews" | "canManageContent" | "showCompanyDocuments"
 >): WikiNavGroup[] {
   const manageItems: WikiNavItem[] = [
     { label: "Templates", href: KB_TEMPLATES, icon: KbLayoutTemplateIcon },
@@ -119,6 +124,9 @@ function buildNavGroups({
         { label: "Private", href: KB_PRIVATE, icon: KbLockIcon },
         { label: "Shared", href: KB_SHARED, icon: KbUsersIcon },
         { label: "Spaces", href: KB_SPACES, icon: KbLayoutGridIcon },
+        ...(showCompanyDocuments === true
+          ? [{ label: "Company documents", href: KB_COMPANY_DOCUMENTS, icon: KbFileTextIcon }]
+          : []),
       ],
     },
     {
@@ -317,6 +325,7 @@ export default function WikiSidebarNav({
   canViewAnalytics,
   canViewReviews,
   canManageContent,
+  showCompanyDocuments = false,
 }: WikiSidebarNavProps) {
   const pathname = usePathname();
   const askKbItem = useMemo(() => buildAskKbItem(), []);
@@ -327,8 +336,9 @@ export default function WikiSidebarNav({
         canViewAnalytics,
         canViewReviews,
         canManageContent,
+        showCompanyDocuments,
       }),
-    [canViewAnalytics, canViewReviews, canManageContent],
+    [canViewAnalytics, canViewReviews, canManageContent, showCompanyDocuments],
   );
   const accordionItems = useMemo(
     () => groups.flatMap((group) => group.items),

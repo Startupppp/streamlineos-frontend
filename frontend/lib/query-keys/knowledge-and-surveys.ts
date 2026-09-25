@@ -4,6 +4,15 @@ export const knowledgeAndSurveysQueryKeys = {
   kb: {
     all: [...base, "kb"] as const,
     kbPages: () => [...base, "kb", "pages"] as const,
+    hrLinkConfig: () => [...base, "kb", "hrLinkConfig"] as const,
+    hrLinkFlagsAdmin: () => [...base, "kb", "hrLinkConfig", "admin"] as const,
+    linkedDocumentsAll: [...base, "kb", "linkedDocuments"] as const,
+    linkedDocuments: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "linkedDocuments"] as const)
+        : ([...base, "kb", "linkedDocuments", params] as const),
+    linkedDocument: (linkedDocumentId: number) =>
+      [...base, "kb", "linkedDocuments", "detail", linkedDocumentId] as const,
     pagesTree: () => [...base, "kb", "pages", "tree"] as const,
     pagesTreeByProject: (projectId: number) =>
       [...base, "kb", "pages", "tree", "project", projectId] as const,

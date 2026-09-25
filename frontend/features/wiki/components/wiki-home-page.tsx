@@ -25,6 +25,7 @@ import {
   WIKI_PAGE_CARD_GRID_CLASS,
 } from "@/features/wiki/components/wiki-page-card";
 import { WikiHomeAllPages } from "./wiki-home-all-pages";
+import { WikiCompanyDocumentsStrip } from "./wiki-company-documents-strip";
 
 interface WikiHomePageProps {
   projectId?: number;
@@ -138,6 +139,8 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             </div>
           </section>
         )}
+
+        {!isProjectScoped && <WikiCompanyDocumentsStrip />}
 
         <section className="flex min-h-0 flex-1 flex-col">
           {!isProjectScoped && (

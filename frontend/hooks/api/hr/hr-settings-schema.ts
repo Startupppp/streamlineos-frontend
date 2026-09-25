@@ -24,6 +24,8 @@ export const documentRowContract = z.object({
   parentDocumentId: z.number().int().nullable(),
   isPublic: z.boolean().nullable(),
   isActive: z.boolean().nullable(),
+  classification: z.enum(["PERSONAL", "CONFIDENTIAL", "RESTRICTED", "INTERNAL"]),
+  effectiveDate: z.string().nullable(),
   expiryDate: z.string().nullable(),
   expiryReminderSent: z.boolean().nullable(),
   tags: z.array(z.string()).nullable(),

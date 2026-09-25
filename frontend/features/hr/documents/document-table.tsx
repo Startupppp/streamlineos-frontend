@@ -35,6 +35,7 @@ export interface DocumentTableProps {
   onEdit: (doc: Document) => void;
   onOpenUpload: () => void;
   onSendForSignature: (doc: Document) => void;
+  onClassify?: (doc: Document) => void;
 }
 
 export function DocumentTable({
@@ -52,6 +53,7 @@ export function DocumentTable({
   onEdit,
   onOpenUpload,
   onSendForSignature,
+  onClassify,
 }: DocumentTableProps) {
   const [isZipping, setIsZipping] = useState(false);
 
@@ -102,8 +104,8 @@ export function DocumentTable({
     page === 1 && selectedCategory === "All Files" && searchTerm === "";
 
   const columns = useMemo(
-    () => createDocumentColumns(onDelete, onEdit, onSendForSignature),
-    [onDelete, onEdit, onSendForSignature],
+    () => createDocumentColumns(onDelete, onEdit, onSendForSignature, onClassify),
+    [onDelete, onEdit, onSendForSignature, onClassify],
   );
 
   const emptyState = (

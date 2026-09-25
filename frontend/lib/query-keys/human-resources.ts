@@ -33,6 +33,12 @@ export const humanResourcesQueryKeys = {
         ? ([...base, "hr", "documents"] as const)
         : ([...base, "hr", "documents", params] as const),
     documentsAll: [...base, "hr", "documents"] as const,
+    documentClassification: (documentId: number) =>
+      [...base, "hr", "documents", "classification", documentId] as const,
+    documentKbLink: (documentId: number) =>
+      [...base, "hr", "documents", "kbLink", documentId] as const,
+    documentVersions: (documentId: number) =>
+      [...base, "hr", "documents", "versions", documentId] as const,
     performanceReviews: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "performanceReviews"] as const)
