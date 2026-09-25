@@ -19,9 +19,10 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { useHrCases } from "@/hooks/api/hr/cases";
 import type { CaseCategory, CaseStatus, CaseSeverity, HrCase } from "@/hooks/api/hr/cases";
 import { CaseDetailSheet } from "./case-detail-sheet";
@@ -40,6 +41,8 @@ function isActiveTab(value: string): value is ActiveTab {
 
 export function CasesPageContent() {
   const canManage = useCan("hr:cases:manage");
+  // POST /hr/cases/anonymous is @RequirePermission("hr:cases:view").
+  const canReport = useCan("hr:cases:view");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [status, setStatus] = useState<CaseStatus | "">("");
@@ -64,6 +67,13 @@ export function CasesPageContent() {
     status: status || undefined,
     category: category || undefined,
     severity: severity || undefined,
+  });
+
+  const casesState = usePageState({
+    permission: "hr:cases:view",
+    isLoading: casesLoading,
+    isError: casesIsError,
+    error: casesError,
   });
 
   const filtersActive =
@@ -142,22 +152,24 @@ export function CasesPageContent() {
       }
       actions={
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 h-8 text-sm"
-            onClick={handleOpenAnonymousReport}
-          >
-            <ShieldAlert className="h-3.5 w-3.5" />
-            Anonymous Report
-          </Button>
+          {canReport && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={handleOpenAnonymousReport}
+            >
+              <ShieldAlert className="h-3.5 w-3.5" />
+              Anonymous Report
+            </Button>
+          )}
           {canManage && (
             <AnimatedIconButton
               icon={PlusIcon}
               iconSize={14}
               iconClassName="mr-1.5"
               size="sm"
-              className="gap-1.5 text-sm"
+              className="gap-1.5"
               onClick={handleOpenNewCase}
             >
               New Case
@@ -178,19 +190,11 @@ export function CasesPageContent() {
 
         <TabsContent value="cases" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="flex flex-1 min-h-0 flex-col gap-2">
-            {casesIsError ? (
-              <ErrorState
-                className="flex-1"
-                title="Couldn't load cases"
-                description={getErrorMessage(casesError)}
-                onRetry={handleRetryCases}
-              />
-            ) : (
+            <PageState resolution={casesState} loading={<DataTableSkeleton />} onRetry={handleRetryCases} className="flex-1">
               <DataTable
                 className="flex-1 min-h-0"
                 columns={CASE_COLUMNS}
                 data={casesData?.data ?? []}
-                isLoading={casesLoading}
                 getRowKey={(row) => row.id}
                 onRowClick={handleCaseRowClick}
                 emptyState={
@@ -213,8 +217,8 @@ export function CasesPageContent() {
                   />
                 }
               />
-            )}
-            {!casesIsError && (casePagination.hasPrevious || casesHasMore) ? (
+            </PageState>
+            {casesState.kind === "ready" && (casePagination.hasPrevious || casesHasMore) ? (
               <CursorPageControls
                 page={casePagination.page}
                 hasNext={casesHasMore}
