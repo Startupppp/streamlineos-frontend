@@ -72,7 +72,7 @@ const validate = () => {
   for (const decision of [
     "KEEP_ROUTE_MOVE_CONFIG",
     "/build/{projectId}/forms` definitions + `/build/{projectId}/triage",
-    "89 final page routes",
+    "all 74 current Build-owned routes",
   ]) {
     requireText(
       routeManifest,
