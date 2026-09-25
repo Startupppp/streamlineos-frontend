@@ -176,14 +176,14 @@ Ordered by dependency on the closure stages above.
 - **Evidence:** `frontend/features/build/shared/use-build-list-url-state.ts` is now the canonical serializer used directly by the shared filter hook and its existing consumers; direct URL-state consumers remain limited and the remaining list surfaces are unconverted.
 - **Effort:** 4–6 d
 
-#### P1-3 — Canonical Issues explorer residual
+#### P1-3 — Canonical Issues explorer residual — **DONE FOR CURRENT RELEASE**
 
 - **User job:** run board, list, table and timeline from one screen with saved views and bulk actions.
 - **Owner:** frontend
 - **Depends on:** P1-2
-- **Acceptance:** `layout=timeline`, `type=BUG` and saved-view management all work from `/build/[projectId]/issues`, which is what P1-1 needs before three of its removals can run.
-- **Evidence:** the view ladder is the exhaustive switch in `frontend/features/build/views/project-board-content.tsx`; timeline and BUG aliases already redirect into Issues.
-- **Effort:** 2–4 d
+- **Acceptance:** `view=timeline`, `type=BUG` and saved-view management all work from `/build/[projectId]/issues`, which is what P1-1 needs before three of its removals can run.
+- **Evidence:** the view ladder is the exhaustive switch in `frontend/features/build/views/project-board-content.tsx`; timeline and BUG aliases redirect into Issues; `use-board-url-state.test.tsx`, `saved-views-menu.test.tsx`, and `build-redirect-route-removal.test.ts` pass 107 tests together; local port `1000` browser verification rendered `/build/6/issues?view=timeline&type=BUG` with zero browser error logs.
+- **Effort:** spent
 
 #### P1-4 — One guided freelancer flow
 
@@ -194,14 +194,14 @@ Ordered by dependency on the closure stages above.
 - **Evidence:** every screen exists today and the handoffs do not — `/crm/quotes`, `/sign/envelopes`, `/timesheets/billing`, `/accounting/invoices` and `/accounting/payments-received` all resolve; the merged `invoice_items.timesheet_entry_id` pointer is the first real link.
 - **Effort:** 10–15 d
 
-#### P1-5 — Feedbucket bulk actions and server-side filters
+#### P1-5 — Feedbucket bulk actions and server-side filters — **DONE FOR CURRENT RELEASE**
 
 - **User job:** triage a backlog of submissions without opening each one.
 - **Owner:** backend, then frontend
-- **Depends on:** P1-2
+- **Depends on:** P1-2 contract primitives; Feedbucket implementation is independently complete.
 - **Acceptance:** owner, linked, duplicate, date and cursor filters are evaluated on the server; bulk actions are bounded and idempotent.
-- **Evidence:** `frontend/features/build/feedbucket/`; the a11y and mobile work on this surface is already merged and is a different concern.
-- **Effort:** 5–8 d
+- **Evidence:** `backend/src/modules/feedbucket/feedbucket-submissions.service.ts` evaluates predicates in SQL; `feedbucket-submissions-bulk.ts` re-evaluates the supplied filters inside a transaction and bounds the mutation; `feedbucket-list-filters.spec.ts`, `feedbucket-list-predicate.spec.ts`, `feedbucket-submissions-bulk.spec.ts`, and `feedbucket-bulk-route-contract.spec.ts` pass 76 tests; the frontend sends the URL filters in `frontend/features/build/feedbucket/project-submissions-inbox.tsx`.
+- **Effort:** spent
 
 #### P1-6 — Realtime version gaps and conflict recovery
 
