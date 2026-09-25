@@ -71,6 +71,7 @@ export function useProjectTeam(teamId: number) {
     queryFn: ({ signal }) => apiClient.get<ProjectTeamDetail>(`/build/teams/${teamId}`, undefined, signal, teamDetailContract),
     enabled: !!teamId,
     staleTime: 60_000,
+    throwOnError: false,
   });
 }
 

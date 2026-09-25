@@ -78,6 +78,7 @@ export function usePortfolio(portfolioId: number, filters?: PortfolioDetailFilte
       ),
     enabled: !!portfolioId,
     staleTime: 60_000,
+    throwOnError: false,
   });
 }
 
