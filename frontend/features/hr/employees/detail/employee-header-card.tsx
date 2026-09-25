@@ -15,6 +15,7 @@ import {
   Calendar,
   CheckCircle2,
   Mail,
+  MailQuestion,
   Phone,
   Tag,
   XCircle,
@@ -145,6 +146,17 @@ export function EmployeeHeaderCard({
                 <span className="inline-flex items-center gap-1 rounded-full border border-status-danger-rule bg-status-danger-surface px-2 py-0.5 text-micro font-semibold text-status-danger-ink">
                   <XCircle className="h-3 w-3" />
                   Terminated
+                </span>
+              ) : employee.hasAccepted === false ? (
+                // PROVISIONAL (product default E-4): the account flag is set at
+                // creation, so an invitee who never accepted must not read
+                // "Active" here while the directory counts them "Pending invite".
+                <span
+                  className="inline-flex items-center gap-1 rounded-full border border-status-warning-rule bg-status-warning-surface px-2 py-0.5 text-micro font-semibold text-status-warning-ink"
+                  title="Invited, not yet accepted"
+                >
+                  <MailQuestion className="h-3 w-3" />
+                  Pending
                 </span>
               ) : showEmploymentActiveBadge ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-status-success-rule bg-status-success-surface px-2 py-0.5 text-micro font-semibold text-status-success-ink">
