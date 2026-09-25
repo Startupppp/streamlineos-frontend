@@ -71,6 +71,9 @@ Current release-candidate checks:
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
 - `git diff --check`: pass.
+- Latest frontend Build navigation fixes are on `origin/main` at `b2c605b69`:
+  backlog, My Work, draft, and keyboard shortcut navigation now use the shared
+  dirty-state guard; focused regressions pass.
 - Build-owned unsafe assertion findings: zero. The assertion gate still reports unrelated pre-existing Inventory, HR, Wiki, editor, and infrastructure debt.
 - Build-owned gated-read findings: zero. The gate still reports two unrelated HR recruitment reads.
 - The dead-code classifier reports no Build deletion candidate. Its current dead files are in Knowledge Base, outside this release.
@@ -89,6 +92,9 @@ The candidate was exercised through a real authenticated browser against the pro
 - Workspace text is absent; the remaining `All of Build / Organization` selector is intentional organization scope, not a module-level workspace.
 - Earlier smoke evidence for `/build`, `/build/6/issues`, and `/build/6/tickets/BQS-1` is retained as historical evidence; it is not a substitute for the current full matrix.
 - The current browser observation rendered `/build/6/tickets/BQS-2` with ticket data and no visible error state.
+- Local port `1000` browser checks also rendered `/build/my-work`,
+  `/build/inbox?view=drafts`, `/build/6/backlog`, and
+  `/build/command-center` without a visible runtime error.
 
 Some detail pages have no production fixture rows for forms, incidents, meetings, QA runs, wiki pages, goals, portfolios, managed products, or teams. Their authenticated parent empty states passed; no production business data was created solely for testing.
 
