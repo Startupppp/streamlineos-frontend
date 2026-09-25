@@ -5,8 +5,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { LinkedDocumentDetail } from "@/hooks/api/kb/linked-documents";
 import CompanyDocumentDetailPage from "./company-document-detail-page";
 
-const mockToast = { error: jest.fn() };
-jest.mock("sonner", () => ({ toast: { error: (m: string) => mockToast.error(m) } }));
 
 // usePageState and PageState are the real ones: a test that stubs them decides the outcome the page is supposed to reach.
 const mockCan = jest.fn<boolean, [string]>();
@@ -105,16 +103,26 @@ describe("CompanyDocumentDetailPage", () => {
     expect(mockForgetOpen).toHaveBeenCalledTimes(1);
   });
 
-  it("shows the server's message and opens nothing when the entry can no longer be opened", async () => {
-    const failure = new ApiError("Not found", 404, "NOT_FOUND", {}, "/kb/linked-documents/31/open");
+  it("shows the server's message with a copyable reference, and opens nothing, when the entry can no longer be opened", async () => {
+    const failure = new ApiError("Not found", 404, "NOT_FOUND", { correlationId: "req-7f3a" }, "/kb/linked-documents/31/open");
     mockOpen.mockRejectedValue(failure);
 
     render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
     await userEvent.click(screen.getByRole("button", { name: "Open file" }));
 
-    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(getErrorMessage(failure)));
+    expect(await screen.findByText("The file could not be opened")).toBeInTheDocument();
+    expect(screen.getByText(getErrorMessage(failure))).toBeInTheDocument();
+    expect(screen.getByText("req-7f3a")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy" })).toBeInTheDocument();
     expect(openSpy).not.toHaveBeenCalled();
     expect(mockForgetOpen).not.toHaveBeenCalled();
+  });
+
+  it("shows no failure before the reader has tried to open the file", () => {
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.queryByText("The file could not be opened")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open file" })).toBeInTheDocument();
   });
 
   it("offers no file to open for an entry that links out to an external address", () => {

@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
 import { ExternalLink } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorReference } from "@/components/shared/error-reference";
 import { PageState } from "@/components/shared/page-state";
 import { SourceBadge } from "@/components/shared/source-badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -113,14 +113,16 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
     if (configFailed) void refetchConfig();
     else void refetch();
   }, [configFailed, refetchConfig, refetch]);
+  const [openFailure, setOpenFailure] = useState<unknown>(null);
   const handleOpen = useCallback(async () => {
+    setOpenFailure(null);
     try {
       const { url } = await requestOpen(linkedDocumentId);
       window.open(url, "_blank", "noopener,noreferrer");
       // The signed URL is single use: do not keep it in the mutation's result once it has been handed to the browser.
       forgetOpen();
     } catch (failure) {
-      toast.error(getErrorMessage(failure));
+      setOpenFailure(failure);
     }
   }, [linkedDocumentId, requestOpen, forgetOpen]);
 
@@ -155,6 +157,15 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
       >
         {entry ? (
           <div className="flex flex-col gap-6">
+            {openFailure !== null ? (
+              <Alert variant="destructive">
+                <AlertTitle>The file could not be opened</AlertTitle>
+                <AlertDescription className="flex flex-col gap-2 break-words">
+                  {getErrorMessage(openFailure)}
+                  <ErrorReference error={openFailure} className="justify-start" />
+                </AlertDescription>
+              </Alert>
+            ) : null}
             <div className="flex flex-wrap items-center gap-2">
               <SourceBadge kind="hr-document" size="sm" />
               {entry.status !== "active" ? <SemanticBadge tone="warning" label={entry.status === "unpublished" ? "Withdrawn" : "Source removed"} /> : null}
