@@ -299,6 +299,7 @@ export const humanResourcesQueryKeys = {
     travelMine: () => [...base, "hr", "travel", "mine"] as const,
     travelApprovals: () => [...base, "hr", "travel", "approvals"] as const,
     leavePolicies: () => [...base, "hr", "leave-policies"] as const,
+    leavePolicyTemplates: () => [...base, "hr", "leave-policy-templates"] as const,
     leavePolicy: () => [...base, "hr", "leave-policy"] as const,
     requisitions: (status?: string) =>
       status === undefined

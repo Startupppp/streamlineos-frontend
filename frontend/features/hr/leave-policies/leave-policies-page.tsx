@@ -22,6 +22,7 @@ import { useLeaveTypesAdmin } from "@/hooks/api/hr/leaves";
 import { LeaveTypesManager } from "@/features/hr/leaves/leave-types-manager";
 import { PolicyCard } from "@/features/hr/leave-policies/policy-card";
 import { PolicyFormSheet } from "@/features/hr/leave-policies/policy-form-sheet";
+import { LeavePolicyTemplatesDialog } from "@/features/hr/leave-policies/leave-policy-templates-dialog";
 
 function LeavePoliciesEmptyState({ onCreateClick }: { onCreateClick: () => void }) {
   return (
@@ -141,6 +142,10 @@ export function LeavePoliciesPage() {
           ))}
         </div>
       </PageState>
+
+      {/* Ticket 08: only opens for an authorised admin of an organisation that
+          has configured nothing and has not already refused. */}
+      <LeavePolicyTemplatesDialog />
 
       <PolicyFormSheet
         open={sheetOpen}
