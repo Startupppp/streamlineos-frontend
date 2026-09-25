@@ -10,6 +10,17 @@ module and sidebar PRDs (658 total, counted directly from the current PRD tree).
 completion; use `docs/specs/build/module/README.md` and its child PRDs for the
 complete product definition of done.
 
+## Checkout reconciliation
+
+The working checkout is ahead of the configured remote on more than one repository;
+this is not deployment evidence. The current local Build evidence includes backend
+commit `a60c8a189` and frontend commits `6ffc21b48`, `cae206a6c`, and `b41041440`.
+The frontend and backend branches also contain unrelated Knowledge Base work that
+must remain separate. Treat a Build commit as deployed only after the deployment
+identity is read from the running service. Older commit hashes elsewhere in this
+document are retained as historical evidence for the release they describe and do
+not prove that the current checkout is deployed.
+
 ## Scope
 
 - The authenticated route manifest contains 65 canonical Build pages, all marked `KEEP`.
