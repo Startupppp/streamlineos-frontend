@@ -21,7 +21,7 @@
 | 4. Collaboration and external workflows | Complete for the current release | Client Portal, client access, change requests, Feedbucket, forms, approvals, updates, chat, and meetings parent routes passed authenticated browser verification. |
 | 5. Execution and governance | Complete for the current release | QA, incidents, risks, decisions, automations, webhooks, files, wiki, whiteboard, workflow settings, project settings, and integrations parent routes passed authenticated browser verification. |
 | 6. Performance and UX hardening | Complete for Build-owned release work | Build cache focus sync, mobile overflow, ticket-detail drawer behavior, contract parsing, route access, feature cycles, and workspace-removal checks are verified. |
-| 7. Release verification | Complete for the current release | Backend and migrations are live. Frontend Build commit `0b1559c8d` is in `origin/main`, the production Vercel project deployed it successfully, and authenticated production smoke passed for Build home, project issues, and ticket detail. |
+| 7. Release verification | Complete for the current release | Backend and migrations are live. Frontend Build release merge `67cf4342f` is in `origin/main`; production Vercel deployed containing commit `c7f810a9e`, and authenticated production smoke passed for Build home, project issues, and ticket detail. |
 
 "Complete for the current release" does not mean the aspirational P1/P2 competitor backlog is finished. Those future product investments remain explicitly listed in `06-prioritized-backlog.md`.
 
@@ -100,8 +100,8 @@ These failures are measured and are not Build-owned:
 
 Completed:
 
-- Frontend Build release commit `0b1559c8d` is contained in `origin/main`.
-- `Vercel - streamlineos-frontend`, the production project, reported `Deployment has completed` for `0b1559c8d`.
+- Frontend Build release merge `67cf4342f` is contained in `origin/main`.
+- `Vercel - streamlineos-frontend`, the production project, reported `Deployment has completed` for `c7f810a9e`, which contains the Build release merge.
 - The production-domain unauthenticated `/build` smoke passed with the expected sign-in redirect and no console errors.
 - The authenticated production-domain smoke passed for `/build`, `/build/6/issues`, and `/build/6/tickets/BQS-1` with no fresh console errors.
 
