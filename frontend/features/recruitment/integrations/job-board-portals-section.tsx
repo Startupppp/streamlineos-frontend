@@ -12,7 +12,6 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -26,7 +25,7 @@ import {
   useUpsertSourcePortal,
   type SourcePortal,
   type UpsertPortalInput,
-} from "@/hooks/api/hr/recruitment";
+} from "@/hooks/api/hr/recruitment/jobs";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
@@ -155,11 +154,8 @@ function PortalCard({
   );
 }
 
-interface HrRecruitmentIntegrationsSettingsProps {
-  embedded?: boolean;
-}
-
-export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecruitmentIntegrationsSettingsProps) {
+/** Job boards the ATS pulls applications from. Rendered on the Recruitment OS integrations page. */
+export function JobBoardPortalsSection() {
   const { data: portals, isLoading, isError, error, refetch, access } = useSourcePortals();
 
   const portalByPlatform = useCallback(
@@ -171,7 +167,7 @@ export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecrui
     void refetch();
   }, [refetch]);
 
-  const content = (
+  return (
     <RequireModule module="hr">
       {access.denied ? (
         // FE-47: a disabled read would render every board as "Inactive".
@@ -211,16 +207,5 @@ export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecrui
         </div>
       )}
     </RequireModule>
-  );
-
-  if (embedded) return content;
-
-  return (
-    <PageWrapper
-      title="Recruitment Integrations"
-      subtitle="Connect job boards to automatically ingest applications into the ATS."
-    >
-      {content}
-    </PageWrapper>
   );
 }

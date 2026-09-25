@@ -142,7 +142,7 @@ export const CARD_GROUPS: CardGroup[] = [
       },
       {
         title: "Integrations",
-        description: "Job boards and connected recruiting apps",
+        description: "Webhooks, connected apps and devices",
         href: "/hr/settings/integrations",
         permission: "hr:integrations:manage",
         advanced: true,

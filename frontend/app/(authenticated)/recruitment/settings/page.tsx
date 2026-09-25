@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { requirePermission } from "@/lib/rbac/require-permission";
 import {
   Workflow, ClipboardList, BookOpen, Zap, Clock, Mail, FileSignature,
-  BarChart3, Users, PieChart, FileBarChart, Plug, type LucideIcon,
+  BarChart3, Users, PieChart, FileBarChart, Plug, ShieldCheck, type LucideIcon,
 } from "lucide-react";
 
 interface SettingsLink {
@@ -55,6 +55,7 @@ const SECTIONS: SettingsSection[] = [
       { label: "Interviewer Performance", description: "Scorecard turnaround and submission rates by interviewer.", href: "/recruitment/interviewer-performance", icon: Users },
       { label: "Scorecard Analytics", description: "Aggregated scorecard ratings and recommendation splits.", href: "/recruitment/scorecard-analytics", icon: PieChart },
       { label: "Diversity Report", description: "Pipeline diversity breakdown across stages.", href: "/recruitment/diversity-report", icon: PieChart },
+      { label: "Candidate BGV Compliance", description: "Cleared background checks per job posting.", href: "/recruitment/bgv-compliance", icon: ShieldCheck },
       { label: "Custom Reports & Exports", description: "Build ad-hoc exports of candidates, jobs, and offers.", href: "/recruitment/reports", icon: FileBarChart },
       { label: "Headcount Requests", description: "Review and approve open headcount requests.", href: "/recruitment/headcount", icon: Users },
     ],

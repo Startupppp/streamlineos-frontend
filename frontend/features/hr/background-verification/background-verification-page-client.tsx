@@ -6,18 +6,12 @@ import {
   useUpdateBackgroundVerification,
   type BackgroundVerification,
 } from "@/hooks/api/hr";
-import { useBgvComplianceDashboard, type BgvComplianceRow } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -68,84 +62,6 @@ function getStatusConfig(s: string | null) {
     icon: <ShieldCheck className="h-2.5 w-2.5" />,
     label: "Pending",
   };
-}
-
-function ComplianceDashboard() {
-  const { data: rows, isLoading, isError, error, refetch } = useBgvComplianceDashboard();
-
-  if (isLoading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-2xl" />
-        ))}
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        title="Couldn't load compliance data"
-        description={getErrorMessage(error)}
-        onRetry={refetch}
-        className="py-16"
-      />
-    );
-  }
-
-  if (!rows?.length) {
-    return (
-      <EmptyState
-        illustrationPreset="chart"
-        title="No candidate BgV data yet"
-        description="Candidate background verification data will appear here."
-      />
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {rows.map((row: BgvComplianceRow) => (
-        <Card
-          key={row.jobPostingId}
-          className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden"
-        >
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-semibold text-foreground">{row.jobTitle}</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0 px-4 pb-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <Progress value={row.clearedPct} className="flex-1 h-2 bg-muted [&>div]:bg-status-success-fill" />
-              <span className="text-xs font-semibold text-status-success-ink tabular-nums w-10 text-right">
-                {row.clearedPct}%
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-3 text-dense">
-              <span className="text-muted-foreground">
-                Total: <span className="font-medium text-foreground">{row.total}</span>
-              </span>
-              <span className="text-status-success-ink">
-                Cleared: <span className="font-medium">{row.cleared}</span>
-              </span>
-              <span className="text-status-warning-ink">
-                Pending: <span className="font-medium">{row.pending}</span>
-              </span>
-              <span className="text-status-info-ink">
-                Initiated: <span className="font-medium">{row.initiated}</span>
-              </span>
-              <span className="text-status-danger-ink">
-                Failed: <span className="font-medium">{row.failed}</span>
-              </span>
-              <span className="text-muted-foreground">
-                Not initiated: <span className="font-medium">{row.notInitiated}</span>
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
 }
 
 function stopRowClick(e: React.MouseEvent) {
@@ -338,7 +254,7 @@ export function BackgroundVerificationPageClient() {
   return (
     <PageWrapper
       title="Background Verification"
-      subtitle="Initiate, track employee background checks, and view candidate compliance"
+      subtitle="Initiate and track employee background checks"
       actions={
         canInitiate ? (
           <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
@@ -369,47 +285,28 @@ export function BackgroundVerificationPageClient() {
           </span>
         </div>
       )}
-      <Tabs defaultValue="employee-bgv">
-        <TabsList className="mb-4 bg-muted/60">
-          <TabsTrigger value="employee-bgv">Employee BGV</TabsTrigger>
-          <TabsTrigger value="candidate-compliance">Candidate Compliance</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="employee-bgv">
-          <DataTable<BackgroundVerification>
-            className="flex-1 min-h-0"
-            data={items ?? []}
-            columns={buildBgvColumns(
-              handleUpdateStatus,
-              handleOpenEdit,
-              update.isPending,
-              canManage,
-            )}
-            getRowKey={(bgv) => bgv.id}
-            emptyState={
-              <EmptyState
-                illustrationPreset="security"
-                title="No background verifications initiated"
-                description={
-                  canInitiate
-                    ? "Initiate background checks for employees to track their verification status."
-                    : "Background checks will appear here after an authorized HR administrator initiates one."
-                }
-              />
+      <DataTable<BackgroundVerification>
+        className="flex-1 min-h-0"
+        data={items ?? []}
+        columns={buildBgvColumns(
+          handleUpdateStatus,
+          handleOpenEdit,
+          update.isPending,
+          canManage,
+        )}
+        getRowKey={(bgv) => bgv.id}
+        emptyState={
+          <EmptyState
+            illustrationPreset="security"
+            title="No background verifications initiated"
+            description={
+              canInitiate
+                ? "Initiate background checks for employees to track their verification status."
+                : "Background checks will appear here after an authorized HR administrator initiates one."
             }
           />
-        </TabsContent>
-
-        <TabsContent value="candidate-compliance">
-          <div className="mb-3">
-            <p className="text-sm text-muted-foreground">
-              BgV completion rate per job posting — percentage of candidates with cleared background
-              verification.
-            </p>
-          </div>
-          <ComplianceDashboard />
-        </TabsContent>
-      </Tabs>
+        }
+      />
       </PageState>
 
       <InitiateBgvSheet

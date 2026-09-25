@@ -18,6 +18,7 @@ import {
 import { IntegrationCard } from "./integration-card";
 import { InboundSecretDialog, type IssuedSecret } from "./inbound-secret-dialog";
 import { SourcingExtensionCard } from "./sourcing-extension-card";
+import { JobBoardPortalsSection } from "./job-board-portals-section";
 
 const FAMILY_TITLE: Record<RecruitmentIntegration["family"], string> = {
   "job-board": "Job boards",
@@ -185,6 +186,12 @@ export function RecruitmentIntegrationsPage() {
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <SourcingExtensionCard />
             </div>
+          </section>
+
+          {/* Moved here from HR settings: job-board ingestion is a hiring concern. */}
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold text-foreground">Job board sync</h2>
+            <JobBoardPortalsSection />
           </section>
 
           {/*
