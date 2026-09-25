@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -96,7 +96,6 @@ export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
       ),
     enabled: canView && !!projectId,
     staleTime: 60_000,
-    placeholderData: keepPreviousData,
   });
 }
 

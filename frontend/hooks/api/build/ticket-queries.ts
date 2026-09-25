@@ -41,7 +41,6 @@ export function useTickets(
       apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined, signal, ticketListPageLazy),
     enabled: canView && !!projectId,
     staleTime: 30_000,
-    placeholderData: (prev) => prev,
     ...options,
   });
 }
@@ -86,7 +85,6 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 30_000,
-    placeholderData: (prev) => prev,
   });
 
   const data = useMemo(

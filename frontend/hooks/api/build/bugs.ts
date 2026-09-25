@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -34,7 +34,6 @@ export function useBugs(projectId?: number, filters?: BugFilters) {
     queryFn: ({ signal }) => apiClient.get<Bug[]>(`/build/${projectId}/bugs`, params, signal, bugListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
-    placeholderData: keepPreviousData,
   });
 }
 
