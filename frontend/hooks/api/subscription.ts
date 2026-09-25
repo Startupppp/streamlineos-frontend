@@ -127,7 +127,7 @@ export function useVerifySubscription() {
     mutationKey: ["billing", "checkout", "confirm"],
     mutationFn: (data) => apiClient.patch("/billing/checkout", data, undefined, verifySubscriptionContract),
     onSuccess: () => {
-      invalidateSettledPurchase(queryClient, session?.orgId);
+      invalidateSettledPurchase(queryClient, session?.orgId ?? undefined);
     },
   });
 }

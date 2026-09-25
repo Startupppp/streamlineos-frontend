@@ -9,7 +9,6 @@ import { useBoardSavedViews } from "./use-board-saved-views";
 import { applyDisplayOptionParams, hydrateDisplayOptions, useDisplayOptions, writeDisplayOptionParams } from "./use-display-options";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { parseViewType, type ViewType } from "./view-switcher";
-import { parseViewType } from "@/lib/build/view-types";
 import { INITIAL_FILTERS, type FilterState as WorkloadFilterState } from "./workload-types";
 import type { KanbanTicket } from "@/features/build/shared/types";
 import { mapBoardTicketToKanban } from "@/features/build/my-tickets/map-board-ticket";
