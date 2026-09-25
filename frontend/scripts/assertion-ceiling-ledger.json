@@ -533,10 +533,6 @@
       "as": 2,
       "nonNull": 0
     },
-    "features/hr/import-export/components/import-wizard-sheet.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/hr/leaves/components/leave-approvals.tsx": {
       "as": 1,
       "nonNull": 0
