@@ -270,18 +270,18 @@ export function MyPayrollPageContent() {
             </StatCardGrid>
 
             {/*
-              Below `lg` the tab strip wraps onto as many rows as it needs
-              instead of scrolling. There are up to nine sections here and the
-              scroll was hidden, so "Salary Structure" was half a label at the
-              right edge with nothing to say the rest of the strip existed.
+              The tab strip wraps onto as many rows as it needs, at every width,
+              instead of scrolling. There are up to nine sections and the scroll
+              was hidden: "Salary Structure" was half a label at 390, and with
+              the sidebar open the last four tabs sat past the edge at 1024.
             */}
-            <div className="flex min-w-0 items-center gap-2 max-lg:flex-wrap max-lg:items-stretch lg:flex-nowrap lg:overflow-x-auto lg:scrollbar-hide">
-              <TabsList className="shrink-0 max-lg:h-auto max-lg:min-h-9 max-lg:flex-wrap max-lg:justify-start max-lg:overflow-visible">
+            <div className="flex min-w-0 flex-wrap items-stretch gap-2">
+              <TabsList className="h-auto min-h-9 shrink-0 flex-wrap justify-start overflow-visible">
                 {sections.map((section) => (
                   <TabsTrigger
                     key={section.id}
                     value={section.id}
-                    className="gap-1.5 whitespace-nowrap max-lg:flex-none"
+                    className="flex-none gap-1.5 whitespace-nowrap"
                   >
                     {section.label}
                   </TabsTrigger>
