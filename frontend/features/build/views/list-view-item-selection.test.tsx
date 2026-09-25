@@ -2,6 +2,8 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+let mockTicketQuickActionsClassName: string | undefined;
+
 jest.mock("framer-motion", () => ({
   motion: {
     div: ({
@@ -58,7 +60,10 @@ jest.mock("./card-inline-date-fields", () => ({
 }));
 
 jest.mock("./ticket-quick-actions", () => ({
-  TicketQuickActions: () => null,
+  TicketQuickActions: ({ className }: { className?: string }) => {
+    mockTicketQuickActionsClassName = className;
+    return null;
+  },
 }));
 
 jest.mock("@/components/shared/ticket-status-badge", () => ({
@@ -230,5 +235,45 @@ describe("ListViewItem — keyboard focus is visible and announced", () => {
     );
 
     expect(container.querySelector("[aria-current]")).toBeNull();
+  });
+});
+
+describe("ListViewItem — row actions remain visible with focus", () => {
+  it("reveals the drag handle for focus within the row without changing hover behavior", () => {
+    render(
+      <ListViewItem
+        ticket={TICKET}
+        onClick={jest.fn()}
+        dragHandleProps={{
+          "data-rfd-drag-handle-draggable-id": "42",
+          "data-rfd-drag-handle-context-id": "list",
+          role: "button",
+          "aria-describedby": "drag-description",
+          tabIndex: 0,
+          draggable: false,
+          onDragStart: jest.fn(),
+        }}
+      />,
+    );
+
+    const dragHandle = screen.getByLabelText("Drag to reorder");
+    expect(dragHandle).toHaveClass("opacity-0");
+    expect(dragHandle).toHaveClass("group-hover:opacity-100");
+    expect(dragHandle).toHaveClass("group-focus-within:opacity-100");
+  });
+
+  it("reveals quick actions for focus within the row without changing hover behavior", () => {
+    render(<ListViewItem ticket={TICKET} onClick={jest.fn()} projectId={7} />);
+
+    expect(mockTicketQuickActionsClassName?.split(" ")).toEqual(
+      expect.arrayContaining([
+        "opacity-0",
+        "translate-x-1",
+        "group-hover:translate-x-0",
+        "group-hover:opacity-100",
+        "group-focus-within:translate-x-0",
+        "group-focus-within:opacity-100",
+      ]),
+    );
   });
 });
