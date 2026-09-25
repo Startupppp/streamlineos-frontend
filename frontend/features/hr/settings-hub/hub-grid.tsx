@@ -203,10 +203,9 @@ function CardItem({ card }: { card: CardDef }) {
 
 interface Props {
   isAdvanced: boolean;
-  onSwitchToAdvanced?: () => void;
 }
 
-export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
+export function HubGrid({ isAdvanced }: Props) {
   const { data: access } = useAccess();
   const canOpen = (card: CardDef) => {
     if (access?.isOrgOwner) return true;
@@ -233,16 +232,7 @@ export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
       {!isAdvanced && hiddenCount > 0 && (
         <p className="text-xs text-muted-foreground">
           {hiddenCount} advanced {hiddenCount === 1 ? "tool is" : "tools are"} hidden in Simple view.
-          {onSwitchToAdvanced && (
-            <button
-              type="button"
-              onClick={onSwitchToAdvanced}
-              className="ml-1 inline-flex items-center gap-1 rounded-sm font-medium text-status-info-ink outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              Show advanced tools
-              <ArrowRight className="h-3 w-3" />
-            </button>
-          )}
+          Switch to Advanced above to show {hiddenCount === 1 ? "it" : "them"}.
         </p>
       )}
       {accessibleGroups.map((group) => {

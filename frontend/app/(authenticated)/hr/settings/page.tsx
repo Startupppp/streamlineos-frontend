@@ -20,10 +20,6 @@ export default function HrSettingsHubPage() {
     setMode(next === "advanced");
   }
 
-  function handleSelectAdvanced() {
-    setMode(true);
-  }
-
   return (
     <PageWrapper
       title="HR configuration"
@@ -37,7 +33,7 @@ export default function HrSettingsHubPage() {
         />
       }
     >
-      <HubGrid isAdvanced={isAdvanced} onSwitchToAdvanced={handleSelectAdvanced} />
+      <HubGrid isAdvanced={isAdvanced} />
     </PageWrapper>
   );
 }
