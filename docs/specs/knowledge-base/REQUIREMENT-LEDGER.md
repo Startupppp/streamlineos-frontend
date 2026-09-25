@@ -753,7 +753,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Invalid/revoked → 404; no private chrome, sibling tree, comments, Ask scope, or non-public metadata
 - [x] Tokens hashed, revocable, versioned, rate limited, absent from logs
 - [x] Cache headers keyed by token revision; rotation/revocation purges CDN/cache
-- [ ] Page and attachment access bound to the same public grant
+- [x] Page and attachment access bound to the same public grant
 - [x] `@Public` route RLS: SECURITY DEFINER lookup (42501 hazard)
 
 **Evidence:** _pending_
