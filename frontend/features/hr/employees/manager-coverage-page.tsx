@@ -19,6 +19,8 @@ import { formatShortDate } from "@/lib/date-utils";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useUpdateProfile } from "@/hooks/api/hr/employee-profile";
 import { useCan } from "@/hooks/api/access";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { circularChainRows, type CircularChainRow } from "@/features/hr/employees/manager-coverage-names";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
@@ -88,18 +90,16 @@ const INACTIVE_MANAGER_COLUMNS: DataTableColumn<ManagerCoverageReport["inactiveM
   { key: "since", header: "Since", cell: (row) => <span className="font-mono text-dense">{formatShortDate(row.effectiveFrom)}</span> },
 ];
 
-const CIRCULAR_COLUMNS: DataTableColumn<ManagerCoverageReport["circular"][number] & { key: string }>[] = [
+const CIRCULAR_COLUMNS: DataTableColumn<CircularChainRow>[] = [
   {
     key: "chain",
     header: "Reporting loop",
     cell: (row) => (
       <div className="flex flex-wrap items-center gap-1">
-        {row.userIds.map((userId, index) => (
-          <span key={userId} className="flex items-center gap-1">
-            {index > 0 ? <span className="text-muted-foreground">→</span> : null}
-            <Link href={`/hr/employees/${userId}`} className="font-mono text-dense text-primary hover:underline">
-              {userId}
-            </Link>
+        {row.members.map((member, index) => (
+          <span key={member.userId} className="flex items-center gap-1">
+            {index > 0 ? <span className="text-muted-foreground" aria-hidden="true">→</span> : null}
+            {personLink(member.userId, member.name, "Unnamed employee")}
           </span>
         ))}
       </div>
@@ -124,6 +124,12 @@ const INACTIVE_MANAGER_ASSIGN_COLUMN: DataTableColumn<ManagerCoverageReport["ina
   cell: (row) => <AssignManagerCell userId={row.userId} currentManagerUserId={row.managerUserId} />,
 };
 
+function memberNames(members: Array<{ userId: string; name: string | null }> | undefined): Map<string, string> {
+  const names = new Map<string, string>();
+  for (const member of members ?? []) if (member.name) names.set(member.userId, member.name);
+  return names;
+}
+
 const WITHOUT_MANAGER_HEADERS = WITHOUT_MANAGER_COLUMNS.map((column) => column.header);
 
 function LoadingBody() {
@@ -140,6 +146,8 @@ export function ManagerCoveragePage() {
   const [tab, setTab] = useState<CoverageTab>("withoutManager");
   const canEdit = useCan("hr:employees:update");
   const pageState = usePageState({ permission: "hr:employees:view", module: "hr", isLoading, isError, error });
+  const cycleUserIds = [...new Set((data?.circular ?? []).flatMap((cycle) => cycle.userIds))].slice(0, 100);
+  const { data: cycleMembers } = useOrgMembersByIds(cycleUserIds);
 
   function handleRetry() {
     void refetch();
@@ -216,7 +224,7 @@ export function ManagerCoveragePage() {
               <TabsContent value="circular" className={TABS_CONTENT_PAGE_BODY_CLASS}>
                 <DataTable
                   className="flex-1 min-h-0"
-                  data={data.circular.map((cycle) => ({ ...cycle, key: cycle.userIds.join(">") }))}
+                  data={circularChainRows(data, memberNames(cycleMembers?.data))}
                   columns={CIRCULAR_COLUMNS}
                   getRowKey={(row) => row.key}
                   emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="No circular reporting lines" description="No chain of managers loops back on itself." />}
