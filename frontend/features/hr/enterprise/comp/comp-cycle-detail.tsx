@@ -20,6 +20,8 @@ import {
   type CompRecommendation,
 } from "@/hooks/api/hr/enterprise-comp";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoney, type MoneyDisplay } from "@/lib/format-utils";
 import {
   getUserDisplayName,
   type NamedUser,
@@ -30,25 +32,25 @@ interface Props {
   canManage: boolean;
 }
 
-function formatCents(cents: number | null): string {
+function formatCents(cents: number | null, money: MoneyDisplay): string {
   if (cents === null) return "—";
-  return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 0 })}`;
+  return formatMoney(cents / 100, money);
 }
 
-function BudgetBar({ allocated, used }: { allocated: number; used: number }) {
+function BudgetBar({ allocated, used, money }: { allocated: number; used: number; money: MoneyDisplay }) {
   const pct = allocated > 0 ? Math.min((used / allocated) * 100, 100) : 0;
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-xs text-muted-foreground">
-        <span>{formatCents(used)} used</span>
-        <span>{formatCents(allocated)} budget</span>
+        <span className="tabular-nums">{formatCents(used, money)} used</span>
+        <span className="tabular-nums">{formatCents(allocated, money)} budget</span>
       </div>
       <div className="h-2 rounded-full bg-muted overflow-hidden">
         <motion.div
           className="h-full rounded-full bg-primary"
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
         />
       </div>
       <p className="text-xs text-muted-foreground">{pct.toFixed(1)}% utilized</p>
@@ -77,6 +79,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
   } = useCompRecommendations(cycleId, { cursor });
   const { data: pools, isLoading: poolsLoading, isError: poolsIsError, error: poolsError, refetch: refetchPools } = useBudgetPools(cycleId);
   const calibrateMut = useCalibrateRecommendation();
+  const money = useOrgDisplay();
   const { data: membersData } = useOrgMembers(1, 200);
 
   const memberById = useMemo(() => {
@@ -92,7 +95,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
 
   const resolveMemberName = (userId: string) => {
     const member = memberById.get(userId);
-    return member ? getUserDisplayName(member) : userId;
+    return member ? getUserDisplayName(member) : "Unknown member";
   };
 
   const [calibratingId, setCalibratingId] = useState<number | null>(null);
@@ -132,10 +135,12 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
 
   function handleCalibrate(rec: CompRecommendation) {
     const val = calibrateValue[rec.id];
-    if (!val) return;
+    const amount = Number(val);
+    if (!val || !Number.isFinite(amount) || amount < 0) return;
     setCalibratingId(rec.id);
+    // The field is entered in major units (the column shows major units); the API takes cents.
     calibrateMut.mutate(
-      { recommendationId: rec.id, hrCalibratedCents: parseInt(val) },
+      { recommendationId: rec.id, hrCalibratedCents: Math.round(amount * 100) },
       {
         onSuccess: () => { toast.success("Calibrated"); setCalibratingId(null); },
         onError: (err) => { toast.error(getErrorMessage(err)); setCalibratingId(null); },
@@ -157,7 +162,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
         <div className="p-4 rounded-xl border bg-card space-y-3">
           <p className="text-sm font-semibold">Budget Pools</p>
           {pools.map((pool) => (
-            <BudgetBar key={pool.id} allocated={pool.allocatedCents} used={pool.usedCents} />
+            <BudgetBar key={pool.id} allocated={pool.allocatedCents} used={pool.usedCents} money={money} />
           ))}
         </div>
       ) : null}
@@ -197,9 +202,9 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
               getRowKey={(r) => r.id}
               columns={[
               { key: "user", header: "Employee", cell: (r) => <span className="font-medium text-sm">{resolveMemberName(r.userId)}</span> },
-              { key: "current", header: "Current Salary", cell: (r) => formatCents(r.currentSalaryCents) },
-              { key: "increase", header: "Increase", cell: (r) => <span className="text-primary font-medium">{formatCents(r.recommendedIncreaseCents)}</span> },
-              { key: "calibrated", header: "Calibrated", cell: (r) => formatCents(r.hrCalibratedCents) },
+              { key: "current", header: "Current Salary", cell: (r) => <span className="tabular-nums">{formatCents(r.currentSalaryCents, money)}</span> },
+              { key: "increase", header: "Increase", cell: (r) => <span className="text-primary font-medium tabular-nums">{formatCents(r.recommendedIncreaseCents, money)}</span> },
+              { key: "calibrated", header: "Calibrated", cell: (r) => <span className="tabular-nums">{formatCents(r.hrCalibratedCents, money)}</span> },
               {
                 key: "status",
                 header: "Status",
@@ -212,8 +217,9 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
-                      className="w-28 text-xs"
-                      placeholder="Calibrated $"
+                      className="w-28"
+                      aria-label={`Calibrated amount (${money.currency})`}
+                      placeholder={`Amount (${money.currency})`}
                       value={calibrateValue[r.id] ?? ""}
                       onChange={(e) => setCalibrateValue((prev) => ({ ...prev, [r.id]: e.target.value }))}
                     />
@@ -222,9 +228,10 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
                       variant="outline"
                       className="text-xs"
                       isPending={calibratingId === r.id}
+                      disabled={calibratingId !== null}
                       onClick={() => handleCalibrate(r)}
                     >
-                      Set
+                      Calibrate
                     </LoadingButton>
                   </div>
                 ) : null,

@@ -6,12 +6,14 @@ import { ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useCompCycles, type CompCycle } from "@/hooks/api/hr/enterprise-comp";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { activationProps } from "@/lib/keyboard-activation";
+import { formatMoney } from "@/lib/format-utils";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 interface Props {
   onSelect: (cycle: CompCycle) => void;
@@ -25,9 +27,6 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
   closed: "secondary",
 };
 
-function formatCents(cents: number): string {
-  return `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-}
 
 export function CompCycleList({ onSelect }: Props) {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
@@ -35,6 +34,8 @@ export function CompCycleList({ onSelect }: Props) {
   const cursor = cursorHistory.at(-1);
   const { data, isLoading, isFetching, isError, error, refetch } = useCompCycles({ cursor });
   const cycles = data?.data ?? [];
+  const money = useOrgDisplay();
+  const pageState = usePageState({ permission: "hr:compensation:manage", module: "hr", isLoading, isError, error });
 
   const handlePreviousPage = useCallback(() => {
     setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
@@ -49,22 +50,20 @@ export function CompCycleList({ onSelect }: Props) {
     void refetch();
   }, [refetch]);
 
-  if (isLoading) {
+  if (pageState.kind !== "ready") {
     return (
-      <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load compensation cycles"
-        description={getErrorMessage(error)}
+      <PageState
+        resolution={pageState}
+        loading={
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+          </div>
+        }
         onRetry={handleRetry}
-      />
+        className="flex-1"
+      >
+        {null}
+      </PageState>
     );
   }
 
@@ -97,7 +96,7 @@ export function CompCycleList({ onSelect }: Props) {
               <TruncatedText text={cycle.name} className="font-semibold text-sm min-w-0 flex-1" />
               <Badge variant={STATUS_VARIANT[cycle.status]} className="capitalize text-dense shrink-0">{cycle.status}</Badge>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">FY {cycle.fiscalYear} · Budget {formatCents(cycle.budgetPoolCents)}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">FY {cycle.fiscalYear} · Budget {formatMoney(cycle.budgetPoolCents / 100, money)}</p>
           </div>
           <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           </motion.div>
