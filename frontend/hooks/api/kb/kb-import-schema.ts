@@ -17,7 +17,16 @@ export const kbImportJobContract = z.object({
   updatedAt: z.string(),
 });
 
-export const kbImportJobListContract = z.array(kbImportJobContract);
+const cursorPagination = z.object({
+  limit: z.number().int(),
+  hasMore: z.boolean(),
+  nextCursor: z.string().nullable(),
+});
+
+export const kbImportJobListPageContract = z.object({
+  data: z.array(kbImportJobContract),
+  pagination: cursorPagination,
+});
 
 export const kbExportJobContract = z.object({
   id: z.number().int(),
@@ -33,7 +42,10 @@ export const kbExportJobContract = z.object({
   updatedAt: z.string(),
 });
 
-export const kbExportJobListContract = z.array(kbExportJobContract);
+export const kbExportJobListPageContract = z.object({
+  data: z.array(kbExportJobContract),
+  pagination: cursorPagination,
+});
 
 export const kbImportResultContract = z.object({
   jobId: z.number().int(),

@@ -29,6 +29,9 @@ jest.mock("@/hooks/api/kb", () => ({
     isError: false,
     error: null,
     refetch: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
   }),
   useKbExportJobs: () => ({
     data: [],
@@ -36,6 +39,9 @@ jest.mock("@/hooks/api/kb", () => ({
     isError: false,
     error: null,
     refetch: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
   }),
 }));
 

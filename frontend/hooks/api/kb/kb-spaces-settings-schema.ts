@@ -18,8 +18,6 @@ export const kbSpaceListItemContract = z.object({
 
 export type KbSpaceListItem = z.infer<typeof kbSpaceListItemContract>;
 
-export const kbSpaceListContract = z.array(kbSpaceListItemContract);
-
 export const kbSpaceListPageContract = z.object({
   data: z.array(kbSpaceListItemContract),
   pagination: z.object({
@@ -78,8 +76,6 @@ export const kbSpaceMemberContract = z.object({
   userImage: z.string().nullable(),
 });
 
-export const kbSpaceMemberListContract = z.array(kbSpaceMemberContract);
-
 export const kbSettingsContract = z.object({
   trashRetentionDays: z.number().int(),
   chatHistoryRetentionDays: z.number().int(),
@@ -92,5 +88,3 @@ export const kbTagContract = z.object({
   slug: z.string(),
   createdAt: z.string(),
 });
-
-export const kbTagListContract = z.array(kbTagContract);

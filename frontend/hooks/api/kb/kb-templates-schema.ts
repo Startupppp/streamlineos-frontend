@@ -12,7 +12,6 @@ const kbPageTemplateContract = z.object({
   updatedAt: z.string(),
 });
 
-export const kbPageTemplateListContract = z.array(kbPageTemplateContract);
 export const kbPageTemplateSingleContract = kbPageTemplateContract;
 
 export const kbPageTemplateListPageContract = z.object({
