@@ -111,6 +111,7 @@ const TEST_DATA = {
   goals: [],
   industry: "IT Services",
   companyName: "Test Corp",
+  fullName: "QA Owner",
   teamSize: "1-10",
   phone: "",
   installedApps: [],

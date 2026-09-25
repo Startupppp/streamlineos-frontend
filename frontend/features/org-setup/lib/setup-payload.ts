@@ -19,6 +19,7 @@ export function buildOrgSetupPayload(data: WizardData): OrgSetupPayload {
   return {
     industry: data.industry,
     companyName: data.companyName,
+    ...(data.fullName.trim() ? { fullName: data.fullName.trim() } : {}),
     companySize: data.teamSize,
     ...(data.country ? { country: data.country } : {}),
     ...(data.timezone ? { timezone: data.timezone } : {}),

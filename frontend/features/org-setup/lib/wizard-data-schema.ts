@@ -29,6 +29,7 @@ export const wizardDataSchema = z.object({
   goals: z.array(z.string()).catch([]),
   industry: z.string().catch(""),
   companyName: z.string().catch(""),
+  fullName: z.string().catch(""),
   teamSize: z.string().catch(""),
   country: optionalString,
   timezone: optionalString,

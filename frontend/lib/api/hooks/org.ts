@@ -23,6 +23,8 @@ const orgSetupSkipContract = lazyContract(() =>
 export type OrgSetupPayload = {
   industry: string;
   companyName?: string;
+  /** HRMS-E2E-025. The owner's own name, collected on Basics. Optional, mirroring the backend. */
+  fullName?: string;
   companySize: string;
   country?: string;
   timezone?: string;

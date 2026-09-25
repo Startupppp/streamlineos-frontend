@@ -32,6 +32,7 @@ import type { ZodIssue } from "zod";
 import {
   basicsStepSchema,
   COMPANY_NAME_MAX_LENGTH,
+  FULL_NAME_MAX_LENGTH,
   INDUSTRY_MAX_LENGTH,
 } from "../lib/basics-schema";
 import {
@@ -162,17 +163,24 @@ export function StepBasics({
         goals: data.goals,
         industry: data.industry,
         companyName: data.companyName,
+        fullName: data.fullName,
         teamSize: data.teamSize,
         phone: data.phone,
       }),
-    [data.goals, data.industry, data.companyName, data.teamSize, data.phone],
+    [data.goals, data.industry, data.companyName, data.fullName, data.teamSize, data.phone],
   );
 
   const issues = parsed.success ? [] : parsed.error.issues;
+  const handleFullNameChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => patch({ fullName: event.target.value }),
+    [patch],
+  );
+
   const errors = {
     goals: fieldError(attempted, issues, "goals"),
     industry: fieldError(attempted, issues, "industry"),
     companyName: fieldError(attempted, issues, "companyName"),
+    fullName: fieldError(attempted, issues, "fullName"),
     teamSize: fieldError(attempted, issues, "teamSize"),
     phone: fieldError(attempted, issues, "phone"),
   };
@@ -329,6 +337,28 @@ export function StepBasics({
           </p>
         </div>
         <div className="grid min-w-0 grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {/* HRMS-E2E-025. Asked here because it is the only place the product
+              ever could: sign-up collects an address and nothing else, so until
+              this existed users.name was null for every founder and the
+              directory, the org chart and every export fell back to the email's
+              local part. */}
+          <div className="min-w-0 space-y-1">
+            <Label htmlFor="owner-full-name" className="text-xs">
+              Your full name *
+            </Label>
+            <Input
+              id="owner-full-name"
+              value={data.fullName}
+              onChange={handleFullNameChange}
+              placeholder="Joseph Mathew"
+              maxLength={FULL_NAME_MAX_LENGTH}
+              autoComplete="name"
+              className="w-full text-sm"
+              aria-invalid={!!errors.fullName}
+              aria-describedby={errors.fullName ? "owner-full-name-error" : undefined}
+            />
+            <InlineError id="owner-full-name-error" message={errors.fullName} />
+          </div>
           <div className="min-w-0 space-y-1">
             <Label htmlFor="company-name" className="text-xs">
               Company name *
