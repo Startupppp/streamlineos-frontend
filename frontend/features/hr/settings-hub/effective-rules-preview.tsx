@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronRight } from "lucide-react";
+import { getTodayString } from "@/lib/date-utils";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -61,9 +63,10 @@ function RuleCard({ item }: { item: EffectiveRuleItem }) {
       </div>
 
       <details className="group">
-        <summary className="text-xs text-status-info-ink cursor-pointer select-none list-none flex items-center gap-1">
-          <span className="group-open:hidden">▶ Show rules</span>
-          <span className="hidden group-open:inline">▼ Hide rules</span>
+        <summary className="text-xs text-status-info-ink cursor-pointer select-none list-none flex w-fit items-center gap-1 rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-ring">
+          <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 motion-reduce:transition-none group-open:rotate-90" />
+          <span className="group-open:hidden">Show rules</span>
+          <span className="hidden group-open:inline">Hide rules</span>
         </summary>
         <pre className="text-xs font-mono bg-muted/50 rounded-lg p-3 mt-2 overflow-auto max-h-48 whitespace-pre-wrap">
           {JSON.stringify(item.rules, null, 2)}
@@ -75,12 +78,17 @@ function RuleCard({ item }: { item: EffectiveRuleItem }) {
 
 export function EffectiveRulesPreview() {
   const [employeeId, setEmployeeId] = useState("");
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  // Local calendar date: toISOString() is UTC and reads as yesterday/tomorrow near midnight.
+  const [date, setDate] = useState(getTodayString);
 
   const params =
     employeeId.trim() && date ? { employeeId: employeeId.trim(), date } : null;
 
   const { data, isLoading, isError, error, refetch } = useEffectiveRules(params);
+
+  function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setDate(e.target.value);
+  }
 
   function handleRetry() {
     void refetch();
@@ -94,14 +102,13 @@ export function EffectiveRulesPreview() {
             value={employeeId}
             onChange={setEmployeeId}
             placeholder="Select employee"
-            className="text-xs"
           />
         </div>
         <Input
           type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="w-40 text-xs"
+          onChange={handleDateChange}
+          className="w-40"
         />
         <span className="text-xs text-muted-foreground">
           {params ? "Showing effective rules" : "Select an employee to preview"}
@@ -110,7 +117,7 @@ export function EffectiveRulesPreview() {
 
       {isLoading ? (
         <div className="flex flex-col gap-3">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-28 w-full rounded-xl" />
           ))}
         </div>

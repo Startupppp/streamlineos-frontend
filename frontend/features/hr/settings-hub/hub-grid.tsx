@@ -187,14 +187,14 @@ function CardItem({ card }: { card: CardDef }) {
       href={card.href}
       className={cn(
         "group relative flex flex-col gap-2 h-full rounded-2xl border border-border/70 bg-card/90 p-4",
-        "shadow-panel transition-all duration-300",
+        "shadow-panel transition-transform duration-200 motion-reduce:transition-none",
         "hover:-translate-y-0.5 hover:border-status-info-rule hover:shadow-accent",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold text-foreground">{card.title}</p>
-        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 -translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
+        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 -translate-x-1 transition-[opacity,transform] duration-200 motion-reduce:transition-none group-hover:opacity-100 group-focus-visible:opacity-100 group-hover:translate-x-0" />
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">{card.description}</p>
     </Link>
@@ -237,7 +237,7 @@ export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
             <button
               type="button"
               onClick={onSwitchToAdvanced}
-              className="ml-1 inline-flex items-center gap-1 font-medium text-status-info-ink hover:underline"
+              className="ml-1 inline-flex items-center gap-1 rounded-sm font-medium text-status-info-ink outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring"
             >
               Show advanced tools
               <ArrowRight className="h-3 w-3" />
