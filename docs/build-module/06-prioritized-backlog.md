@@ -221,14 +221,14 @@ Ordered by dependency on the closure stages above.
 - **Evidence:** Backend controller and service are implemented in `backend/src/modules/build/import-export/`, including permission checks, project scoping, CSV/JSON parsing, preview-only validation, confirmation-token enforcement, bounded writes, atomic rollback, partial-mode reporting, and idempotency. The frontend flow is implemented in `frontend/features/build/import-export/` and mounted from `frontend/features/build/project-detail/project-board-page.tsx`. Focused verification passes 9 backend suites / 121 tests and 7 frontend suites / 80 tests.
 - **Effort:** spent
 
-#### P1-8 — Product prioritization inputs
+#### P1-8 — Product prioritization inputs — **PARTIAL**
 
 - **User job:** decide what to build next using customer revenue and tier, not opinion.
 - **Owner:** backend, then frontend
 - **Depends on:** P1-4
 - **Acceptance:** feedback carries CRM-sourced revenue and tier; a scoring frame is applied on the roadmap; adoption outcomes return to the insight.
-- **Evidence:** managed-product feedback, insights, roadmap, projects, and releases form the discovery chain; the CRM value input and scoring remain incomplete.
-- **Effort:** 10–15 d
+- **Evidence:** Roadmap RICE scoring and CRM tier/revenue weighting are implemented in `backend/src/modules/build/core/projects-roadmap.service.ts` and `backend/src/modules/build/core/roadmap-accounts.ts`. Managed-product insights now expose tenant-scoped roadmap status, linked feedback status, and feedback-vote outcome aggregates through `backend/src/modules/build/managed-products/managed-products.service.ts`, with the frontend rendered in `frontend/features/build/managed-products/product-insights-page.tsx`; focused backend verification passes 44 tests and frontend insight/schema verification passes 6 tests. The remaining gap is a durable CRM tier/value snapshot on each feedback record and an authenticated browser run with a real managed-product fixture.
+- **Effort:** in progress
 
 ## P2 — differentiation, after the core is dependable
 

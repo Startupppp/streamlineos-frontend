@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart2, CheckCircle2, FolderOpen, Inbox, LayoutGrid } from "lucide-react";
+import { BarChart2, CheckCircle2, FolderOpen, Inbox, LayoutGrid, MessageSquare, ThumbsUp } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
@@ -101,6 +101,36 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
                     value={data?.submissionsByStatus.archived ?? 0}
                     icon={FolderOpen}
                     tone="default"
+                  />
+                </StatCardGrid>
+              </div>
+
+              <div>
+                <h2 className="mb-3 text-sm font-semibold text-foreground">Roadmap outcomes</h2>
+                <StatCardGrid cols={4}>
+                  <StatCard
+                    label="Roadmap items"
+                    value={data?.roadmapItemCount ?? 0}
+                    icon={LayoutGrid}
+                    tone="default"
+                  />
+                  <StatCard
+                    label="Completed items"
+                    value={data?.roadmapItemsByStatus.completed ?? 0}
+                    icon={CheckCircle2}
+                    tone="blue"
+                  />
+                  <StatCard
+                    label="Linked feedback"
+                    value={Object.values(data?.feedbackByStatus ?? {}).reduce((total, value) => total + value, 0)}
+                    icon={MessageSquare}
+                    tone="amber"
+                  />
+                  <StatCard
+                    label="Feedback votes"
+                    value={data?.linkedFeedbackVoteCount ?? 0}
+                    icon={ThumbsUp}
+                    tone="emerald"
                   />
                 </StatCardGrid>
               </div>
