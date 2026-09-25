@@ -84,6 +84,46 @@ function renderHeader(overrides: Partial<EmployeeData> = {}) {
   );
 }
 
+describe("EmployeeHeaderCard name", () => {
+  it("shows the display name once when first name, last name and display name are all set", () => {
+    renderHeader({
+      name: "Ada B. Lovelace",
+      firstName: "Ada",
+      lastName: "Lovelace",
+    });
+
+    expect(screen.getAllByText("Ada B. Lovelace")).toHaveLength(1);
+    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
+    // The composed first+last reading, which used to win here and to render a
+    // second time as the page title above the card.
+    expect(screen.queryByText("Ada Lovelace")).not.toBeInTheDocument();
+  });
+
+  it("falls back to the display name when first and last are null", () => {
+    renderHeader({
+      name: "Grace Hopper",
+      firstName: null,
+      lastName: null,
+    });
+
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+      "Grace Hopper",
+    );
+    expect(screen.queryByText("Employee")).not.toBeInTheDocument();
+  });
+
+  it("falls back to the email local part rather than the literal word Employee", () => {
+    renderHeader({
+      name: null,
+      firstName: null,
+      lastName: null,
+      email: "owner@example.test",
+    });
+
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("owner");
+  });
+});
+
 describe("EmployeeHeaderCard status badge", () => {
   it("badges an invited-but-not-accepted employee Pending, never Active", () => {
     renderHeader({ hasAccepted: false });

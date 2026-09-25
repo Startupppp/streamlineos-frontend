@@ -9,6 +9,7 @@ import { AvailabilityBadge, InfoField, StatBlock } from "@/features/hr/employees
 import { LIFECYCLE_BADGE } from "@/features/hr/employees/detail/employee-detail-constants";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
+import { getUserDisplayName } from "@/lib/person-display";
 import { format } from "date-fns";
 import {
   Building2,
@@ -64,8 +65,10 @@ export function EmployeeHeaderCard({
   showLegacyEmployeeId,
   legacyEmployeeId,
 }: EmployeeHeaderCardProps) {
-  const employeeName =
-    `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() || "Employee";
+  // V-023/V-025: one name, from one place. Composing first+last here ignored
+  // `employee.name`, so a person carrying only a display name read "Employee"
+  // and an owner read their email local part.
+  const employeeName = getUserDisplayName(employee);
 
   const lifecycleBadge = lifecycleStatus
     ? LIFECYCLE_BADGE[lifecycleStatus] ?? {
@@ -83,37 +86,25 @@ export function EmployeeHeaderCard({
     >
       <CardContent className="p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:gap-5">
-          <div className="flex items-start gap-3 sm:block sm:shrink-0">
-            <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
-              <AvatarImage
-                src={resolveImageUrl(
-                  typeof employee.image === "string" ? employee.image : null,
-                )}
-              />
-              <AvatarFallback className="bg-muted text-lg font-bold text-muted-foreground sm:text-xl">
-                {getInitials(undefined, employee.firstName, employee.lastName)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1 sm:hidden">
-              <h2 className="text-base font-bold leading-tight text-foreground">
-                {employeeName}
-              </h2>
-              {employee.designation && (
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  {employee.designation}
-                </p>
-              )}
-            </div>
-          </div>
-
           <div className="min-w-0 flex-1 space-y-3.5">
-            <div className="hidden items-start gap-2 sm:flex">
+            {/* V-023: one heading, not a mobile copy and a desktop copy. */}
+            <div className="flex items-start gap-3">
+              <Avatar className="h-16 w-16 shrink-0 sm:h-20 sm:w-20">
+                <AvatarImage
+                  src={resolveImageUrl(
+                    typeof employee.image === "string" ? employee.image : null,
+                  )}
+                />
+                <AvatarFallback className="bg-muted text-lg font-bold text-muted-foreground sm:text-xl">
+                  {getInitials(undefined, employee.firstName, employee.lastName)}
+                </AvatarFallback>
+              </Avatar>
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-bold text-foreground">
+                <h2 className="text-base font-bold leading-tight text-foreground sm:text-lg">
                   {employeeName}
                 </h2>
                 {employee.designation && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     {employee.designation}
                   </p>
                 )}
