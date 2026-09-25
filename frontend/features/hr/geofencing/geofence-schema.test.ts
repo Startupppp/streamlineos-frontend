@@ -1,4 +1,4 @@
-import { geofenceSchema } from "./geofence-schema";
+import { geofenceSchema, GEOFENCE_PRESETS } from "./geofence-schema";
 
 function issues(values: { name: string; lat: string; lng: string }): string[] {
   const result = geofenceSchema.safeParse({ ...values, radiusMeters: 200 });
@@ -15,4 +15,12 @@ describe("a geofence needs a real coordinate pair, not just any text", () => {
     expect(issues({ name: "HQ", lat: "13.0827", lng: "east" })).toEqual(["lng: Longitude must be a number"]);
     expect(issues({ name: "HQ", lat: "", lng: "" })).toEqual(["lat: Latitude is required", "lng: Longitude is required"]);
   });
+
+  it("validates all exported location presets", () => {
+    expect(GEOFENCE_PRESETS.length).toBeGreaterThan(0);
+    for (const preset of GEOFENCE_PRESETS) {
+      expect(issues({ name: preset.name, lat: preset.lat, lng: preset.lng })).toEqual([]);
+    }
+  });
 });
+
