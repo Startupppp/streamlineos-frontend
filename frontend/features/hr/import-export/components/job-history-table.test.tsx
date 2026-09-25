@@ -8,6 +8,10 @@ jest.mock("@/hooks/api/hr/import-export", () => ({
   useHrImportJob: () => ({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() }),
   useRollbackImportJob: () => ({ mutate: jest.fn(), isPending: false }),
 }));
+const mockAccess = jest.fn(() => "granted");
+jest.mock("@/hooks/api/access", () => ({
+  useCanState: () => mockAccess(),
+}));
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 function history(rows: ReturnType<typeof importJob>[]) {
@@ -49,5 +53,15 @@ describe("JobHistoryTable", () => {
 
     expect(screen.queryByRole("button", { name: "View errors" })).not.toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument();
+  });
+
+  it("says access is restricted, not that there is no history, when the caller cannot import (FE-47)", () => {
+    history([]);
+    mockAccess.mockReturnValueOnce("denied");
+
+    render(<JobHistoryTable />);
+
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+    expect(screen.queryByText("No import history yet")).not.toBeInTheDocument();
   });
 });

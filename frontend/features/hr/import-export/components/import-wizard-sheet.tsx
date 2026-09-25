@@ -171,6 +171,9 @@ export function ImportWizardSheet({
   }, [commitJob, job, entityLabel]);
 
   const handleDone = useCallback(() => handleOpenChange(false), [handleOpenChange]);
+  const handleChooseFile = useCallback(() => fileInputRef.current?.click(), []);
+  const handleBackToUpload = useCallback(() => setStep(1), []);
+  const handleBackToPreview = useCallback(() => setStep(2), []);
 
   type PreviewRow = { [key: string]: string | number } & { _rowIdx: number };
 
@@ -238,8 +241,8 @@ export function ImportWizardSheet({
               ) : null}
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors p-8 flex flex-col items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                onClick={handleChooseFile}
+                className="w-full rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring p-8 flex flex-col items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
               >
                 <Upload className="h-6 w-6" />
                 <span className="font-medium">Click to choose a CSV file</span>
@@ -330,13 +333,13 @@ export function ImportWizardSheet({
 
         <SheetFooter className="flex shrink-0 gap-2 border-t border-border bg-muted/30 px-6 py-4">
           {step === 1 && (
-            <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={handleDone}>
               Cancel
             </Button>
           )}
           {step === 2 && (
             <>
-              <Button variant="outline" onClick={() => setStep(1)}>
+              <Button type="button" variant="outline" onClick={handleBackToUpload}>
                 Back
               </Button>
               <LoadingButton
@@ -355,7 +358,7 @@ export function ImportWizardSheet({
           )}
           {step === 3 && job && (
             <>
-              <Button variant="outline" onClick={() => setStep(2)}>
+              <Button type="button" variant="outline" onClick={handleBackToPreview}>
                 Back
               </Button>
               <LoadingButton
