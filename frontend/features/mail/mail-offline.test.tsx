@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MailListPane } from "./mail-list-pane";
 import type { MailAccount } from "@/types/mail";
@@ -55,7 +55,9 @@ function setOnline(online: boolean) {
     configurable: true,
     get: () => online,
   });
-  fireEvent(window, new Event(online ? "online" : "offline"));
+  act(() => {
+    fireEvent(window, new Event(online ? "online" : "offline"));
+  });
 }
 
 function renderPane() {
@@ -151,6 +153,7 @@ describe("MailListPane — offline and reconnect", () => {
     ];
     listState.hasNextPage = true;
     renderPane();
+    fetchNextPage.mockClear();
 
     setOnline(false);
     fireEvent.click(screen.getByRole("button", { name: /load more/i }));

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo, type Key } from "react";
+import { memo, useCallback, useMemo, useRef, type Key } from "react";
 import { List, type RowComponentProps } from "react-window";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { MailMessageRow, type MailListAction } from "./mail-message-row";
@@ -20,8 +20,13 @@ function buildFlatItems(groups: MailTriageGroup[]): FlatItem[] {
   const items: FlatItem[] = [];
   for (const group of groups) {
     if (group.label)
-      items.push({ kind: "header", label: group.label, count: group.messages.length });
-    for (const msg of group.messages) items.push({ kind: "message", message: msg });
+      items.push({
+        kind: "header",
+        label: group.label,
+        count: group.messages.length,
+      });
+    for (const msg of group.messages)
+      items.push({ kind: "message", message: msg });
   }
   return items;
 }
@@ -132,10 +137,7 @@ export const MailVirtualList = memo(function MailVirtualList({
   onAiBrief,
   onLoadMore,
 }: MailVirtualListProps) {
-  const items = useMemo(
-    () => buildFlatItems(groups),
-    [groups],
-  );
+  const items = useMemo(() => buildFlatItems(groups), [groups]);
 
   const rowProps = useMemo(
     (): MailVirtualRowData => ({
@@ -147,7 +149,15 @@ export const MailVirtualList = memo(function MailVirtualList({
       onAction,
       onAiBrief,
     }),
-    [items, selectedMessageId, activeFolder, canAi, onSelect, onAction, onAiBrief],
+    [
+      items,
+      selectedMessageId,
+      activeFolder,
+      canAi,
+      onSelect,
+      onAction,
+      onAiBrief,
+    ],
   );
 
   const stableRowKey = useCallback(
@@ -159,9 +169,17 @@ export const MailVirtualList = memo(function MailVirtualList({
     [],
   );
 
+  const lastTriggerStopIndexRef = useRef(-1);
+
   const handleRowsRendered = useCallback(
     ({ stopIndex }: { startIndex: number; stopIndex: number }) => {
-      if (stopIndex >= items.length - 1 && hasNextPage && !isFetchingNextPage) {
+      if (
+        stopIndex >= items.length - 1 &&
+        hasNextPage &&
+        !isFetchingNextPage &&
+        stopIndex !== lastTriggerStopIndexRef.current
+      ) {
+        lastTriggerStopIndexRef.current = stopIndex;
         onLoadMore();
       }
     },
