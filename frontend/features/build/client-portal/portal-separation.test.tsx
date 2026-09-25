@@ -4,6 +4,12 @@ import { PortalListPage } from "./portal-list-page";
 import { PortalDashboardPage } from "./portal-dashboard-page";
 import { ApiError } from "@/lib/api-envelope";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn() }),
+  useSearchParams: () => ({ get: () => null, toString: () => "" }),
+  usePathname: () => "/build/1/client-portal",
+}));
+
 jest.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => (

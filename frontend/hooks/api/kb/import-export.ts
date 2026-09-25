@@ -148,6 +148,7 @@ export function useCancelImportJob() {
 
 export function useDryRunImport() {
   return useMutation({
+    mutationKey: ["kb", "pages", "import", "dry-run"],
     mutationFn: (input: ImportKbPagesInput) =>
       apiClient.post<ImportDryRunResult>("/kb/pages/import/dry-run", input, undefined, kbImportDryRunContractLazy),
   });

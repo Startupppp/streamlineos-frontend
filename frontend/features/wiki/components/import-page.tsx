@@ -10,13 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Tabs,
   TabsContent,
   TabsList,
@@ -24,7 +17,14 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { useCan } from "@/hooks/api/access";
-import { useImportKbPages, useKbImportJob, useCancelImportJob } from "@/hooks/api/kb";
+import {
+  useImportKbPages,
+  useKbImportJob,
+  useCancelImportJob,
+  useDryRunImport,
+  type ImportDryRunResult,
+} from "@/hooks/api/kb";
+import { useKbPageTreeInfinite } from "@/hooks/api/kb/pages";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_IMPORT, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
@@ -32,6 +32,9 @@ import { KbUploadIcon, KbClipboardIcon } from "@/features/wiki/lib/kb-icons";
 import { ExportJobsCard } from "./export-jobs-card";
 import { ImportHistorySection } from "./import-history-section";
 import { ImportPendingList, type ImportPendingItem } from "./import-pending-list";
+import { ImportDryRunCard } from "./import-dry-run-card";
+import { ImportFailedTitlesAlert } from "./import-failed-titles-alert";
+import { ImportFormControls } from "./import-form-controls";
 
 const VALID_TABS = ["import", "export"] as const;
 type ImportExportTab = (typeof VALID_TABS)[number];
@@ -47,6 +50,7 @@ export default function ImportPage() {
   const canExport = useCan("kb:pages:export");
   const importMutation = useImportKbPages();
   const cancelMutation = useCancelImportJob();
+  const dryRunMutation = useDryRunImport();
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedTab = resolveTab(searchParams.get("tab"));
@@ -62,19 +66,36 @@ export default function ImportPage() {
   const [pasteTitle, setPasteTitle] = useState("");
   const [pasteText, setPasteText] = useState("");
   const [targetSpaceId, setTargetSpaceId] = useState<string>("none");
+  const [targetParentPageId, setTargetParentPageId] = useState<string>("none");
   const [visibility, setVisibility] = useState<"private" | "org" | "public">("org");
   const [duplicatePolicy, setDuplicatePolicy] = useState<"skip" | "update">("skip");
   const [activeJobId, setActiveJobId] = useState<number | null>(null);
+  const [dryRunResult, setDryRunResult] = useState<ImportDryRunResult | null>(null);
+  const [completedFailedTitles, setCompletedFailedTitles] = useState<string[]>([]);
 
   const { data: activeJob } = useKbImportJob(activeJobId);
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
 
+  const selectedSpaceId = targetSpaceId === "none" ? undefined : Number(targetSpaceId);
+  const parentPagesQuery = useKbPageTreeInfinite({ spaceId: selectedSpaceId });
+  const parentPages = parentPagesQuery.data?.pages.flatMap((p) => p.data) ?? [];
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setDryRunResult(null);
+  }, [items]);
 
   useEffect(() => {
     if (!activeJob) return;
     if (activeJob.status === "completed") {
+      const report = activeJob.errorReport;
+      const titles: string[] = [];
+      if (report && typeof report === "object" && "failedTitles" in report && Array.isArray(report.failedTitles)) {
+        for (const t of report.failedTitles) if (typeof t === "string") titles.push(t);
+      }
+      if (titles.length > 0) setCompletedFailedTitles(titles);
       toast.success(
         `Imported ${activeJob.succeededItems} page${activeJob.succeededItems === 1 ? "" : "s"}${activeJob.failedItems > 0 ? ` (${activeJob.failedItems} failed)` : ""}`,
         {
@@ -161,72 +182,67 @@ export default function ImportPage() {
     [items.length],
   );
 
-  function handleChooseFiles() {
-    fileInputRef.current?.click();
-  }
+  function handleChooseFiles() { fileInputRef.current?.click(); }
+  function handleShowPaste() { setShowPaste(true); }
 
-  function handleShowPaste() {
-    setShowPaste(true);
-  }
-
-  function handlePasteTitleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setPasteTitle(event.target.value);
-  }
-
-  function handlePasteTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
-    setPasteText(event.target.value);
-  }
+  function handlePasteTitleChange(e: React.ChangeEvent<HTMLInputElement>) { setPasteTitle(e.target.value); }
+  function handlePasteTextChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setPasteText(e.target.value); }
 
   function handleAddPaste() {
     const title = pasteTitle.trim();
-    if (!title) {
-      toast.error("A title is required");
-      return;
-    }
-    if (items.length >= 100) {
-      toast.error("Maximum 100 items reached");
-      return;
-    }
-    setItems((prev) => [
-      ...prev,
-      {
-        title,
-        contentText: pasteText,
-        sizeBytes: new TextEncoder().encode(pasteText).length,
-      },
-    ]);
+    if (!title) { toast.error("A title is required"); return; }
+    if (items.length >= 100) { toast.error("Maximum 100 items reached"); return; }
+    setItems((prev) => [...prev, { title, contentText: pasteText, sizeBytes: new TextEncoder().encode(pasteText).length }]);
     setPasteTitle("");
     setPasteText("");
     setShowPaste(false);
   }
 
-  function handleRemoveItem(index: number) {
-    setItems((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
-  }
-
-  function handleClearAll() {
-    setItems([]);
-  }
-
-  function handleTargetSpaceChange(value: string) {
-    setTargetSpaceId(value);
-  }
-
+  function handleRemoveItem(index: number) { setItems((prev) => prev.filter((_, i) => i !== index)); }
+  function handleClearAll() { setItems([]); setCompletedFailedTitles([]); }
+  function handleTargetSpaceChange(value: string) { setTargetSpaceId(value); setTargetParentPageId("none"); }
+  function handleParentPageChange(value: string) { setTargetParentPageId(value); }
   function handleVisibilityChange(value: string) {
-    setVisibility(value as "private" | "org" | "public");
+    if (value === "private" || value === "org" || value === "public") setVisibility(value);
   }
-
   function handleDuplicatePolicyChange(value: string) {
-    setDuplicatePolicy(value as "skip" | "update");
+    if (value === "skip" || value === "update") setDuplicatePolicy(value);
+  }
+  function handleDismissDryRun() { setDryRunResult(null); }
+  function handleDismissFailedTitles() { setCompletedFailedTitles([]); }
+
+  function handleDryRun() {
+    if (items.length === 0) return;
+    dryRunMutation.mutate(
+      {
+        items: items.map(({ title, contentText }) => ({ title, contentText })),
+        sourceType: "markdown",
+        spaceId: selectedSpaceId,
+        visibility,
+        duplicatePolicy,
+      },
+      {
+        onSuccess: setDryRunResult,
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
+        },
+      },
+    );
   }
 
   function handleImport() {
     if (items.length === 0) return;
+    setCompletedFailedTitles([]);
+    const parentId = targetParentPageId !== "none" ? Number(targetParentPageId) : undefined;
     importMutation.mutate(
       {
-        items: items.map(({ title, contentText }) => ({ title, contentText })),
+        items: items.map(({ title, contentText }) => ({
+          title,
+          contentText,
+          ...(parentId !== undefined ? { parentPageId: parentId } : {}),
+        })),
         sourceType: "markdown",
-        spaceId: targetSpaceId === "none" ? undefined : Number(targetSpaceId),
+        spaceId: selectedSpaceId,
         visibility,
         duplicatePolicy,
       },
@@ -307,6 +323,17 @@ export default function ImportPage() {
               <KbClipboardIcon className="mr-1.5 h-3.5 w-3.5" />
               Paste text
             </Button>
+            {items.length > 0 ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleDryRun}
+                disabled={isProcessing || dryRunMutation.isPending}
+              >
+                Preview import
+              </Button>
+            ) : null}
             <Button
               type="button"
               size="sm"
@@ -334,6 +361,13 @@ export default function ImportPage() {
             <p className="text-xs text-muted-foreground">
               Accepts .md, .markdown and .txt files · 5 MB per file · max 100 pages per import. Pasted text has a 50,000 character limit. Set a duplicate policy to control what happens when a page title already exists.
             </p>
+
+            {completedFailedTitles.length > 0 ? (
+              <ImportFailedTitlesAlert
+                titles={completedFailedTitles}
+                onDismiss={handleDismissFailedTitles}
+              />
+            ) : null}
 
             {isProcessing ? (
               <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm flex items-center justify-between gap-2">
@@ -398,50 +432,26 @@ export default function ImportPage() {
                     </div>
                   ) : null}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Target space</Label>
-                      <Select value={targetSpaceId} onValueChange={handleTargetSpaceChange}>
-                        <SelectTrigger className="text-sm">
-                          <SelectValue placeholder="No space" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No space</SelectItem>
-                          {spaces.map((s) => (
-                            <SelectItem key={s.id} value={String(s.id)}>
-                              {s.icon ? `${s.icon} ` : ""}
-                              {s.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Default visibility</Label>
-                      <Select value={visibility} onValueChange={handleVisibilityChange}>
-                        <SelectTrigger className="text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="private">Private</SelectItem>
-                          <SelectItem value="org">Team</SelectItem>
-                          <SelectItem value="public">Public</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Duplicate items</Label>
-                      <Select value={duplicatePolicy} onValueChange={handleDuplicatePolicyChange}>
-                        <SelectTrigger className="text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="skip">Skip duplicates</SelectItem>
-                          <SelectItem value="update">Update duplicates</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  <ImportFormControls
+                    spaces={spaces}
+                    parentPages={parentPages}
+                    targetSpaceId={targetSpaceId}
+                    targetParentPageId={targetParentPageId}
+                    visibility={visibility}
+                    duplicatePolicy={duplicatePolicy}
+                    onSpaceChange={handleTargetSpaceChange}
+                    onParentPageChange={handleParentPageChange}
+                    onVisibilityChange={handleVisibilityChange}
+                    onDuplicatePolicyChange={handleDuplicatePolicyChange}
+                  />
+
+                  {dryRunResult !== null ? (
+                    <ImportDryRunCard
+                      result={dryRunResult}
+                      duplicatePolicy={duplicatePolicy}
+                      onDismiss={handleDismissDryRun}
+                    />
+                  ) : null}
 
                   <ImportPendingList
                     items={items}

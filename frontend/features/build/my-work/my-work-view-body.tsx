@@ -1,18 +1,34 @@
 ﻿"use client";
 
 import { memo, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { KanbanBoard } from "@/features/build/views/kanban-board";
-import { ListView } from "@/features/build/views/list-view";
-import { TableView } from "@/features/build/views/table-view";
+import { Skeleton } from "@/components/ui/skeleton";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { AllWorkTicketMeta } from "./map-all-work-ticket";
 import type { MyWorkView } from "./my-work-view";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+
+const ViewFallback = () => <Skeleton className="h-24 w-full" />;
+
+const KanbanBoard = dynamic(
+  () => import("@/features/build/views/kanban-board").then((m) => ({ default: m.KanbanBoard })),
+  { ssr: false, loading: ViewFallback },
+);
+
+const ListView = dynamic(
+  () => import("@/features/build/views/list-view").then((m) => ({ default: m.ListView })),
+  { ssr: false, loading: ViewFallback },
+);
+
+const TableView = dynamic(
+  () => import("@/features/build/views/table-view").then((m) => ({ default: m.TableView })),
+  { ssr: false, loading: ViewFallback },
+);
 
 interface MyWorkViewBodyProps {
   view: MyWorkView;

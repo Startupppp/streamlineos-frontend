@@ -655,11 +655,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S11 — Trash
 
-- [ ] Table + mobile cards; search; deleted-by/date/space filters; cursor
+- [x] Table + mobile cards; search; deleted-by/date/space filters; cursor
 - [x] Remove the silent 100-row cap and card-only layout
 - [ ] Selected restore/purge; dependency impact; empty trash; retention permission split; legal/hold explanation
 - [x] Restore repairs tree/search/index links idempotently
-- [ ] Resumable multi-store purge ledger: rows, versions, comments, grants, blobs, chunks/vectors, caches, public/CDN, analytics ids, notifications, connector projections
+- [x] Resumable multi-store purge ledger: rows, versions, comments, grants, blobs, chunks/vectors, caches, public/CDN, analytics ids, notifications, connector projections
 - [x] Purge interruption/resumption test
 
 **Evidence:** _pending_
@@ -681,8 +681,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 ### S13 — Import & Export
 
 - [x] Separately gated import/export tabs
-- [ ] Format/size validation and help; title, target space/parent, default visibility, duplicate policy
-- [ ] Dry-run summary; progress; per-item errors; retry; cancel before processing
+- [x] Format/size validation and help; title, target space/parent, default visibility, duplicate policy
+- [x] Dry-run summary; progress; per-item errors; retry; cancel before processing
 - [x] Cursor job histories; expiring download indicator; audit event
 - [x] Uploads scanned; jobs idempotent; partial import reports created/skipped/failed and resumes without duplicates
 - [x] Remove client slicing of job history and any synchronous parsing/indexing on the request connection
@@ -695,7 +695,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 - [x] Date range + space filters
 - [x] Successful resolution, zero-result queries, unsupported Ask queries, citation reuse, stale high-use pages, review SLA, public deflection
-- [ ] Paginated drill-down; assign/dismiss/create-fix actions for gaps
+- [x] Paginated drill-down; assign/dismiss/create-fix actions for gaps
 - [x] Minimum-cohort privacy thresholds; aggregates cannot reveal a hidden page via count or label
 - [x] Remove vanity totals, raw org-wide titles, duplicate trust scores, charts without table alternatives
 - [x] Skeleton/error/no-data states
@@ -731,7 +731,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] `kb:ai:generate` + read access required; billing permission not inferred from view
 - [x] Provider context contains only authorized passages; document content is data, never instruction
 - [x] Citations accepted only when they map to a retrieved, still-authorized passage
-- [ ] Tenant quotas: requests, tokens, concurrent streams, indexed bytes, research jobs
+- [x] Tenant quotas: requests, tokens, concurrent streams, indexed bytes, research jobs
 - [x] Remove confidence percentages, uncited prose, hidden auto-selected sources, drafts in browser storage
 
 **Coverage gap found during the S01 lane work — CLOSED, re-measured 2026-09-25.** The gap was real: both Ask isolation specs exercised only the **article** paths and never reached `auth.visiblePagePredicate`, which is consulted only when **page** citations are present. It is now closed on both sides, each with a negative/positive pair:

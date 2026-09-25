@@ -8,7 +8,6 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { ModuleCard, ModuleCardSkeleton } from "@/features/build/modules/module-card";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +52,9 @@ import {
   DESC_MAX,
 } from "./create-module-schema";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 function NewModuleButton() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -82,6 +84,8 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
     error,
     refetch,
   } = useModulePages(projectId);
+
+  const pageState = usePageState({ isLoading, isError, error, permission: "build:view" });
   const modules = modulePages?.pages.flatMap((page) => page.data) ?? [];
   const createMutation = useCreateModule();
 
@@ -173,7 +177,20 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
   const completed = modules?.filter((m) => m.status === "completed").length ?? 0;
   const planned = modules?.filter((m) => m.status === "planned").length ?? 0;
 
-  if (isLoading) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper
+        title="Modules"
+        subtitle="Organize work into feature groups and track module progress"
+      >
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper
         title="Modules"
@@ -190,24 +207,6 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
               ))}
             </div>
           </PmSection>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Modules"
-        subtitle="Organize work into feature groups and track module progress"
-      >
-        <PmPageShell>
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load modules"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
         </PmPageShell>
       </PageWrapper>
     );
@@ -389,13 +388,11 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
                 <ModuleCard key={mod.id} module={mod} projectId={projectId} index={index} />
               ))}
             </PmStaggerList>
-            {hasNextPage ? (
-              <div className="mt-4 flex justify-center">
-                <Button type="button" variant="outline" onClick={handleLoadMore} disabled={isFetchingNextPage}>
-                  {isFetchingNextPage ? "Loading…" : "Load more modules"}
-                </Button>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={!!hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+            />
           </PmSection>
         )}
       </PmPageShell>

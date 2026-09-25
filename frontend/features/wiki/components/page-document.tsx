@@ -322,7 +322,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             ) : null}
           </div>
 
-          <div className="mx-auto w-full min-w-0 max-w-[46rem] px-4 pb-8 pt-3 sm:px-8">
+          <div className="wiki-document-body mx-auto mb-8 w-full min-w-0 max-w-[46rem] flex-1 px-4 py-4 sm:px-8">
             {conflict ? (
               <div className="mb-5">
                 <PageEditConflict

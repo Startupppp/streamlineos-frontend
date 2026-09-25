@@ -4,6 +4,12 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { ClientVisibilityPage } from "./client-visibility-page";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn() }),
+  useSearchParams: () => ({ get: () => null, toString: () => "" }),
+  usePathname: () => "/build/1/client-portal",
+}));
+
 jest.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => (

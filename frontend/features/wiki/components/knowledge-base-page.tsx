@@ -81,6 +81,8 @@ export default function KnowledgeBasePage() {
   const [sourcesSheet, setSourcesSheet] = useState<SourcesSheetState>({ kind: "closed" });
   const [scopeSourceIds, setScopeSourceIds] = useState<number[]>([]);
   const [pendingScopeIds, setPendingScopeIds] = useState<number[]>([]);
+  const [scopeVerifiedOnly, setScopeVerifiedOnly] = useState(false);
+  const [pendingVerifiedOnly, setPendingVerifiedOnly] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -207,7 +209,10 @@ export default function KnowledgeBasePage() {
       if (generationRef.current === generation)
         setPending((current) => current ? { ...current, answer: (current.answer ?? "") + token } : current);
     }
-    const scopePayload = scopeSourceIds.length > 0 ? { sourceIds: scopeSourceIds } : {};
+    const scopePayload = {
+      ...(scopeSourceIds.length > 0 ? { sourceIds: scopeSourceIds } : {}),
+      ...(scopeVerifiedOnly ? { verifiedOnly: true } : {}),
+    };
     ask.mutate(
       { question: trimmed, conversationId: activeConversationId ?? undefined, onToken: handleToken, ...scopePayload },
       {
@@ -306,6 +311,7 @@ export default function KnowledgeBasePage() {
   }
   function handleScopeClick() {
     setPendingScopeIds(scopeSourceIds);
+    setPendingVerifiedOnly(scopeVerifiedOnly);
     setSourcesSheet({ kind: "scope" });
   }
   function handleSourcesSheetOpenChange(open: boolean) {
@@ -314,8 +320,9 @@ export default function KnowledgeBasePage() {
   function handleAddNoteClick() { setSourcesSheet({ kind: "closed" }); setNoteOpen(true); }
 
   function handleScopeSelectionChange(ids: number[]) { setPendingScopeIds(ids); }
-  function handleScopeConfirm() { setScopeSourceIds(pendingScopeIds); setSourcesSheet({ kind: "closed" }); }
-  function handleClearScope() { setScopeSourceIds([]); }
+  function handleScopeVerifiedOnlyChange(v: boolean) { setPendingVerifiedOnly(v); }
+  function handleScopeConfirm() { setScopeSourceIds(pendingScopeIds); setScopeVerifiedOnly(pendingVerifiedOnly); setSourcesSheet({ kind: "closed" }); }
+  function handleClearScope() { setScopeSourceIds([]); setScopeVerifiedOnly(false); }
 
   function makeDeleteHandler(id: number) {
     return function handleDeleteSource() {
@@ -330,7 +337,7 @@ export default function KnowledgeBasePage() {
 
   const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
   const readyCount = sources.filter((s) => s.status === "ready").length;
-  const scopeActive = scopeSourceIds.length > 0;
+  const scopeActive = scopeSourceIds.length > 0 || scopeVerifiedOnly;
 
   return (
     <PageWrapper
@@ -533,6 +540,8 @@ export default function KnowledgeBasePage() {
           isLoading={sourcesQuery.isLoading}
           selectedIds={pendingScopeIds}
           onSelectionChange={handleScopeSelectionChange}
+          verifiedOnly={pendingVerifiedOnly}
+          onVerifiedOnlyChange={handleScopeVerifiedOnlyChange}
           onConfirm={handleScopeConfirm}
         />
       )}

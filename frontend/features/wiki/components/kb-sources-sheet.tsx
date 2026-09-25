@@ -1,12 +1,13 @@
 "use client";
 
+import React from "react";
 import {
   UploadIcon,
   PlusIcon,
   Trash2Icon,
   BookOpenTextIcon,
 } from "@animateicons/react/lucide";
-import { StickyNote, Loader2, Check } from "lucide-react";
+import { StickyNote, Loader2, Check, ShieldCheck } from "lucide-react";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Tooltip,
   TooltipContent,
@@ -46,6 +49,8 @@ interface KbSourcesSheetScopeProps {
   isLoading: boolean;
   selectedIds: number[];
   onSelectionChange: (ids: number[]) => void;
+  verifiedOnly: boolean;
+  onVerifiedOnlyChange: (verifiedOnly: boolean) => void;
   onConfirm: () => void;
 }
 
@@ -119,6 +124,35 @@ function KbSourcesManageSheet({
   );
 }
 
+const SOURCE_KINDS = ["all", "file", "note"] as const;
+type SourceKindFilter = (typeof SOURCE_KINDS)[number];
+
+const KIND_LABELS: Record<SourceKindFilter, string> = { all: "All", file: "Files", note: "Notes" };
+
+function KindFilterButton({
+  kind,
+  active,
+  onSelect,
+}: {
+  kind: SourceKindFilter;
+  active: boolean;
+  onSelect: (kind: SourceKindFilter) => void;
+}) {
+  function handleClick() { onSelect(kind); }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "flex-1 rounded px-2 py-1 text-xs font-medium transition-colors",
+        active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {KIND_LABELS[kind]}
+    </button>
+  );
+}
+
 function KbSourcesScopeSheet({
   open,
   onOpenChange,
@@ -126,10 +160,17 @@ function KbSourcesScopeSheet({
   isLoading,
   selectedIds,
   onSelectionChange,
+  verifiedOnly,
+  onVerifiedOnlyChange,
   onConfirm,
 }: Omit<KbSourcesSheetScopeProps, "mode">) {
-  const readySources = sources.filter((s) => s.status === "ready");
-  const allSelected = readySources.length > 0 && readySources.every((s) => selectedIds.includes(s.id));
+  const [kindFilter, setKindFilter] = React.useState<SourceKindFilter>("all");
+
+  const visibleSources = kindFilter === "all"
+    ? sources
+    : sources.filter((s) => s.kind === kindFilter);
+  const readyVisible = visibleSources.filter((s) => s.status === "ready");
+  const allSelected = readyVisible.length > 0 && readyVisible.every((s) => selectedIds.includes(s.id));
   const noneSelected = selectedIds.length === 0;
 
   const description = noneSelected
@@ -138,9 +179,10 @@ function KbSourcesScopeSheet({
 
   function handleToggleAll() {
     if (allSelected) {
-      onSelectionChange([]);
+      onSelectionChange(selectedIds.filter((id) => !readyVisible.some((s) => s.id === id)));
     } else {
-      onSelectionChange(readySources.map((s) => s.id));
+      const toAdd = readyVisible.filter((s) => !selectedIds.includes(s.id)).map((s) => s.id);
+      onSelectionChange([...selectedIds, ...toAdd]);
     }
   }
 
@@ -152,6 +194,10 @@ function KbSourcesScopeSheet({
     }
   }
 
+  function handleKindFilter(kind: SourceKindFilter) {
+    setKindFilter(kind);
+  }
+
   return (
     <AppSheet
       open={open}
@@ -161,10 +207,36 @@ function KbSourcesScopeSheet({
       className="sm:max-w-md"
     >
       <div className="flex flex-col gap-4">
-        {readySources.length > 1 && (
+        <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-1">
+          {SOURCE_KINDS.map((kind) => (
+            <KindFilterButton
+              key={kind}
+              kind={kind}
+              active={kindFilter === kind}
+              onSelect={handleKindFilter}
+            />
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="verified-only-toggle" className="text-sm">
+              Verified sources only
+            </Label>
+          </div>
+          <Switch
+            id="verified-only-toggle"
+            checked={verifiedOnly}
+            onCheckedChange={onVerifiedOnlyChange}
+            aria-label="Restrict answer to verified sources only"
+          />
+        </div>
+
+        {readyVisible.length > 1 && (
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">
-              {noneSelected ? "No filter — searching all sources" : `${selectedIds.length} of ${readySources.length} selected`}
+              {noneSelected ? "No filter — searching all sources" : `${selectedIds.length} of ${sources.filter((s) => s.status === "ready").length} selected`}
             </span>
             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleToggleAll}>
               {allSelected ? "Deselect all" : "Select all"}
@@ -174,7 +246,7 @@ function KbSourcesScopeSheet({
 
         <ScopeSourcesList
           isLoading={isLoading}
-          sources={sources}
+          sources={visibleSources}
           selectedIds={selectedIds}
           onToggle={handleToggleSource}
         />

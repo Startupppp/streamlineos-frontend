@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { Input } from "@/components/ui/input";
 import {
   useKbAnalyticsOverview,
   useKbNoResults,
@@ -21,6 +22,9 @@ import {
   useCitationReuse,
   useReviewSla,
   useCreateKbPage,
+  useAssignGap,
+  useDismissGap,
+  useCreateGapFix,
 } from "@/hooks/api/kb";
 import { useState } from "react";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
@@ -134,51 +138,169 @@ const GapTableRow = memo(function GapTableRow({
   isCreating,
   isSelected,
   onSelect,
+  onAssign,
+  isAssigning,
+  onDismiss,
+  isDismissing,
+  onCreateFix,
+  isCreatingFix,
 }: {
   row: KbGapRow;
   onCreatePage: (q: string) => void;
   isCreating: boolean;
   isSelected: boolean;
   onSelect: (query: string) => void;
+  onAssign: (query: string, assigneeUserId: string) => void;
+  isAssigning: boolean;
+  onDismiss: (query: string, reason: string) => void;
+  isDismissing: boolean;
+  onCreateFix: (query: string) => void;
+  isCreatingFix: boolean;
 }) {
-  function handleCreateClick() {
-    if (row.query) onCreatePage(row.query);
-  }
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignValue, setAssignValue] = useState("");
+  const [dismissOpen, setDismissOpen] = useState(false);
+  const [dismissValue, setDismissValue] = useState("");
+
   function handleSelectClick() {
     if (row.query) onSelect(row.query);
   }
+  function handleCreatePageClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (row.query) onCreatePage(row.query);
+  }
+  function handleCreateFixClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (row.query) onCreateFix(row.query);
+  }
+  function handleAssignSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (row.query && assignValue.trim()) {
+      onAssign(row.query, assignValue.trim());
+      setAssignOpen(false);
+      setAssignValue("");
+    }
+  }
+  function handleDismissSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (row.query && dismissValue.trim()) {
+      onDismiss(row.query, dismissValue.trim());
+      setDismissOpen(false);
+      setDismissValue("");
+    }
+  }
   return (
-    <div
-      className={`flex items-center gap-3 px-3 py-2 transition-colors cursor-pointer ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}
-      onClick={handleSelectClick}
-      role="button"
-      tabIndex={0}
-      aria-expanded={isSelected}
-      aria-label={`Gap: ${row.query ?? "(empty)"}`}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleSelectClick(); }}
-    >
-      <TruncatedText text={row.query ?? "(empty)"} className="flex-1 text-sm" />
-      <span className="text-xs tabular-nums text-muted-foreground shrink-0">
-        {row.count}
-      </span>
-      <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
-        {new Date(row.lastOccurredAt).toLocaleDateString("en", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })}
-      </span>
-      <Button
-        size="sm"
-        variant="ghost"
-        className="px-2 text-xs gap-1 shrink-0"
-        onClick={(e) => { e.stopPropagation(); handleCreateClick(); }}
-        disabled={isCreating || !row.query}
-        type="button"
+    <div>
+      <div
+        className={`flex items-center gap-3 px-3 py-2 transition-colors cursor-pointer ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}
+        onClick={handleSelectClick}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isSelected}
+        aria-label={`Gap: ${row.query ?? "(empty)"}`}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleSelectClick(); }}
       >
-        <KbPlusIcon className="h-3 w-3" />
-        Create page
-      </Button>
+        <TruncatedText text={row.query ?? "(empty)"} className="flex-1 text-sm" />
+        <span className="text-xs tabular-nums text-muted-foreground shrink-0">
+          {row.count}
+        </span>
+        <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
+          {new Date(row.lastOccurredAt).toLocaleDateString("en", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </span>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="px-2 text-xs gap-1 shrink-0"
+          onClick={(e) => { e.stopPropagation(); setAssignOpen((o) => !o); setDismissOpen(false); }}
+          disabled={!row.query}
+          type="button"
+          aria-label="Assign gap owner"
+        >
+          Assign
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="px-2 text-xs gap-1 shrink-0"
+          onClick={(e) => { e.stopPropagation(); setDismissOpen((o) => !o); setAssignOpen(false); }}
+          disabled={!row.query}
+          type="button"
+          aria-label="Dismiss gap"
+        >
+          Dismiss
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="px-2 text-xs gap-1 shrink-0"
+          onClick={handleCreateFixClick}
+          disabled={isCreatingFix || !row.query}
+          type="button"
+          aria-label="Create fix page for gap"
+        >
+          <KbPlusIcon className="h-3 w-3" />
+          Fix
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="px-2 text-xs gap-1 shrink-0"
+          onClick={handleCreatePageClick}
+          disabled={isCreating || !row.query}
+          type="button"
+        >
+          <KbPlusIcon className="h-3 w-3" />
+          Page
+        </Button>
+      </div>
+      {assignOpen && (
+        <form
+          onSubmit={handleAssignSubmit}
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-t border-border/40"
+        >
+          <Input
+            className="h-7 text-xs flex-1"
+            placeholder="Assignee user ID"
+            value={assignValue}
+            onChange={(e) => setAssignValue(e.target.value)}
+            autoFocus
+          />
+          <Button size="sm" type="submit" disabled={isAssigning || !assignValue.trim()} className="h-7 px-2 text-xs">
+            Assign
+          </Button>
+          <Button size="sm" type="button" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setAssignOpen(false); setAssignValue(""); }}>
+            Cancel
+          </Button>
+        </form>
+      )}
+      {dismissOpen && (
+        <form
+          onSubmit={handleDismissSubmit}
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-t border-border/40"
+        >
+          <Input
+            className="h-7 text-xs flex-1"
+            placeholder="Reason for dismissal"
+            value={dismissValue}
+            onChange={(e) => setDismissValue(e.target.value)}
+            autoFocus
+          />
+          <Button size="sm" type="submit" disabled={isDismissing || !dismissValue.trim()} className="h-7 px-2 text-xs">
+            Dismiss
+          </Button>
+          <Button size="sm" type="button" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setDismissOpen(false); setDismissValue(""); }}>
+            Cancel
+          </Button>
+        </form>
+      )}
     </div>
   );
 });
@@ -263,6 +385,9 @@ export default function KnowledgeAnalyticsPage() {
   } = useGapRelatedPages(selectedGapQuery);
 
   const createPage = useCreateKbPage();
+  const assignGap = useAssignGap();
+  const dismissGap = useDismissGap();
+  const createGapFix = useCreateGapFix();
   const router = useRouter();
 
   function handleLoadMorePages() {
@@ -313,6 +438,18 @@ export default function KnowledgeAnalyticsPage() {
         },
       },
     );
+  }
+
+  function handleAssignGap(query: string, assigneeUserId: string) {
+    assignGap.mutate({ query, assigneeUserId });
+  }
+
+  function handleDismissGap(query: string, reason: string) {
+    dismissGap.mutate({ query, reason });
+  }
+
+  function handleCreateGapFix(query: string) {
+    createGapFix.mutate({ query });
   }
 
   const pageState = usePageState({
@@ -614,6 +751,12 @@ export default function KnowledgeAnalyticsPage() {
                     isCreating={createPage.isPending}
                     isSelected={selectedGapQuery === row.query}
                     onSelect={handleGapRowSelect}
+                    onAssign={handleAssignGap}
+                    isAssigning={assignGap.isPending}
+                    onDismiss={handleDismissGap}
+                    isDismissing={dismissGap.isPending}
+                    onCreateFix={handleCreateGapFix}
+                    isCreatingFix={createGapFix.isPending}
                   />
                   {selectedGapQuery === row.query && (
                     <div className="px-3 py-2 bg-muted/30 border-t border-border/40">

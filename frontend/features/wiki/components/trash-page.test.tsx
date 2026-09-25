@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import TrashPage from "./trash-page";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
+import type { DataTableColumn } from "@/components/ui/data-table.types";
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
@@ -46,7 +47,25 @@ jest.mock("@/components/shared/page-state", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: jest.fn(() => <div data-testid="data-table" />),
+  DataTable: jest.fn(
+    ({
+      data,
+      columns,
+    }: {
+      data: KbPageListItem[];
+      columns: DataTableColumn<KbPageListItem>[];
+    }) => (
+      <div data-testid="data-table">
+        {data.map((row) =>
+          columns.map((col) =>
+            col.cell ? (
+              <div key={String(col.key)}>{col.cell(row)}</div>
+            ) : null,
+          ),
+        )}
+      </div>
+    ),
+  ),
 }));
 
 jest.mock("@/components/ui/confirm-dialog", () => ({
@@ -192,5 +211,151 @@ describe("trash page space filter", () => {
     expect(useKbPagesTrash).toHaveBeenCalledWith(
       expect.not.objectContaining({ spaceId: expect.anything() }),
     );
+  });
+});
+
+describe("trash page date filter", () => {
+  it("renders a deletedFrom date input so the backend date range has a frontend writer", () => {
+    render(<TrashPage />);
+    expect(screen.getByLabelText(/deleted from/i)).toBeInTheDocument();
+  });
+
+  it("renders a deletedBefore date input to close the upper end of the date range", () => {
+    render(<TrashPage />);
+    expect(screen.getByLabelText(/deleted before/i)).toBeInTheDocument();
+  });
+
+  it("passes deletedFrom from the URL to the trash hook when the param is present", () => {
+    useSearchParams.mockReturnValue(
+      new URLSearchParams("deletedFrom=2026-01-01T00%3A00%3A00.000Z"),
+    );
+
+    render(<TrashPage />);
+
+    expect(useKbPagesTrash).toHaveBeenCalledWith(
+      expect.objectContaining({ deletedFrom: "2026-01-01T00:00:00.000Z" }),
+    );
+  });
+
+  it("does not include deletedFrom in the hook params when the URL param is absent, so an empty filter is a no-op", () => {
+    render(<TrashPage />);
+
+    expect(useKbPagesTrash).toHaveBeenCalledWith(
+      expect.not.objectContaining({ deletedFrom: expect.anything() }),
+    );
+  });
+});
+
+describe("trash page legal hold indicator", () => {
+  it("shows a legal hold badge on pages that have legalHold=true so the user knows a purge will be blocked", () => {
+    usePageState.mockReturnValue({ kind: "content" });
+    useKbPagesTrash.mockReturnValue({
+      data: {
+        data: [
+          {
+            id: 1,
+            orgId: "org-1",
+            spaceId: null,
+            parentPageId: null,
+            sortOrder: null,
+            projectId: null,
+            title: "Held Page",
+            icon: null,
+            coverImage: null,
+            status: "published",
+            contentType: "note",
+            trustState: "unverified",
+            visibility: "private",
+            publicToken: null,
+            publicSlug: null,
+            isLocked: false,
+            createdAt: "2026-01-01T00:00:00Z",
+            updatedAt: "2026-01-01T00:00:00Z",
+            deletedAt: "2026-06-01T00:00:00Z",
+            createdByMembershipId: null,
+            lastEditedByMembershipId: null,
+            deletedByMembershipId: null,
+            ownerMembershipId: null,
+            verifiedByMembershipId: null,
+            createdById: null,
+            lastEditedById: null,
+            deletedById: null,
+            ownerUserId: null,
+            verifiedById: null,
+            verifiedUntil: null,
+            nextReviewAt: null,
+            aclRevision: 1,
+            contentRevision: 1,
+            legalHold: true,
+            legalHoldReason: "Litigation hold — case 2026-XYZ",
+          },
+        ],
+        pagination: { limit: 50, nextCursor: null, hasMore: false },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<TrashPage />);
+
+    expect(screen.getByLabelText("Legal hold")).toBeInTheDocument();
+  });
+
+  it("does not show a legal hold badge on pages where legalHold=false, so the badge is not vacuous", () => {
+    usePageState.mockReturnValue({ kind: "content" });
+    useKbPagesTrash.mockReturnValue({
+      data: {
+        data: [
+          {
+            id: 2,
+            orgId: "org-1",
+            spaceId: null,
+            parentPageId: null,
+            sortOrder: null,
+            projectId: null,
+            title: "Normal Page",
+            icon: null,
+            coverImage: null,
+            status: "published",
+            contentType: "note",
+            trustState: "unverified",
+            visibility: "private",
+            publicToken: null,
+            publicSlug: null,
+            isLocked: false,
+            createdAt: "2026-01-01T00:00:00Z",
+            updatedAt: "2026-01-01T00:00:00Z",
+            deletedAt: "2026-06-01T00:00:00Z",
+            createdByMembershipId: null,
+            lastEditedByMembershipId: null,
+            deletedByMembershipId: null,
+            ownerMembershipId: null,
+            verifiedByMembershipId: null,
+            createdById: null,
+            lastEditedById: null,
+            deletedById: null,
+            ownerUserId: null,
+            verifiedById: null,
+            verifiedUntil: null,
+            nextReviewAt: null,
+            aclRevision: 1,
+            contentRevision: 1,
+            legalHold: false,
+            legalHoldReason: null,
+          },
+        ],
+        pagination: { limit: 50, nextCursor: null, hasMore: false },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<TrashPage />);
+
+    expect(screen.queryByLabelText("Legal hold")).not.toBeInTheDocument();
   });
 });

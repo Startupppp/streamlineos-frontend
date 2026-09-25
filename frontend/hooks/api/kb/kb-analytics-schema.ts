@@ -101,3 +101,12 @@ export const kbAnalyticsReviewSlaContract = z.object({
   slaRate: z.number(),
   overdueOpen: z.number().int(),
 });
+
+export const kbAnalyticsGapActionContract = z.object({
+  id: z.number().int(),
+  clusterKey: z.string(),
+  status: z.string(),
+  proposedArticleId: z.number().int().nullable(),
+  draftedBy: z.string().nullable(),
+  updatedAt: z.string(),
+});

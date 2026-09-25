@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
@@ -214,6 +214,52 @@ export function useGapRelatedPages(searchQuery: string | undefined) {
     ...query,
     pages: query.data?.pages.flatMap((page) => page.data),
   };
+}
+
+const kbAnalyticsGapActionContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-analytics-schema").then((m) => m.kbAnalyticsGapActionContract),
+);
+
+export function useAssignGap() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["knowledge", "kb", "gaps", "assign"],
+    mutationFn: (body: { query: string; assigneeUserId: string }) =>
+      apiClient.post("/kb/analytics/gaps/assign", body, undefined, kbAnalyticsGapActionContract),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.knowledgeGaps(),
+      });
+    },
+  });
+}
+
+export function useDismissGap() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["knowledge", "kb", "gaps", "dismiss"],
+    mutationFn: (body: { query: string; reason: string }) =>
+      apiClient.post("/kb/analytics/gaps/dismiss", body, undefined, kbAnalyticsGapActionContract),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.knowledgeGaps(),
+      });
+    },
+  });
+}
+
+export function useCreateGapFix() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["knowledge", "kb", "gaps", "create-fix"],
+    mutationFn: (body: { query: string; spaceId?: number }) =>
+      apiClient.post("/kb/analytics/gaps/create-fix", body, undefined, kbAnalyticsGapActionContract),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.knowledgeGaps(),
+      });
+    },
+  });
 }
 
 export function useKbContentGaps(range?: KbAnalyticsRange) {

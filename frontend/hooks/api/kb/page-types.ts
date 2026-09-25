@@ -34,6 +34,8 @@ export type KbPage = {
   nextReviewAt: string | null;
   aclRevision: number;
   contentRevision: number;
+  legalHold: boolean;
+  legalHoldReason: string | null;
 };
 
 export type KbPageListItem = Omit<KbPage, "content" | "contentText">;

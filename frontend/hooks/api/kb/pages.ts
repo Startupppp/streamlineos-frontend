@@ -231,6 +231,8 @@ export type TrashPageParams = {
   q?: string;
   spaceId?: number;
   deletedByMembershipId?: number;
+  deletedFrom?: string;
+  deletedBefore?: string;
 };
 
 export type KbTrashCursorPage = {

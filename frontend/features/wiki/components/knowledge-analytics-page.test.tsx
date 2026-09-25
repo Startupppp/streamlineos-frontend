@@ -54,6 +54,9 @@ jest.mock("@/hooks/api/kb", () => ({
   useCitationReuse: (...args: unknown[]) => useCitationReuse(...args),
   useReviewSla: (...args: unknown[]) => useReviewSla(...args),
   useCreateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
+  useAssignGap: () => ({ mutate: jest.fn(), isPending: false }),
+  useDismissGap: () => ({ mutate: jest.fn(), isPending: false }),
+  useCreateGapFix: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 import KnowledgeAnalyticsPage from "./knowledge-analytics-page";
@@ -369,6 +372,18 @@ describe("KnowledgeAnalyticsPage — gap rows render without crashing and suppor
     ]));
 
     expect(() => render(<KnowledgeAnalyticsPage />)).not.toThrow();
+  });
+
+  it("renders Assign, Dismiss and Fix controls for each gap row so gap actions are reachable from the table", () => {
+    useKnowledgeGaps.mockReturnValue(
+      settledGaps([{ query: "export report", count: 3, lastOccurredAt: "2024-03-01T00:00:00Z" }]),
+    );
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByRole("button", { name: /assign gap owner/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /dismiss gap/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /create fix page/i })).toBeInTheDocument();
   });
 
   it("shows the related-pages section when a gap row is clicked", () => {

@@ -65,6 +65,8 @@ export default function TrashPage() {
     deletedByRaw && Number.isInteger(Number(deletedByRaw)) && Number(deletedByRaw) > 0
       ? Number(deletedByRaw)
       : undefined;
+  const deletedFrom = searchParams.get("deletedFrom") ?? undefined;
+  const deletedBefore = searchParams.get("deletedBefore") ?? undefined;
 
   const [searchDraft, setSearchDraft] = useState(q ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,6 +78,8 @@ export default function TrashPage() {
     q: q || undefined,
     spaceId,
     deletedByMembershipId,
+    deletedFrom,
+    deletedBefore,
   };
 
   const { data, isLoading, isError, error, refetch } = useKbPagesTrash(params);
@@ -126,6 +130,18 @@ export default function TrashPage() {
   function handleSpaceChange(value: string) {
     cursorState.reset();
     updateFilters({ spaceId: value === ALL_SPACES_VALUE ? null : value });
+  }
+
+  function handleDeletedFromChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value;
+    cursorState.reset();
+    updateFilters({ deletedFrom: raw ? new Date(raw).toISOString() : null });
+  }
+
+  function handleDeletedBeforeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value;
+    cursorState.reset();
+    updateFilters({ deletedBefore: raw ? new Date(raw).toISOString() : null });
   }
 
   function handleEmptyTrash() {
@@ -223,6 +239,15 @@ export default function TrashPage() {
           <span className="truncate font-medium">
             {row.title || "Untitled"}
           </span>
+          {row.legalHold && (
+            <span
+              className="shrink-0 rounded px-1.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+              title={row.legalHoldReason ?? "Page is under a legal hold and cannot be purged"}
+              aria-label="Legal hold"
+            >
+              Legal hold
+            </span>
+          )}
         </div>
       ),
     },
@@ -295,6 +320,20 @@ export default function TrashPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Input
+              type="date"
+              aria-label="Deleted from"
+              value={deletedFrom ? deletedFrom.slice(0, 10) : ""}
+              onChange={handleDeletedFromChange}
+              className="w-40"
+            />
+            <Input
+              type="date"
+              aria-label="Deleted before"
+              value={deletedBefore ? deletedBefore.slice(0, 10) : ""}
+              onChange={handleDeletedBeforeChange}
+              className="w-40"
+            />
           </div>
 
           <PageState
@@ -344,6 +383,14 @@ export default function TrashPage() {
                       <p className="text-xs text-muted-foreground">
                         {row.deletedAt ? kbTimeAgo(row.deletedAt) : ""}
                       </p>
+                      {row.legalHold && (
+                        <p
+                          className="text-xs font-medium text-amber-700 dark:text-amber-400"
+                          title={row.legalHoldReason ?? undefined}
+                        >
+                          Legal hold
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
