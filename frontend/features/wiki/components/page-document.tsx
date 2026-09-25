@@ -37,7 +37,6 @@ import { PageCoverPickerDialog } from "./page-cover-picker";
 import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";
 import PageRightPanel from "./page-right-panel";
-import { PageDocumentMetaFooter } from "./page-document-meta-footer";
 import { PageDocumentPropertyActions } from "./page-document-property-actions";
 import { PageDocumentOutline } from "./page-document-outline";
 import {
@@ -46,6 +45,7 @@ import {
   plainTextToPlateValue,
   prependPlateValue,
 } from "@/components/editor/plate/plate-value-convert";
+import "../wiki-document.css";
 
 const PlateDocumentEditor = dynamic(
   () => import("@/components/editor/plate/plate-document-editor"),
@@ -271,7 +271,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     .filter(Boolean).length;
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="wiki-document flex min-h-full flex-col">
       <PageCover
         coverImage={page.coverImage}
         isEditable={isEditable}
@@ -287,7 +287,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
 
       <div className="flex min-w-0 flex-1">
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="wiki-document-chrome sticky top-0 z-40 border-b backdrop-blur">
             <div className="mx-auto w-full max-w-[46rem] px-4 py-2.5 sm:px-8">
               <PageDocumentHeader
                 page={page}
@@ -312,7 +312,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             ) : null}
           </div>
 
-          <div className="mx-auto w-full min-w-0 max-w-[46rem] px-4 pb-12 pt-3 sm:px-8">
+          <div className="mx-auto w-full min-w-0 max-w-[46rem] px-4 pb-8 pt-3 sm:px-8">
             {conflict ? (
               <div className="mb-5">
                 <PageEditConflict
@@ -348,7 +348,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
                 onKeyDown={handleTitleKeyDown}
                 onMouseDown={handleTitleMouseDown}
                 placeholder="Untitled"
-                className="min-w-0 flex-1 resize-none overflow-hidden border-0 bg-transparent py-0 text-left text-3xl font-semibold leading-tight tracking-tight text-foreground outline-none placeholder:text-muted-foreground/70"
+                className="min-w-0 flex-1 resize-none overflow-hidden border-0 bg-transparent py-0 text-left text-3xl font-semibold leading-tight tracking-tight text-foreground outline-none placeholder:text-muted-foreground"
                 rows={1}
                 style={{ height: "auto" }}
                 readOnly={!isEditable}
@@ -382,14 +382,6 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
                 toolbarHost={toolbarHost}
               />
             </div>
-
-            <PageDocumentMetaFooter
-              trustState={page.trustState}
-              nextReviewAt={page.nextReviewAt}
-              updatedAt={page.updatedAt}
-              lastEditedById={page.lastEditedById}
-              ownerUserId={page.ownerUserId}
-            />
           </div>
         </div>
 
