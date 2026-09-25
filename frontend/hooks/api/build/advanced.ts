@@ -92,7 +92,7 @@ export function useCycles(
 
 export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("build:workspace:manage", {
+  return useAuthorizedMutation("build:cycles:manage", {
     ...options,
     mutationKey: ["projects", "cycles", "create"],
     mutationFn: ({ projectId, ...data }: CreateCycleInput) =>
@@ -117,7 +117,7 @@ export interface UpdateCycleInput {
 
 export function useUpdateCycle(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("build:workspace:manage", {
+  return useAuthorizedMutation("build:cycles:manage", {
     ...options,
     mutationKey: ["projects", "cycles", "update"],
     mutationFn: ({ projectId, cycleId, ...data }: UpdateCycleInput) =>
@@ -143,7 +143,7 @@ export function useUpdateCycle(options?: Parameters<typeof useMutation>[0]) {
 
 export function useDeleteCycle(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("build:workspace:manage", {
+  return useAuthorizedMutation("build:cycles:manage", {
     ...options,
     mutationKey: ["projects", "cycles", "delete"],
     mutationFn: ({ projectId, cycleId }: { projectId: number; cycleId: number }) =>

@@ -39,7 +39,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   const [editTarget, setEditTarget] = useState<Cycle | null>(null);
   const [statusTarget, setStatusTarget] = useState<Cycle | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Cycle | null>(null);
-  const canManage = useCan("build:workspace:manage");
+  const canManage = useCan("build:cycles:manage");
   const { error, refetch, isError, isLoading, data: cycles } = useCycles(projectId);
   const updateCycle = useUpdateCycle();
   const deleteCycle = useDeleteCycle();
