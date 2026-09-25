@@ -3,6 +3,13 @@
 **Updated:** 2026-09-25
 **Authority:** This is the single release-status document for the Build module. Product contracts remain in the numbered specifications; future competitive work remains in `06-prioritized-backlog.md`.
 
+This document tracks the current production-release checklist, not total Build
+product completion. The full normative PRD remains open: the current source
+tree contains 24 checked and 630 unchecked acceptance boxes across the Build
+module and sidebar PRDs. Do not report this release checklist as full PRD
+completion; use `docs/specs/build/module/README.md` and its child PRDs for the
+complete product definition of done.
+
 ## Scope
 
 - The authenticated route manifest contains 65 canonical Build pages, all marked `KEEP`.
