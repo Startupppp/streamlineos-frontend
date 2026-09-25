@@ -195,6 +195,10 @@ export interface KbResearchBrief {
   citations: KbResearchBriefCitation[] | null;
   errorMessage: string | null;
   rating: "helpful" | "not_helpful" | null;
+  costCredits: number | null;
+  provider: string | null;
+  model: string | null;
+  approvedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

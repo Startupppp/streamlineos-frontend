@@ -67,6 +67,7 @@ export const knowledgeAndSurveysQueryKeys = {
     pageRecordLinks: (pageId: number) =>
       [...base, "kb", "pages", pageId, "record-links"] as const,
     importJobs: () => [...base, "kb", "import-jobs"] as const,
+    importJob: (jobId: number) => [...base, "kb", "import-jobs", jobId] as const,
     exportJobs: () => [...base, "kb", "export-jobs"] as const,
     pageAnalytics: (params?: QueryKeyParams) =>
       params === undefined
@@ -111,6 +112,8 @@ export const knowledgeAndSurveysQueryKeys = {
         : ([...base, "kb", "contentHealthSignals", params] as const),
     contentHealthCounts: () =>
       [...base, "kb", "contentHealthCounts"] as const,
+    contentHealthTrend: () =>
+      [...base, "kb", "contentHealthTrend"] as const,
   },
 
   roadmap: {

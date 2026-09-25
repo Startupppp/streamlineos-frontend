@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
@@ -24,7 +24,7 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { useCan } from "@/hooks/api/access";
-import { useImportKbPages } from "@/hooks/api/kb";
+import { useImportKbPages, useKbImportJob, useCancelImportJob } from "@/hooks/api/kb";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_IMPORT, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
@@ -46,6 +46,7 @@ export default function ImportPage() {
   const canImport = useCan("kb:pages:import");
   const canExport = useCan("kb:pages:export");
   const importMutation = useImportKbPages();
+  const cancelMutation = useCancelImportJob();
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedTab = resolveTab(searchParams.get("tab"));
@@ -63,15 +64,51 @@ export default function ImportPage() {
   const [targetSpaceId, setTargetSpaceId] = useState<string>("none");
   const [visibility, setVisibility] = useState<"private" | "org" | "public">("org");
   const [duplicatePolicy, setDuplicatePolicy] = useState<"skip" | "update">("skip");
-  const [failedImportTitles, setFailedImportTitles] = useState<string[]>([]);
+  const [activeJobId, setActiveJobId] = useState<number | null>(null);
 
+  const { data: activeJob } = useKbImportJob(activeJobId);
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function titleExists(_title: string): boolean {
-    return false;
+  useEffect(() => {
+    if (!activeJob) return;
+    if (activeJob.status === "completed") {
+      toast.success(
+        `Imported ${activeJob.succeededItems} page${activeJob.succeededItems === 1 ? "" : "s"}${activeJob.failedItems > 0 ? ` (${activeJob.failedItems} failed)` : ""}`,
+        {
+          action: {
+            label: "View wiki",
+            onClick: () => window.location.assign(KNOWLEDGE_BASE),
+          },
+        },
+      );
+      setItems([]);
+      setActiveJobId(null);
+    } else if (activeJob.status === "failed") {
+      const report = activeJob.errorReport;
+      const failedTitles =
+        report !== null &&
+        typeof report === "object" &&
+        "failedTitles" in report &&
+        Array.isArray(report.failedTitles)
+          ? (report.failedTitles as string[])
+          : [];
+      toast.error(
+        failedTitles.length > 0
+          ? `Import failed — ${failedTitles.length} page${failedTitles.length === 1 ? "" : "s"} could not be imported`
+          : "Import failed",
+      );
+      setActiveJobId(null);
+    } else if (activeJob.status === "cancelled") {
+      toast.info("Import cancelled");
+      setActiveJobId(null);
+    }
+  }, [activeJob?.status, activeJob?.succeededItems, activeJob?.failedItems, activeJob?.errorReport, activeJob?.id]);
+
+  function titleExists(title: string): boolean {
+    return items.filter((i) => i.title === title).length > 1;
   }
 
   const handleFilesChange = useCallback(
@@ -185,7 +222,6 @@ export default function ImportPage() {
 
   function handleImport() {
     if (items.length === 0) return;
-    setFailedImportTitles([]);
     importMutation.mutate(
       {
         items: items.map(({ title, contentText }) => ({ title, contentText })),
@@ -196,25 +232,25 @@ export default function ImportPage() {
       },
       {
         onSuccess: (result) => {
-          toast.success(
-            `Imported ${result.succeeded} page${result.succeeded === 1 ? "" : "s"}${result.failed > 0 ? ` (${result.failed} failed)` : ""}`,
-            {
-              action: {
-                label: "View wiki",
-                onClick: () => window.location.assign(KNOWLEDGE_BASE),
-              },
-            },
-          );
-          if (result.failedTitles.length > 0) {
-            setFailedImportTitles(result.failedTitles);
-          }
-          setItems([]);
+          setActiveJobId(result.jobId);
         },
         onError: (err) => {
           toast.error(getErrorMessage(err));
         },
       },
     );
+  }
+
+  function handleCancelImport() {
+    if (activeJobId === null) return;
+    cancelMutation.mutate(activeJobId, {
+      onSuccess: (result) => {
+        toast.info(result.message);
+      },
+      onError: (err) => {
+        toast.error(getErrorMessage(err));
+      },
+    });
   }
 
   function handleTabChange(value: string) {
@@ -240,6 +276,9 @@ export default function ImportPage() {
   }
 
   const isImportTab = activeTab === "import";
+  const isProcessing =
+    activeJobId !== null &&
+    (activeJob?.status === "pending" || activeJob?.status === "processing");
 
   return (
     <PageWrapper
@@ -263,6 +302,7 @@ export default function ImportPage() {
               size="sm"
               variant="outline"
               onClick={handleShowPaste}
+              disabled={isProcessing}
             >
               <KbClipboardIcon className="mr-1.5 h-3.5 w-3.5" />
               Paste text
@@ -271,7 +311,7 @@ export default function ImportPage() {
               type="button"
               size="sm"
               onClick={handleChooseFiles}
-              disabled={items.length >= 100}
+              disabled={items.length >= 100 || isProcessing}
             >
               Choose files
             </Button>
@@ -294,18 +334,27 @@ export default function ImportPage() {
             <p className="text-xs text-muted-foreground">
               Accepts .md, .markdown and .txt files · 5 MB per file · max 100 pages per import. Pasted text has a 50,000 character limit. Set a duplicate policy to control what happens when a page title already exists.
             </p>
-            {failedImportTitles.length > 0 ? (
-              <div className="rounded-lg border border-status-warning-border bg-status-warning-subtle px-3 py-2 text-sm">
-                <p className="font-medium text-status-warning-ink">
-                  {failedImportTitles.length} page{failedImportTitles.length === 1 ? "" : "s"} failed to import:
-                </p>
-                <ul className="mt-1 list-disc pl-4 text-xs text-status-warning-ink">
-                  {failedImportTitles.map((title) => (
-                    <li key={title}>{title}</li>
-                  ))}
-                </ul>
+
+            {isProcessing ? (
+              <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
+                  <span className="text-sm text-muted-foreground">
+                    {activeJob?.status === "processing" ? "Processing import…" : "Import queued…"}
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleCancelImport}
+                  disabled={cancelMutation.isPending}
+                >
+                  Cancel
+                </Button>
               </div>
             ) : null}
+
             {showPaste || items.length > 0 ? (
               <PageSection title="Import Pages">
                 <div className="space-y-4">
@@ -396,7 +445,7 @@ export default function ImportPage() {
 
                   <ImportPendingList
                     items={items}
-                    isImporting={importMutation.isPending}
+                    isImporting={importMutation.isPending || isProcessing}
                     onClearAll={handleClearAll}
                     onImport={handleImport}
                     onRemove={handleRemoveItem}

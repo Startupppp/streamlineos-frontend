@@ -66,7 +66,7 @@ redis-cli -u $UPSTASH_REDIS_REST_URL DEL <namespace-key>
 
 **Detection signal:** `alert-kb-revocation-lag.mjs` queries `kb_pages.acl_revision_changed_at` and `kb_article_chunks.acl_synced_at` (added by migration 1229). Both columns are applied to production. The alert guards with a column-existence check and exits 0 with `reason: "migration-M5-pending"` when either column is absent — reporting no lag is not the same as reporting health.
 
-**Currently inert by design.** The columns exist but nothing writes them yet. The indexing path does not stamp `acl_revision_changed_at` on ACL mutations or `acl_synced_at` on chunk sync. The alert becomes live when those writes land. This SLO (`module:kb:access-revocation`) is registered to track that commitment.
+**Both columns are live.** All ACL mutation paths (`kb-articles.service.ts`, `kb-pages.service.ts`, `kb-page-grants.service.ts`, `kb-indexing.service.ts`) now stamp `acl_revision_changed_at` on the page row in the same transaction as the `acl_revision + 1` increment. All chunk write paths stamp `acl_synced_at` at insert or update time. The SLO (`module:kb:access-revocation`) is now measurable.
 
 **First five minutes**
 

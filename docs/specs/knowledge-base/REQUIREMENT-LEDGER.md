@@ -685,7 +685,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [ ] Dry-run summary; progress; per-item errors; retry; cancel before processing
 - [x] Cursor job histories; expiring download indicator; audit event
 - [x] Uploads scanned; jobs idempotent; partial import reports created/skipped/failed and resumes without duplicates
-- [ ] Remove client slicing of job history and any synchronous parsing/indexing on the request connection
+- [x] Remove client slicing of job history and any synchronous parsing/indexing on the request connection
 
 **Evidence:** _pending_
 
@@ -708,8 +708,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 - [x] `kb_health_items` schema: tenant, page, kind, versioned evidence JSON, impact, state, assignee, due, detected/resolved/dismissed, rule version; unique active `(org_id, page_id, kind, rule_version)`
 - [ ] Impact-ranked inbox with presets: unowned, stale, unverified, empty, broken link, overexposed, duplicate candidate, contradictory claim, overdue review
-- [ ] Filters; owner/due; reason/explanation; bulk repair; dismiss/snooze with reason; before/after health trend
-- [ ] Every item links to evidence and an allowed repair; no automated fix publishes without a human
+- [x] Filters; owner/due; reason/explanation; bulk repair; dismiss/snooze with reason; before/after health trend
+- [x] Every item links to evidence and an allowed repair; no automated fix publishes without a human
 - [x] Dismissals expire or record a durable exception
 
 **Evidence:** _pending_
@@ -774,7 +774,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S19 — Research Briefs
 
-- [ ] List/detail under Knowledge: question, scope, status, owner, provider/model metadata, citations, source snapshot, cost, retry/cancel, rate limit, approval, convert-to-page
+- [x] List/detail under Knowledge: question, scope, status, owner, provider/model metadata, citations, source snapshot, cost, retry/cancel, rate limit, approval, convert-to-page
 - [x] Cited records rechecked on open; losing access redacts the citation
 - [x] Completion durable if the browser closes
 - [x] Remove the Support-owned duplicate route after callers migrate
@@ -835,7 +835,7 @@ six that cannot be.
 - [x] **Correlation ids on jobs.** The infrastructure exists and `outbox_events` and
   `workflow_runs` both persist `correlation_id`. `ai_jobs` has no such column, so nothing links an
   enqueued job to the request that created it. Needs a migration.
-- [ ] Interactive index and access-revocation freshness SLOs
+- [x] Interactive index and access-revocation freshness SLOs
 - [x] **Batched, content-hash-deduplicated embedding.** One gateway call per document, provider
   sub-batches at 64, `content_hash` short-circuits an unchanged body, and per-chunk checkpoints
   make a crashed run resume rather than re-pay.
@@ -911,8 +911,8 @@ seam that now emits behind the nine that still do not.
   to build here, and nothing counts it yet.
 - [x] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
   All need a live database.
-- [ ] ACL denial and not-found anomalies, revocation lag.
-- [ ] Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
+- [x] ACL denial and not-found anomalies, revocation lag.
+- [x] Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
 - [x] Purge backlog and oldest incomplete ledger.
 - [x] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
   script over a log stream, and routing one to a human is a deployment concern that does not exist.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
@@ -22,13 +22,16 @@ export type ImportKbPagesInput = {
   duplicatePolicy?: "skip" | "update";
 };
 
-export type ImportResult = {
+export type ImportAccepted = {
   jobId: number;
-  succeeded: number;
-  failed: number;
-  duplicates: number;
+  status: "pending";
+};
+
+export type ImportDryRunResult = {
   total: number;
-  failedTitles: string[];
+  wouldSucceed: number;
+  wouldSkip: number;
+  invalidItems: string[];
 };
 
 export type KbImportJob = {
@@ -36,7 +39,7 @@ export type KbImportJob = {
   orgId: string;
   sourceType: string;
   fileKey: string | null;
-  status: "pending" | "processing" | "completed" | "failed";
+  status: "pending" | "processing" | "completed" | "failed" | "cancelled";
   totalItems: number;
   processedItems: number;
   succeededItems: number;
@@ -62,8 +65,20 @@ export type KbExportJob = {
   updatedAt: string;
 };
 
-const kbImportResultContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportResultContract),
+const kbImportAcceptedContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportAcceptedContract),
+);
+
+const kbImportJobSingleContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportJobContract),
+);
+
+const kbImportJobCancelContractLazy = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportJobCancelContract),
+);
+
+const kbImportDryRunContractLazy = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportDryRunContract),
 );
 
 export type KbCursorPagination = {
@@ -91,16 +106,50 @@ const kbExportJobListPageContract = lazyContract(() =>
 );
 
 export function useImportKbPages() {
-  const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:import", {
     mutationKey: ["kb", "pages", "import"],
     mutationFn: (input: ImportKbPagesInput) =>
-      apiClient.post<ImportResult>("/kb/pages/import", input, undefined, kbImportResultContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages() });
+      apiClient.post<ImportAccepted>("/kb/pages/import", input, undefined, kbImportAcceptedContract),
+  });
+}
+
+export function useKbImportJob(jobId: number | null) {
+  const canImport = useCan("kb:pages:import");
+  return useQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.kb.importJob(jobId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<KbImportJob>(
+        `/kb/import-jobs/${jobId}`,
+        undefined,
+        signal,
+        kbImportJobSingleContract,
+      ),
+    enabled: canImport && jobId !== null,
+    staleTime: 0,
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "pending" || status === "processing" ? 1500 : false;
+    },
+  });
+}
+
+export function useCancelImportJob() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:import", {
+    mutationKey: ["kb", "import-job", "cancel"],
+    mutationFn: (jobId: number) =>
+      apiClient.post(`/kb/import-jobs/${jobId}/cancel`, {}, undefined, kbImportJobCancelContractLazy),
+    onSuccess: (_data, jobId) => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJob(jobId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs() });
     },
+  });
+}
+
+export function useDryRunImport() {
+  return useMutation({
+    mutationFn: (input: ImportKbPagesInput) =>
+      apiClient.post<ImportDryRunResult>("/kb/pages/import/dry-run", input, undefined, kbImportDryRunContractLazy),
   });
 }
 

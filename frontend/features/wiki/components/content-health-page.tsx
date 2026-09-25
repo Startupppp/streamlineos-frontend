@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -15,11 +16,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import {
   useContentHealthCounts,
   useContentHealthSignals,
+  useAssignHealthItem,
+  useBulkRepairHealthItems,
+  useContentHealthEvidence,
+  useContentHealthTrend,
 } from "@/hooks/api/kb/content-health";
 import type { ContentHealthSignalType } from "@/hooks/api/kb/content-health-schema";
 import { pageHref } from "@/lib/knowledge-routes";
@@ -32,6 +43,8 @@ import {
   ContentHealthDismissDialog,
   useDismissDialog,
 } from "@/features/wiki/components/content-health-dismiss-dialog";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const SIGNAL_TYPES: ContentHealthSignalType[] = [
   "unowned",
@@ -119,11 +132,233 @@ function ContentHealthSkeleton() {
   );
 }
 
+interface EvidencePopoverProps {
+  pageId: number;
+  kind: ContentHealthSignalType;
+}
+
+function EvidencePopover({ pageId, kind }: EvidencePopoverProps) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading } = useContentHealthEvidence(
+    open ? pageId : null,
+    open ? kind : null,
+  );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="text-xs h-7 w-20 shrink-0"
+          aria-label="View evidence for this signal"
+        >
+          Evidence
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-3" align="end">
+        <p className="text-xs font-medium text-foreground mb-2">
+          Signal evidence
+        </p>
+        {isLoading ? (
+          <Skeleton className="h-16 w-full" />
+        ) : data?.evidence ? (
+          <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap break-all max-h-48 overflow-y-auto">
+            {JSON.stringify(data.evidence, null, 2)}
+          </pre>
+        ) : (
+          <p className="text-xs text-muted-foreground">No evidence recorded.</p>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+interface HealthTrendWidgetProps {
+  activeSignal: ContentHealthSignalType;
+}
+
+function HealthTrendWidget({ activeSignal }: HealthTrendWidgetProps) {
+  const { data, isLoading } = useContentHealthTrend();
+  if (isLoading) return <Skeleton className="h-16 w-full rounded-xl" />;
+  if (!data) return null;
+
+  const delta = data.afterCount - data.beforeCount;
+  const improved = delta < 0;
+  const deltaLabel = improved
+    ? `${Math.abs(delta)} fewer issues than 30 days ago`
+    : delta === 0
+      ? "No change in 30 days"
+      : `${delta} more issues than 30 days ago`;
+
+  return (
+    <div className="rounded-xl border border-border bg-card/60 px-4 py-3 flex items-center gap-4">
+      <div className="flex flex-col">
+        <span className="text-xs text-muted-foreground">Before (30 days ago)</span>
+        <span className="text-lg font-semibold tabular-nums text-foreground">{data.beforeCount}</span>
+      </div>
+      <span className="text-muted-foreground text-sm">→</span>
+      <div className="flex flex-col">
+        <span className="text-xs text-muted-foreground">Now ({SIGNAL_LABELS[activeSignal]})</span>
+        <span className={`text-lg font-semibold tabular-nums ${improved ? "text-green-600 dark:text-green-400" : "text-foreground"}`}>
+          {data.afterCount}
+        </span>
+      </div>
+      <p className="text-xs text-muted-foreground ml-auto text-right">{deltaLabel}</p>
+    </div>
+  );
+}
+
+interface BulkRepairDialogProps {
+  selectedIds: number[];
+  activeSignal: ContentHealthSignalType;
+  onClose: () => void;
+}
+
+function BulkRepairDialog({ selectedIds, activeSignal, onClose }: BulkRepairDialogProps) {
+  const bulkRepair = useBulkRepairHealthItems();
+  const [repairAction, setRepairAction] = useState<"assign_owner" | "request_review" | "mark_needs_content">("request_review");
+
+  function handleConfirm() {
+    bulkRepair.mutate(
+      { pageIds: selectedIds, kind: activeSignal, repairAction },
+      {
+        onSuccess: (result) => {
+          const count = result.results.filter((r) => r.outcome === "applied").length;
+          toast.success(`Repaired ${count} pages`);
+          onClose();
+        },
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
+        },
+      },
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-card border border-border rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
+        <h2 className="text-sm font-semibold text-foreground">
+          Bulk repair — {selectedIds.length} pages
+        </h2>
+        <Select
+          value={repairAction}
+          onValueChange={(v) => setRepairAction(v as typeof repairAction)}
+        >
+          <SelectTrigger className="w-full h-8 text-xs" aria-label="Repair action">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="request_review" className="text-xs">
+              Request review
+            </SelectItem>
+            <SelectItem value="assign_owner" className="text-xs">
+              Assign owner
+            </SelectItem>
+            <SelectItem value="mark_needs_content" className="text-xs">
+              Mark needs content
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-2 justify-end pt-2">
+          <Button type="button" variant="outline" size="sm" className="text-xs h-7" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            className="text-xs h-7"
+            onClick={handleConfirm}
+            disabled={bulkRepair.isPending}
+          >
+            {bulkRepair.isPending ? "Repairing…" : "Confirm"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface AssignPopoverProps {
+  pageId: number;
+  kind: ContentHealthSignalType;
+}
+
+function AssignPopover({ pageId, kind }: AssignPopoverProps) {
+  const [open, setOpen] = useState(false);
+  const [membershipId, setMembershipId] = useState("");
+  const [dueAt, setDueAt] = useState("");
+  const assign = useAssignHealthItem();
+
+  function handleAssign() {
+    const parsed = parseInt(membershipId, 10);
+    if (!Number.isFinite(parsed)) return;
+    assign.mutate(
+      { pageId, kind, assigneeMembershipId: parsed, dueAt: dueAt || undefined },
+      {
+        onSuccess: () => {
+          toast.success("Assigned");
+          setOpen(false);
+        },
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
+        },
+      },
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="text-xs h-7 w-16 shrink-0"
+          aria-label="Assign this page"
+        >
+          Assign
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-3 space-y-2" align="end">
+        <p className="text-xs font-medium text-foreground">Assign owner</p>
+        <input
+          type="number"
+          placeholder="Membership ID"
+          value={membershipId}
+          onChange={(e) => setMembershipId(e.target.value)}
+          className="w-full h-8 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Membership ID"
+        />
+        <input
+          type="date"
+          value={dueAt}
+          onChange={(e) => setDueAt(e.target.value)}
+          className="w-full h-8 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Due date"
+        />
+        <Button
+          type="button"
+          size="sm"
+          className="w-full text-xs h-7"
+          onClick={handleAssign}
+          disabled={assign.isPending || !membershipId}
+        >
+          {assign.isPending ? "Saving…" : "Save"}
+        </Button>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function ContentHealthPage() {
   const searchParams = useSearchParams();
   const { update: updateFilters } = useUrlFilters({ pageParam: "cursor" });
   const cursorState = useCursorPagination();
   const { state: dismissState, openDismiss, closeDialog } = useDismissDialog();
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkRepairOpen, setBulkRepairOpen] = useState(false);
 
   const activeSignal = parseEnum<readonly ContentHealthSignalType[]>(
     searchParams.get("signal"),
@@ -154,6 +389,7 @@ export default function ContentHealthPage() {
 
   function handleSignalSelect(signal: string) {
     cursorState.reset();
+    setSelectedIds(new Set());
     updateFilters({ signal });
   }
 
@@ -173,6 +409,31 @@ export default function ContentHealthPage() {
 
   function handleDismissOpenChange(open: boolean) {
     if (!open) closeDialog();
+  }
+
+  function handleRowSelect(id: number, checked: boolean) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  }
+
+  function handleSelectAll(checked: boolean) {
+    if (checked) {
+      setSelectedIds(new Set(rows.map((r) => r.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  }
+
+  function handleBulkRepairClose() {
+    setBulkRepairOpen(false);
+    setSelectedIds(new Set());
   }
 
   const rows = signalsData?.data ?? [];
@@ -195,6 +456,9 @@ export default function ContentHealthPage() {
   const countMap = new Map(
     (countsData?.counts ?? []).map((c) => [c.signalType, c.count]),
   );
+
+  const allSelected = rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+  const someSelected = selectedIds.size > 0;
 
   return (
     <PageWrapper title="Content Health">
@@ -226,6 +490,8 @@ export default function ContentHealthPage() {
             ))}
           </div>
 
+          <HealthTrendWidget activeSignal={activeSignal} />
+
           <div className="rounded-xl border border-border bg-card/60 px-4 py-3 flex items-start gap-2">
             <KbAlertCircleIcon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
             <p className="text-xs text-muted-foreground">
@@ -250,21 +516,34 @@ export default function ContentHealthPage() {
                   {SIGNAL_DESCRIPTIONS[activeSignal]}
                 </p>
               </div>
-              <Select value={activeSignal} onValueChange={handleSignalSelect}>
-                <SelectTrigger
-                  className="w-44 h-8 text-xs"
-                  aria-label="Signal type"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SIGNAL_TYPES.map((s) => (
-                    <SelectItem key={s} value={s} className="text-xs">
-                      {SIGNAL_LABELS[s]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                {someSelected && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-8"
+                    onClick={() => setBulkRepairOpen(true)}
+                  >
+                    Bulk repair ({selectedIds.size})
+                  </Button>
+                )}
+                <Select value={activeSignal} onValueChange={handleSignalSelect}>
+                  <SelectTrigger
+                    className="w-44 h-8 text-xs"
+                    aria-label="Signal type"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SIGNAL_TYPES.map((s) => (
+                      <SelectItem key={s} value={s} className="text-xs">
+                        {SIGNAL_LABELS[s]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {signalsLoading ? (
@@ -286,6 +565,12 @@ export default function ContentHealthPage() {
               <>
                 <div className="rounded-xl border border-border bg-card divide-y divide-border/60">
                   <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all rows"
+                      className="shrink-0"
+                    />
                     <span className="flex-1 text-xs font-medium text-muted-foreground">
                       Title
                     </span>
@@ -295,13 +580,19 @@ export default function ContentHealthPage() {
                     <span className="text-xs font-medium text-muted-foreground w-24 text-right">
                       Updated
                     </span>
-                    <span className="w-16" />
+                    <span className="w-48" />
                   </div>
                   {rows.map((row) => (
                     <div
                       key={row.id}
                       className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/40 transition-colors"
                     >
+                      <Checkbox
+                        checked={selectedIds.has(row.id)}
+                        onCheckedChange={(checked) => handleRowSelect(row.id, !!checked)}
+                        aria-label={`Select ${row.title || "Untitled"}`}
+                        className="shrink-0"
+                      />
                       <Link
                         href={pageHref(row.id)}
                         className="flex-1 text-sm truncate hover:underline text-foreground"
@@ -314,15 +605,19 @@ export default function ContentHealthPage() {
                       <span className="text-xs text-muted-foreground w-24 text-right tabular-nums shrink-0">
                         {kbFormatDate(row.updatedAt)}
                       </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs h-7 w-16 shrink-0"
-                        onClick={() => openDismiss(row.id, row.title || "Untitled", activeSignal)}
-                      >
-                        Dismiss
-                      </Button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <EvidencePopover pageId={row.id} kind={activeSignal} />
+                        <AssignPopover pageId={row.id} kind={activeSignal} />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs h-7 w-16 shrink-0"
+                          onClick={() => openDismiss(row.id, row.title || "Untitled", activeSignal)}
+                        >
+                          Dismiss
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -368,6 +663,14 @@ export default function ContentHealthPage() {
           </section>
         </div>
       </PageState>
+
+      {bulkRepairOpen && someSelected && (
+        <BulkRepairDialog
+          selectedIds={Array.from(selectedIds)}
+          activeSignal={activeSignal}
+          onClose={handleBulkRepairClose}
+        />
+      )}
     </PageWrapper>
   );
 }

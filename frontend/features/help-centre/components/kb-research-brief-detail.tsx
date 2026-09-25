@@ -260,7 +260,26 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
             </LoadingButton>
           )}
 
-          {brief.status === "completed" && brief.report !== null && canCreatePages && (
+          {brief.status === "completed" && brief.approvedAt === null && canManagePages && (
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleApprove}
+              isPending={approveMutation.isPending}
+              loadingText="Approving…"
+            >
+              Approve for publishing
+            </LoadingButton>
+          )}
+
+          {brief.status === "completed" && brief.approvedAt !== null && (
+            <p className="text-xs text-status-success-ink">
+              Approved for publishing
+            </p>
+          )}
+
+          {brief.status === "completed" && brief.report !== null && brief.approvedAt !== null && canCreatePages && (
             <LoadingButton
               variant="outline"
               size="sm"

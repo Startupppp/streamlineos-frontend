@@ -73,3 +73,40 @@ export interface DismissHealthItemParams {
   reason: string;
   dismissalExpiresAt?: string;
 }
+
+const bulkRepairOutcomeSchema = z.enum(["applied", "already_resolved", "skipped"]);
+
+const bulkRepairResultItemSchema = z.object({
+  pageId: z.number().int(),
+  outcome: bulkRepairOutcomeSchema,
+});
+
+export const bulkRepairHealthItemsContract = z.object({
+  results: z.array(bulkRepairResultItemSchema),
+});
+
+export type BulkRepairHealthItemsResult = z.infer<typeof bulkRepairHealthItemsContract>;
+
+export const contentHealthEvidenceContract = z.object({
+  pageId: z.number().int(),
+  kind: contentHealthSignalTypeSchema,
+  ruleVersion: z.number().int(),
+  evidence: z.record(z.string(), z.unknown()),
+  detectedAt: z.string(),
+});
+
+export type ContentHealthEvidenceResult = z.infer<typeof contentHealthEvidenceContract>;
+
+const contentHealthTrendPointSchema = z.object({
+  date: z.string(),
+  openCount: z.number().int(),
+  resolvedCount: z.number().int(),
+});
+
+export const contentHealthTrendContract = z.object({
+  points: z.array(contentHealthTrendPointSchema),
+  beforeCount: z.number().int(),
+  afterCount: z.number().int(),
+});
+
+export type ContentHealthTrendResult = z.infer<typeof contentHealthTrendContract>;

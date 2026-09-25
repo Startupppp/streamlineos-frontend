@@ -107,6 +107,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
+  const editorSnapshotRef = useRef<string | null>(null);
   const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
 
   const handleSavePage = useCallback(
@@ -149,6 +150,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
 
   useEffect(() => {
     setEditorDraft(null);
+    editorSnapshotRef.current = null;
   }, [pageId]);
 
   const handleNavigateToPage = useCallback(
@@ -193,8 +195,16 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   }
 
   function handleEditorChange(value: unknown, plainText: string) {
+    const content = withoutPendingUploads(value);
+    const snapshot = `${plainText}\u0000${JSON.stringify(content)}`;
+    if (editorSnapshotRef.current === null) {
+      const loaded = normalizePlateValue(page?.content);
+      editorSnapshotRef.current = `${getPlainText(loaded)}\u0000${JSON.stringify(withoutPendingUploads(loaded))}`;
+    }
+    if (snapshot === editorSnapshotRef.current) return;
+    editorSnapshotRef.current = snapshot;
     setEditorDraft(value);
-    schedule({ content: withoutPendingUploads(value), contentText: plainText });
+    schedule({ content, contentText: plainText });
   }
 
   function applyEditorValue(next: unknown, plainText: string) {
@@ -287,7 +297,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
 
       <div className="flex min-w-0 flex-1">
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="wiki-document-chrome sticky top-0 z-40 border-b backdrop-blur">
+          <div className="wiki-document-chrome sticky top-0 z-40 border-b">
             <div className="mx-auto w-full max-w-[46rem] px-4 py-2.5 sm:px-8">
               <PageDocumentHeader
                 page={page}
