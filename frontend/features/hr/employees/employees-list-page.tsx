@@ -37,6 +37,7 @@ import {
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { resolveImageUrl, cn } from "@/lib/utils";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { EmployeeListItem } from "@/types/hr";
 import { HrPanel, HrStatusBadge } from "@/features/hr/shared/hr-ui";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -64,16 +65,14 @@ function buildEmployeeListColumns(
       key: "employee",
       header: "Employee",
       cell: (emp) => {
-        const displayName =
-          emp.firstName && emp.lastName
-            ? `${emp.firstName} ${emp.lastName}`
-            : (emp.name ?? "—");
+        // Ticket 07: the same helper the card and the profile header use.
+        const displayName = getUserDisplayName(emp);
         return (
           <div className="flex items-center gap-3">
             <Avatar className="w-9 h-9 shrink-0 ring-2 ring-background shadow-sm">
               <AvatarImage src={resolveImageUrl(emp.image)} alt="" />
               <AvatarFallback className="bg-status-info-surface text-status-info-ink text-xs font-bold">
-                {displayName[0]?.toUpperCase()}
+                {getUserInitials(emp)}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
