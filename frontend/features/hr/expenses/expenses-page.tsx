@@ -48,6 +48,8 @@ import {
 import type { ExpenseToEdit } from "@/features/hr/expenses/components/create-expense-dialog";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 export function ExpensesPage() {
   const { staggerContainer, fadeUp } = useMotionVariants();
@@ -82,6 +84,7 @@ export function ExpensesPage() {
     data: pageData,
     isLoading,
     isError,
+    error,
     refetch,
   } = useExpensePageData(
     {
@@ -219,22 +222,25 @@ export function ExpensesPage() {
     setIsCreateOpen(false);
   }, [refetch]);
 
-  if (isLoading && !pageData) return <LoadingState variant="page" />;
+  // The org-wide read needs the accounting module; self-service does not (HRMS-E2E-008).
+  const pageState = usePageState({
+    module: isAdmin ? "accounting" : undefined,
+    isLoading: isLoading && !pageData,
+    isError: isError && !pageData,
+    error,
+  });
 
-  if (isError && !pageData) {
+  if (pageState.kind !== "ready") {
     return (
       <PageWrapper title="Expenses" subtitle="Manage your expense claims">
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="text-center">
-            <p className="text-sm font-semibold text-foreground">Failed to load expenses</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Something went wrong. Please try again.
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleRetryLoad}>
-            Try Again
-          </Button>
-        </div>
+        <PageState
+          resolution={pageState}
+          loading={<LoadingState variant="page" />}
+          onRetry={handleRetryLoad}
+          className="flex-1"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }
