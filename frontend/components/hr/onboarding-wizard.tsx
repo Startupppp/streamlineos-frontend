@@ -23,6 +23,7 @@ import {
 } from "@/components/hr/check-employee-email";
 import { describeUnsentInvite } from "@/components/hr/invite-delivery";
 import { buildOnboardEmployeePayload } from "@/components/hr/onboarding-payload";
+import { describeOnboardingSuccess } from "@/components/hr/onboarding-result";
 import { StepPersonalInfo } from "./_onboarding/step-personal-info";
 import { StepEmployment } from "./_onboarding/step-employment";
 import { StepSkillsPay } from "./_onboarding/step-skills-pay";
@@ -41,7 +42,7 @@ const STEPS = [
 
 const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
   1: ["firstName", "lastName", "email", "phone", "gender", "dateOfBirth"],
-  2: ["designation", "departmentId", "reportingManagerUserId", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
+  2: ["designation", "departmentId", "reportingManagerUserId", "secondaryManagers", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
   3: ["taxId"],
   4: [],
 };
@@ -72,7 +73,8 @@ export function OnboardingWizard() {
       firstName: "", lastName: "", email: "", phone: "",
       whatsappSameAsPhone: true, whatsappNumber: "", gender: "MALE",
       designation: "", departmentId: undefined,
-      reportingManagerUserId: undefined, topLevelRole: false, topLevelRoleReason: undefined,
+      reportingManagerUserId: undefined, reportingManagerRef: null, secondaryManagers: [],
+      topLevelRole: false, topLevelRoleReason: undefined,
       role: DEFAULT_INVITE_ROLE, employeeId: "", attachToExistingMember: false, joiningDate: new Date(),
       dateOfBirth: undefined,
       taxId: "", monthlySalary: undefined,
@@ -134,7 +136,7 @@ export function OnboardingWizard() {
         buildOnboardEmployeePayload(data),
         {
           onSuccess: (result) => {
-            toast.success("Employee created successfully");
+            toast.success(describeOnboardingSuccess(result.primaryManager));
             const unsentInvite = describeUnsentInvite(result.invite);
             if (unsentInvite)
               toast.warning(unsentInvite, {

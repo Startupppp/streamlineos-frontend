@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ManagerRef } from "@/hooks/api/hr/reporting-lines-schema";
@@ -96,5 +97,20 @@ describe("ManagerCandidatePicker — accessible manager selection", () => {
     );
     const trigger = screen.getByRole("combobox", { name: "Primary reporting manager" });
     expect(trigger).toHaveAccessibleDescription("Assigned automatically by policy if left blank");
+  });
+
+  it("keeps naming a manager picked from search after the results move on", async () => {
+    const user = userEvent.setup();
+    function Controlled() {
+      const [value, setValue] = useState<string | null>(null);
+      return <ManagerCandidatePicker value={value} onChange={setValue} placeholder="Primary reporting manager" />;
+    }
+    render(<Controlled />);
+    await user.click(screen.getByRole("combobox"));
+    await user.click(await screen.findByRole("option", { name: /Asha Rao/ }));
+    hrCandidates.mockReturnValue({ data: { items: [] } });
+    await user.click(screen.getByRole("combobox"));
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("combobox")).toHaveTextContent("Asha Rao");
   });
 });

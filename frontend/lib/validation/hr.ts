@@ -6,24 +6,61 @@ function hasLetterOrDigit(value: string): boolean {
   return /[\p{L}\p{N}]/u.test(value);
 }
 
-export const REPORTS_TO_REQUIRED_MESSAGE =
-  "Reports to is required. Choose a reporting manager, or mark the role as top-level with a reason.";
+/** Display-only copy of a chosen manager, so a step can name them after remounting. Never sent. */
+const managerRefDisplaySchema = z
+  .object({
+    userId: z.string(),
+    name: z.string(),
+    email: z.string().nullable(),
+    designation: z.string().nullable(),
+    state: z.enum(["active", "on-notice", "inactive", "exited"]),
+  })
+  .nullable()
+  .optional();
 
-function requireReportsTo(
-  value: { reportingManagerUserId?: string; topLevelRole?: boolean; topLevelRoleReason?: string },
+export const secondaryManagerEntrySchema = z.object({
+  managerUserId: z.string().min(1, "Choose a manager or remove this row"),
+  label: z.string().trim().max(60, "Keep the label under 60 characters").optional(),
+  managerRef: managerRefDisplaySchema,
+});
+
+/**
+ * HRM-15 (PRD D2/D3). The primary manager is optional — the backend resolves a
+ * blank one by policy. A top-level role is the only way to have none, needs a
+ * reason, and cannot carry any manager. Secondaries may not repeat the primary or
+ * each other; the org cap is enforced where rows are added and by the server.
+ */
+function validateReportingChoice(
+  value: {
+    reportingManagerUserId?: string;
+    topLevelRole?: boolean;
+    topLevelRoleReason?: string;
+    secondaryManagers?: Array<{ managerUserId: string }>;
+  },
   ctx: z.RefinementCtx,
 ): void {
-  const hasManager = Boolean(value.reportingManagerUserId);
-  if (hasManager && value.topLevelRole) {
-    ctx.addIssue({ code: "custom", message: "A top-level role cannot also have a reporting manager.", path: ["topLevelRole"] });
+  const secondaries = value.secondaryManagers ?? [];
+  if (value.topLevelRole) {
+    if (value.reportingManagerUserId || secondaries.length > 0)
+      ctx.addIssue({ code: "custom", message: "A top-level role cannot also have a reporting manager.", path: ["topLevelRole"] });
+    if (!value.topLevelRoleReason?.trim())
+      ctx.addIssue({ code: "custom", message: "Explain why this role has no reporting manager.", path: ["topLevelRoleReason"] });
     return;
   }
-  if (!hasManager && !value.topLevelRole) {
-    ctx.addIssue({ code: "custom", message: REPORTS_TO_REQUIRED_MESSAGE, path: ["reportingManagerUserId"] });
-    return;
-  }
-  if (value.topLevelRole && !value.topLevelRoleReason?.trim())
-    ctx.addIssue({ code: "custom", message: "Explain why this role has no reporting manager.", path: ["topLevelRoleReason"] });
+  const seen = new Set<string>(value.reportingManagerUserId ? [value.reportingManagerUserId] : []);
+  secondaries.forEach((entry, index) => {
+    if (!entry.managerUserId) return;
+    if (seen.has(entry.managerUserId))
+      ctx.addIssue({
+        code: "custom",
+        message:
+          entry.managerUserId === value.reportingManagerUserId
+            ? "Already the primary reporting manager."
+            : "Already added as an additional manager.",
+        path: ["secondaryManagers", index, "managerUserId"],
+      });
+    seen.add(entry.managerUserId);
+  });
 }
 
 export const onboardEmployeeInputSchema = z.object({
@@ -62,6 +99,8 @@ export const onboardEmployeeInputSchema = z.object({
     .refine(hasLetterOrDigit, "Designation must contain a letter or number"),
   departmentId: z.string().min(1, "Department is required"),
   reportingManagerUserId: z.string().optional(),
+  reportingManagerRef: managerRefDisplaySchema,
+  secondaryManagers: z.array(secondaryManagerEntrySchema).max(3, "At most three additional managers").optional(),
   topLevelRole: z.boolean().optional(),
   topLevelRoleReason: z.string().trim().max(500, "Keep the reason under 500 characters").optional(),
   role: z.enum(USER_INVITE_ROLE_VALUES),
@@ -152,4 +191,4 @@ export const onboardEmployeeInputSchema = z.object({
         .or(z.literal("")),
     })
     .optional(),
-}).superRefine(requireReportsTo);
+}).superRefine(validateReportingChoice);

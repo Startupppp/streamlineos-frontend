@@ -86,7 +86,8 @@ export function ManagerCandidatePicker({
   for (const item of items) seen.current.set(item.userId, item);
   if (selected) seen.current.set(selected.userId, selected);
 
-  const known = selected ? [toOption(selected)] : [];
+  const current = value ? seen.current.get(value) : undefined;
+  const known = current ? [toOption(current)] : [];
 
   function handleChange(userId: string | null) {
     onChange(userId, userId ? (seen.current.get(userId) ?? null) : null);

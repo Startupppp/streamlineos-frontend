@@ -7,6 +7,9 @@ import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { DEFAULT_INVITE_ROLE } from "@/lib/constants/user-invite-roles";
 import { StepEmployment } from "./step-employment";
 
+// The reporting half has its own suite (step-employment-reports-to.test.tsx).
+jest.mock("./step-employment-reporting", () => ({ StepEmploymentReporting: () => null }));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
 }));
