@@ -10,6 +10,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { optionalSignalRead } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
@@ -147,12 +148,16 @@ export function useEmployeeEmployment(userId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.employeeEmployment(userId),
+    // A member not yet hired has no employment: 404 is "absent", which every
+    // consumer already draws, not a failure that should take down the profile.
     queryFn: ({ signal }) =>
-      apiClient.get(
-        `/hr/employees/${userId}/employment`,
-        undefined,
-        signal,
-        _employmentContract,
+      optionalSignalRead(
+        apiClient.get(
+          `/hr/employees/${userId}/employment`,
+          undefined,
+          signal,
+          _employmentContract,
+        ),
       ),
     enabled: hrEnabled && !!userId && canView,
     staleTime: 5 * 60_000,
