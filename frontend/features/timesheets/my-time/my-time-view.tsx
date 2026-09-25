@@ -25,7 +25,7 @@ import { WeekGrid } from "./week-grid";
 import { DayTimeline } from "./day-timeline";
 import { cn } from "@/lib/utils";
 
-export function MyTimeView() {
+export function MyTimeView({ projectId }: { projectId?: number }) {
   const shouldReduceMotion = useReducedMotion();
   const [rejectionDismissed, setRejectionDismissed] = useState(false);
 
@@ -42,7 +42,7 @@ export function MyTimeView() {
     null,
   );
   const { data: entriesData, isLoading: entriesLoading } = useTimesheetEntries(
-    { startDate: weekStart, endDate: weekEnd, limit: 100 },
+    { startDate: weekStart, endDate: weekEnd, projectId, limit: 100 },
     true,
   );
 
@@ -293,6 +293,7 @@ export function MyTimeView() {
                 days={days}
                 weekStart={weekStart}
                 weekEnd={weekEnd}
+                defaultProjectId={projectId}
               />
             </TabsContent>
           </Tabs>

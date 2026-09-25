@@ -1,7 +1,14 @@
 import { requirePermission } from "@/lib/rbac/require-permission";
 import { MyTimeView } from "@/features/timesheets/my-time";
 
-export default async function TimesheetsPage() {
+type TimesheetsPageProps = {
+  searchParams?: Promise<{ projectId?: string }>;
+};
+
+export default async function TimesheetsPage({ searchParams }: TimesheetsPageProps) {
   await requirePermission("timesheets:entries:view");
-  return <MyTimeView />;
+  const params = await searchParams;
+  const rawProjectId = params?.projectId?.trim();
+  const projectId = rawProjectId && /^\d+$/.test(rawProjectId) ? Number(rawProjectId) : undefined;
+  return <MyTimeView projectId={projectId} />;
 }
