@@ -1,6 +1,6 @@
 "use client";
 
-import { useHrAnalytics } from "@/hooks/api/hr/analytics";
+import { useHrEmployeeCounts } from "@/hooks/api/hr/employee-list";
 import { useHrDocumentStats } from "@/hooks/api/hr/documents";
 import { useLeavePolicies } from "@/hooks/api/hr/leave-policies";
 import { useHrShifts } from "@/hooks/api/hr/shifts";
@@ -13,19 +13,24 @@ import type { HrSetupSignals } from "./hr-start-here";
  * loading, so it still resolves to a null signal rather than blocking forever.
  */
 export function useHrSetupSignals(): HrSetupSignals | null {
-  const analytics = useHrAnalytics();
+  // Headcount counts every active, verified member — the founder included —
+  // so a brand-new org read as "people added" before anyone was. Count active
+  // plus invited people and leave out the one account that always exists.
+  const employees = useHrEmployeeCounts({});
   // Leave types are seeded for every org at creation, so counting them marked
   // this step done before anyone configured anything. Policies are not seeded.
   const leavePolicies = useLeavePolicies();
   const shifts = useHrShifts();
   const documents = useHrDocumentStats();
 
-  if ([analytics, leavePolicies, shifts, documents].some((query) => query.isLoading)) {
+  if ([employees, leavePolicies, shifts, documents].some((query) => query.isLoading)) {
     return null;
   }
 
   return {
-    people: analytics.data ? analytics.data.headcount.total : null,
+    people: employees.data
+      ? Math.max(0, employees.data.active + employees.data.pending - 1)
+      : null,
     leavePolicies: leavePolicies.data ? leavePolicies.data.length : null,
     shifts: shifts.data ? shifts.data.length : null,
     documents: documents.data ? documents.data.total : null,

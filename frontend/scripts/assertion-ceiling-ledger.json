@@ -581,91 +581,91 @@
       "as": 2,
       "nonNull": 0
     },
-    "features/hr/recruitment/candidate-detail/calibration-tab.tsx": {
+    "features/recruitment/candidate-detail/calibration-tab.tsx": {
       "as": 3,
       "nonNull": 0
     },
-    "features/hr/recruitment/candidate-detail/documents-tab.tsx": {
+    "features/recruitment/candidate-detail/documents-tab.tsx": {
       "as": 2,
       "nonNull": 0
     },
-    "features/hr/recruitment/candidate-detail/vault-upload-area.tsx": {
+    "features/recruitment/candidate-detail/vault-upload-area.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/candidates/bulk-import-page.tsx": {
+    "features/recruitment/candidates/bulk-import-page.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/candidates/candidate-sheets.tsx": {
+    "features/recruitment/candidates/candidate-sheets.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/candidates/candidates-page.tsx": {
+    "features/recruitment/candidates/candidates-page.tsx": {
       "as": 3,
       "nonNull": 0
     },
-    "features/hr/recruitment/components/automations-client.tsx": {
+    "features/recruitment/components/automations-client.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/email-sequences/email-sequences-page.tsx": {
+    "features/recruitment/email-sequences/email-sequences-page.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/hiring-flows/round-form-sheet.tsx": {
+    "features/recruitment/hiring-flows/round-form-sheet.tsx": {
       "as": 2,
       "nonNull": 0
     },
-    "features/hr/recruitment/inbox/recruitment-inbox-page.tsx": {
+    "features/recruitment/inbox/recruitment-inbox-page.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/interview-feedback-form.tsx": {
+    "features/recruitment/interview-feedback-form.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/interviews/interview-form-sheet.tsx": {
+    "features/recruitment/interviews/interview-form-sheet.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/jobs/create-job-form/hiring-pipeline-sections.tsx": {
+    "features/recruitment/jobs/create-job-form/hiring-pipeline-sections.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/jobs/create-job-form/index.tsx": {
+    "features/recruitment/jobs/create-job-form/index.tsx": {
       "as": 3,
       "nonNull": 0
     },
-    "features/hr/recruitment/jobs/create-job-form/job-posting-preview.tsx": {
+    "features/recruitment/jobs/create-job-form/job-posting-preview.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/jobs/create-job-form/parse-job.ts": {
+    "features/recruitment/jobs/create-job-form/parse-job.ts": {
       "as": 5,
       "nonNull": 0
     },
-    "features/hr/recruitment/pipeline-kanban.tsx": {
+    "features/recruitment/pipeline-kanban.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/question-bank/question-form-body.tsx": {
+    "features/recruitment/question-bank/question-form-body.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/question-bank/question-form-dialog.tsx": {
+    "features/recruitment/question-bank/question-form-dialog.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/referrals/invite-referrers-sheet.tsx": {
+    "features/recruitment/referrals/invite-referrers-sheet.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/reports-page.tsx": {
+    "features/recruitment/reports-page.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/recruitment/reports/components/schedule-report-sheet.tsx": {
+    "features/recruitment/reports/components/schedule-report-sheet.tsx": {
       "as": 1,
       "nonNull": 0
     },

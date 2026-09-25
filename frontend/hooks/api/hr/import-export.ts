@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { downloadExport } from "@/lib/download-export";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -149,6 +150,11 @@ export function useHrImportJobs(
         ...(entity ? { entity } : {}),
       }, signal, lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobListContract))),
     staleTime: 30_000,
+    // Import history is one section of Import / Export. JobHistoryTable renders
+    // its own inline error and retry; left to the provider default, one failed
+    // read replaced the whole page — export and import cards included — with
+    // the /hr route boundary's "Failed to load".
+    ...INLINE_READ_ERROR,
     enabled: hrEnabled && canImport,
   });
 }

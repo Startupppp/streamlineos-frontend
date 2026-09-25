@@ -19,7 +19,7 @@
 
 **Backend prefixes renamed under `/build` (2026-09-02).** `product-management/workspaces` → `build/workspaces`; the org-wide `whiteboards` hub → `build/whiteboards`. §8 puts every Build resource under `/build`, and a middleware or rate-limit tier keyed on `/build` silently missed the old hub. **`build/workspaces` itself is retired 2026-09-23** — see PM Workspaces below; the `whiteboards` half of this decision is unaffected.
 
-**Every static HRMS route has smoke coverage (2026-09-21).** The list is `lib/hrms-static-routes.ts` — derived from the sidebar navigation model (`NAV_GROUPS` + `HOME_NAV_GROUPS`, `/hr/**` static hrefs, minus `/hr/recruitment/**` and `/payroll/**`), never hand-copied, so a new sidebar entry is covered the moment it is added. Two tiers: (1) `lib/hrms-static-routes.test.tsx` runs under jest with no server — per route it asserts the `page.tsx` exists, the route is gated server-side (page-level `require*()` or the HR layout's `enforceRouteAccess` resolving to a registered decision), renders `loading.tsx` and asserts a non-empty `h1`, compares the skeleton's title with the page's declared `PageWrapper` title when both are static, and holds a shrink-only list of skeletons that still announce numbered "Column N" headers; (2) `e2e/hrms-routes.spec.ts` runs under Playwright, one `test` per route, signs in with the minted-cookie fixture, asserts the URL stays on the route (or on the page's declared `redirect()`), that `main` has an `h1` matching the declared title, that "Loading results…" and `aria-busy` content clear within 30s, and that no console error contains "Minified React error" or "Error:". Run tier 1 with `npx jest lib/hrms-static-routes.test.tsx --maxWorkers=2`; tier 2 needs a backend on a local database and the tenant env (`E2E_ORG_ID`, `E2E_USER_ID`, `E2E_USER_EMAIL`, `E2E_SESSION_ID` naming an unrevoked `user_sessions` row of that user, `BACKEND_JWT_SECRET`, `INTERNAL_API_SECRET` and `NEXTAUTH_SECRET` byte-matching the backend's — `POST /auth/session-exchange` verifies the session proof with the backend's `NEXTAUTH_SECRET` and refuses a session it has not registered — plus `NEXT_PUBLIC_API_URL`): `E2E_DEV_BUNDLER=webpack NEXTAUTH_SECRET=… NEXT_PUBLIC_API_URL=http://localhost:<port> E2E_ORG_ID=… E2E_USER_ID=… E2E_USER_EMAIL=… E2E_SESSION_ID=… BACKEND_JWT_SECRET=… INTERNAL_API_SECRET=… pnpm exec playwright test e2e/hrms-routes.spec.ts --project=chromium`; it skips with the missing variable names otherwise. `E2E_DEV_BUNDLER=webpack` is for worktrees whose `node_modules` is a symlink out of the project root, which Turbopack refuses. `/hr/settings/company` is asserted as the redirect it declares, not as a page.
+**Every static HRMS route has smoke coverage (2026-09-21).** The list is `lib/hrms-static-routes.ts` — derived from the sidebar navigation model (`NAV_GROUPS` + `HOME_NAV_GROUPS`, `/hr/**` static hrefs, minus `/payroll/**`; Recruitment OS lives under `/recruitment/**`, outside HRMS), never hand-copied, so a new sidebar entry is covered the moment it is added. Two tiers: (1) `lib/hrms-static-routes.test.tsx` runs under jest with no server — per route it asserts the `page.tsx` exists, the route is gated server-side (page-level `require*()` or the HR layout's `enforceRouteAccess` resolving to a registered decision), renders `loading.tsx` and asserts a non-empty `h1`, compares the skeleton's title with the page's declared `PageWrapper` title when both are static, and holds a shrink-only list of skeletons that still announce numbered "Column N" headers; (2) `e2e/hrms-routes.spec.ts` runs under Playwright, one `test` per route, signs in with the minted-cookie fixture, asserts the URL stays on the route (or on the page's declared `redirect()`), that `main` has an `h1` matching the declared title, that "Loading results…" and `aria-busy` content clear within 30s, and that no console error contains "Minified React error" or "Error:". Run tier 1 with `npx jest lib/hrms-static-routes.test.tsx --maxWorkers=2`; tier 2 needs a backend on a local database and the tenant env (`E2E_ORG_ID`, `E2E_USER_ID`, `E2E_USER_EMAIL`, `E2E_SESSION_ID` naming an unrevoked `user_sessions` row of that user, `BACKEND_JWT_SECRET`, `INTERNAL_API_SECRET` and `NEXTAUTH_SECRET` byte-matching the backend's — `POST /auth/session-exchange` verifies the session proof with the backend's `NEXTAUTH_SECRET` and refuses a session it has not registered — plus `NEXT_PUBLIC_API_URL`): `E2E_DEV_BUNDLER=webpack NEXTAUTH_SECRET=… NEXT_PUBLIC_API_URL=http://localhost:<port> E2E_ORG_ID=… E2E_USER_ID=… E2E_USER_EMAIL=… E2E_SESSION_ID=… BACKEND_JWT_SECRET=… INTERNAL_API_SECRET=… pnpm exec playwright test e2e/hrms-routes.spec.ts --project=chromium`; it skips with the missing variable names otherwise. `E2E_DEV_BUNDLER=webpack` is for worktrees whose `node_modules` is a symlink out of the project root, which Turbopack refuses. `/hr/settings/company` is asserted as the redirect it declares, not as a page.
 
 ---
 ## Auth `(auth)`
@@ -319,7 +319,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ## HR (Human Resources)
 
 ### Hub
-- `/hr` · **HR** · hooks: `→ features/hr/hub` (2026-09-21: titled "HR overview"; one primary action "Onboard employee" with "Review approvals" and "Create announcement" as outlined actions; the Dashboard, Analytics and Approvals tiles that duplicated nav destinations are gone) (2026-09-21: `loading.tsx` is titled "HR overview", matching the page)
+- `/hr` · **HR** · hooks: `→ features/hr/hub` (2026-09-21: titled "HR overview"; one primary action "Onboard employee" with "Review approvals" and "Create announcement" as outlined actions; the Dashboard, Analytics and Approvals tiles that duplicated nav destinations are gone) (2026-09-21: `loading.tsx` is titled "HR overview", matching the page) (2026-09-25: the Recruitment section and the "Interviews today" card are gone — hiring lives in Recruitment OS; the `/hr/hub` contract still accepts the backend's recruitment sections and capabilities, and they no longer count as an HR panel)
 - `/hr/dashboard` — **deleted 2026-09-21**; it duplicated `/hr` (the hub snapshot already carries the metrics, leave calendar and onboarding status), so the route, `features/hr/dashboard/**`, `useHrDashboardMetrics`/`useHrLeaveCalendar`/`useHrOnboardingStatus` and their keys are gone
 
 ### Employees
@@ -357,41 +357,42 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/hr/comp-off` · **HR** · hooks: `→ features/hr/comp-off`
 
 ### Recruitment
-- `/hr/recruitment` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/jobs` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/recruitment/jobs/new` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/jobs/[jobId]/edit` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/candidates` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: in the reproduced React #419 set (jsdom chunk reached through a shared import); fixed by the sanitiser boundary. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/recruitment/candidates/[candidateId]` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/candidates/import` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/candidates/intake` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/pipeline` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
-- `/hr/recruitment/interviews` · **HR** · hooks: `→ features/hr/recruitment` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
-- `/hr/recruitment/offers` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/offer-templates` · **HR** · hooks: `→ features/hr/recruitment` — 2026-09-21: the preview sheet renders `SanitizedHtml` instead of an inline `DOMPurify.sanitize`; this route was in the reproduced React #419 set
-- `/hr/recruitment/requisitions` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/talent-pools` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/headcount` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/analytics` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/diversity-report` · **HR** · hooks: `requirePermission("hr:sensitive:view")` (server), `useDiversityReport` (`useGatedQuery("hr:sensitive:view")` → `GET /hr/recruitment/diversity-report`), `usePageState` + `PageWrapper state=`, `→ features/hr/recruitment`. 2026-09-21 (FE#134): the page's state resolves through `usePageState({ permission: "hr:sensitive:view", …, error, isEmpty })`, so access-loading is a skeleton, denial is `DeniedView`, a failed read is `ErrorState` with the backend message, and "No applicant data found" appears only for a permitted, finished read with `total === 0`; removed from `denial-is-not-emptiness.known.json`.
-- `/hr/recruitment/scorecard-analytics` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/scorecard-templates` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/question-bank` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/hiring-flows` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/booking-links` · **HR** · hooks: `→ features/hr/recruitment` (2026-09-21: `loading.tsx` is titled "Interview Booking Links" with the page's subtitle)
-- `/hr/recruitment/email-sequences` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/automations` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/recruiters` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/vendors` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/internal-jobs` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/referrals` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/refer` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/sla` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/sla-report` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/interviewer-performance` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/inbox` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/reports` · **HR** · hooks: `→ features/hr/recruitment`
-- `/hr/recruitment/settings` · **HR** · hooks: `→ features/hr/recruitment`
+- `/recruitment` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/jobs` · **Recruitment** · hooks: `→ features/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/recruitment/jobs/new` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/jobs/[jobId]/edit` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/candidates` · **Recruitment** · hooks: `→ features/recruitment` — 2026-09-21: in the reproduced React #419 set (jsdom chunk reached through a shared import); fixed by the sanitiser boundary. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/recruitment/candidates/[candidateId]` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/candidates/import` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/candidates/intake` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/pipeline` · **Recruitment** · hooks: `→ features/recruitment` — 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
+- `/recruitment/interviews` · **Recruitment** · hooks: `→ features/recruitment` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
+- `/recruitment/offers` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/offer-templates` · **Recruitment** · hooks: `→ features/recruitment` — 2026-09-21: the preview sheet renders `SanitizedHtml` instead of an inline `DOMPurify.sanitize`; this route was in the reproduced React #419 set
+- `/recruitment/requisitions` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/talent-pools` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/headcount` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/analytics` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/diversity-report` · **Recruitment** · hooks: `requirePermission("hr:sensitive:view")` (server), `useDiversityReport` (`useGatedQuery("hr:sensitive:view")` → `GET /hr/recruitment/diversity-report`), `usePageState` + `PageWrapper state=`, `→ features/recruitment`. 2026-09-21 (FE#134): the page's state resolves through `usePageState({ permission: "hr:sensitive:view", …, error, isEmpty })`, so access-loading is a skeleton, denial is `DeniedView`, a failed read is `ErrorState` with the backend message, and "No applicant data found" appears only for a permitted, finished read with `total === 0`; removed from `denial-is-not-emptiness.known.json`.
+- `/recruitment/bgv-compliance` · **Recruitment** · hooks: `requirePermission("hr:sensitive:view")` (server), `useBgvComplianceDashboard` → `GET /hr/recruitment/bgv-compliance`, `usePageState` + `PageWrapper state=`, `→ features/recruitment` (2026-09-25: moved out of the HR Background Verification page; linked from Recruitment settings)
+- `/recruitment/scorecard-analytics` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/scorecard-templates` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/question-bank` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/hiring-flows` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/booking-links` · **Recruitment** · hooks: `→ features/recruitment` (2026-09-21: `loading.tsx` is titled "Interview Booking Links" with the page's subtitle)
+- `/recruitment/email-sequences` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/automations` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/recruiters` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/vendors` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/internal-jobs` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/referrals` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/refer` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/sla` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/sla-report` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/interviewer-performance` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/inbox` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/reports` · **Recruitment** · hooks: `→ features/recruitment`
+- `/recruitment/settings` · **Recruitment** · hooks: `→ features/recruitment`
 
 ### Performance & Engagement
 - `/hr/performance` · **HR** · hooks: `→ features/hr/performance` — 2026-09-21: React #419 came in through `@/components/ai`'s barrel (`AiFailureBody` import pulled `AiInlinePreview` → `isomorphic-dompurify` → bundled jsdom across the client boundary); the preview now renders through `SanitizedHtml`. 2026-09-21: the route wraps its `useSearchParams` consumer in `<Suspense fallback={<Loading/>}>` (the route's own `loading.tsx` skeleton), matching `payroll/settings/import-export`; pinned by `app/(authenticated)/hr/hr-search-params-suspense.test.ts`
@@ -447,7 +448,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/hr/labor-relations` · **HR** · hooks: `→ features/hr/labor-relations` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Memberships tab))
 - `/hr/safety` · **HR** · hooks: `→ features/hr/safety` — 2026-09-21: the suppressed wellness pulse renders the shared `AnonymitySuppressedNotice` (same floor as polls, mood and survey analytics) instead of its own k-anonymity line
 - `/hr/safety` · **HR** · hooks: `→ features/hr/safety` (2026-09-21: `WellnessPulseCard` renders `ErrorState` with retry when `useWellnessPulse` fails instead of returning null (FE#117); `loading.tsx` shows the table's real column headers under the page title while the rows load)
-- `/hr/background-verification` · **HR** · hooks: `→ features/hr/bg-verification`
+- `/hr/background-verification` · **HR** · hooks: `→ features/hr/bg-verification` (2026-09-25: employee checks only; the Candidate Compliance tab moved to `/recruitment/bgv-compliance`)
 - `/hr/identity` · **HR** · hooks: `→ features/hr/identity` (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load (the Provisioning tab))
 - `/hr/accommodations` · **HR** · hooks: `→ features/hr/accommodations`
 
@@ -468,7 +469,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/hr/delegations` · **HR** · hooks: `→ features/hr/delegations`
 
 ### HR Analytics, Helpdesk, Cases
-- `/hr/analytics` · **HR** · hooks: `→ features/hr/analytics` (2026-09-21: "People analytics"; the Recruitment tab and the Open positions KPI render only for a viewer holding `hr:interviews:view` — `GET /hr/recruitment/stats`'s key — since no org-level ATS enablement signal exists)
+- `/hr/analytics` · **HR** · hooks: `→ features/hr/analytics` (2026-09-21: "People analytics") (2026-09-25: no Recruitment tab and no Open positions KPI — recruitment analytics live only in Recruitment OS at `/recruitment/analytics`)
 - `/hr/helpdesk` · **HR** · hooks: `requirePermission("hr:helpdesk:view")` (server), `→ features/employee-support` (`SupportQueuesPage`: `useSupportQueueTickets`, `useSupportQueues`, `useSupportQueueTicket`) — 2026-09-21: the HR-only helpdesk became the company-wide **Employee support** agent view. Five queue tabs (HR, IT, Finance, Admin, Legal) with open/overdue counts for the queues the agent is a member of (`useCan("hr:helpdesk:queue-<q>")` or `hr:helpdesk:manage`); non-member tabs are read-only and show non-confidential requests only. Rows carry the confidential badge, the SLA marker (due / response overdue / overdue / escalated) and the assignee; the detail sheet works the request (status, queue) only for queue members. `Queue settings` (SLA hours, escalation target, category routing) is admin-only. State resolves through `usePageState` + `<PageState>` with `module: "hr"`; the loading branch keeps the title and typed column headers (no `Column 1`), error has retry, empty names the queue. Tab, status, search and the open ticket sync to the URL (`queue`, `status`, `q`, `ticket`). Employees no longer raise requests here — that surface moved to `/me/support`.
 - `/hr/cases` · **HR** · hooks: `→ features/hr/cases`
 - `/hr/service-delivery` · **HR** · hooks: `→ features/hr/service-delivery`
@@ -490,7 +491,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/hr/settings/forms/[formId]` · **HR** · hooks: `→ features/hr/settings`
 - `/hr/settings/forms/[formId]/submissions` · **HR** · hooks: `→ features/hr/settings`
 - `/hr/settings/import-export` · **HR** · hooks: `→ features/hr/settings`
-- `/hr/settings/integrations` · **HR** · hooks: `→ features/hr/settings`
+- `/hr/settings/integrations` · **HR** · hooks: `→ features/hr/settings` (2026-09-25: job-board sync moved to Recruitment OS `/recruitment/integrations`)
 - `/hr/settings/policies` · **HR** · hooks: `usePageState({permission:"hr:policies:view"})` + `PageWrapper state=`, `→ features/hr/policies` — the separate `!canView` return that re-declared the page chrome is gone
 - `/hr/settings/preview` · **HR** · hooks: `→ features/hr/settings`
 - `/hr/settings/templates` · **HR** · hooks: `→ features/hr/settings`
@@ -1038,6 +1039,6 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/vendor-portal/[vendorPortalToken]` · **Inventory/Accounting** · hooks: `→ features/vendor-portal`
 - `/sign/[recipientToken]` · **Sign (public signing)** · hooks: `→ features/sign`
 - `/s/[collectorToken]` · **Platform (short link)** · hooks: redirect
-- `/refer/[orgId]` · **HR (public referral)** · hooks: `→ features/hr/recruitment`
-- `/refer/link/[referralToken]` · **HR (public referral)** · hooks: `→ features/hr/recruitment`
+- `/refer/[orgId]` · **HR (public referral)** · hooks: `→ features/recruitment`
+- `/refer/link/[referralToken]` · **HR (public referral)** · hooks: `→ features/recruitment`
 - `/unsubscribe/[unsubscribeToken]` · **Platform (public)** · hooks: `usePublicUnsubscribe` — email unsubscribe flow; four states: loading, success, error, already-unsubscribed

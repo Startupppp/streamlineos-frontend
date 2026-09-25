@@ -89,7 +89,7 @@ describe("permission-aware product navigation", () => {
       "/hr/analytics",
       "/hr/workforce",
       "/hr/performance",
-      "/hr/recruitment",
+      "/recruitment",
       "/hr/announcements",
       "/hr/settings/policies",
       "/hr/settings/workflows",

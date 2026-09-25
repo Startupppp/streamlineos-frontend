@@ -1,0 +1,273 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { format } from "date-fns";
+import {
+  FileText,
+  Send,
+  Eye,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  ChevronRight,
+  FileSignature,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RecruitmentEmptyState } from "@/features/recruitment/components/recruitment-empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
+
+import { useRolloutDocuments, type RolloutDocumentRecord } from "@/hooks/api/hr/recruitment";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { RolloutDocumentsDialog } from "@/components/hr/recruitment/rollout-documents-dialog";
+import { cn } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/truncated-text";
+
+type DocStatus = "GENERATED" | "SENT" | "VIEWED" | "SIGNED" | "DECLINED";
+
+const STATUS_CONFIG: Record<
+  DocStatus,
+  {
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    badgeClass: string;
+    accentClass: string;
+  }
+> = {
+  GENERATED: {
+    label: "Generated",
+    icon: FileText,
+    badgeClass: "bg-muted text-muted-foreground border-border",
+    accentClass: "border-l-border",
+  },
+  SENT: {
+    label: "Sent",
+    icon: Send,
+    badgeClass: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+    accentClass: "border-l-blue-500",
+  },
+  VIEWED: {
+    label: "Viewed",
+    icon: Eye,
+    badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+    accentClass: "border-l-amber-500",
+  },
+  SIGNED: {
+    label: "Signed",
+    icon: CheckCircle2,
+    badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+    accentClass: "border-l-emerald-500",
+  },
+  DECLINED: {
+    label: "Declined",
+    icon: XCircle,
+    badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+    accentClass: "border-l-rose-500",
+  },
+};
+
+function getStatusConfig(status: string) {
+  return STATUS_CONFIG[status as DocStatus] ?? STATUS_CONFIG.GENERATED;
+}
+
+function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
+  const steps: Array<{
+    key: keyof RolloutDocumentRecord;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }> = [
+    { key: "sentAt", label: "Sent", icon: Send },
+    { key: "viewedAt", label: "Viewed", icon: Eye },
+    { key: "signedAt", label: "Signed", icon: CheckCircle2 },
+  ];
+
+  if (doc.declinedAt) {
+    return (
+      <div className="flex items-center gap-1.5 text-dense text-status-danger-ink mt-2">
+        <XCircle className="h-3 w-3" />
+        <span>Declined {format(new Date(doc.declinedAt), "PPp")}</span>
+      </div>
+    );
+  }
+
+  const doneCount = steps.filter((s) => doc[s.key] !== null && doc[s.key] !== undefined).length;
+
+  return (
+    <div className="flex items-center gap-1 mt-2.5">
+      {steps.map((step, idx) => {
+        const ts = doc[step.key] as string | null;
+        const done = ts !== null && ts !== undefined;
+        const Icon = step.icon;
+        return (
+          <div key={step.key} className="flex items-center gap-1">
+            <div
+              className={cn(
+                "flex items-center gap-1 text-micro font-semibold px-1.5 py-0.5 rounded-full border transition-colors duration-200",
+                done
+                  ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
+                  : "bg-muted text-muted-foreground border-border"
+              )}
+              title={ts ? format(new Date(ts), "PPp") : step.label}
+            >
+              <Icon className="h-3 w-3" />
+              <span>{step.label}</span>
+            </div>
+            {idx < steps.length - 1 && (
+              <ChevronRight
+                className={cn(
+                  "h-3 w-3",
+                  doneCount > idx ? "text-status-success-ink" : "text-muted-foreground"
+                )}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+interface DocumentsTabProps {
+  candidateId: number;
+  candidateName: string;
+  jobTitle?: string;
+  candidateStatus: string | null;
+}
+
+export function DocumentsTab({
+  candidateId,
+  candidateName,
+  jobTitle,
+  candidateStatus,
+}: DocumentsTabProps) {
+  const { data: docs, isLoading, isError, error, refetch } = useRolloutDocuments(candidateId);
+  const [rolloutOpen, setRolloutOpen] = useState(false);
+
+  const isSelected =
+    candidateStatus === "OFFER" ||
+    candidateStatus === "HIRED" ||
+    candidateStatus === "SELECTED";
+
+  const handleGenerateOffer = useCallback(() => setRolloutOpen(true), []);
+
+  const handleRolloutOpenChange = useCallback((open: boolean) => {
+    setRolloutOpen(open);
+    if (!open) void refetch();
+  }, [refetch]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
+
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-status-danger-rule bg-status-danger-surface px-6 py-8 text-center">
+        <div className="text-sm font-medium text-status-danger-ink">
+          Failed to load documents
+        </div>
+        <p className="text-xs text-status-danger-ink">
+          {getErrorMessage(error)}
+        </p>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
+  const list = docs ?? [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
+          {list.length} document{list.length !== 1 ? "s" : ""}
+        </p>
+        <Button
+          size="sm"
+          variant={isSelected ? "default" : "outline"}
+          className="gap-1.5 text-xs"
+          onClick={handleGenerateOffer}
+        >
+          <FileSignature className="h-3.5 w-3.5" />
+          Generate Offer
+        </Button>
+      </div>
+
+      {!isSelected && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-status-warning-rule bg-status-warning-surface p-3 text-xs text-status-warning-ink">
+          <Clock className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          <span>
+            Move this candidate to the <strong>Offer</strong> stage to trigger the automatic offer generation prompt.
+          </span>
+        </div>
+      )}
+
+      {list.length === 0 ? (
+        <RecruitmentEmptyState
+          illustration={<EmptyDocumentsIllustration />}
+          title="No documents yet"
+          description="Generate and send offer documents to this candidate."
+          action={{ label: "Generate Offer", onClick: handleGenerateOffer }}
+          compact
+        />
+      ) : (
+        <div className="space-y-3">
+          {list.map((doc) => {
+            const cfg = getStatusConfig(doc.status);
+            const StatusIcon = cfg.icon;
+            return (
+              <div
+                key={doc.id}
+                className={cn(
+                  "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 transition-colors duration-200 hover:border-border/80",
+                  cfg.accentClass
+                )}
+              >
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <TruncatedText text={doc.title} className="text-sm font-semibold text-foreground" />
+                      </div>
+                      {doc.createdAt && (
+                        <p className="text-dense text-muted-foreground mt-1 ml-9">
+                          Created {format(new Date(doc.createdAt), "PPP")}
+                        </p>
+                      )}
+                      <div className="ml-9">
+                        <EsignTimeline doc={doc} />
+                      </div>
+                    </div>
+                    <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border shrink-0", cfg.badgeClass)}>
+                      <StatusIcon className="h-3 w-3" />
+                      {cfg.label}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <RolloutDocumentsDialog
+        open={rolloutOpen}
+        onOpenChange={handleRolloutOpenChange}
+        candidateId={candidateId}
+        candidateName={candidateName}
+        jobTitle={jobTitle}
+      />
+    </div>
+  );
+}

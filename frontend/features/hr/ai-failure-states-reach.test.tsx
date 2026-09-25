@@ -75,7 +75,7 @@ jest.mock("@/lib/api/hooks/executive-brief", () => ({
 }));
 
 import { useMutation } from "@tanstack/react-query";
-import { AIScoreCandidateButton } from "@/features/hr/recruitment/ai-score-candidate-button";
+import { AIScoreCandidateButton } from "@/features/recruitment/ai-score-candidate-button";
 import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-review-button";
 import ExecutiveBriefPage from "@/app/(authenticated)/ai/executive-brief/page";
 

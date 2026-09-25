@@ -1,0 +1,300 @@
+"use client";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
+
+import { useState, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useUpdateJobPosting, useDeleteJobPosting, useHrDepartments } from "@/hooks/api/hr";
+import {
+  useJobPostingsPage,
+  usePublishJobToBoards,
+  useDuplicateJobPosting,
+} from "@/hooks/api/hr/recruitment";
+import type { JobBoardPlatform } from "@/hooks/api/hr/recruitment";
+import type { JobPostingStatus } from "@/types/hr";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
+import { ExternalBoardsSheet } from "@/features/recruitment/jobs/external-boards-sheet";
+import { ShareJobDialog } from "@/features/recruitment/jobs/share-job-dialog";
+import { JobCard, JobCardSkeleton } from "@/features/recruitment/jobs/job-card";
+import { STATUS_OPTIONS } from "@/features/recruitment/jobs/job-posting-constants";
+import { toast } from "sonner";
+import { Plus } from "lucide-react";
+import { EmptyPersonIllustration } from "@/components/illustrations";
+import { RecruitmentEmptyState } from "@/features/recruitment/components/recruitment-empty-state";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
+
+const JOB_POSTING_STATUSES = [
+  "DRAFT",
+  "OPEN",
+  "PAUSED",
+  "CLOSED",
+  "FILLED",
+] as const satisfies readonly JobPostingStatus[];
+
+export function JobsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const statusFilter =
+    JOB_POSTING_STATUSES.find((candidate) => candidate === searchParams.get("status")) ?? null;
+  const visibilityFilter = searchParams.get("visibility");
+  const pageSizeFromUrl = Math.min(
+    100,
+    Math.max(6, Number(searchParams.get("pageSize") ?? "12") || 12),
+  );
+
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
+  const { data: jobsPage, isLoading, isError, refetch } = useJobPostingsPage({
+    ...(statusFilter ? { status: statusFilter } : {}),
+    cursor,
+    pageSize: pageSizeFromUrl,
+  });
+
+  const jobs = (jobsPage?.items ?? []).filter((job) => {
+    if (visibilityFilter === "internal") return job.isInternal === true;
+    if (visibilityFilter === "external") return !job.isInternal;
+    return true;
+  });
+
+  const updateJob = useUpdateJobPosting();
+  const deleteJob = useDeleteJobPosting();
+  const duplicateJob = useDuplicateJobPosting();
+  const publishToBoards = usePublishJobToBoards();
+  const { data: departments } = useHrDepartments();
+
+  const [shareJobId, setShareJobId] = useState<number | null>(null);
+  const [boardsJobId, setBoardsJobId] = useState<number | null>(null);
+  const [deleteJobId, setDeleteJobId] = useState<number | null>(null);
+
+  const setFilter = useCallback(
+    (key: string, value: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value && value !== "ALL") params.set(key, value);
+      else params.delete(key);
+      if (key !== "pageSize") setCursorHistory([undefined]);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
+
+  const setPageSize = useCallback(
+    (pageSize: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("pageSize", String(pageSize));
+      router.replace(`?${params.toString()}`, { scroll: false });
+      setCursorHistory([undefined]);
+    },
+    [searchParams, router],
+  );
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = jobsPage?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [jobsPage?.pagination.nextCursor]);
+
+  const handleStatusChange = useCallback(
+    (id: number, status: JobPostingStatus) => {
+      updateJob.mutate({ jobId: id, status }, {
+        onSuccess: () => toast.success("Status updated"),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [updateJob],
+  );
+
+  const handleDelete = useCallback(() => {
+    if (!deleteJobId) return;
+    deleteJob.mutate(deleteJobId, {
+      onSuccess: () => {
+        toast.success("Job posting deleted");
+        setDeleteJobId(null);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [deleteJobId, deleteJob]);
+
+  const handleDuplicate = useCallback(
+    (id: number) => {
+      duplicateJob.mutate(id, {
+        onSuccess: (job) => {
+          toast.success("Job duplicated as draft");
+          router.push(`/recruitment/jobs/${job.id}/edit`);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [duplicateJob, router],
+  );
+
+  const handlePublish = useCallback(
+    (id: number) => {
+      const platforms: JobBoardPlatform[] = ["LINKEDIN", "NAUKRI", "INDEED"];
+      publishToBoards.mutate({ jobId: id, platforms }, {
+        onSuccess: (data) => {
+          /**
+           * "Queued", not "Posted". At the moment this response is written
+           * nothing has been sent — the request is on the outbox and a consumer
+           * is what talks to the board. "Posted to N platforms" used to appear
+           * whenever an oauth token happened to be saved, for an API call that
+           * reached nobody; saying "queued" is the one claim that is true here,
+           * and Track boards is where the outcome actually lands.
+           */
+          if (data.queuedCount > 0) {
+            toast.success(
+              `Queued for ${data.queuedCount} board${data.queuedCount !== 1 ? "s" : ""}`,
+              { description: "Track boards shows whether each one went live." },
+            );
+            return;
+          }
+          const stopped = data.results.filter(
+            (r): r is Extract<typeof r, { message: string }> => r.status !== "QUEUED",
+          );
+          const reasons = [...new Set(stopped.map((r) => r.message))];
+          toast.error(reasons[0] ?? "No board accepted this job.", {
+            description:
+              reasons.length > 1
+                ? reasons.slice(1).join(" ")
+                : stopped.map((r) => r.platform).join(", "),
+          });
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [publishToBoards],
+  );
+
+  function handleStatusFilterChange(v: string) { setFilter("status", v); }
+  function handleVisibilityFilterChange(v: string) { setFilter("visibility", v); }
+  function handleRetry() { void refetch(); }
+  function handleCloseShareDialog() { setShareJobId(null); }
+  function handleCloseBoardsSheet() { setBoardsJobId(null); }
+  function handleConfirmDialogOpenChange(open: boolean) { if (!open) setDeleteJobId(null); }
+
+  const total = jobsPage?.total ?? 0;
+  const subtitle =
+    isLoading
+      ? "Loading positions…"
+      : total > 0
+        ? `${total.toLocaleString()} position${total === 1 ? "" : "s"}`
+        : "Manage open positions";
+
+  return (
+    <>
+      <PageWrapper
+        title="Job Postings"
+        subtitle={subtitle}
+        actions={
+          <Button size="sm" asChild>
+            <Link href="/recruitment/jobs/new">
+              <Plus className="mr-1.5 h-4 w-4" /> New Job
+            </Link>
+          </Button>
+        }
+        filters={
+          <div className={FILTER_TOOLBAR_ROW}>
+            <Select value={statusFilter ?? "ALL"} onValueChange={handleStatusFilterChange}>
+              <SelectTrigger className={cn("w-32", FILTER_SELECT_TRIGGER)}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={visibilityFilter ?? "ALL"} onValueChange={handleVisibilityFilterChange}>
+              <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                <SelectItem value="ALL">All Postings</SelectItem>
+                <SelectItem value="external">External</SelectItem>
+                <SelectItem value="internal">Internal Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        }
+      >
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {isLoading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 12 }).map((_, i) => <JobCardSkeleton key={i} />)}
+            </div>
+          ) : isError ? (
+            <ErrorState className="flex-1" title="Unable to load job postings" onRetry={handleRetry} />
+          ) : !jobs?.length ? (
+            <RecruitmentEmptyState
+              illustration={<EmptyPersonIllustration />}
+              title="No job postings yet"
+              description="Create your first job posting to start hiring"
+              action={{ label: "New Job Posting", href: "/recruitment/jobs/new" }}
+              className={CONTENT_FILL_PANEL}
+            />
+          ) : (
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {jobs.map((job) => {
+                  const deptName = departments?.find((d) => String(d.id) === job.orgDepartmentId)?.name;
+                  return (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      deptName={deptName}
+                      isPublishPending={publishToBoards.isPending}
+                      isDuplicatePending={duplicateJob.isPending}
+                      onStatusChange={handleStatusChange}
+                      onPublish={handlePublish}
+                      onShare={setShareJobId}
+                      onTrackBoards={setBoardsJobId}
+                      onDuplicate={handleDuplicate}
+                      onDelete={setDeleteJobId}
+                    />
+                  );
+                })}
+              </div>
+              {(page > 1 || jobsPage?.pagination.hasMore) ? (
+                <CursorPageControls
+                  page={page}
+                  hasNext={jobsPage?.pagination.hasMore ?? false}
+                  onPrevious={handlePreviousPage}
+                  onNext={handleNextPage}
+                  pageSize={pageSizeFromUrl}
+                  onPageSizeChange={setPageSize}
+                />
+              ) : null}
+            </>
+          )}
+        </div>
+      </PageWrapper>
+
+      {shareJobId !== null && (
+        <ShareJobDialog jobId={shareJobId} onClose={handleCloseShareDialog} />
+      )}
+      {boardsJobId !== null && (
+        <ExternalBoardsSheet jobId={boardsJobId} onClose={handleCloseBoardsSheet} />
+      )}
+      <ConfirmSheet
+        open={deleteJobId !== null}
+        onOpenChange={handleConfirmDialogOpenChange}
+        title="Delete job posting?"
+        description="This will permanently delete this job posting and all related data. This cannot be undone."
+        confirmLabel="Delete Job Posting"
+        destructive
+        onConfirm={handleDelete}
+      />
+    </>
+  );
+}
