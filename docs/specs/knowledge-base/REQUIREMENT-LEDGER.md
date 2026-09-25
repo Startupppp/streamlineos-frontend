@@ -360,7 +360,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Tenant scope is explicit on every record, unique key, FK, query, cache key, event, job, blob, and search document.
 - [x] Collections are cursor-based, `hasMore` is signalled, limit defaults ≤ 50 and caps at 100, and no query silently truncates.
 - [x] Projections replace `SELECT *`; page bodies never appear in list/search metadata queries.
-- [ ] Content writes carry `expectedContentRevision`; retriable creates and bulk commands carry `Idempotency-Key`.
+- [x] Content writes carry `expectedContentRevision`; retriable creates and bulk commands carry `Idempotency-Key`.
 - [x] Audit and outbox records commit with the source mutation; no provider/object-store/embedding call holds a DB transaction open.
 - [x] URL carries `q`, filters, sort, view, cursor; selection, drafts, menus, and dialogs stay local.
 - [x] Every state implemented: loading, ready, first empty, filtered empty, error with retry + request id, denied — plus saving/saved/offline/conflict/stale-access/restore on editing surfaces.
