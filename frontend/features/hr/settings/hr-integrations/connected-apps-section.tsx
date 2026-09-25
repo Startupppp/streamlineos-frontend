@@ -10,6 +10,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   useIntegrationConnections,
   useInitiateIntegrationConnection,
@@ -50,6 +52,7 @@ function AppCard({
   const initiate = useInitiateIntegrationConnection();
   const disconnect = useDisconnectIntegration();
   const [confirmDisconnectOpen, setConfirmDisconnectOpen] = useState(false);
+  const canManage = useCan("integrations:connections:manage");
 
   const handleConnect = useCallback(async () => {
     try {
@@ -72,6 +75,10 @@ function AppCard({
   }, [disconnect, connection, config.label]);
 
   const isConnected = !!connection;
+
+  function handleOpenDisconnect() {
+    setConfirmDisconnectOpen(true);
+  }
 
   return (
     <div className="flex items-start gap-4 px-4 py-3 border-b last:border-0">
@@ -102,12 +109,12 @@ function AppCard({
         )}
       </div>
       <div className="shrink-0">
-        {isConnected ? (
+        {!canManage ? null : isConnected ? (
           <LoadingButton
             variant="outline"
             size="sm"
             isPending={disconnect.isPending}
-            onClick={() => setConfirmDisconnectOpen(true)}
+            onClick={handleOpenDisconnect}
             className="gap-1.5 text-destructive hover:text-destructive"
           >
             <Unlink className="h-3.5 w-3.5" />
@@ -140,7 +147,7 @@ function AppCard({
 }
 
 export function ConnectedAppsSection() {
-  const { data: connections, isLoading, isError, error, refetch } = useIntegrationConnections();
+  const { data: connections, isLoading, isError, error, refetch, access } = useIntegrationConnections();
 
   const connectionByToolkit = useCallback(
     (toolkit: IntegrationToolkit) =>
@@ -162,7 +169,10 @@ export function ConnectedAppsSection() {
       </div>
 
       <div className="rounded-lg border">
-        {isLoading ? (
+        {access.denied ? (
+          // FE-47: a disabled read would render every app as "Not Connected".
+          <NoPermissionState permission="integrations:connections:view" compact />
+        ) : isLoading || access.pending ? (
           <div className="p-4 space-y-3">
             {APP_CONFIGS.map((c) => (
               <Skeleton key={c.toolkit} className="h-16 w-full rounded-md" />
