@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { useCan } from "@/hooks/api/access";
+import { useCanState } from "@/hooks/api/access";
 import {
   useServiceDeliveryOpsInbox,
   useServiceDeliveryMyItems,
@@ -68,8 +68,12 @@ function ItemRow({ item }: { item: ServiceDeliveryItem }) {
 }
 
 export default function ServiceDeliveryPage() {
-  const canOps = useCan("hr:cases:view");
-  const canMy = useCan("hr:helpdesk:view");
+  // useCan is false while access loads and for a caller holding neither key;
+  // both disabled the reads and fell through to "Nothing open" (FE-42/47).
+  const opsAccess = useCanState("hr:cases:view");
+  const myAccess = useCanState("hr:helpdesk:view");
+  const canOps = opsAccess === "granted";
+  const canMy = myAccess === "granted";
   const {
     data: ops,
     isLoading: opsLoading,
@@ -90,7 +94,13 @@ export default function ServiceDeliveryPage() {
   const refetch = showOps ? refetchOps : refetchMine;
   const items = data?.items ?? [];
   const isError = !!error;
-  const pageState = usePageState({ isLoading: false, isError, error });
+  const pageState = usePageState({
+    permission: opsAccess === "denied" ? "hr:helpdesk:view" : "hr:cases:view",
+    isLoading: isLoading || (opsAccess === "denied" && myAccess === "loading"),
+    isError,
+    error,
+    isEmpty: items.length === 0,
+  });
 
   return (
     <PageWrapper
@@ -143,17 +153,17 @@ export default function ServiceDeliveryPage() {
           </StatCardGrid>
         )}
 
-        {pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading" ? (
-          <PageState resolution={pageState} loading={null} onRetry={() => void refetch()}>
-            {null}
-          </PageState>
-        ) : isLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full rounded-lg" />
-            ))}
-          </div>
-        ) : items.length === 0 ? (
+        <PageState
+          resolution={pageState}
+          loading={
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full rounded-lg" />
+              ))}
+            </div>
+          }
+          onRetry={() => void refetch()}
+          empty={
           <EmptyState
             title="Nothing open"
             description={
@@ -167,7 +177,8 @@ export default function ServiceDeliveryPage() {
                 : { label: "Employee support", href: "/me/support" }
             }
           />
-        ) : (
+          }
+        >
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             <div className="px-3 py-2 border-b border-border flex items-center justify-between">
               <p className="text-xs font-semibold">
@@ -191,7 +202,7 @@ export default function ServiceDeliveryPage() {
               ))}
             </div>
           </div>
-        )}
+        </PageState>
       </div>
     </PageWrapper>
   );
