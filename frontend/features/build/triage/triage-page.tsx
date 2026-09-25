@@ -19,6 +19,9 @@ import {
 import { TriageRow } from "./triage-row";
 import type { Ticket } from "@/types/projects";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { TablePagination } from "@/components/ui/table-pagination";
 
 const TRIAGE_STATUS = "TODO";
 const ACCEPT_STATUS = "IN_PROGRESS";
@@ -44,6 +47,17 @@ interface TriagePageProps {
 export function TriagePage({ projectId }: TriagePageProps) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
+  const listFilters = useBuildListFilters();
+  const [storedTrail, setStoredTrail] = useState<(string | null)[]>([null]);
+  const cursorTrail = useMemo(
+    () =>
+      storedTrail[storedTrail.length - 1] === listFilters.cursor
+        ? storedTrail
+        : [listFilters.cursor],
+    [listFilters.cursor, storedTrail],
+  );
+  const cursor = cursorTrail[cursorTrail.length - 1] ?? undefined;
+  const hasPrevious = cursorTrail.length > 1;
   const {
     data: ticketPage,
     isLoading: ticketsLoading,
@@ -51,6 +65,8 @@ export function TriagePage({ projectId }: TriagePageProps) {
     error,
     refetch,
   } = useTickets(projectId, {
+    search: listFilters.debouncedSearch || undefined,
+    cursor,
     status: TRIAGE_STATUS,
     limit: PAGE_LIMIT,
     orderBy: "created",
@@ -66,6 +82,21 @@ export function TriagePage({ projectId }: TriagePageProps) {
   const tickets = useMemo(() => ticketPage?.data ?? [], [ticketPage?.data]);
   const visibleCount = tickets.length;
   const hasMore = ticketPage?.pagination.hasMore ?? false;
+
+  const handleNextPage = useCallback((nextCursor: string | null | undefined) => {
+      if (!nextCursor) return;
+      setStoredTrail([...cursorTrail, nextCursor]);
+      listFilters.setCursor(nextCursor);
+    },
+    [cursorTrail, listFilters],
+  );
+
+  const handlePreviousPage = useCallback(() => {
+    if (cursorTrail.length <= 1) return;
+    const nextTrail = cursorTrail.slice(0, -1);
+    setStoredTrail(nextTrail);
+    listFilters.setCursor(nextTrail[nextTrail.length - 1] ?? null);
+  }, [cursorTrail, listFilters]);
 
   const pageState = usePageState({
     permission: "build:tickets:view",
@@ -156,6 +187,16 @@ export function TriagePage({ projectId }: TriagePageProps) {
           ? `${visibleCount}${hasMore ? "+" : ""} issue${visibleCount !== 1 ? "s" : ""} awaiting triage`
           : "Review and process incoming issues"
       }
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search triage",
+          }}
+          onClearAll={listFilters.clearAll}
+        />
+      }
     >
       <PageState
         resolution={pageState}
@@ -189,11 +230,14 @@ export function TriagePage({ projectId }: TriagePageProps) {
                   />
                 ))}
               </PmStaggerList>
-              {hasMore ? (
-                <p className="mt-4 text-center text-xs text-muted-foreground">
-                  Showing the first {PAGE_LIMIT} issues
-                </p>
-              ) : null}
+              <TablePagination
+                mode="cursor"
+                rowCount={tickets.length}
+                hasMore={hasMore}
+                hasPrevious={hasPrevious}
+                onNext={() => handleNextPage(ticketPage?.pagination.nextCursor)}
+                onPrevious={handlePreviousPage}
+              />
             </PmSection>
           )}
         </PmPageShell>

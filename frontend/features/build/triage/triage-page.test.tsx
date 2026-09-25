@@ -21,7 +21,29 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  usePathname: () => "/build/1/triage",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: () => ({
+    search: "",
+    debouncedSearch: "",
+    cursor: null,
+    setSearch: jest.fn(),
+    setCursor: jest.fn(),
+    clearAll: jest.fn(),
+    resetKey: "",
+  }),
+}));
+
+jest.mock("@/components/ui/table-pagination", () => ({
+  TablePagination: () => <div data-testid="table-pagination" />,
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: () => <div data-testid="build-list-toolbar" />,
 }));
 
 jest.mock("next/link", () => ({
