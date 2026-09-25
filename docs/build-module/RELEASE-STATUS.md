@@ -71,7 +71,7 @@ Current release-candidate checks:
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
 - `git diff --check`: pass.
-- Latest frontend Build navigation, filtered board-count, malformed-filter normalization, and portfolio-search fixes are on `origin/main` at `1f2b1e63a`:
+- Latest frontend Build navigation, filtered board-count, malformed-filter normalization, portfolio-search, and Command Center title consistency fixes are on `origin/main` at `d2f782f3a`:
   backlog, My Work, draft, and keyboard shortcut navigation now use the shared
   dirty-state guard; focused regressions pass.
 - The Build view switcher now routes Calendar to the unified `/calendar` surface
@@ -101,7 +101,8 @@ The candidate was exercised through a real authenticated browser against the pro
 - Focused backend schema evidence covers oversized direct URL searches: project Issues, All Work, and organization ticket search reject terms over 200 characters and trim valid terms.
 - Local port `1000` browser checks also rendered `/build/my-work`,
   `/build/inbox?view=drafts`, `/build/6/backlog`, and
-  `/build/command-center` without a visible runtime error.
+  `/build/command-center` without a visible runtime error; the canonical
+  page heading is `Command Center`.
 - Local port `1000` view-switcher verification routed `/build/6/issues` to
   `/calendar?q=login&status=TODO&cycle=7&projectId=6&source=build`; the unified
   Calendar surface rendered with no browser console errors.
@@ -134,8 +135,8 @@ These failures are measured and are not Build-owned:
 
 Completed:
 
-- Frontend `origin/main` contains `13663e4d0` (portfolio search is sent as the server-side `q` parameter; the prior malformed-filter and board-count fixes remain in the same release line).
-- Backend `origin/main` contains `b709ba20b`, including the Build portfolio `q` schema, tenant-scoped `ilike` predicate, and focused contract coverage.
+- Frontend `origin/main` contains `d2f782f3a` (Command Center route labeling is consistent with its canonical route; portfolio search is sent as the server-side `q` parameter; the prior malformed-filter and board-count fixes remain in the same release line).
+- Backend `origin/main` contains `e8d56b1c9`, including the Build portfolio cursor validation and tenant-scoped goal-owner projection fixes.
 - The portfolio list UI renders its loading and empty states locally on port `1000`; authenticated production verification of `/build/portfolios?q=platform` now reaches the server-filtered empty state without a runtime error.
 - Portfolio and managed-product list services now reject malformed cursors with a bounded `400`; the local UI remains stable against the currently deployed older API, which still treats that input as the first page.
 - Goal list and detail responses now resolve owner membership IDs to tenant-scoped user projections in one batch for collections, avoiding the previous always-unassigned response.
