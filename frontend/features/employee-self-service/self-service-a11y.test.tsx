@@ -108,6 +108,7 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useCanState: () => "granted",
   useAccess: () => ({ data: { isOrgOwner: false, scopes: {} }, isLoading: false }),
   useModuleEnabled: () => true,
 }));
