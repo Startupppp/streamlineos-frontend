@@ -80,4 +80,24 @@ describe("PageEditConflict", () => {
     expect(onDiscardMine).not.toHaveBeenCalled();
     expect(onKeepMine).not.toHaveBeenCalled();
   });
+
+  it("shows which local fields the user has modified when pendingFields is provided", () => {
+    renderConflict({ pendingFields: ["title", "content"] });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Your local changes: title and body");
+  });
+
+  it("shows no local-changes line when pendingFields is empty", () => {
+    renderConflict({ pendingFields: [] });
+
+    expect(screen.queryByText(/your local changes/i)).toBeNull();
+  });
+
+  it("deduplicates content and contentText in the field summary", () => {
+    renderConflict({ pendingFields: ["content", "contentText"] });
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Your local changes: body");
+    expect(alert).not.toHaveTextContent("body and body");
+  });
 });

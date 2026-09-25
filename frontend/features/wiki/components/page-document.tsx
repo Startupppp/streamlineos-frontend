@@ -348,6 +348,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
               nextReviewAt={page.nextReviewAt}
               updatedAt={page.updatedAt}
               lastEditedById={page.lastEditedById}
+              ownerUserId={page.ownerUserId}
             />
 
             {page.isLocked && !canManage && (

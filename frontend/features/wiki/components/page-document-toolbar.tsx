@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -182,7 +183,7 @@ export function PageDocumentToolbar({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           {groups.map((group, groupIndex) => (
-            <span key={group[0]?.id ?? groupIndex}>
+            <Fragment key={group[0]?.id ?? groupIndex}>
               {groupIndex > 0 && <DropdownMenuSeparator />}
               {group.map((action) => {
                 if (action.id === "backlinks") {
@@ -226,7 +227,7 @@ export function PageDocumentToolbar({
                   </DropdownMenuItem>
                 );
               })}
-            </span>
+            </Fragment>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>

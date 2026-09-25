@@ -13,6 +13,7 @@ interface PageDocumentTrustHeaderProps {
   nextReviewAt: string | null;
   updatedAt: string;
   lastEditedById: string | null;
+  ownerUserId?: string | null;
 }
 
 const STATUS_LABELS: Record<PageDocumentTrustHeaderProps["status"], string> = {
@@ -89,22 +90,36 @@ export function PageDocumentTrustHeader({
   nextReviewAt,
   updatedAt,
   lastEditedById,
+  ownerUserId,
 }: PageDocumentTrustHeaderProps) {
-  const { data: membersPage } = useOrgMembersByIds(
-    lastEditedById ? [lastEditedById] : [],
-  );
-  const editorMember = lastEditedById
-    ? membersPage?.data.find((m) => m.userId === lastEditedById)
-    : undefined;
-  const editorName = editorMember
-    ? getUserDisplayName({ name: editorMember.name, email: editorMember.email })
-    : null;
+  const memberIds = [lastEditedById, ownerUserId]
+    .filter((id): id is string => id !== null && id !== undefined);
+
+  const { data: membersPage } = useOrgMembersByIds(memberIds);
+  const members = membersPage?.data ?? [];
+
+  function getMemberName(userId: string | null | undefined): string | null {
+    if (!userId) return null;
+    const member = members.find((m) => m.userId === userId);
+    return member
+      ? getUserDisplayName({ name: member.name, email: member.email })
+      : null;
+  }
+
+  const editorName = getMemberName(lastEditedById);
+  const ownerName = getMemberName(ownerUserId);
 
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2 text-xs text-muted-foreground">
       <ToneBadge label={STATUS_LABELS[status]} tone={STATUS_TONES[status]} />
       <ToneBadge label={TRUST_LABELS[trustState]} tone={TRUST_TONES[trustState]} />
       <ToneBadge label={VISIBILITY_LABELS[visibility]} tone={VISIBILITY_TONES[visibility]} />
+      {ownerName && (
+        <span>
+          Owner:{" "}
+          <span className="font-medium text-foreground">{ownerName}</span>
+        </span>
+      )}
       {nextReviewAt && (
         <span>
           Review due{" "}
