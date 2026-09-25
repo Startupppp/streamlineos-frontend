@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useModules, useCreateModule } from "@/hooks/api/build";
+import { useModulePages, useCreateModule } from "@/hooks/api/build";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -73,12 +73,16 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
   const canManage = useCan("build:workspace:manage");
 
   const {
-    data: modules,
+    data: modulePages,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
     isLoading,
     isError,
     error,
     refetch,
-  } = useModules(projectId);
+  } = useModulePages(projectId);
+  const modules = modulePages?.pages.flatMap((page) => page.data) ?? [];
   const createMutation = useCreateModule();
 
   const form = useForm<CreateModuleForm>({
@@ -125,6 +129,10 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleLeadChange = useCallback(
     (userId: string | null) => form.setValue("leadId", userId ?? undefined),
@@ -381,6 +389,13 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
                 <ModuleCard key={mod.id} module={mod} projectId={projectId} index={index} />
               ))}
             </PmStaggerList>
+            {hasNextPage ? (
+              <div className="mt-4 flex justify-center">
+                <Button type="button" variant="outline" onClick={handleLoadMore} disabled={isFetchingNextPage}>
+                  {isFetchingNextPage ? "Loading…" : "Load more modules"}
+                </Button>
+              </div>
+            ) : null}
           </PmSection>
         )}
       </PmPageShell>

@@ -26,7 +26,7 @@ const formRowContract = lazyContract(() =>
   import("@/hooks/api/build/forms-schema").then((m) => m.formRowContract),
 );
 const submissionListContract = lazyContract(() =>
-  import("@/hooks/api/build/forms-schema").then((m) => m.submissionListContract),
+  import("@/hooks/api/build/forms-schema").then((m) => m.submissionResponseContract),
 );
 const submissionCreateResultContract = lazyContract(() =>
   import("@/hooks/api/build/forms-schema").then((m) => m.submissionCreateResultContract),
@@ -121,10 +121,21 @@ export function useDeleteForm(projectId: number) {
 
 export function useFormSubmissions(projectId: number, formId: number) {
   const canManage = useCan("build:forms:manage");
-  return useQuery<FormSubmission[]>({
+  return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.forms.submissions(projectId, formId),
-    queryFn: ({ signal }) =>
-      apiClient.get<FormSubmission[]>(`/build/${projectId}/forms/${formId}/submissions`, undefined, signal, submissionListContract),
+    queryFn: async ({ pageParam, signal }) => {
+      const response = await apiClient.get<FormSubmission[] | { data: FormSubmission[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+        `/build/${projectId}/forms/${formId}/submissions`,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
+        signal,
+        submissionListContract,
+      );
+      return Array.isArray(response)
+        ? { data: response, pagination: { limit: response.length || 100, hasMore: false, nextCursor: null } }
+        : response;
+    },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canManage && !!projectId && !!formId,
     staleTime: 60_000,
   });

@@ -56,6 +56,17 @@ export const submissionRowContract = z.object({
 
 export const submissionListContract = z.array(submissionRowContract);
 
+export const submissionPageContract = z.object({
+  data: z.array(submissionRowContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const submissionResponseContract = z.union([submissionPageContract, submissionListContract]);
+
 export const submissionCreateResultContract = z.object({
   id: z.number().int(),
   orgId: z.string(),

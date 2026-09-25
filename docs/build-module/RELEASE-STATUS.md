@@ -23,13 +23,13 @@ complete product definition of done.
 | Phase | Current state | Evidence |
 |---|---|---|
 | 0. Baseline and control | Complete | Route manifest, route census, this status document, and the durable page specifications are reconciled. |
-| 1. Data and security foundation | Partially verified | Sprint/Cycle and QA Bug contraction is present; authorization census is `VULNERABLE=0`, `NEEDS-REVIEW=0`. Build migration `1197` is applied and verified on production RDS; the mixed historical journal still has unrelated pending entries. |
+| 1. Data and security foundation | Partially verified | Sprint/Cycle and QA Bug contraction is present; authorization census is `VULNERABLE=0`, `NEEDS-REVIEW=0`. The live ledger reports 967 applied rows, 967 journal entries, and zero pending migrations; its integrity check still fails on five unrelated orphaned HR rows (`1187`–`1191`) below the watermark. Build migration `1197` is applied and verified on production RDS. |
 | 2. Core daily workflow | Complete for the current release | My Work, Inbox, All Work, Backlog, Cycles, Triage, Forms, bulk actions, URL state, and focus refresh are implemented and focused-tested. |
 | 3. Planning and product management | Complete for the current release | Roadmap, Goals, Programs, Portfolios, Managed Products, Releases, Milestones, Reports, Analytics, and Workload parent routes passed authenticated browser verification. |
 | 4. Collaboration and external workflows | Complete for the current release | Client Portal, client access, change requests, Feedbucket, forms, approvals, updates, chat, and meetings parent routes passed authenticated browser verification. |
 | 5. Execution and governance | Complete for the current release | QA, incidents, risks, decisions, automations, webhooks, files, wiki, whiteboard, workflow settings, project settings, and integrations parent routes passed authenticated browser verification. |
-| 6. Performance and UX hardening | Partially verified | Build cache focus sync, mobile overflow, ticket-detail drawer behavior, contract parsing, route access, feature cycles, and workspace-removal checks are verified. The current production build has eight route-bundle budget breaches, including `/build/inbox` and `/build/my-work`; the bundle contract was remeasured against build `5NMve5o-mHy-mRYQjxN91`. The My Work lazy panel change did not lower the measured first-load total. |
-| 7. Release verification | Partially verified | Authenticated production smoke passed for the ticket-detail route observed in this audit. Migration `1197` is verified; current deployment identity and the full browser matrix remain open. |
+| 6. Performance and UX hardening | Partially verified | Build cache focus sync, mobile overflow, ticket-detail drawer behavior, contract parsing, route access, feature cycles, and workspace-removal checks are verified. Fresh build `pbXZoKVBF7wCmr_bCnlWo` measured all 13 declared route bundles and confirmed eight first-load JS breaches, including `/build/inbox` at 660,565 bytes and `/build/my-work` at 664,385 bytes against the 524,288-byte ceiling. The attempted Inbox lazy split regressed the existing render contract and was reverted. Chromium responsive UI coverage passed 31/31 gallery checks at 375px, 768px, and 1280px; the fixture still logs a hydration-warning diagnostic. |
+| 7. Release verification | Partially verified | Authenticated production smoke passed for the ticket-detail route observed in this audit. Migration `1197` is verified; the live migration ledger has zero pending rows but still fails its orphan-row integrity gate, and current deployment identity and the full browser matrix remain open. |
 
 "Complete for the current release" does not mean the aspirational P1/P2 competitor backlog is finished. Those future product investments remain explicitly listed in `06-prioritized-backlog.md`.
 
@@ -47,7 +47,7 @@ complete product definition of done.
 ## Production migrations
 
 - The production ledger was queried through the backend IAM-aware migration client on 2026-09-25.
-- Migration `1197_build_cycle_permissions.sql` is applied on production RDS; its journal hash is present exactly once.
+- Migration `1197_build_cycle_permissions.sql` is applied on production RDS; its journal hash is present exactly once. The live ledger check on 2026-09-25 reported 967 applied rows against 967 journal entries and zero pending migrations, but failed the integrity gate on five unrelated orphaned HR rows (`1187`–`1191`) below the watermark.
 - Build migration `1204_build_feedback_account_snapshots.sql` is applied to production RDS; `build.feedback_posts.account_tier_snapshot`, its tenant-scoped partial index, and the exact journal hash were read back after commit.
 - Build deal-to-project provisioning now returns the existing organization-scoped project for a CRM deal on retry; backend commit `ad0044c83` and its focused tenant-isolation suite prevent duplicate project creation. Quote detail now exposes project and invoice destinations, and project-scoped My Time now filters entries and defaults the log-time sheet from `?projectId=`. Authenticated browser evidence for the quote actions and the full quote-to-sign-to-time-to-invoice-to-payment handoff remains open under P1-4.
 - Production contains canonical `build:cycles:view` and `build:cycles:manage` permissions, and the legacy sprint permission rows are absent.
@@ -66,7 +66,7 @@ Current release-candidate checks:
 
 - `pnpm type-check`: pass.
 - `pnpm type-check:specs`: pass.
-- `pnpm build`: pass; all 480 application routes completed production compilation and page generation.
+- `pnpm build`: pass; all 482 application routes completed production compilation and page generation.
 - The canonical Windows `pnpm build` invocation now uses Node's cross-platform memory flag in frontend commit `c2ae44ac4`; it completed successfully with all 482 generated pages after the script fix.
 - Focused affected-surface matrix: 15 suites, 192 tests passed.
 - Workflow assertion-cleanup matrix: nine suites, 94 tests passed.
@@ -74,6 +74,8 @@ Current release-candidate checks:
 - `check:route-access-contract`: pass.
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
+- Fresh route-bundle measurement for build `pbXZoKVBF7wCmr_bCnlWo`: 13 routes measured, zero pending measurements, eight first-load JS budget breaches; the gate fails with the breaches visible rather than treating them as inconclusive.
+- Playwright `e2e/build-list-responsive.spec.ts`: 31/31 Chromium checks passed at 375px, 768px, and 1280px, covering overflow, focus return, filter drawers, pagination reachability, responsive cards/tables, loading, and empty states. The run also logged a hydration mismatch warning from the gallery fixture; it is retained as an open diagnostic.
 - `git diff --check`: pass.
 - Latest frontend Build navigation, filtered board-count, malformed-filter normalization, portfolio-search, Command Center title consistency, retry-refresh, stale-detail recovery, expected missing-record telemetry, invalid project-id rejection, dirty-navigation protection, scope-switch stale-data fixes, project-scoped ticket-detail cache identity, cross-tab access/entitlement freshness hardening, and the All Work navigation typecheck fix are on `origin/main` at the current release commit:
   backlog, My Work, draft, and keyboard shortcut navigation now use the shared
@@ -104,6 +106,9 @@ Current release-candidate checks:
 - Ticket version conflicts expose a reapply action, offline draft mutations drain on reconnect, and the Build cache sync refreshes active queries on focus/visibility and across tabs; the focused recovery matrix passes 20/20 tests.
 - Approval inbox and project approval lists now return validated cursor pages and the two approval screens load subsequent pages without the previous first-100-row ceiling; focused approval suites pass 15/15.
 - Project Forms now return a validated cursor page, preserve legacy array responses during rollout, and load subsequent pages in the UI; focused Forms verification passes 24 tests across frontend and backend.
+- Form submissions now use the same validated timestamp/id cursor page, and the submissions tab can load subsequent records while accepting the legacy array response during rollout.
+- Project Incidents now return a validated detected-at/ID cursor page, and the incident list loads subsequent records while accepting the legacy array response during rollout.
+- Project Modules now return a validated name/ID cursor page; the Modules page loads subsequent records while embedded selectors continue to normalize the page contract to their existing array API.
 
 ## Browser verification
 
