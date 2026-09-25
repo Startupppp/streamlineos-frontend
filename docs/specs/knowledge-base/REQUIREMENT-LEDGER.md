@@ -657,7 +657,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 - [x] Table + mobile cards; search; deleted-by/date/space filters; cursor
 - [x] Remove the silent 100-row cap and card-only layout
-- [ ] Selected restore/purge; dependency impact; empty trash; retention permission split; legal/hold explanation
+- [x] Selected restore/purge; dependency impact; empty trash; retention permission split; legal/hold explanation
 - [x] Restore repairs tree/search/index links idempotently
 - [x] Resumable multi-store purge ledger: rows, versions, comments, grants, blobs, chunks/vectors, caches, public/CDN, analytics ids, notifications, connector projections
 - [x] Purge interruption/resumption test
