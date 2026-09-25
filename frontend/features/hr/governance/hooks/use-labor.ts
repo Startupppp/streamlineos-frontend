@@ -69,7 +69,7 @@ export interface LaborCase {
 
 const LABOR_KEY = ["hr", "governance", "labor"] as const;
 
-export function useUnionMemberships(params?: { unionName?: string; status?: string; page?: number; limit?: number }) {
+export function useUnionMemberships(params?: { unionName?: string; status?: string; cursor?: string; limit?: number }) {
   const canViewLabor = useCan("hr:labor:view");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrLaborMembershipsAll, params],
@@ -77,7 +77,7 @@ export function useUnionMemberships(params?: { unionName?: string; status?: stri
       const p: Record<string, unknown> = {};
       if (params?.unionName) p["unionName"] = params.unionName;
       if (params?.status) p["status"] = params.status;
-      if (params?.page) p["page"] = params.page;
+      if (params?.cursor) p["cursor"] = params.cursor;
       if (params?.limit) p["limit"] = params.limit;
       return apiClient.get("/hr/governance/labor/memberships", p, signal, unionMembershipListContract);
     },
@@ -86,7 +86,7 @@ export function useUnionMemberships(params?: { unionName?: string; status?: stri
   });
 }
 
-export function useCollectiveAgreements(params?: { status?: string; unionName?: string; page?: number; limit?: number }) {
+export function useCollectiveAgreements(params?: { status?: string; unionName?: string; cursor?: string; limit?: number }) {
   const canViewLabor = useCan("hr:labor:view");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrLaborAgreementsAll, params],
@@ -94,7 +94,7 @@ export function useCollectiveAgreements(params?: { status?: string; unionName?: 
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
       if (params?.unionName) p["unionName"] = params.unionName;
-      if (params?.page) p["page"] = params.page;
+      if (params?.cursor) p["cursor"] = params.cursor;
       if (params?.limit) p["limit"] = params.limit;
       return apiClient.get("/hr/governance/labor/agreements", p, signal, collectiveAgreementListContract);
     },
@@ -114,7 +114,7 @@ export function useExpiringAgreements(days = 30) {
   });
 }
 
-export function useLaborCases(params?: { status?: string; unionName?: string; page?: number; limit?: number }) {
+export function useLaborCases(params?: { status?: string; unionName?: string; cursor?: string; limit?: number }) {
   const canViewLabor = useCan("hr:labor:view");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.hrLaborCasesAll, params],
@@ -122,7 +122,7 @@ export function useLaborCases(params?: { status?: string; unionName?: string; pa
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
       if (params?.unionName) p["unionName"] = params.unionName;
-      if (params?.page) p["page"] = params.page;
+      if (params?.cursor) p["cursor"] = params.cursor;
       if (params?.limit) p["limit"] = params.limit;
       return apiClient.get("/hr/governance/labor/cases", p, signal, laborCaseListContract);
     },

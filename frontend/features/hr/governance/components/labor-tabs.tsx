@@ -7,7 +7,10 @@ import { z } from "zod";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useCursorPager } from "@/components/ui/table-pagination";
+import { format } from "date-fns";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import {
@@ -43,8 +46,8 @@ import { AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
@@ -92,13 +95,16 @@ export function LaborTabs() {
   const canManage = useCan("hr:labor:manage");
   const [activeTab, setActiveTab] = useState<ActiveTab>("memberships");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [membershipPage, setMembershipPage] = useState(1);
-  const [agreementPage, setAgreementPage] = useState(1);
-  const [casePage, setCasePage] = useState(1);
+  // All three endpoints are keyset-paginated; the `page` sent before was
+  // ignored, so rows past the first 20 were unreachable.
+  const membershipPager = useCursorPager();
+  const agreementPager = useCursorPager();
+  const casePager = useCursorPager();
+  const [pendingDelete, setPendingDelete] = useState<{ kind: ActiveTab; id: number; label: string } | null>(null);
 
-  const { data: memberships, isLoading: membershipsLoading, isError: membershipsIsError, error: membershipsError, refetch: refetchMemberships } = useUnionMemberships({ page: membershipPage, limit: 20 });
-  const { data: agreements, isLoading: agreementsLoading, isError: agreementsIsError, error: agreementsError, refetch: refetchAgreements } = useCollectiveAgreements({ page: agreementPage, limit: 20 });
-  const { data: cases, isLoading: casesLoading, isError: casesIsError, error: casesError, refetch: refetchCases } = useLaborCases({ page: casePage, limit: 20 });
+  const { data: memberships, isLoading: membershipsLoading, isError: membershipsIsError, error: membershipsError, refetch: refetchMemberships } = useUnionMemberships({ cursor: membershipPager.cursor, limit: 20 });
+  const { data: agreements, isLoading: agreementsLoading, isError: agreementsIsError, error: agreementsError, refetch: refetchAgreements } = useCollectiveAgreements({ cursor: agreementPager.cursor, limit: 20 });
+  const { data: cases, isLoading: casesLoading, isError: casesIsError, error: casesError, refetch: refetchCases } = useLaborCases({ cursor: casePager.cursor, limit: 20 });
   const { data: expiring } = useExpiringAgreements(30);
 
   const memberUserIds = useMemo(
@@ -162,15 +168,38 @@ export function LaborTabs() {
     createCase.mutate(values, { onSuccess: () => { caseForm.reset(); setSheetOpen(false); } });
   }
 
+  const deleteMutation =
+    pendingDelete?.kind === "agreements" ? deleteAgreement : pendingDelete?.kind === "cases" ? deleteCase : deleteMembership;
+
+  function handleConfirmDelete() {
+    if (!pendingDelete) return;
+    deleteMutation.mutate(pendingDelete.id, { onSuccess: () => setPendingDelete(null) });
+  }
+
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) setPendingDelete(null);
+  }
+
+  function cursorPagination(pager: ReturnType<typeof useCursorPager>, hasMore: boolean | undefined, nextCursor: string | null | undefined) {
+    return {
+      mode: "cursor" as const,
+      pageSize: 20,
+      hasMore: hasMore ?? false,
+      hasPrevious: pager.hasPrevious,
+      onNext: () => pager.goNext(nextCursor),
+      onPrevious: pager.goPrevious,
+    };
+  }
+
   const membershipColumns: DataTableColumn<UnionMembership>[] = [
     { key: "userId", header: "User", cell: (r) => <span className="text-sm">{getUserDisplayName(memberById.get(r.userId))}</span> },
     { key: "unionName", header: "Union", cell: (r) => <span className="text-sm">{r.unionName}</span> },
-    { key: "memberSince", header: "Since", cell: (r) => <span className="text-sm text-muted-foreground">{new Date(r.memberSince).toLocaleDateString()}</span> },
+    { key: "memberSince", header: "Since", cell: (r) => <span className="text-sm text-muted-foreground">{format(new Date(r.memberSince), "MMM d, yyyy")}</span> },
     { key: "status", header: "Status", cell: (r) => <Badge variant={r.status === "active" ? "default" : "secondary"}>{r.status}</Badge> },
     {
       key: "actions", header: "",
       cell: (r) => canManage ? (
-        <LoadingButton variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteMembership.mutate(r.id)} isPending={deleteMembership.isPending}>Delete</LoadingButton>
+        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setPendingDelete({ kind: "memberships", id: r.id, label: r.unionName })}>Delete</Button>
       ) : null,
     },
   ];
@@ -188,11 +217,11 @@ export function LaborTabs() {
     },
     { key: "unionName", header: "Union", cell: (r) => <span className="text-sm text-muted-foreground">{r.unionName}</span> },
     { key: "status", header: "Status", cell: (r) => <Badge variant={r.status === "active" ? "default" : r.status === "expired" ? "destructive" : "secondary"}>{r.status}</Badge> },
-    { key: "expiresAt", header: "Expires", cell: (r) => <span className="text-sm text-muted-foreground">{r.expiresAt ? new Date(r.expiresAt).toLocaleDateString() : "—"}</span> },
+    { key: "expiresAt", header: "Expires", cell: (r) => <span className="text-sm text-muted-foreground">{r.expiresAt ? format(new Date(r.expiresAt), "MMM d, yyyy") : "—"}</span> },
     {
       key: "actions", header: "",
       cell: (r) => canManage ? (
-        <LoadingButton variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteAgreement.mutate(r.id)} isPending={deleteAgreement.isPending}>Delete</LoadingButton>
+        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setPendingDelete({ kind: "agreements", id: r.id, label: r.title })}>Delete</Button>
       ) : null,
     },
   ];
@@ -210,11 +239,11 @@ export function LaborTabs() {
     },
     { key: "unionName", header: "Union", cell: (r) => <span className="text-sm text-muted-foreground">{r.unionName}</span> },
     { key: "status", header: "Status", cell: (r) => <Badge variant={r.status === "open" ? "destructive" : r.status === "resolved" ? "secondary" : "outline"}>{r.status}</Badge> },
-    { key: "createdAt", header: "Created", cell: (r) => <span className="text-sm text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</span> },
+    { key: "createdAt", header: "Created", cell: (r) => <span className="text-sm text-muted-foreground">{format(new Date(r.createdAt), "MMM d, yyyy")}</span> },
     {
       key: "actions", header: "",
       cell: (r) => canManage ? (
-        <LoadingButton variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteCase.mutate(r.id)} isPending={deleteCase.isPending}>Delete</LoadingButton>
+        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setPendingDelete({ kind: "cases", id: r.id, label: r.subject })}>Delete</Button>
       ) : null,
     },
   ];
@@ -228,7 +257,7 @@ export function LaborTabs() {
   const isLoading = activeTab === "memberships" ? membershipsLoading : activeTab === "agreements" ? agreementsLoading : casesLoading;
   const isError = activeTab === "memberships" ? membershipsIsError : activeTab === "agreements" ? agreementsIsError : casesIsError;
   const activeError = activeTab === "memberships" ? membershipsError : activeTab === "agreements" ? agreementsError : casesError;
-  const errorTitle = activeTab === "memberships" ? "Couldn't load union memberships" : activeTab === "agreements" ? "Couldn't load collective agreements" : "Couldn't load labor cases";
+  const pageState = usePageState({ permission: "hr:labor:view", isLoading, isError, error: activeError });
 
   const expiringCount = (expiring?.data ?? []).length;
 
@@ -255,22 +284,16 @@ export function LaborTabs() {
         </TabsList>
       </Tabs>
 
-      {isLoading ? (
-        <div className="flex flex-1 min-h-0 flex-col gap-3">
-          {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
-        </div>
-      ) : isError ? (
-        <ErrorState
-          className="flex-1"
-          title={errorTitle}
-          description={getErrorMessage(activeError)}
-          onRetry={handleRetry}
-        />
-      ) : activeTab === "memberships" ? (
+      <PageState
+        resolution={pageState}
+        loading={<DataTableSkeleton columns={5} className="flex-1" />}
+        onRetry={handleRetry}
+        className="flex-1"
+      >
+      {activeTab === "memberships" ? (
         <>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">{memberships?.data?.length ?? 0} memberships</p>
-            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
+          <div className="flex items-center justify-end mb-4">
+            {canManage && <Button onClick={handleOpenSheet} size="sm"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
           </div>
           <DataTable className="flex-1 min-h-0" columns={membershipColumns} data={memberships?.data ?? []} getRowKey={(r) => r.id}
             emptyState={
@@ -282,14 +305,13 @@ export function LaborTabs() {
                 action={canManage ? { label: "Add", onClick: handleOpenSheet } : undefined}
               />
             }
-            pagination={{ mode: "server", page: membershipPage, pageSize: 20, total: memberships?.data?.length ?? 0, onPageChange: setMembershipPage }}
+            pagination={cursorPagination(membershipPager, memberships?.pagination.hasMore, memberships?.pagination.nextCursor)}
           />
         </>
       ) : activeTab === "agreements" ? (
         <>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">{agreements?.data?.length ?? 0} agreements</p>
-            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
+          <div className="flex items-center justify-end mb-4">
+            {canManage && <Button onClick={handleOpenSheet} size="sm"><PlusIcon size={16} className="mr-1.5" />Add</Button>}
           </div>
           <DataTable className="flex-1 min-h-0" columns={agreementColumns} data={agreements?.data ?? []} getRowKey={(r) => r.id}
             emptyState={
@@ -301,14 +323,13 @@ export function LaborTabs() {
                 action={canManage ? { label: "Add", onClick: handleOpenSheet } : undefined}
               />
             }
-            pagination={{ mode: "server", page: agreementPage, pageSize: 20, total: agreements?.data?.length ?? 0, onPageChange: setAgreementPage }}
+            pagination={cursorPagination(agreementPager, agreements?.pagination.hasMore, agreements?.pagination.nextCursor)}
           />
         </>
       ) : (
         <>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">{cases?.data?.length ?? 0} cases</p>
-            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><PlusIcon size={16} className="mr-1.5" />New Case</Button>}
+          <div className="flex items-center justify-end mb-4">
+            {canManage && <Button onClick={handleOpenSheet} size="sm"><PlusIcon size={16} className="mr-1.5" />New Case</Button>}
           </div>
           <DataTable className="flex-1 min-h-0" columns={caseColumns} data={cases?.data ?? []} getRowKey={(r) => r.id}
             emptyState={
@@ -320,10 +341,23 @@ export function LaborTabs() {
                 action={canManage ? { label: "New Case", onClick: handleOpenSheet } : undefined}
               />
             }
-            pagination={{ mode: "server", page: casePage, pageSize: 20, total: cases?.data?.length ?? 0, onPageChange: setCasePage }}
+            pagination={cursorPagination(casePager, cases?.pagination.hasMore, cases?.pagination.nextCursor)}
           />
         </>
       )}
+      </PageState>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={handleDeleteDialogChange}
+        title={`Delete "${pendingDelete?.label ?? ""}"?`}
+        description="This record is removed from labor relations."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteMutation.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmDelete}
+      />
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
