@@ -23,13 +23,13 @@ complete product definition of done.
 | Phase | Current state | Evidence |
 |---|---|---|
 | 0. Baseline and control | Complete | Route manifest, route census, this status document, and the durable page specifications are reconciled. |
-| 1. Data and security foundation | Partially verified | Sprint/Cycle and QA Bug contraction is present; authorization census is `VULNERABLE=0`, `NEEDS-REVIEW=0`. Build migration `1197` is applied and verified on production RDS; the mixed historical journal still has unrelated pending entries. |
+| 1. Data and security foundation | Partially verified | Sprint/Cycle and QA Bug contraction is present; authorization census is `VULNERABLE=0`, `NEEDS-REVIEW=0`. The live ledger reports 967 applied rows, 967 journal entries, and zero pending migrations; its integrity check still fails on five unrelated orphaned HR rows (`1187`–`1191`) below the watermark. Build migration `1197` is applied and verified on production RDS. |
 | 2. Core daily workflow | Complete for the current release | My Work, Inbox, All Work, Backlog, Cycles, Triage, Forms, bulk actions, URL state, and focus refresh are implemented and focused-tested. |
 | 3. Planning and product management | Complete for the current release | Roadmap, Goals, Programs, Portfolios, Managed Products, Releases, Milestones, Reports, Analytics, and Workload parent routes passed authenticated browser verification. |
 | 4. Collaboration and external workflows | Complete for the current release | Client Portal, client access, change requests, Feedbucket, forms, approvals, updates, chat, and meetings parent routes passed authenticated browser verification. |
 | 5. Execution and governance | Complete for the current release | QA, incidents, risks, decisions, automations, webhooks, files, wiki, whiteboard, workflow settings, project settings, and integrations parent routes passed authenticated browser verification. |
 | 6. Performance and UX hardening | Partially verified | Build cache focus sync, mobile overflow, ticket-detail drawer behavior, contract parsing, route access, feature cycles, and workspace-removal checks are verified. The current production build has eight route-bundle budget breaches, including `/build/inbox` and `/build/my-work`; the bundle contract was remeasured against build `5NMve5o-mHy-mRYQjxN91`. The My Work lazy panel change did not lower the measured first-load total. |
-| 7. Release verification | Partially verified | Authenticated production smoke passed for the ticket-detail route observed in this audit. Migration `1197` is verified; current deployment identity and the full browser matrix remain open. |
+| 7. Release verification | Partially verified | Authenticated production smoke passed for the ticket-detail route observed in this audit. Migration `1197` is verified; the live migration ledger has zero pending rows but still fails its orphan-row integrity gate, and current deployment identity and the full browser matrix remain open. |
 
 "Complete for the current release" does not mean the aspirational P1/P2 competitor backlog is finished. Those future product investments remain explicitly listed in `06-prioritized-backlog.md`.
 
@@ -47,7 +47,7 @@ complete product definition of done.
 ## Production migrations
 
 - The production ledger was queried through the backend IAM-aware migration client on 2026-09-25.
-- Migration `1197_build_cycle_permissions.sql` is applied on production RDS; its journal hash is present exactly once.
+- Migration `1197_build_cycle_permissions.sql` is applied on production RDS; its journal hash is present exactly once. The live ledger check on 2026-09-25 reported 967 applied rows against 967 journal entries and zero pending migrations, but failed the integrity gate on five unrelated orphaned HR rows (`1187`–`1191`) below the watermark.
 - Build migration `1204_build_feedback_account_snapshots.sql` is applied to production RDS; `build.feedback_posts.account_tier_snapshot`, its tenant-scoped partial index, and the exact journal hash were read back after commit.
 - Build deal-to-project provisioning now returns the existing organization-scoped project for a CRM deal on retry; backend commit `ad0044c83` and its focused tenant-isolation suite prevent duplicate project creation. Quote detail now exposes project and invoice destinations, and project-scoped My Time now filters entries and defaults the log-time sheet from `?projectId=`. Authenticated browser evidence for the quote actions and the full quote-to-sign-to-time-to-invoice-to-payment handoff remains open under P1-4.
 - Production contains canonical `build:cycles:view` and `build:cycles:manage` permissions, and the legacy sprint permission rows are absent.
