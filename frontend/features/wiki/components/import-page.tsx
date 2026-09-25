@@ -10,6 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -18,6 +25,7 @@ import {
 } from "@/components/ui/tabs";
 import { useCan } from "@/hooks/api/access";
 import { useImportKbPages } from "@/hooks/api/kb";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_IMPORT, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 import { KbUploadIcon, KbClipboardIcon } from "@/features/wiki/lib/kb-icons";
@@ -43,6 +51,12 @@ export default function ImportPage() {
   const [showPaste, setShowPaste] = useState(false);
   const [pasteTitle, setPasteTitle] = useState("");
   const [pasteText, setPasteText] = useState("");
+  const [targetSpaceId, setTargetSpaceId] = useState<string>("none");
+  const [visibility, setVisibility] = useState<"private" | "org" | "public">("org");
+  const [duplicatePolicy, setDuplicatePolicy] = useState<"skip" | "update">("skip");
+
+  const { data: spacesPage } = useKbSpaces();
+  const spaces = spacesPage?.data ?? [];
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -128,12 +142,27 @@ export default function ImportPage() {
     setItems([]);
   }
 
+  function handleTargetSpaceChange(value: string) {
+    setTargetSpaceId(value);
+  }
+
+  function handleVisibilityChange(value: string) {
+    setVisibility(value as "private" | "org" | "public");
+  }
+
+  function handleDuplicatePolicyChange(value: string) {
+    setDuplicatePolicy(value as "skip" | "update");
+  }
+
   function handleImport() {
     if (items.length === 0) return;
     importMutation.mutate(
       {
         items: items.map(({ title, contentText }) => ({ title, contentText })),
         sourceType: "markdown",
+        spaceId: targetSpaceId === "none" ? undefined : Number(targetSpaceId),
+        visibility,
+        duplicatePolicy,
       },
       {
         onSuccess: (result) => {
@@ -271,6 +300,51 @@ export default function ImportPage() {
                       </Button>
                     </div>
                   ) : null}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Target space</Label>
+                      <Select value={targetSpaceId} onValueChange={handleTargetSpaceChange}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue placeholder="No space" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No space</SelectItem>
+                          {spaces.map((s) => (
+                            <SelectItem key={s.id} value={String(s.id)}>
+                              {s.icon ? `${s.icon} ` : ""}
+                              {s.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Default visibility</Label>
+                      <Select value={visibility} onValueChange={handleVisibilityChange}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="private">Private</SelectItem>
+                          <SelectItem value="org">Team</SelectItem>
+                          <SelectItem value="public">Public</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Duplicate items</Label>
+                      <Select value={duplicatePolicy} onValueChange={handleDuplicatePolicyChange}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="skip">Skip duplicates</SelectItem>
+                          <SelectItem value="update">Update duplicates</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
                   <ImportPendingList
                     items={items}

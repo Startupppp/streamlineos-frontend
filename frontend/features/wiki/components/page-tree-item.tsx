@@ -53,12 +53,14 @@ interface PageTreeItemProps {
   node: KbPageTreeNode;
   depth: number;
   onCloseMobile?: () => void;
+  spaceId?: number;
 }
 
 const PageTreeItem = memo(function PageTreeItemInner({
   node,
   depth,
   onCloseMobile,
+  spaceId,
 }: PageTreeItemProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -85,7 +87,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
     hasNextPage: childrenHasNextPage,
     isFetchingNextPage: childrenFetchingNext,
     fetchNextPage: fetchChildrenNextPage,
-  } = useKbPageChildrenLevel(node.id, expanded);
+  } = useKbPageChildrenLevel(node.id, expanded, spaceId);
 
   const children: KbPageTreeNode[] = childrenData?.pages.flatMap((p) => p.data) ?? [];
 
@@ -357,6 +359,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   node={child}
                   depth={depth + 1}
                   onCloseMobile={onCloseMobile}
+                  spaceId={spaceId}
                 />
               ))}
               <InfiniteScrollSentinel

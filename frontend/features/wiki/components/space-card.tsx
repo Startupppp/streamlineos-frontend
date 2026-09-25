@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { spaceHref } from "@/lib/knowledge-routes";
+import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
   KbArchiveIcon,
   KbPencilIcon,
   KbRotateCcwIcon,
+  KbTriangleAlertIcon,
+  KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
 import type { KbAudience } from "@/types/kb";
 import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
@@ -44,6 +47,7 @@ interface SpaceCardProps {
   pageCount: number;
   onEdit: (space: KbSpaceListItem) => void;
   onArchiveToggle: (space: KbSpaceListItem) => void;
+  onViewMembers: (space: KbSpaceListItem) => void;
 }
 
 export function SpaceCard({
@@ -52,6 +56,7 @@ export function SpaceCard({
   pageCount,
   onEdit,
   onArchiveToggle,
+  onViewMembers,
 }: SpaceCardProps) {
   function handleEdit(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
@@ -61,6 +66,11 @@ export function SpaceCard({
   function handleArchiveToggle(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     onArchiveToggle(space);
+  }
+
+  function handleViewMembers(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    onViewMembers(space);
   }
 
   const audience = space.audience ?? "internal";
@@ -90,8 +100,31 @@ export function SpaceCard({
         {pageCount} {pageCount === 1 ? "page" : "pages"} · {space.memberCount}{" "}
         {space.memberCount === 1 ? "member" : "members"}
       </p>
+      <p className="text-xs text-muted-foreground" suppressHydrationWarning>
+        {space.ownerName ? `Owned by ${space.ownerName} · ` : ""}
+        Updated {kbTimeAgo(space.updatedAt)}
+      </p>
+      {canManage && space.pagesOverdueForReview > 0 && (
+        <Badge
+          variant="outline"
+          className="w-fit text-micro h-4 px-1.5 bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule"
+        >
+          <KbTriangleAlertIcon className="h-3 w-3 mr-1" />
+          {space.pagesOverdueForReview}{" "}
+          {space.pagesOverdueForReview === 1 ? "page" : "pages"} overdue for review
+        </Badge>
+      )}
       {canManage && (
         <div className="flex items-center gap-1 pt-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="px-2 text-xs text-muted-foreground"
+            onClick={handleViewMembers}
+          >
+            <KbUsersIcon className="h-3 w-3 mr-1" />
+            Members
+          </Button>
           <Button
             variant="ghost"
             size="sm"

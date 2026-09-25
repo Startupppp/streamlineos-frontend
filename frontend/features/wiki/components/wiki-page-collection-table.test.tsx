@@ -400,3 +400,43 @@ describe("WikiPageCollectionTable — cursor pagination", () => {
     expect(lastCall.cursor).toBeUndefined();
   });
 });
+
+describe("WikiPageCollectionTable — owner filter", () => {
+  it("passes owner: \"me\" to the collection query when the URL carries owner=me", () => {
+    mockSearchParams = new URLSearchParams("owner=me");
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+
+    expect(useKbPageCollection).toHaveBeenLastCalledWith(
+      expect.objectContaining({ owner: "me" }),
+    );
+  });
+
+  it("passes owner: undefined when the URL carries no owner param, so the table shows everyone's pages by default", () => {
+    mockSearchParams = new URLSearchParams();
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+
+    expect(useKbPageCollection).toHaveBeenLastCalledWith(
+      expect.objectContaining({ owner: undefined }),
+    );
+  });
+
+  it("renders an Owner selector when the table's owner is not pinned by the caller", () => {
+    mockSearchParams = new URLSearchParams();
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+
+    expect(screen.getByText("Anyone")).toBeInTheDocument();
+  });
+
+  it("hides the Owner selector when the caller already pins owner, e.g. a dedicated My Pages view", () => {
+    mockSearchParams = new URLSearchParams();
+
+    render(
+      <WikiPageCollectionTable fixedParams={{ owner: "me" }} emptyTitle="No pages" />,
+    );
+
+    expect(screen.queryByText("Anyone")).not.toBeInTheDocument();
+  });
+});

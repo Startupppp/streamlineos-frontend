@@ -134,3 +134,10 @@ export const kbBulkPageResultContract = z.object({
     }),
   ),
 });
+
+export const kbPageTrashPurgeImpactContract = z.object({
+  pageCount: z.number().int(),
+  descendantCount: z.number().int(),
+});
+
+export type KbPageTrashPurgeImpact = z.infer<typeof kbPageTrashPurgeImpactContract>;

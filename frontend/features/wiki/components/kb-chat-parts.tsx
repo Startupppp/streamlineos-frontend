@@ -1,8 +1,12 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Clock, MessageSquareWarning } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, CheckCircle2, Clock, Copy, Flag, HelpCircle, MessageSquareWarning, ThumbsDown, ThumbsUp } from "lucide-react";
+import { toast } from "sonner";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { statusToneClasses } from "@/lib/design-tokens";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useKbAiAnswerFeedback, useCreateKbKnowledgeGap } from "@/hooks/api/kb/ask";
 import type { ChatMessage } from "@/components/kb/kb-chat-bubble";
 import type { KbAskCitationWithParts } from "@/hooks/api/kb/ask-result-schema";
 
@@ -53,6 +57,21 @@ export function buildKbHistoryRows(messages: ChatMessage[]): KbHistoryRow[] {
   return rows;
 }
 
+export function questionForAssistantId(messages: ChatMessage[]): Map<string, string> {
+  const questionById = new Map<string, string>();
+  let lastQuestion: string | null = null;
+  for (const message of messages) {
+    if (message.role === "user") {
+      lastQuestion = message.content;
+      continue;
+    }
+    if (message.role === "assistant" && lastQuestion !== null) {
+      questionById.set(message.id, lastQuestion);
+    }
+  }
+  return questionById;
+}
+
 export function DaySeparator({ label }: { label: string }) {
   return (
     <div className="flex items-center justify-center py-0.5">
@@ -96,7 +115,42 @@ export function EmptyChat({
   );
 }
 
-export function InsufficientEvidenceBanner() {
+export function CreateKnowledgeGapButton({ question }: { question: string }) {
+  const createGap = useCreateKbKnowledgeGap();
+  const [created, setCreated] = useState(false);
+
+  function handleCreate() {
+    createGap.mutate(
+      { question },
+      {
+        onSuccess: () => {
+          setCreated(true);
+          toast.success("Flagged for the content team");
+        },
+        onError: (error: unknown) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
+  if (created) {
+    return <span className="text-micro text-muted-foreground">Knowledge gap flagged</span>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCreate}
+      disabled={createGap.isPending}
+      aria-label="Create a knowledge gap for this question"
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <HelpCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
+      Create knowledge gap
+    </button>
+  );
+}
+
+export function InsufficientEvidenceBanner({ question }: { question?: string }) {
   return (
     <div
       role="status"
@@ -109,6 +163,11 @@ export function InsufficientEvidenceBanner() {
         <p className={`mt-0.5 text-xs ${warningTone.ink}`}>
           The knowledge base does not contain anything that answers this question. Consider uploading relevant files or adding a note.
         </p>
+        {question ? (
+          <div className="mt-1.5">
+            <CreateKnowledgeGapButton question={question} />
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -204,6 +263,113 @@ export function DisagreementBanner({ summary }: DisagreementBannerProps) {
     >
       <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       <span><span className="font-semibold">Sources disagree:</span> {summary}</span>
+    </div>
+  );
+}
+
+export function CopyAnswerButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 2000);
+      },
+      () => toast.error("Could not copy the answer"),
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      aria-label={copied ? "Answer copied" : "Copy answer"}
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+    >
+      {copied ? (
+        <CheckCircle2 className="h-3 w-3 shrink-0" aria-hidden="true" />
+      ) : (
+        <Copy className="h-3 w-3 shrink-0" aria-hidden="true" />
+      )}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
+type AnswerFeedbackRating = "helpful" | "not_helpful" | "missing_source";
+
+export function AnswerFeedbackBar({
+  question,
+  onSubmitted,
+}: {
+  question: string;
+  onSubmitted?: () => void;
+}) {
+  const feedback = useKbAiAnswerFeedback();
+  const [given, setGiven] = useState(false);
+
+  function submit(rating: AnswerFeedbackRating, comment?: string) {
+    feedback.mutate(
+      { rating, question, comment },
+      {
+        onSuccess: () => {
+          setGiven(true);
+          toast.success("Thanks for the feedback");
+          onSubmitted?.();
+        },
+        onError: (error: unknown) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
+  function handleHelpful() {
+    submit("helpful");
+  }
+
+  function handleNotHelpful() {
+    submit("not_helpful");
+  }
+
+  function handleReportWrongOrStale() {
+    submit("not_helpful", "Reported as wrong or stale");
+  }
+
+  if (given) {
+    return <p className="pt-1 text-micro text-muted-foreground">Thanks for the feedback</p>;
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1 pt-1">
+      <span className="mr-1 text-micro text-muted-foreground">Helpful?</span>
+      <button
+        type="button"
+        onClick={handleHelpful}
+        disabled={feedback.isPending}
+        aria-label="Mark answer as helpful"
+        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ThumbsUp className="h-3 w-3 shrink-0" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={handleNotHelpful}
+        disabled={feedback.isPending}
+        aria-label="Mark answer as not helpful"
+        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ThumbsDown className="h-3 w-3 shrink-0" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={handleReportWrongOrStale}
+        disabled={feedback.isPending}
+        aria-label="Report answer as wrong or stale"
+        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <Flag className="h-3 w-3 shrink-0" aria-hidden="true" />
+        Report wrong or stale
+      </button>
     </div>
   );
 }

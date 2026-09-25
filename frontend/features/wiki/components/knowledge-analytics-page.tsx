@@ -11,11 +11,14 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
   useKbAnalyticsOverview,
   useKbNoResults,
   usePageAnalytics,
   useKnowledgeGaps,
+  useCitationReuse,
+  useReviewSla,
   useCreateKbPage,
 } from "@/hooks/api/kb";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -28,6 +31,9 @@ import {
   KbFileTextIcon,
   KbEyeIcon,
   KbPlusIcon,
+  KbClockIcon,
+  KbCheckCircleIcon,
+  KbLink2Icon,
 } from "@/features/wiki/lib/kb-icons";
 import type { KbNoResultRow, KbPageAnalyticsRow, KbGapRow } from "@/types/kb";
 
@@ -151,7 +157,7 @@ function formatRatioAsPercent(ratio: number): string {
 function AnalyticsSkeleton() {
   return (
     <div className="space-y-4">
-      <StatCardGridSkeleton cols={5} count={5} />
+      <StatCardGridSkeleton cols={6} count={6} />
       {Array.from({ length: 3 }).map((_, s) => (
         <div key={s} className="space-y-2">
           <Skeleton className="h-4 w-36" />
@@ -169,11 +175,24 @@ export default function KnowledgeAnalyticsPage() {
     useKbAnalyticsOverview();
   const { data: noResults = [], isLoading: noResultsLoading, isError: noResultsError, refetch: refetchNoResults } =
     useKbNoResults();
-  const { data: pageAnalytics = [], isLoading: pagesLoading, isError: pagesError, refetch: refetchPages } =
-    usePageAnalytics();
+  const {
+    data: pageAnalytics = [],
+    isLoading: pagesLoading,
+    isError: pagesError,
+    refetch: refetchPages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = usePageAnalytics();
   const { data: gaps = [], isLoading: gapsLoading, isError: gapsError, refetch: refetchGaps } = useKnowledgeGaps();
+  const { data: citationReuse } = useCitationReuse();
+  const { data: reviewSla } = useReviewSla();
   const createPage = useCreateKbPage();
   const router = useRouter();
+
+  function handleLoadMorePages() {
+    void fetchNextPage();
+  }
 
   function handleRetry() {
     void refetchOverview();
@@ -218,7 +237,7 @@ export default function KnowledgeAnalyticsPage() {
         }
       >
       {overview ? (
-      <StatCardGrid cols={5} className="mb-4">
+      <StatCardGrid cols={6} className="mb-4">
         <StatCard
           label="Help centre articles"
           value={overview.totalCount}
@@ -249,8 +268,35 @@ export default function KnowledgeAnalyticsPage() {
           icon={KbBarChart2Icon}
           tone="amber"
         />
+        <StatCard
+          label="Tickets deflected"
+          value={overview.ticketsDeflected}
+          icon={KbCheckCircleIcon}
+          tone="emerald"
+        />
       </StatCardGrid>
       ) : null}
+
+      {(reviewSla || citationReuse) && (
+      <StatCardGrid cols={2} className="mb-4">
+        {reviewSla ? (
+          <StatCard
+            label="Review SLA met"
+            value={formatRatioAsPercent(reviewSla.slaRate)}
+            icon={KbClockIcon}
+            tone="amber"
+          />
+        ) : null}
+        {citationReuse ? (
+          <StatCard
+            label="Reused citations"
+            value={citationReuse.length}
+            icon={KbLink2Icon}
+            tone="violet"
+          />
+        ) : null}
+      </StatCardGrid>
+      )}
 
       <div className="space-y-4">
         <section className="space-y-2">
@@ -339,6 +385,12 @@ export default function KnowledgeAnalyticsPage() {
               {pageAnalytics.map((row) => (
                 <PageAnalyticsTableRow key={row.id} row={row} />
               ))}
+              <InfiniteScrollSentinel
+                hasNextPage={!!hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={handleLoadMorePages}
+                label="Load more pages"
+              />
             </div>
           )}
         </section>

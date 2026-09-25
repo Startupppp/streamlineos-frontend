@@ -43,7 +43,10 @@ import {
   InsufficientEvidenceBanner,
   OverQuotaBanner,
   DisagreementBanner,
+  CopyAnswerButton,
+  AnswerFeedbackBar,
   buildKbHistoryRows,
+  questionForAssistantId,
 } from "@/features/wiki/components/kb-chat-parts";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -121,6 +124,7 @@ export default function KnowledgeBasePage() {
   );
 
   const rows = useMemo(() => buildKbHistoryRows(persisted), [persisted]);
+  const questionByAssistantId = useMemo(() => questionForAssistantId(persisted), [persisted]);
 
   const loadOlder = useCallback(() => {
     const el = scrollRef.current;
@@ -409,7 +413,20 @@ export default function KnowledgeBasePage() {
                       row.type === "sep" ? (
                         <DaySeparator key={row.id} label={row.label} />
                       ) : (
-                        <ChatBubble key={row.message.id} message={row.message} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
+                        <ChatBubble
+                          key={row.message.id}
+                          message={row.message}
+                          onCitation={handleCitationClick}
+                          reduce={Boolean(reduce)}
+                          actions={
+                            row.message.role === "assistant" && questionByAssistantId.has(row.message.id) ? (
+                              <>
+                                <CopyAnswerButton text={row.message.content} />
+                                <AnswerFeedbackBar question={questionByAssistantId.get(row.message.id) ?? ""} />
+                              </>
+                            ) : undefined
+                          }
+                        />
                       ),
                     )}
                     {pending && (
@@ -423,12 +440,26 @@ export default function KnowledgeBasePage() {
                     )}
                     {pending?.error && !pending.isQuotaError && !ask.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
                     {pending?.hasContext === false && (
-                      <InsufficientEvidenceBanner />
+                      <InsufficientEvidenceBanner question={pending.question} />
                     )}
                     {pending?.disagreement && (
                       <DisagreementBanner summary={pending.disagreement.summary} />
                     )}
-                    {pending?.answer && <ChatBubble message={{ id: "pending-answer", role: "assistant", content: pending.answer }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />}
+                    {pending?.answer && (
+                      <ChatBubble
+                        message={{ id: "pending-answer", role: "assistant", content: pending.answer }}
+                        onCitation={handleCitationClick}
+                        reduce={Boolean(reduce)}
+                        actions={
+                          !ask.isPending ? (
+                            <>
+                              <CopyAnswerButton text={pending.answer} />
+                              <AnswerFeedbackBar question={pending.question} />
+                            </>
+                          ) : undefined
+                        }
+                      />
+                    )}
                     {ask.isPending && !pending?.answer && <TypingBubble reduce={Boolean(reduce)} />}
                     {(pending?.hasContext === false || pending?.disagreement) && !ask.isPending && (
                       <div className="flex gap-2">

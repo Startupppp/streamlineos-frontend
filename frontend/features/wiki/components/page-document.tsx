@@ -39,6 +39,7 @@ import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";
 import PageRightPanel from "./page-right-panel";
 import { PageDocumentTrustHeader } from "./page-document-trust-header";
+import { PageDocumentOutline } from "./page-document-outline";
 import {
   normalizePlateValue,
   getPlainText,
@@ -105,6 +106,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   const [editorDraft, setEditorDraft] = useState<unknown>(null);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
   const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
 
   const handleSavePage = useCallback(
@@ -371,18 +373,25 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
               </div>
             )}
 
-            <PlateDocumentEditor
-              value={editorDraft ?? page.content ?? undefined}
-              contentKey={`${pageId}:${reloadNonce}`}
-              editable={isEditable}
-              placeholder="Start writing…"
-              onChange={handleEditorChange}
-              fetchMentionUsers={fetchMentionUsers}
-              fetchPageLinks={fetchPageLinks}
-              onNavigateToPage={handleNavigateToPage}
-              uploadFile={isEditable ? handleUploadFile : undefined}
-              toolbarHost={toolbarHost}
+            <PageDocumentOutline
+              content={editorDraft ?? page.content}
+              containerRef={editorContainerRef}
             />
+
+            <div ref={editorContainerRef}>
+              <PlateDocumentEditor
+                value={editorDraft ?? page.content ?? undefined}
+                contentKey={`${pageId}:${reloadNonce}`}
+                editable={isEditable}
+                placeholder="Start writing…"
+                onChange={handleEditorChange}
+                fetchMentionUsers={fetchMentionUsers}
+                fetchPageLinks={fetchPageLinks}
+                onNavigateToPage={handleNavigateToPage}
+                uploadFile={isEditable ? handleUploadFile : undefined}
+                toolbarHost={toolbarHost}
+              />
+            </div>
           </div>
         </div>
 

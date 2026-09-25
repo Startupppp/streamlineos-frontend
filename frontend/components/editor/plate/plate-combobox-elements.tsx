@@ -35,6 +35,8 @@ const SLASH_COMMANDS: CommandItem[] = [
   { key: 'table', label: 'Table', description: 'Table with rows and columns' },
   { key: 'img', label: 'Image', description: 'Image from URL' },
   { key: 'toggle', label: 'Toggle', description: 'Collapsible section' },
+  { key: 'citation', label: 'Citation', description: 'Quoted text with a source' },
+  { key: 'link_preview', label: 'Link preview', description: 'Embed a link with a preview card' },
 ];
 
 function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
@@ -107,6 +109,23 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
     case 'toggle':
       editor.tf.setNodes({ type: 'toggle' }, { at: blockPath });
       break;
+    case 'citation':
+      editor.tf.setNodes(
+        { type: 'citation', sourceTitle: null, sourceUrl: null } as Partial<TElement>,
+        { at: blockPath },
+      );
+      break;
+    case 'link_preview': {
+      const url = window.prompt('Link URL:');
+      if (url) {
+        editor.tf.insertNodes(
+          { type: 'link_preview', url, children: [{ text: '' }] } as TElement,
+          { at: blockPath },
+        );
+        editor.tf.removeNodes({ at: nextPath });
+      }
+      break;
+    }
     default:
       editor.tf.setNodes({ type: 'p' }, { at: blockPath });
   }

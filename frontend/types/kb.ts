@@ -13,6 +13,9 @@ export interface KbSpace {
   articleCount?: number;
   createdAt: string;
   updatedAt: string;
+  archivedAt?: string | null;
+  pagesOverdueForReview?: number;
+  pagesWithReviewPolicy?: number;
 }
 
 export interface CreateSpaceInput {
@@ -108,6 +111,7 @@ export interface KbAnalyticsOverview {
   aiAnswers: number;
   aiNoContext: number;
   views: number;
+  ticketsDeflected: number;
   verifiedPublished: number;
   trustScore: number;
   topArticles: KbAnalyticsTopArticle[];
@@ -121,6 +125,21 @@ export interface KbNoResultRow {
 export interface KbAnalyticsRange {
   from?: string;
   to?: string;
+  spaceId?: number;
+}
+
+export interface KbCitationReuseRow {
+  kind: string;
+  refId: number;
+  title: string;
+  reuseCount: number;
+}
+
+export interface KbReviewSla {
+  decided: number;
+  metSla: number;
+  slaRate: number;
+  overdueOpen: number;
 }
 
 export interface KbPageAnalyticsRow {

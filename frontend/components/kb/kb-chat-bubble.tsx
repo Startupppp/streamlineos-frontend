@@ -21,10 +21,12 @@ export function ChatBubble({
   message,
   onCitation,
   reduce,
+  actions,
 }: {
   message: ChatMessage;
   onCitation?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   reduce: boolean;
+  actions?: React.ReactNode;
 }) {
   const isUser = message.role === "user";
   return (
@@ -56,6 +58,11 @@ export function ChatBubble({
           )}
           {message.citations && message.citations.length > 0 && onCitation ? (
             <Citations citations={message.citations} onCitation={onCitation} />
+          ) : null}
+          {!message.isError && actions ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-border/60 pt-2">
+              {actions}
+            </div>
           ) : null}
         </div>
       )}

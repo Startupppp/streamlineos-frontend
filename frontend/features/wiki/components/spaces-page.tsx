@@ -37,6 +37,7 @@ import {
 import { SpaceCard, SpaceCardSkeleton } from "./space-card";
 import { SpaceArchiveImpact } from "./space-archive-impact";
 import { SpaceSheet } from "./space-sheet";
+import { SpaceMembersSheet } from "./space-members-sheet";
 
 const AUDIENCE_FILTER_VALUES = ["all", "internal", "public", "mixed"] as const;
 type AudienceFilter = (typeof AUDIENCE_FILTER_VALUES)[number];
@@ -116,6 +117,8 @@ export default function SpacesPage() {
     useState<KbSpaceListItem | null>(null);
   const [restoreTarget, setRestoreTarget] =
     useState<KbSpaceListItem | null>(null);
+  const [membersTarget, setMembersTarget] =
+    useState<KbSpaceListItem | null>(null);
 
   const handleCreate = useCallback(() => {
     setEditingSpace(null);
@@ -133,6 +136,14 @@ export default function SpacesPage() {
 
   const handleRestore = useCallback((space: KbSpaceListItem) => {
     setRestoreTarget(space);
+  }, []);
+
+  const handleViewMembers = useCallback((space: KbSpaceListItem) => {
+    setMembersTarget(space);
+  }, []);
+
+  const handleMembersOpenChange = useCallback((open: boolean) => {
+    if (!open) setMembersTarget(null);
   }, []);
 
   const handleSheetOpenChange = useCallback((open: boolean) => {
@@ -284,6 +295,7 @@ export default function SpacesPage() {
                   onArchiveToggle={
                     space.archivedAt ? handleRestore : handleArchive
                   }
+                  onViewMembers={handleViewMembers}
                 />
               ))}
             </SpacesGrid>
@@ -345,6 +357,13 @@ export default function SpacesPage() {
         confirmLabel="Restore"
         isPending={restoreSpace.isPending}
         onConfirm={handleConfirmRestore}
+      />
+
+      <SpaceMembersSheet
+        spaceId={membersTarget?.id ?? 0}
+        spaceName={membersTarget?.name ?? ""}
+        open={membersTarget !== null}
+        onOpenChange={handleMembersOpenChange}
       />
     </PageWrapper>
   );

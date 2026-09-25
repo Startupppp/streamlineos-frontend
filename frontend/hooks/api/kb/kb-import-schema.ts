@@ -51,6 +51,7 @@ export const kbImportResultContract = z.object({
   jobId: z.number().int(),
   succeeded: z.number().int(),
   failed: z.number().int(),
+  duplicates: z.number().int(),
   total: z.number().int(),
 });
 

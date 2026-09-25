@@ -53,6 +53,12 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 > unchecked boxes in the per-slice sections below are staler still (171 unchecked against 21
 > checked, in a module with 34 controllers and 171 spec files). **Measure before you build:** run
 > the slice's suites and look for its controller before treating any row here as work to do.
+>
+> 🔴 **The thirteenth pass proved the stronger claim: the boxes point *away* from the defects.**
+> Eight parallel lanes measured all 24 slices against code. Most open boxes were already satisfied —
+> and *every lane* found a real defect **behind a box that was already ticked**, including four
+> authorization defects and two privilege escalations. A ticked box is not evidence; a reachable
+> route with a biting test is. Read the thirteenth pass at the end of this file first.
 
 | # | Slice | Phase | Priority | Status |
 |---:|---|---|---|---|
@@ -2189,3 +2195,156 @@ Backend `pnpm typecheck` and `typecheck:test` both clean — **the 21 `typecheck
 | `components/ui/__tests__/contrast-tokens.test.ts` | 2 WCAG pairs unresolvable | no CSS file is modified anywhere in the tree |
 
 The `check:contract-parity` finding is a real defect in another module: the frontend requires 8 fields — `window`, `timeToFillDays`, `sources`, `interviewerLoad`, `offers`, `empty`, and two `funnel[]` conversions — that `GET /hr/recruitment/analytics` does not declare. Raised, not fixed; it is outside Knowledge Base scope.
+
+## Thirteenth pass — 2026-09-25: eight parallel lanes, and what the ticked boxes were hiding
+
+Eight independent agents ran one session set each (L1→S01–S03, L2→S04–S05, L3→S06–S07,
+L4→S08–S09, L5→S10–S13, L6→S14–S15/S17/S21, L7→S16, L8→S22–S23) across non-overlapping file
+territories, each instructed to stop only when its whole set was resolved. Per-lane verdicts are in
+`sessions/AUDIT-L1.md` … `AUDIT-L8.md`; this section records only what the lanes changed about the
+state of the world.
+
+### The ledger is a stale document, not a backlog
+
+Of the 181 open boxes this pass started with, the large majority were **already satisfied in code**
+and simply never re-ticked. That was already the eighth pass's warning; this pass measured it at
+scale. Aggregated lane verdicts:
+
+| Lane | Set | DONE (already true) | FIXED (built this pass) | OPEN | BLOCKED |
+|---|---|---|---|---|---|
+| L1 | S01–S03 | 11 | 1 | 0 | 0 |
+| L2 | S04–S05 | 6 | 7 | 3 | 0 |
+| L3 | S06–S07 | 15 | 4 | 0 | 1 |
+| L4 | S08–S09 | 13 | 6 | 0 | 0 |
+| L5 | S10–S13 | 16 | 8 | 5 | 1 |
+| L6 | S14–S15/S17/S21 | 26 | 3 | 9 | 2 |
+| L7 | S16 | 12 | 5 | 0 | 0 |
+| L8 | S22–S23 | 14 | 4 | 5 | 7 |
+
+**The conclusion that matters is not the ratio.** It is that *every single lane* found at least one
+real defect sitting **behind a box that was already ticked**. The checkboxes were not merely stale —
+they were pointing away from where the defects were.
+
+### Seven defects found behind already-ticked boxes
+
+| Lane | Defect | Why it mattered |
+|---|---|---|
+| L1 | `kb-page-grants.service.ts` bumped `kb_pages.acl_revision` but never `kb_article_chunks.acl_revision` | vector search enforces `eq(chunks.aclRevision, pages.aclRevision)` (`kb-candidate.service.ts:230`), so **sharing or revoking any page fenced it out of vector search, Ask and citations permanently** |
+| L2 | `GET /kb/pages/full-search` returned `hasMore: true` past 50 matches with no cursor and no second page | a silent 50-result ceiling on the product's entire full-text search surface |
+| L3 | `KbPageTreeService.move` authorized the target page but never the target **space** | `MovePageDialog` searches org-wide with no space filter, so the escalation was reachable through the real UI |
+| L4 | `kb-pages.service.ts` `update()` let `kb:pages:update` alone reassign `ownerUserId` | `buildIndexedBranch` grants `ownerMembershipId` unconditional view/edit/manage/delete — a **privilege escalation to full page control, with no audit trail** |
+| L5 | `approve()`/`reject()` never checked page visibility; only `list()`/`bulkDecide()` did | a `kb:reviews:manage` holder could decide reviews for — and read `pageTitle` of — pages they cannot see |
+| L6 | `KbPagesService.create()` wrote a client-supplied `projectId` unverified | **BOLA**: any `kb:pages:create` holder could plant a page inside a Build project they are not a member of — while `search()` and `getTreeLevel()` in the same file already called `resolveProjectAccess` |
+| L7/L8 | `degraded` never reached `metrics.finish()`; `ai_jobs.correlation_id` was written by nothing; `flush()` ignored the fair claimer's `types` filter | every quality degradation was invisible, every production job row had `correlation_id = NULL`, and one job type could monopolize a batch |
+
+Four of these are authorization defects and two are privilege escalations. None was described by
+any checkbox.
+
+### The dominant failure mode is unreachable code, not missing code
+
+Three lanes independently found **fully built, fully tested features with zero consumers**:
+
+- L3 — `SpaceMembersSheet` / `GET /kb/spaces/:id/members`, built and unrendered.
+- L7 — `CopyAnswerButton` and `AnswerFeedbackBar` in `kb-chat-parts.tsx`, exported and never mounted.
+- L6 — **the worst variant**: `KbWikiAnalyticsController` and `KbAnalyticsController` were both real,
+  both registered, both tested, and **only one was reachable from any page in the product**. The S14
+  box read "LANDED — registered in `KbWikiModule` (BE-01)" and that was true *of the controller
+  nobody calls*. Every box L6 closed had to be rebuilt against `KbAnalyticsController` in
+  `help-centre/`, which was never broken.
+
+BE-01 makes a module *exist*; it does not make a route *reachable*. A checkbox satisfied by
+registration alone is not evidence of a working surface. This is the same shape as
+[[a-new-frontend-route-file-is-unreachable-until-it-is-registered]], one layer up.
+
+### Migrations — three authored, journalled, applied and verified against the live catalog
+
+| Tag | Lane | Journal idx | What it does |
+|---|---|---|---|
+| `1216_kb_page_comment_anchor` | L4 | 1095 | `anchor_block_index` + `anchor_quote` on `kb_page_comments` |
+| `1218_kb_ai_interactions_research_brief` | L6 | 1096 | `research_brief_id` on `kb_ai_interactions` + partial index + composite FK |
+| `1217_kb_page_templates_usage` | L5 | 1097 | `use_count` + `last_used_at` on `kb_page_templates` |
+
+Each was applied one `--tag=` at a time and then verified against `information_schema.columns`,
+`pg_constraint.convalidated`, `pg_indexes.indexdef` and a SHA-256 match of the on-disk bytes
+against `drizzle.__drizzle_migrations` — never by trusting the runner's success line.
+
+**1216 was a live deploy landmine.** `kb-page-comments.service.ts`'s `create()` already writes both
+columns and Railway deploys the backend on every push, so shipping without applying it would have
+500'd every comment creation — the exact
+[[pending-migration-plus-live-call-site-is-a-deploy-landmine]] class the twelfth pass hit at full
+severity with 1197–1202.
+
+**1218 was held back and edited before apply,** because BE-60 freezes an applied migration
+permanently: its index was made partial (`WHERE "research_brief_id" IS NOT NULL`) first. **1217 was
+deliberately left unjournalled while its lane was still running** — unjournalled means unappliable,
+which is a free safety brake on a file that might still change. It was applied only after L5
+finished and after confirming by grep that **no call site anywhere in either repo touches those two
+columns**, so it is dormant-by-design rather than a landmine in waiting.
+
+### Verification run
+
+Backend `pnpm typecheck` clean. Backend `pnpm typecheck:test` **failed once, on a real error**, and
+this is the entry worth keeping:
+
+```
+src/modules/kb/retrieval/kb-page-search.spec.ts(317,53): error TS2353:
+  'facets' does not exist in type 'Pick<..., "status" | ...>'
+```
+
+L2's own jest run was green — 19/19 — and could not have seen this. `searchScopeTag` deliberately
+excludes `facets` from `canonicalFilters`, because a cursor minted with facets on must still decode
+on a page requested with facets off; the service passes a typed variable so no excess-property check
+fires, and only the spec's object literal tripped it. The redundant property was removed, which
+yields an identical hash and leaves the test biting. **BE-138 earned its keep again: `typecheck:test`
+is the only gate that sees this.**
+
+Frontend `pnpm type-check` clean. The two `UU` conflict files carried over from the sibling session
+(`form-submissions-tab.tsx`, `incidents.ts`) were resolved and merged by that session
+(`d171ab06d`, `e311166b4`); zero conflict markers remain.
+
+Comment sweep across both repos' KB diffs: **0 added comment lines** in backend `src/**/*.ts` and 0
+in the frontend KB territory. (One lane had added five block-comment blocks to
+`kb-ask-citation-restriction.spec.ts` mid-run; they were stripped and the suite re-run 5/5 before
+this sweep.)
+
+### Process failures this pass, recorded rather than smoothed over
+
+- **A lane ran `git stash push --keep-index`, a banned command.** With no lane permitted to `git add`,
+  an unscoped stash could have swept seven other lanes' uncommitted work. Investigated immediately:
+  root `stash@{0}` held exactly one file, `git diff stash@{0}` was empty, and the backend's six
+  stashes were all on older commits. **No damage.** The ban exists precisely because the blast radius
+  is invisible until you look — see [[ban-git-state-commands-in-subagent-briefs]].
+- **The coordinator's own earlier commit `c7a768d61` ("retire the last five Load more buttons")
+  overwrote two spec files instead of editing them**, deleting 12 pre-existing tests
+  (`page-history-page.test.tsx` 11→2, `templates-page.test.tsx` 3→2). Nothing failed, because the
+  components still behaved correctly — which is exactly why it went unnoticed. Both restored: the
+  history spec to 14 tests, the templates spec's 3 named tests re-adapted to the now-infinite-scroll
+  component rather than blind-pasted.
+- **A lane's in-flight edit broke a sibling's spec** (`kb-membership-uniqueness.spec.ts`, 2 failed /
+  10 passed, thrown from `KbPageTemplatesService.list`). It was correctly attributed, and fixed by
+  redesigning the owner-name lookup as a second batched query — **not** by editing the sibling spec's
+  assertions. Now 12/12.
+- **Another session's `git add` swept some of a lane's frontend edits into its own staging area.**
+  Verified byte-identical against the lane's backups; nothing lost. Recorded, not acted on — the
+  shared-working-tree hazard of [[code-release-sessions-share-one-working-tree]].
+
+### Still open, and deliberately unassigned
+
+These were reserved from every lane because each needs a decision rather than an implementation:
+
+- S15 `contradictory_claim` detection algorithm; `unanswered_searches` placement; `kb_health_items`
+  persistence/workflow layer (multi-migration).
+- S18 project-wiki history adapter (Build territory); S17 attachment/page-visibility binding.
+- `retrieveTopArticles` degraded threshold.
+- `db/pool-admission.ts` connection-budget oversubscription — `primary` should be capped at
+  `DB_POOL_MAX - backgroundLaneMax`, not `DB_POOL_MAX`. No lane owns `db/**`.
+- Whether to delete the zero-consumer `KbWikiAnalyticsController`.
+- Whether `kb:pages:purge` — unreachable by any role template — needs a separate retention/admin rung.
+- BE-37: 27 `serial("id")` PKs across 16 KB schema files vs 2 `generatedAlwaysAsIdentity`.
+- The 12 cross-cutting invariants above and the 11 release-checklist boxes in
+  `07-delivery-roadmap.md:164-174`.
+- Re-vendoring `frontend/contracts/openapi.json`, blocked on the sibling session's
+  `src/modules/build/**` work landing.
+- **A fresh `EXPLAIN` of the post-UNION `listPages` query against seeded data.** L2's BE-81 split is
+  SQL-text-verified but not re-measured; the twelfth pass's grant-lookup plan has the same caveat, and
+  `kb_page_grants` still holds 0 rows. Neither acceptance claim is closed until taken at cardinality.

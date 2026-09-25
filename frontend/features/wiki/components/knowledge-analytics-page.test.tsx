@@ -17,6 +17,8 @@ const useKbAnalyticsOverview = jest.fn();
 const useKbNoResults = jest.fn();
 const usePageAnalytics = jest.fn();
 const useKnowledgeGaps = jest.fn();
+const useCitationReuse = jest.fn();
+const useReviewSla = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -36,6 +38,8 @@ jest.mock("@/hooks/api/kb", () => ({
   useKbNoResults: () => useKbNoResults(),
   usePageAnalytics: () => usePageAnalytics(),
   useKnowledgeGaps: () => useKnowledgeGaps(),
+  useCitationReuse: () => useCitationReuse(),
+  useReviewSla: () => useReviewSla(),
   useCreateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
@@ -59,6 +63,7 @@ const OVERVIEW = {
   aiAnswers: 4,
   aiNoContext: 1,
   views: 340,
+  ticketsDeflected: 3,
   verifiedPublished: 5,
   trustScore: 0.55,
   topArticles: [],
@@ -66,6 +71,15 @@ const OVERVIEW = {
 
 function settled<T>(data: T) {
   return { data, isLoading: false, isError: false, error: null, refetch: jest.fn() };
+}
+
+function settledPages<T>(data: T) {
+  return {
+    ...settled(data),
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+  };
 }
 
 function cancelled() {
@@ -77,8 +91,10 @@ beforeEach(() => {
   useAccess.mockReturnValue(accessGranted);
   useKbAnalyticsOverview.mockReturnValue(settled(OVERVIEW));
   useKbNoResults.mockReturnValue(settled([]));
-  usePageAnalytics.mockReturnValue(settled([]));
+  usePageAnalytics.mockReturnValue(settledPages([]));
   useKnowledgeGaps.mockReturnValue(settled([]));
+  useCitationReuse.mockReturnValue(cancelled());
+  useReviewSla.mockReturnValue(cancelled());
 });
 
 describe("KnowledgeAnalyticsPage — access is three-valued, not a boolean", () => {

@@ -200,15 +200,23 @@ function setupSearch(
 ) {
   useKbPageFullSearch.mockReturnValue({
     data: {
-      items,
-      hasMore: extras.hasMore ?? false,
-      limit: 20,
-      facets: extras.facets ?? null,
+      pages: [
+        {
+          items,
+          hasMore: extras.hasMore ?? false,
+          nextCursor: extras.hasMore ? "cursor-1" : null,
+          limit: 20,
+          facets: extras.facets ?? null,
+        },
+      ],
     },
     isLoading: false,
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+    fetchNextPage: jest.fn(),
+    hasNextPage: extras.hasMore ?? false,
+    isFetchingNextPage: false,
   });
 }
 
@@ -221,6 +229,9 @@ beforeEach(() => {
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
   });
   usePageState.mockReturnValue({ kind: "ready" });
   mockFlags.mockReturnValue({ link: false, search: false, ai: false });
@@ -313,6 +324,38 @@ describe("WikiSearchPage — URL filter state", () => {
 
     const input = screen.getByTestId("search-input") as HTMLInputElement;
     expect(input.value).toBe("onboarding");
+  });
+
+  it("passes type from the URL param to the search hook, alongside q and status", () => {
+    mockUseSearchParams.mockReturnValue(
+      new URLSearchParams("q=handbook&type=sop"),
+    );
+    setupSearch([mockSearchResult({ title: "Handbook" })]);
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<WikiSearchPage />);
+
+    expect(useKbPageFullSearch).toHaveBeenCalledWith(
+      expect.objectContaining({ q: "handbook", type: "sop" }),
+      expect.anything(),
+    );
+  });
+
+  it("calls update with type=null when the type filter chip is removed", () => {
+    mockUseSearchParams.mockReturnValue(
+      new URLSearchParams("q=onboarding&type=sop"),
+    );
+    setupSearch([mockSearchResult()]);
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<WikiSearchPage />);
+
+    const removeButton = screen.getByRole("button", {
+      name: /Remove type filter/i,
+    });
+    fireEvent.click(removeButton);
+
+    expect(mockUpdate).toHaveBeenCalledWith({ type: null });
   });
 
   it("calls update with status=null when the status filter chip is removed", () => {
@@ -439,5 +482,96 @@ describe("WikiSearchPage — quick-find handoff", () => {
 
     expect(screen.getByTestId("empty-title")).toHaveTextContent("Search pages");
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+});
+
+type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
+
+const observers: {
+  callback: IntersectionCallback;
+  observed: Element[];
+  disconnected: boolean;
+}[] = [];
+
+class FakeIntersectionObserver {
+  constructor(callback: IntersectionCallback) {
+    this.entry = { callback, observed: [], disconnected: false };
+    observers.push(this.entry);
+  }
+  private entry: (typeof observers)[number];
+  observe(element: Element) {
+    this.entry.observed.push(element);
+  }
+  disconnect() {
+    this.entry.disconnected = true;
+  }
+  unobserve() {}
+}
+
+describe("WikiSearchPage — cursor pagination", () => {
+  beforeEach(() => {
+    observers.length = 0;
+    Reflect.set(globalThis, "IntersectionObserver", FakeIntersectionObserver);
+  });
+
+  afterEach(() => {
+    Reflect.deleteProperty(globalThis, "IntersectionObserver");
+  });
+
+  it("shows an open-ended count and a sentinel, never a fixed 'Top N' ceiling, when another page exists", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=guide"));
+    setupSearch([mockSearchResult({ id: 1, title: "Guide" })], { hasMore: true });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<WikiSearchPage />);
+
+    expect(screen.getByText("1+ results")).toBeInTheDocument();
+    expect(screen.queryByText(/^Top \d+ results$/)).toBeNull();
+    expect(observers).toHaveLength(1);
+  });
+
+  it("calls fetchNextPage when the bottom sentinel intersects", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=guide"));
+    setupSearch([mockSearchResult({ id: 1, title: "Guide" })], { hasMore: true });
+    usePageState.mockReturnValue({ kind: "ready" });
+    const fetchNextPage = jest.fn();
+    useKbPageFullSearch.mockReturnValue({
+      data: {
+        pages: [
+          {
+            items: [mockSearchResult({ id: 1, title: "Guide" })],
+            hasMore: true,
+            nextCursor: "cursor-1",
+            limit: 20,
+            facets: null,
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+      fetchNextPage,
+      hasNextPage: true,
+      isFetchingNextPage: false,
+    });
+
+    render(<WikiSearchPage />);
+
+    expect(observers).toHaveLength(1);
+    observers[0]?.callback([{ isIntersecting: true } as IntersectionObserverEntry]);
+
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("mounts no sentinel once the last page has been reached", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=guide"));
+    setupSearch([mockSearchResult({ id: 1, title: "Guide" })], { hasMore: false });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<WikiSearchPage />);
+
+    expect(observers).toHaveLength(0);
+    expect(screen.getByText("1 result")).toBeInTheDocument();
   });
 });

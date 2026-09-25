@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import PageHistoryPage from "./page-history-page";
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
@@ -32,9 +32,11 @@ function intersect(index = 0) {
   observer.callback([{ isIntersecting: true } as IntersectionObserverEntry]);
 }
 
+const mockSearchParamsGet = jest.fn(() => null as string | null);
+
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn() })),
-  useSearchParams: jest.fn(() => ({ get: () => null })),
+  useSearchParams: jest.fn(() => ({ get: mockSearchParamsGet })),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -102,10 +104,20 @@ const mockVersion = {
   createdAt: new Date().toISOString(),
 };
 
+const mockVersionTwo = {
+  versionNumber: 2,
+  title: "Test Page",
+  content: {},
+  authorName: "Bob",
+  changeSummary: "Second edit",
+  createdAt: new Date().toISOString(),
+};
+
 beforeEach(() => {
   observers.length = 0;
   Reflect.set(globalThis, "IntersectionObserver", FakeIntersectionObserver);
   jest.clearAllMocks();
+  mockSearchParamsGet.mockReturnValue(null);
 
   useKbPage.mockReturnValue({
     data: { id: 1, title: "Test Page", content: {} },
@@ -153,5 +165,191 @@ describe("PageHistoryPage sentinel", () => {
     render(<PageHistoryPage pageId={1} />);
 
     expect(screen.getByRole("button", { name: "Load more versions" })).toBeInTheDocument();
+  });
+});
+
+describe("PageHistoryPage — current version marker", () => {
+  it("marks the highest versionNumber with a Current badge and aria-label", () => {
+    useKbPageVersionsInfinite.mockReturnValue({
+      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
+      isLoading: false,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<PageHistoryPage pageId={1} />);
+
+    expect(
+      screen.getByRole("button", { name: "Select version 2 (current)" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Select version 1 (current)" }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("PageHistoryPage — two-version compare", () => {
+  beforeEach(() => {
+    useKbPageVersionsInfinite.mockReturnValue({
+      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
+      isLoading: false,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+    useKbPageVersionDetail.mockImplementation((_pageId: number, versionNumber: number) => ({
+      data: versionNumber === 2 ? mockVersionTwo : mockVersion,
+      isLoading: false,
+    }));
+  });
+
+  it("entering compare mode shows the compare UI hint", () => {
+    render(<PageHistoryPage pageId={1} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Enter compare mode" }));
+
+    expect(screen.getByRole("button", { name: "Exit compare mode" })).toBeInTheDocument();
+    expect(screen.getByText("Select base version")).toBeInTheDocument();
+  });
+
+  it("selecting two versions in compare mode renders the two-version diff header", () => {
+    render(<PageHistoryPage pageId={1} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Select version 2 (current)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Enter compare mode" }));
+    fireEvent.click(screen.getByRole("button", { name: "Select version 1" }));
+
+    expect(screen.getByText("Version 2 → Version 1")).toBeInTheDocument();
+  });
+});
+
+describe("PageHistoryPage — page states", () => {
+  it("shows skeletons while the page is loading", () => {
+    useKbPage.mockReturnValue({ data: undefined, isLoading: true, isError: false });
+
+    const { container } = render(<PageHistoryPage pageId={1} />);
+
+    expect(container.querySelectorAll(".skeleton-shimmer").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Select a version to preview")).not.toBeInTheDocument();
+  });
+
+  it("shows a retry control when the page fails to load", () => {
+    useKbPage.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+
+    render(<PageHistoryPage pageId={1} />);
+
+    expect(screen.getByText("Failed to load page.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+  });
+
+  it("shows an empty state when the page has no versions", () => {
+    useKbPageVersionsInfinite.mockReturnValue({
+      data: { pages: [{ data: [] }] },
+      isLoading: false,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<PageHistoryPage pageId={1} />);
+
+    expect(screen.getByText("No versions yet")).toBeInTheDocument();
+  });
+
+  it("prompts for a selection before any version is picked", () => {
+    render(<PageHistoryPage pageId={1} />);
+
+    expect(screen.getByText("Select a version to preview")).toBeInTheDocument();
+  });
+});
+
+describe("PageHistoryPage — restore gate", () => {
+  beforeEach(() => {
+    useKbPageVersionsInfinite.mockReturnValue({
+      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
+      isLoading: false,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+  });
+
+  it("disables restore for the current version even once its detail has loaded", () => {
+    useKbPageVersionDetail.mockReturnValue({ data: mockVersionTwo, isLoading: false });
+
+    render(<PageHistoryPage pageId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Select version 2 (current)" }));
+
+    expect(screen.getByRole("button", { name: /restore/i })).toBeDisabled();
+  });
+
+  it("enables restore once a non-current version's detail has loaded", () => {
+    useKbPageVersionDetail.mockReturnValue({ data: mockVersion, isLoading: false });
+
+    render(<PageHistoryPage pageId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Select version 1" }));
+
+    expect(screen.getByRole("button", { name: /restore/i })).toBeEnabled();
+  });
+});
+
+describe("PageHistoryPage — keyboard accessibility", () => {
+  it("selects a version on Enter without requiring a pointer click", () => {
+    useKbPageVersionsInfinite.mockReturnValue({
+      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
+      isLoading: false,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+    useKbPageVersionDetail.mockReturnValue({ data: mockVersion, isLoading: false });
+
+    render(<PageHistoryPage pageId={1} />);
+    const versionButton = screen.getByRole("button", { name: "Select version 1" });
+    fireEvent.keyDown(versionButton, { key: "Enter" });
+
+    expect(screen.queryByText("Select a version to preview")).not.toBeInTheDocument();
+  });
+
+  it("gives every version button an accessible name instead of an icon-only control", () => {
+    useKbPageVersionsInfinite.mockReturnValue({
+      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
+      isLoading: false,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<PageHistoryPage pageId={1} />);
+
+    expect(screen.getByRole("button", { name: "Select version 2 (current)" })).toHaveAttribute(
+      "type",
+      "button",
+    );
+    expect(screen.getByRole("button", { name: "Select version 1" })).toHaveAttribute(
+      "type",
+      "button",
+    );
+  });
+});
+
+describe("PageHistoryPage — deep link", () => {
+  it("preselects the version named by the ?version= query param", () => {
+    mockSearchParamsGet.mockImplementation((key: string) => (key === "version" ? "2" : null));
+    useKbPageVersionsInfinite.mockReturnValue({
+      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
+      isLoading: false,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+    useKbPageVersionDetail.mockReturnValue({ data: mockVersionTwo, isLoading: false });
+
+    render(<PageHistoryPage pageId={1} />);
+
+    expect(
+      screen.getByRole("button", { name: "Select version 2 (current)" }),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 });

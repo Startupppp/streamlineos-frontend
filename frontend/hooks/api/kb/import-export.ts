@@ -17,12 +17,16 @@ export type KbImportItem = {
 export type ImportKbPagesInput = {
   items: KbImportItem[];
   sourceType: "markdown" | "html" | "zip";
+  spaceId?: number;
+  visibility?: "private" | "org" | "public";
+  duplicatePolicy?: "skip" | "update";
 };
 
 export type ImportResult = {
   jobId: number;
   succeeded: number;
   failed: number;
+  duplicates: number;
   total: number;
 };
 
@@ -91,30 +95,10 @@ export function useImportKbPages() {
     mutationKey: ["kb", "pages", "import"],
     mutationFn: (input: ImportKbPagesInput) =>
       apiClient.post<ImportResult>("/kb/pages/import", input, undefined, kbImportResultContract),
-    onSuccess: (result, variables) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages() });
-      void qc
-        .invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs() })
-        .then(() => {
-          const itemTitles = variables.items.map((item) => item.title);
-          qc.setQueryData<KbImportJob[]>(
-            knowledgeAndSurveysQueryKeys.kb.importJobs(),
-            (previous) => {
-              if (!previous) return previous;
-              return previous.map((job) => {
-                if (job.id !== result.jobId) return job;
-                return {
-                  ...job,
-                  errorReport: {
-                    ...(job.errorReport ?? {}),
-                    itemTitles,
-                  },
-                };
-              });
-            },
-          );
-        });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs() });
     },
   });
 }

@@ -36,6 +36,19 @@ const STATUS_OPTIONS = [
   { value: "archived", label: "Archived" },
 ] as const;
 
+const TYPE_OPTIONS = [
+  { value: "note", label: "Note" },
+  { value: "sop", label: "SOP" },
+  { value: "policy", label: "Policy" },
+  { value: "support_article", label: "Support article" },
+  { value: "troubleshooting", label: "Troubleshooting" },
+  { value: "decision_record", label: "Decision record" },
+  { value: "meeting_notes", label: "Meeting notes" },
+  { value: "runbook", label: "Runbook" },
+  { value: "project_brief", label: "Project brief" },
+  { value: "playbook", label: "Playbook" },
+] as const;
+
 const VIEW_VALUES = ["list", "card"] as const;
 type ViewMode = (typeof VIEW_VALUES)[number];
 
@@ -121,6 +134,7 @@ export default function WikiSearchPage() {
 
   const q = searchParams.get("q") ?? "";
   const status = searchParams.get("status") ?? undefined;
+  const type = searchParams.get("type") ?? undefined;
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
 
   const [inputValue, setInputValue] = useState(q);
@@ -140,14 +154,38 @@ export default function WikiSearchPage() {
     [update],
   );
 
-  const { data, isLoading, isError, error, refetch } = useKbPageFullSearch(
-    { q, status, facets: true },
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useKbPageFullSearch(
+    { q, status, type, facets: true },
     { enabled: q.trim().length > 0 },
   );
 
-  const items = data?.items ?? [];
-  const hasFilters = !!status;
+  const items = data?.pages.flatMap((page) => page.items) ?? [];
+  const hasFilters = !!status || !!type;
   const queryActive = q.trim().length > 0;
+
+  const bottomSentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const sentinel = bottomSentinelRef.current;
+    if (!sentinel || !hasNextPage || isFetchingNextPage) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) void fetchNextPage();
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const pageState = usePageState({
     permission: "kb:pages:view",
@@ -178,16 +216,27 @@ export default function WikiSearchPage() {
   );
 
   const handleClearFilters = useCallback(() => {
-    update({ status: null });
+    update({ status: null, type: null });
   }, [update]);
 
   const handleClearStatus = useCallback(() => {
     update({ status: null });
   }, [update]);
 
+  const handleClearType = useCallback(() => {
+    update({ type: null });
+  }, [update]);
+
   const handleStatusChange = useCallback(
     (value: string) => {
       update({ status: value === "all" ? null : value });
+    },
+    [update],
+  );
+
+  const handleTypeChange = useCallback(
+    (value: string) => {
+      update({ type: value === "all" ? null : value });
     },
     [update],
   );
@@ -199,7 +248,8 @@ export default function WikiSearchPage() {
     [update],
   );
 
-  const facetStatusCounts = data?.facets?.status ?? [];
+  const facetStatusCounts = data?.pages[0]?.facets?.status ?? [];
+  const facetTypeCounts = data?.pages[0]?.facets?.type ?? [];
 
   return (
     <PageWrapper title="Search">
@@ -231,6 +281,23 @@ export default function WikiSearchPage() {
                 <SelectItem value="all">Any status</SelectItem>
                 {STATUS_OPTIONS.map((opt) => {
                   const facet = facetStatusCounts.find((f) => f.value === opt.value);
+                  return (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                      {facet ? ` (${facet.count})` : ""}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            <Select value={type ?? "all"} onValueChange={handleTypeChange}>
+              <SelectTrigger className="h-9 w-40">
+                <SelectValue placeholder="Any type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any type</SelectItem>
+                {TYPE_OPTIONS.map((opt) => {
+                  const facet = facetTypeCounts.find((f) => f.value === opt.value);
                   return (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
@@ -276,8 +343,8 @@ export default function WikiSearchPage() {
         {queryActive && !isLoading && items.length > 0 && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>
-              {data?.hasMore
-                ? `Top ${items.length} results`
+              {hasNextPage
+                ? `${items.length}+ results`
                 : `${items.length} result${items.length !== 1 ? "s" : ""}`}
             </span>
             {status && (
@@ -288,6 +355,17 @@ export default function WikiSearchPage() {
                 aria-label={`Remove status filter: ${status}`}
               >
                 {status}
+                <X className="size-3" />
+              </button>
+            )}
+            {type && (
+              <button
+                type="button"
+                onClick={handleClearType}
+                className="flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-xs hover:bg-muted/80"
+                aria-label={`Remove type filter: ${type}`}
+              >
+                {type}
                 <X className="size-3" />
               </button>
             )}
@@ -346,6 +424,7 @@ export default function WikiSearchPage() {
                   />
                 ),
               )}
+              {hasNextPage && <div ref={bottomSentinelRef} className="h-1" />}
             </div>
           )}
         </PageState>

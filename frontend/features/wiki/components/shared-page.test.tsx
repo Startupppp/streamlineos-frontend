@@ -262,4 +262,36 @@ describe("SharedPage — flash fix and server-side filtering", () => {
       expect.not.objectContaining({ owner: "me" }),
     );
   });
+
+  it("shows the access-lost recovery state, not the first-empty state, once a previously visible share disappears", () => {
+    useKbPageCollection.mockReturnValue({
+      data: {
+        data: [makeSharedItem()],
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
+        facets: null,
+      },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { rerender } = render(<SharedPage />);
+    expect(screen.getByText("Handbook")).toBeInTheDocument();
+
+    useKbPageCollection.mockReturnValue({
+      data: { data: [], pagination: { limit: 50, hasMore: false, nextCursor: null }, facets: null },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    rerender(<SharedPage />);
+
+    expect(screen.getByText("Your access may have changed")).toBeInTheDocument();
+    expect(screen.queryByText("Nothing shared with you")).not.toBeInTheDocument();
+  });
 });

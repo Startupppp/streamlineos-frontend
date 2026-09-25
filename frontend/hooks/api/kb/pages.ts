@@ -14,6 +14,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useKbSpaces } from "./spaces";
 import { kbPageTreeLevelContract } from "./kb-page-tree-schema";
 import type { KbSpaceListPage } from "./spaces";
+import type { KbPageTrashPurgeImpact } from "./kb-pages-schema";
 import type {
   CreateKbPageInput,
   KbPage,
@@ -85,6 +86,12 @@ const kbPageSoftDeleteContract = lazyContract(() =>
 const kbTrashPageListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then(
     (m) => m.kbTrashPageListContract,
+  ),
+);
+
+const kbPageTrashPurgeImpactContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then(
+    (m) => m.kbPageTrashPurgeImpactContract,
   ),
 );
 
@@ -195,15 +202,20 @@ export function useKbPageTreeInfinite(params: {
 export function useKbPageChildrenLevel(
   nodeId: number,
   enabled: boolean,
+  spaceId?: number,
 ) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: [...treeLevelKey({ parentId: nodeId }), "infinite"] as const,
+    queryKey: [
+      ...treeLevelKey({ parentId: nodeId, spaceId }),
+      "infinite",
+    ] as const,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<KbPageTreeLevel>(
         "/kb/pages/tree",
         {
           parentId: nodeId,
+          ...(spaceId === undefined ? {} : { spaceId }),
           ...(pageParam === undefined ? {} : { cursor: pageParam }),
         } as Record<string, unknown>,
         signal,
@@ -307,6 +319,25 @@ export function useKbBulkRestorePages() {
         queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages(),
       });
     },
+  });
+}
+
+export function useKbTrashPurgeImpact(
+  pageIds: number[],
+  options?: { enabled?: boolean },
+) {
+  const canPurge = useCan("kb:pages:purge");
+  return useQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashPurgeImpact(pageIds),
+    queryFn: ({ signal }) =>
+      apiClient.post<KbPageTrashPurgeImpact>(
+        "/kb/pages/trash/purge-impact",
+        { pageIds },
+        { signal },
+        kbPageTrashPurgeImpactContract,
+      ),
+    staleTime: 15_000,
+    enabled: canPurge && pageIds.length > 0 && (options?.enabled ?? true),
   });
 }
 

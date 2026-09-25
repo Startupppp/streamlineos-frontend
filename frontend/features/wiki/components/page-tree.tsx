@@ -96,6 +96,7 @@ export default function PageTree({
           node={node}
           depth={0}
           onCloseMobile={onCloseMobile}
+          spaceId={spaceId}
         />
       ))}
       <InfiniteScrollSentinel

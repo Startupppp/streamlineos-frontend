@@ -41,11 +41,14 @@ export const kbPageFullSearchFacetsContract = z.object({
   space: z.array(
     z.object({ spaceId: z.number().int().nullable(), count: z.number().int() }),
   ),
+  type: z.array(z.object({ value: z.string(), count: z.number().int() })),
+  verified: z.array(z.object({ value: z.string(), count: z.number().int() })),
 });
 
 export const kbPageFullSearchResponseContract = z.object({
   items: z.array(kbPageFullSearchItemContract),
   hasMore: z.boolean(),
+  nextCursor: z.string().nullable(),
   limit: z.number().int(),
   facets: kbPageFullSearchFacetsContract.nullable(),
 });
