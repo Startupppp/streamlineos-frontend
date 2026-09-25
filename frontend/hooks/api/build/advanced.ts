@@ -80,7 +80,7 @@ export function useCycles(
   projectId: number,
   options?: Omit<UseQueryOptions<Cycle[]>, "queryKey" | "queryFn" | "enabled">
 ) {
-  const canView = useCan("build:sprints:view");
+  const canView = useCan("build:cycles:view");
   return useQuery<Cycle[]>({
     queryKey: buildWorkQueryKeys.projects.cycles(projectId),
     queryFn: ({ signal }) => apiClient.get<Cycle[]>(`/build/${projectId}/cycles`, undefined, signal, cycleListContract),

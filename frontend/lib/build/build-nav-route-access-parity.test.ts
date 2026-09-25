@@ -121,7 +121,7 @@ const CROSS_SCOPE_CASES: CrossScopeCase[] = [
   ],
   [
     "/build/managed-products/7/cycles",
-    "build:sprints:view",
+    "build:cycles:view",
     "build:managed-products:view",
   ],
   [

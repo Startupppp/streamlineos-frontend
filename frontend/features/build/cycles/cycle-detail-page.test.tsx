@@ -106,7 +106,7 @@ const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 
 const ACCESS_GRANTED = {
-  data: { isOrgOwner: false, scopes: { "build:sprints:view": "all" }, modules: {} },
+  data: { isOrgOwner: false, scopes: { "build:cycles:view": "all" }, modules: {} },
   isLoading: false,
 };
 const ACCESS_DENIED = {
@@ -154,7 +154,7 @@ beforeEach(() => {
   mockUseTicketColumnCounts.mockReturnValue(baseQueryResult({ data: {} }));
 });
 
-it("renders NoPermissionState when build:sprints:view is denied instead of calling notFound", () => {
+it("renders NoPermissionState when build:cycles:view is denied instead of calling notFound", () => {
   mockUseAccess.mockReturnValue(ACCESS_DENIED);
   mockUseProject.mockReturnValue(baseQueryResult());
   mockUseCycles.mockReturnValue(baseQueryResult());

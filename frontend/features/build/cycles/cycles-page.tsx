@@ -79,7 +79,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     error,
     isError,
     isLoading,
-    permission: "build:sprints:view",
+    permission: "build:cycles:view",
   });
   const activeCycles = cycles?.filter((c) => c.status === "active") ?? [];
   const upcomingCycles = cycles?.filter((c) => c.status === "draft") ?? [];

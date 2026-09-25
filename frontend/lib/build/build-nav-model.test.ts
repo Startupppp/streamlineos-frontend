@@ -63,7 +63,7 @@ const ALL_BUILD_PERMISSIONS: PermissionKey[] = [
   "build:portal:view",
   "build:members:view",
   "build:access:view",
-  "build:sprints:view",
+  "build:cycles:view",
   "build:qa:view",
   "build:bugs:view",
   "build:incidents:view",
