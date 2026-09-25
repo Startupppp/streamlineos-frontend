@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { InfiniteData } from "@tanstack/react-query";
 import type { UnreadCount } from "@/types/notifications";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -17,12 +18,13 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-const approvalInboxListContract = lazyContract(() =>
-  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalInboxListContract),
+const approvalInboxPageContract = lazyContract(() =>
+  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalInboxPageContract),
 );
-const approvalListContract = lazyContract(() =>
-  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalListContract),
+const approvalPageContract = lazyContract(() =>
+  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalPageContract),
 );
 const approvalRowContract = lazyContract(() =>
   import("@/hooks/api/build/approvals-schema").then((m) => m.approvalRowContract),
@@ -39,11 +41,40 @@ interface ApprovalFilters {
   entityType?: string;
 }
 
+type ApprovalInboxPage = {
+  data: ApprovalInboxItem[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
+
+type ApprovalInboxCache = ApprovalInboxItem[] | InfiniteData<ApprovalInboxPage>;
+
+function removeInboxApproval(
+  cache: ApprovalInboxCache | undefined,
+  approvalId: number,
+): ApprovalInboxCache | undefined {
+  if (!cache) return cache;
+  if (Array.isArray(cache)) return cache.filter((item) => item.id !== approvalId);
+  return {
+    ...cache,
+    pages: cache.pages.map((page) => ({
+      ...page,
+      data: page.data.filter((item) => item.id !== approvalId),
+    })),
+  };
+}
+
 export function useApprovalInbox() {
   const canView = useCan("build:approvals:view");
-  return useQuery<ApprovalInboxItem[]>({
+  return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.approvals.inbox(),
-    queryFn: ({ signal }) => apiClient.get<ApprovalInboxItem[]>("/build/approvals/inbox", undefined, signal, approvalInboxListContract),
+    queryFn: ({ pageParam, signal }) => apiClient.get(
+      "/build/approvals/inbox",
+      pageParam !== undefined ? { cursor: pageParam } : undefined,
+      signal,
+      approvalInboxPageContract,
+    ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView,
     staleTime: 120_000,
     refetchInterval: 120_000,
@@ -77,12 +108,19 @@ export function useProjectApprovals(projectId: number, filters?: ApprovalFilters
   if (filters?.status) params["status"] = filters.status;
   if (filters?.entityType) params["entityType"] = filters.entityType;
 
-  return useQuery<Approval[]>({
+  return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.approvals.list(
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: ({ signal }) => apiClient.get<Approval[]>(`/build/${projectId}/approvals`, params, signal, approvalListContract),
+    queryFn: ({ pageParam, signal }) => apiClient.get(
+      `/build/${projectId}/approvals`,
+      pageParam !== undefined ? { ...params, cursor: pageParam } : params,
+      signal,
+      approvalPageContract,
+    ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -112,9 +150,9 @@ export function useDecideApproval(projectId: number) {
         buildWorkQueryKeys.projects.approvals.inboxCount(),
         (old) => (old !== undefined ? { count: Math.max(0, old.count - 1) } : old),
       );
-      qc.setQueryData<ApprovalInboxItem[]>(
+      qc.setQueryData<ApprovalInboxCache>(
         buildWorkQueryKeys.projects.approvals.inbox(),
-        (old) => old?.filter((item) => item.id !== vars.approvalId),
+        (old) => removeInboxApproval(old, vars.approvalId),
       );
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.list(projectId) });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.detail(projectId, vars.approvalId) });
@@ -147,9 +185,9 @@ export function useDeleteApproval(projectId: number) {
         buildWorkQueryKeys.projects.approvals.inboxCount(),
         (old) => (old !== undefined ? { count: Math.max(0, old.count - 1) } : old),
       );
-      qc.setQueryData<ApprovalInboxItem[]>(
+      qc.setQueryData<ApprovalInboxCache>(
         buildWorkQueryKeys.projects.approvals.inbox(),
-        (old) => old?.filter((item) => item.id !== approvalId),
+        (old) => removeInboxApproval(old, approvalId),
       );
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.list(projectId) });
     },

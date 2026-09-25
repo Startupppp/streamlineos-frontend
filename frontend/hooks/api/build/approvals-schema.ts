@@ -17,6 +17,15 @@ export const approvalInboxItemContract = z.object({
 
 export const approvalInboxListContract = z.array(approvalInboxItemContract);
 
+export const approvalInboxPageContract = z.object({
+  data: z.array(approvalInboxItemContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
 export const approvalRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -39,5 +48,14 @@ export const approvalRowContract = z.object({
 });
 
 export const approvalListContract = z.array(approvalRowContract);
+
+export const approvalPageContract = z.object({
+  data: z.array(approvalRowContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
 
 export const approvalInboxCountContract = z.object({ count: z.number().int().nonnegative() });

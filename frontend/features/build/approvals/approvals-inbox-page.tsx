@@ -9,7 +9,11 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import {
+  StatCard,
+  StatCardGrid,
+  StatCardGridSkeleton,
+} from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DecideDialog } from "./decide-dialog";
@@ -20,16 +24,9 @@ import {
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
 import { STATUS_OPTIONS } from "./approvals-constants";
-import type {
-  ApprovalInboxItem,
-  DecideApprovalInput,
-} from "@/types/projects";
+import type { ApprovalInboxItem, DecideApprovalInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  PmPageShell,
-  PmSection,
-  PM_FILL_PANEL,
-} from "@/components/pm-chrome";
+import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import {
   INBOX_TABLE_HEADERS,
   type DecideTarget,
@@ -49,7 +46,20 @@ export function ApprovalsInboxPage() {
     withSearch: false,
   });
 
-  const { data, isLoading, isError, error, refetch } = useApprovalInbox();
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useApprovalInbox();
+  const items = useMemo(
+    () => data?.pages.flatMap((page) => page.data) ?? [],
+    [data],
+  );
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
@@ -60,14 +70,13 @@ export function ApprovalsInboxPage() {
 
   const pending = useMemo(
     () =>
-      (data ?? []).filter(
-        (a) => a.status === "pending" || a.status === "requested",
-      ).length,
-    [data],
+      items.filter((a) => a.status === "pending" || a.status === "requested")
+        .length,
+    [items],
   );
   const overdue = useMemo(() => {
     const now = new Date();
-    return (data ?? []).filter(
+    return items.filter(
       (a) =>
         a.dueAt &&
         new Date(a.dueAt) < now &&
@@ -75,13 +84,13 @@ export function ApprovalsInboxPage() {
         a.status !== "rejected" &&
         a.status !== "cancelled",
     ).length;
-  }, [data]);
+  }, [items]);
 
   const filteredItems = useMemo(() => {
-    const all = data ?? [];
+    const all = items;
     if (statusValue === BUILD_FILTER_ALL) return all;
     return all.filter((a) => a.status === statusValue);
-  }, [data, statusValue]);
+  }, [items, statusValue]);
 
   const memberName = useCallback(
     (userId: string | null): string => {
@@ -140,7 +149,12 @@ export function ApprovalsInboxPage() {
   );
 
   const columns = useMemo(
-    () => buildApprovalsInboxColumns({ canDecide, memberName, onDecide: handleDecideClick }),
+    () =>
+      buildApprovalsInboxColumns({
+        canDecide,
+        memberName,
+        onDecide: handleDecideClick,
+      }),
     [canDecide, memberName, handleDecideClick],
   );
 
@@ -211,7 +225,8 @@ export function ApprovalsInboxPage() {
           <PageState
             resolution={pageState}
             loading={
-              <DataTableSkeleton mobileCards
+              <DataTableSkeleton
+                mobileCards
                 rows={12}
                 headers={INBOX_TABLE_HEADERS}
                 className="flex-1"
@@ -234,7 +249,14 @@ export function ApprovalsInboxPage() {
               data={filteredItems}
               columns={columns}
               getRowKey={(row) => `${row.projectId}-${row.id}`}
-              pagination={{ pageSize: 25 }}
+              pagination={{
+                mode: "cursor",
+                pageSize: 25,
+                hasMore: Boolean(hasNextPage),
+                hasPrevious: false,
+                onNext: () => void fetchNextPage(),
+              }}
+              isLoading={isFetchingNextPage}
               minWidth="680px"
               mobileCard={renderMobileCard}
               className={PM_FILL_PANEL}
