@@ -108,6 +108,7 @@ export function EffectiveRulesPreview() {
           type="date"
           value={date}
           onChange={handleDateChange}
+          aria-label="Effective date"
           className="w-40"
         />
         <span className="text-xs text-muted-foreground">

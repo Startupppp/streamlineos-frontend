@@ -129,7 +129,7 @@ export function PolicyVersionsPage() {
             value={entity}
             onValueChange={handleEntityChange}
           >
-            <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+            <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)} aria-label="Entity type">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

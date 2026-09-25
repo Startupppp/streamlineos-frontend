@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { useCursorPager } from "@/components/ui/table-pagination";
@@ -264,10 +264,10 @@ export function HrPoliciesPage() {
         ) : undefined
       }
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput placeholder="Search policies..." value={search} onValueChange={handleSearchChange} />
           <Select value={typeFilter} onValueChange={handleTypeFilterChange}>
-            <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
+            <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)} aria-label="Policy type">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -278,7 +278,7 @@ export function HrPoliciesPage() {
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className={cn("w-32", FILTER_SELECT_TRIGGER)}>
+            <SelectTrigger className={cn("w-32", FILTER_SELECT_TRIGGER)} aria-label="Policy status">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
