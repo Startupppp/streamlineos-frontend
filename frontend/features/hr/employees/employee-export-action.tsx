@@ -70,7 +70,8 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
     // A stored id the server will not serve any more must not nag on every
     // visit. Only "gone" counts: dropping the id on a transient 5xx would
     // abandon an export that is still running.
-    if (isApiError(exportJob.error) && [404, 410].includes(exportJob.error.status)) {
+    const status = isApiError(exportJob.error) ? exportJob.error.status : undefined;
+    if (status === 404 || status === 410) {
       clearExportJobId(scope);
     }
     const message = getErrorMessage(exportJob.error);
