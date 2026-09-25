@@ -112,7 +112,7 @@ settings page, workspace membership, or workspace scope in the sidebar.
   submission.
 - Client-ready views show approved roadmap, release, and update data only.
 
-- [ ] **BLD-02A-014** product overview metrics reconcile to their source pages.
+- [x] **BLD-02A-014** product overview metrics reconcile to their source pages.
 - [x] **BLD-02A-015** product feedback rows open valid, permission-safe detail
   routes and never lose `projectId`.
 - [ ] **BLD-02A-016** linking and unlinking projects is transactional,
