@@ -11,7 +11,19 @@ linked records. There is no offline signal and no save timestamp, so a user who 
 mid-edit sees nothing. Export serializes client-side and therefore bypasses `kb:pages:export`
 entirely — the permission exists and does not gate anything.
 
-**Migration tag allocated to you:** `1211_kb_page_export_grant`.
+**Migration tag allocated to you: none — and this was corrected on 2026-09-25.**
+
+The brief originally allocated `1211_kb_page_export_grant`. That was wrong, and the orchestrator
+measured it before you ran. **BE-111: widen a role template and let `RoleGrantReconcilerService`
+converge at boot. Never backfill grants by migration** — a migration-written key violates the FK
+until catalog sync runs. Migration 1203 got away with it only because its key already existed.
+
+The grant work is **already done**, in `8dc7a95fe`. Measured against production first: zero roles
+held `kb:pages:export`, and `kb:pages:import`, `kb:reviews:view`, `kb:reviews:manage` and
+`kb:settings:manage` were in **no role template at all**, so no role could ever hold them. All five
+were added to the `CUSTOMER_SUPPORT` template, pinned by
+`backend/src/modules/rbac/kb-role-template-reachability.spec.ts`. Do not write a migration for
+this, and do not re-measure it as an open item.
 
 ## Files you own
 
@@ -52,11 +64,9 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
 - [ ] Server-side export behind `kb:pages:export`: a route that authorizes, serializes on the
       server via `kb-export-serializer.ts`, and returns an expiring download. The client-side
       serializer stops being the export path.
-- [ ] `1211` grants `kb:pages:export` to the roles that legitimately hold it today. **Measure the
-      current grant population before writing it** — if zero roles hold the key, gating the route
-      revokes export from everyone. Expand before you contract: the grant lands before the code
-      that requires it. End the migration with a postcondition that raises if the intended
-      population is not reached.
+- [x] `kb:pages:export` is reachable through a role template — done in `8dc7a95fe`, see above.
+      Your remaining obligation is ordering: the template widening must be **deployed** before the
+      client stops serializing locally, or export breaks for everyone between the two.
 - [ ] Connectivity signal: an explicit offline state on the editor, with queued-save behaviour and
       recovery when the network returns.
 - [ ] Save timestamp and state are visible: saving, saved-at, and failed-with-retry.

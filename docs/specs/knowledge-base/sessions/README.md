@@ -24,6 +24,9 @@ Each session closes only when **every** checkbox in its own `SESSION-0N.md` is `
    `merge`, `commit`, `push`, `apply`, `revert` are forbidden — other sessions are editing the same
    tree and a single `restore` destroys their work. Read-only `git diff`/`git log`/`git status` is
    fine. The orchestrator commits.
+   **`git add` is banned too.** The index is shared across all eight sessions: one `git add -A`
+   stages every other session's half-finished files, and the next commit sweeps them in. This
+   happened on 2026-09-25 — leave your work unstaged and let the orchestrator stage by pathspec.
 3. **Never edit `backend/migrations/meta/_journal.json`.** Write your `.sql` and its
    `rollback/*.down.sql` using the migration tag pre-allocated to you, then post a `HANDOFF`.
    The orchestrator journals and applies it to production.
@@ -66,7 +69,7 @@ Use only the tag allocated to you. Do not invent a number — a collision corrup
 | 03 | `1206_kb_space_member_counts` |
 | 05 | `1207_kb_version_restore_audit` |
 | 06 | `1208_kb_ai_interactions`, `1209_kb_events_correlation_id` |
-| 04 | `1211_kb_page_export_grant` |
+| 04 | none — the export grant was a role-template change, not a migration (BE-111) |
 | 07 | `1212_kb_indexed_bytes_quota` |
 | 08 | `1210_kb_page_grants_plan_evidence` |
 | 02 | `1213` (spare, only if needed) |
