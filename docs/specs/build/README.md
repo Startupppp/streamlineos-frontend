@@ -1534,7 +1534,7 @@ packet's write set):
 
 | Anchor | Lead |
 |---|---|
-| `features/build/goals/key-result-row.tsx:27-29` | The "Check in" button has no `useCan("build:goals:manage")` gate — same defect class as the four just fixed, missed only because the file was excluded from the write set. Server-gated, so UX not security |
+| `features/build/goals/key-result-row.tsx:27-29` | **Fixed 2026-09-25** — the "Check in" button is now rendered only when the parent goal detail has `build:goals:manage`; the dialog mount is gated by the same capability and a focused denial regression covers the row. |
 | `features/build/goals/constants.ts:92` | `keyResultPercent` applies `Math.round` per key result, while the backend rounds only after averaging — a KR at 99.5% displays "100%" on its own bar. Goal-level progress is unaffected |
 | `hooks/api/goals.ts` + `goals-schema.ts` | `useUpdateGoal`/`useCheckIn` type their response as the bare `goalRowContract`, but `update` and `checkIn` actually return the full `GoalDetail` via `getGoal()`. Inert today (no consumer reads the returned value) but the contract comment is factually wrong and will mislead the first consumer |
 

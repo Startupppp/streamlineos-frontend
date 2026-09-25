@@ -248,7 +248,12 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
           ) : (
             <div className="space-y-2">
               {detail.keyResults.map((kr) => (
-                <KeyResultRow key={kr.id} keyResult={kr} onCheckIn={handleCheckIn} />
+                <KeyResultRow
+                  key={kr.id}
+                  keyResult={kr}
+                  onCheckIn={handleCheckIn}
+                  canManage={canManage}
+                />
               ))}
             </div>
           )}
@@ -336,7 +341,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
       </PmPageShell>
 
       {editOpen ? <GoalFormSheet open={editOpen} onOpenChange={setEditOpen} goal={detail} /> : null}
-      {checkInTarget ? (
+      {checkInTarget && canManage ? (
         <CheckInDialog
           goalId={goalId}
           keyResult={checkInTarget}

@@ -231,7 +231,16 @@ const FULL_GOAL_DETAIL = {
   dueDate: null,
   project: null,
   owner: null,
-  keyResults: [],
+  keyResults: [
+    {
+      id: 7,
+      title: "Activation rate",
+      metricType: "percentage",
+      unit: "%",
+      currentValue: 40,
+      targetValue: 80,
+    },
+  ],
   links: [],
   updates: [],
 };
@@ -279,6 +288,7 @@ it("hides edit, delete and add-link controls when build:goals:manage is denied, 
   expect(screen.queryByText("Edit")).not.toBeInTheDocument();
   expect(screen.queryByText("Delete")).not.toBeInTheDocument();
   expect(screen.queryByText("Link")).not.toBeInTheDocument();
+  expect(screen.queryByText("Check in")).not.toBeInTheDocument();
 });
 
 it("shows edit, delete and add-link controls when build:goals:manage is granted", () => {
