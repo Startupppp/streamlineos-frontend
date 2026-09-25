@@ -73,6 +73,12 @@ describe("resolvePageState", () => {
       .toBe("denied");
   });
 
+  it("renders a missing record as an empty state", () => {
+    expect(pageStateFromError(new ApiError("Not found", 404, "NOT_FOUND"))).toEqual({
+      kind: "empty",
+    });
+  });
+
   it("degrades a malformed denial payload rather than throwing inside a render", () => {
     const error = new ApiError("nope", 402, "MODULE_NOT_ENABLED", { moduleKey: 7 });
     expect(pageStateFromError(error)).toEqual({ kind: "module-disabled", moduleKey: "" });

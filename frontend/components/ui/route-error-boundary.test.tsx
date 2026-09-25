@@ -126,6 +126,10 @@ describe("shouldReportRouteError", () => {
   it("still reports a non-transient failure immediately", () => {
     expect(shouldReportRouteError(new Error("boom"), "/build/command-center")).toBe(true);
   });
+
+  it("does not report an expected missing-record response", () => {
+    expect(shouldReportRouteError(new ApiError("Not found", 404, "NOT_FOUND"), "/build/teams/1")).toBe(false);
+  });
 });
 
 describe("access denials that escape a query render the shared page state instead of a generic card", () => {

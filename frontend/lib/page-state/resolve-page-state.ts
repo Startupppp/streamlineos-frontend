@@ -67,6 +67,7 @@ export function fromModuleDenial(
 
 export function pageStateFromError(error: unknown): PageStateResolution | null {
   if (!isApiError(error)) return null;
+  if (error.status === 404) return { kind: "empty" };
   if (error.status === 403)
     return { kind: "denied", permission: null, message: getErrorMessage(error) };
   if (error.status !== 402) return null;

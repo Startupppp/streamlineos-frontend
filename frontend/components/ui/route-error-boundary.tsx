@@ -13,6 +13,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { PageState } from "@/components/shared/page-state";
 import { pageStateFromError } from "@/lib/page-state/resolve-page-state";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
+import { isApiError } from "@/lib/api-envelope";
 
 interface NetworkRetryBudget {
   readonly attempts: number;
@@ -42,6 +43,7 @@ function spentNetworkRetries(routeKey: string): number {
 }
 
 export function shouldReportRouteError(error: unknown, routeKey: string): boolean {
+  if (isApiError(error) && error.status === 404) return false;
   if (!isTransientNetworkError(error)) return true;
   return spentNetworkRetries(routeKey) >= MAX_NETWORK_AUTO_RETRIES;
 }
