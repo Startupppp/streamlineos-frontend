@@ -108,6 +108,9 @@ The candidate was exercised through a real authenticated browser against the pro
   Managed Products, Portfolios, Programs, Roadmap, Teams, Templates,
   Approvals, and Build settings, without a visible runtime-error or failed-load
   surface.
+- A second local port `1000` UI smoke traversed 29 project routes under
+  `/build/6`, including delivery, collaboration, QA, governance, settings,
+  and reporting surfaces, without a visible runtime-error or not-found surface.
 - Local port `1000` view-switcher verification routed `/build/6/issues` to
   `/calendar?q=login&status=TODO&cycle=7&projectId=6&source=build`; the unified
   Calendar surface rendered with no browser console errors.
