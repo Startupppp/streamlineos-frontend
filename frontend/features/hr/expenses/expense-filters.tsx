@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Filter } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DownloadIcon } from "@animateicons/react/lucide";
@@ -37,52 +36,6 @@ const DATE_PRESETS = [
   "custom",
   "all",
 ] as const satisfies readonly DatePreset[];
-
-function MemberStatusTab({
-  status,
-  index,
-  totalCount,
-  isActive,
-  onStatusChange,
-}: {
-  status: StatusFilter;
-  index: number;
-  totalCount: number;
-  isActive: boolean;
-  onStatusChange: (status: StatusFilter) => void;
-}) {
-  function handleClick() {
-    onStatusChange(status);
-  }
-  function handleKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
-    let nextIdx = index;
-    if (e.key === "ArrowRight") nextIdx = (index + 1) % totalCount;
-    else if (e.key === "ArrowLeft")
-      nextIdx = (index - 1 + totalCount) % totalCount;
-    else return;
-    e.preventDefault();
-    onStatusChange(STATUS_FILTERS[nextIdx]);
-    const sibling = e.currentTarget.parentElement?.children[nextIdx];
-    if (sibling instanceof HTMLElement) sibling.focus();
-  }
-  return (
-    <button
-      role="tab"
-      aria-selected={isActive}
-      tabIndex={isActive ? 0 : -1}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      className={cn(
-        "h-7 px-3 rounded-lg text-xs font-medium transition-all duration-200",
-        isActive
-          ? "bg-background text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {status === "ALL" ? "All Claims" : STATUS_LABELS[status]}
-    </button>
-  );
-}
 
 interface EmployeeOption {
   id: string;
@@ -162,6 +115,8 @@ interface MemberExpenseFiltersProps {
   filters: ExpenseFilters;
   onStatusChange: (status: StatusFilter) => void;
   onDatePresetChange: (preset: DatePreset) => void;
+  /** `POST /hr/expenses/export/jobs` needs `hr:expenses:read`. */
+  canExport: boolean;
 }
 
 export function MemberExpenseFilters({
@@ -170,6 +125,7 @@ export function MemberExpenseFilters({
   filters,
   onStatusChange,
   onDatePresetChange,
+  canExport,
 }: MemberExpenseFiltersProps) {
   function handleDatePresetChange(v: string) {
     const next = DATE_PRESETS.find((candidate) => candidate === v);
@@ -178,22 +134,17 @@ export function MemberExpenseFilters({
 
   return (
     <div className={cn(FILTER_TOOLBAR_ROW, "justify-between")}>
-      <div
-        className="flex items-center gap-0.5 bg-muted p-1 rounded-xl"
-        role="tablist"
-        aria-label="Filter by status"
-      >
-        {STATUS_FILTERS.map((s, i, arr) => (
-          <MemberStatusTab
-            key={s}
-            status={s}
-            index={i}
-            totalCount={arr.length}
-            isActive={statusFilter === s}
-            onStatusChange={onStatusChange}
-          />
+      <FilterPillGroup aria-label="Filter by status">
+        {STATUS_FILTERS.map((status) => (
+          <FilterPill
+            key={status}
+            active={statusFilter === status}
+            onClick={() => onStatusChange(status)}
+          >
+            {status === "ALL" ? "All Claims" : STATUS_LABELS[status]}
+          </FilterPill>
         ))}
-      </div>
+      </FilterPillGroup>
       <div className="flex items-center gap-2">
         <Select value={datePreset} onValueChange={handleDatePresetChange}>
           <SelectTrigger
@@ -211,6 +162,7 @@ export function MemberExpenseFilters({
             <SelectItem value="this_year">This Year</SelectItem>
           </SelectContent>
         </Select>
+        {canExport && (
         <ExpenseExportDialog
           filters={filters}
           trigger={
@@ -224,6 +176,7 @@ export function MemberExpenseFilters({
             />
           }
         />
+        )}
       </div>
     </div>
   );
