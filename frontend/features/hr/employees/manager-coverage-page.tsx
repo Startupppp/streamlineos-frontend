@@ -16,6 +16,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useManagerCoverage } from "@/hooks/api/hr/reporting-lines";
 import type { ManagerCoverageReport, ManagerState } from "@/hooks/api/hr/reporting-lines-schema";
 import { formatShortDate } from "@/lib/date-utils";
+import { UserCombobox } from "@/components/ui/user-combobox";
+import { useUpdateProfile } from "@/hooks/api/hr/employee-profile";
+import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { toast } from "sonner";
 
 const PAGE_TITLE = "Manager coverage";
 const PAGE_SUBTITLE = "Employees whose approvals have no dependable owner, and reporting lines that need repair";
@@ -36,6 +41,36 @@ function personLink(userId: string | null, name: string | null, fallback: string
     <Link href={`/hr/employees/${userId}`} className="truncate text-primary hover:underline">
       {label}
     </Link>
+  );
+}
+
+// Writes through the same employee PATCH the profile form uses, so the new
+// line is dated today and kept in reporting-line history; the mutation
+// invalidates this report, so a fixed row drops out on its own.
+function AssignManagerCell({ userId, currentManagerUserId }: { userId: string | null; currentManagerUserId?: string | null }) {
+  const updateProfile = useUpdateProfile();
+  if (!userId) return <span className="text-xs text-muted-foreground">No user account</span>;
+
+  function handleChange(managerUserId: string) {
+    if (!userId || !managerUserId) return;
+    updateProfile.mutate(
+      { userId, reportingTo: managerUserId },
+      {
+        onSuccess: () => toast.success("Manager updated"),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
+  return (
+    <UserCombobox
+      value={currentManagerUserId ?? ""}
+      onChange={handleChange}
+      placeholder="Assign manager"
+      excludeUserId={userId}
+      disabled={updateProfile.isPending}
+      className="w-56"
+    />
   );
 }
 
@@ -77,6 +112,18 @@ const OVER_SPAN_COLUMNS: DataTableColumn<ManagerCoverageReport["overSpan"][numbe
   { key: "reports", header: "Direct reports", cell: (row) => <span className="font-mono tabular-nums">{row.directReports}</span> },
 ];
 
+const WITHOUT_MANAGER_ASSIGN_COLUMN: DataTableColumn<ManagerCoverageReport["withoutManager"][number]> = {
+  key: "assign",
+  header: "Manager",
+  cell: (row) => <AssignManagerCell userId={row.userId} />,
+};
+
+const INACTIVE_MANAGER_ASSIGN_COLUMN: DataTableColumn<ManagerCoverageReport["inactiveManager"][number]> = {
+  key: "assign",
+  header: "Change manager",
+  cell: (row) => <AssignManagerCell userId={row.userId} currentManagerUserId={row.managerUserId} />,
+};
+
 const WITHOUT_MANAGER_HEADERS = WITHOUT_MANAGER_COLUMNS.map((column) => column.header);
 
 function LoadingBody() {
@@ -91,6 +138,7 @@ function LoadingBody() {
 export function ManagerCoveragePage() {
   const { data, isLoading, isError, error, refetch } = useManagerCoverage();
   const [tab, setTab] = useState<CoverageTab>("withoutManager");
+  const canEdit = useCan("hr:employees:update");
   const pageState = usePageState({ permission: "hr:employees:view", module: "hr", isLoading, isError, error });
 
   function handleRetry() {
@@ -149,7 +197,7 @@ export function ManagerCoveragePage() {
                 <DataTable
                   className="flex-1 min-h-0"
                   data={data.withoutManager}
-                  columns={WITHOUT_MANAGER_COLUMNS}
+                  columns={canEdit ? [...WITHOUT_MANAGER_COLUMNS, WITHOUT_MANAGER_ASSIGN_COLUMN] : WITHOUT_MANAGER_COLUMNS}
                   getRowKey={(row) => row.employmentId}
                   emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="Everyone has a manager" description="Every active employee reports to someone." />}
                   pagination={{ pageSize: 25 }}
@@ -159,7 +207,7 @@ export function ManagerCoveragePage() {
                 <DataTable
                   className="flex-1 min-h-0"
                   data={data.inactiveManager}
-                  columns={INACTIVE_MANAGER_COLUMNS}
+                  columns={canEdit ? [...INACTIVE_MANAGER_COLUMNS, INACTIVE_MANAGER_ASSIGN_COLUMN] : INACTIVE_MANAGER_COLUMNS}
                   getRowKey={(row, index) => `${row.userId ?? "employee"}-${index}`}
                   emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="All managers are active" description="No employee reports to an exited, suspended or deactivated manager." />}
                   pagination={{ pageSize: 25 }}

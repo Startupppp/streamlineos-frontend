@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { UNSCOPED, orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { Check, Circle, CircleDot, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,14 +25,12 @@ function StepIcon({ status }: { status: HrSetupStep["status"] }) {
 // cleared browser shows the checklist again, which is harmless.
 const dismissListeners = new Set<() => void>();
 
-function dismissedKey(orgId: string): string {
-  return `hr_start_here_dismissed_${orgId}`;
-}
+const DISMISSED_KEY = "hr_start_here_dismissed";
 
-function readDismissed(orgId: string | undefined): boolean {
-  if (!orgId) return false;
+function readDismissed(scope: string): boolean {
+  if (scope === UNSCOPED) return false;
   try {
-    return localStorage.getItem(dismissedKey(orgId)) === "true";
+    return localStorage.getItem(orgScopedStorageKey(DISMISSED_KEY, scope)) === "true";
   } catch {
     return false;
   }
@@ -45,10 +43,10 @@ function subscribeDismissed(callback: () => void): () => void {
   };
 }
 
-function persistDismissed(orgId: string | undefined): void {
-  if (!orgId) return;
+function persistDismissed(scope: string): void {
+  if (scope === UNSCOPED) return;
   try {
-    localStorage.setItem(dismissedKey(orgId), "true");
+    localStorage.setItem(orgScopedStorageKey(DISMISSED_KEY, scope), "true");
   } catch {
     return;
   }
@@ -56,13 +54,16 @@ function persistDismissed(orgId: string | undefined): void {
 }
 
 export function HrStartHereChecklist({ signals }: { signals: HrSetupSignals | null }) {
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? undefined;
+  const scope = useOrgStorageScope();
   const dismissed = useSyncExternalStore(
     subscribeDismissed,
-    () => readDismissed(orgId),
+    () => readDismissed(scope),
     () => false,
   );
+
+  function handleDismiss() {
+    persistDismissed(scope);
+  }
 
   if (!signals || dismissed) return null;
   const steps = hrStartHereSteps(signals);
@@ -76,13 +77,13 @@ export function HrStartHereChecklist({ signals }: { signals: HrSetupSignals | nu
         <div className="space-y-1">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-foreground">Start here</h2>
-            {orgId ? (
+            {scope !== UNSCOPED ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 shrink-0 text-muted-foreground"
-                onClick={() => persistDismissed(orgId)}
+                onClick={handleDismiss}
                 aria-label="Dismiss setup checklist"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
