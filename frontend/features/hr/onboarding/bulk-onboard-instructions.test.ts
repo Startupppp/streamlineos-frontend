@@ -1,4 +1,4 @@
-import { BULK_ONBOARD_COLUMNS } from "./bulk-onboard-template";
+import { BULK_ONBOARD_COLUMNS } from "./bulk-onboard-columns";
 import { buildBulkOnboardInstructionRows } from "./bulk-onboard-download";
 
 /**

@@ -1,4 +1,5 @@
-import { BULK_ONBOARD_COLUMNS, validateAndMap, type ParsedRow } from "./bulk-onboard-template";
+import { BULK_ONBOARD_COLUMNS, type ParsedRow } from "./bulk-onboard-columns";
+import { validateAndMap } from "./bulk-onboard-template";
 
 const DEPARTMENTS = new Set(["engineering"]);
 

@@ -23,13 +23,9 @@ import { useBulkOnboardEmployees } from "@/hooks/api/hr";
 import { useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import type { BulkOnboardEmployeeRow, BulkOnboardResult } from "@/types/hr";
 
-import {
-  BULK_ONBOARD_COLUMNS,
-  MAX_ROWS,
-  parseFile,
-  validateAndMap,
-  type PreviewRow,
-} from "./bulk-onboard-template";
+import { BULK_ONBOARD_COLUMNS, MAX_ROWS } from "./bulk-onboard-columns";
+import { parseFile } from "./bulk-onboard-parse";
+import { validateAndMap, type PreviewRow } from "./bulk-onboard-template";
 import { downloadBulkOnboardTemplate } from "./bulk-onboard-download";
 import { BulkOnboardPreviewTable } from "./bulk-onboard-preview-table";
 import { BulkOnboardResultPanel } from "./bulk-onboard-result-panel";

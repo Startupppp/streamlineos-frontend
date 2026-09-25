@@ -1,5 +1,5 @@
 import { downloadXlsx } from "@/lib/export/xlsx-utils";
-import { BULK_ONBOARD_COLUMNS, MAX_ROWS } from "./bulk-onboard-template";
+import { BULK_ONBOARD_COLUMNS, MAX_ROWS } from "./bulk-onboard-columns";
 
 /**
  * The Instructions sheet, extracted so a test can hold it against the columns.
