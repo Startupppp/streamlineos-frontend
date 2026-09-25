@@ -208,7 +208,7 @@ Typed events include:
 
 Consumers re-authorize reads; an event is not a data-access grant.
 
-- [ ] **BLD-07-016** inventory Build event producers and consumers.
+- [x] **BLD-07-016** inventory Build event producers and consumers. The only orphaned Build event was removed because incident status already persists a timeline entry and audit record, with no downstream consumer or user job for an outbox delivery.
 - [ ] **BLD-07-017** remove duplicate direct side effects where an owned outbox
   event exists.
 - [ ] **BLD-07-018** version compatibility, replay, poison message, and
