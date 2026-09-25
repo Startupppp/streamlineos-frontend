@@ -16,6 +16,9 @@ const kbResearchBriefBaseContract = {
   sourceCount: z.number().int(),
   errorMessage: z.string().nullable(),
   rating: z.enum(["helpful", "not_helpful"]).nullable(),
+  costCredits: z.number().int().nullable(),
+  provider: z.string().nullable(),
+  model: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 };

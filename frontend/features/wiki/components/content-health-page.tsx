@@ -42,6 +42,7 @@ const SIGNAL_TYPES: ContentHealthSignalType[] = [
   "broken_link",
   "overexposed",
   "duplicate_candidate",
+  "contradictory_claim",
 ];
 
 const SIGNAL_LABELS: Record<ContentHealthSignalType, string> = {
@@ -53,6 +54,7 @@ const SIGNAL_LABELS: Record<ContentHealthSignalType, string> = {
   broken_link: "Broken link",
   overexposed: "Overexposed",
   duplicate_candidate: "Duplicate candidate",
+  contradictory_claim: "Contradictory claim",
 };
 
 const SIGNAL_DESCRIPTIONS: Record<ContentHealthSignalType, string> = {
@@ -64,6 +66,7 @@ const SIGNAL_DESCRIPTIONS: Record<ContentHealthSignalType, string> = {
   broken_link: "Pages that contain links to deleted or missing pages",
   overexposed: "Pages marked public while their space is not a public help centre",
   duplicate_candidate: "Pages whose content is identical to another page in this org",
+  contradictory_claim: "Pages flagged as containing claims that contradict other pages",
 };
 
 interface CountChipProps {

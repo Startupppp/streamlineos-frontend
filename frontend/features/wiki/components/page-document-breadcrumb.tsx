@@ -8,7 +8,7 @@ import {
   KbChevronRightIcon,
   KbLoader2Icon,
 } from "@/features/wiki/lib/kb-icons";
-import { KNOWLEDGE_BASE, pageHref, projectPageHref } from "@/lib/knowledge-routes";
+import { KNOWLEDGE_BASE, KB_SPACES, pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import {
   KB_STATUS_LABELS,
@@ -21,6 +21,26 @@ interface PageDocumentBreadcrumbProps {
   savedAt?: Date | null;
   isOffline?: boolean;
   projectId?: number;
+}
+
+interface SpaceBreadcrumbProps {
+  spaceName: string;
+}
+
+export function SpaceBreadcrumb({ spaceName }: SpaceBreadcrumbProps) {
+  return (
+    <nav className="flex min-w-0 flex-1 items-center gap-1 text-sm text-muted-foreground">
+      <Link href={KNOWLEDGE_BASE} className="shrink-0 transition-colors hover:text-foreground">
+        Wiki
+      </Link>
+      <KbChevronRightIcon className="h-3 w-3 shrink-0" />
+      <Link href={KB_SPACES} className="shrink-0 transition-colors hover:text-foreground">
+        Spaces
+      </Link>
+      <KbChevronRightIcon className="h-3 w-3 shrink-0" />
+      <span className="min-w-0 truncate font-medium text-foreground">{spaceName}</span>
+    </nav>
+  );
 }
 
 function formatSavedAt(date: Date): string {

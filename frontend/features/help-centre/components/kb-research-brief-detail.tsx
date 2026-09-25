@@ -270,6 +270,14 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
             </p>
           )}
 
+          {brief.status === "completed" && (brief.model != null || brief.costCredits != null) && (
+            <p className="text-xs text-muted-foreground">
+              {brief.model != null ? brief.model : null}
+              {brief.model != null && brief.costCredits != null ? " · " : null}
+              {brief.costCredits != null ? `${brief.costCredits} credits` : null}
+            </p>
+          )}
+
           {citations.length > 0 && (
             <div className="space-y-1.5">
               <p className="text-dense font-medium uppercase tracking-wide text-muted-foreground">Sources</p>

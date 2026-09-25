@@ -17,7 +17,7 @@ import {
 } from "@/hooks/api/kb/spaces";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { KB_SPACES, pageHref } from "@/lib/knowledge-routes";
+import { pageHref } from "@/lib/knowledge-routes";
 import {
   KbArchiveIcon,
   KbLayoutGridIcon,
@@ -34,6 +34,7 @@ import { WikiPageCollectionTable } from "./wiki-page-collection-table";
 import { SpaceMembersSheet } from "./space-members-sheet";
 import { SpaceArchiveImpact } from "./space-archive-impact";
 import PageTree from "./page-tree";
+import { SpaceBreadcrumb } from "./page-document-breadcrumb";
 import type { KbAudience } from "@/types/kb";
 import { KB_ACCESS_LABELS, type KbSpaceRole } from "@/types/kb";
 
@@ -64,7 +65,13 @@ interface SpaceDetailPageProps {
 
 export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   const router = useRouter();
-  const { data: space, isLoading, isError, error, refetch } = useKbSpace(spaceId);
+  const {
+    data: space,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useKbSpace(spaceId);
   const canCreatePage = useCan("kb:pages:create");
   const canManage = useCan("kb:spaces:manage");
   const createPage = useCreateKbPage();
@@ -131,14 +138,19 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   }
 
   const audience: KbAudience = space?.audience ?? "internal";
-  const isArchived = space?.archivedAt !== undefined && space?.archivedAt !== null;
+  const isArchived =
+    space?.archivedAt !== undefined && space?.archivedAt !== null;
   const pagesOverdueForReview = space?.pagesOverdueForReview ?? 0;
   const pagesWithReviewPolicy = space?.pagesWithReviewPolicy ?? 0;
 
   const headerActions = space ? (
     <div className="flex items-center gap-1.5">
       {canCreatePage && (
-        <Button size="sm" onClick={handleNewPage} disabled={createPage.isPending}>
+        <Button
+          size="sm"
+          onClick={handleNewPage}
+          disabled={createPage.isPending}
+        >
           <KbPlusIcon className="h-4 w-4 mr-1.5" />
           New page
         </Button>
@@ -151,12 +163,21 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       )}
       {canManage &&
         (isArchived ? (
-          <Button variant="outline" size="sm" onClick={handleRestore} disabled={restoreSpace.isPending}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRestore}
+            disabled={restoreSpace.isPending}
+          >
             <KbRotateCcwIcon className="h-4 w-4 mr-1.5" />
             Restore
           </Button>
         ) : (
-          <Button variant="outline" size="sm" onClick={handleOpenArchiveConfirm}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleOpenArchiveConfirm}
+          >
             <KbArchiveIcon className="h-4 w-4 mr-1.5" />
             Archive
           </Button>
@@ -168,7 +189,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
     <PageWrapper
       title={space?.name ?? "Space"}
       subtitle={space?.description ?? undefined}
-      backHref={KB_SPACES}
+      leading={<SpaceBreadcrumb spaceName={space?.name ?? "Space"} />}
       actions={headerActions}
     >
       <PageState
@@ -214,7 +235,10 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
                   </Badge>
                 )}
                 {isArchived && (
-                  <Badge variant="outline" className="text-micro h-4 px-1.5 bg-muted text-muted-foreground border-border">
+                  <Badge
+                    variant="outline"
+                    className="text-micro h-4 px-1.5 bg-muted text-muted-foreground border-border"
+                  >
                     Archived
                   </Badge>
                 )}
@@ -225,13 +249,17 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
                 </p>
               )}
               {canManage && pagesWithReviewPolicy > 0 && (
-                <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground" suppressHydrationWarning>
+                <div
+                  className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground"
+                  suppressHydrationWarning
+                >
                   {pagesOverdueForReview > 0 && (
                     <KbTriangleAlertIcon className="h-3.5 w-3.5 text-status-warning-ink-strong" />
                   )}
                   <span>
-                    {pagesWithReviewPolicy} {pagesWithReviewPolicy === 1 ? "page" : "pages"} under review
-                    policy
+                    {pagesWithReviewPolicy}{" "}
+                    {pagesWithReviewPolicy === 1 ? "page" : "pages"} under
+                    review policy
                     {pagesOverdueForReview > 0
                       ? ` · ${pagesOverdueForReview} overdue`
                       : ""}

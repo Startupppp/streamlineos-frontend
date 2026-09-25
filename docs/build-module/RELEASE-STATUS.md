@@ -87,6 +87,7 @@ Current release-candidate checks:
 - Workflow assertion-cleanup matrix: nine suites, 94 tests passed.
 - `check:pm-workspace-removal`: pass across source and built chunks.
 - `check:route-access-contract`: pass.
+- `check-build-execution-plan.mjs` and `frontend pnpm run check:prd-traceability` pass; the restored control plan is present and 103 owned acceptance checkboxes map to 10 criterion sections. These structural checks do not close the remaining product acceptance criteria.
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
 - A fresh frontend `pnpm run type-check` rerun on 2026-09-25 is currently red on concurrent Knowledge Base work, not Build code: `features/wiki/components/knowledge-analytics-page.tsx` has four `InfiniteData` narrowing errors plus two implicit-any errors, and `hooks/api/kb/analytics.ts` has a missing `KbGapRelatedPageRow` export and missing `queryKeys.gapRelatedPages`. Preserve those unrelated edits for their owning session; this is not current Build evidence.
