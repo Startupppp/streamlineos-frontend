@@ -17,6 +17,7 @@ jest.mock("@/components/shared/hr-sheet", () => ({ HrSheet: () => null }));
 jest.mock("@/components/ui/confirm-sheet", () => ({ ConfirmSheet: () => null }));
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/org-display", () => ({ useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }) }));
 
 jest.mock("@/components/shared/page-state", () => ({
   PageState: ({ resolution, loading, children, onRetry }: { resolution: { kind: string; error?: unknown }; loading: ReactNode; children: ReactNode; onRetry?: () => void }) => {

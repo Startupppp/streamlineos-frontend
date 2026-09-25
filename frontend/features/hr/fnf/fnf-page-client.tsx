@@ -18,7 +18,9 @@ import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, FileSpreadsheet, IndianRupee, CheckCircle2 } from "lucide-react";
+import { Plus, FileSpreadsheet, CheckCircle2 } from "lucide-react";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoney, type MoneyDisplay } from "@/lib/format-utils";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -29,34 +31,43 @@ import {
   type FnfSettlement,
 } from "@/hooks/api/hr/fnf";
 
+function isInReview(status: string | null): boolean {
+  return status === "PENDING_APPROVAL" || status === "HR_REVIEW" || status === "FINANCE_REVIEW";
+}
+
 function fnfStatusBadgeClass(status: string | null): string {
   if (status === "PAID") return "bg-status-success-surface text-status-success-ink border-status-success-rule";
   if (status === "APPROVED") return "bg-status-info-surface text-status-info-ink border-status-info-rule";
-  if (status === "PENDING_APPROVAL") return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
+  if (isInReview(status)) return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
   return "bg-muted text-muted-foreground border-border";
 }
 
 function fnfStatusLabel(status: string | null): string {
   if (status === "PAID") return "Paid";
-  if (status === "APPROVED") return "Processing";
+  if (status === "APPROVED") return "Approved";
   if (status === "PENDING_APPROVAL") return "Pending";
+  if (status === "HR_REVIEW") return "HR review";
+  if (status === "FINANCE_REVIEW") return "Finance review";
   return "Draft";
 }
 
 function fnfBorderClass(status: string | null): string {
-  if (status === "PAID") return "border-l-emerald-500";
-  if (status === "APPROVED") return "border-l-blue-400";
-  if (status === "PENDING_APPROVAL") return "border-l-amber-400";
-  return "border-l-border dark:border-l-slate-600";
+  if (status === "PAID") return "border-l-status-success-rule";
+  if (status === "APPROVED") return "border-l-status-info-rule";
+  if (isInReview(status)) return "border-l-status-warning-rule";
+  return "border-l-border";
 }
 
 interface FnfCardProps {
   item: FnfSettlement;
   onMarkPaid: (id: number) => void;
+  /** PATCH /hr/fnf/:id needs hr:exit:manage. */
+  canMarkPaid: boolean;
   isPending: boolean;
+  money: MoneyDisplay;
 }
 
-function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
+function FnfCard({ item, onMarkPaid, canMarkPaid, isPending, money }: FnfCardProps) {
   const handleMarkPaid = useCallback(() => onMarkPaid(item.id), [item.id, onMarkPaid]);
 
   return (
@@ -75,7 +86,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
                 ? "bg-status-success-surface"
                 : item.status === "APPROVED"
                   ? "bg-status-info-surface"
-                  : item.status === "PENDING_APPROVAL"
+                  : isInReview(item.status)
                     ? "bg-status-warning-surface"
                     : "bg-muted"
             )}
@@ -87,7 +98,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
                   ? "text-status-success-ink"
                   : item.status === "APPROVED"
                     ? "text-status-info-ink"
-                    : item.status === "PENDING_APPROVAL"
+                    : isInReview(item.status)
                       ? "text-status-warning-ink"
                       : "text-muted-foreground"
               )}
@@ -111,19 +122,18 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
 
             <div className="flex gap-3 text-micro text-muted-foreground mt-1 flex-wrap">
               {item.netPayable && (
-                <span className="flex items-center gap-0.5 font-semibold text-foreground">
-                  <IndianRupee className="h-3 w-3" />
-                  {Number(item.netPayable).toLocaleString("en-IN")} net payable
+                <span className="font-semibold text-foreground tabular-nums">
+                  {formatMoney(item.netPayable, money)} net payable
                 </span>
               )}
               {item.deductions && Number(item.deductions) > 0 && (
-                <span className="text-status-danger-ink">
-                  −₹{Number(item.deductions).toLocaleString("en-IN")} deductions
+                <span className="text-status-danger-ink tabular-nums">
+                  −{formatMoney(item.deductions, money)} deductions
                 </span>
               )}
               {item.loanRecovery && Number(item.loanRecovery) > 0 && (
-                <span>
-                  Loan: ₹{Number(item.loanRecovery).toLocaleString("en-IN")}
+                <span className="tabular-nums">
+                  Loan: {formatMoney(item.loanRecovery, money)}
                 </span>
               )}
               {item.createdAt && (
@@ -136,16 +146,17 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
             )}
           </div>
 
-          {item.status !== "PAID" && (
+          {/* The backend allows only APPROVED → PAID; any other status answers 409. */}
+          {canMarkPaid && item.status === "APPROVED" && (
             <LoadingButton
               size="sm"
               variant="outline"
-              className="text-xs shrink-0 gap-1.5 duration-200"
+              className="text-xs shrink-0 gap-1.5"
               onClick={handleMarkPaid}
               isPending={isPending}
             >
-              <CheckCircle2 className="h-3 w-3" />
-              Mark Paid
+              {!isPending && <CheckCircle2 className="h-3 w-3" />}
+              Mark paid
             </LoadingButton>
           )}
         </div>
@@ -159,6 +170,7 @@ export function FnfPageClient() {
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const pageState = usePageState({ permission: "hr:payroll:view", isLoading, isError, error });
   const canCreate = useCan("hr:exit:manage");
+  const money = useOrgDisplay();
 
   const create = useCreateFnfSettlement();
   const complete = useCompleteFnfSettlement();
@@ -268,7 +280,14 @@ export function FnfPageClient() {
         ) : (
           <div className="flex flex-1 min-h-0 flex-col gap-2">
             {items.map((item: FnfSettlement) => (
-              <FnfCard key={item.id} item={item} onMarkPaid={setCompleteId} isPending={complete.isPending} />
+              <FnfCard
+                key={item.id}
+                item={item}
+                onMarkPaid={setCompleteId}
+                canMarkPaid={canCreate}
+                isPending={complete.isPending && complete.variables === item.id}
+                money={money}
+              />
             ))}
           </div>
         )}
@@ -295,7 +314,7 @@ export function FnfPageClient() {
 
         <div className="space-y-2">
           <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
-            Settlement Components (₹)
+            Settlement components ({money.currency})
           </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

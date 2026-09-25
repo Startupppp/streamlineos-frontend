@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -82,7 +81,7 @@ export function useCompleteFnfSettlement(
   options?: UseMutationOptions<{ success: boolean }, Error, number>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<{ success: boolean }, Error, number>("hr:exit:manage", {
     mutationKey: ["hr", "fnf", "complete"],
     mutationFn: (fnfId: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/fnf/${fnfId}`, { status: "PAID" }, undefined, lazyContract(() => import("@/hooks/api/hr/fnf-schema").then(m => m.successResponseContract))),
