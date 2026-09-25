@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { downloadExport } from "@/lib/download-export";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -192,12 +193,16 @@ export function useExpenseExportJob(jobId: string | null) {
 
 export function useDownloadExpenseExportJob() {
   const canRead = useCan("hr:expenses:read");
-  return useAuthorizedMutation<Blob, Error, string>("hr:expenses:read", {
+  return useAuthorizedMutation<{ filename: string; bytes: number }, Error, string>("hr:expenses:read", {
     mutationKey: ["hr", "expenses", "export", "jobs", "download"],
     mutationFn: (jobId) => {
       if (!canRead)
         return Promise.reject(new Error("Expense read access is required"));
-      return apiClient.download(`/hr/expenses/export/jobs/${jobId}/download`);
+      // Saves the file itself, and refuses an empty or non-file body (HRMS-E2E-009).
+      return downloadExport(`/hr/expenses/export/jobs/${jobId}/download`, {
+        label: "expenses",
+        fallbackName: "expenses.csv",
+      });
     },
   });
 }

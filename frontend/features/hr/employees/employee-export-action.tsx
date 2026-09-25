@@ -11,7 +11,6 @@ import {
   type HrEmployeeExportFilters,
   type HrExportJobStatus,
 } from "@/hooks/api/hr/import-export";
-import { downloadBlob } from "@/lib/download-blob";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { randomId } from "@/lib/random-id";
 
@@ -90,8 +89,6 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
   const download = useCallback(() => {
     if (!job || job.status !== "completed") return;
     downloadExport.mutate(job.id, {
-      onSuccess: (blob) =>
-        downloadBlob(blob, job.fileName ?? "employee-directory.csv"),
       onError: (error) => {
         setExportJobId(null);
         toast.error(getErrorMessage(error));
