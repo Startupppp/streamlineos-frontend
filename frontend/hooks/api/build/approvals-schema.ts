@@ -26,6 +26,11 @@ export const approvalInboxPageContract = z.object({
   }),
 });
 
+export const approvalInboxResponseContract = z.union([
+  approvalInboxPageContract,
+  z.array(approvalInboxItemContract),
+]);
+
 export const approvalRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -57,5 +62,10 @@ export const approvalPageContract = z.object({
     nextCursor: z.string().nullable(),
   }),
 });
+
+export const approvalResponseContract = z.union([
+  approvalPageContract,
+  z.array(approvalRowContract),
+]);
 
 export const approvalInboxCountContract = z.object({ count: z.number().int().nonnegative() });
