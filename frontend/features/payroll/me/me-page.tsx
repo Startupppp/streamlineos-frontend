@@ -213,7 +213,7 @@ export function MyPayrollPageContent() {
         filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
         filters={
           <>
-            <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3}>
+            <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3} stackOnMobile>
               <StatCard
                 label="Net Pay Last Month"
                 value={
@@ -269,13 +269,19 @@ export function MyPayrollPageContent() {
               />
             </StatCardGrid>
 
-            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide">
-              <TabsList className="shrink-0">
+            {/*
+              Below `lg` the tab strip wraps onto as many rows as it needs
+              instead of scrolling. There are up to nine sections here and the
+              scroll was hidden, so "Salary Structure" was half a label at the
+              right edge with nothing to say the rest of the strip existed.
+            */}
+            <div className="flex min-w-0 items-center gap-2 max-lg:flex-wrap max-lg:items-stretch lg:flex-nowrap lg:overflow-x-auto lg:scrollbar-hide">
+              <TabsList className="shrink-0 max-lg:h-auto max-lg:min-h-9 max-lg:flex-wrap max-lg:justify-start max-lg:overflow-visible">
                 {sections.map((section) => (
                   <TabsTrigger
                     key={section.id}
                     value={section.id}
-                    className="gap-1.5 whitespace-nowrap"
+                    className="gap-1.5 whitespace-nowrap max-lg:flex-none"
                   >
                     {section.label}
                   </TabsTrigger>
