@@ -6,8 +6,8 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { FlaskConical } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useSimulationHistory, type SimulationRecord, type SimulationType } from "@/hooks/api/hr/enterprise-ops-simulator";
 import { format } from "date-fns";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -101,14 +101,15 @@ export function SimulationHistory() {
     void refetch();
   }, [refetch]);
 
-  if (isError) {
+  // Resolve denial ahead of "No simulations run yet" (FE-47); the history read
+  // is GET /hr/enterprise/ops/simulator/history (hr:policies:manage).
+  const pageState = usePageState({ permission: "hr:policies:manage", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load simulation history"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
-      />
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        {null}
+      </PageState>
     );
   }
 

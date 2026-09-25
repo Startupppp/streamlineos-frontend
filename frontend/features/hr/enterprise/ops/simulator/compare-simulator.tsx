@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { SimulationResult } from "./simulation-result";
@@ -64,13 +64,15 @@ export function CompareSimulator() {
               <Input type="number" placeholder="ID" value={newPolicyId} onChange={(e) => setNewPolicyId(e.target.value)} />
             </div>
           </div>
-          <Button
+          <LoadingButton
             onClick={handleCompare}
-            disabled={isLoading || !employeeId || !oldPolicyId || !newPolicyId}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+            isPending={isLoading}
+            loadingText="Comparing…"
+            disabled={!employeeId || !oldPolicyId || !newPolicyId}
+            className="w-full"
           >
-            {isLoading ? "Comparing…" : "Compare Policies"}
-          </Button>
+            Compare policies
+          </LoadingButton>
         </div>
       </div>
       {isError ? (
