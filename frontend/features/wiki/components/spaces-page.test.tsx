@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
 import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
@@ -229,5 +229,39 @@ describe("SpacesPage", () => {
     expect(mockSpaces).toHaveBeenCalledWith(
       expect.objectContaining({ audience: "public", archived: true }),
     );
+  });
+});
+
+describe("SpacesPage — card/list view", () => {
+  it("BITE: renders the spaces as a table when the URL asks for the list view", () => {
+    mockSearchParams = new URLSearchParams("view=list");
+
+    render(<SpacesPage />);
+
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("Engineering")).toBeInTheDocument();
+    expect(within(table).getByText("Internal")).toBeInTheDocument();
+  });
+
+  it("BITE: the view toggle reflects the list view selected in the URL", () => {
+    mockSearchParams = new URLSearchParams("view=list");
+
+    render(<SpacesPage />);
+
+    expect(screen.getByRole("button", { name: "List view" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Card view" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  it("keeps the card grid as the default view when the URL names no view", () => {
+    render(<SpacesPage />);
+
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.getByText("Engineering")).toBeInTheDocument();
   });
 });

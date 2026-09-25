@@ -21,6 +21,8 @@ export type KbPageTemplate = {
   content: Record<string, unknown> | null;
   createdById: string | null;
   createdByName: string | null;
+  useCount: number;
+  lastUsedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };

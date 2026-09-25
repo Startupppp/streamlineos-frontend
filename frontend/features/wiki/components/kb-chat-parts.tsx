@@ -251,6 +251,31 @@ export function VerificationBadge({ verified }: VerificationBadgeProps) {
   );
 }
 
+function citationEvidenceKey(citation: KbAskCitationWithParts): string {
+  if (citation.kind === "page") return `page-${citation.pageId}`;
+  if (citation.kind === "source") return `source-${citation.sourceId}`;
+  if (citation.kind === "document") return `document-${citation.linkedDocumentId}`;
+  return `article-${citation.articleId}`;
+}
+
+export function CitationEvidenceList({ citations }: { citations: KbAskCitationWithParts[] }) {
+  if (citations.length === 0) return null;
+  return (
+    <ul className="mt-2 space-y-2 border-t border-border/60 pt-2">
+      {citations.map((citation, index) => (
+        <li key={citationEvidenceKey(citation)}>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-dense font-medium text-foreground">{citation.title}</span>
+            <FreshnessTag updatedAt={citation.updatedAt} />
+            <VerificationBadge verified={citation.verified === true} />
+          </div>
+          <CitationPassage citation={citation} index={index} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 interface DisagreementBannerProps {
   summary: string;
 }

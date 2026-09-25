@@ -18,6 +18,8 @@ function comment(overrides: Partial<KbPageComment> = {}): KbPageComment {
     authorName: "Alice",
     parentId: null,
     content: "A top-level comment",
+    anchorBlockIndex: null,
+    anchorQuote: null,
     resolvedAt: null,
     createdAt: "2026-09-01T10:00:00.000Z",
     updatedAt: "2026-09-01T10:00:00.000Z",

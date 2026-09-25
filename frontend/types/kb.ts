@@ -35,36 +35,35 @@ export interface UpdateSpaceInput {
   isPublicHelpCenter?: boolean;
 }
 
+interface KbAskCitationEvidence {
+  title: string;
+  updatedAt: string;
+  passage?: string;
+  verified?: boolean;
+}
+
 export type KbAskCitation =
-  | {
+  | (KbAskCitationEvidence & {
       kind: "article";
       articleId: number;
-      title: string;
       slug: string;
       spaceId: number | null;
-      updatedAt: string;
-    }
-  | {
+    })
+  | (KbAskCitationEvidence & {
       kind: "page";
       pageId: number;
-      title: string;
       spaceId: number | null;
-      updatedAt: string;
-    }
-  | {
+    })
+  | (KbAskCitationEvidence & {
       kind: "source";
       sourceId: number;
-      title: string;
       spaceId: number | null;
-      updatedAt: string;
-    }
-  | {
+    })
+  | (KbAskCitationEvidence & {
       kind: "document";
       linkedDocumentId: number;
-      title: string;
       spaceId: null;
-      updatedAt: string;
-    };
+    });
 
 export interface KbAskResponse {
   answer: string;
@@ -87,16 +86,6 @@ export interface KbAskInput {
   conversationId?: number;
 }
 
-export interface KbAnalyticsTopArticle {
-  id: number;
-  title: string;
-  slug: string;
-  spaceId: number | null;
-  viewCount: number;
-  helpfulCount: number;
-  notHelpfulCount: number;
-}
-
 export interface KbAnalyticsOverview {
   totalCount: number;
   publishedCount: number;
@@ -114,7 +103,6 @@ export interface KbAnalyticsOverview {
   ticketsDeflected: number;
   verifiedPublished: number;
   trustScore: number;
-  topArticles: KbAnalyticsTopArticle[];
 }
 
 export interface KbNoResultRow {

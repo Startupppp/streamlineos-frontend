@@ -23,6 +23,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
+jest.mock("./reviews-filters", () => ({
+  ReviewsFilters: () => <div data-testid="reviews-filters" />,
+}));
+
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: jest.fn(),
 }));

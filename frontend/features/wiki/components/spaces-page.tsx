@@ -30,11 +30,13 @@ import {
   useRestoreKbSpace,
 } from "@/hooks/api/kb/spaces";
 import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
+import { LayoutGrid, LayoutList } from "lucide-react";
 import {
   KbLayoutGridIcon,
   KbPlusIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { SpaceCard, SpaceCardSkeleton } from "./space-card";
+import { SpacesListTable } from "./spaces-list-table";
 import { SpaceArchiveImpact } from "./space-archive-impact";
 import { SpaceSheet } from "./space-sheet";
 import { SpaceMembersSheet } from "./space-members-sheet";
@@ -44,6 +46,8 @@ type AudienceFilter = (typeof AUDIENCE_FILTER_VALUES)[number];
 
 const ARCHIVED_FILTER_VALUES = ["all", "active", "archived"] as const;
 type ArchivedFilter = (typeof ARCHIVED_FILTER_VALUES)[number];
+
+const VIEW_VALUES = ["card", "list"] as const;
 
 const LIST_LIMIT = 30;
 
@@ -71,6 +75,7 @@ export default function SpacesPage() {
     ARCHIVED_FILTER_VALUES,
     "active",
   );
+  const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "card");
   const debouncedSearch = useDebouncedValue(rawSearch, 300);
 
   const cursorState = useCursorPagination();
@@ -138,6 +143,14 @@ export default function SpacesPage() {
     setRestoreTarget(space);
   }, []);
 
+  const handleArchiveToggle = useCallback(
+    (space: KbSpaceListItem) => {
+      if (space.archivedAt) handleRestore(space);
+      else handleArchive(space);
+    },
+    [handleArchive, handleRestore],
+  );
+
   const handleViewMembers = useCallback((space: KbSpaceListItem) => {
     setMembersTarget(space);
   }, []);
@@ -200,6 +213,14 @@ export default function SpacesPage() {
 
   function handleGoNext() {
     cursorState.goNext(pagination?.nextCursor);
+  }
+
+  function handleViewCard() {
+    updateFilters({ view: null });
+  }
+
+  function handleViewList() {
+    updateFilters({ view: "list" });
   }
 
   const hasActiveFilters =
@@ -269,6 +290,31 @@ export default function SpacesPage() {
               <SelectItem value="archived">Archived</SelectItem>
             </SelectContent>
           </Select>
+
+          <div className="ml-auto flex items-center gap-1">
+            <Button
+              type="button"
+              variant={view === "card" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-9 w-9"
+              aria-label="Card view"
+              aria-pressed={view === "card"}
+              onClick={handleViewCard}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={view === "list" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-9 w-9"
+              aria-label="List view"
+              aria-pressed={view === "list"}
+              onClick={handleViewList}
+            >
+              <LayoutList className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <PageState
@@ -283,34 +329,48 @@ export default function SpacesPage() {
           }
           empty={emptyNode}
         >
-          <div className="flex flex-col gap-4">
-            <SpacesGrid>
-              {spaces.map((space: KbSpaceListItem) => (
-                <SpaceCard
-                  key={space.id}
-                  space={space}
-                  canManage={canManage}
-                  pageCount={space.pageCount}
-                  onEdit={handleEdit}
-                  onArchiveToggle={
-                    space.archivedAt ? handleRestore : handleArchive
-                  }
-                  onViewMembers={handleViewMembers}
-                />
-              ))}
-            </SpacesGrid>
-            {pagination &&
-              (pagination.hasMore || cursorState.hasPrevious) && (
-                <TablePagination
-                  mode="cursor"
-                  rowCount={spaces.length}
-                  hasPrevious={cursorState.hasPrevious}
-                  hasMore={pagination.hasMore}
-                  onNext={handleGoNext}
-                  onPrevious={cursorState.goPrevious}
-                />
-              )}
-          </div>
+          {view === "list" ? (
+            <SpacesListTable
+              spaces={spaces}
+              canManage={canManage}
+              pageSize={LIST_LIMIT}
+              hasMore={pagination?.hasMore ?? false}
+              hasPrevious={cursorState.hasPrevious}
+              onNext={handleGoNext}
+              onPrevious={cursorState.goPrevious}
+              onEdit={handleEdit}
+              onArchiveToggle={handleArchiveToggle}
+              onViewMembers={handleViewMembers}
+              emptyState={emptyNode}
+            />
+          ) : (
+            <div className="flex flex-col gap-4">
+              <SpacesGrid>
+                {spaces.map((space: KbSpaceListItem) => (
+                  <SpaceCard
+                    key={space.id}
+                    space={space}
+                    canManage={canManage}
+                    pageCount={space.pageCount}
+                    onEdit={handleEdit}
+                    onArchiveToggle={handleArchiveToggle}
+                    onViewMembers={handleViewMembers}
+                  />
+                ))}
+              </SpacesGrid>
+              {pagination &&
+                (pagination.hasMore || cursorState.hasPrevious) && (
+                  <TablePagination
+                    mode="cursor"
+                    rowCount={spaces.length}
+                    hasPrevious={cursorState.hasPrevious}
+                    hasMore={pagination.hasMore}
+                    onNext={handleGoNext}
+                    onPrevious={cursorState.goPrevious}
+                  />
+                )}
+            </div>
+          )}
         </PageState>
       </div>
 

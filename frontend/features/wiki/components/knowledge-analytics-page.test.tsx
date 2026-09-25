@@ -20,8 +20,19 @@ const useKnowledgeGaps = jest.fn();
 const useCitationReuse = jest.fn();
 const useReviewSla = jest.fn();
 
+let searchParams = new URLSearchParams();
+const routerReplace = jest.fn();
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: routerReplace }),
+  usePathname: () => "/knowledge/wiki/analytics",
+  useSearchParams: () => searchParams,
+}));
+
+const useKbSpaces = jest.fn();
+
+jest.mock("@/hooks/api/kb/spaces", () => ({
+  useKbSpaces: () => useKbSpaces(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -34,12 +45,12 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
-  useKbAnalyticsOverview: () => useKbAnalyticsOverview(),
-  useKbNoResults: () => useKbNoResults(),
-  usePageAnalytics: () => usePageAnalytics(),
-  useKnowledgeGaps: () => useKnowledgeGaps(),
-  useCitationReuse: () => useCitationReuse(),
-  useReviewSla: () => useReviewSla(),
+  useKbAnalyticsOverview: (...args: unknown[]) => useKbAnalyticsOverview(...args),
+  useKbNoResults: (...args: unknown[]) => useKbNoResults(...args),
+  usePageAnalytics: (...args: unknown[]) => usePageAnalytics(...args),
+  useKnowledgeGaps: (...args: unknown[]) => useKnowledgeGaps(...args),
+  useCitationReuse: (...args: unknown[]) => useCitationReuse(...args),
+  useReviewSla: (...args: unknown[]) => useReviewSla(...args),
   useCreateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
@@ -66,7 +77,6 @@ const OVERVIEW = {
   ticketsDeflected: 3,
   verifiedPublished: 5,
   trustScore: 0.55,
-  topArticles: [],
 };
 
 function settled<T>(data: T) {
@@ -88,6 +98,11 @@ function cancelled() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  searchParams = new URLSearchParams();
+  useKbSpaces.mockReturnValue({
+    data: { data: [{ id: 42, name: "Engineering" }] },
+    isLoading: false,
+  });
   useAccess.mockReturnValue(accessGranted);
   useKbAnalyticsOverview.mockReturnValue(settled(OVERVIEW));
   useKbNoResults.mockReturnValue(settled([]));
@@ -158,5 +173,160 @@ describe("KnowledgeAnalyticsPage — a stat names what it actually counted", () 
     render(<KnowledgeAnalyticsPage />);
 
     expect(screen.queryByText("Total pages")).toBeNull();
+  });
+});
+
+describe("KnowledgeAnalyticsPage — activity counts are not success metrics", () => {
+  it("does not headline a bare content count, which the strategy names as a non-metric", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.queryByText("Help centre articles")).toBeNull();
+    expect(screen.queryByText(String(OVERVIEW.totalCount))).toBeNull();
+  });
+
+  it("reports helpfulness as a rate rather than a raw upvote tally", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("Helpful ratio")).toBeInTheDocument();
+    expect(screen.queryByText("Helpful votes")).toBeNull();
+  });
+
+  it("still shows the decision-useful rates it is meant to drive action from", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("Search success")).toBeInTheDocument();
+    expect(screen.getByText("Tickets deflected")).toBeInTheDocument();
+  });
+});
+
+describe("KnowledgeAnalyticsPage — the reader can choose the window the figures cover", () => {
+  it("offers a date range control", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByLabelText("Date range")).toBeInTheDocument();
+  });
+
+  it("bounds every ranged read to the selected window", () => {
+    searchParams = new URLSearchParams("range=7d");
+
+    render(<KnowledgeAnalyticsPage />);
+
+    for (const hook of [
+      useKbAnalyticsOverview,
+      useKbNoResults,
+      useKnowledgeGaps,
+      useCitationReuse,
+      useReviewSla,
+    ]) {
+      expect(hook).toHaveBeenCalledWith(
+        expect.objectContaining({ from: expect.any(String) }),
+      );
+    }
+  });
+
+  it("sends no lower bound when the reader asks for all time", () => {
+    searchParams = new URLSearchParams("range=all");
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(useKbAnalyticsOverview).toHaveBeenCalledWith(
+      expect.not.objectContaining({ from: expect.anything() }),
+    );
+    expect(useKnowledgeGaps).toHaveBeenCalledWith(
+      expect.not.objectContaining({ from: expect.anything() }),
+    );
+  });
+});
+
+describe("KnowledgeAnalyticsPage — the reader can narrow the figures to one space", () => {
+  it("offers a space control", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByLabelText("Space")).toBeInTheDocument();
+  });
+
+  it("scopes the page drill-down and the overview to the selected space", () => {
+    searchParams = new URLSearchParams("space=42");
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(usePageAnalytics).toHaveBeenCalledWith(
+      expect.objectContaining({ spaceId: 42 }),
+    );
+    expect(useKbAnalyticsOverview).toHaveBeenCalledWith(
+      expect.objectContaining({ spaceId: 42 }),
+    );
+  });
+
+  it("scopes nothing to a space when the reader has not chosen one", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(usePageAnalytics).toHaveBeenCalledWith(
+      expect.not.objectContaining({ spaceId: expect.anything() }),
+    );
+    expect(useKbAnalyticsOverview).toHaveBeenCalledWith(
+      expect.not.objectContaining({ spaceId: expect.anything() }),
+    );
+  });
+});
+
+describe("KnowledgeAnalyticsPage — a filtered zero result is not first-run emptiness", () => {
+  it("offers a way back out once a filter is narrowing the figures", () => {
+    searchParams = new URLSearchParams("space=42");
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(
+      screen.getByRole("button", { name: /clear filters/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not offer to clear filters when none are applied", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.queryByRole("button", { name: /clear filters/i })).toBeNull();
+  });
+
+  it("blames the filter, not a missing knowledge base, when a narrowed read returns nothing", () => {
+    searchParams = new URLSearchParams("space=42");
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.queryByText(/No page data yet/i)).toBeNull();
+    expect(screen.getByText(/No pages match these filters/i)).toBeInTheDocument();
+  });
+
+  it("still explains genuine first-run emptiness when nothing is filtered", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText(/No page data yet/i)).toBeInTheDocument();
+  });
+});
+
+describe("KnowledgeAnalyticsPage — stale high-use pages are reachable, not just inferable", () => {
+  it("offers a control that narrows the drill-down to stale pages", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(
+      screen.getByRole("button", { name: /stale/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("asks the drill-down for stale pages only once the reader turns it on", () => {
+    searchParams = new URLSearchParams("stale=1");
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(usePageAnalytics).toHaveBeenCalledWith(
+      expect.objectContaining({ staleOnly: true }),
+    );
+  });
+
+  it("does not ask for stale pages when the reader has not turned it on", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(usePageAnalytics).toHaveBeenCalledWith(
+      expect.not.objectContaining({ staleOnly: true }),
+    );
   });
 });

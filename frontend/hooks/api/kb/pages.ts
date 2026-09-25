@@ -11,6 +11,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useKbSpaces } from "./spaces";
 import { kbPageTreeLevelContract } from "./kb-page-tree-schema";
 import type { KbSpaceListPage } from "./spaces";
@@ -116,24 +117,6 @@ const kbPagePermanentDeleteContract = lazyContract(() =>
     (m) => m.kbPagePermanentDeleteContract,
   ),
 );
-
-export function useKbPagesTree() {
-  const canView = useCan("kb:pages:view");
-  return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
-    queryFn: async ({ signal }) => {
-      const page = await apiClient.get<KbPageTreeLevel>(
-        "/kb/pages/tree",
-        undefined,
-        signal,
-        kbPageTreeLevelContract,
-      );
-      return page.data;
-    },
-    staleTime: 30_000,
-    enabled: canView,
-  });
-}
 
 export function useKbProjectPagesTree(projectId: number) {
   const canView = useCan("kb:pages:view");
@@ -299,16 +282,18 @@ export type BulkPageResult = {
 
 export function useKbBulkRestorePages() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "trash", "bulk-restore"],
     mutationFn: (pageIds: number[]) =>
       apiClient.post<BulkPageResult>(
         "/kb/pages/trash/restore",
         { pageIds },
-        undefined,
+        operation.configFor({ pageIds }),
         kbBulkPageResultContract,
       ),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
       });
@@ -343,16 +328,18 @@ export function useKbTrashPurgeImpact(
 
 export function useKbBulkPurgePages() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:purge", {
     mutationKey: ["kb", "pages", "trash", "bulk-purge"],
     mutationFn: (pageIds: number[]) =>
       apiClient.delete<BulkPageResult>(
         "/kb/pages/trash/purge",
         { pageIds },
-        undefined,
+        operation.configFor({ pageIds }),
         kbBulkPageResultContract,
       ),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
       });
@@ -560,16 +547,18 @@ export function useHardDeleteKbPage() {
 
 export function useEmptyKbTrash() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:purge", {
     mutationKey: ["kb", "pages", "emptyTrash"],
     mutationFn: () =>
       apiClient.delete<{ purgedCount: number }>(
         "/kb/pages/trash/empty",
         undefined,
-        undefined,
+        operation.configFor({ command: "kb.pages.trash-empty" }),
         kbPageEmptyTrashContract,
       ),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
       });

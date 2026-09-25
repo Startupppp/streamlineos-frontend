@@ -17,17 +17,6 @@ export const kbAnalyticsOverviewContract = z.object({
   ticketsDeflected: z.number().int(),
   verifiedPublished: z.number().int(),
   trustScore: z.number(),
-  topArticles: z.array(
-    z.object({
-      id: z.number().int(),
-      title: z.string(),
-      slug: z.string(),
-      spaceId: z.number().int().nullable(),
-      viewCount: z.number().int(),
-      helpfulCount: z.number().int(),
-      notHelpfulCount: z.number().int(),
-    }),
-  ),
 });
 
 export const kbAnalyticsNoResultsContract = z.array(

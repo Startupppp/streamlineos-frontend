@@ -7,6 +7,8 @@ const kbPageCommentWithAuthorContract = z.object({
   authorId: z.string().nullable(),
   parentId: z.number().int().nullable(),
   content: z.string(),
+  anchorBlockIndex: z.number().int().nullable(),
+  anchorQuote: z.string().nullable(),
   resolvedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),

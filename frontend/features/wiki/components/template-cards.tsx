@@ -17,6 +17,7 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useDeleteKbPageTemplate } from "@/hooks/api/kb";
 import { KbTrash2Icon, KbPencilIcon } from "@/features/wiki/lib/kb-icons";
+import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
 import type { StarterTemplate } from "@/features/wiki/lib/starter-templates";
 import { EditTemplateDialog } from "./edit-template-dialog";
@@ -81,6 +82,15 @@ export function TemplateCard({
               By {template.createdByName}
             </span>
           )}
+          <span className="mt-0.5 block text-xs text-muted-foreground tabular-nums">
+            {template.useCount === 0
+              ? "Never used"
+              : `${template.useCount} use${template.useCount === 1 ? "" : "s"}${
+                  template.lastUsedAt
+                    ? ` · Last used ${kbTimeAgo(template.lastUsedAt)}`
+                    : ""
+                }`}
+          </span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <LoadingButton

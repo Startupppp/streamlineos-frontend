@@ -12,16 +12,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useCan } from "@/hooks/api/access";
+import { TrustBadge } from "@/features/wiki/components/kb-collection-badges";
 import { useKbPageReviews } from "@/hooks/api/kb/page-reviews";
 import type {
   KbPageReview,
@@ -38,6 +32,7 @@ import {
   KbXCircleIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
+import { ReviewsFilters } from "./reviews-filters";
 import { ApproveDialog, RejectDialog } from "./reviews-decision-dialogs";
 import { BulkDecideDialog } from "./reviews-bulk-decide-dialog";
 import {
@@ -49,6 +44,13 @@ const STATUS_FILTER_VALUES = ["all", "pending", "approved", "rejected", "overdue
 const TYPE_FILTER_VALUES = ["all", "approval", "freshness"] as const;
 const SORT_DIR_VALUES = ["asc", "desc"] as const;
 const DEFAULT_LIMIT = 50;
+
+function toDayBoundary(value: string, edge: "start" | "end"): string | undefined {
+  if (!value) return undefined;
+  const suffix = edge === "start" ? "T00:00:00.000Z" : "T23:59:59.999Z";
+  const candidate = value.includes("T") ? value : `${value}${suffix}`;
+  return Number.isNaN(Date.parse(candidate)) ? undefined : candidate;
+}
 
 type BulkState =
   | { kind: "idle" }
@@ -131,6 +133,9 @@ function ReviewMobileCard(review: KbPageReview) {
       <div className="flex items-center gap-2 flex-wrap">
         <StatusBadge status={review.status} isOverdue={review.isOverdue} />
         <TypeBadge type={review.type} />
+        {review.pageTrustState ? (
+          <TrustBadge trustState={review.pageTrustState} />
+        ) : null}
       </div>
       <span className="text-sm text-muted-foreground">
         {review.reviewerName ?? "No reviewer"}
@@ -147,17 +152,37 @@ export default function ReviewsPage() {
   const statusFilter = parseEnum(searchParams.get("status"), STATUS_FILTER_VALUES, "all");
   const typeFilter = parseEnum(searchParams.get("type"), TYPE_FILTER_VALUES, "all");
   const sortDir = parseEnum(searchParams.get("sortDir"), SORT_DIR_VALUES, "asc") as "asc" | "desc";
+  const searchFilter = searchParams.get("q") ?? "";
+  const spaceFilter = searchParams.get("spaceId") ?? "";
+  const reviewerFilter = searchParams.get("reviewer") ?? "";
+  const dueFromFilter = searchParams.get("dueFrom") ?? "";
+  const dueToFilter = searchParams.get("dueTo") ?? "";
 
-  const hasFilters = statusFilter !== "all" || typeFilter !== "all" || sortDir !== "asc";
+  const hasFilters =
+    statusFilter !== "all" ||
+    typeFilter !== "all" ||
+    sortDir !== "asc" ||
+    searchFilter !== "" ||
+    spaceFilter !== "" ||
+    reviewerFilter !== "" ||
+    dueFromFilter !== "" ||
+    dueToFilter !== "";
 
   const cursorState = useCursorPagination();
   const canManage = useCan("kb:reviews:manage");
+
+  const parsedSpaceId = Number(spaceFilter);
 
   const params = {
     cursor: cursorState.cursor,
     limit: DEFAULT_LIMIT,
     status: statusFilter === "all" ? undefined : (statusFilter as KbReviewStatusFilter),
     type: typeFilter === "all" ? undefined : (typeFilter as KbReviewType),
+    q: searchFilter || undefined,
+    spaceId: Number.isFinite(parsedSpaceId) && parsedSpaceId > 0 ? parsedSpaceId : undefined,
+    reviewer: reviewerFilter || undefined,
+    dueFrom: toDayBoundary(dueFromFilter, "start"),
+    dueTo: toDayBoundary(dueToFilter, "end"),
     sortDir,
   };
 
@@ -179,17 +204,9 @@ export default function ReviewsPage() {
   const reviews = useMemo(() => data?.data ?? [], [data]);
   const pagination = data?.pagination;
 
-  const handleStatusChange = useCallback(
-    (val: string) => {
-      updateFilters({ status: val === "all" ? null : val });
-      cursorState.reset();
-    },
-    [updateFilters, cursorState],
-  );
-
-  const handleTypeChange = useCallback(
-    (val: string) => {
-      updateFilters({ type: val === "all" ? null : val });
+  const handleFilterPatch = useCallback(
+    (patch: Record<string, string | null>) => {
+      updateFilters(patch);
       cursorState.reset();
     },
     [updateFilters, cursorState],
@@ -204,7 +221,16 @@ export default function ReviewsPage() {
   );
 
   function handleClearFilters() {
-    updateFilters({ status: null, type: null, sortDir: null });
+    updateFilters({
+      status: null,
+      type: null,
+      sortDir: null,
+      q: null,
+      spaceId: null,
+      reviewer: null,
+      dueFrom: null,
+      dueTo: null,
+    });
     cursorState.reset();
   }
 
@@ -267,12 +293,17 @@ export default function ReviewsPage() {
         key: "page",
         header: "Page",
         cell: (review) => (
-          <Link
-            href={pageHref(review.pageId)}
-            className="text-sm font-medium text-foreground hover:text-accent transition-colors line-clamp-1"
-          >
-            {review.pageTitle ?? "Untitled"}
-          </Link>
+          <div className="flex items-center gap-2 min-w-0">
+            <Link
+              href={pageHref(review.pageId)}
+              className="text-sm font-medium text-foreground hover:text-accent transition-colors line-clamp-1"
+            >
+              {review.pageTitle ?? "Untitled"}
+            </Link>
+            {review.pageTrustState ? (
+              <TrustBadge trustState={review.pageTrustState} />
+            ) : null}
+          </div>
         ),
       },
       {
@@ -382,28 +413,18 @@ export default function ReviewsPage() {
 
   const filters = (
     <>
-      <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="approved">Approved</SelectItem>
-          <SelectItem value="rejected">Rejected</SelectItem>
-          <SelectItem value="overdue">Overdue</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select value={typeFilter} onValueChange={handleTypeChange}>
-        <SelectTrigger className="w-[130px]">
-          <SelectValue placeholder="Type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All types</SelectItem>
-          <SelectItem value="approval">Approval</SelectItem>
-          <SelectItem value="freshness">Freshness</SelectItem>
-        </SelectContent>
-      </Select>
+      <ReviewsFilters
+        values={{
+          q: searchFilter,
+          status: statusFilter,
+          type: typeFilter,
+          spaceId: spaceFilter,
+          reviewer: reviewerFilter,
+          dueFrom: dueFromFilter,
+          dueTo: dueToFilter,
+        }}
+        onChange={handleFilterPatch}
+      />
       {canManage && selected.size > 0 && (
         <Button type="button" size="sm" variant="outline" onClick={handleOpenBulkDecide}>
           Decide {selected.size} selected

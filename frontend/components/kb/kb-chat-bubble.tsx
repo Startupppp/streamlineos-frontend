@@ -18,15 +18,17 @@ export interface ChatMessage {
 }
 
 export function ChatBubble({
-  message,
-  onCitation,
   reduce,
+  message,
   actions,
+  evidence,
+  onCitation,
 }: {
-  message: ChatMessage;
-  onCitation?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   reduce: boolean;
+  message: ChatMessage;
   actions?: React.ReactNode;
+  evidence?: React.ReactNode;
+  onCitation?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   const isUser = message.role === "user";
   return (
@@ -59,6 +61,7 @@ export function ChatBubble({
           {message.citations && message.citations.length > 0 && onCitation ? (
             <Citations citations={message.citations} onCitation={onCitation} />
           ) : null}
+          {!message.isError && evidence ? evidence : null}
           {!message.isError && actions ? (
             <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-border/60 pt-2">
               {actions}
@@ -73,7 +76,8 @@ export function ChatBubble({
 function citationKey(citation: KbAskCitation): string {
   if (citation.kind === "page") return `page-${citation.pageId}`;
   if (citation.kind === "source") return `source-${citation.sourceId}`;
-  if (citation.kind === "document") return `document-${citation.linkedDocumentId}`;
+  if (citation.kind === "document")
+    return `document-${citation.linkedDocumentId}`;
   return `article-${citation.articleId}`;
 }
 
@@ -110,7 +114,9 @@ function Citations({
                 className="inline-flex max-w-48 items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-accent transition-colors hover:bg-muted"
               >
                 <BookOpenTextIcon size={11} />
-                <TruncatedText text={(citation.title ?? "").trim() || "Untitled page"} />
+                <TruncatedText
+                  text={(citation.title ?? "").trim() || "Untitled page"}
+                />
               </button>
             );
           }
@@ -125,16 +131,23 @@ function Citations({
                 className="inline-flex max-w-48 items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-accent transition-colors hover:bg-muted"
               >
                 <Building2 className="h-3 w-3 shrink-0" aria-hidden="true" />
-                <TruncatedText text={(citation.title ?? "").trim() || "Company document"} />
+                <TruncatedText
+                  text={(citation.title ?? "").trim() || "Company document"}
+                />
               </button>
             );
           }
           const isSource = citation.kind === "source";
           const label =
-            (citation.title ?? "").trim() || (isSource ? "Uploaded document" : "Untitled");
+            (citation.title ?? "").trim() ||
+            (isSource ? "Uploaded document" : "Untitled");
           return (
             <span
-              key={isSource ? `source-${citation.sourceId}` : `article-${citation.articleId}`}
+              key={
+                isSource
+                  ? `source-${citation.sourceId}`
+                  : `article-${citation.articleId}`
+              }
               className="inline-flex max-w-48 items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-muted-foreground"
             >
               <BookOpenTextIcon size={11} />

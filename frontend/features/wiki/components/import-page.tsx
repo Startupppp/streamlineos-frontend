@@ -42,10 +42,17 @@ function resolveTab(tabParam: string | null): ImportExportTab {
 
 export default function ImportPage() {
   const canImport = useCan("kb:pages:import");
+  const canExport = useCan("kb:pages:export");
   const importMutation = useImportKbPages();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab = resolveTab(searchParams.get("tab"));
+  const requestedTab = resolveTab(searchParams.get("tab"));
+  const activeTab =
+    requestedTab === "import" && !canImport
+      ? "export"
+      : requestedTab === "export" && !canExport
+        ? "import"
+        : requestedTab;
 
   const [items, setItems] = useState<ImportPendingItem[]>([]);
   const [showPaste, setShowPaste] = useState(false);
@@ -192,7 +199,7 @@ export default function ImportPage() {
     router.replace(qs ? `${KB_IMPORT}?${qs}` : KB_IMPORT, { scroll: false });
   }
 
-  if (!canImport) {
+  if (!canImport && !canExport) {
     return (
       <PageWrapper title="Import & Export">
         <EmptyState
@@ -200,7 +207,7 @@ export default function ImportPage() {
             <KbUploadIcon className="w-8 text-muted-foreground" />
           }
           title="Access denied"
-          description="You don't have permission to import pages. Ask an admin to grant kb:pages:import."
+          description="You don't have permission to import or export pages. Ask an admin to grant kb:pages:import or kb:pages:export."
         />
       </PageWrapper>
     );
@@ -252,8 +259,8 @@ export default function ImportPage() {
         className="flex min-h-0 flex-1 flex-col gap-4"
       >
         <TabsList>
-          <TabsTrigger value="import">Import</TabsTrigger>
-          <TabsTrigger value="export">Export</TabsTrigger>
+          {canImport ? <TabsTrigger value="import">Import</TabsTrigger> : null}
+          {canExport ? <TabsTrigger value="export">Export</TabsTrigger> : null}
         </TabsList>
 
         <TabsContent value="import" className={TABS_CONTENT_PAGE_BODY_CLASS}>

@@ -575,3 +575,91 @@ describe("WikiSearchPage — cursor pagination", () => {
     expect(screen.getByText("1 result")).toBeInTheDocument();
   });
 });
+
+describe("WikiSearchPage — verified facet", () => {
+  it("forwards the verified filter from the URL to the search request, because the backend already accepts it and the counts are otherwise computed and thrown away", () => {
+    mockUseSearchParams.mockReturnValue(
+      new URLSearchParams("q=guide&verified=verified"),
+    );
+    setupSearch([mockSearchResult()], {
+      facets: {
+        status: [],
+        space: [],
+        type: [],
+        verified: [
+          { value: "verified", count: 4 },
+          { value: "unverified", count: 2 },
+        ],
+      },
+    });
+
+    render(<WikiSearchPage />);
+
+    expect(useKbPageFullSearch).toHaveBeenCalledWith(
+      expect.objectContaining({ verified: true }),
+      expect.anything(),
+    );
+  });
+
+  it("omits verified from the request when the URL carries no verified filter, so the unfiltered list is not silently narrowed", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=guide"));
+    setupSearch([mockSearchResult()]);
+
+    render(<WikiSearchPage />);
+
+    expect(useKbPageFullSearch).toHaveBeenCalledWith(
+      expect.not.objectContaining({ verified: expect.anything() }),
+      expect.anything(),
+    );
+  });
+
+  it("renders the verified facet counts the response already carries, so the control is not a filter with no evidence behind it", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=guide"));
+    setupSearch([mockSearchResult()], {
+      facets: {
+        status: [],
+        space: [],
+        type: [],
+        verified: [
+          { value: "verified", count: 4 },
+          { value: "unverified", count: 2 },
+        ],
+      },
+    });
+
+    render(<WikiSearchPage />);
+
+    expect(screen.getByText("Verified (4)")).toBeInTheDocument();
+    expect(screen.getByText("Not verified (2)")).toBeInTheDocument();
+  });
+
+  it("writes the chosen trust value to the URL rather than holding it in component state, so the filtered search is shareable", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("q=guide"));
+    setupSearch([mockSearchResult()], {
+      facets: { status: [], space: [], type: [], verified: [] },
+    });
+
+    render(<WikiSearchPage />);
+    const selects = screen.getAllByTestId("status-select");
+    fireEvent.change(selects[selects.length - 1], {
+      target: { value: "verified" },
+    });
+
+    expect(mockUpdate).toHaveBeenCalledWith({ verified: "verified" });
+  });
+
+  it("clears the verified filter along with the others, so the filtered-empty recovery actually restores every result", () => {
+    mockUseSearchParams.mockReturnValue(
+      new URLSearchParams("q=guide&verified=verified"),
+    );
+    setupSearch([]);
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<WikiSearchPage />);
+    fireEvent.click(screen.getByTestId("clear-filters"));
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ verified: null }),
+    );
+  });
+});

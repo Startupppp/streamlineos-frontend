@@ -16,7 +16,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useKbResearchBrief, useRateResearchBrief, useRetryResearchBrief, useCancelResearchBrief } from "@/hooks/api/kb/research-briefs";
+import { useKbResearchBrief, useRateResearchBrief, useRetryResearchBrief, useCancelResearchBrief, useConvertResearchBriefToPage } from "@/hooks/api/kb/research-briefs";
+import { pageHref } from "@/lib/knowledge-routes";
+import { useCan } from "@/hooks/api/access";
+import { useRouter } from "next/navigation";
 import type { KbResearchBriefCitation, KbResearchBriefStatus } from "@/types/kb";
 
 interface KbResearchBriefDetailProps {
@@ -106,6 +109,9 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
   const { data: brief, isLoading, error, refetch } = useKbResearchBrief(briefId);
   const retryMutation = useRetryResearchBrief();
   const cancelMutation = useCancelResearchBrief();
+  const convertMutation = useConvertResearchBriefToPage();
+  const canCreatePages = useCan("kb:pages:create");
+  const router = useRouter();
   const [showFullReport, setShowFullReport] = useState(false);
 
   const citations = useMemo(() => {
@@ -142,6 +148,16 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
 
   function handleCancel() {
     cancelMutation.mutate(briefId, { onError: (e) => toast.error(getErrorMessage(e)) });
+  }
+
+  function handleConvertToPage() {
+    convertMutation.mutate(briefId, {
+      onSuccess: (result) => {
+        toast.success("Brief converted to a page");
+        router.push(pageHref(result.pageId));
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
   }
 
   if (isLoading) return <LoadingState variant="form" rows={6} />;
@@ -218,6 +234,19 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
               loadingText="Cancelling…"
             >
               Cancel
+            </LoadingButton>
+          )}
+
+          {brief.status === "completed" && brief.report !== null && canCreatePages && (
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleConvertToPage}
+              isPending={convertMutation.isPending}
+              loadingText="Converting…"
+            >
+              Convert to page
             </LoadingButton>
           )}
 

@@ -25,7 +25,10 @@ import { WikiSearchCompanyDocuments } from "@/features/wiki/components/wiki-sear
 import { pageHref } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { SearchSnippetText } from "@/features/wiki/lib/search-snippet-text";
-import { TrustBadge, StatusBadge } from "@/features/wiki/components/kb-collection-badges";
+import {
+  TrustBadge,
+  StatusBadge,
+} from "@/features/wiki/components/kb-collection-badges";
 import { cn } from "@/lib/utils";
 import type { KbPageFullSearchItem } from "@/hooks/api/kb/kb-search-schema";
 
@@ -98,7 +101,11 @@ interface SearchResultCardProps {
   onFocus: () => void;
 }
 
-function SearchResultCard({ item, refCallback, onFocus }: SearchResultCardProps) {
+function SearchResultCard({
+  item,
+  refCallback,
+  onFocus,
+}: SearchResultCardProps) {
   return (
     <Link
       ref={refCallback}
@@ -135,6 +142,13 @@ export default function WikiSearchPage() {
   const q = searchParams.get("q") ?? "";
   const status = searchParams.get("status") ?? undefined;
   const type = searchParams.get("type") ?? undefined;
+  const verifiedParam = searchParams.get("verified");
+  const verified =
+    verifiedParam === "verified"
+      ? true
+      : verifiedParam === "unverified"
+        ? false
+        : undefined;
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
 
   const [inputValue, setInputValue] = useState(q);
@@ -164,12 +178,18 @@ export default function WikiSearchPage() {
     hasNextPage,
     isFetchingNextPage,
   } = useKbPageFullSearch(
-    { q, status, type, facets: true },
+    {
+      q,
+      status,
+      type,
+      ...(verified === undefined ? {} : { verified }),
+      facets: true,
+    },
     { enabled: q.trim().length > 0 },
   );
 
   const items = data?.pages.flatMap((page) => page.items) ?? [];
-  const hasFilters = !!status || !!type;
+  const hasFilters = !!status || !!type || verified !== undefined;
   const queryActive = q.trim().length > 0;
 
   const bottomSentinelRef = useRef<HTMLDivElement | null>(null);
@@ -216,8 +236,15 @@ export default function WikiSearchPage() {
   );
 
   const handleClearFilters = useCallback(() => {
-    update({ status: null, type: null });
+    update({ status: null, type: null, verified: null });
   }, [update]);
+
+  const handleVerifiedChange = useCallback(
+    (value: string) => {
+      update({ verified: value === "all" ? null : value });
+    },
+    [update],
+  );
 
   const handleClearStatus = useCallback(() => {
     update({ status: null });
@@ -250,6 +277,13 @@ export default function WikiSearchPage() {
 
   const facetStatusCounts = data?.pages[0]?.facets?.status ?? [];
   const facetTypeCounts = data?.pages[0]?.facets?.type ?? [];
+  const facetVerifiedCounts = data?.pages[0]?.facets?.verified ?? [];
+  const verifiedCount = facetVerifiedCounts.find(
+    (f) => f.value === "verified",
+  )?.count;
+  const unverifiedCount = facetVerifiedCounts
+    .filter((f) => f.value !== "verified")
+    .reduce((total, f) => total + f.count, 0);
 
   return (
     <PageWrapper title="Search">
@@ -270,17 +304,16 @@ export default function WikiSearchPage() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <Select
-              value={status ?? "all"}
-              onValueChange={handleStatusChange}
-            >
+            <Select value={status ?? "all"} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-9 w-40">
                 <SelectValue placeholder="Any status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Any status</SelectItem>
                 {STATUS_OPTIONS.map((opt) => {
-                  const facet = facetStatusCounts.find((f) => f.value === opt.value);
+                  const facet = facetStatusCounts.find(
+                    (f) => f.value === opt.value,
+                  );
                   return (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
@@ -297,7 +330,9 @@ export default function WikiSearchPage() {
               <SelectContent>
                 <SelectItem value="all">Any type</SelectItem>
                 {TYPE_OPTIONS.map((opt) => {
-                  const facet = facetTypeCounts.find((f) => f.value === opt.value);
+                  const facet = facetTypeCounts.find(
+                    (f) => f.value === opt.value,
+                  );
                   return (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
@@ -305,6 +340,27 @@ export default function WikiSearchPage() {
                     </SelectItem>
                   );
                 })}
+              </SelectContent>
+            </Select>
+            <Select
+              value={verifiedParam ?? "all"}
+              onValueChange={handleVerifiedChange}
+            >
+              <SelectTrigger className="h-9 w-40">
+                <SelectValue placeholder="Any trust" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any trust</SelectItem>
+                <SelectItem value="verified">
+                  {verifiedCount === undefined
+                    ? "Verified"
+                    : `Verified (${verifiedCount})`}
+                </SelectItem>
+                <SelectItem value="unverified">
+                  {facetVerifiedCounts.length === 0
+                    ? "Not verified"
+                    : `Not verified (${unverifiedCount})`}
+                </SelectItem>
               </SelectContent>
             </Select>
             <div className="flex rounded-md border border-border">
@@ -377,7 +433,13 @@ export default function WikiSearchPage() {
           loading={<SearchSkeleton />}
           empty={
             <EmptyState
-              title={queryActive ? (hrDocumentSearch ? "No pages found" : "No results") : "Search pages"}
+              title={
+                queryActive
+                  ? hrDocumentSearch
+                    ? "No pages found"
+                    : "No results"
+                  : "Search pages"
+              }
               description={
                 queryActive
                   ? "Try a different query or clear your filters."

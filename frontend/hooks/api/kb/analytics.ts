@@ -72,15 +72,28 @@ export interface PageAnalyticsPage {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export function usePageAnalytics(spaceId?: number) {
+export interface PageAnalyticsFilters {
+  spaceId?: number;
+  staleOnly?: boolean;
+}
+
+export function usePageAnalytics(filters?: PageAnalyticsFilters) {
   const canViewAnalytics = useCan("kb:analytics:view");
+  const { spaceId, staleOnly } = filters ?? {};
+  const keyParams: Record<string, unknown> = {
+    ...(spaceId !== undefined ? { spaceId } : {}),
+    ...(staleOnly === true ? { staleOnly: true } : {}),
+  };
   const query = useInfiniteQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pageAnalytics(spaceId !== undefined ? { spaceId } : undefined),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pageAnalytics(
+      Object.keys(keyParams).length > 0 ? keyParams : undefined,
+    ),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) => {
       const params: Record<string, unknown> = {
         ...(pageParam !== undefined ? { cursor: pageParam } : {}),
         ...(spaceId !== undefined ? { spaceId } : {}),
+        ...(staleOnly === true ? { staleOnly: "1" } : {}),
       };
       return apiClient.get<PageAnalyticsPage>(
         "/kb/analytics/pages",

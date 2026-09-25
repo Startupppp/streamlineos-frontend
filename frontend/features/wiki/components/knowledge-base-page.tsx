@@ -45,9 +45,11 @@ import {
   DisagreementBanner,
   CopyAnswerButton,
   AnswerFeedbackBar,
+  CitationEvidenceList,
   buildKbHistoryRows,
   questionForAssistantId,
 } from "@/features/wiki/components/kb-chat-parts";
+import type { KbAskCitation } from "@/types/kb";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -55,6 +57,7 @@ interface Pending {
   question: string;
   answer?: string;
   error?: string;
+  citations?: KbAskCitation[];
   hasContext?: boolean;
   disagreement?: { summary: string };
   isQuotaError?: boolean;
@@ -223,9 +226,9 @@ export default function KnowledgeBasePage() {
           if (activeConversationId === null) setConversation(data.conversationId);
           void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
           if (!data.hasContext) {
-            setPending((prev) => prev ? { ...prev, hasContext: false } : prev);
+            setPending((prev) => prev ? { ...prev, hasContext: false, citations: data.citations } : prev);
           } else if (data.disagreement) {
-            setPending((prev) => prev ? { ...prev, hasContext: true, disagreement: data.disagreement } : prev);
+            setPending((prev) => prev ? { ...prev, hasContext: true, disagreement: data.disagreement, citations: data.citations } : prev);
           } else {
             setPending(null);
           }
@@ -418,6 +421,11 @@ export default function KnowledgeBasePage() {
                           message={row.message}
                           onCitation={handleCitationClick}
                           reduce={Boolean(reduce)}
+                          evidence={
+                            row.message.role === "assistant" && row.message.citations?.length ? (
+                              <CitationEvidenceList citations={row.message.citations} />
+                            ) : undefined
+                          }
                           actions={
                             row.message.role === "assistant" && questionByAssistantId.has(row.message.id) ? (
                               <>
@@ -447,9 +455,12 @@ export default function KnowledgeBasePage() {
                     )}
                     {pending?.answer && (
                       <ChatBubble
-                        message={{ id: "pending-answer", role: "assistant", content: pending.answer }}
+                        message={{ id: "pending-answer", role: "assistant", content: pending.answer, citations: pending.citations }}
                         onCitation={handleCitationClick}
                         reduce={Boolean(reduce)}
+                        evidence={
+                          pending.citations?.length ? <CitationEvidenceList citations={pending.citations} /> : undefined
+                        }
                         actions={
                           !ask.isPending ? (
                             <>
