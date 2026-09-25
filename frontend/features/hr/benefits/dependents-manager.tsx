@@ -30,7 +30,9 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 const DEPENDENT_RELATIONSHIPS = ["spouse", "child", "parent", "other"] as const;
 
@@ -53,7 +55,7 @@ function DependentRow({ dep, onDelete }: { dep: Dependent; onDelete: () => void 
   return (
     <div className="flex items-center justify-between py-2 border-b border-border/40 last:border-0">
       <div className="flex items-center gap-2.5">
-        <div className="w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
           <UserRound className="h-4 w-4 text-muted-foreground" />
         </div>
         <div>
@@ -85,6 +87,8 @@ export function DependentsManager() {
   const addDependent = useAddDependent();
   const deleteDependent = useDeleteDependent();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Dependent | null>(null);
+  const pageState = usePageState({ permission: "hr:benefits:view", module: "hr", isLoading, isError, error });
 
   const form = useForm<DepFormValues>({
     resolver: zodResolver(depSchema),
@@ -122,16 +126,20 @@ export function DependentsManager() {
     })();
   }, [form, addDependent]);
 
-  const handleDelete = useCallback(
-    (id: number) => {
-      toast.promise(deleteDependent.mutateAsync(id), {
-        loading: "Removing dependent...",
-        success: "Dependent removed",
-        error: (e: unknown) => getErrorMessage(e),
-      });
-    },
-    [deleteDependent],
-  );
+  const handleConfirmDelete = useCallback(() => {
+    if (!deleteTarget) return;
+    deleteDependent.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success(`Removed ${deleteTarget.name}`);
+        setDeleteTarget(null);
+      },
+      onError: (e: unknown) => toast.error(getErrorMessage(e)),
+    });
+  }, [deleteDependent, deleteTarget]);
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+  function handleRetry() { void refetch(); }
 
   function handleRelationshipChange(v: string) {
     const next = DEPENDENT_RELATIONSHIPS.find((candidate) => candidate === v);
@@ -143,25 +151,23 @@ export function DependentsManager() {
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">Dependents</p>
         <AnimatedIconButton size="sm" variant="outline" className="text-xs gap-1" onClick={handleOpenSheet} icon={PlusIcon} iconSize={12} iconClassName="mr-1">
-          Add
+          Add dependent
         </AnimatedIconButton>
       </div>
 
       <Card>
         <CardContent className="p-4">
-          {isLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : isError ? (
-            <ErrorState
-              compact
-              title="Couldn't load your dependents"
-              description={getErrorMessage(error)}
-              onRetry={() => void refetch()}
-            />
-          ) : !dependents?.length ? (
+          <PageState
+            resolution={pageState}
+            loading={
+              <div className="space-y-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            }
+            onRetry={handleRetry}
+          >
+          {!dependents?.length ? (
             <EmptyState
               illustrationPreset="team"
               illustrationSize="sm"
@@ -173,10 +179,11 @@ export function DependentsManager() {
           ) : (
             <div>
               {dependents.map((dep) => (
-                <DependentRow key={dep.id} dep={dep} onDelete={() => handleDelete(dep.id)} />
+                <DependentRow key={dep.id} dep={dep} onDelete={() => setDeleteTarget(dep)} />
               ))}
             </div>
           )}
+          </PageState>
         </CardContent>
       </Card>
 
@@ -219,6 +226,18 @@ export function DependentsManager() {
           <Input id="dateOfBirth" type="date" {...form.register("dateOfBirth")} />
         </div>
       </HrSheet>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title="Remove dependent?"
+        description={deleteTarget ? `${deleteTarget.name} will no longer be covered under your benefits.` : ""}
+        confirmLabel="Remove"
+        destructive
+        isPending={deleteDependent.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
