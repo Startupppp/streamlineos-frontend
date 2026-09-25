@@ -4,6 +4,7 @@ import { useCallback, useMemo, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { NotificationSection, NotificationCategory } from "@/types/notifications";
 import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
+import { buildListSearchParams } from "../shared/use-build-list-url-state";
 
 export type InboxView = "notifications" | "drafts";
 
@@ -79,16 +80,9 @@ export function useInboxUrlState(): InboxUrlState {
 
   const setParams = useCallback(
     (updates: Record<string, string | null>) => {
-      const next = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") {
-          next.delete(key);
-        } else {
-          next.set(key, value);
-        }
-      }
-      const filterChanged = Object.keys(updates).some((key) => key !== "cursor");
-      if (filterChanged) next.delete("cursor");
+      const next = buildListSearchParams(searchParams, updates, {
+        resetCursor: Object.keys(updates).some((key) => key !== "cursor"),
+      });
       replaceWith(next);
     },
     [replaceWith, searchParams],
