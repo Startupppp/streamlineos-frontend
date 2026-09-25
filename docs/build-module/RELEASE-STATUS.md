@@ -22,13 +22,13 @@ complete product definition of done.
 | Phase | Current state | Evidence |
 |---|---|---|
 | 0. Baseline and control | Complete | Route manifest, route census, this status document, and the durable page specifications are reconciled. |
-| 1. Data and security foundation | Partially verified | Sprint/Cycle and QA Bug contraction is present; authorization census is `VULNERABLE=0`, `NEEDS-REVIEW=0`. Migration `1197` is pushed but production application is not verified in this audit. |
+| 1. Data and security foundation | Partially verified | Sprint/Cycle and QA Bug contraction is present; authorization census is `VULNERABLE=0`, `NEEDS-REVIEW=0`. Build migration `1197` is applied and verified on production RDS; the mixed historical journal still has unrelated pending entries. |
 | 2. Core daily workflow | Complete for the current release | My Work, Inbox, All Work, Backlog, Cycles, Triage, Forms, bulk actions, URL state, and focus refresh are implemented and focused-tested. |
 | 3. Planning and product management | Complete for the current release | Roadmap, Goals, Programs, Portfolios, Managed Products, Releases, Milestones, Reports, Analytics, and Workload parent routes passed authenticated browser verification. |
 | 4. Collaboration and external workflows | Complete for the current release | Client Portal, client access, change requests, Feedbucket, forms, approvals, updates, chat, and meetings parent routes passed authenticated browser verification. |
 | 5. Execution and governance | Complete for the current release | QA, incidents, risks, decisions, automations, webhooks, files, wiki, whiteboard, workflow settings, project settings, and integrations parent routes passed authenticated browser verification. |
 | 6. Performance and UX hardening | Complete for Build-owned release work | Build cache focus sync, mobile overflow, ticket-detail drawer behavior, contract parsing, route access, feature cycles, and workspace-removal checks are verified. |
-| 7. Release verification | Partially verified | Authenticated production smoke passed for the ticket-detail route observed in this audit. Current deployment identity, migration `1197` application, and the full browser matrix are not verified here. |
+| 7. Release verification | Partially verified | Authenticated production smoke passed for the ticket-detail route observed in this audit. Migration `1197` is verified; current deployment identity and the full browser matrix remain open. |
 
 "Complete for the current release" does not mean the aspirational P1/P2 competitor backlog is finished. Those future product investments remain explicitly listed in `06-prioritized-backlog.md`.
 
@@ -45,9 +45,10 @@ complete product definition of done.
 
 ## Production migrations
 
-- The production ledger and migration watermark were not queried in this audit because no production database connection is available in the clean checkout.
-- Migration `1197_build_cycle_permissions.sql` is present in backend `origin/main` but its production application is unverified.
-- Five known orphan rows remain below the watermark; none is pending or unreachable.
+- The production ledger was queried through the backend IAM-aware migration client on 2026-09-25.
+- Migration `1197_build_cycle_permissions.sql` is applied on production RDS; its journal hash is present exactly once.
+- Production contains canonical `build:cycles:view` and `build:cycles:manage` permissions, and the legacy sprint permission rows are absent.
+- The general migration runner reports a large mixed-module backlog because production is not at the current repository journal state. It was not replayed; unrelated HR, CRM, billing, and platform migrations were deliberately left untouched.
 - Canonical Build search migrations are:
   - `1185_roadmap_search_id_probe`
   - `1186_project_programs_list_indexes`
@@ -114,7 +115,7 @@ Completed:
 - [x] Canonical route inventory and physical pages agree.
 - [x] PM Workspace is absent from source, bundles, APIs, and production storage.
 - [x] Build authorization census is `VULNERABLE=0` and `NEEDS-REVIEW=0`.
-- [ ] Production migration ledger has zero pending migrations and includes migration `1197`.
+- [ ] Production migration ledger has zero pending migrations and includes migration `1197` (1197 is complete; the unrelated mixed-module backlog remains).
 - [x] Frontend and backend focused tests and typechecks pass.
 - [ ] Authenticated desktop and mobile browser matrices pass for the full Build route census against the production API.
 - [x] Frontend candidate is merged into `origin/main`.
