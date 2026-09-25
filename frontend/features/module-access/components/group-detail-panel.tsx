@@ -229,13 +229,20 @@ export function GroupDetailPanel({
         </CardContent>
       </Card>
 
+      {/* A system group's permission set is read-only — the picker above enforces
+          that, and the reconciler rewrites it at boot anyway. Its membership is
+          the opposite: deciding who is an HR admin is exactly what an org owner
+          is for, and it was the only way to give anyone hr:leaves:approve. This
+          gate used to carry `&& !group.isSystem`, which made all three HR groups
+          unassignable by everybody. The server never agreed — `addGroupMember`
+          has no isSystem guard. */}
       <MemberAssignmentSheet
         open={membersOpen}
         onOpenChange={handleMembersOpenChange}
         moduleKey={moduleKey}
         groupId={group.id}
         groupName={group.name}
-        canManage={canManage && !group.isSystem}
+        canManage={canManage}
       />
     </>
   );
