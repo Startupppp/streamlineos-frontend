@@ -106,6 +106,7 @@ Current release-candidate checks:
 - Project Forms now return a validated cursor page, preserve legacy array responses during rollout, and load subsequent pages in the UI; focused Forms verification passes 24 tests across frontend and backend.
 - Form submissions now use the same validated timestamp/id cursor page, and the submissions tab can load subsequent records while accepting the legacy array response during rollout.
 - Project Incidents now return a validated detected-at/ID cursor page, and the incident list loads subsequent records while accepting the legacy array response during rollout.
+- Project Modules now return a validated name/ID cursor page; the Modules page loads subsequent records while embedded selectors continue to normalize the page contract to their existing array API.
 
 ## Browser verification
 

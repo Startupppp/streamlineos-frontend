@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
@@ -17,7 +17,10 @@ const cycleRowContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.cycleRowContract),
 );
 const moduleListContract = lazyContract(() =>
-  import("@/hooks/api/build/execution-schema").then((m) => m.moduleListContract),
+  import("@/hooks/api/build/execution-schema").then((m) => m.moduleResponseContract),
+);
+const modulePageContract = lazyContract(() =>
+  import("@/hooks/api/build/execution-schema").then((m) => m.moduleResponseContract),
 );
 const moduleRowContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.moduleRowContract),
@@ -174,9 +177,36 @@ export function useModules(
   const canView = useCan("build:view");
   return useQuery<Module[]>({
     queryKey: buildWorkQueryKeys.projects.modules(projectId),
-    queryFn: ({ signal }) => apiClient.get<Module[]>(`/build/${projectId}/modules`, undefined, signal, moduleListContract),
+    queryFn: async ({ signal }) => {
+      const response = await apiClient.get<Module[] | { data: Module[] }>(`/build/${projectId}/modules`, undefined, signal, moduleListContract);
+      return Array.isArray(response) ? response : response.data;
+    },
     staleTime: 60_000,
     ...options,
+    enabled: canView && !!projectId,
+  });
+}
+
+type ModulePage = {
+  data: Module[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
+
+export function useModulePages(projectId: number) {
+  const canView = useCan("build:view");
+  return useInfiniteQuery<ModulePage>({
+    queryKey: [...buildWorkQueryKeys.projects.modules(projectId), "pages"],
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ signal, pageParam }) => {
+      const query = pageParam ? { cursor: pageParam, pageSize: "50" } : { pageSize: "50" };
+      const response = await apiClient.get<Module[] | ModulePage>(`/build/${projectId}/modules`, query, signal, modulePageContract);
+      if (Array.isArray(response)) {
+        return { data: response, pagination: { limit: response.length, hasMore: false, nextCursor: null } };
+      }
+      return response;
+    },
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
+    staleTime: 60_000,
     enabled: canView && !!projectId,
   });
 }
