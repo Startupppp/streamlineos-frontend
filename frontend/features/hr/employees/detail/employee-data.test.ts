@@ -26,6 +26,17 @@ const SAFE_EMPLOYEE = {
   phone: null,
   employmentStatus: "ACTIVE",
   employment: null,
+  // HRMS-E2E-018. Every detail response now carries what the server observed
+  // about the invite email. "none" is the shape for an employee with no invite
+  // row at all — the screen shows nothing rather than guessing.
+  inviteDelivery: {
+    status: "none",
+    queuedAt: null,
+    sentAt: null,
+    attempts: 0,
+    lastError: null,
+    deliveryConfirmed: false,
+  },
 };
 
 describe("employee base response contract", () => {
