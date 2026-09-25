@@ -207,22 +207,22 @@ Separately, the stale-justification problem stands: 642 reads are suppressed on 
 
 ---
 
-## P2-2 · Two org-wide Build reads have no pagination
+## P2-2 · Org-wide Build reads and dead resource-allocation surface
 
 Both are in `backend/src/modules/build/core/projects-analytics.service.ts`:
 
-- **`resourceAllocation`** backs `GET /build/resource-allocation` (`projects-reports.controller.ts:55`). It reads every `ACTIVE` project in the org with no limit, runs an org-wide `UNION` over `tickets` and `ticket_assignees`, reads every distinct assignee from `users`, and returns `[...byMember.values()]` — an unbounded array, sorted in JS. `@ResponseSchema(z.array(...))` confirms there is no envelope and no cursor. This violates BE-24 and BE-132.
-- **`getOrgProjectHealthSummary`** aggregates `tickets` and `cycles` across the whole org with no project predicate and no limit, then reads every project row.
+- **`resourceAllocation`** backs `GET /build/resource-allocation` (`projects-reports.controller.ts:55`). It now returns a validated cursor page, limits the assignee query to the requested page, and fetches user and project breakdowns only for that page. The route still has no frontend, AI, or internal caller.
+- **`getOrgProjectHealthSummary`** previously materialized every project row and assembled the five scalar results in JavaScript. It now computes the same tenant-scoped totals and health buckets in one SQL CTE aggregate; focused analytics and executive-brief coverage passes.
 
 **`GET /build/resource-allocation` has no caller.** An exhaustive search across `backend/src` and `frontend` finds the controller, the service, three spec files and the census — and nothing else. No frontend hook, no AI tool, no internal service. It is live, permissioned, module-gated, unbounded, and dead.
 
 That changes the recommendation. Paginating an endpoint nothing calls is contract churn for no reader; first prove a caller or remove the dead surface under the rules in `docs/build-module/99-kill-list.md`.
 
-It was **not** deleted here: removing a Build route trips three disk-bound gates — the route manifest, the authorization census and module-access — all of which read the live tree and all of which are on this task's do-not-touch list.
+It was **not** deleted here: removing a Build route trips three disk-bound gates — the route manifest, the authorization census and module-access — all of which read the live tree and all of which require an explicit route-retirement decision.
 
-**Recommendation.** Route `resource-allocation` to dead-surface removal. If it is kept, give it the standard cursor envelope with `PAGE_SIZE_CAP`, keyed on `(org_id, member)`.
+**Recommendation.** Keep the resource-allocation deletion decision open until the route manifest and API-contract owner explicitly retire it. If it remains public, its current cursor envelope is the minimum contract; do not reintroduce a bare array.
 
-`getOrgProjectHealthSummary` does have a caller — `executive-brief.service.ts:175`. It returns five scalars, so bound it rather than paginate: the two aggregates are already grouped, but the `projects` read is uncapped and the summary is assembled in JS rather than SQL.
+`getOrgProjectHealthSummary` does have a caller — `executive-brief.service.ts:175`. The uncapped project-row materialization is resolved in backend commit `121c1727e`; production-shaped EXPLAIN evidence remains a release follow-up.
 
 ---
 
