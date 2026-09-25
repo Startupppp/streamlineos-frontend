@@ -1,6 +1,6 @@
 import "server-only";
 import type { Session } from "next-auth";
-import { gateCookieName } from "@/lib/onboarding-gate";
+import { gateCookieName, mayDeferOwnOnboarding } from "@/lib/onboarding-gate";
 
 export type WizardGate =
   | "/access-suspended"
@@ -53,7 +53,7 @@ export function resolveWizardGate(
     // themselves. The wizard stays reachable and stays incomplete — deferring is
     // not finishing, and nothing downstream is told otherwise.
     const deferred =
-      session.user?.role === "ORG_ADMIN" &&
+      mayDeferOwnOnboarding(session) &&
       Boolean(cookieStore.get(gateCookieName("onboarding-deferred", scope))?.value);
     if (!onboardingDone && !deferred) return "/employee-onboarding";
   }

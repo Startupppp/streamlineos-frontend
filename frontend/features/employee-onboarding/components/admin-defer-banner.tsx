@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { writeGateCookie } from "@/lib/onboarding-gate";
+import { mayDeferOwnOnboarding, writeGateCookie } from "@/lib/onboarding-gate";
 
 /**
  * HRMS-E2E-020. An ORG_ADMIN brought in to set up HR was redirected to this
@@ -28,7 +28,10 @@ export function AdminDeferBanner() {
 
   const userId = session?.user?.id;
   const orgId = session?.orgId;
-  const isAdmin = session?.user?.role === "ORG_ADMIN";
+  // Asks the gate its own question (FE-52): a client component does not read
+  // the role slug, and the button must never appear for somebody the gate then
+  // refuses to let past.
+  const isAdmin = mayDeferOwnOnboarding(session);
 
   const handleDefer = useCallback(() => {
     if (!userId || !orgId) return;

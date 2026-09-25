@@ -14,7 +14,11 @@ const session = jest.fn();
 
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 jest.mock("next-auth/react", () => ({ useSession: () => session() }));
+// Only the cookie write is doubled. `mayDeferOwnOnboarding` stays real, so
+// these assertions exercise the rule the routing gate actually applies rather
+// than a stand-in that could drift away from it.
 jest.mock("@/lib/onboarding-gate", () => ({
+  ...jest.requireActual("@/lib/onboarding-gate"),
   writeGateCookie: (...args: unknown[]) => writeGateCookie(...args),
 }));
 
