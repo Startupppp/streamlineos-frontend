@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useReviewCycles, useHrPerformanceReviews } from "@/hooks/api/hr";
 
@@ -92,6 +93,8 @@ const PerformanceAnalyticsStats = memo(function PerformanceAnalyticsStats({
 export default function PerformanceAnalyticsPage() {
   const { data: cycles = [], isLoading, isError, error, refetch } = useReviewCycles();
   const pageState = usePageState({ permission: "hr:performance:view", isLoading, isError, error });
+  // FE-55: /hr/analytics requires hr:analytics:read; never link to a predictable denial.
+  const canOpenPeopleAnalytics = useCan("hr:analytics:read");
   const { data: reviews } = useHrPerformanceReviews();
 
   const handleRetry = useCallback(() => {
@@ -135,7 +138,7 @@ export default function PerformanceAnalyticsPage() {
       subtitle="Review cycle insights and metrics"
       backHref="/hr/performance"
       actions={
-        <Button asChild variant="outline" size="sm">
+        canOpenPeopleAnalytics && <Button asChild variant="outline" size="sm">
           <Link href="/hr/analytics">
             Open people analytics
             <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
