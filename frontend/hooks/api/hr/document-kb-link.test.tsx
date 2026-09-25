@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import type { DataScope } from "@/hooks/api/access-schema";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import {
@@ -20,9 +21,11 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 const mockCan = jest.fn<boolean, [string]>();
+const mockScope = jest.fn<DataScope, [string]>();
 const mockModuleEnabled = jest.fn<boolean, [string]>();
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockCan(key),
+  useScope: (key: string) => mockScope(key),
   useModuleEnabled: (key: string) => mockModuleEnabled(key),
   useAccess: () => ({ data: {}, refetch: jest.fn() }),
 }));
@@ -39,6 +42,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   mockCan.mockReturnValue(true);
+  mockScope.mockReturnValue("all");
   mockModuleEnabled.mockReturnValue(true);
 });
 
@@ -65,11 +69,27 @@ describe("useDocumentKbLink and useDocumentVersions", () => {
   it("do not ask without the permission to view documents, or without a document", () => {
     mockCan.mockReturnValue(false);
     renderHook(() => useDocumentKbLink(7), { wrapper });
+    renderHook(() => useDocumentVersions(7), { wrapper });
     mockCan.mockReturnValue(true);
     renderHook(() => useDocumentKbLink(null), { wrapper });
+    renderHook(() => useDocumentVersions(null), { wrapper });
 
     expect(mockGet).not.toHaveBeenCalled();
   });
+
+  it.each<DataScope>(["team", "own", "none"])(
+    "do not ask a caller who holds the view permission at scope %s, because both routes refuse anyone below the whole organisation",
+    (scope) => {
+      mockScope.mockReturnValue(scope);
+
+      renderHook(() => useDocumentKbLink(7), { wrapper });
+      renderHook(() => useDocumentVersions(7), { wrapper });
+
+      expect(mockCan).toHaveBeenCalledWith("hr:documents:view");
+      expect(mockScope).toHaveBeenCalledWith("hr:documents:view");
+      expect(mockGet).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("usePublishDocumentToKb and useWithdrawDocumentFromKb", () => {
@@ -84,6 +104,22 @@ describe("usePublishDocumentToKb and useWithdrawDocumentFromKb", () => {
 
     expect(mockPost).toHaveBeenCalledWith("/hr/documents/7/kb-link", {}, undefined, expect.anything());
     expect(client.getQueryData(humanResourcesQueryKeys.hr.documentKbLink(7))).toEqual(live);
+  });
+
+  it("publish refreshes the Knowledge Base lists and the document's own view, because the entry it made is now on both", async () => {
+    mockPost.mockResolvedValue(state);
+    client.setQueryData(humanResourcesQueryKeys.hr.documentClassification(7), { documentId: 7 });
+    client.setQueryData(knowledgeAndSurveysQueryKeys.kb.linkedDocuments({ limit: 20 }), { data: [] });
+    const spy = jest.spyOn(client, "invalidateQueries");
+
+    const { result } = renderHook(() => usePublishDocumentToKb(), { wrapper });
+    await act(async () => {
+      await result.current.mutateAsync({ documentId: 7 });
+    });
+
+    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+    expect(spy).toHaveBeenCalledWith({ queryKey: humanResourcesQueryKeys.hr.documentClassification(7) });
+    expect(client.getQueryState(knowledgeAndSurveysQueryKeys.kb.linkedDocuments({ limit: 20 }))?.isInvalidated).toBe(true);
   });
 
   it("publish sends the narrowed audiences when the caller gives them", async () => {

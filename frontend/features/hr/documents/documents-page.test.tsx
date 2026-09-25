@@ -7,6 +7,7 @@ import {
   dehydrate,
 } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import type { DataScope } from "@/hooks/api/access-schema";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { documentListContract } from "@/hooks/api/hr/documents-schema";
@@ -15,9 +16,11 @@ jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: null }),
 }));
 
+const mockScope = jest.fn<DataScope, [string]>();
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
   useCan: jest.fn(() => true),
+  useScope: (key: string) => mockScope(key),
   useModuleEnabled: jest.fn(() => true),
 }));
 
@@ -30,8 +33,9 @@ jest.mock("@/lib/api-client", () => ({
   },
 }));
 
+const mockHrKbLinkFlags = jest.fn<{ link: boolean; search: boolean; ai: boolean }, []>();
 jest.mock("@/hooks/api/kb/hr-link-config", () => ({
-  useHrKbLinkFlags: () => ({ link: false, search: false, ai: false }),
+  useHrKbLinkFlags: () => mockHrKbLinkFlags(),
   useHrKbLinkFlagsAdmin: () => ({ data: undefined }),
   useUpdateHrKbLinkFlags: () => ({ mutateAsync: jest.fn(), isPending: false }),
 }));
@@ -61,14 +65,24 @@ jest.mock("@/features/hr/documents/document-filters", () => ({
 jest.mock("@/features/hr/documents/document-table", () => ({
   DocumentTable: ({
     documents,
+    onClassify,
   }: {
     documents: { id: number; name: string }[];
-  }) =>
-    documents.map((d) => (
-      <div key={d.id} data-testid="document-row">
-        {d.name}
-      </div>
-    )),
+    onClassify?: (doc: { id: number; name: string }) => void;
+  }) => (
+    <>
+      {documents.map((d) => (
+        <div key={d.id} data-testid="document-row">
+          {d.name}
+        </div>
+      ))}
+      {onClassify ? <div data-testid="classification-offered" /> : null}
+    </>
+  ),
+}));
+
+jest.mock("@/features/hr/documents/components/document-classification-sheet", () => ({
+  DocumentClassificationSheet: () => <div data-testid="classification-sheet" />,
 }));
 
 jest.mock("@/features/hr/documents/new-folder-dialog", () => ({
@@ -157,12 +171,14 @@ function documentListCalls(): unknown[][] {
   );
 }
 
-describe("DocumentsPage server-prefetch seam", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    (apiClient.get as jest.Mock).mockReturnValue(new Promise(() => {}));
-  });
+beforeEach(() => {
+  jest.clearAllMocks();
+  (apiClient.get as jest.Mock).mockReturnValue(new Promise(() => {}));
+  mockScope.mockReturnValue("all");
+  mockHrKbLinkFlags.mockReturnValue({ link: false, search: false, ai: false });
+});
 
+describe("DocumentsPage server-prefetch seam", () => {
   it("renders rows from the hydrated cache and makes no documents API call", () => {
     const state = makeHydratedState();
     const client = new QueryClient();
@@ -205,5 +221,47 @@ describe("DocumentsPage server-prefetch seam", () => {
     await expect((call?.[3] as () => Promise<unknown>)()).resolves.toBe(
       documentListContract,
     );
+  });
+});
+
+describe("DocumentsPage classification and sharing", () => {
+  function renderHydrated() {
+    render(
+      <Wrapper client={new QueryClient()}>
+        <HydrationBoundary state={makeHydratedState()}>
+          <DocumentsPage />
+        </HydrationBoundary>
+      </Wrapper>,
+    );
+  }
+
+  it("offers classification and mounts its sheet for someone who holds the document permissions across the organisation, with the feature on", () => {
+    mockHrKbLinkFlags.mockReturnValue({ link: true, search: false, ai: false });
+
+    renderHydrated();
+
+    expect(screen.getByTestId("classification-offered")).toBeInTheDocument();
+    expect(screen.getByTestId("classification-sheet")).toBeInTheDocument();
+  });
+
+  it.each<DataScope>(["team", "own", "none"])(
+    "offers nothing and mounts no sheet for a manager whose document scope is %s, although useCan says they may manage documents",
+    (scope) => {
+      mockScope.mockReturnValue(scope);
+      mockHrKbLinkFlags.mockReturnValue({ link: true, search: false, ai: false });
+
+      renderHydrated();
+
+      expect(screen.getByTestId("document-row")).toBeInTheDocument();
+      expect(screen.queryByTestId("classification-offered")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("classification-sheet")).not.toBeInTheDocument();
+    },
+  );
+
+  it("offers nothing while the feature is off, even to someone who holds the permissions across the organisation", () => {
+    renderHydrated();
+
+    expect(screen.getByTestId("document-row")).toBeInTheDocument();
+    expect(screen.queryByTestId("classification-offered")).not.toBeInTheDocument();
   });
 });

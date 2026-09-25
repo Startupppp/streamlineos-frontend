@@ -26,6 +26,7 @@ import { DocumentClassificationSheet } from "@/features/hr/documents/components/
 import { HrKbSharingSwitch } from "@/features/hr/documents/components/hr-kb-sharing-switch";
 import { DocumentBackfillPanel } from "@/features/hr/documents/components/document-backfill-panel";
 import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
+import { useCanClassifyDocuments } from "@/hooks/api/hr/document-classification";
 import { useCan } from "@/hooks/api/access";
 import { RichDocumentsSection } from "@/features/hr/documents/rich-documents-section";
 import { DocumentsExtendedSection } from "@/features/hr/documents/documents-extended-section";
@@ -62,6 +63,8 @@ export function DocumentsPage() {
   const pageSize = 20;
 
   const canManageDocs = useCan("hr:documents:manage");
+  // Classification and sharing is organisation-wide authority the server refuses below scope `all`; `canManageDocs` is scope-blind.
+  const canClassify = useCanClassifyDocuments();
   const hrKbLink = useHrKbLinkFlags();
   const [isLetterGenOpen, setIsLetterGenOpen] = useState(false);
 
@@ -239,7 +242,7 @@ export function DocumentsPage() {
           onEdit={handleEdit}
           onOpenUpload={handleOpenUpload}
           onSendForSignature={handleSendForSignature}
-          onClassify={hrKbLink.link && canManageDocs ? handleClassify : undefined}
+          onClassify={hrKbLink.link && canClassify ? handleClassify : undefined}
         />
 
         <RichDocumentsSection />
@@ -269,11 +272,13 @@ export function DocumentsPage() {
           categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
           canAssignEmployee={canManageDocs}
         />
-        <DocumentClassificationSheet
-          open={!!classifyingDocument}
-          onOpenChange={handleClassifySheetChange}
-          document={classifyingDocument}
-        />
+        {canClassify ? (
+          <DocumentClassificationSheet
+            open={!!classifyingDocument}
+            onOpenChange={handleClassifySheetChange}
+            document={classifyingDocument}
+          />
+        ) : null}
         <CreateEnvelopeDialog
           open={!!signatureDocument}
           onOpenChange={handleSignatureDialogChange}

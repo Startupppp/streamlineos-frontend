@@ -7,7 +7,12 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
-import type { DocumentAudience, DocumentAudienceEntry, PublishBlockerCode } from "@/hooks/api/hr/document-classification";
+import {
+  useCanReadDocumentSharing,
+  type DocumentAudience,
+  type DocumentAudienceEntry,
+  type PublishBlockerCode,
+} from "@/hooks/api/hr/document-classification";
 
 const linkLazy = lazyContract(() => import("@/hooks/api/hr/document-kb-link-schema").then((m) => m.documentKbLinkStateContract));
 const versionsLazy = lazyContract(() => import("@/hooks/api/hr/document-kb-link-schema").then((m) => m.documentVersionsContract));
@@ -47,14 +52,16 @@ export interface DocumentVersionsView {
   versions: DocumentVersionRow[];
 }
 
+/** Organisation-wide: the route answers 403 to a caller whose `hr:documents:view` scope is below `all`, so it is not asked for one (see `useCanReadDocumentSharing`). */
 export function useDocumentKbLink(documentId: number | null, options?: { enabled?: boolean }) {
   const canView = useCan("hr:documents:view");
+  const orgWide = useCanReadDocumentSharing();
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.documentKbLink(documentId ?? 0),
     queryFn: ({ signal }) => apiClient.get<DocumentKbLinkState>(`/hr/documents/${documentId}/kb-link`, undefined, signal, linkLazy),
     staleTime: 15_000,
-    enabled: documentId !== null && hrEnabled && canView && (options?.enabled ?? true),
+    enabled: documentId !== null && hrEnabled && canView && orgWide && (options?.enabled ?? true),
   });
 }
 
@@ -100,14 +107,16 @@ export function useWithdrawDocumentFromKb() {
   });
 }
 
+/** Organisation-wide, like the link state: not asked for a caller whose `hr:documents:view` scope is below `all`. */
 export function useDocumentVersions(documentId: number | null, options?: { enabled?: boolean }) {
   const canView = useCan("hr:documents:view");
+  const orgWide = useCanReadDocumentSharing();
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.documentVersions(documentId ?? 0),
     queryFn: ({ signal }) => apiClient.get<DocumentVersionsView>(`/hr/documents/${documentId}/versions`, undefined, signal, versionsLazy),
     staleTime: 15_000,
-    enabled: documentId !== null && hrEnabled && canView && (options?.enabled ?? true),
+    enabled: documentId !== null && hrEnabled && canView && orgWide && (options?.enabled ?? true),
   });
 }
 

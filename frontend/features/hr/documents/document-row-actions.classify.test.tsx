@@ -1,10 +1,15 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { DataScope } from "@/hooks/api/access-schema";
 import type { Document } from "@/types/hr";
 import { DocumentRowActions } from "./document-row-actions";
 
 const mockCan = jest.fn<boolean, [string]>();
-jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan(key) }));
+const mockScope = jest.fn<DataScope, [string]>();
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => mockCan(key),
+  useScope: (key: string) => mockScope(key),
+}));
 jest.mock("@/hooks/common/use-file-url", () => ({ downloadProtectedFile: jest.fn(), viewProtectedFile: jest.fn() }));
 jest.mock("sonner", () => ({ toast: { error: jest.fn(), info: jest.fn(), success: jest.fn() } }));
 
@@ -45,6 +50,7 @@ describe("DocumentRowActions — classification and sharing", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCan.mockImplementation((key) => key === "hr:documents:manage");
+    mockScope.mockReturnValue("all");
   });
 
   it("offers the item to someone who manages documents when the feature is on, and hands over the document", async () => {
@@ -68,6 +74,30 @@ describe("DocumentRowActions — classification and sharing", () => {
     await openMenu(jest.fn());
 
     expect(screen.getByRole("menuitem", { name: /view file/i })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /classification and sharing/i })).not.toBeInTheDocument();
+  });
+
+  it.each<DataScope>(["team", "own", "none"])(
+    "does not offer it to a manager whose scope is %s, although useCan says they may manage documents and the feature is on",
+    async (scope) => {
+      mockScope.mockReturnValue(scope);
+      await openMenu(jest.fn());
+
+      expect(mockCan).toHaveBeenCalledWith("hr:documents:manage");
+      expect(screen.getByRole("menuitem", { name: /edit details/i })).toBeInTheDocument();
+      expect(screen.queryByRole("menuitem", { name: /classification and sharing/i })).not.toBeInTheDocument();
+    },
+  );
+
+  it("does not offer it to someone who reads every document but manages only a team's", async () => {
+    mockScope.mockImplementation((key) => (key === "hr:documents:manage" ? "team" : "all"));
+    await openMenu(jest.fn());
+    expect(screen.queryByRole("menuitem", { name: /classification and sharing/i })).not.toBeInTheDocument();
+  });
+
+  it("does not offer it to someone who manages every document but reads only a team's", async () => {
+    mockScope.mockImplementation((key) => (key === "hr:documents:view" ? "team" : "all"));
+    await openMenu(jest.fn());
     expect(screen.queryByRole("menuitem", { name: /classification and sharing/i })).not.toBeInTheDocument();
   });
 });

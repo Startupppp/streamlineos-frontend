@@ -26,6 +26,7 @@ import {
 } from "@/hooks/common/use-file-url";
 import { toast } from "sonner";
 import { useCan } from "@/hooks/api/access";
+import { useCanClassifyDocuments } from "@/hooks/api/hr/document-classification";
 import type { Document } from "@/types/hr";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
@@ -34,7 +35,7 @@ interface DocumentRowActionsProps {
   onDelete: (documentId: number) => Promise<void>;
   onEdit: (doc: Document) => void;
   onSendForSignature: (doc: Document) => void;
-  /** Present only when HR documents in the Knowledge Base are switched on for this tenant. */
+  /** Present only when HR documents in the Knowledge Base are switched on for this tenant. Offered only to a caller who also holds the document permissions organisation-wide. */
   onClassify?: (doc: Document) => void;
 }
 
@@ -45,6 +46,8 @@ export const DocumentRowActions = forwardRef<
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const canManageDocs = useCan("hr:documents:manage");
+  // Scope-blind `useCan` is not enough here: the sheet's requests are refused below `all`, so the entry would open onto a wall of 403s.
+  const canClassify = useCanClassifyDocuments();
   const canCreateEnvelope = useCan("sign:envelope:create");
   const hasFileUrl = doc.hasFile;
 
@@ -171,7 +174,7 @@ export const DocumentRowActions = forwardRef<
               Edit details
             </DropdownMenuItem>
           ) : null}
-          {canManageDocs && onClassify ? (
+          {canManageDocs && canClassify && onClassify ? (
             <DropdownMenuItem onClick={handleClassify}>
               <ShieldCheck className="mr-2 h-3.5 w-3.5" />
               Classification and sharing
