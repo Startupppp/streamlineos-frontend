@@ -12,6 +12,7 @@ import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types
 import type { AllWorkTicketMeta } from "./map-all-work-ticket";
 import type { MyWorkView } from "./my-work-view";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 interface MyWorkViewBodyProps {
   view: MyWorkView;
@@ -27,6 +28,7 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
   ticketMeta,
 }: MyWorkViewBodyProps) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const shouldReduceMotion = useReducedMotion();
   const swapVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
 
@@ -34,11 +36,13 @@ export const MyWorkViewBody = memo(function MyWorkViewBody({
     (id: number) => {
       const meta = ticketMeta.get(id);
       if (!meta) return;
-      router.push(
-        getTicketDetailHref(meta.projectId, meta.projectKey, meta.ticketNumber),
+      requestLeave(() =>
+        router.push(
+          getTicketDetailHref(meta.projectId, meta.projectKey, meta.ticketNumber),
+        ),
       );
     },
-    [ticketMeta, router],
+    [ticketMeta, requestLeave, router],
   );
 
   return (

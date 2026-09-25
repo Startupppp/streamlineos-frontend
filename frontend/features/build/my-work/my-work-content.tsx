@@ -23,6 +23,7 @@ import type { UseMyWorkBulkReturn } from "./use-my-work-bulk";
 import { AllWorkListSkeleton, BucketSection, BUCKET_ORDER } from "./my-work-rows";
 import { MyWorkViewBody } from "./my-work-view-body-lazy";
 import { MyWorkPaginationBar } from "./my-work-pagination-bar";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 const TABLE_COLUMNS: DataTableColumn<KanbanTicket>[] = [
   {
@@ -112,17 +113,20 @@ export const MyWorkContent = memo(function MyWorkContent({
   orgStatuses,
 }: MyWorkContentProps) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const isOnline = useOnlineStatus();
 
   const handleTicketSelect = useCallback(
     (id: number) => {
       const meta = ticketMeta.get(id);
       if (!meta) return;
-      router.push(
-        getTicketDetailHref(meta.projectId, meta.projectKey, meta.ticketNumber),
+      requestLeave(() =>
+        router.push(
+          getTicketDetailHref(meta.projectId, meta.projectKey, meta.ticketNumber),
+        ),
       );
     },
-    [ticketMeta, router],
+    [ticketMeta, requestLeave, router],
   );
 
   const handleRowClick = useCallback(
