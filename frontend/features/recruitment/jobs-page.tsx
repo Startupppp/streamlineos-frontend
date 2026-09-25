@@ -131,7 +131,7 @@ export function JobsPage() {
       duplicateJob.mutate(id, {
         onSuccess: (job) => {
           toast.success("Job duplicated as draft");
-          router.push(`/hr/recruitment/jobs/${job.id}/edit`);
+          router.push(`/recruitment/jobs/${job.id}/edit`);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       });
@@ -198,7 +198,7 @@ export function JobsPage() {
         subtitle={subtitle}
         actions={
           <Button size="sm" asChild>
-            <Link href="/hr/recruitment/jobs/new">
+            <Link href="/recruitment/jobs/new">
               <Plus className="mr-1.5 h-4 w-4" /> New Job
             </Link>
           </Button>
@@ -240,7 +240,7 @@ export function JobsPage() {
               illustration={<EmptyPersonIllustration />}
               title="No job postings yet"
               description="Create your first job posting to start hiring"
-              action={{ label: "New Job Posting", href: "/hr/recruitment/jobs/new" }}
+              action={{ label: "New Job Posting", href: "/recruitment/jobs/new" }}
               className={CONTENT_FILL_PANEL}
             />
           ) : (

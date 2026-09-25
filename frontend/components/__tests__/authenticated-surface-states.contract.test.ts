@@ -38,7 +38,7 @@ const BASELINE = {
 const EMPTY_STATE_NOT_APPLICABLE = [
   "/build/managed-products/[managedProductId]/insights",
   "/crm/import",
-  "/hr/recruitment/sla",
+  "/recruitment/sla",
   "/inventory/products/new",
   "/settings/notifications/policy",
   "/settings/organization/structure",

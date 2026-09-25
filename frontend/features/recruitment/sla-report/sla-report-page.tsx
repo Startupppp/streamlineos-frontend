@@ -131,7 +131,7 @@ export function SlaReportPage() {
     <PageWrapper
       title="SLA Breach Report"
       subtitle="Monthly % of candidates who breached SLA per recruitment stage"
-      backHref="/hr/recruitment/sla"
+      backHref="/recruitment/sla"
       backLabel="SLA Config"
     >
       {isLoading ? (
@@ -151,7 +151,7 @@ export function SlaReportPage() {
           illustration={<EmptyReportIllustration />}
           title="No SLA tracking data yet"
           description="SLA data is recorded as candidates move through recruitment stages."
-          action={{ label: "Configure SLAs", href: "/hr/recruitment/sla" }}
+          action={{ label: "Configure SLAs", href: "/recruitment/sla" }}
           className={CONTENT_FILL_PANEL}
         />
       ) : (

@@ -211,7 +211,7 @@ export function SlaConfigPage() {
     <PageWrapper
       title="SLA Configuration"
       subtitle="Set maximum hours allowed per recruitment stage before an SLA breach is triggered"
-      backHref="/hr/recruitment"
+      backHref="/recruitment"
       backLabel="Back to Recruitment"
     >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">

@@ -46,7 +46,7 @@ export function AtsDeveloperSandboxPage() {
     <PageWrapper
       title="Developer"
       subtitle="Hiring webhooks, signature verification, and what sign-on and directory sync actually do here."
-      backHref="/hr/recruitment/integrations"
+      backHref="/recruitment/integrations"
     >
       <PageState resolution={pageState} loading={<LoadingSkeleton />} onRetry={handleRetry}>
         <div className="space-y-6">

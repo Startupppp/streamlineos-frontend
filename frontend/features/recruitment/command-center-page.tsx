@@ -38,13 +38,13 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
 
 const CREATE_ACTIONS = [
-  { label: "New requisition", href: "/hr/recruitment/requisitions" },
-  { label: "New job post", href: "/hr/recruitment/jobs/new" },
-  { label: "Add candidate", href: "/hr/recruitment/candidates" },
-  { label: "Import resumes", href: "/hr/recruitment/candidates/import" },
-  { label: "Schedule interview", href: "/hr/recruitment/interviews" },
-  { label: "Create referral link", href: "/hr/recruitment/refer" },
-  { label: "Add vendor", href: "/hr/recruitment/vendors" },
+  { label: "New requisition", href: "/recruitment/requisitions" },
+  { label: "New job post", href: "/recruitment/jobs/new" },
+  { label: "Add candidate", href: "/recruitment/candidates" },
+  { label: "Import resumes", href: "/recruitment/candidates/import" },
+  { label: "Schedule interview", href: "/recruitment/interviews" },
+  { label: "Create referral link", href: "/recruitment/refer" },
+  { label: "Add vendor", href: "/recruitment/vendors" },
 ] as const;
 
 
@@ -138,10 +138,10 @@ export function RecruitmentCommandCenterPage() {
 
   const attentionItems = [
     ...(overdueFeedback.length > 0
-      ? [{ label: `${overdueFeedback.length} interview${overdueFeedback.length > 1 ? "s" : ""} awaiting feedback`, href: "/hr/recruitment/interviews" }]
+      ? [{ label: `${overdueFeedback.length} interview${overdueFeedback.length > 1 ? "s" : ""} awaiting feedback`, href: "/recruitment/interviews" }]
       : []),
     ...(rolesWithNoApplicants.length > 0
-      ? [{ label: `${rolesWithNoApplicants.length} open role${rolesWithNoApplicants.length > 1 ? "s" : ""} with no applicants`, href: "/hr/recruitment/jobs" }]
+      ? [{ label: `${rolesWithNoApplicants.length} open role${rolesWithNoApplicants.length > 1 ? "s" : ""} with no applicants`, href: "/recruitment/jobs" }]
       : []),
   ];
 
@@ -194,7 +194,7 @@ export function RecruitmentCommandCenterPage() {
                 <QueueSection
                   title="New applicants to review"
                   count={newCandidates?.length ?? 0}
-                  viewAllHref="/hr/recruitment/candidates/intake"
+                  viewAllHref="/recruitment/candidates/intake"
                   isLoading={candidatesLoading}
                   isError={candidatesError}
                   isEmpty={!newCandidates?.length}
@@ -203,7 +203,7 @@ export function RecruitmentCommandCenterPage() {
                   {newCandidates?.slice(0, 5).map((c) => (
                     <Link
                       key={c.id}
-                      href="/hr/recruitment/candidates/intake"
+                      href="/recruitment/candidates/intake"
                       className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors duration-150 group"
                     >
                       <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-dense font-bold text-primary">
@@ -222,7 +222,7 @@ export function RecruitmentCommandCenterPage() {
                 <QueueSection
                   title="Interviews today"
                   count={interviewsToday.length}
-                  viewAllHref="/hr/recruitment/interviews"
+                  viewAllHref="/recruitment/interviews"
                   isLoading={interviewsLoading}
                   isError={interviewsError}
                   isEmpty={!interviewsToday.length}
@@ -245,7 +245,7 @@ export function RecruitmentCommandCenterPage() {
                 <QueueSection
                   title="Roles with no applicants"
                   count={rolesWithNoApplicants.length}
-                  viewAllHref="/hr/recruitment/jobs"
+                  viewAllHref="/recruitment/jobs"
                   isLoading={jobsLoading}
                   isError={jobsError}
                   isEmpty={!rolesWithNoApplicants.length}
@@ -254,7 +254,7 @@ export function RecruitmentCommandCenterPage() {
                   {rolesWithNoApplicants.slice(0, 5).map((job) => (
                     <Link
                       key={job.id}
-                      href="/hr/recruitment/jobs"
+                      href="/recruitment/jobs"
                       className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors duration-150 group"
                     >
                       <div className="w-8 rounded-lg bg-status-warning-surface flex items-center justify-center shrink-0">

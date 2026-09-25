@@ -87,10 +87,10 @@ export function HrHubRecruitment({
     access.canInterviews || access.canOffers || access.canRequisitions;
 
   const recruitmentHref = access.canRequisitions
-    ? "/hr/recruitment"
+    ? "/recruitment"
     : access.canInterviews
-      ? "/hr/recruitment/interviews"
-      : "/hr/recruitment/offers";
+      ? "/recruitment/interviews"
+      : "/recruitment/offers";
 
   if (!hasAnyRecruitmentAccess) return null;
 
@@ -155,7 +155,7 @@ export function HrHubRecruitment({
             isLoading={isLoading}
             isError={Boolean(hubSectionError(sections?.interviews))}
             onRetry={onRetry}
-            href="/hr/recruitment/interviews"
+            href="/recruitment/interviews"
             tone={interviewsToday > 0 ? "default" : "default"}
           />
         )}
@@ -167,7 +167,7 @@ export function HrHubRecruitment({
             isLoading={isLoading}
             isError={Boolean(hubSectionError(sections?.interviews))}
             onRetry={onRetry}
-            href="/hr/recruitment/interviews"
+            href="/recruitment/interviews"
             tone={awaitingScorecard > 0 ? "amber" : "default"}
           />
         )}
@@ -179,7 +179,7 @@ export function HrHubRecruitment({
             isLoading={isLoading}
             isError={Boolean(hubSectionError(sections?.pendingOffers))}
             onRetry={onRetry}
-            href="/hr/recruitment/offers"
+            href="/recruitment/offers"
             tone={pendingOffers > 0 ? "amber" : "default"}
           />
         )}
@@ -191,7 +191,7 @@ export function HrHubRecruitment({
             isLoading={isLoading}
             isError={Boolean(hubSectionError(sections?.pendingRequisitions))}
             onRetry={onRetry}
-            href="/hr/recruitment/requisitions"
+            href="/recruitment/requisitions"
             tone={pendingRequisitions > 0 ? "amber" : "default"}
           />
         )}

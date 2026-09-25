@@ -296,7 +296,7 @@ export function HeadcountPage() {
   const createJob = useCreateHeadcountJob({
     onSuccess: (data) => {
       toast.success("Job posting created");
-      router.push(`/hr/recruitment/jobs/${data.jobId}/edit`);
+      router.push(`/recruitment/jobs/${data.jobId}/edit`);
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   });

@@ -63,7 +63,7 @@ export function CandidateConsentCard({ candidateId }: CandidateConsentCardProps)
         if (result.status === "ERASED") {
           toast.success("Candidate erased, résumé vault confirmed clear");
           setConfirmOpen(false);
-          router.push("/hr/recruitment/candidates");
+          router.push("/recruitment/candidates");
           return;
         }
         toast.warning("Records deleted — résumé vault NOT confirmed", {
@@ -71,7 +71,7 @@ export function CandidateConsentCard({ candidateId }: CandidateConsentCardProps)
           duration: 12_000,
         });
         setConfirmOpen(false);
-        router.push("/hr/recruitment/candidates");
+        router.push("/recruitment/candidates");
       },
       onError: (error) => toast.error(getErrorMessage(error)),
     });

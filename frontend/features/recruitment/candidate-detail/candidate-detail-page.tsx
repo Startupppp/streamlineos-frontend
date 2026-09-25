@@ -233,7 +233,7 @@ export function CandidateDetailPage() {
             The candidate may have been deleted or the link is invalid.
           </p>
           <Button asChild>
-            <Link href="/hr/recruitment/candidates">Back to Candidates</Link>
+            <Link href="/recruitment/candidates">Back to Candidates</Link>
           </Button>
         </div>
       </PageWrapper>
@@ -251,7 +251,7 @@ export function CandidateDetailPage() {
           ? `${candidate.currentRole}${candidate.currentCompany ? ` at ${candidate.currentCompany}` : ""}`
           : undefined
       }
-      backHref="/hr/recruitment/candidates"
+      backHref="/recruitment/candidates"
       actions={
         <div className="flex items-center gap-2">
           <Button size="sm" onClick={handleInterviewOpen}>
@@ -271,7 +271,7 @@ export function CandidateDetailPage() {
             <span className="text-status-warning-ink">
               This profile was identified as a duplicate of{" "}
               <Link
-                href={`/hr/recruitment/candidates/${candidate.duplicateOfId}`}
+                href={`/recruitment/candidates/${candidate.duplicateOfId}`}
                 className="underline underline-offset-2 hover:no-underline"
               >
                 Candidate #{candidate.duplicateOfId}

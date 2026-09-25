@@ -196,7 +196,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
         updateJob.mutate({ jobId: job.id, ...payload }, {
           onSuccess: () => {
             toast.success("Job posting updated");
-            router.push("/hr/recruitment/jobs");
+            router.push("/recruitment/jobs");
           },
           onError: (e) => toast.error(getErrorMessage(e)),
         });
@@ -204,7 +204,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
         createJob.mutate(payload, {
           onSuccess: () => {
             toast.success(status === "DRAFT" ? "Job saved as draft" : "Job published successfully");
-            router.push("/hr/recruitment/jobs");
+            router.push("/recruitment/jobs");
           },
           onError: (e) => toast.error(getErrorMessage(e)),
         });

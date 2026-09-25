@@ -175,7 +175,7 @@ export function InterviewerPerformancePage() {
     <PageWrapper
       title="Interviewer Performance"
       subtitle="Track how quickly interviewers submit scorecards after interviews"
-      backHref="/hr/recruitment/interviews"
+      backHref="/recruitment/interviews"
       backLabel="Back to Interviews"
       actions={
         <Select value={String(days)} onValueChange={handlePeriodChange}>
@@ -237,7 +237,7 @@ export function InterviewerPerformancePage() {
               <RecruitmentEmptyState
                 illustration={<EmptyLeaderboardIllustration />}
                 title="No scorecard data for the selected period"
-                action={{ label: "View Interviews", href: "/hr/recruitment/interviews" }}
+                action={{ label: "View Interviews", href: "/recruitment/interviews" }}
                 compact
                 className="border-0 bg-transparent shadow-none"
               />

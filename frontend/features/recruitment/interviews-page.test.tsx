@@ -3,7 +3,7 @@ import { renderWithProviders } from "@/test-utils/render";
 
 /**
  * Root CLAUDE.md §8: one unified calendar, module events are toggleable
- * SOURCES on it and never a calendar page of their own. `/hr/recruitment/interviews`
+ * SOURCES on it and never a calendar page of their own. `/recruitment/interviews`
  * rendered a second full month/week calendar off `useInterviews`, which also made
  * it the only feature->feature importer of `features/calendar/**` (root §9).
  *
@@ -15,7 +15,7 @@ import { renderWithProviders } from "@/test-utils/render";
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),
   useSearchParams: () => new URLSearchParams(),
-  usePathname: () => "/hr/recruitment/interviews",
+  usePathname: () => "/recruitment/interviews",
 }));
 
 jest.mock("@animateicons/react/lucide", () => ({
@@ -104,7 +104,7 @@ describe("InterviewsPage", () => {
 
     expect(screen.getByRole("link", { name: /performance/i })).toHaveAttribute(
       "href",
-      "/hr/recruitment/interviewer-performance",
+      "/recruitment/interviewer-performance",
     );
     expect(screen.getByRole("button", { name: /schedule/i })).toBeInTheDocument();
   });

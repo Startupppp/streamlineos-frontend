@@ -34,7 +34,7 @@ const STATUS_CONFIG: Record<OfferListItem["offerStatus"], { label: string; varia
 function OfferRow({ offer }: { offer: OfferListItem }) {
   const cfg = STATUS_CONFIG[offer.offerStatus] ?? STATUS_CONFIG.DRAFT;
   return (
-    <Link href={`/hr/recruitment/candidates/${offer.candidateId}`}>
+    <Link href={`/recruitment/candidates/${offer.candidateId}`}>
       <Card className="shadow-sm hover:bg-muted/40 transition-colors">
         <CardContent className="p-4 flex items-center justify-between gap-4">
           <div className="min-w-0 flex-1">

@@ -210,7 +210,7 @@ export function CandidateCard({
         </DropdownMenu>
       </div>
 
-      <Link href={`/hr/recruitment/candidates/${candidate.id}`} className="block p-3 pr-14">
+      <Link href={`/recruitment/candidates/${candidate.id}`} className="block p-3 pr-14">
         <div className="flex items-start gap-3 mb-2">
           <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20">
             {getInitials(undefined, candidate.firstName, candidate.lastName)}

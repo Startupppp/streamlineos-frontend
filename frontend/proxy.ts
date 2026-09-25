@@ -93,6 +93,7 @@ const PROTECTED_ROUTES = [
   "/dashboard",
   "/build",
   "/hr",
+  "/recruitment",
   "/settings",
   "/onboarding",
   "/employee-onboarding",

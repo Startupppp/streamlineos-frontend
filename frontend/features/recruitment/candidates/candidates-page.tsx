@@ -356,7 +356,7 @@ export function CandidatesPage() {
               className="gap-1.5 text-xs"
               asChild
             >
-              <Link href="/hr/recruitment/candidates/import">
+              <Link href="/recruitment/candidates/import">
                 <Upload className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Import</span>
               </Link>

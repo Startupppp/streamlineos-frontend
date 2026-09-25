@@ -82,7 +82,7 @@ export function RecruitmentPipelinePage() {
       title="Recruitment Pipeline"
       subtitle="Drag candidates between stages to update their status"
       noInternalScroll
-      backHref="/hr/recruitment"
+      backHref="/recruitment"
       filters={
         <ViewToggle<PipelineViewMode>
           value={view}

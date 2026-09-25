@@ -44,7 +44,7 @@ const PIPELINE_COLUMNS: DataTableColumn<PipelineRow>[] = [
     cell: (row) => (
       <div>
         <Link
-          href={`/hr/recruitment/candidates/${row.id}`}
+          href={`/recruitment/candidates/${row.id}`}
           className="text-sm font-medium text-foreground hover:text-primary transition-colors"
         >
           {row.name}

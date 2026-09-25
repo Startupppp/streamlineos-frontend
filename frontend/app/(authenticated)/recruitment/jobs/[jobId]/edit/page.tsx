@@ -73,7 +73,7 @@ function EditJobContent({ jobId }: { jobId: number }) {
         illustrationPreset="search"
         title="This job no longer exists"
         description="The job posting may have been deleted, or the link is invalid."
-        action={{ label: "Back to jobs", href: "/hr/recruitment/jobs" }}
+        action={{ label: "Back to jobs", href: "/recruitment/jobs" }}
       />
     );
   }
@@ -81,7 +81,7 @@ function EditJobContent({ jobId }: { jobId: number }) {
   return (
     <PageWrapper
       title="Edit Job Opening"
-      backHref="/hr/recruitment/jobs"
+      backHref="/recruitment/jobs"
       backLabel="Back to Jobs"
       actions={
         <AiActionsMenu actions={aiActions} triggerLabel="AI" menuLabel="AI assist" align="end" />
@@ -102,14 +102,14 @@ export default function EditJobPage({ params }: Props) {
     return (
       <PageWrapper
         title="Edit Job Opening"
-        backHref="/hr/recruitment/jobs"
+        backHref="/recruitment/jobs"
         backLabel="Back to Jobs"
       >
         <EmptyState
           illustrationPreset="search"
           title="That job link is not valid"
           description="The address does not name a job posting."
-          action={{ label: "Back to jobs", href: "/hr/recruitment/jobs" }}
+          action={{ label: "Back to jobs", href: "/recruitment/jobs" }}
         />
       </PageWrapper>
     );

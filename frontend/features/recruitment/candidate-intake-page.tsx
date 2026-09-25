@@ -54,7 +54,7 @@ function CandidateIntakeRow({ candidate: c, isSelected, duplicate, onToggle, onS
       <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-dense font-bold text-primary">
         {c.firstName?.[0]}{c.lastName?.[0]}
       </div>
-      <Link href={`/hr/recruitment/candidates/${c.id}`} className="flex-1 min-w-0 group">
+      <Link href={`/recruitment/candidates/${c.id}`} className="flex-1 min-w-0 group">
         <TruncatedText text={`${c.firstName ?? ""} ${c.lastName ?? ""}`.trim()} className="text-sm font-medium text-foreground group-hover:text-primary transition-colors" />
         <p className="text-dense text-muted-foreground mt-0.5">{c.email}</p>
       </Link>

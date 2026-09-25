@@ -23,11 +23,11 @@ const SECTIONS: SettingsSection[] = [
   {
     title: "Hiring Process",
     links: [
-      { label: "Hiring Flows", description: "Define reusable multi-round interview workflows per role.", href: "/hr/recruitment/hiring-flows", icon: Workflow },
-      { label: "Scorecard Templates", description: "Evaluation criteria used by interviewers per round.", href: "/hr/recruitment/scorecard-templates", icon: ClipboardList },
-      { label: "Question Bank", description: "Curated interview questions by role and difficulty.", href: "/hr/recruitment/question-bank", icon: BookOpen },
-      { label: "Pipeline Automations", description: "Trigger actions automatically on pipeline events.", href: "/hr/recruitment/automations", icon: Zap },
-      { label: "Interview SLAs", description: "Max hours allowed per stage before an SLA breach.", href: "/hr/recruitment/sla", icon: Clock },
+      { label: "Hiring Flows", description: "Define reusable multi-round interview workflows per role.", href: "/recruitment/hiring-flows", icon: Workflow },
+      { label: "Scorecard Templates", description: "Evaluation criteria used by interviewers per round.", href: "/recruitment/scorecard-templates", icon: ClipboardList },
+      { label: "Question Bank", description: "Curated interview questions by role and difficulty.", href: "/recruitment/question-bank", icon: BookOpen },
+      { label: "Pipeline Automations", description: "Trigger actions automatically on pipeline events.", href: "/recruitment/automations", icon: Zap },
+      { label: "Interview SLAs", description: "Max hours allowed per stage before an SLA breach.", href: "/recruitment/sla", icon: Clock },
     ],
   },
   {
@@ -36,7 +36,7 @@ const SECTIONS: SettingsSection[] = [
       {
         label: "Integrations",
         description: "Job boards, calendars, assessments and background checks — and what each one can actually do.",
-        href: "/hr/recruitment/integrations",
+        href: "/recruitment/integrations",
         icon: Plug,
       },
     ],
@@ -44,19 +44,19 @@ const SECTIONS: SettingsSection[] = [
   {
     title: "Candidate Communication",
     links: [
-      { label: "Email Sequences", description: "Automated drip campaigns to nurture candidates.", href: "/hr/recruitment/email-sequences", icon: Mail },
-      { label: "Offer Letter Templates", description: "Reusable offer templates with merge placeholders.", href: "/hr/recruitment/offer-templates", icon: FileSignature },
+      { label: "Email Sequences", description: "Automated drip campaigns to nurture candidates.", href: "/recruitment/email-sequences", icon: Mail },
+      { label: "Offer Letter Templates", description: "Reusable offer templates with merge placeholders.", href: "/recruitment/offer-templates", icon: FileSignature },
     ],
   },
   {
     title: "Reports & Performance",
     links: [
-      { label: "SLA Breach Report", description: "Monthly SLA breach rate by pipeline stage.", href: "/hr/recruitment/sla-report", icon: BarChart3 },
-      { label: "Interviewer Performance", description: "Scorecard turnaround and submission rates by interviewer.", href: "/hr/recruitment/interviewer-performance", icon: Users },
-      { label: "Scorecard Analytics", description: "Aggregated scorecard ratings and recommendation splits.", href: "/hr/recruitment/scorecard-analytics", icon: PieChart },
-      { label: "Diversity Report", description: "Pipeline diversity breakdown across stages.", href: "/hr/recruitment/diversity-report", icon: PieChart },
-      { label: "Custom Reports & Exports", description: "Build ad-hoc exports of candidates, jobs, and offers.", href: "/hr/recruitment/reports", icon: FileBarChart },
-      { label: "Headcount Requests", description: "Review and approve open headcount requests.", href: "/hr/recruitment/headcount", icon: Users },
+      { label: "SLA Breach Report", description: "Monthly SLA breach rate by pipeline stage.", href: "/recruitment/sla-report", icon: BarChart3 },
+      { label: "Interviewer Performance", description: "Scorecard turnaround and submission rates by interviewer.", href: "/recruitment/interviewer-performance", icon: Users },
+      { label: "Scorecard Analytics", description: "Aggregated scorecard ratings and recommendation splits.", href: "/recruitment/scorecard-analytics", icon: PieChart },
+      { label: "Diversity Report", description: "Pipeline diversity breakdown across stages.", href: "/recruitment/diversity-report", icon: PieChart },
+      { label: "Custom Reports & Exports", description: "Build ad-hoc exports of candidates, jobs, and offers.", href: "/recruitment/reports", icon: FileBarChart },
+      { label: "Headcount Requests", description: "Review and approve open headcount requests.", href: "/recruitment/headcount", icon: Users },
     ],
   },
 ];

@@ -103,7 +103,7 @@ export function QuestionBankPage() {
     <PageWrapper
       title="Interview Question Bank"
       subtitle="Curated questions per role and round for interviewers"
-      backHref="/hr/recruitment"
+      backHref="/recruitment"
       actions={
         <QuestionFormDialog
           mode="create"

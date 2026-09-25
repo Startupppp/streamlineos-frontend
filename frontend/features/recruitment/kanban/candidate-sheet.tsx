@@ -94,7 +94,7 @@ export const CandidateSheet = memo(function CandidateSheet({
               </div>
             </div>
             <Link
-              href={`/hr/recruitment/candidates/${candidate.id}`}
+              href={`/recruitment/candidates/${candidate.id}`}
               className="shrink-0 flex items-center gap-1.5 text-dense font-semibold text-muted-foreground hover:text-foreground transition-colors duration-200 mt-0.5"
             >
               <ExternalLink className="h-3.5 w-3.5" />

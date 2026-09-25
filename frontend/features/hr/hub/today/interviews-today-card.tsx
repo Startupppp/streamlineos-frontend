@@ -29,7 +29,7 @@ export function InterviewsTodayCard({
     <HrPanel>
       <HrSectionHeader
         title="Interviews today"
-        action={{ label: "All interviews", href: "/hr/recruitment/interviews" }}
+        action={{ label: "All interviews", href: "/recruitment/interviews" }}
       />
       {isLoading ? (
         <SkeletonRows />

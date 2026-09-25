@@ -78,7 +78,7 @@ export function InterviewsPage() {
     <PageWrapper
       title="Interviews"
       subtitle={subtitle}
-      backHref="/hr/recruitment"
+      backHref="/recruitment"
       actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" asChild>
@@ -88,19 +88,19 @@ export function InterviewsPage() {
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/recruitment/interviewer-performance">
+            <Link href="/recruitment/interviewer-performance">
               <BarChart2 className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Performance</span>
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/recruitment/sla-report">
+            <Link href="/recruitment/sla-report">
               <CalendarClock className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">SLA Report</span>
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/recruitment/sla">
+            <Link href="/recruitment/sla">
               <Settings className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">SLA Config</span>
             </Link>

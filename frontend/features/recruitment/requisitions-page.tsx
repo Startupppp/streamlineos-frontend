@@ -71,7 +71,7 @@ export function RequisitionsPage() {
       createJobFromRequisition.mutate(id, {
         onSuccess: (data) => {
           toast.success(`Job posting "${data.jobTitle}" created`);
-          router.push(`/hr/recruitment/jobs/${data.jobId}/edit`);
+          router.push(`/recruitment/jobs/${data.jobId}/edit`);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       });

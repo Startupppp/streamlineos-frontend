@@ -170,7 +170,7 @@ export function RecruitmentIntegrationsPage() {
     <PageWrapper
       title="Integrations"
       subtitle="What Recruitment OS can talk to, and what it currently can."
-      backHref="/hr/recruitment/settings"
+      backHref="/recruitment/settings"
     >
       <PageState resolution={pageState} loading={<LoadingSkeleton />} onRetry={handleRetry}>
         <div className="space-y-6">
@@ -196,7 +196,7 @@ export function RecruitmentIntegrationsPage() {
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-foreground">Build your own</h2>
             <Link
-              href="/hr/recruitment/developer"
+              href="/recruitment/developer"
               className="block rounded-xl border p-4 text-sm transition-colors hover:bg-muted/40"
             >
               <span className="font-medium text-foreground">Hiring webhooks and signatures</span>

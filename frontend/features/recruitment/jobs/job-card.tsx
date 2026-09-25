@@ -100,7 +100,7 @@ export function JobCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem asChild>
-                <Link href={`/hr/recruitment/jobs/${job.id}/edit`}>
+                <Link href={`/recruitment/jobs/${job.id}/edit`}>
                   <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
                 </Link>
               </DropdownMenuItem>
@@ -189,7 +189,7 @@ export function JobCard({
             <span>opening{job.openings !== 1 ? "s" : ""}</span>
           </div>
           <Button variant="outline" size="sm" className="text-xs gap-1.5" asChild>
-            <Link href={`/hr/recruitment/jobs/${job.id}/edit`}>
+            <Link href={`/recruitment/jobs/${job.id}/edit`}>
               <Briefcase className="h-3 w-3" />
               View
             </Link>

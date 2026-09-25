@@ -277,7 +277,7 @@ export function BulkImportPage() {
   function handleGoToUpload() { setStep("upload"); }
   function handleGoToPreview() { setStep("preview"); }
   function handleGoToMap() { setStep("map"); }
-  function handleViewCandidates() { router.push("/hr/recruitment/candidates"); }
+  function handleViewCandidates() { router.push("/recruitment/candidates"); }
   function handleImportMore() {
     setStep("upload");
     setHeaders([]);
@@ -293,7 +293,7 @@ export function BulkImportPage() {
     <PageWrapper
       title="Bulk Import Candidates"
       subtitle="Upload a CSV or Excel file to import candidates"
-      backHref="/hr/recruitment/candidates"
+      backHref="/recruitment/candidates"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="flex gap-2 text-xs">
