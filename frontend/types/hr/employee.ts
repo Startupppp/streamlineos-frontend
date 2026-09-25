@@ -261,6 +261,8 @@ export interface CreateDocumentInput {
 }
 
 export interface UpsertWorkLogInput {
+  /** Target employee; only a holder of hr:attendance:manage may widen past self. */
+  userId?: string;
   date: Date | string;
   hours?: number;
   description?: string;

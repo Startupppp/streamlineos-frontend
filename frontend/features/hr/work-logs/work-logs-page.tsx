@@ -93,7 +93,7 @@ export function WorkLogsPage() {
   const { year, quarter, selectedUserId } = filters;
 
   const canManageEmployees = useCan("hr:employees:manage");
-  const canEditSavedWorkLogs = useCan("hr:attendance:manage");
+  const canManageWorkLogs = useCan("hr:attendance:manage");
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const { data: departments } = useHrDepartments();
@@ -263,11 +263,19 @@ export function WorkLogsPage() {
     canManageEmployees,
   };
 
+  const targetUserId =
+    selectedUserId && selectedUserId !== session?.user?.id ? selectedUserId : undefined;
+
   const handleSaveLog = useCallback(
     (date: string, content: string, workLink: string) => {
-      upsertLog.mutate({ date, description: content, workLink });
+      upsertLog.mutate({
+        date,
+        description: content,
+        workLink,
+        ...(targetUserId ? { userId: targetUserId } : {}),
+      });
     },
-    [upsertLog],
+    [upsertLog, targetUserId],
   );
 
   function handleRetryWorkLogs() { void refetch(); }
@@ -352,9 +360,10 @@ export function WorkLogsPage() {
                   searchTerm={searchTerm}
                   logs={logs}
                   currentUserId={session?.user?.id}
-                  readOnly={!!selectedUserId && selectedUserId !== session?.user?.id}
-                  canEditSaved={canEditSavedWorkLogs}
-                  approvedLeaveDates={approvedLeaveDates}
+                  readOnly={!!targetUserId && !canManageWorkLogs}
+                  canEditSaved={canManageWorkLogs}
+                  canManageAll={canManageWorkLogs}
+                  approvedLeaveDates={targetUserId ? undefined : approvedLeaveDates}
                   onSave={handleSaveLog}
                   isSaving={upsertLog.isPending}
                 />
