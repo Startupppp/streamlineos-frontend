@@ -33,12 +33,12 @@ The baseline was audited on 2026-09-19 against:
 
 The second-pass source inventory currently contains:
 
-- 84 unique authenticated `app/(authenticated)/build/**/page.tsx` routes;
-- 5 Build portal pages: internal preview index/detail, external client portal
-  index/detail, and invitation acceptance;
+- 65 unique authenticated `app/(authenticated)/build/**/page.tsx` routes;
+- 5 internal or external portal pages: internal preview index/detail, external
+  client portal index/detail, and invitation acceptance;
 - 4 public Build pages: published form, legacy public intake, shared board, and
   public roadmap; the shared Wiki remains a Knowledge-owned integration;
-- 59 controllers and 313 operations under `backend/src/modules/build/`;
+- 49 controllers and 325 HTTP handlers under `backend/src/modules/build/`;
 - 36 schema files and 86 tenant tables under `backend/src/db/schema/build/`;
   and
 - cross-module Build dependencies in Chat, Knowledge, Goals, CRM, Calendar,
@@ -53,10 +53,11 @@ must be rechecked at implementation time because the working tree is active.
 
 The Build module is **not complete**.
 
-The documentation census now accounts for all 93 current Build-owned pages in
-BLD-01A, every current/final page's product contract in BLD-02C through
-BLD-02F, the current mutation surfaces in BLD-05A, the expanded 59-controller
-matrix in BLD-06A, and all 36 Build schema files in BLD-06B. That is
+The documentation census now accounts for the current 74-route Build census
+(65 authenticated pages plus nine portal/public routes) in BLD-01A, every
+current/final page's product contract in BLD-02C through BLD-02F, the current
+mutation surfaces in BLD-05A, the 49-controller/325-handler matrix in BLD-06A,
+and all 36 Build schema files in BLD-06B. That is
 documentation coverage, not shipped evidence.
 
 Confirmed open defects include route/catalog drift, duplicate Sprint/Cycle and

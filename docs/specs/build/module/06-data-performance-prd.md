@@ -37,8 +37,8 @@ substitute for authoritative writes or return stale access.
   retention for payroll-exported rows.
 - only 14 of 203 Build mutations are marked idempotent; automation and webhook
   fan-out are unbounded; billing-summary cache has no writer invalidation.
-- the source census is 59 controllers and 313 operations, not the earlier 47
-  controller sample used in the first BLD-06A draft.
+- the current source census is 49 controllers and 325 HTTP handlers; older
+  59-controller/313-operation figures belong to the superseded matrix draft.
 - ticket-by-id, ticket-by-key, comment permalink, and chat preview fail
   `check:contract-parity` because backend `ticketDetailSchema` omits the
   nested `assignees` shape the query already returns.

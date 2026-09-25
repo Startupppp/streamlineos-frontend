@@ -14,6 +14,7 @@ complete product definition of done.
 
 - The authenticated route manifest contains 65 canonical Build pages, all marked `KEEP`.
 - The complete Build route census contains 74 routes: 65 authenticated pages and nine portal/public collaboration routes.
+- The normative route-count prose is reconciled to that generated census; the older 93/84 figures were stale authored counts, not additional live pages.
 - PM Workspace is retired from the UI, API, contracts, permissions, routes, source tree, and production database. Organization is the tenancy boundary; products and projects are the working scopes.
 - `/build/[projectId]/intake`, `/forms`, and `/triage` remain separate canonical jobs.
 

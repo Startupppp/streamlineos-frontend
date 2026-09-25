@@ -7,17 +7,14 @@
 ## Purpose
 
 This manifest is the current-to-final route authority for Build. It inventories
-all 93 current Build-owned pages: 84 authenticated Build pages, five internal or
-external portal pages, and four public Build pages. Detailed UX and data
+all 74 current Build-owned routes: 65 authenticated Build pages, five internal
+or external portal pages, and four public Build pages. Detailed UX and data
 contracts live in BLD-02C through BLD-02F.
 
-The `93`/`84` counts above are the figures this manifest was authored with and
-they are stale: the generated census at
-`docs/specs/build/generated/routes.snapshot.json` measured 88 authenticated
-Build pages before the 2026-09-22 dead-surface removal and 82 after. Per the
-closing note of this document the generated census is authoritative; the header
-counts are not reconciled here because doing so needs a decision on the
-`/portal`, `/portal/{projectId}` and `/build/customers` rows recorded in
+The generated census at `docs/specs/build/generated/routes.snapshot.json` is
+authoritative and currently reports 74 routes. The count reflects the approved
+dead-surface removal and the retained `/portal`, `/portal/{projectId}`, and
+public collaboration routes recorded in
 `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`.
 
 `KEEP` means the current path remains. `MOVE` changes the canonical path.
@@ -183,10 +180,9 @@ Workspace has no final path, so it is not represented as an ADD route either.
 The generated final-route set contains retained routes, MOVE targets, and ADD
 routes. It excludes REMOVE rows and CONSOLIDATE source routes. The PM Workspace
 removal drops 9 routes (`PG-WS-001` through `PG-WS-009`) and 1 ADD route
-(former `PG-ADD-004`, workspace settings), so the current decisions yield
-89 final page routes, down from 99; the generated census at
-`docs/specs/build/generated/routes.snapshot.json` becomes authoritative when an
-approved route decision changes.
+(former `PG-ADD-004`, workspace settings). The generated census at
+`docs/specs/build/generated/routes.snapshot.json` is
+authoritative after those decisions and currently reports 74 live Build routes.
 
 ## Explicit Non-Pages
 
@@ -202,7 +198,7 @@ approved route decision changes.
 
 ## Manifest Acceptance
 
-- [ ] **BLD-01M-001** filesystem census contains exactly the 93 current
+- [ ] **BLD-01M-001** filesystem census contains exactly the 74 current
   Build-owned pages above and zero unclassified Build pages.
 - [ ] **BLD-01M-002** every stable ID links to one detailed BLD-02C through
   BLD-02F row and one route disposition.

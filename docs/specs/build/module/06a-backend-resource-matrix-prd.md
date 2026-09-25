@@ -130,7 +130,7 @@ The implementation audit must cover every file under
   Git, and client portal relations.
 
 - [ ] **BLD-06A-001** the generated controller census and this matrix contain
-  the same 59 current controllers and 313 operations, with zero blank
+  the same 49 current controllers and 325 HTTP handlers, with zero blank
   auth/parent/schema/bound/idempotency fields.
 - [ ] **BLD-06A-002** every Build schema table maps to a live service owner or
   a proven migration/removal plan.
