@@ -78,6 +78,19 @@ Current release-candidate checks:
   with `source=build` and `projectId`, and the local Build calendar renderer was
   removed. Direct `/build/:projectId/issues?view=calendar` links are normalized
   to the same canonical route; focused URL-state and view-render tests pass.
+- The `/sprints` consolidation was completed without losing planning capability:
+  canonical `/build/:projectId/cycles` now owns backlog-to-cycle planning,
+  unfinished-ticket handling during completion, and the velocity panel. The
+  removed sprint route remains absent; the restored cycle workflow passed 12
+  cycles-page tests and local browser verification.
+- Build programmatic navigation now passes through the dirty-state leave guard
+  for user-triggered redirects across cycle detail, project lists, triage,
+  feedback submissions, Gantt, and the restored board navigation paths. The
+  focused guard matrix passes 47 tests.
+- Build-owned browser test fixtures were split out of the scope-directory and
+  scope-browser suites; both remain below the 500-line review gate. The current
+  frontend release commits are `daa52469a`, `b6e5753e4`, and `8c4b7ed8a` on
+  `origin/main`.
 - Build-owned unsafe assertion findings: zero. The assertion gate still reports unrelated pre-existing Inventory, HR, Wiki, editor, and infrastructure debt.
 - Build-owned gated-read findings: zero. The gate still reports two unrelated HR recruitment reads.
 - The dead-code classifier reports no Build deletion candidate. Its current dead files are in Knowledge Base, outside this release.
@@ -153,6 +166,10 @@ Completed:
 - Goal list and detail responses now resolve owner membership IDs to tenant-scoped user projections in one batch for collections, avoiding the previous always-unassigned response.
 - The production-domain unauthenticated `/build` smoke passed with the expected sign-in redirect and no console errors.
 - The current browser observation passed for `/build/6/tickets/BQS-2`; the corrected stale-detail routes were rechecked after rollout and are clean. The desktop matrix is exercised, but the release pass remains open until mobile coverage and deployment identity are recorded.
+- Local port `1000` browser verification rendered `/build/6/cycles` with real
+  upcoming cycle rows, no console errors, a Velocity empty state, and the
+  planning sheet showing the backlog and cycle regions after opening `Plan
+  work` from the cycle actions menu.
 - Production `/build/portfolios?q=platform`, `/build/managed-products`, `/build/goals`, and `/build/command-center` were rechecked in the real browser without visible errors.
 - Local port `1000` browser verification rechecked `/build/inbox?view=drafts` and `/build/command-center`; both rendered their canonical headings without visible runtime errors.
 
