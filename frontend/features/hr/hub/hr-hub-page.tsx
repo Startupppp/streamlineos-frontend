@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { AlertCircle, Briefcase, Banknote, RefreshCcw } from "lucide-react";
+import { AlertCircle, Banknote, RefreshCcw } from "lucide-react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -25,15 +25,6 @@ import { HrHubToday } from "./hr-hub-today";
 import { HrHubActivity } from "./hr-hub-activity";
 
 const ALL_QUICK_ACTIONS = [
-  {
-    actionKey: "post-job" as const,
-    href: "/hr/recruitment/jobs",
-    icon: Briefcase,
-    label: "Post job",
-    description: "Open a new role",
-    tone: "sky" as const,
-    permKey: "canRequisitionsManage" as const,
-  },
   {
     actionKey: "run-payroll" as const,
     href: "/payroll/runs",
