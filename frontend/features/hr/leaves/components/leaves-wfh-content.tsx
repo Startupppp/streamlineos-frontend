@@ -48,6 +48,7 @@ import { WfhTabContent } from "./wfh-tab-content";
 import { LeaveApprovalsContent } from "./leave-approvals";
 import { LeavesSummaryStrip, buildAvailableHint } from "./leaves-summary-strip";
 import { LeavesThisWeekCard } from "./leaves-this-week-card";
+import { LeavesNoPolicyEmptyState } from "./leaves-no-policy-empty-state";
 import { approvedDaysInYear } from "@/features/hr/leaves/leave-date-helpers";
 import type {
   LeaveBalance,
@@ -359,16 +360,23 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
             )}
 
             <TabsContent value="my-leaves" className={TAB_PANEL_CLASS}>
-              <LeavesTabContent
-                balances={balances}
-                myLeaveRequests={myLeaveRequests}
-                approvedLeavesThisWeek={selfService ? [] : approvedLeavesThisWeek}
-                compact={selfService}
-                onRequestLeave={handleOpenLeaveSheet}
-                hasMore={hasMoreMyRequests}
-                isLoadingMore={isLoadingMoreMyRequests}
-                onLoadMore={() => void fetchMoreMyRequests()}
-              />
+              {/* V-051. Nothing can be requested against a policy that does not
+                  exist, so the my-leaves panel guides into setup instead of
+                  showing an empty list that looks like a spent balance. */}
+              {noPolicyConfigured ? (
+                <LeavesNoPolicyEmptyState />
+              ) : (
+                <LeavesTabContent
+                  balances={balances}
+                  myLeaveRequests={myLeaveRequests}
+                  approvedLeavesThisWeek={selfService ? [] : approvedLeavesThisWeek}
+                  compact={selfService}
+                  onRequestLeave={handleOpenLeaveSheet}
+                  hasMore={hasMoreMyRequests}
+                  isLoadingMore={isLoadingMoreMyRequests}
+                  onLoadMore={() => void fetchMoreMyRequests()}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="wfh" className={TAB_PANEL_CLASS}>
