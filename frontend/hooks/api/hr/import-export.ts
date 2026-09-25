@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { downloadExport } from "@/lib/download-export";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { lazyContract } from "@/lib/api-envelope";
 import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -255,12 +256,16 @@ export function useHrEmployeeExportJob(exportJobId: string | null) {
 export function useDownloadHrEmployeeExportJob() {
   const canExport = useCan("hr:export:manage");
   const hrEnabled = useModuleEnabled("hr");
-  return useAuthorizedMutation<Blob, Error, string>("hr:export:manage", {
+  return useAuthorizedMutation<{ filename: string; bytes: number }, Error, string>("hr:export:manage", {
     mutationKey: ["hr", "employee-export", "download"],
     mutationFn: (exportJobId) => {
       if (!hrEnabled || !canExport)
         return Promise.reject(new Error("Employee export access is required"));
-      return apiClient.download(`/hr/export/jobs/${exportJobId}/download`);
+      // Saves the file itself, and refuses an empty or non-file body (HRMS-E2E-009).
+      return downloadExport(`/hr/export/jobs/${exportJobId}/download`, {
+        label: "employee directory",
+        fallbackName: "employee-directory.csv",
+      });
     },
   });
 }
