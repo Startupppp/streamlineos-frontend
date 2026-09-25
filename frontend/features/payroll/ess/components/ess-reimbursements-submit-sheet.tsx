@@ -19,6 +19,7 @@ import { useSubmitReimbursement } from "@/hooks/api/payroll/ess";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import {
   CLAIM_CATEGORIES,
+  MAX_CLAIM_AMOUNT,
   getCurrentMonth,
   reimbursementSchema,
   type ReimbursementFormValues,
@@ -96,7 +97,17 @@ export function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => v
           </SheetHeader>
         </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+          {/*
+            `noValidate` hands validation to the schema. With the browser's own
+            constraint validation on, `min="0"` blocked submit before the
+            resolver ever ran, so a pasted `-1` sat in the field with a native
+            bubble and no inline error under it — the state PAY-004 reports.
+          */}
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex flex-col flex-1 min-h-0"
+            noValidate
+          >
           <SheetBody className="px-6 py-4 space-y-4">
             <FormField
               control={form.control}
@@ -127,7 +138,15 @@ export function SubmitSheet({ open, onClose }: { open: boolean; onClose: () => v
                 <FormItem>
                   <FormLabel>Amount (₹)</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" step="0.01" placeholder="0.00" {...field} />
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      max={MAX_CLAIM_AMOUNT}
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
