@@ -32,13 +32,13 @@ export const CHANGE_REQUESTS_TABLE_HEADERS = [
 
 const CR_STATUS_STYLES: Record<string, string> = {
   submitted: "text-muted-foreground border-border",
-  under_review: "text-status-info-ink border-status-info-rule",
-  estimated: "text-status-warning-ink border-status-warning-rule",
-  awaiting_approval: "text-status-warning-ink border-status-warning-rule",
-  approved: "text-status-success-ink border-status-success-rule",
-  rejected: "text-status-danger-ink border-status-danger-rule",
-  in_progress: "text-status-info-ink border-status-info-rule",
-  completed: "text-status-success-ink border-status-success-rule",
+  under_review: "text-status-info-ink-strong border-status-info-rule",
+  estimated: "text-status-warning-ink-strong border-status-warning-rule",
+  awaiting_approval: "text-status-warning-ink-strong border-status-warning-rule",
+  approved: "text-status-success-ink-strong border-status-success-rule",
+  rejected: "text-status-danger-ink-strong border-status-danger-rule",
+  in_progress: "text-status-info-ink-strong border-status-info-rule",
+  completed: "text-status-success-ink-strong border-status-success-rule",
 };
 
 export function CrStatusBadge({ status }: { status: ChangeRequestStatus }) {

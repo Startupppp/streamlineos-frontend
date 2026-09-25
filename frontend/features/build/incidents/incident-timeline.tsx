@@ -32,11 +32,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  detected: "text-status-danger-ink border-status-danger-rule",
-  investigating: "text-status-warning-ink border-status-warning-rule",
-  mitigating: "text-status-warning-ink border-status-warning-rule",
-  resolved: "text-status-success-ink border-status-success-rule",
-  postmortem: "text-status-info-ink border-status-info-rule",
+  detected: "text-status-danger-ink-strong border-status-danger-rule",
+  investigating: "text-status-warning-ink-strong border-status-warning-rule",
+  mitigating: "text-status-warning-ink-strong border-status-warning-rule",
+  resolved: "text-status-success-ink-strong border-status-success-rule",
+  postmortem: "text-status-info-ink-strong border-status-info-rule",
   closed: "text-muted-foreground border-border",
 };
 

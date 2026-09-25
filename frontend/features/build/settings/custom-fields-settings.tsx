@@ -125,7 +125,7 @@ const CustomFieldRow = memo(function CustomFieldRow({
       {field.required && (
         <Badge
           variant="outline"
-          className="text-micro shrink-0 border-status-danger-rule text-status-danger-ink"
+          className="text-micro shrink-0 border-status-danger-rule text-status-danger-ink-strong"
         >
           required
         </Badge>

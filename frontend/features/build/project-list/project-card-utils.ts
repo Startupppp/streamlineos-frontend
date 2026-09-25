@@ -18,10 +18,10 @@ export const statusDotColors: Record<string, string> = {
 };
 
 export const avatarTints: Record<string, string> = {
-  ACTIVE: "bg-status-success-surface text-status-success-ink ring-status-success-rule",
-  PLANNING: "bg-status-info-surface text-status-info-ink ring-status-info-rule",
+  ACTIVE: "bg-status-success-surface text-status-success-ink-strong ring-status-success-rule",
+  PLANNING: "bg-status-info-surface text-status-info-ink-strong ring-status-info-rule",
   COMPLETED: "bg-muted text-muted-foreground ring-border",
-  ON_HOLD: "bg-status-warning-surface text-status-warning-ink ring-status-warning-rule",
+  ON_HOLD: "bg-status-warning-surface text-status-warning-ink-strong ring-status-warning-rule",
   ARCHIVED: "bg-muted text-muted-foreground ring-border",
 };
 
@@ -34,8 +34,8 @@ export interface DateMeta {
 
 export const dateToneClasses: Record<DateTone, string> = {
   muted: "text-muted-foreground",
-  soon: "text-status-warning-ink",
-  overdue: "text-status-danger-ink",
+  soon: "text-status-warning-ink-strong",
+  overdue: "text-status-danger-ink-strong",
 };
 
 export function resolveDateMeta(

@@ -64,7 +64,7 @@ describe("resolveBuildScopeFallback", () => {
     ).toEqual({ kind: "no-access" });
   });
 
-  it("recovers to the accessible parent product ahead of the organization destination", () => {
+  it("uses the permission-filtered organization destination instead of trusting a parent hint", () => {
     expect(
       resolveBuildScopeFallback({
         scope: PROJECT_SCOPE,
@@ -75,8 +75,8 @@ describe("resolveBuildScopeFallback", () => {
       }),
     ).toEqual({
       kind: "recover",
-      href: "/build/managed-products/7",
-      label: "Go to the parent product",
+      href: "/build/command-center",
+      label: "Go to All of Build",
     });
   });
 
@@ -119,6 +119,34 @@ describe("resolveBuildScopeFallback", () => {
         isInaccessible: true,
         hasAnyBuildAccess: true,
         accessibleParent: null,
+        organizationHref: null,
+      }),
+    ).toEqual({ kind: "no-access" });
+  });
+
+  it("uses a narrow-access organization destination when a parent hint is present", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: PROJECT_SCOPE,
+        isInaccessible: true,
+        hasAnyBuildAccess: true,
+        accessibleParent: { type: "product", id: "7" },
+        organizationHref: "/build/my-work",
+      }),
+    ).toEqual({
+      kind: "recover",
+      href: "/build/my-work",
+      label: "Go to All of Build",
+    });
+  });
+
+  it("does not emit a parent link when no authorized organization destination exists", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: PROJECT_SCOPE,
+        isInaccessible: true,
+        hasAnyBuildAccess: true,
+        accessibleParent: { type: "product", id: "7" },
         organizationHref: null,
       }),
     ).toEqual({ kind: "no-access" });

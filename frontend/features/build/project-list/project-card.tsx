@@ -326,7 +326,7 @@ export const ProjectCard = React.memo(function ProjectCard({
             >
               {hasTickets ? (
                 <>
-                  <span className="inline-flex items-center gap-0.5 rounded-md bg-status-success-surface px-1 py-0.5 text-micro font-medium text-status-success-ink">
+                  <span className="inline-flex items-center gap-0.5 rounded-md bg-status-success-surface px-1 py-0.5 text-micro font-medium text-status-success-ink-strong">
                     <CheckCircle2 className="h-2 w-2" aria-hidden="true" />
                     {project.progress.done} done
                   </span>

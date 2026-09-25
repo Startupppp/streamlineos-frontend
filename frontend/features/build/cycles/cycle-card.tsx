@@ -57,7 +57,7 @@ export function CycleCard({
             </Link>
             <Badge
               variant={isActive ? "default" : "secondary"}
-              className={cn("shrink-0 capitalize", isActive && "bg-status-success-surface text-status-success-ink")}
+              className={cn("shrink-0 capitalize", isActive && "bg-status-success-surface text-status-success-ink-strong")}
             >
               {cycle.status}
             </Badge>

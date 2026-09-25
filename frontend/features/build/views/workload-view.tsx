@@ -113,21 +113,21 @@ const STATS: readonly WorkloadStat[] = [
     label: "Assigned",
     icon: CheckCircle2,
     bg: "bg-status-success-surface",
-    text: "text-status-success-ink",
+    text: "text-status-success-ink-strong",
   },
   {
     id: "unassigned",
     label: "Unassigned",
     icon: Users,
     bg: "bg-status-warning-surface",
-    text: "text-status-warning-ink",
+    text: "text-status-warning-ink-strong",
   },
   {
     id: "over-capacity",
     label: "Over Capacity",
     icon: AlertTriangle,
     bg: "bg-status-danger-surface",
-    text: "text-status-danger-ink",
+    text: "text-status-danger-ink-strong",
   },
 ];
 
@@ -408,7 +408,7 @@ export const WorkloadView = memo(function WorkloadView({
                     </span>
                   </div>
                   <div className="w-20 shrink-0 px-2 py-3 text-center">
-                    <span className="text-sm font-semibold text-status-warning-ink">
+                    <span className="text-sm font-semibold text-status-warning-ink-strong">
                       {unassigned.length}
                     </span>
                   </div>

@@ -26,12 +26,12 @@ const DEC_STATUS_LABEL: Record<string, string> = {
 };
 
 const DEC_STATUS_STYLE: Record<string, string> = {
-  proposed: "text-status-info-ink border-status-info-rule bg-status-info-surface",
+  proposed: "text-status-info-ink-strong border-status-info-rule bg-status-info-surface",
   accepted:
-    "text-status-success-ink border-status-success-rule bg-status-success-surface",
+    "text-status-success-ink-strong border-status-success-rule bg-status-success-surface",
   superseded: "text-muted-foreground border-border",
   revisit:
-    "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
+    "text-status-warning-ink-strong border-status-warning-rule bg-status-warning-surface",
 };
 
 export const DECISION_TABLE_HEADERS = [

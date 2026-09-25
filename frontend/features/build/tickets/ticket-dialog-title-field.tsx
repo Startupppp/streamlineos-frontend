@@ -81,7 +81,7 @@ export function TicketDialogTitleField({
               <div className="mt-1 flex items-start gap-1.5 rounded-md border border-status-warning-rule bg-status-warning-surface px-2.5 py-2">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-warning-ink" />
                 <div className="min-w-0">
-                  <p className="text-dense font-medium text-status-warning-ink">
+                  <p className="text-dense font-medium text-status-warning-ink-strong">
                     Similar open{" "}
                     {duplicates.length === 1 ? "ticket" : "tickets"}{" "}
                     already exist — you can still create this one.
@@ -90,10 +90,10 @@ export function TicketDialogTitleField({
                     {duplicates.slice(0, 3).map((d) => (
                       <li
                         key={d.id}
-                        className="text-dense text-status-warning-ink"
+                        className="text-dense text-status-warning-ink-strong"
                       >
                         {d.projectKey}-{d.ticketNumber}: {d.title}{" "}
-                        <span className="text-status-warning-ink">
+                        <span className="text-status-warning-ink-strong">
                           ({d.status})
                         </span>
                       </li>

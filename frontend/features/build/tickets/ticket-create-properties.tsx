@@ -374,7 +374,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                 />
                 <span className="min-w-0 flex-1 truncate text-left">{c.name}</span>
                 {c.status === "active" && (
-                  <Badge variant="outline" className="h-4 px-1 text-micro text-status-success-ink border-status-success-rule">Active</Badge>
+                  <Badge variant="outline" className="h-4 px-1 text-micro text-status-success-ink-strong border-status-success-rule">Active</Badge>
                 )}
                 {value.cycleId === c.id && <Check className="ml-auto h-3 w-3" />}
               </button>

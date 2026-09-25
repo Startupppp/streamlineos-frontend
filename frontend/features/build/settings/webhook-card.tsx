@@ -56,7 +56,7 @@ function DeliveryRow({ delivery }: { delivery: WebhookDelivery }) {
       </div>
       {delivery.lastError && delivery.status === "failed" && (
         <p
-          className="mt-0.5 ml-5 text-micro text-status-danger-ink truncate"
+          className="mt-0.5 ml-5 text-micro text-status-danger-ink-strong truncate"
           title={delivery.lastError}
         >
           {delivery.lastError}

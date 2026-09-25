@@ -14,25 +14,29 @@ const config = {
   URGENT: {
     label: "Urgent",
     icon: AlertTriangle,
-    color: "text-status-danger-ink",
+    color: "text-status-danger-ink-strong",
+    iconColor: "text-status-danger-ink",
     bg: "bg-status-danger-surface",
   },
   HIGH: {
     label: "High",
     icon: ArrowUp,
     color: "text-category-orange-ink",
+    iconColor: "text-category-orange-ink",
     bg: "bg-category-orange-surface",
   },
   MEDIUM: {
     label: "Medium",
     icon: Minus,
-    color: "text-status-warning-ink",
+    color: "text-status-warning-ink-strong",
+    iconColor: "text-status-warning-ink",
     bg: "bg-status-warning-surface",
   },
   LOW: {
     label: "Low",
     icon: ArrowDown,
-    color: "text-status-info-ink",
+    color: "text-status-info-ink-strong",
+    iconColor: "text-status-info-ink",
     bg: "bg-status-info-surface",
   },
 } as const;
@@ -40,7 +44,7 @@ const config = {
 export function getPriorityColor(priority: string | null | undefined): string {
   const key = (priority ?? "MEDIUM").toUpperCase();
   const isKey = (k: string): k is keyof typeof config => k in config;
-  return isKey(key) ? config[key].color : "text-muted-foreground";
+  return isKey(key) ? config[key].iconColor : "text-muted-foreground";
 }
 
 interface PriorityBadgeProps {
@@ -82,7 +86,7 @@ export const PriorityBadge = memo(function PriorityBadge({
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={cn("inline-flex", c.color, className)}>
+          <span className={cn("inline-flex", c.iconColor, className)}>
             <Icon className={iconSize} />
           </span>
         </TooltipTrigger>

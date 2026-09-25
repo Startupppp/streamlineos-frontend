@@ -34,7 +34,7 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expired" }) {
     return (
       <Badge
         variant="outline"
-        className="border-status-success-rule bg-status-success-surface text-status-success-ink"
+        className="border-status-success-rule bg-status-success-surface text-status-success-ink-strong"
       >
         Active
       </Badge>
@@ -44,7 +44,7 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expired" }) {
     return (
       <Badge
         variant="outline"
-        className="border-destructive/40 bg-status-danger-surface text-status-danger-ink"
+        className="border-destructive/40 bg-status-danger-surface text-status-danger-ink-strong"
       >
         Revoked
       </Badge>
@@ -53,7 +53,7 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expired" }) {
   return (
     <Badge
       variant="outline"
-      className="border-status-warning-rule bg-status-warning-surface text-status-warning-ink"
+      className="border-status-warning-rule bg-status-warning-surface text-status-warning-ink-strong"
     >
       Expired
     </Badge>

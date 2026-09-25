@@ -112,7 +112,7 @@ export function SubmissionBulkToolbar({
       </span>
 
       {overCap ? (
-        <span className="text-sm text-status-danger-ink">
+        <span className="text-sm text-status-danger-ink-strong">
           Bulk actions apply to at most {BULK_SELECTION_CAP} submissions at a time.
         </span>
       ) : null}

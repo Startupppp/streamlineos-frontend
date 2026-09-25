@@ -20,14 +20,14 @@ import type { TestCase } from "@/types/projects";
 
 const PRIORITY_STYLES: Record<string, string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-status-warning-ink border-status-warning-rule",
-  high: "text-status-danger-ink border-status-danger-rule",
+  medium: "text-status-warning-ink-strong border-status-warning-rule",
+  high: "text-status-danger-ink-strong border-status-danger-rule",
 };
 
 const AUTOMATION_STYLES: Record<string, string> = {
   manual: "text-muted-foreground border-border",
-  automated: "text-status-success-ink border-status-success-rule",
-  planned: "text-status-info-ink border-status-info-rule",
+  automated: "text-status-success-ink-strong border-status-success-rule",
+  planned: "text-status-info-ink-strong border-status-info-rule",
 };
 
 function priorityLabel(p: string) {

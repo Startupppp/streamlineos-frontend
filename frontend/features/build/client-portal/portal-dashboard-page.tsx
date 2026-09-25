@@ -41,19 +41,19 @@ const CR_STATUS_LABELS: Record<string, string> = {
 const CR_STATUS_STYLES: Record<string, string> = {
   submitted: "text-muted-foreground border-border bg-muted/40",
   under_review:
-    "text-status-info-ink border-status-info-rule bg-status-info-surface",
+    "text-status-info-ink-strong border-status-info-rule bg-status-info-surface",
   estimated:
-    "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
+    "text-status-warning-ink-strong border-status-warning-rule bg-status-warning-surface",
   awaiting_approval:
-    "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
+    "text-status-warning-ink-strong border-status-warning-rule bg-status-warning-surface",
   approved:
-    "text-status-success-ink border-status-success-rule bg-status-success-surface",
+    "text-status-success-ink-strong border-status-success-rule bg-status-success-surface",
   rejected:
-    "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
+    "text-status-danger-ink-strong border-status-danger-rule bg-status-danger-surface",
   in_progress:
-    "text-status-info-ink border-status-info-rule bg-status-info-surface",
+    "text-status-info-ink-strong border-status-info-rule bg-status-info-surface",
   completed:
-    "text-status-success-ink border-status-success-rule bg-status-success-surface",
+    "text-status-success-ink-strong border-status-success-rule bg-status-success-surface",
 };
 
 function SectionTitle({

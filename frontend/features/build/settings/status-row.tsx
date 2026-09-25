@@ -46,16 +46,16 @@ export const TYPE_CONFIG: Record<StateType, { label: string; color: string }> = 
   },
   started: {
     label: "Started",
-    color: "bg-status-info-surface text-status-info-ink",
+    color: "bg-status-info-surface text-status-info-ink-strong",
   },
   completed: {
     label: "Completed",
     color:
-      "bg-status-success-surface text-status-success-ink",
+      "bg-status-success-surface text-status-success-ink-strong",
   },
   cancelled: {
     label: "Cancelled",
-    color: "bg-status-danger-surface text-status-danger-ink",
+    color: "bg-status-danger-surface text-status-danger-ink-strong",
   },
 };
 

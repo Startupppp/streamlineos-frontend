@@ -142,7 +142,7 @@ export function buildApprovalsInboxColumns({
             className={cn(
               "tabular-nums",
               isOverdue
-                ? "font-medium text-status-danger-ink"
+                ? "font-medium text-status-danger-ink-strong"
                 : "text-muted-foreground",
             )}
           >

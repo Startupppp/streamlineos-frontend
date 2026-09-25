@@ -11,7 +11,7 @@ const APPROVAL_STATUS_MAP: Record<ApprovalStatus, StatusEntry> = {
   escalated: {
     label: "Escalated",
     tone: "warning",
-    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+    className: "bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule",
   },
   cancelled: {
     label: "Cancelled",

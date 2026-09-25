@@ -25,9 +25,9 @@ import { resolveLabelColor } from "@/components/labels/label-colors";
 const INLINE_TYPES = ["TASK", "BUG", "STORY", "EPIC"] as const;
 
 const TYPE_PILL_CLASS: Record<string, string> = {
-  BUG: "bg-status-info-surface text-status-info-ink",
+  BUG: "bg-status-info-surface text-status-info-ink-strong",
   TASK: "bg-muted text-muted-foreground",
-  STORY: "bg-status-success-surface text-status-success-ink",
+  STORY: "bg-status-success-surface text-status-success-ink-strong",
   EPIC: "bg-category-orange-surface text-category-orange-ink",
   SUBTASK: "bg-muted text-muted-foreground",
 };

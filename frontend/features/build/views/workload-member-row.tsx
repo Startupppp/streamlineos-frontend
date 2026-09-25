@@ -48,9 +48,9 @@ interface WorkloadMemberRowProps {
 
 function getUtilizationClass(count: number): string {
   if (count === 0) return "bg-muted";
-  if (count <= 2) return "bg-status-success-surface text-status-success-ink";
-  if (count <= 4) return "bg-status-warning-surface text-status-warning-ink";
-  return "bg-status-danger-surface text-status-danger-ink";
+  if (count <= 2) return "bg-status-success-surface text-status-success-ink-strong";
+  if (count <= 4) return "bg-status-warning-surface text-status-warning-ink-strong";
+  return "bg-status-danger-surface text-status-danger-ink-strong";
 }
 
 export const WorkloadMemberRow = memo(function WorkloadMemberRow({
@@ -114,7 +114,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="ml-auto h-4 w-4 rounded-full bg-status-danger-surface text-status-danger-ink text-micro flex items-center justify-center font-bold shrink-0">
+                  <span className="ml-auto h-4 w-4 rounded-full bg-status-danger-surface text-status-danger-ink-strong text-micro flex items-center justify-center font-bold shrink-0">
                     {overdue}
                   </span>
                 </TooltipTrigger>
@@ -133,7 +133,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 <span
                   className={cn(
                     "text-sm font-semibold",
-                    overCapacity ? "text-status-danger-ink" : total > 3 ? "text-status-warning-ink" : "text-foreground",
+                    overCapacity ? "text-status-danger-ink-strong" : total > 3 ? "text-status-warning-ink-strong" : "text-foreground",
                   )}
                 >
                   {total}

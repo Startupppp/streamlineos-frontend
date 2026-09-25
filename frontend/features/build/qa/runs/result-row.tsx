@@ -17,16 +17,16 @@ import type { TestRunResult, TestResultStatus, TestCasePriority } from "@/types/
 
 const STATUS_OPTIONS: { value: TestResultStatus; label: string; activeClass: string }[] = [
   { value: "not_run", label: "Not Run", activeClass: "bg-muted text-foreground border-border" },
-  { value: "passed", label: "Pass", activeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
-  { value: "failed", label: "Fail", activeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
-  { value: "blocked", label: "Blocked", activeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  { value: "passed", label: "Pass", activeClass: "bg-status-success-surface text-status-success-ink-strong border-status-success-rule" },
+  { value: "failed", label: "Fail", activeClass: "bg-status-danger-surface text-status-danger-ink-strong border-status-danger-rule" },
+  { value: "blocked", label: "Blocked", activeClass: "bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule" },
   { value: "skipped", label: "Skip", activeClass: "bg-muted text-muted-foreground border-border" },
 ];
 
 const PRIORITY_STYLES: Record<TestCasePriority, string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-status-warning-ink border-status-warning-rule",
-  high: "text-status-danger-ink border-status-danger-rule",
+  medium: "text-status-warning-ink-strong border-status-warning-rule",
+  high: "text-status-danger-ink-strong border-status-danger-rule",
 };
 
 interface ResultRowProps {

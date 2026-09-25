@@ -34,9 +34,9 @@ const RUN_PAGE_SIZE = 50;
 
 const RUN_STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",
-  in_progress: "text-status-info-ink border-status-info-rule",
-  completed: "text-status-success-ink border-status-success-rule",
-  aborted: "text-status-danger-ink border-status-danger-rule",
+  in_progress: "text-status-info-ink-strong border-status-info-rule",
+  completed: "text-status-success-ink-strong border-status-success-rule",
+  aborted: "text-status-danger-ink-strong border-status-danger-rule",
 };
 
 const RUN_STATUS_LABELS: Record<string, string> = {

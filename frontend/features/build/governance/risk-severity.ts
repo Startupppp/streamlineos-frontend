@@ -15,7 +15,7 @@ export function getRiskSeverity(
 ): RiskSeverityResult {
   const score = PROB_IDX[probability] * IMPACT_IDX[impact];
   if (score <= 2) return { label: "Low", className: "bg-muted text-foreground border-border", score };
-  if (score <= 4) return { label: "Medium", className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule", score };
-  if (score === 6) return { label: "High", className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule", score };
-  return { label: "Critical", className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule", score };
+  if (score <= 4) return { label: "Medium", className: "bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule", score };
+  if (score === 6) return { label: "High", className: "bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule", score };
+  return { label: "Critical", className: "bg-status-danger-surface text-status-danger-ink-strong border-status-danger-rule", score };
 }

@@ -186,7 +186,7 @@ export function CycleFormSheet({
                     </FormControl>
                     <FormMessage />
                     {!form.formState.errors.name && duplicateName ? (
-                      <p className="text-xs text-status-warning-ink" aria-live="polite">
+                      <p className="text-xs text-status-warning-ink-strong" aria-live="polite">
                         A cycle with this name already exists in this project.
                       </p>
                     ) : null}

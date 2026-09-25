@@ -55,9 +55,9 @@ const FOLLOW_UP_STATUS_LABELS: Record<IncidentFollowUpStatus, string> = {
 };
 
 const FOLLOW_UP_STATUS_STYLES: Record<IncidentFollowUpStatus, string> = {
-  open: "text-status-danger-ink border-status-danger-rule",
-  in_progress: "text-status-warning-ink border-status-warning-rule",
-  done: "text-status-success-ink border-status-success-rule",
+  open: "text-status-danger-ink-strong border-status-danger-rule",
+  in_progress: "text-status-warning-ink-strong border-status-warning-rule",
+  done: "text-status-success-ink-strong border-status-success-rule",
   cancelled: "text-muted-foreground border-border",
 };
 
@@ -398,7 +398,7 @@ export function IncidentFollowUps({
           Follow-up actions
         </p>
         {unresolved > 0 ? (
-          <Badge variant="outline" className="text-micro text-status-warning-ink border-status-warning-rule">
+          <Badge variant="outline" className="text-micro text-status-warning-ink-strong border-status-warning-rule">
             {unresolved} unresolved
           </Badge>
         ) : null}

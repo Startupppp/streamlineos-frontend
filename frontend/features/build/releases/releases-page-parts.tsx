@@ -13,12 +13,12 @@ export const STATUS_CONFIG: Record<
   draft: {
     label: "Draft",
     className:
-      "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
+      "text-status-warning-ink-strong border-status-warning-rule bg-status-warning-surface",
   },
   released: {
     label: "Released",
     className:
-      "text-status-success-ink border-status-success-rule bg-status-success-surface",
+      "text-status-success-ink-strong border-status-success-rule bg-status-success-surface",
   },
   archived: {
     label: "Archived",

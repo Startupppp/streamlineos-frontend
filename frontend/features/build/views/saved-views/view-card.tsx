@@ -34,10 +34,10 @@ export interface ViewItem {
 
 const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
   board: { icon: <Kanban className="h-4 w-4" />, label: "Board", color: "text-muted-foreground bg-muted" },
-  list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-status-info-ink bg-status-info-surface" },
-  table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-status-success-ink bg-status-success-surface" },
-  calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-status-warning-ink bg-status-warning-surface" },
-  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Timeline", color: "text-status-danger-ink bg-status-danger-surface" },
+  list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-status-info-ink-strong bg-status-info-surface" },
+  table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-status-success-ink-strong bg-status-success-surface" },
+  calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-status-warning-ink-strong bg-status-warning-surface" },
+  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Timeline", color: "text-status-danger-ink-strong bg-status-danger-surface" },
 };
 
 interface ViewCardProps {
@@ -95,7 +95,7 @@ export const ViewCard = memo(function ViewCard({
         </button>
         <div className="flex items-center gap-1 shrink-0">
           {isPinned && (
-            <Badge variant="outline" className="text-micro bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
+            <Badge variant="outline" className="text-micro bg-status-warning-surface text-status-warning-ink-strong border-status-warning-rule">
               Pinned
             </Badge>
           )}

@@ -32,11 +32,11 @@ import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 export const STATUS_COLOR: Record<string, string> = {
   ACTIVE:
-    "text-status-success-ink border-status-success-rule bg-status-success-surface",
+    "text-status-success-ink-strong border-status-success-rule bg-status-success-surface",
   PLANNING:
-    "text-status-info-ink border-status-info-rule bg-status-info-surface",
+    "text-status-info-ink-strong border-status-info-rule bg-status-info-surface",
   ON_HOLD:
-    "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
+    "text-status-warning-ink-strong border-status-warning-rule bg-status-warning-surface",
   COMPLETED:
     "text-muted-foreground border-border bg-muted",
   ARCHIVED:

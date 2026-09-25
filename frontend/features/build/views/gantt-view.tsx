@@ -466,7 +466,7 @@ export function GanttView({
       (milestones?.length ?? 0) > 0 ? (
         <div className="flex shrink-0 flex-wrap items-center gap-2 px-0.5">
           {(cpData?.criticalPath.length ?? 0) > 0 ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-rule bg-status-danger-surface px-2.5 py-0.5 text-dense text-status-danger-ink">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-rule bg-status-danger-surface px-2.5 py-0.5 text-dense text-status-danger-ink-strong">
               <span
                 className="inline-block h-2.5 w-2.5 rounded-sm border border-status-danger-rule bg-status-danger-fill"
                 aria-hidden

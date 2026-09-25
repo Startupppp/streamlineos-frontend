@@ -63,7 +63,7 @@ function SubmissionActionsCell({ row, canManage, onView, onStatusUpdate }: Submi
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs text-status-success-ink hover:text-status-success-ink"
+            className="text-xs text-status-success-ink-strong hover:text-status-success-ink-strong"
             onClick={handleProcess}
           >
             Process

@@ -107,10 +107,10 @@ export const priorityConfig: Record<
   string,
   { label: string; color: string; icon: string }
 > = {
-  URGENT: { label: "Urgent", color: "text-status-danger-ink", icon: "AlertTriangle" },
-  HIGH: { label: "High", color: "text-status-warning-ink", icon: "ArrowUp" },
-  MEDIUM: { label: "Medium", color: "text-status-warning-ink", icon: "Minus" },
-  LOW: { label: "Low", color: "text-status-info-ink", icon: "ArrowDown" },
+  URGENT: { label: "Urgent", color: "text-status-danger-ink-strong", icon: "AlertTriangle" },
+  HIGH: { label: "High", color: "text-status-warning-ink-strong", icon: "ArrowUp" },
+  MEDIUM: { label: "Medium", color: "text-status-warning-ink-strong", icon: "Minus" },
+  LOW: { label: "Low", color: "text-status-info-ink-strong", icon: "ArrowDown" },
 };
 
 export const statusConfig: Record<string, StatusConfigEntry> = {
@@ -166,9 +166,9 @@ export const typeConfig: Record<
   string,
   { label: string; color: string }
 > = {
-  TASK: { label: "Task", color: "text-status-info-ink" },
-  BUG: { label: "Bug", color: "text-status-danger-ink" },
-  STORY: { label: "Story", color: "text-status-success-ink" },
-  EPIC: { label: "Epic", color: "text-status-info-ink" },
+  TASK: { label: "Task", color: "text-status-info-ink-strong" },
+  BUG: { label: "Bug", color: "text-status-danger-ink-strong" },
+  STORY: { label: "Story", color: "text-status-success-ink-strong" },
+  EPIC: { label: "Epic", color: "text-status-info-ink-strong" },
   SUBTASK: { label: "Subtask", color: "text-muted-foreground" },
 };

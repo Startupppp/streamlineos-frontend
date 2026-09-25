@@ -369,7 +369,7 @@ export function ActivityFeed({
       </div>
 
       {commentNotFound && (
-        <div className="flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-2.5 text-xs text-status-warning-ink">
+        <div className="flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-2.5 text-xs text-status-warning-ink-strong">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-status-warning-ink" />
           <span className="flex-1">
             Comment not found — it may have been deleted.
