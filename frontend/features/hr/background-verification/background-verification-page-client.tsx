@@ -34,6 +34,10 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getInitials } from "@/lib/format-utils";
 import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { InitiateBgvSheet } from "@/features/hr/background-verification/initiate-bgv-sheet";
 import { EditVerificationSheet } from "@/features/hr/background-verification/edit-verification-sheet";
 
@@ -144,6 +148,10 @@ function ComplianceDashboard() {
   );
 }
 
+function stopRowClick(e: React.MouseEvent) {
+  e.stopPropagation();
+}
+
 function buildBgvColumns(
   onUpdateStatus: (id: number, status: string) => void,
   onOpenEdit: (bgv: BackgroundVerification) => void,
@@ -235,7 +243,7 @@ function buildBgvColumns(
             <>
               <LoadingButton
                 size="sm"
-                className="gap-1 text-xs"
+                className="gap-1"
                 onClick={(e) => {
                   e.stopPropagation();
                   onUpdateStatus(bgv.id, "PASSED");
@@ -245,19 +253,26 @@ function buildBgvColumns(
                 <CheckCircle2 className="h-3 w-3" />
                 Pass
               </LoadingButton>
-              <LoadingButton
-                size="sm"
-                variant="outline"
-                className="gap-1 text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUpdateStatus(bgv.id, "FAILED");
-                }}
+              <ConfirmDialog
+                trigger={
+                  <LoadingButton
+                    size="sm"
+                    variant="outline"
+                    className="gap-1"
+                    onClick={stopRowClick}
+                    isPending={isPending}
+                  >
+                    <XCircle className="h-3 w-3" />
+                    Fail
+                  </LoadingButton>
+                }
+                title="Flag this verification as failed?"
+                description={`${bgv.user?.name ?? bgv.user?.email ?? "The employee"}'s ${bgv.type} check will be recorded as Flagged.`}
+                confirmLabel="Mark failed"
+                destructive
                 isPending={isPending}
-              >
-                <XCircle className="h-3 w-3" />
-                Fail
-              </LoadingButton>
+                onConfirm={() => onUpdateStatus(bgv.id, "FAILED")}
+              />
             </>
           )}
           <Button
@@ -283,6 +298,7 @@ export function BackgroundVerificationPageClient() {
   const canViewEmployees = useCan("hr:employees:view");
   const canInitiate = canManage && canViewEmployees;
   const { data: items, isLoading, isError, error, refetch } = useBackgroundVerifications();
+  const pageState = usePageState({ permission: "hr:sensitive:view", isLoading, isError, error });
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -314,21 +330,6 @@ export function BackgroundVerificationPageClient() {
     [update],
   );
 
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Background Verification"
-        subtitle="Initiate, track employee background checks, and view candidate compliance">
-        <EmptyState
-          illustrationPreset="alert"
-          title="Failed to load verifications"
-          description={getErrorMessage(error)}
-          action={{ label: "Retry", onClick: handleRetry }}
-        />
-      </PageWrapper>
-    );
-  }
-
   const pendingCount = items?.filter((b) => b.status === "PENDING").length ?? 0;
   const inProgressCount = items?.filter((b) => b.status === "IN_PROGRESS").length ?? 0;
   const passedCount = items?.filter((b) => b.status === "PASSED").length ?? 0;
@@ -347,6 +348,7 @@ export function BackgroundVerificationPageClient() {
         ) : undefined
       }
     >
+      <PageState resolution={pageState} loading={<DataTableSkeleton />} onRetry={handleRetry} className="flex-1">
       {items && items.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-3">
           <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-muted text-muted-foreground border-border">
@@ -384,7 +386,6 @@ export function BackgroundVerificationPageClient() {
               canManage,
             )}
             getRowKey={(bgv) => bgv.id}
-            isLoading={isLoading}
             emptyState={
               <EmptyState
                 illustrationPreset="security"
@@ -409,6 +410,7 @@ export function BackgroundVerificationPageClient() {
           <ComplianceDashboard />
         </TabsContent>
       </Tabs>
+      </PageState>
 
       <InitiateBgvSheet
         open={sheetOpen}
