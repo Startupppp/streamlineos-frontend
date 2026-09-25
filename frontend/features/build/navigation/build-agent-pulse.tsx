@@ -28,7 +28,7 @@ function resolveSignalHref(signal: AgentPulseSignal): string {
     "blocked_milestone": `${base}/${signal.projectId}/milestones`,
     "delivery_risk": `${base}/${signal.projectId}/risks`,
     "dependency_change": `${base}/${signal.projectId}`,
-    "comment_draft": `${base}/drafts`,
+    "comment_draft": `${base}/inbox?view=drafts`,
   };
 
   return signalTypeToHref[signalType];
