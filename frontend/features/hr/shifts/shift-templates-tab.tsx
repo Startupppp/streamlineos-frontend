@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrShifts, useDeleteShift, type ShiftTemplate } from "@/hooks/api/hr/shifts";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { titleCaseLabel } from "@/lib/title-case";
 
 interface Props {
   canManage: boolean;
@@ -77,7 +78,9 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {shifts.map((shift, idx) => (
+        {shifts.map((shift, idx) => {
+          const name = titleCaseLabel(shift.name);
+          return (
           <motion.div
             key={shift.id}
             initial={{ opacity: 0, y: 16 }}
@@ -87,7 +90,7 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <TruncatedText text={shift.name} className="text-sm font-semibold text-foreground" />
+                <TruncatedText text={name} className="text-sm font-semibold text-foreground" />
                 <div className="flex items-center gap-1.5 mt-1">
                   <Badge variant="secondary" className="text-dense">{shift.type}</Badge>
                   {shift.isNightShift && (
@@ -104,7 +107,7 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
                     size="icon"
                     className="w-7"
                     onClick={() => onEdit(shift)}
-                    aria-label={`Edit ${shift.name}`}
+                    aria-label={`Edit ${name}`}
                   >
                     <Edit2 className="h-3.5 w-3.5" />
                   </Button>
@@ -116,7 +119,7 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
                     className="w-7 text-destructive hover:text-destructive"
                     onClick={() => setPendingDelete(shift)}
                     disabled={deleteShift.isPending}
-                    aria-label={`Delete ${shift.name}`}
+                    aria-label={`Delete ${name}`}
                   />
                 </div>
               )}
@@ -136,7 +139,8 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
               </div>
             </div>
           </motion.div>
-        ))}
+          );
+        })}
       </div>
 
       <ConfirmSheet
@@ -147,7 +151,7 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
         title="Delete shift template?"
         description={
           pendingDelete
-            ? `Delete "${pendingDelete.name}"? This cannot be undone and may affect related assignments.`
+            ? `Delete "${titleCaseLabel(pendingDelete.name)}"? This cannot be undone and may affect related assignments.`
             : "Delete this shift template?"
         }
         confirmLabel="Delete"

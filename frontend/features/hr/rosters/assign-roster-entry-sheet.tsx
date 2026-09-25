@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { titleCaseLabel } from "@/lib/title-case";
 import { useHrShifts } from "@/hooks/api/hr/shifts";
 import { useUpsertRosterEntry } from "@/hooks/api/hr/rosters";
 import {
@@ -160,7 +161,7 @@ export function AssignRosterEntrySheet({
                       <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
                         {(shifts ?? []).map((shift) => (
                           <SelectItem key={shift.id} value={String(shift.id)}>
-                            {shift.name}
+                            {titleCaseLabel(shift.name)}
                           </SelectItem>
                         ))}
                       </SelectContent>
