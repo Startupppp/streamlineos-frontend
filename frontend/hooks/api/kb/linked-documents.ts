@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { readErrorExceptNotFoundReachesBoundary } from "@/lib/query-error-policy";
 
 const listLazy = lazyContract(() => import("@/hooks/api/kb/linked-documents-schema").then((m) => m.linkedDocumentListContract));
 const detailLazy = lazyContract(() => import("@/hooks/api/kb/linked-documents-schema").then((m) => m.linkedDocumentDetailContract));
@@ -67,6 +68,7 @@ export function useLinkedDocuments(params?: LinkedDocumentListParams, options?: 
     placeholderData: keepPreviousData,
     // The switch is read separately; a tenant with it off answers 404 here, which the page shows as "not found".
     retry: false,
+    throwOnError: readErrorExceptNotFoundReachesBoundary,
     ...options,
   });
 }
@@ -77,6 +79,8 @@ export function useLinkedDocument(linkedDocumentId: number, options?: { enabled?
     queryFn: ({ signal }) => apiClient.get<LinkedDocumentDetail>(`/kb/linked-documents/${linkedDocumentId}`, undefined, signal, detailLazy),
     staleTime: 60_000,
     retry: false,
+    // An entry that was withdrawn, or that this person may not see, answers 404; the page says so instead of falling to the route's error page.
+    throwOnError: readErrorExceptNotFoundReachesBoundary,
     ...options,
   });
 }
