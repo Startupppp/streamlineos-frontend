@@ -282,7 +282,12 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
           ) : (
             <PmPanel>
               {detail.links.map((link) => (
-                <LinkRow key={link.id} link={link} onRemove={handleRemoveLink} />
+                <LinkRow
+                  key={link.id}
+                  link={link}
+                  onRemove={handleRemoveLink}
+                  canManage={canManage}
+                />
               ))}
             </PmPanel>
           )}
