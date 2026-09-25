@@ -163,9 +163,10 @@ export function AllWorkPage() {
     (ticketId: number) => {
       const ticket = tickets.find((t) => t.id === ticketId);
       if (!ticket || ticket.projectId === null) return;
+      const projectId = ticket.projectId;
       requestLeave(() =>
         router.push(
-          getTicketDetailHref(ticket.projectId, ticket.projectKey, ticket.ticketNumber),
+          getTicketDetailHref(projectId, ticket.projectKey, ticket.ticketNumber),
         ),
       );
     },
@@ -195,9 +196,10 @@ export function AllWorkPage() {
   const handleKeyboardOpen = useCallback(() => {
     const ticket = tickets[focusedIndex];
     if (!ticket || ticket.projectId === null) return;
+    const projectId = ticket.projectId;
     requestLeave(() =>
       router.push(
-        getTicketDetailHref(ticket.projectId, ticket.projectKey ?? "", ticket.ticketNumber),
+        getTicketDetailHref(projectId, ticket.projectKey ?? "", ticket.ticketNumber),
       ),
     );
   }, [tickets, focusedIndex, requestLeave, router]);

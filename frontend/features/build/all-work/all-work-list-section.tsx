@@ -59,9 +59,11 @@ const GroupSection = memo(function GroupSection({
     (ticketId: number) => {
       const ticket = group.tickets.find((t) => t.id === ticketId);
       if (!ticket || !group.projectId || !group.projectKey) return;
+      const projectId = group.projectId;
+      const projectKey = group.projectKey;
       requestLeave(() =>
         router.push(
-          getTicketDetailHref(group.projectId, group.projectKey, ticket.ticketNumber),
+          getTicketDetailHref(projectId, projectKey, ticket.ticketNumber),
         ),
       );
     },
