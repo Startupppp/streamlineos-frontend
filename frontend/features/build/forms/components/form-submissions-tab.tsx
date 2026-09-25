@@ -86,7 +86,7 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
   const canManage = useCan("build:forms:manage");
   const [viewTarget, setViewTarget] = useState<FormSubmission | null>(null);
 
-  const { data, isLoading, isError, error, refetch } = useFormSubmissions(projectId, formId);
+  const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useFormSubmissions(projectId, formId);
   const updateSubmission = useUpdateSubmission(projectId, formId);
 
   const pageState = usePageState({
@@ -169,7 +169,7 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
     },
   ];
 
-  const items = data ?? [];
+  const items = Array.isArray(data) ? data : data?.pages.flatMap((page) => page.data) ?? [];
 
   const renderMobileCard = (row: FormSubmission) => (
     <BuildMobileCard
@@ -223,7 +223,14 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
             minWidth="640px"
             mobileCard={renderMobileCard}
             className="min-h-0 flex-1"
-            pagination={{ pageSize: 25 }}
+            pagination={{
+              mode: "cursor",
+              pageSize: 25,
+              hasMore: Boolean(hasNextPage),
+              hasPrevious: false,
+              onNext: () => void fetchNextPage(),
+            }}
+            isLoading={isFetchingNextPage}
           />
         )}
       </PageState>
