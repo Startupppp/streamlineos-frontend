@@ -42,7 +42,7 @@ complete product definition of done.
   - `CLOSED=42`
   - `VERIFIED=283`
 - The generated Markdown and JSON census artifacts in the backend `docs/build-module/` match backend `origin/main`.
-- The focused backend integration matrix passed 41 suites and 482 tests. Backend typecheck, build, permission-key validation, route-budget self-test, feature-cycle scan, and migration-discipline checks passed.
+- The Build backend matrix passed 231 suites and 2,301 tests after refreshing authorization evidence and cursor-pagination expectations. Backend typecheck, build, permission-key validation, route-budget self-test, feature-cycle scan, and migration-discipline checks remain separately tracked.
 - Fresh P1-4 handoff verification passed 4 focused suites and 48 tests across quote lifecycle, quote tenant isolation, signed-envelope completion, and deal-linked project provisioning. The authenticated browser handoff remains open because this environment has no configured E2E tenant/session fixture.
 
 ## Production migrations
@@ -77,7 +77,7 @@ Current release-candidate checks:
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
 - Fresh static gate rerun passed: route-access contract (215 permission keys), feature-cycle scan (46 features / 3,883 files), PM Workspace removal (1,989 source files / 3,641 chunks), route thinness (595 authenticated modules, zero in-scope thick), and permission binding (2,620 Build-relevant bindings with no Build-owned mismatch).
-- Fresh route-bundle measurement for build `PEsKaTy3mZOzL9HoUw7Zu`: 13 routes measured, zero pending measurements, seven first-load JS budget breaches; the gate fails with the breaches visible rather than treating them as inconclusive. Deferring the module switcher and chat mobile navigation reduced `/build/inbox` from 620,256 to 609,551 bytes and `/build/my-work` from 655,347 to 644,642 bytes; `/inbox` and `/chat` now pass their first-load budgets.
+- Fresh route-bundle measurement for build `9kF2UvxqDKQsMSSeU_4Ln`: 13 routes measured, zero pending measurements, seven first-load JS budget breaches; the gate fails with the breaches visible rather than treating them as inconclusive. Current Build values are `/build/inbox` 609,560 bytes and `/build/my-work` 644,655 bytes against the 524,288-byte default ceiling.
 - Playwright `e2e/build-list-responsive.spec.ts`: 31/31 Chromium checks passed at 375px, 768px, and 1280px, covering overflow, focus return, filter drawers, pagination reachability, responsive cards/tables, loading, and empty states. The latest rerun is hydration-clean.
 - `git diff --check`: pass.
 - Latest frontend Build navigation, filtered board-count, malformed-filter normalization, portfolio-search, Command Center title consistency, retry-refresh, stale-detail recovery, expected missing-record telemetry, invalid project-id rejection, dirty-navigation protection, scope-switch stale-data fixes, project-scoped ticket-detail cache identity, cross-tab access/entitlement freshness hardening, and the All Work navigation typecheck fix are on `origin/main` at the current release commit:
