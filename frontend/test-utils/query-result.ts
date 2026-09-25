@@ -152,12 +152,12 @@ export function successInfiniteQueryResult<TPage>(
 }
 
 /** The infinite counterpart of `idleQueryResult` — gated off, never run, no pages. */
-export function idleInfiniteQueryResult<TPage>(): UseInfiniteQueryResult<
-  InfiniteData<TPage, unknown>,
+export function idleInfiniteQueryResult<TPage, TPageParam = unknown>(): UseInfiniteQueryResult<
+  InfiniteData<TPage, TPageParam>,
   Error
 > {
   return {
-    ...baseResult<InfiniteData<TPage, unknown>>(),
+    ...baseResult<InfiniteData<TPage, TPageParam>>(),
     ...infinitePaging,
     hasNextPage: false,
     data: undefined,
