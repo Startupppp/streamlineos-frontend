@@ -178,6 +178,14 @@ export default function QuoteDetailPage({
     () => setSigningEnvelopeOpen(true),
     [],
   );
+  const handleOpenProject = useCallback(() => {
+    if (quote?.projectId != null) router.push(`/build/${quote.projectId}`);
+  }, [quote?.projectId, router]);
+  const handleOpenInvoice = useCallback(() => {
+    if (quote?.convertedInvoiceId != null) {
+      router.push(`/accounting/invoices/${quote.convertedInvoiceId}`);
+    }
+  }, [quote?.convertedInvoiceId, router]);
 
   const handleMarkSignedConfirm = useCallback(() => {
     setSignedDialogOpen(false);
@@ -283,6 +291,8 @@ export default function QuoteDetailPage({
             onApprove={handleApprove}
             onApprovalRejectOpen={handleApprovalRejectOpen}
             onConvertToInvoice={handleConvertToInvoice}
+            onOpenProject={handleOpenProject}
+            onOpenInvoice={handleOpenInvoice}
             onCreateSigningEnvelope={handleCreateSigningEnvelope}
             onMarkSignedOpen={handleMarkSignedOpen}
             onDelete={handleDelete}

@@ -8,6 +8,8 @@ import {
   Trash2,
   FileCheck2,
   Receipt,
+  FolderKanban,
+  ExternalLink,
   PenLine,
   Pencil,
 } from "lucide-react";
@@ -36,6 +38,8 @@ interface QuoteActionBarProps {
   onApprove: () => void;
   onApprovalRejectOpen: () => void;
   onConvertToInvoice: () => void;
+  onOpenProject?: () => void;
+  onOpenInvoice?: () => void;
   onCreateSigningEnvelope: () => void;
   onMarkSignedOpen: () => void;
   onDelete: () => void;
@@ -56,6 +60,8 @@ export function QuoteActionBar({
   onApprove,
   onApprovalRejectOpen,
   onConvertToInvoice,
+  onOpenProject,
+  onOpenInvoice,
   onCreateSigningEnvelope,
   onMarkSignedOpen,
   onDelete,
@@ -161,6 +167,18 @@ export function QuoteActionBar({
         <Button size="sm" variant="outline" onClick={onCreateSigningEnvelope}>
           <PenLine className="h-3.5 w-3.5 mr-1.5" />
           Create Signing Envelope
+        </Button>
+      )}
+      {quote.projectId != null && onOpenProject && (
+        <Button size="sm" variant="outline" onClick={onOpenProject}>
+          <FolderKanban className="h-3.5 w-3.5 mr-1.5" />
+          Open Project
+        </Button>
+      )}
+      {quote.convertedInvoiceId != null && onOpenInvoice && (
+        <Button size="sm" variant="outline" onClick={onOpenInvoice}>
+          <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+          Open Invoice
         </Button>
       )}
       {canMarkSigned && (
