@@ -3,10 +3,11 @@
 import { useCallback, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useInfiniteProjects } from "@/hooks/api/build/projects";
+import { useInfiniteManagedProducts } from "@/hooks/api/build/managed-products";
 import {
-  useManagedProducts,
-  useInfiniteManagedProducts,
-} from "@/hooks/api/build/managed-products";
+  useInfiniteBuildScopeSearch,
+  type BuildScopeResolvedRef,
+} from "@/hooks/api/build/scope-directory";
 import { useCanState } from "@/hooks/api/access";
 import { BUILD_ROOT_PATH } from "@/lib/build/build-scope";
 import {
@@ -47,10 +48,32 @@ export interface BuildScopeDirectory {
   hasMoreHierarchy: boolean;
   isFetchingMoreHierarchy: boolean;
   fetchMoreHierarchy: () => void;
+  hasMoreSearchResults: boolean;
+  isFetchingMoreSearchResults: boolean;
+  fetchMoreSearchResults: () => void;
   refetch: () => void;
 }
 
 const ORGANIZATION_PARENT = "Organization";
+
+function directoryEntryFromResolved(
+  row: BuildScopeResolvedRef,
+): BuildScopeDirectoryEntry {
+  return {
+    key: row.key,
+    type: row.type,
+    id: row.id,
+    name: row.name,
+    parentPath: row.parentPath,
+    parentKey: row.parentKey,
+    projectKey: row.projectKey,
+    href:
+      row.type === "product"
+        ? `${BUILD_ROOT_PATH}/managed-products/${row.id}`
+        : `${BUILD_ROOT_PATH}/${row.id}`,
+    isArchived: row.isArchived,
+  };
+}
 
 export function useBuildScopeDirectory(
   search: string,
@@ -61,37 +84,51 @@ export function useBuildScopeDirectory(
     search.trim(),
     BUILD_SCOPE_SEARCH_DEBOUNCE_MS,
   );
-  const searchParam =
-    debouncedSearch.length > 0 ? { search: debouncedSearch } : {};
-
-  const hierarchyProductsQuery = useManagedProducts({
-    limit: BUILD_SCOPE_PAGE_LIMIT,
-  });
+  const trimmedSearch = search.trim();
+  const isSearching = trimmedSearch.length > 0;
+  const isDebouncePending = isSearching && trimmedSearch !== debouncedSearch;
 
   const productsInfinite = useInfiniteManagedProducts({
     limit: BUILD_SCOPE_PAGE_LIMIT,
-    ...searchParam,
   });
 
   const projectsInfiniteQuery = useInfiniteProjects({
     limit: BUILD_SCOPE_PAGE_LIMIT,
-    ...searchParam,
     ...(includeArchived ? { status: "ALL" as const } : {}),
   });
 
+  const searchQuery = useInfiniteBuildScopeSearch(debouncedSearch, {
+    enabled: isSearching && !isDebouncePending,
+  });
+  const fetchNextProjectPage = projectsInfiniteQuery.fetchNextPage;
+  const fetchNextProductPage = productsInfinite.fetchNextPage;
+  const fetchNextSearchPage = searchQuery.fetchNextPage;
+
   const productNames = useMemo(() => {
-    const rows = hierarchyProductsQuery.data?.data ?? [];
+    const rows = productsInfinite.data?.pages.flatMap((page) => page.data) ?? [];
     return new Map(rows.map((row) => [row.id, row.name]));
-  }, [hierarchyProductsQuery.data]);
+  }, [productsInfinite.data]);
 
   const hierarchyIsComplete = useMemo(
+    () => productsInfinite.isSuccess && productsInfinite.hasNextPage === false,
+    [productsInfinite.isSuccess, productsInfinite.hasNextPage],
+  );
+
+  const searchRows = useMemo(
     () =>
-      hierarchyProductsQuery.isSuccess &&
-      !(hierarchyProductsQuery.data?.pagination.hasMore ?? false),
-    [hierarchyProductsQuery.isSuccess, hierarchyProductsQuery.data],
+      isDebouncePending
+        ? []
+        : searchQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [isDebouncePending, searchQuery.data],
   );
 
   const products = useMemo<BuildScopeDirectoryEntry[]>(() => {
+    if (isSearching) {
+      return searchRows
+        .filter((row) => row.type === "product")
+        .filter((row) => includeArchived || !row.isArchived)
+        .map(directoryEntryFromResolved);
+    }
     const rows = productsInfinite.data?.pages.flatMap((p) => p.data) ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "archived")
@@ -106,9 +143,15 @@ export function useBuildScopeDirectory(
         href: `${BUILD_ROOT_PATH}/managed-products/${row.id}`,
         isArchived: row.status === "archived",
       }));
-  }, [productsInfinite.data, includeArchived]);
+  }, [isSearching, searchRows, productsInfinite.data, includeArchived]);
 
   const projects = useMemo<BuildScopeDirectoryEntry[]>(() => {
+    if (isSearching) {
+      return searchRows
+        .filter((row) => row.type === "project")
+        .filter((row) => includeArchived || !row.isArchived)
+        .map(directoryEntryFromResolved);
+    }
     const rows = projectsInfiniteQuery.data?.pages.flatMap((p) => p.data) ?? [];
     return rows
       .filter((row) => includeArchived || row.status !== "ARCHIVED")
@@ -140,9 +183,10 @@ export function useBuildScopeDirectory(
           isArchived: row.status === "ARCHIVED",
         };
       });
-  }, [projectsInfiniteQuery.data, includeArchived, productNames, hierarchyIsComplete]);
+  }, [isSearching, searchRows, projectsInfiniteQuery.data, includeArchived, productNames, hierarchyIsComplete]);
 
   const quarantinedProjects = useMemo<BuildScopeDirectoryEntry[]>(() => {
+    if (isSearching) return [];
     if (!hierarchyIsComplete) return [];
     const rows = projectsInfiniteQuery.data?.pages.flatMap((p) => p.data) ?? [];
     return rows
@@ -161,20 +205,27 @@ export function useBuildScopeDirectory(
         href: `${BUILD_ROOT_PATH}/${row.id}`,
         isArchived: row.status === "ARCHIVED",
       }));
-  }, [projectsInfiniteQuery.data, includeArchived, productNames, hierarchyIsComplete]);
+  }, [isSearching, projectsInfiniteQuery.data, includeArchived, productNames, hierarchyIsComplete]);
 
   const hasMoreHierarchy = productsInfinite.hasNextPage ?? false;
 
   const handleFetchMoreProjects = useCallback(() => {
-    void projectsInfiniteQuery.fetchNextPage();
-  }, [projectsInfiniteQuery.fetchNextPage]);
+    void fetchNextProjectPage();
+  }, [fetchNextProjectPage]);
 
   const handleFetchMoreHierarchy = useCallback(() => {
-    void productsInfinite.fetchNextPage();
-  }, [productsInfinite.fetchNextPage]);
+    void fetchNextProductPage();
+  }, [fetchNextProductPage]);
+
+  const handleFetchMoreSearchResults = useCallback(() => {
+    void fetchNextSearchPage();
+  }, [fetchNextSearchPage]);
 
   function handleRefetch() {
-    void hierarchyProductsQuery.refetch();
+    if (isSearching) {
+      void searchQuery.refetch();
+      return;
+    }
     void productsInfinite.refetch();
     void projectsInfiniteQuery.refetch();
   }
@@ -185,14 +236,23 @@ export function useBuildScopeDirectory(
     quarantinedProjects,
     isLoading:
       canViewState === "loading" ||
-      productsInfinite.isLoading ||
-      projectsInfiniteQuery.isLoading,
+      (isSearching
+        ? isDebouncePending || searchQuery.isLoading
+        : productsInfinite.isLoading || projectsInfiniteQuery.isLoading),
     isRefreshing:
-      (productsInfinite.isFetching && !productsInfinite.isLoading && !productsInfinite.isFetchingNextPage) ||
-      (projectsInfiniteQuery.isFetching &&
-        !projectsInfiniteQuery.isLoading &&
-        !projectsInfiniteQuery.isFetchingNextPage),
-    isError: productsInfinite.isError || projectsInfiniteQuery.isError,
+      isSearching
+        ? searchQuery.isFetching &&
+          !searchQuery.isLoading &&
+          !searchQuery.isFetchingNextPage
+        : (productsInfinite.isFetching &&
+            !productsInfinite.isLoading &&
+            !productsInfinite.isFetchingNextPage) ||
+          (projectsInfiniteQuery.isFetching &&
+            !projectsInfiniteQuery.isLoading &&
+            !projectsInfiniteQuery.isFetchingNextPage),
+    isError: isSearching
+      ? searchQuery.isError
+      : productsInfinite.isError || projectsInfiniteQuery.isError,
     isDenied: canViewState === "denied",
     hasMoreProjects: projectsInfiniteQuery.hasNextPage ?? false,
     isFetchingMoreProjects: projectsInfiniteQuery.isFetchingNextPage,
@@ -200,6 +260,9 @@ export function useBuildScopeDirectory(
     hasMoreHierarchy,
     isFetchingMoreHierarchy: productsInfinite.isFetchingNextPage,
     fetchMoreHierarchy: handleFetchMoreHierarchy,
+    hasMoreSearchResults: searchQuery.hasNextPage ?? false,
+    isFetchingMoreSearchResults: searchQuery.isFetchingNextPage,
+    fetchMoreSearchResults: handleFetchMoreSearchResults,
     refetch: handleRefetch,
   };
 }

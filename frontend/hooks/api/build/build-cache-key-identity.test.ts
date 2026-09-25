@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useManagedProducts, useUpdateManagedProduct } from "@/hooks/api/build/managed-products";
 import { useAgentPulse } from "@/hooks/api/build/agent-pulse";
+import { useInfiniteBuildScopeSearch } from "@/hooks/api/build/scope-directory";
 import type { BuildScope } from "@/lib/build/build-scope";
 
 const ORG_SCOPE: BuildScope = {
@@ -55,6 +56,10 @@ jest.mock("@/hooks/api/build/agent-pulse-schema", () => ({
   agentPulseContract: null,
 }));
 
+jest.mock("@/hooks/api/build/scope-directory-schema", () => ({
+  scopeDirectorySearchContract: null,
+}));
+
 type ApiMock = { get: jest.Mock; patch: jest.Mock; delete: jest.Mock };
 
 function getApiClient(): ApiMock {
@@ -86,6 +91,12 @@ describe("BSN-04-031 — all response-shaping inputs appear in cache keys", () =
     const ab = buildWorkQueryKeys.projects.scopeDirectory.resolve(["project:1", "product:2"]);
     const ba = buildWorkQueryKeys.projects.scopeDirectory.resolve(["product:2", "project:1"]);
     expect(JSON.stringify(ab)).toEqual(JSON.stringify(ba));
+  });
+
+  it("scope-directory search keys isolate rapid query changes", () => {
+    const alpha = buildWorkQueryKeys.projects.scopeDirectory.search({ q: "alpha", limit: 100 });
+    const beta = buildWorkQueryKeys.projects.scopeDirectory.search({ q: "beta", limit: 100 });
+    expect(JSON.stringify(alpha)).not.toEqual(JSON.stringify(beta));
   });
 
   it("agent-pulse keys differ per Build scope so one scope's top signal is never served to another", () => {
@@ -128,6 +139,16 @@ describe("BSN-04-032 — queryFns pass the AbortSignal to apiClient", () => {
     const thirdArg: unknown = getApiClient().get.mock.calls[0]?.[2];
     expect(thirdArg).toBeInstanceOf(AbortSignal);
   });
+
+  it("useInfiniteBuildScopeSearch calls the authorized directory endpoint with a bounded page and abort signal", async () => {
+    getApiClient().get.mockResolvedValue({ data: [], nextCursor: null });
+    const client = makeClient();
+    renderHook(() => useInfiniteBuildScopeSearch("alpha"), { wrapper: wrap(client) });
+    await waitFor(() => expect(getApiClient().get).toHaveBeenCalled());
+    expect(getApiClient().get.mock.calls[0]?.[0]).toBe("/build/scope-directory/search");
+    expect(getApiClient().get.mock.calls[0]?.[1]).toEqual({ q: "alpha", limit: 100 });
+    expect(getApiClient().get.mock.calls[0]?.[2]).toBeInstanceOf(AbortSignal);
+  });
 });
 
 describe("BSN-04-033 — post-commit patch scope for rename mutations", () => {
@@ -159,6 +180,33 @@ describe("BSN-04-033 — post-commit patch scope for rename mutations", () => {
     };
     expect(patched.data[0]?.name).toBe("Renamed product");
     expect(patched.data[1]?.name).toBe("Untouched");
-    expect(invalidateSpy).not.toHaveBeenCalled();
+    expect(invalidateSpy).toHaveBeenCalledTimes(1);
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: buildWorkQueryKeys.projects.scopeDirectory.all,
+    });
+  });
+
+  it("useUpdateManagedProduct patches every loaded infinite page used by the scope browser", async () => {
+    getApiClient().patch.mockResolvedValue({ id: 5, name: "Renamed product" });
+    const client = makeClient();
+    const listKey = buildWorkQueryKeys.projects.managedProducts.listInfinite({ limit: "100" });
+    client.setQueryData(listKey, {
+      pages: [
+        { data: [{ id: 6, name: "Untouched" }], pagination: { limit: 100, hasMore: true, nextCursor: "next" } },
+        { data: [{ id: 5, name: "Old product" }], pagination: { limit: 100, hasMore: false, nextCursor: null } },
+      ],
+      pageParams: [undefined, "next"],
+    });
+    const { result } = renderHook(() => useUpdateManagedProduct(), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ managedProductId: 5, name: "Renamed product" });
+    });
+
+    const patched = client.getQueryData(listKey) as {
+      pages: { data: { id: number; name: string }[] }[];
+    };
+    expect(patched.pages[0]?.data[0]?.name).toBe("Untouched");
+    expect(patched.pages[1]?.data[0]?.name).toBe("Renamed product");
   });
 });

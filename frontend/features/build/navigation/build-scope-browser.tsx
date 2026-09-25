@@ -62,6 +62,11 @@ export function BuildScopeBrowser({
   ).entries;
   const directory = useBuildScopeDirectory(search, includeArchived);
   const listRef = useRef<HTMLDivElement>(null);
+  const {
+    fetchMoreProjects,
+    fetchMoreHierarchy,
+    fetchMoreSearchResults,
+  } = directory;
 
   const moveFocus = useCallback((step: number) => {
     const container = listRef.current;
@@ -158,12 +163,16 @@ export function BuildScopeBrowser({
   );
 
   const handleFetchMoreProjects = useCallback(() => {
-    directory.fetchMoreProjects();
-  }, [directory.fetchMoreProjects]);
+    fetchMoreProjects();
+  }, [fetchMoreProjects]);
 
   const handleFetchMoreHierarchy = useCallback(() => {
-    directory.fetchMoreHierarchy();
-  }, [directory.fetchMoreHierarchy]);
+    fetchMoreHierarchy();
+  }, [fetchMoreHierarchy]);
+
+  const handleFetchMoreSearchResults = useCallback(() => {
+    fetchMoreSearchResults();
+  }, [fetchMoreSearchResults]);
 
   const rootProjects = useMemo(
     () => directory.projects.filter((entry) => entry.parentKey === null),
@@ -356,29 +365,16 @@ export function BuildScopeBrowser({
             ) : (
               searchResults.map(renderSearchRow)
             )}
-            {directory.hasMoreHierarchy ? (
+            {directory.hasMoreSearchResults ? (
               <div className="flex justify-center py-1">
                 <LoadingButton
                   variant="outline"
                   size="sm"
                   type="button"
-                  isPending={directory.isFetchingMoreHierarchy}
-                  onClick={handleFetchMoreHierarchy}
+                  isPending={directory.isFetchingMoreSearchResults}
+                  onClick={handleFetchMoreSearchResults}
                 >
-                  Load more products
-                </LoadingButton>
-              </div>
-            ) : null}
-            {directory.hasMoreProjects ? (
-              <div className="flex justify-center py-1">
-                <LoadingButton
-                  variant="outline"
-                  size="sm"
-                  type="button"
-                  isPending={directory.isFetchingMoreProjects}
-                  onClick={handleFetchMoreProjects}
-                >
-                  Load more projects
+                  Load more results
                 </LoadingButton>
               </div>
             ) : null}

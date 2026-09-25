@@ -62,6 +62,24 @@ export function useManagedProducts(params?: ListManagedProductsParams) {
 }
 
 type InfiniteManagedProductsParams = Omit<ListManagedProductsParams, "cursor">;
+type ManagedProductsListCache =
+  | ManagedProductsPage
+  | InfiniteData<ManagedProductsPage>;
+
+function patchManagedProductListCache(
+  cache: ManagedProductsListCache | undefined,
+  updated: ManagedProduct,
+): ManagedProductsListCache | undefined {
+  if (cache === undefined) return cache;
+  const patchPage = (page: ManagedProductsPage): ManagedProductsPage => ({
+    ...page,
+    data: page.data.map((row) => (row.id === updated.id ? updated : row)),
+  });
+  if ("pages" in cache) {
+    return { ...cache, pages: cache.pages.map(patchPage) };
+  }
+  return patchPage(cache);
+}
 
 export function useInfiniteManagedProducts(
   params: InfiniteManagedProductsParams,
@@ -139,6 +157,7 @@ export function useCreateManagedProduct() {
       apiClient.post<ManagedProduct>("/build/managed-products", data, undefined, managedProductRowContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.scopeDirectory.all });
     },
   });
 }
@@ -162,19 +181,17 @@ export function useUpdateManagedProduct() {
         buildWorkQueryKeys.projects.managedProducts.detail(vars.managedProductId),
         updated,
       );
-      const loadedPages = qc.getQueriesData<ManagedProductsPage>({
+      const loadedPages = qc.getQueriesData<ManagedProductsListCache>({
         queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
       });
       for (const [key, page] of loadedPages) {
         if (page === undefined) continue;
-        if (!page.data.some((row) => row.id === vars.managedProductId)) continue;
-        qc.setQueryData<ManagedProductsPage>(key, {
-          ...page,
-          data: page.data.map((row) =>
-            row.id === vars.managedProductId ? updated : row,
-          ),
-        });
+        qc.setQueryData<ManagedProductsListCache>(
+          key,
+          patchManagedProductListCache(page, updated),
+        );
       }
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.scopeDirectory.all });
     },
   });
 }
@@ -187,6 +204,7 @@ export function useDeleteManagedProduct() {
       apiClient.delete<void>(`/build/managed-products/${managedProductId}`, undefined, undefined, noContentContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.scopeDirectory.all });
     },
   });
 }
