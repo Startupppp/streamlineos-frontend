@@ -25,6 +25,7 @@ export function spaceHref(id: number): string {
   return `${KB_SPACES}/${id}`;
 }
 
+export const KB_MANAGE = `${KNOWLEDGE_BASE}/manage`;
 export const KB_REVIEWS = `${KNOWLEDGE_BASE}/reviews`;
 export const KB_IMPORT = `${KNOWLEDGE_BASE}/import`;
 export const KB_SEARCH = `${KNOWLEDGE_BASE}/search`;

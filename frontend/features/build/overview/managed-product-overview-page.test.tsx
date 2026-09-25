@@ -20,6 +20,12 @@ jest.mock("@/hooks/api/build/managed-products", () => ({
     isError: false,
     refetch: jest.fn(),
   })),
+  useManagedProductInsights: jest.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+  })),
 }));
 
 jest.mock("@/hooks/api/build/projects", () => ({
@@ -177,6 +183,48 @@ describe("ManagedProductOverviewPage", () => {
     render(<ManagedProductOverviewPage managedProductId={42} />);
 
     expect(screen.getByText("137")).toBeInTheDocument();
+  });
+
+  it("shows the exact linked-project aggregate instead of presenting the first cursor page as the total", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useManagedProduct, useManagedProductInsights } = jest.requireMock(
+      "@/hooks/api/build/managed-products",
+    );
+    (useManagedProduct as jest.Mock).mockReturnValue({
+      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+    (useManagedProductInsights as jest.Mock).mockReturnValue({
+      data: { linkedProjectCount: 37 },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
+    (useProjects as jest.Mock).mockReturnValue({
+      data: {
+        data: Array.from({ length: 10 }, (_, index) => ({
+          id: index + 1,
+          name: `Project ${index + 1}`,
+          key: `P-${index + 1}`,
+          status: "ACTIVE",
+        })),
+        hasMore: true,
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    expect(useManagedProductInsights).toHaveBeenCalledWith(42);
+    expect(screen.getByText("37")).toBeInTheDocument();
+    expect(screen.queryByText("10+")).not.toBeInTheDocument();
   });
 
   it("renders the error state when the resolution reports an error", () => {

@@ -60,6 +60,9 @@ function makeDirectory(overrides: Partial<BuildScopeDirectory> = {}): BuildScope
     hasMoreHierarchy: false,
     isFetchingMoreHierarchy: false,
     fetchMoreHierarchy: jest.fn(),
+    hasMoreSearchResults: false,
+    isFetchingMoreSearchResults: false,
+    fetchMoreSearchResults: jest.fn(),
     refetch: jest.fn(),
     ...overrides,
   };
@@ -406,46 +409,37 @@ describe("BLD-X-SB-DIR-001 — ARIA: search result items must carry role=option 
 });
 
 describe("BLD-X-SB-DIR-001 — search-mode load-more: a paginated search result set must not be silently truncated at the first cursor page", () => {
-  test("Load more projects button appears in search mode when hasMoreProjects is true so the user knows more matching results exist", async () => {
+  test("Load more results appears in search mode when the unified directory has another page", async () => {
     const project = makeEntry({ key: "project:1", name: "Alpha" });
-    setupMocks({ projects: [project], hasMoreProjects: true });
+    setupMocks({ projects: [project], hasMoreSearchResults: true });
     renderBrowser();
     await userEvent.type(screen.getByPlaceholderText(/Search projects/), "Al");
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Load more projects/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Load more results/i })).toBeInTheDocument();
     });
   });
 
-  test("Load more products button appears in search mode when hasMoreHierarchy is true", async () => {
-    const product = makeEntry({ key: "product:p1", type: "product", name: "SearchWS", parentKey: null });
-    setupMocks({ products: [product], hasMoreHierarchy: true });
-    renderBrowser();
-    await userEvent.type(screen.getByPlaceholderText(/Search projects/), "Se");
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Load more products/i })).toBeInTheDocument();
-    });
-  });
-
-  test("clicking Load more projects in search mode calls fetchMoreProjects so the next cursor page is appended", async () => {
-    const fetchMoreProjects = jest.fn();
+  test("clicking Load more results advances the unified directory cursor", async () => {
+    const fetchMoreSearchResults = jest.fn();
     const project = makeEntry({ key: "project:1", name: "Alpha" });
-    setupMocks({ projects: [project], hasMoreProjects: true, fetchMoreProjects });
+    setupMocks({ projects: [project], hasMoreSearchResults: true, fetchMoreSearchResults });
     renderBrowser();
     await userEvent.type(screen.getByPlaceholderText(/Search projects/), "Al");
-    await waitFor(() => screen.getByRole("button", { name: /Load more projects/i }));
-    await userEvent.click(screen.getByRole("button", { name: /Load more projects/i }));
-    expect(fetchMoreProjects).toHaveBeenCalledTimes(1);
+    await waitFor(() => screen.getByRole("button", { name: /Load more results/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Load more results/i }));
+    expect(fetchMoreSearchResults).toHaveBeenCalledTimes(1);
   });
 
-  test("Load more projects button is absent in search mode when hasMoreProjects is false so there is no spurious prompt", async () => {
+  test("browse pagination flags do not create type-specific load-more controls in search mode", async () => {
     const project = makeEntry({ key: "project:1", name: "Alpha" });
-    setupMocks({ projects: [project], hasMoreProjects: false });
+    setupMocks({ projects: [project], hasMoreProjects: true, hasMoreHierarchy: true });
     renderBrowser();
     await userEvent.type(screen.getByPlaceholderText(/Search projects/), "Al");
     await waitFor(() => {
       expect(screen.getByText("Alpha")).toBeInTheDocument();
     });
     expect(screen.queryByRole("button", { name: /Load more projects/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Load more products/i })).not.toBeInTheDocument();
   });
 });
 

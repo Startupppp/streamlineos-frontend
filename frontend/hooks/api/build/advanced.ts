@@ -80,7 +80,7 @@ export function useCycles(
   projectId: number,
   options?: Omit<UseQueryOptions<Cycle[]>, "queryKey" | "queryFn" | "enabled">
 ) {
-  const canView = useCan("build:sprints:view");
+  const canView = useCan("build:cycles:view");
   return useQuery<Cycle[]>({
     queryKey: buildWorkQueryKeys.projects.cycles(projectId),
     queryFn: ({ signal }) => apiClient.get<Cycle[]>(`/build/${projectId}/cycles`, undefined, signal, cycleListContract),
@@ -92,7 +92,7 @@ export function useCycles(
 
 export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("build:workspace:manage", {
+  return useAuthorizedMutation("build:cycles:manage", {
     ...options,
     mutationKey: ["projects", "cycles", "create"],
     mutationFn: ({ projectId, ...data }: CreateCycleInput) =>
@@ -100,6 +100,68 @@ export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
     onSuccess: (_: unknown, variables: CreateCycleInput) => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.cycles(variables.projectId),
+      });
+    },
+  });
+}
+
+export interface UpdateCycleInput {
+  projectId: number;
+  cycleId: number;
+  name?: string;
+  description?: string;
+  status?: "draft" | "active" | "completed";
+  startDate?: string;
+  endDate?: string;
+}
+
+export function useUpdateCycle(options?: Parameters<typeof useMutation>[0]) {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation("build:cycles:manage", {
+    ...options,
+    mutationKey: ["projects", "cycles", "update"],
+    mutationFn: ({ projectId, cycleId, ...data }: UpdateCycleInput) =>
+      apiClient.patch<Cycle>(`/build/${projectId}/cycles/${cycleId}`, data, undefined, cycleRowContract),
+    onSuccess: (cycle: Cycle, variables: UpdateCycleInput) => {
+      const queryKey = buildWorkQueryKeys.projects.cycles(variables.projectId);
+      queryClient.setQueryData<Cycle[]>(queryKey, (current) =>
+        current?.map((item) => item.id === cycle.id ? { ...item, ...cycle } : item),
+      );
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.velocity(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.burnup(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.cycleTime(variables.projectId),
+      });
+    },
+  });
+}
+
+export function useDeleteCycle(options?: Parameters<typeof useMutation>[0]) {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation("build:cycles:manage", {
+    ...options,
+    mutationKey: ["projects", "cycles", "delete"],
+    mutationFn: ({ projectId, cycleId }: { projectId: number; cycleId: number }) =>
+      apiClient.delete<void>(`/build/${projectId}/cycles/${cycleId}`, undefined, undefined, noContentLazy),
+    onSuccess: (_: unknown, variables: { projectId: number; cycleId: number }) => {
+      const queryKey = buildWorkQueryKeys.projects.cycles(variables.projectId);
+      queryClient.setQueryData<Cycle[]>(queryKey, (current) =>
+        current?.filter((cycle) => cycle.id !== variables.cycleId),
+      );
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.velocity(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.burnup(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.cycleTime(variables.projectId),
       });
     },
   });

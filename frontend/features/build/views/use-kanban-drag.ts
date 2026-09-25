@@ -112,13 +112,16 @@ export function useKanbanDrag({
       }
       toast.error(getErrorMessage(error));
     },
-    onSettled: (data) => {
+    onSuccess: (data) => {
       if (data) {
-        patchTicketCollections(queryClient, projectId, (t) =>
-          t.id === data.id ? { ...t, rank: data.rank, status: data.status } : t,
+        setOptimisticTickets((current) =>
+          current.map((ticket) =>
+            ticket.id === data.id
+              ? { ...ticket, rank: data.rank, status: data.status }
+              : ticket,
+          ),
         );
       }
-      queryClient.invalidateQueries({ queryKey: boardTicketsKey });
     },
   });
 

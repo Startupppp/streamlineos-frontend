@@ -3,13 +3,19 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
+const mockRequestLeave = jest.fn((action: () => void) => action());
 const mockSearchParamsContainer = { current: new URLSearchParams() };
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace, push: mockPush }),
   usePathname: () => "/build/1/backlog",
   useSearchParams: () => mockSearchParamsContainer.current,
   notFound: jest.fn(() => null),
+}));
+
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useNavigationLeave: () => mockRequestLeave,
 }));
 
 jest.mock("sonner", () => ({
@@ -74,12 +80,23 @@ jest.mock("@/features/build/shared/project-load-fallback", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: ({ data }: { data: { id: number; title: string }[] }) => (
+  DataTable: ({
+    data,
+    onRowClick,
+  }: {
+    data: { id: number; title: string }[];
+    onRowClick?: (row: { id: number; title: string }) => void;
+  }) => (
     <div data-testid="data-table">
       {data.map((row) => (
-        <span key={row.id} data-testid="data-table-row">
+        <button
+          key={row.id}
+          type="button"
+          data-testid="data-table-row"
+          onClick={() => onRowClick?.(row)}
+        >
           {row.title}
-        </span>
+        </button>
       ))}
     </div>
   ),
@@ -116,8 +133,9 @@ jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => String(e),
 }));
 
+const mockBuildTicketDetailUrl = jest.fn((): string | null => null);
 jest.mock("@/features/build/ticket-details/build-ticket-detail-url", () => ({
-  buildTicketDetailUrl: jest.fn(() => null),
+  buildTicketDetailUrl: (...args: unknown[]) => mockBuildTicketDetailUrl(...args),
 }));
 
 import { ProjectBacklogPage } from "./project-backlog-page";
@@ -143,6 +161,8 @@ const READY_TICKETS = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockRequestLeave.mockImplementation((action: () => void) => action());
+  mockBuildTicketDetailUrl.mockReturnValue(null);
   mockSearchParamsContainer.current = new URLSearchParams();
   usePageState.mockReturnValue({ kind: "ready" });
   mockUseProject.mockReturnValue(READY_PROJECT);
@@ -334,5 +354,33 @@ describe("ProjectBacklogPage — server filtering and cursor pagination", () => 
     renderPage();
 
     expect(screen.getByRole("button", { name: /load more/i })).toBeDisabled();
+  });
+});
+
+describe("ProjectBacklogPage — unsaved-work navigation", () => {
+  it("routes a ticket row click through the shared leave guard", async () => {
+    mockBuildTicketDetailUrl.mockReturnValue("/build/1/TST-1");
+    let pendingNavigation: (() => void) | undefined;
+    mockRequestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+
+    renderPage();
+    await userEvent.click(screen.getByTestId("data-table-row"));
+
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    pendingNavigation?.();
+    expect(mockPush).toHaveBeenCalledWith("/build/1/TST-1");
+  });
+
+  it("does not ask to leave when a ticket detail destination cannot be resolved", async () => {
+    renderPage();
+
+    await userEvent.click(screen.getByTestId("data-table-row"));
+
+    expect(mockRequestLeave).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });

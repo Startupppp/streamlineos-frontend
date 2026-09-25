@@ -48,6 +48,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import { useCan } from "@/hooks/api/access";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 interface ProjectBacklogPageProps {
   projectId: string;
@@ -58,6 +59,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   const projectId = parseInt(projectIdStr);
   const searchParams = useSearchParams();
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const { setListParams } = useBuildListUrlState();
   const {
     q,
@@ -141,9 +143,9 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   const handleTicketSelect = useCallback(
     (id: number) => {
       const href = buildTicketDetailUrl(projectId, data?.key, id, tickets);
-      if (href) router.push(href);
+      if (href) requestLeave(() => router.push(href));
     },
-    [router, projectId, data?.key, tickets],
+    [router, projectId, data?.key, tickets, requestLeave],
   );
 
   useEffect(() => {

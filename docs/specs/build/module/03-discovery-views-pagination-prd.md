@@ -109,7 +109,7 @@ Rules:
   canonical filter vocabulary and serializer.
 - [ ] **BLD-03-002** malformed values fail with a field-level 400 and never
   disappear into a broader query.
-- [ ] **BLD-03-003** every date value is ISO validated and range order is
+- [x] **BLD-03-003** every date value is ISO validated and range order is
   checked.
 - [ ] **BLD-03-004** archived, deleted, inaccessible, and cross-tenant option
   IDs cannot widen or leak the result.

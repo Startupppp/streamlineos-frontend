@@ -99,7 +99,7 @@ Actions appear only when applicable and authorized:
   label, field, relation, access, and client-visibility changes.
 - [ ] **BLD-04-007** destructive actions state impact, require the correct
   confirmation, and preserve recoverability where supported.
-- [ ] **BLD-04-008** menus use roving keyboard focus, restore opener focus, and
+- [x] **BLD-04-008** menus use roving keyboard focus, restore opener focus, and
   remain reachable without hover.
 
 ## Inline Edit, Dialog, Sheet, and Full Page
@@ -265,7 +265,7 @@ Completion preview includes:
   explicit.
 - [ ] **BLD-04-029** undo is offered only while no incompatible downstream
   write has occurred.
-- [ ] **BLD-04-038** iteration completion derives all completed states from the
+- [x] **BLD-04-038** iteration completion derives all completed states from the
   workflow category and contains no hard-coded status name.
 
 ## Ticket Detail
@@ -286,7 +286,7 @@ Completion preview includes:
   large collections.
 - [ ] **BLD-04-033** comment and update drafts are actor, organization, scope,
   and record keyed with defined expiry.
-- [ ] **BLD-04-036** card action triggers remain visible and operable for
+- [x] **BLD-04-036** card action triggers remain visible and operable for
   touch, keyboard, high zoom, and reduced-pointer users.
 - [ ] **BLD-04-037** archive is the default removal action; permanent delete is
   shown only when the approved retention policy and dependency preview permit

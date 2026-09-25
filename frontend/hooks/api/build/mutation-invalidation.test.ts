@@ -203,6 +203,21 @@ describe("useUpdateTicket — invalidation contract", () => {
       refetchType: "none",
     });
   });
+
+  it("marks every project ticket list stale without refetching loaded pages", async () => {
+    const { result } = renderHook(() => useUpdateTicket(42), {
+      wrapper: wrap(client),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ ticketId: 9, title: "After" });
+    });
+
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: queryKeys.projects.tickets({ projectId: 42 }),
+      refetchType: "none",
+    });
+  });
 });
 
 describe("useBulkUpdateTickets — invalidation contract", () => {

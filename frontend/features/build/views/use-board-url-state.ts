@@ -14,7 +14,10 @@ import { INITIAL_FILTERS, type FilterState as WorkloadFilterState } from "./work
 import type { KanbanTicket } from "@/features/build/shared/types";
 import { mapBoardTicketToKanban } from "@/features/build/my-tickets/map-board-ticket";
 import { filterHiddenCompletedTickets, getCompletedStatusNames } from "@/features/build/shared/completed-status";
-import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
+import {
+  buildTicketCollectionReturnHref,
+  buildTicketDetailUrl,
+} from "@/features/build/ticket-details/build-ticket-detail-url";
 import { currentSearchParams } from "@/lib/current-search-params";
 
 export type ProjectStatus = {
@@ -274,6 +277,11 @@ export function useBoardUrlState(
     hasActiveFilters &&
     filteredTickets.length === 0;
 
+  const ticketCollectionReturnHref = useMemo(
+    () => buildTicketCollectionReturnHref(projectId, pathname, searchParams),
+    [projectId, pathname, searchParams],
+  );
+
   const handleClearView = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());
     next.delete("viewId");
@@ -364,10 +372,17 @@ export function useBoardUrlState(
 
   const handleTicketSelect = useCallback(
     (id: number) => {
-      const href = buildTicketDetailUrl(projectId, data?.key, id, allTickets);
+      const href = buildTicketDetailUrl(
+        projectId,
+        data?.key,
+        id,
+        allTickets,
+        undefined,
+        ticketCollectionReturnHref,
+      );
       if (href) router.push(href);
     },
-    [router, projectId, data?.key, allTickets],
+    [router, projectId, data?.key, allTickets, ticketCollectionReturnHref],
   );
 
   useEffect(() => {
@@ -378,6 +393,7 @@ export function useBoardUrlState(
       selectedTicketId,
       allTickets,
       highlightCommentId,
+      ticketCollectionReturnHref,
     );
     if (href) router.replace(href);
   }, [
@@ -386,6 +402,7 @@ export function useBoardUrlState(
     allTickets,
     projectId,
     highlightCommentId,
+    ticketCollectionReturnHref,
     router,
   ]);
 

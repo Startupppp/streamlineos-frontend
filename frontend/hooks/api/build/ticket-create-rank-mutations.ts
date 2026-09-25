@@ -16,6 +16,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import {
   addTicketToCollections,
   invalidateBuildViews,
+  invalidateTicketUpdateViews,
   patchTicketCollections,
   removeTicketFromCollections,
   restoreTicketCollections,
@@ -228,12 +229,24 @@ export function useRankTicket<TContext = unknown>(
         undefined,
         rankTicketResultLazy,
       ),
+    onSuccess: (data, variables, context, mutationContext) => {
+      const applyServerRank = (ticket: Ticket) =>
+        ticket.id === data.id
+          ? { ...ticket, rank: data.rank, status: data.status }
+          : ticket;
+      patchTicketCollections(queryClient, variables.projectId, applyServerRank);
+      queryClient.setQueryData<Ticket | null>(
+        buildWorkQueryKeys.projects.ticket(data.id),
+        (current) => (current ? applyServerRank(current) : current),
+      );
+      options?.onSuccess?.(data, variables, context, mutationContext);
+    },
     onSettled: (data, error, variables, context, mutationContext) => {
-      invalidateBuildViews(
+      invalidateTicketUpdateViews(
         queryClient,
         variables.projectId,
-        [variables.ticketId],
-        variables.status !== undefined,
+        variables.ticketId,
+        { status: variables.status },
       );
       options?.onSettled?.(data, error, variables, context, mutationContext);
     },

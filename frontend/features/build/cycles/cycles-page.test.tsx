@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { CyclesPage } from "./cycles-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -14,6 +14,8 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/hooks/api/build", () => ({
   useCycles: jest.fn(),
   useCreateCycle: jest.fn(),
+  useUpdateCycle: jest.fn(),
+  useDeleteCycle: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -56,12 +58,42 @@ jest.mock("next/link", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: React.ReactNode; title?: string }) => (
+  PageWrapper: ({ children, title, actions }: { children: React.ReactNode; title?: string; actions?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {actions}
       {children}
     </div>
   ),
+}));
+
+jest.mock("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuItem: ({ children, onSelect }: { children: React.ReactNode; onSelect?: () => void }) => (
+    <button type="button" onClick={onSelect}>{children}</button>
+  ),
+}));
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: ({ open, title, confirmLabel, onConfirm }: {
+    open: boolean;
+    title: React.ReactNode;
+    confirmLabel?: string;
+    onConfirm: () => void;
+  }) => open ? (
+    <div role="dialog">
+      <h2>{title}</h2>
+      <button type="button" onClick={onConfirm}>{confirmLabel}</button>
+    </div>
+  ) : null,
+}));
+
+jest.mock("./cycle-form-sheet", () => ({
+  CycleFormSheet: ({ open, cycle }: { open: boolean; cycle?: { name: string } | null }) => open ? (
+    <div data-testid="cycle-form-sheet">{cycle ? `Editing ${cycle.name}` : "Creating cycle"}</div>
+  ) : null,
 }));
 
 jest.mock("@/components/shared/no-permission-state", () => ({
@@ -109,16 +141,20 @@ jest.mock("@/components/ui/date-picker", () => ({
   DatePicker: () => <input data-testid="date-picker" />,
 }));
 
-import { useCycles, useCreateCycle } from "@/hooks/api/build";
+import { useCycles, useCreateCycle, useDeleteCycle, useUpdateCycle } from "@/hooks/api/build";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseCycles = useCycles as jest.Mock;
 const mockUseCreateCycle = useCreateCycle as jest.Mock;
+const mockUseUpdateCycle = useUpdateCycle as jest.Mock;
+const mockUseDeleteCycle = useDeleteCycle as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
+const mockUpdateMutate = jest.fn();
+const mockDeleteMutate = jest.fn();
 
 const ACCESS_GRANTED = {
-  data: { isOrgOwner: false, scopes: { "build:sprints:view": "all" }, modules: {} },
+  data: { isOrgOwner: false, scopes: { "build:cycles:view": "all" }, modules: {} },
   isLoading: false,
 };
 const ACCESS_DENIED = {
@@ -144,9 +180,13 @@ beforeEach(() => {
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseCreateCycle.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseUpdateCycle.mockReturnValue({ mutate: mockUpdateMutate, isPending: false });
+  mockUseDeleteCycle.mockReturnValue({ mutate: mockDeleteMutate, isPending: false });
+  mockUpdateMutate.mockClear();
+  mockDeleteMutate.mockClear();
 });
 
-it("renders NoPermissionState when build:sprints:view is denied instead of empty state", () => {
+it("renders NoPermissionState when build:cycles:view is denied instead of empty state", () => {
   mockUseAccess.mockReturnValue(ACCESS_DENIED);
   mockUseCycles.mockReturnValue(baseQueryResult());
   render(<CyclesPage projectId={1} />);
@@ -223,5 +263,70 @@ describe("CyclesPage — the completed disclosure is shareable, not local compon
     expect(mockReplace).toHaveBeenCalledWith("/build/1/cycles?completed=1", {
       scroll: false,
     });
+  });
+});
+
+describe("CyclesPage — cycle lifecycle actions", () => {
+  const ACTIVE_CYCLE = {
+    id: 4,
+    name: "Current cycle",
+    status: "active",
+    startDate: "2026-09-01",
+    endDate: "2026-09-14",
+    progress: 50,
+    completedItems: 2,
+    totalItems: 4,
+  };
+
+  it("opens the edit sheet from the cycle action menu", () => {
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.getByTestId("cycle-form-sheet")).toHaveTextContent("Editing Current cycle");
+  });
+
+  it("completes an active cycle through a confirmation", () => {
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Complete" }));
+    expect(screen.getByRole("heading", { name: "Complete cycle?" })).toBeInTheDocument();
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Complete" }));
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      { projectId: 1, cycleId: 4, status: "completed" },
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    );
+  });
+
+  it("reopens a completed cycle from the expanded completed section", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("completed=1");
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [{ ...ACTIVE_CYCLE, status: "completed" }] }));
+    render(<CyclesPage projectId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Reopen" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Reopen" }));
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      { projectId: 1, cycleId: 4, status: "active" },
+      expect.any(Object),
+    );
+  });
+
+  it("deletes a cycle only after confirmation", () => {
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    expect(mockDeleteMutate).not.toHaveBeenCalled();
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Delete" }));
+    expect(mockDeleteMutate).toHaveBeenCalledWith(
+      { projectId: 1, cycleId: 4 },
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    );
+  });
+
+  it("does not render mutation controls without manage permission", () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Complete" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
   });
 });

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useCreateView, useUpdateView } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { currentSearchParams } from "@/lib/current-search-params";
+import { buildTicketCollectionReturnHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { type SaveViewMeta } from "./save-view-dialog";
 import { toSavedViewLayout } from "@/lib/build/view-types";
@@ -62,7 +63,14 @@ export function useBoardSavedViews({
             ) {
               const next = currentSearchParams(searchParams);
               next.set("viewId", String(created.id));
-              router.replace(`?${next.toString()}`, { scroll: false });
+              router.replace(
+                buildTicketCollectionReturnHref(
+                  projectId,
+                  `/build/${projectId}/issues`,
+                  next,
+                ),
+                { scroll: false },
+              );
             }
           },
           onError: (err) => toast.error(getErrorMessage(err)),

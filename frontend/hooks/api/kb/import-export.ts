@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -60,12 +61,28 @@ const kbImportResultContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportResultContract),
 );
 
-const kbImportJobListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportJobListContract),
+export type KbCursorPagination = {
+  limit: number;
+  hasMore: boolean;
+  nextCursor: string | null;
+};
+
+export type KbImportJobPage = {
+  data: KbImportJob[];
+  pagination: KbCursorPagination;
+};
+
+export type KbExportJobPage = {
+  data: KbExportJob[];
+  pagination: KbCursorPagination;
+};
+
+const kbImportJobListPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportJobListPageContract),
 );
 
-const kbExportJobListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbExportJobListContract),
+const kbExportJobListPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbExportJobListPageContract),
 );
 
 export function useImportKbPages() {
@@ -104,22 +121,46 @@ export function useImportKbPages() {
 
 export function useKbImportJobs() {
   const canImport = useCan("kb:pages:import");
-  return useQuery({
+  const query = useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbImportJob[]>("/kb/import-jobs", undefined, signal, kbImportJobListContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbImportJobPage>(
+        "/kb/import-jobs",
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
+        signal,
+        kbImportJobListPageContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canImport,
     staleTime: 30_000,
   });
+
+  return {
+    ...query,
+    data: query.data?.pages.flatMap((page) => page.data),
+  };
 }
 
 export function useKbExportJobs() {
   const canExport = useCan("kb:pages:export");
-  return useQuery({
+  const query = useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.exportJobs(),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbExportJob[]>("/kb/export-jobs", undefined, signal, kbExportJobListContract),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<KbExportJobPage>(
+        "/kb/export-jobs",
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
+        signal,
+        kbExportJobListPageContract,
+      ),
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canExport,
     staleTime: 30_000,
   });
+
+  return {
+    ...query,
+    data: query.data?.pages.flatMap((page) => page.data),
+  };
 }

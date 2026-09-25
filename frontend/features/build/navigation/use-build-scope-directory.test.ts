@@ -2,34 +2,24 @@ import { act, renderHook } from "@testing-library/react";
 import { useBuildScopeDirectory } from "./use-build-scope-directory";
 import { useCanState } from "@/hooks/api/access";
 import { useInfiniteProjects } from "@/hooks/api/build/projects";
-import {
-  useManagedProducts,
-  useInfiniteManagedProducts,
-} from "@/hooks/api/build/managed-products";
+import { useInfiniteManagedProducts } from "@/hooks/api/build/managed-products";
+import { useInfiniteBuildScopeSearch } from "@/hooks/api/build/scope-directory";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import type { AccessState } from "@/lib/rbac/gate";
-import type { InfiniteData, UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
-import { idleInfiniteQueryResult, idleQueryResult } from "@/test-utils/query-result";
+import type { InfiniteData, UseInfiniteQueryResult } from "@tanstack/react-query";
+import { idleInfiniteQueryResult } from "@/test-utils/query-result";
 
 jest.mock("@/hooks/api/access");
 jest.mock("@/hooks/api/build/projects");
 jest.mock("@/hooks/api/build/managed-products");
+jest.mock("@/hooks/api/build/scope-directory");
 jest.mock("@/hooks/common/use-debounce");
 
 const mockUseCanState = useCanState as jest.MockedFunction<typeof useCanState>;
 const mockUseInfiniteProjects = useInfiniteProjects as jest.MockedFunction<typeof useInfiniteProjects>;
-const mockUseManagedProducts = useManagedProducts as jest.MockedFunction<typeof useManagedProducts>;
 const mockUseInfiniteManagedProducts = useInfiniteManagedProducts as jest.MockedFunction<typeof useInfiniteManagedProducts>;
+const mockUseInfiniteBuildScopeSearch = useInfiniteBuildScopeSearch as jest.MockedFunction<typeof useInfiniteBuildScopeSearch>;
 const mockUseDebouncedValue = useDebouncedValue as jest.MockedFunction<typeof useDebouncedValue>;
-
-function makeEmptyQuery<TData = unknown>(
-  overrides: Partial<UseQueryResult<TData, Error>> = {},
-): UseQueryResult<TData, Error> {
-  return { ...idleQueryResult<TData>(), refetch: jest.fn(), ...overrides } as UseQueryResult<
-    TData,
-    Error
-  >;
-}
 
 function makeEmptyInfiniteQuery<TPage = unknown>(
   overrides: Partial<UseInfiniteQueryResult<InfiniteData<TPage, unknown>, Error>> = {},
@@ -77,8 +67,8 @@ function setupGrantedAccessMocks(debounced = "") {
   mockUseCanState.mockReturnValue("granted" as AccessState);
   mockUseDebouncedValue.mockReturnValue(debounced);
   mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
-  mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
   mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
+  mockUseInfiniteBuildScopeSearch.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteBuildScopeSearch>);
 }
 
 beforeEach(() => {
@@ -86,28 +76,89 @@ beforeEach(() => {
 });
 
 describe("BSN-02-015 — stale request isolation via debounced search", () => {
-  test("useInfiniteProjects receives the debounced search term, not the raw keystroke value", () => {
-    mockUseCanState.mockReturnValue("granted" as AccessState);
-    mockUseDebouncedValue.mockReturnValue("debounced");
-    mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
-    mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
-    mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
+  test("the unified directory search receives the debounced term and waits until it matches the current input", () => {
+    setupGrantedAccessMocks("debounced");
 
-    renderHook(() => useBuildScopeDirectory("raw-rapidly-typed", false));
+    renderHook(() => useBuildScopeDirectory("debounced", false));
 
-    const calls = mockUseInfiniteProjects.mock.calls;
-    const searchCall = calls.find((args) => args[0]?.search !== undefined);
-    expect(searchCall?.[0]).toMatchObject({ search: "debounced" });
+    expect(mockUseInfiniteBuildScopeSearch).toHaveBeenLastCalledWith(
+      "debounced",
+      { enabled: true },
+    );
   });
 
-  test("with empty debounced value, useInfiniteProjects is called without a search param so no request fires for blank queries", () => {
+  test("a blank query leaves the unified directory search disabled", () => {
     setupGrantedAccessMocks("");
 
     renderHook(() => useBuildScopeDirectory("", false));
 
-    const calls = mockUseInfiniteProjects.mock.calls;
-    const callWithSearch = calls.find((args) => args[0]?.search !== undefined);
-    expect(callWithSearch).toBeUndefined();
+    expect(mockUseInfiniteBuildScopeSearch).toHaveBeenLastCalledWith("", {
+      enabled: false,
+    });
+  });
+});
+
+describe("BLD-X-SB-DIR-001 — unified authorized directory search", () => {
+  const linkedProject = {
+    key: "project:42",
+    type: "project" as const,
+    id: "42",
+    name: "Checkout",
+    parentKey: "product:7",
+    projectKey: "PAY",
+    isArchived: false,
+    parentPath: "Payments",
+    clientPortalEnabled: true,
+  };
+
+  test("uses the server parent path for a linked project even when its product is not loaded in browse pages", () => {
+    setupGrantedAccessMocks("PAY");
+    mockUseInfiniteBuildScopeSearch.mockReturnValue(
+      makeEmptyInfiniteQuery({
+        isSuccess: true,
+        data: { pages: [{ data: [linkedProject], nextCursor: null }], pageParams: [undefined] },
+      }) as ReturnType<typeof useInfiniteBuildScopeSearch>,
+    );
+
+    const { result } = renderHook(() => useBuildScopeDirectory("PAY", false));
+
+    expect(result.current.projects).toEqual([
+      expect.objectContaining({
+        key: "project:42",
+        parentKey: "product:7",
+        parentPath: "Payments",
+        href: "/build/42",
+      }),
+    ]);
+  });
+
+  test("exposes one continuation for the ranked mixed-type result set", () => {
+    setupGrantedAccessMocks("pay");
+    const fetchNextPage = jest.fn().mockResolvedValue(undefined);
+    mockUseInfiniteBuildScopeSearch.mockReturnValue(
+      makeEmptyInfiniteQuery({ hasNextPage: true, fetchNextPage }) as ReturnType<typeof useInfiniteBuildScopeSearch>,
+    );
+
+    const { result } = renderHook(() => useBuildScopeDirectory("pay", false));
+    act(() => result.current.fetchMoreSearchResults());
+
+    expect(result.current.hasMoreSearchResults).toBe(true);
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  test("does not render an old debounced result while a newer input is waiting", () => {
+    setupGrantedAccessMocks("old");
+    mockUseInfiniteBuildScopeSearch.mockReturnValue(
+      makeEmptyInfiniteQuery({
+        isSuccess: true,
+        data: { pages: [{ data: [linkedProject], nextCursor: null }], pageParams: [undefined] },
+      }) as ReturnType<typeof useInfiniteBuildScopeSearch>,
+    );
+
+    const { result } = renderHook(() => useBuildScopeDirectory("new", false));
+
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.projects).toEqual([]);
   });
 });
 
@@ -169,8 +220,8 @@ describe("BSN-02-017 — isDenied and isLoading correctly distinguish access sta
     mockUseCanState.mockReturnValue("denied" as AccessState);
     mockUseDebouncedValue.mockReturnValue("");
     mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
-    mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
     mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
+    mockUseInfiniteBuildScopeSearch.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteBuildScopeSearch>);
 
     const { result } = renderHook(() => useBuildScopeDirectory("", false));
 
@@ -182,8 +233,8 @@ describe("BSN-02-017 — isDenied and isLoading correctly distinguish access sta
     mockUseCanState.mockReturnValue("loading" as AccessState);
     mockUseDebouncedValue.mockReturnValue("");
     mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
-    mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
     mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
+    mockUseInfiniteBuildScopeSearch.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteBuildScopeSearch>);
 
     const { result } = renderHook(() => useBuildScopeDirectory("", false));
 
@@ -272,12 +323,12 @@ describe("BSN-02-014 — project continuation: no duplicates, no reorder, cursor
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 
-  test("changing the search term causes useInfiniteProjects to be called with the new filter, not the old cursor", () => {
+  test("changing the search term moves the unified search to the new query without carrying a cursor", () => {
     mockUseCanState.mockReturnValue("granted" as AccessState);
     mockUseDebouncedValue.mockReturnValue("alpha");
     mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
-    mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
     mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
+    mockUseInfiniteBuildScopeSearch.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteBuildScopeSearch>);
 
     const { rerender } = renderHook(
       ({ search }: { search: string }) => useBuildScopeDirectory(search, false),
@@ -287,10 +338,10 @@ describe("BSN-02-014 — project continuation: no duplicates, no reorder, cursor
     mockUseDebouncedValue.mockReturnValue("beta");
     rerender({ search: "beta" });
 
-    const calls = mockUseInfiniteProjects.mock.calls;
+    const calls = mockUseInfiniteBuildScopeSearch.mock.calls;
     const lastCall = calls[calls.length - 1];
-    expect(lastCall?.[0]).toMatchObject({ search: "beta" });
-    expect(lastCall?.[0]).not.toHaveProperty("afterId");
+    expect(lastCall?.[0]).toBe("beta");
+    expect(lastCall?.[1]).toEqual({ enabled: true });
   });
 });
 
@@ -407,12 +458,12 @@ describe("BSN-02-014 — hierarchy continuation: the product infinite query elim
     expect(result.current.isFetchingMoreHierarchy).toBe(true);
   });
 
-  test("changing the search term calls useInfiniteManagedProducts with the new search so stale cursors from the previous query do not persist", () => {
+  test("search does not repurpose the browse product query, so parent hierarchy pagination stays on its own cache entry", () => {
     mockUseCanState.mockReturnValue("granted" as AccessState);
     mockUseDebouncedValue.mockReturnValue("alpha");
     mockUseInfiniteProjects.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteProjects>);
-    mockUseManagedProducts.mockReturnValue(makeEmptyQuery() as ReturnType<typeof useManagedProducts>);
     mockUseInfiniteManagedProducts.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteManagedProducts>);
+    mockUseInfiniteBuildScopeSearch.mockReturnValue(makeEmptyInfiniteQuery() as ReturnType<typeof useInfiniteBuildScopeSearch>);
 
     const { rerender } = renderHook(
       ({ search }: { search: string }) => useBuildScopeDirectory(search, false),
@@ -424,7 +475,7 @@ describe("BSN-02-014 — hierarchy continuation: the product infinite query elim
 
     const calls = mockUseInfiniteManagedProducts.mock.calls;
     const lastCall = calls[calls.length - 1];
-    expect(lastCall?.[0]).toMatchObject({ search: "beta" });
+    expect(lastCall?.[0]).toEqual({ limit: 100 });
   });
 });
 

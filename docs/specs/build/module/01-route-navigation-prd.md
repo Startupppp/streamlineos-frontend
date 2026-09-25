@@ -70,17 +70,17 @@ application.
 
 ## Route Repairs
 
-- [ ] **BLD-01-001** Feedback rows include and validate their owning
+- [x] **BLD-01-001** Feedback rows include and validate their owning
   `projectId`, then open
   `/build/{projectId}/feedbucket/{submissionId}`.
 - [ ] **BLD-01-002** Saved views open under
   `/build/{projectId}/issues?viewId=...`.
 - [ ] **BLD-01-003** module, iteration, epic, assignee, label, and status links
   that represent issue filters open under `/issues`.
-- [ ] **BLD-01-004** ticket detail back actions return to the recorded,
+- [x] **BLD-01-004** ticket detail back actions return to the recorded,
   permission-safe issue collection state; direct deep links fall back to
   `/build/{projectId}/issues`.
-- [ ] **BLD-01-005** saving settings stays on the active settings page and
+- [x] **BLD-01-005** saving settings stays on the active settings page and
   preserves its tab or subroute.
 - [ ] **BLD-01-006** the organization goal collection is canonicalized to
   `/build/goals`; every caller and access rule is migrated before the singular

@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useKbExportJobs } from "@/hooks/api/kb";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -14,8 +13,6 @@ import {
 } from "@/features/wiki/lib/kb-icons";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import type { KbExportJob } from "@/hooks/api/kb/import-export";
-
-const PAGE_SIZE = 10;
 
 function JobRow({ job }: { job: KbExportJob }) {
   return (
@@ -33,24 +30,23 @@ function JobRow({ job }: { job: KbExportJob }) {
 }
 
 export function ExportJobsCard() {
-  const [page, setPage] = useState(1);
   const {
     data: jobs = [],
     isLoading,
     isError,
     error,
     refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
   } = useKbExportJobs();
-
-  const total = jobs.length;
-  const pageJobs = jobs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   function handleRetry() {
     void refetch();
   }
 
-  function handlePageChange(nextPage: number) {
-    setPage(nextPage);
+  function handleLoadMore() {
+    void fetchNextPage();
   }
 
   return (
@@ -85,17 +81,21 @@ export function ExportJobsCard() {
 
       {!isLoading && !isError && jobs.length > 0 && (
         <div className="space-y-1.5">
-          {pageJobs.map((job) => (
+          {jobs.map((job) => (
             <JobRow key={job.id} job={job} />
           ))}
-          {total > PAGE_SIZE ? (
-            <TablePagination
-              page={page}
-              pageSize={PAGE_SIZE}
-              total={total}
-              onPageChange={handlePageChange}
-              className="px-1"
-            />
+          {hasNextPage ? (
+            <LoadingButton
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              isPending={isFetchingNextPage}
+              loadingText="Loading…"
+              onClick={handleLoadMore}
+            >
+              Load more
+            </LoadingButton>
           ) : null}
         </div>
       )}

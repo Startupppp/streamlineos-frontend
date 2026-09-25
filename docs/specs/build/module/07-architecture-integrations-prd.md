@@ -124,7 +124,7 @@ Normative BLD-00 contract:
   contract and data-retention rule.
 - [ ] **BLD-07-011** Build tables contain only canonical IDs, relation metadata,
   and intentional snapshots; copied mutable fields have a reconciliation rule.
-- [ ] **BLD-07-012** deleting or archiving a source record has defined Build
+- [x] **BLD-07-012** deleting or archiving a source record has defined Build
   behavior without dangling unsafe links.
 
 ## Integration Workflows
@@ -208,7 +208,7 @@ Typed events include:
 
 Consumers re-authorize reads; an event is not a data-access grant.
 
-- [ ] **BLD-07-016** inventory Build event producers and consumers.
+- [x] **BLD-07-016** inventory Build event producers and consumers. The only orphaned Build event was removed because incident status already persists a timeline entry and audit record, with no downstream consumer or user job for an outbox delivery.
 - [ ] **BLD-07-017** remove duplicate direct side effects where an owned outbox
   event exists.
 - [ ] **BLD-07-018** version compatibility, replay, poison message, and
@@ -283,7 +283,7 @@ queues and records remain on operational pages.
   verified, tenant-resolved, deduplicated durable receipt; processing failure
   remains retryable and an advertised provider has signature, parser, replay,
   and negative tests.
-- [ ] **BLD-07-034** every cross-module collection has stable ordering,
+- [x] **BLD-07-034** every cross-module collection has stable ordering,
   cursor/continuation or an explicit truthful truncation flag, freshness,
   source-deleted behavior, and an org-leading supporting index.
 - [ ] **BLD-07-035** backend Zod operation schemas are the API contract owner;

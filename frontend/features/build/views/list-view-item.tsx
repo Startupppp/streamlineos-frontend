@@ -92,7 +92,7 @@ export const ListViewItem = memo(function ListViewItem({
       {hasDragHandle && (
         <div
           {...dragHandleProps}
-          className="flex-shrink-0 pl-2 pr-0.5 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-muted-foreground transition-colors opacity-0 group-hover:opacity-100"
+          className="flex-shrink-0 pl-2 pr-0.5 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-muted-foreground transition-colors opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
           aria-label="Drag to reorder"
         >
           <GripVertical className="h-4 w-4" />
@@ -187,7 +187,7 @@ export const ListViewItem = memo(function ListViewItem({
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}
-          className="opacity-0 translate-x-1 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100"
+          className="opacity-0 translate-x-1 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-within:translate-x-0 group-focus-within:opacity-100"
         />
       </div>
     </motion.div>

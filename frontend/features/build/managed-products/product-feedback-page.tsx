@@ -8,6 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { useFeedbucketSubmissions } from "@/hooks/api/feedbucket";
+import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -31,8 +32,29 @@ interface ProductFeedbackPageProps {
   managedProductId: number;
 }
 
+function resolveProductFeedbackSubmissionHref(
+  row: SubmissionRow,
+  managedProductId: number,
+  canOpenDetail: boolean,
+): string | null {
+  const projectId = row.widget?.projectId;
+  const owningManagedProductId = row.widget?.managedProductId;
+  if (
+    !canOpenDetail ||
+    !Number.isSafeInteger(row.id) ||
+    row.id <= 0 ||
+    !Number.isSafeInteger(projectId) ||
+    (projectId ?? 0) <= 0 ||
+    owningManagedProductId !== managedProductId
+  ) {
+    return null;
+  }
+  return `/build/${projectId}/feedbucket/${row.id}`;
+}
+
 export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPageProps) {
   const router = useRouter();
+  const canOpenSubmissionDetail = useCan("feedbucket:widgets:view");
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
 
   const typeValue = listFilters.value("type");
@@ -93,10 +115,12 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const resolveSubmissionHref = useCallback((row: SubmissionRow): string | null => {
-    const projectId = row.widget?.projectId;
-    if (projectId === null || projectId === undefined) return null;
-    return `/build/${projectId}/feedbucket/${row.id}`;
-  }, []);
+    return resolveProductFeedbackSubmissionHref(
+      row,
+      managedProductId,
+      canOpenSubmissionDetail,
+    );
+  }, [canOpenSubmissionDetail, managedProductId]);
 
   const handleRowClick = useCallback((row: SubmissionRow) => {
     const href = resolveSubmissionHref(row);
@@ -169,7 +193,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
               data={data?.data ?? []}
               columns={FEEDBACK_COLUMNS}
               getRowKey={(row) => row.id}
-              onRowClick={handleRowClick}
+              onRowClick={canOpenSubmissionDetail ? handleRowClick : undefined}
               mobileCard={renderMobileCard}
               pagination={{
                 mode: "server",

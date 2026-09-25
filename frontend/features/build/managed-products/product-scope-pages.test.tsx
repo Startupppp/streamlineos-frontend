@@ -5,8 +5,10 @@ import { ProductFeedbackPage } from "./product-feedback-page";
 import { ProductInsightsPage } from "./product-insights-page";
 import { ManagedProductsPage } from "./managed-products-page";
 
+const mockRouterPush = jest.fn();
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  useRouter: () => ({ replace: jest.fn(), push: mockRouterPush }),
   usePathname: () => "/build/managed-products/7/goals",
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -144,19 +146,35 @@ jest.mock("@/components/ui/data-table", () => ({
     emptyState,
     isLoading,
     getRowKey,
+    onRowClick,
+    rowClassName,
   }: {
-    data?: Array<{ name?: string; id?: unknown }>;
+    data?: Array<{ name?: string; message?: string; id?: unknown }>;
     emptyState?: React.ReactNode;
     isLoading?: boolean;
-    getRowKey?: (row: { name?: string; id?: unknown }, i: number) => string | number;
+    getRowKey?: (row: { name?: string; message?: string; id?: unknown }, i: number) => string | number;
+    onRowClick?: (row: { name?: string; message?: string; id?: unknown }) => void;
+    rowClassName?: (row: { name?: string; message?: string; id?: unknown }) => string;
   }) => {
     if (isLoading) return <div data-testid="data-table-loading" />;
     if (!data || data.length === 0) return emptyState ?? <div data-testid="data-table" />;
     return (
       <div data-testid="data-table">
-        {data.map((row, i) => (
-          <span key={getRowKey ? String(getRowKey(row, i)) : i}>{row.name}</span>
-        ))}
+        {data.map((row, i) => {
+          const key = getRowKey ? String(getRowKey(row, i)) : String(i);
+          return onRowClick ? (
+            <button
+              key={key}
+              type="button"
+              className={rowClassName?.(row)}
+              onClick={() => onRowClick(row)}
+            >
+              {row.name ?? row.message}
+            </button>
+          ) : (
+            <span key={key}>{row.name ?? row.message}</span>
+          );
+        })}
       </div>
     );
   },
@@ -228,6 +246,9 @@ const { useGoals } = jest.requireMock("@/hooks/api/goals") as {
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
 };
+const { useCan } = jest.requireMock("@/hooks/api/access") as {
+  useCan: jest.Mock;
+};
 
 const EMPTY_GOALS_RESULT = {
   data: [],
@@ -255,6 +276,7 @@ const EMPTY_MANAGED_PRODUCTS_RESULT = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  useCan.mockReturnValue(true);
   usePageState.mockReturnValue({ kind: "ready" });
 });
 
@@ -361,6 +383,48 @@ describe("ProductFeedbackPage — usePageState integration (BSN-01-012)", () => 
     render(<ProductFeedbackPage managedProductId={7} />);
     const [callParams] = useFeedbucketSubmissions.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).toMatchObject({ managedProductId: 7 });
+  });
+
+  it("opens the registered project-scoped detail route for a row owned by the active product", () => {
+    useFeedbucketSubmissions.mockReturnValue({
+      ...EMPTY_FEEDBUCKET_RESULT,
+      data: {
+        data: [{ id: 41, message: "Broken export", widget: { projectId: 12, managedProductId: 7 } }],
+        total: 1,
+      },
+    });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    screen.getByRole("button", { name: "Broken export" }).click();
+    expect(mockRouterPush).toHaveBeenCalledWith("/build/12/feedbucket/41");
+  });
+
+  it.each([
+    ["missing project", { id: 41, widget: { projectId: null, managedProductId: 7 } }],
+    ["zero project", { id: 41, widget: { projectId: 0, managedProductId: 7 } }],
+    ["nonpositive submission", { id: -1, widget: { projectId: 12, managedProductId: 7 } }],
+    ["different product", { id: 41, widget: { projectId: 12, managedProductId: 8 } }],
+  ])("does not navigate for a %s row", (_label, row) => {
+    useFeedbucketSubmissions.mockReturnValue({
+      ...EMPTY_FEEDBUCKET_RESULT,
+      data: { data: [{ ...row, message: "Unsafe row" }], total: 1 },
+    });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    screen.getByRole("button", { name: "Unsafe row" }).click();
+    expect(mockRouterPush).not.toHaveBeenCalled();
+  });
+
+  it("does not navigate when the destination route permission is denied", () => {
+    useCan.mockImplementation((permission: string) => permission !== "feedbucket:widgets:view");
+    useFeedbucketSubmissions.mockReturnValue({
+      ...EMPTY_FEEDBUCKET_RESULT,
+      data: {
+        data: [{ id: 41, message: "Restricted row", widget: { projectId: 12, managedProductId: 7 } }],
+        total: 1,
+      },
+    });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.queryByRole("button", { name: "Restricted row" })).not.toBeInTheDocument();
+    expect(mockRouterPush).not.toHaveBeenCalled();
   });
 });
 

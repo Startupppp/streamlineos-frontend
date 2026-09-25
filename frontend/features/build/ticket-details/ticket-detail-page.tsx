@@ -24,6 +24,7 @@ import { useCan, useCanState } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageState } from "@/components/shared/page-state";
 import { pageStateFromError } from "@/lib/page-state/resolve-page-state";
+import { resolveTicketBackHref } from "./build-ticket-detail-url";
 
 
 interface TicketDetailPageProps {
@@ -64,6 +65,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   const isMobile = useIsMobile();
   const commentParam = searchParams.get("comment");
   const highlightCommentId = commentParam ? parseInt(commentParam, 10) : null;
+  const backHref = resolveTicketBackHref(projectId, searchParams.get("returnTo"));
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem(RIGHT_PANEL_COLLAPSED_KEY) === "true";
@@ -85,7 +87,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   useCycles(sidebarWarmProjectId);
 
   const handleDeleted = () => {
-    router.push(`/build/${projectId}`);
+    router.push(backHref);
   };
 
   const {
@@ -133,7 +135,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (projectLoading || byKeyLoading || canViewAccess === "loading") {
     return (
-      <PageWrapper title="Loading..." backHref={`/build/${projectId}`} noInternalScroll className="h-full">
+      <PageWrapper title="Loading..." backHref={backHref} noInternalScroll className="h-full">
         <DetailSkeleton />
       </PageWrapper>
     );
@@ -142,7 +144,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   if (byKeyError) {
     if (isApiError(byKeyError) && getApiErrorCode(byKeyError) === "PROJECTS_FORBIDDEN_TICKET") {
       return (
-        <PageWrapper title={displayKey} backHref={`/build/${projectId}`}>
+        <PageWrapper title={displayKey} backHref={backHref}>
           <div className="px-4 py-16 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
               <AlertCircle className="h-6 w-6 text-muted-foreground" />
@@ -159,7 +161,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     const byKeyState = pageStateFromError(byKeyError);
     if (byKeyState !== null && byKeyState.kind !== "error" && byKeyState.kind !== "denied") {
       return (
-        <PageWrapper title="Build" backHref={`/build/${projectId}`}>
+        <PageWrapper title="Build" backHref={backHref}>
           <PageState resolution={byKeyState} loading={<DetailSkeleton />} onRetry={refetchByKey}>
             <span />
           </PageState>
@@ -167,7 +169,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       );
     }
     return (
-      <PageWrapper title="Ticket" backHref={`/build/${projectId}`}>
+      <PageWrapper title="Ticket" backHref={backHref}>
         <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(byKeyError)} onRetry={refetchByKey} />
       </PageWrapper>
     );
@@ -175,7 +177,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (canViewAccess === "denied") {
     return (
-      <PageWrapper title="Ticket" backHref={`/build/${projectId}`}>
+      <PageWrapper title="Ticket" backHref={backHref}>
         <NoPermissionState permission="build:tickets:view" />
       </PageWrapper>
     );
@@ -185,7 +187,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (isLoading) {
     return (
-      <PageWrapper title="Loading..." backHref={`/build/${projectId}`} noInternalScroll className="h-full">
+      <PageWrapper title="Loading..." backHref={backHref} noInternalScroll className="h-full">
         <DetailSkeleton />
       </PageWrapper>
     );
@@ -193,7 +195,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (isApiError(ticketError) && getApiErrorCode(ticketError) === "PROJECTS_FORBIDDEN_TICKET") {
     return (
-      <PageWrapper title={displayKey} backHref={`/build/${projectId}`}>
+      <PageWrapper title={displayKey} backHref={backHref}>
         <div className="px-4 py-16 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <AlertCircle className="h-6 w-6 text-muted-foreground" />
@@ -215,7 +217,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     const ticketState = pageStateFromError(ticketError);
     if (ticketState !== null && ticketState.kind !== "error" && ticketState.kind !== "denied") {
       return (
-        <PageWrapper title="Build" backHref={`/build/${projectId}`}>
+        <PageWrapper title="Build" backHref={backHref}>
           <PageState resolution={ticketState} loading={<DetailSkeleton />} onRetry={refetchTicket}>
             <span />
           </PageState>
@@ -223,7 +225,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       );
     }
     return (
-      <PageWrapper title={displayKey} backHref={`/build/${projectId}`}>
+      <PageWrapper title={displayKey} backHref={backHref}>
         <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(ticketError)} onRetry={refetchTicket} />
       </PageWrapper>
     );
@@ -231,12 +233,12 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (!ticket || !ticketId) {
     return (
-      <PageWrapper title="Ticket not found" backHref={`/build/${projectId}`}>
+      <PageWrapper title="Ticket not found" backHref={backHref}>
         <div className="px-4 py-16 text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-destructive" />
           <p className="mb-4 font-medium text-destructive">Ticket not found</p>
-          <Button variant="outline" size="sm" onClick={() => router.push(`/build/${projectId}`)}>
-            Back to board
+          <Button variant="outline" size="sm" onClick={() => router.push(backHref)}>
+            Back to issues
           </Button>
         </div>
       </PageWrapper>
@@ -269,7 +271,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           ) : null}
         </span>
       }
-      backHref={`/build/${projectId}`}
+      backHref={backHref}
       noInternalScroll
       actionsInline
       className="h-full"

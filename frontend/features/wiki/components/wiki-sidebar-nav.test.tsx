@@ -12,6 +12,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
+        canManageContent={false}
       />,
     );
 
@@ -26,6 +27,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       <WikiSidebarNav
         canViewAnalytics={false}
         canViewReviews={false}
+        canManageContent={false}
       />,
     );
 
@@ -42,6 +44,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
         isCollapsed
         canViewAnalytics={false}
         canViewReviews={false}
+        canManageContent={false}
       />,
     );
 
@@ -49,5 +52,31 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       "href",
       "/knowledge/chat",
     );
+  });
+
+  it("omits Content Health when the actor cannot manage pages", () => {
+    renderWithProviders(
+      <WikiSidebarNav
+        canViewAnalytics={false}
+        canViewReviews={false}
+        canManageContent={false}
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "Content Health" })).toBeNull();
+  });
+
+  it("links Content Health to /knowledge/wiki/manage when the actor can manage pages", () => {
+    renderWithProviders(
+      <WikiSidebarNav
+        canViewAnalytics={false}
+        canViewReviews={false}
+        canManageContent
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Content Health" }),
+    ).toHaveAttribute("href", "/knowledge/wiki/manage");
   });
 });

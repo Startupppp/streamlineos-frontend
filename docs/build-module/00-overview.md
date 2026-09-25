@@ -23,7 +23,7 @@ Anything prefixed **ASSUMPTION** needs user or production-data confirmation.
 |---|---|---|---|
 | Backend | `pnpm -C backend start:dev` | Listening on `http://localhost:1500`; `GET /health` returned HTTP 200 | Legacy `/public/feedbucket/*` wildcard conversion, two retired permission keys, disabled schedulers, and local process timezone UTC+05:30 differed from the configured runtime expectation |
 | Frontend | `pnpm -C frontend dev` | Listening on `http://localhost:1000`; root returned HTTP 200 | Root `pnpm.overrides` ignored from the package directory, Turbopack cache cleared, and Edge Runtime deprecation warning |
-| Production | Authenticated read-only browser session supplied by the user | `/build/command-center` and the route crawl were accessible | No production mutation was performed |
+| Production | Authenticated browser session plus guarded RDS migration verification | `/build/command-center` and the route crawl were accessible; Build migration `1197` was applied and verified | No unrelated migration backlog was replayed |
 
 Repository state before documentation work was not clean. The audit branch `build-module/audit-v1` was created from local `main` (11 commits ahead of `origin/main`) while preserving pre-existing user changes; only `docs/build-module/` belongs to this audit.
 

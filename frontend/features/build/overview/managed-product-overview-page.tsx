@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useManagedProduct } from "@/hooks/api/build/managed-products";
+import {
+  useManagedProduct,
+  useManagedProductInsights,
+} from "@/hooks/api/build/managed-products";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useRoadmapItems } from "@/hooks/api/build/roadmap";
 import { useGoalsPage } from "@/hooks/api/goals";
@@ -34,14 +37,17 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     { managedProductId, limit: 10 },
     { enabled: !!managedProductId },
   );
+  const insightsQuery = useManagedProductInsights(managedProductId);
   const roadmapQuery = useRoadmapItems({ managedProductId, limit: 5 });
   const goalsQuery = useGoalsPage({ managedProductId });
 
-  const isLoading = productQuery.isLoading || projectsQuery.isLoading;
+  const isLoading =
+    productQuery.isLoading || projectsQuery.isLoading || insightsQuery.isLoading;
 
-  const isError = productQuery.isError || projectsQuery.isError;
+  const isError =
+    productQuery.isError || projectsQuery.isError || insightsQuery.isError;
 
-  const error = productQuery.error ?? projectsQuery.error;
+  const error = productQuery.error ?? projectsQuery.error ?? insightsQuery.error;
 
   const resolution = usePageState({
     permission: "build:managed-products:view",
@@ -54,15 +60,13 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
   const product = productQuery.data;
   const projectsPage = projectsQuery.data;
 
-  const firstPageProjectCount = projectsPage?.data?.length ?? 0;
   const hasMoreProjects = projectsPage?.hasMore ?? false;
-  const linkedProjectsLabel = hasMoreProjects
-    ? `${firstPageProjectCount}+`
-    : String(firstPageProjectCount);
+  const linkedProjectsLabel = String(insightsQuery.data?.linkedProjectCount ?? 0);
 
   function handleRetry() {
     void productQuery.refetch();
     void projectsQuery.refetch();
+    void insightsQuery.refetch();
     void roadmapQuery.refetch();
     void goalsQuery.refetch();
   }
@@ -92,8 +96,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
               value={linkedProjectsLabel}
               icon={Briefcase}
               tone="blue"
-              isLoading={projectsQuery.isLoading}
-              hint={hasMoreProjects ? "First page shown" : undefined}
+              isLoading={insightsQuery.isLoading}
               href={`/build/managed-products/${managedProductId}/projects`}
             />
             <StatCard

@@ -87,16 +87,12 @@ export const ListView = memo(function ListView({
       if (isReorderContext(context)) setOptimisticTickets(context.previousTickets);
       toast.error(getErrorMessage(error));
     },
-    onSettled: (data) => {
+    onSuccess: (data) => {
       if (data) {
         setOptimisticTickets((prev) =>
           prev.map((t) => (t.id === data.id ? { ...t, rank: data.rank } : t)),
         );
       }
-      if (projectId == null) return;
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
-      });
     },
   });
 

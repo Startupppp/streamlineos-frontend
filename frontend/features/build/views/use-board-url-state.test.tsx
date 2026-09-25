@@ -14,6 +14,7 @@ jest.mock("next/navigation", () => ({
 const mockCreateViewMutate = jest.fn();
 const mockUpdateViewMutate = jest.fn();
 let mockViews: unknown[] = [];
+let mockBoardTickets: unknown[] = [];
 
 jest.mock("@/hooks/api", () => ({
   useProject: () => ({
@@ -26,7 +27,7 @@ jest.mock("@/hooks/api/build", () => ({
   useCreateView: () => ({ mutate: mockCreateViewMutate, isPending: false }),
   useUpdateView: () => ({ mutate: mockUpdateViewMutate, isPending: false }),
   useProjectBoardTickets: () => ({
-    data: [],
+    data: mockBoardTickets,
     isLoading: false,
     isError: false,
     error: undefined,
@@ -66,6 +67,7 @@ function setParams(init: Record<string, string>) {
 
 beforeEach(() => {
   mockViews = [];
+  mockBoardTickets = [];
   mockQaMatches = undefined;
   mockUseBugs.mockClear();
   setParams({});
@@ -130,6 +132,37 @@ describe("useBoardUrlState — saving a view persists every filter the board was
       filters: Record<string, string>;
     };
     expect(payload.filters).toEqual({ status: "Todo" });
+  });
+});
+
+describe("useBoardUrlState — ticket round trips preserve issue collection state", () => {
+  it("records the allowlisted issue query when opening a ticket", () => {
+    mockBoardTickets = [
+      {
+        id: 22,
+        ticketNumber: 81,
+        title: "Fix login",
+        status: "TODO",
+        type: "BUG",
+        labels: [],
+      },
+    ];
+    setParams({
+      viewId: "9",
+      view: "list",
+      q: "login",
+      status: "TODO",
+      cycle: "7",
+      ticket: "22",
+      comment: "8",
+      unsafe: "value",
+    });
+
+    renderHook(() => useBoardUrlState(1));
+
+    expect(mockReplace).toHaveBeenCalledWith(
+      "/build/1/tickets/TEST-81?comment=8&returnTo=%2Fbuild%2F1%2Fissues%3FviewId%3D9%26view%3Dlist%26q%3Dlogin%26status%3DTODO%26cycle%3D7",
+    );
   });
 });
 

@@ -71,7 +71,7 @@ export function CycleDetailPage({
   const isError = projectFailed || cyclesFailed || ticketsFailed;
   const loadError = projectError ?? cyclesError ?? ticketsError;
   const pageState = usePageState({
-    permission: "build:sprints:view",
+    permission: "build:cycles:view",
     isLoading,
     isError,
     error: loadError,

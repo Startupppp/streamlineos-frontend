@@ -15,3 +15,8 @@ export const scopeDirectoryRefSchema = z.object({
 export const scopeDirectoryResolveContract = z.object({
   data: z.array(scopeDirectoryRefSchema),
 });
+
+export const scopeDirectorySearchContract = z.object({
+  data: z.array(scopeDirectoryRefSchema),
+  nextCursor: z.string().nullable(),
+});

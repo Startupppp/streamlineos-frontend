@@ -3,6 +3,13 @@
 **Updated:** 2026-09-25
 **Authority:** This is the single release-status document for the Build module. Product contracts remain in the numbered specifications; future competitive work remains in `06-prioritized-backlog.md`.
 
+This document tracks the current production-release checklist, not total Build
+product completion. The full normative PRD remains open: the current source
+tree contains 36 checked and 618 unchecked acceptance boxes across the Build
+module and sidebar PRDs. Do not report this release checklist as full PRD
+completion; use `docs/specs/build/module/README.md` and its child PRDs for the
+complete product definition of done.
+
 ## Scope
 
 - The authenticated route manifest contains 65 canonical Build pages, all marked `KEEP`.
@@ -15,13 +22,13 @@
 | Phase | Current state | Evidence |
 |---|---|---|
 | 0. Baseline and control | Complete | Route manifest, route census, this status document, and the durable page specifications are reconciled. |
-| 1. Data and security foundation | Complete for the current release | Sprint/Cycle and QA Bug contraction is applied; authorization census is `VULNERABLE=0`, `NEEDS-REVIEW=0`. |
+| 1. Data and security foundation | Partially verified | Sprint/Cycle and QA Bug contraction is present; authorization census is `VULNERABLE=0`, `NEEDS-REVIEW=0`. Build migration `1197` is applied and verified on production RDS; the mixed historical journal still has unrelated pending entries. |
 | 2. Core daily workflow | Complete for the current release | My Work, Inbox, All Work, Backlog, Cycles, Triage, Forms, bulk actions, URL state, and focus refresh are implemented and focused-tested. |
 | 3. Planning and product management | Complete for the current release | Roadmap, Goals, Programs, Portfolios, Managed Products, Releases, Milestones, Reports, Analytics, and Workload parent routes passed authenticated browser verification. |
 | 4. Collaboration and external workflows | Complete for the current release | Client Portal, client access, change requests, Feedbucket, forms, approvals, updates, chat, and meetings parent routes passed authenticated browser verification. |
 | 5. Execution and governance | Complete for the current release | QA, incidents, risks, decisions, automations, webhooks, files, wiki, whiteboard, workflow settings, project settings, and integrations parent routes passed authenticated browser verification. |
 | 6. Performance and UX hardening | Complete for Build-owned release work | Build cache focus sync, mobile overflow, ticket-detail drawer behavior, contract parsing, route access, feature cycles, and workspace-removal checks are verified. |
-| 7. Release verification | Complete for the current release | Backend and migrations are live. Frontend Build commit `0b1559c8d` is in `origin/main`, the production Vercel project deployed it successfully, and authenticated production smoke passed for Build home, project issues, and ticket detail. |
+| 7. Release verification | Partially verified | Authenticated production smoke passed for the ticket-detail route observed in this audit. Migration `1197` is verified; current deployment identity and the full browser matrix remain open. |
 
 "Complete for the current release" does not mean the aspirational P1/P2 competitor backlog is finished. Those future product investments remain explicitly listed in `06-prioritized-backlog.md`.
 
@@ -38,10 +45,10 @@
 
 ## Production migrations
 
-- Production ledger: 948 applied rows against 943 journal entries.
-- Watermark: `1803000010701`.
-- Pending migrations: zero.
-- Five known orphan rows remain below the watermark; none is pending or unreachable.
+- The production ledger was queried through the backend IAM-aware migration client on 2026-09-25.
+- Migration `1197_build_cycle_permissions.sql` is applied on production RDS; its journal hash is present exactly once.
+- Production contains canonical `build:cycles:view` and `build:cycles:manage` permissions, and the legacy sprint permission rows are absent.
+- The general migration runner reports a large mixed-module backlog because production is not at the current repository journal state. It was not replayed; unrelated HR, CRM, billing, and platform migrations were deliberately left untouched.
 - Canonical Build search migrations are:
   - `1185_roadmap_search_id_probe`
   - `1186_project_programs_list_indexes`
@@ -72,17 +79,16 @@ Current release-candidate checks:
 
 The candidate was exercised through a real authenticated browser against the production API.
 
-- Desktop parent-route matrix passed for every org-scoped and project-scoped Build parent page.
-- Data-backed detail routes `/build/6/cycles/10` and `/build/6/tickets/BQS-1` passed.
-- Mobile checks passed at 375 x 812 for Build home, My Work, All Work, Command Center, Issues, Backlog, Reports, Access, ticket detail, Client Portal, project settings, Forms, and Incidents.
+- The current audit verified the authenticated production ticket route `/build/6/tickets/BQS-2` in the real browser.
+- A complete org/project parent-route matrix and mobile matrix are not reverified in this audit.
 - Issues actions no longer clip at 375 px.
 - Ticket properties start closed on mobile, open only on explicit action, and expose a visible close control.
 - Programs and My Work preserve deep-linked URL state.
 - Returning focus to the Build tab triggers the scoped active-query refresh path without losing URL state.
 - Current browser console errors: none on the verified production routes.
 - Workspace text is absent; the remaining `All of Build / Organization` selector is intentional organization scope, not a module-level workspace.
-- Authenticated production-domain smoke passed on `/build`, `/build/6/issues`, and `/build/6/tickets/BQS-1` on 2026-09-25.
-- Each production smoke route rendered its expected data-backed UI with zero fresh console errors and no document-level horizontal overflow.
+- Earlier smoke evidence for `/build`, `/build/6/issues`, and `/build/6/tickets/BQS-1` is retained as historical evidence; it is not a substitute for the current full matrix.
+- The current browser observation rendered `/build/6/tickets/BQS-2` with ticket data and no visible error state.
 
 Some detail pages have no production fixture rows for forms, incidents, meetings, QA runs, wiki pages, goals, portfolios, managed products, or teams. Their authenticated parent empty states passed; no production business data was created solely for testing.
 
@@ -100,19 +106,18 @@ These failures are measured and are not Build-owned:
 
 Completed:
 
-- Frontend Build release commit `0b1559c8d` is contained in `origin/main`.
-- `Vercel - streamlineos-frontend`, the production project, reported `Deployment has completed` for `0b1559c8d`.
+- Frontend `origin/main` currently contains the documented Build changes; the deployment identity for the latest commit was not queried in this audit.
 - The production-domain unauthenticated `/build` smoke passed with the expected sign-in redirect and no console errors.
-- The authenticated production-domain smoke passed for `/build`, `/build/6/issues`, and `/build/6/tickets/BQS-1` with no fresh console errors.
+- The current browser observation passed for `/build/6/tickets/BQS-2`; the full production route matrix remains open.
 
 ## Acceptance criteria
 
 - [x] Canonical route inventory and physical pages agree.
 - [x] PM Workspace is absent from source, bundles, APIs, and production storage.
 - [x] Build authorization census is `VULNERABLE=0` and `NEEDS-REVIEW=0`.
-- [x] Production migration ledger has zero pending migrations.
+- [ ] Production migration ledger has zero pending migrations and includes migration `1197` (1197 is complete; the unrelated mixed-module backlog remains).
 - [x] Frontend and backend focused tests and typechecks pass.
-- [x] Authenticated desktop and mobile browser matrices pass locally against the production API.
+- [ ] Authenticated desktop and mobile browser matrices pass for the full Build route census against the production API.
 - [x] Frontend candidate is merged into `origin/main`.
-- [x] Vercel reports a successful deployment for that commit.
+- [ ] Deployment status for the latest frontend and backend commits is verified.
 - [x] Production-domain Build smoke passes without current console errors.

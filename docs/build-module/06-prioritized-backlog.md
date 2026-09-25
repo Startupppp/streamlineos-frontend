@@ -2,7 +2,7 @@
 
 Reconciled 2026-09-24 against `codex/build-final-completion` and the paired backend worktree.
 
-This is the durable product backlog, not a release-completion claim. The Sprint/Cycle and QA Bug contraction is complete. Canonical Build migrations `1185_roadmap_search_id_probe` and `1186_project_programs_list_indexes`, historically deployed as `1177` and `1178`, are verified in production with zero pending migrations. The current-worktree authenticated browser matrix passed. Current release truth lives in [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+This is the durable product backlog, not a release-completion claim. The Sprint/Cycle and QA Bug contraction is complete. Canonical Build migrations `1185_roadmap_search_id_probe`, `1186_project_programs_list_indexes`, and `1197_build_cycle_permissions` are verified in production. The production journal still reports unrelated mixed-module backlog entries, so zero pending migrations is not currently true. Current release truth lives in [RELEASE-STATUS.md](./RELEASE-STATUS.md).
 
 Order remains **dependency order, not wish order**: application code → focused verification → deployment → migration → browser verification. A later stage cannot be inferred complete from an earlier test result.
 

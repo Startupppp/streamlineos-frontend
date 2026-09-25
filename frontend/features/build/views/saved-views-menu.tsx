@@ -17,6 +17,7 @@ import { useViews, useUpdateView, useDeleteView } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { currentSearchParams } from "@/lib/current-search-params";
 import { fromSavedViewLayout } from "@/lib/build/view-types";
+import { buildTicketCollectionReturnHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { ViewCard, type ViewItem } from "./saved-views/view-card";
 import { RenameViewDialog } from "./saved-views/rename-view-dialog";
 import { CreateViewSheet } from "./saved-views/create-view-sheet";
@@ -49,10 +50,17 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
       const next = currentSearchParams(searchParams);
       next.set("viewId", String(view.id));
       next.set("view", fromSavedViewLayout(view.layoutType));
-      router.replace(`?${next.toString()}`, { scroll: false });
+      router.replace(
+        buildTicketCollectionReturnHref(
+          projectId,
+          `/build/${projectId}/issues`,
+          next,
+        ),
+        { scroll: false },
+      );
       setMenuOpen(false);
     },
-    [router, searchParams],
+    [projectId, router, searchParams],
   );
 
   const handleTogglePin = useCallback(

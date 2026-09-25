@@ -126,6 +126,12 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason: "Knowledge purge is an administrative destructive surface.",
   },
   {
+    prefix: "/knowledge/wiki/manage",
+    product: "administration",
+    permission: "kb:pages:manage",
+    reason: "Content Health reports unowned, stale and overexposed pages across the whole org, so it is an administrative surface. Key matches kb-content-health.controller.ts.",
+  },
+  {
     prefix: "/directory",
     descendantsOnly: true,
     permission: "directory:people:view",
@@ -226,7 +232,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   {
     prefix: "/build/[projectId]/cycles",
     product: "build",
-    permission: "build:sprints:view",
+    permission: "build:cycles:view",
     reason: "Cycles supersede sprints and share their iteration-planning read key; the generic build:view let a role without sprint access open cycle planning.",
     backendRoute: { method: "get", path: "/build/{projectId}/cycles" },
   },

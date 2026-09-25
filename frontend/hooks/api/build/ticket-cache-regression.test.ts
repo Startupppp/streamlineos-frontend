@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, QueryObserver } from "@tanstack/react-query";
 import { createElement, type ReactNode } from "react";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { queryKeys } from "@/lib/query-keys";
@@ -146,5 +146,32 @@ it("rank status changes refresh counts, reports and dashboard and call the calle
   for (const key of keys) expect(client.getQueryState(key)?.isInvalidated).toBe(true);
   expect(settled).toHaveBeenCalledTimes(1);
   expect(client.getQueryState(queryKeys.projectReports.velocity(99))?.isInvalidated).toBe(false);
+  client.clear();
+});
+
+it("rank updates patch an active board without issuing a duplicate list request", async () => {
+  const client = createAppQueryClient();
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
+  const ticket = { id: 1, title: "Ticket", rank: "a0", status: "OPEN" };
+  const page = { data: [ticket], pagination: { nextCursor: null } };
+  const queryFn = jest.fn(async () => page);
+  const observer = new QueryObserver(client, { queryKey: board, queryFn });
+  const unsubscribe = observer.subscribe(() => {});
+  await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(1));
+  jest.mocked(apiClient.patch).mockResolvedValue({ id: 1, rank: "a1", status: "DONE" });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useRankTicket(), { wrapper });
+
+  await act(async () => {
+    await result.current.mutateAsync({ projectId: 42, ticketId: 1, status: "DONE", beforeTicketId: null, afterTicketId: null });
+  });
+
+  expect(client.getQueryData(board)).toEqual({
+    ...page,
+    data: [{ ...ticket, rank: "a1", status: "DONE" }],
+  });
+  expect(client.getQueryState(board)?.isInvalidated).toBe(true);
+  expect(queryFn).toHaveBeenCalledTimes(1);
+  unsubscribe();
   client.clear();
 });
