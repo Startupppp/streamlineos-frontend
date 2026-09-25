@@ -38,6 +38,16 @@ describe("ChatBubble citations", () => {
     expect(screen.getAllByRole("button")).toHaveLength(2);
   });
 
+  it("sizes the document icon from the spacing scale, keeps it from shrinking and hides it from assistive tech", () => {
+    renderBubble([documentCitation]);
+
+    const icon = screen.getByRole("button", { name: "HR document: Leave Policy" }).querySelector("svg");
+    expect(icon).not.toBeNull();
+    expect(icon).toHaveClass("h-3", "w-3", "shrink-0");
+    expect(icon).toHaveAttribute("aria-hidden", "true");
+    expect(icon?.getAttribute("class")).not.toMatch(/\[[^\]]*px\]/);
+  });
+
   it("names a document with a blank title rather than showing an empty chip", () => {
     renderBubble([{ ...documentCitation, title: "  " }]);
 

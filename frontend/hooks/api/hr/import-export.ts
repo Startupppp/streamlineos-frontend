@@ -53,14 +53,21 @@ export interface HrImportJob {
 
 export interface HrImportRow {
   id: string;
+  orgId: string;
   jobId: string;
   rowNumber: number;
   payload: Record<string, unknown>;
   status: HrImportRowStatus;
   error: string | null;
-  createdRecordRef: { table: string; id: string | number } | null;
+  createdRecordRef: { table: string; id: string | number; outcome?: "created" | "updated" | "unchanged" } | null;
 }
 
+/**
+ * `errorRows` is a SAMPLE of the rows that ended in error: the server returns every status='error' row — failed
+ * validation and failed at commit alike, with nothing to tell the two apart — capped at 50 and unordered. How many
+ * rows a job has in error comes from the counters on `job` (see `tallyImportRows`); `errorRows.length` is only how many
+ * the server sent.
+ */
 export interface HrImportJobDetail {
   job: HrImportJob;
   errorRows: HrImportRow[];

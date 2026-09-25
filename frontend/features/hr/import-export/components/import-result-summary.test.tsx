@@ -1,12 +1,16 @@
 import { render, screen } from "@testing-library/react";
 import { ApiError } from "@/lib/api-envelope";
 import { importJob } from "./import-fixtures";
-import { ImportResultSummary } from "./import-result-summary";
+import { ImportResultSummary, SERVER_ERROR_ROW_CAP, tallyImportRows } from "./import-result-summary";
 
 const mockDetail = jest.fn();
 jest.mock("@/hooks/api/hr/import-export", () => ({ useHrImportJob: (jobId: string | null) => mockDetail(jobId) }));
 
-const failedRow = (n: number, error: string) => ({ id: `r${n}`, jobId: "job-1", rowNumber: n, payload: {}, status: "error", error, createdRecordRef: null });
+const failedRow = (n: number, error: string) => ({ id: `r${n}`, orgId: "org-1", jobId: "job-1", rowNumber: n, payload: {}, status: "error", error, createdRecordRef: null });
+
+/** What `GET /hr/import/jobs/:id` sends: every error row, validation and commit failures alike, unlabelled. */
+const errorRowsOf = (count: number) => Array.from({ length: count }, (_, index) => failedRow(index + 1, `Reason ${index + 1}`));
+const detailWith = (rows: ReturnType<typeof errorRowsOf>) => mockDetail.mockReturnValue({ data: { job: importJob(), errorRows: rows }, isLoading: false, isError: false, error: null });
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -59,14 +63,73 @@ describe("ImportResultSummary", () => {
     expect(screen.getByText(/3 rows were not imported because they did not pass validation/)).toBeInTheDocument();
   });
 
-  it("says only the first ten failed rows are shown, and how many there are", () => {
-    const many = Array.from({ length: 15 }, (_, index) => failedRow(index + 1, `Reason ${index + 1}`));
-    mockDetail.mockReturnValue({ data: { job: importJob(), errorRows: many }, isLoading: false, isError: false, error: null });
+  it("says only ten of the rows not imported are shown, and how many there are", () => {
+    detailWith(errorRowsOf(15));
 
     render(<ImportResultSummary job={importJob({ totalRows: 20, validRows: 5, createdRows: 5, errorRows: 15 })} entityLabel="Documents" />);
 
-    expect(screen.getByText("Failed rows (first 10 of 15)")).toBeInTheDocument();
+    expect(screen.getByText("Rows not imported (showing 10 of 15)")).toBeInTheDocument();
     expect(screen.getAllByText(/^Row \d+$/)).toHaveLength(10);
+  });
+
+  it("counts the list as every row not imported, not as the commit failures, when validation and commit failures are both in it", () => {
+    // 30 rows: 12 written, 3 failed while being written, 15 never passed validation. The server lists all 18 error rows
+    // together; the old heading put the "3" over ten rows that were probably validation failures.
+    detailWith(errorRowsOf(18));
+
+    render(<ImportResultSummary job={importJob({ totalRows: 30, validRows: 12, createdRows: 12, errorRows: 3 })} entityLabel="Documents" />);
+
+    expect(screen.getByText("Failed to write").nextSibling).toHaveTextContent("3");
+    expect(screen.getByText(/15 rows were not imported because they did not pass validation/)).toBeInTheDocument();
+    expect(screen.getByText("Rows not imported (showing 10 of 18)")).toBeInTheDocument();
+    expect(screen.getByText(/listed together, in no particular order/)).toBeInTheDocument();
+    expect(screen.getAllByText(/^Row \d+$/)).toHaveLength(10);
+    expect(screen.queryByText(/Failed rows/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/of 3\)/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/at most/)).not.toBeInTheDocument();
+  });
+
+  it("says the server sends at most 50 error rows when there are more, and how many cannot be shown", () => {
+    // 200 rows: 20 written, 5 failed while being written, 175 never passed validation, so 180 sit in error on the server.
+    detailWith(errorRowsOf(SERVER_ERROR_ROW_CAP));
+
+    render(<ImportResultSummary job={importJob({ totalRows: 200, validRows: 20, createdRows: 20, errorRows: 5 })} entityLabel="Documents" />);
+
+    expect(screen.getByText("Rows not imported (showing 10 of 180)")).toBeInTheDocument();
+    expect(screen.getByText(/The server sends at most 50 of these rows, so the other 130 cannot be shown/)).toBeInTheDocument();
+  });
+
+  it("does not claim a cap when exactly 50 rows were not imported and all 50 arrived", () => {
+    detailWith(errorRowsOf(SERVER_ERROR_ROW_CAP));
+
+    render(<ImportResultSummary job={importJob({ totalRows: 60, validRows: 10, createdRows: 10, errorRows: 50 })} entityLabel="Documents" />);
+
+    expect(screen.getByText("Rows not imported (showing 10 of 50)")).toBeInTheDocument();
+    expect(screen.queryByText(/at most/)).not.toBeInTheDocument();
+  });
+
+  it("lists rows that only failed validation, which the Failed card does not count", () => {
+    detailWith([failedRow(3, "Invalid email"), failedRow(8, "Missing hire date")]);
+
+    render(<ImportResultSummary job={importJob({ totalRows: 10, validRows: 8, createdRows: 8, errorRows: 0 })} entityLabel="Documents" />);
+
+    expect(mockDetail).toHaveBeenCalledWith("job-1");
+    expect(screen.getByText("Imported")).toBeInTheDocument();
+    expect(screen.getByText("Failed to write").nextSibling).toHaveTextContent("0");
+    expect(screen.getByText("Rows not imported (2)")).toBeInTheDocument();
+    expect(screen.getByText(/Invalid email/)).toBeInTheDocument();
+    expect(screen.queryByText(/listed together/)).not.toBeInTheDocument();
+  });
+
+  it("lists why nothing was imported when every row failed validation and none was tried", () => {
+    detailWith([failedRow(1, "Invalid email"), failedRow(2, "Invalid email"), failedRow(3, "Missing hire date")]);
+
+    render(<ImportResultSummary job={importJob({ totalRows: 3, validRows: 0, errorRows: 0 })} entityLabel="Documents" />);
+
+    expect(screen.getByText("Nothing was imported")).toBeInTheDocument();
+    expect(mockDetail).toHaveBeenCalledWith("job-1");
+    expect(screen.getByText("Rows not imported (3)")).toBeInTheDocument();
+    expect(screen.getByText(/Missing hire date/)).toBeInTheDocument();
   });
 
   it("says why the failed rows could not be loaded and points to the history", () => {
@@ -75,5 +138,26 @@ describe("ImportResultSummary", () => {
     render(<ImportResultSummary job={importJob({ validRows: 1, createdRows: 1, errorRows: 2, totalRows: 3 })} entityLabel="Documents" />);
 
     expect(screen.getByText(/also listed in the import history/i)).toBeInTheDocument();
+  });
+});
+
+describe("tallyImportRows", () => {
+  it("reads the counters as validation results before a commit", () => {
+    const tally = tallyImportRows(importJob({ status: "previewed", totalRows: 5, validRows: 3, errorRows: 2 }));
+
+    expect(tally).toEqual({ committed: false, written: 0, failedWhileWriting: 0, failedValidation: 2, notImported: 2 });
+  });
+
+  it("splits a committed job into written, failed while being written and failed validation, which add up to the file", () => {
+    const tally = tallyImportRows(importJob({ status: "committed", totalRows: 30, validRows: 12, errorRows: 3 }));
+
+    expect(tally).toEqual({ committed: true, written: 12, failedWhileWriting: 3, failedValidation: 15, notImported: 18 });
+    expect(tally.written + tally.notImported).toBe(30);
+  });
+
+  it("treats a failed and a rolled back job as committed too, and never reports a negative validation count", () => {
+    expect(tallyImportRows(importJob({ status: "failed", totalRows: 4, validRows: 0, errorRows: 4 })).committed).toBe(true);
+    expect(tallyImportRows(importJob({ status: "rolled_back", totalRows: 4, validRows: 4, errorRows: 0 })).committed).toBe(true);
+    expect(tallyImportRows(importJob({ status: "committed", totalRows: 6, validRows: 6, errorRows: 60 }))).toMatchObject({ failedValidation: 0, notImported: 60 });
   });
 });
