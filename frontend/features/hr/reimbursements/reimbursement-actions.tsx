@@ -2,6 +2,7 @@
 
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 export function ReimbursementActions({
   reimbursementId,
@@ -9,6 +10,7 @@ export function ReimbursementActions({
   currentUserId,
   isAdmin,
   isPending,
+  isRowPending,
   onApprove,
   onStartReject,
 }: {
@@ -17,6 +19,7 @@ export function ReimbursementActions({
   currentUserId: string | undefined;
   isAdmin: boolean;
   isPending: boolean;
+  isRowPending: boolean;
   onApprove: (id: number) => void;
   onStartReject: (id: number) => void;
 }) {
@@ -29,11 +32,11 @@ export function ReimbursementActions({
   }
   return (
     <div className="flex gap-1 justify-end">
-      <Button size="sm" className="gap-1 text-xs" onClick={handleApproveClick} disabled={isPending}>
-        <CheckCircle2 className="h-3 w-3" />
+      <LoadingButton size="sm" className="gap-1 text-xs" onClick={handleApproveClick} disabled={isPending} isPending={isRowPending}>
+        {!isRowPending && <CheckCircle2 className="h-3 w-3" />}
         Approve
-      </Button>
-      <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={handleRejectClick}>
+      </LoadingButton>
+      <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={handleRejectClick} disabled={isPending}>
         <XCircle className="h-3 w-3" />
         Reject
       </Button>
