@@ -203,14 +203,14 @@ Ordered by dependency on the closure stages above.
 - **Evidence:** `backend/src/modules/feedbucket/feedbucket-submissions.service.ts` evaluates predicates in SQL; `feedbucket-submissions-bulk.ts` re-evaluates the supplied filters inside a transaction and bounds the mutation; `feedbucket-list-filters.spec.ts`, `feedbucket-list-predicate.spec.ts`, `feedbucket-submissions-bulk.spec.ts`, and `feedbucket-bulk-route-contract.spec.ts` pass 76 tests; the frontend sends the URL filters in `frontend/features/build/feedbucket/project-submissions-inbox.tsx`.
 - **Effort:** spent
 
-#### P1-6 — Realtime version gaps and conflict recovery
+#### P1-6 — Realtime version gaps and conflict recovery — **DONE FOR CURRENT RELEASE**
 
 - **User job:** recover cleanly when two people edit the same record, or when a tab reconnects after losing the network.
 - **Owner:** frontend
 - **Depends on:** none
 - **Acceptance:** a version conflict is surfaced and resolvable; a reconnect replays without duplicating a mutation.
-- **Evidence:** offline drafts and reconnect exist; version conflict and realtime gap recovery remain the distinct residual.
-- **Effort:** 5–8 d
+- **Evidence:** ticket edits send `expectedUpdatedAt` and surface a `Reapply` action in `frontend/features/build/ticket-details/use-ticket-detail.ts`; `frontend/lib/build-cache-sync.ts` refreshes active Build queries on focus/visibility and invalidates peer tabs through BroadcastChannel or storage fallback; focused frontend tests pass 20/20 across `use-ticket-detail.test.tsx`, `build-cache-sync.test.tsx`, and optimistic/offline mutation coverage.
+- **Effort:** spent
 
 #### P1-7 — Import with preview, validation, mapping and rollback
 
