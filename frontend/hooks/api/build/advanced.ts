@@ -19,9 +19,6 @@ const cycleRowContract = lazyContract(() =>
 const moduleListContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.moduleResponseContract),
 );
-const modulePageContract = lazyContract(() =>
-  import("@/hooks/api/build/execution-schema").then((m) => m.moduleResponseContract),
-);
 const moduleRowContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.moduleRowContract),
 );
@@ -39,9 +36,6 @@ const intakeItemContract = lazyContract(() =>
 );
 const analyticsContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.analyticsContract),
-);
-const successContract = lazyContract(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) => m.successContract),
 );
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -199,7 +193,7 @@ export function useModulePages(projectId: number) {
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ signal, pageParam }) => {
       const query = pageParam ? { cursor: pageParam, pageSize: "50" } : { pageSize: "50" };
-      const response = await apiClient.get<Module[] | ModulePage>(`/build/${projectId}/modules`, query, signal, modulePageContract);
+      const response = await apiClient.get<Module[] | ModulePage>(`/build/${projectId}/modules`, query, signal, moduleListContract);
       if (Array.isArray(response)) {
         return { data: response, pagination: { limit: response.length, hasMore: false, nextCursor: null } };
       }
