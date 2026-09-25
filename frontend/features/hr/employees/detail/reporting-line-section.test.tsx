@@ -147,7 +147,21 @@ describe("Reporting line editor — change-warning UI (PRD D4)", () => {
     line = makeLine({ primaryChangesLast24h: 3, changeThreshold: 3 });
     await openEditor();
     expect(screen.getByRole("status")).toHaveTextContent("changed 3 times in the last 24 hours (limit 3)");
+    expect(screen.getByRole("status")).toHaveTextContent("The limit does not apply when only the additional managers change.");
+    // Like the server, a reason is required only once the primary actually changes.
+    expect(screen.getByRole("textbox", { name: /Reason \(optional\)/ })).toHaveAttribute("aria-required", "false");
+    await userEvent.click(screen.getByRole("combobox", { name: "Primary reporting manager" }));
     expect(screen.getByRole("textbox", { name: /Reason \*/ })).toHaveAttribute("aria-required", "true");
+  });
+
+  it("saves an additional-manager-only change past the threshold without a reason, as the server allows", async () => {
+    line = makeLine({ primaryChangesLast24h: 3, secondary: [CURRENT_SECONDARY] });
+    await openEditor();
+    await userEvent.click(screen.getByRole("button", { name: "Remove additional manager 1" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(setLine).toHaveBeenCalled());
+    expect(setLine.mock.calls[0]?.[0]).toMatchObject({ primaryManagerUserId: "u-dana", secondaryManagers: [] });
+    expect(setLine.mock.calls[0]?.[0]).not.toHaveProperty("reason");
   });
 
   it("leaves the authority decision to the server for a viewer without override", async () => {
@@ -175,6 +189,12 @@ describe("Reporting line editor — change-warning UI (PRD D4)", () => {
       primaryManagerUserId: "u-new",
       reason: "Team reorganisation",
     });
+  });
+
+  it("moves focus to the new manager picker, not its Relationship field, after Add additional manager", async () => {
+    await openEditor();
+    await userEvent.click(screen.getByRole("button", { name: "Add additional manager" }));
+    expect(screen.getByRole("combobox", { name: "Additional manager 1" })).toHaveFocus();
   });
 
   it("marks the top-level reason required and drops the manager helper for a top-level role", async () => {

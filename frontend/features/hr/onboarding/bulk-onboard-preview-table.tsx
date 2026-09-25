@@ -71,9 +71,14 @@ function rowKey(row: BulkOnboardFlowRow) {
 
 export function BulkOnboardPreviewTable({ rows }: BulkOnboardPreviewTableProps) {
   return (
-    // The table scrolls inside its own region, never the page (375/768/1280).
-    <div role="region" aria-label="Preview rows" tabIndex={0} className="min-w-0 max-w-full overflow-x-auto rounded-lg border">
-      <DataTable data={rows} columns={COLUMNS} getRowKey={rowKey} pagination={{ pageSize: 25 }} />
-    </div>
+    // The table scrolls inside its own labelled region, never the page (375/768/1280).
+    <DataTable
+      data={rows}
+      columns={COLUMNS}
+      getRowKey={rowKey}
+      pagination={{ pageSize: 25 }}
+      scrollRegionLabel="Preview rows"
+      className="max-w-full"
+    />
   );
 }

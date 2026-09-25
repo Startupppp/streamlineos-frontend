@@ -97,6 +97,17 @@ describe("bulk onboarding reporting columns (HRM-15 §7.3)", () => {
     ]);
   });
 
+  it("refuses a blank-primary row naming the policy's default as a secondary, once the policy is loaded", () => {
+    const dana = { userId: "u-d", name: "Dana Default", email: "Dana@Example.com" };
+    const message =
+      "Dana Default is your organisation's default reporting manager and will be assigned as primary. Pick the primary explicitly or choose a different additional manager.";
+    expect(validateAndMap(row({ secondaryManagerEmail2: "dana@example.com" }), DEPARTMENTS, 3, dana).errors).toEqual([message]);
+    // An explicit primary, another secondary, or an unknown policy: nothing to say.
+    expect(validateAndMap(row({ primaryManagerEmail: "p@example.com", secondaryManagerEmail1: "dana@example.com" }), DEPARTMENTS, 3, dana).errors).toEqual([]);
+    expect(validateAndMap(row({ secondaryManagerEmail1: "other@example.com" }), DEPARTMENTS, 3, dana).errors).toEqual([]);
+    expect(validateAndMap(row({ secondaryManagerEmail1: "dana@example.com" }), DEPARTMENTS, null, null).errors).toEqual([]);
+  });
+
   it("leaves the cap to the server preview while the policy is unknown", () => {
     const three = row({ secondaryManagerEmail1: "a@example.com", secondaryManagerEmail2: "b@example.com", secondaryManagerEmail3: "c@example.com" });
     expect(validateAndMap(three, DEPARTMENTS, null).errors).toEqual([]);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useFieldArray, type UseFormReturn } from "react-hook-form";
 import type { z } from "zod";
 import { Plus, X } from "lucide-react";
@@ -9,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ManagerCandidatePicker, describeManager } from "@/components/hr/reporting-lines/manager-candidate-picker";
 import { PolicyMissingBanner } from "@/components/hr/reporting-lines/policy-missing-banner";
+import { policyAssignedDefault } from "@/components/hr/reporting-lines/policy-default-primary";
+import { useFocusAddedPicker } from "@/components/hr/reporting-lines/use-focus-added-picker";
 import { useReportingManagerPolicy } from "@/hooks/api/hr/reporting-manager-policy";
 import type { ManagerRef } from "@/hooks/api/hr/reporting-lines-schema";
 import type { onboardEmployeeInputSchema } from "@/lib/validation/hr";
@@ -104,7 +107,20 @@ export function StepEmploymentReporting({ form }: StepEmploymentReportingProps) 
   const primaryRef = form.watch("reportingManagerRef") ?? null;
   const primaryId = form.watch("reportingManagerUserId");
   const secondaries = useFieldArray({ control: form.control, name: "secondaryManagers" });
+  const { listRef, focusPickerAt } = useFocusAddedPicker<HTMLFieldSetElement>();
   const secondaryIds = (form.watch("secondaryManagers") ?? []).map((entry) => entry.managerUserId).filter(Boolean);
+  const assignedDefault = policyAssignedDefault(policy);
+  const assignedDefaultId = assignedDefault?.userId ?? null;
+  const assignedDefaultName = assignedDefault?.name ?? null;
+
+  // The schema refuses an additional manager a blank primary would resolve to.
+  useEffect(() => {
+    form.setValue(
+      "policyDefaultPrimary",
+      assignedDefaultId && assignedDefaultName ? { userId: assignedDefaultId, name: assignedDefaultName } : null,
+    );
+    if ((form.getValues("secondaryManagers") ?? []).some((entry) => entry.managerUserId)) void form.trigger("secondaryManagers");
+  }, [form, assignedDefaultId, assignedDefaultName]);
 
   function handleTopLevelRoleChange(checked: boolean | "indeterminate") {
     const isTopLevel = checked === true;
@@ -124,7 +140,8 @@ export function StepEmploymentReporting({ form }: StepEmploymentReportingProps) 
   }
 
   function handleAddSecondary() {
-    secondaries.append({ managerUserId: "", label: "", managerRef: null });
+    focusPickerAt(secondaries.fields.length);
+    secondaries.append({ managerUserId: "", label: "", managerRef: null }, { shouldFocus: false });
   }
 
   function handleRemoveSecondary(index: number) {
@@ -197,7 +214,7 @@ export function StepEmploymentReporting({ form }: StepEmploymentReportingProps) 
         </div>
       </div>
       {cap > 0 && !topLevelRole ? (
-        <fieldset className="flex flex-col gap-2">
+        <fieldset ref={listRef} className="flex flex-col gap-2">
           <legend className="text-sm font-medium">Additional reporting managers</legend>
           <p className="text-xs text-muted-foreground">
             Dotted-line contacts shown on the profile. They never approve requests. Up to {cap}.

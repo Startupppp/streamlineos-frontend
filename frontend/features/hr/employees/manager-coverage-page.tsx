@@ -105,6 +105,8 @@ function CoverageTable({ view, data, canEdit, canReview, memberNameMap }: Covera
           {...common}
           data={data.withoutManager}
           columns={canEdit ? [...WITHOUT_MANAGER_COLUMNS, WITHOUT_MANAGER_ASSIGN_COLUMN] : WITHOUT_MANAGER_COLUMNS}
+          // Cards until xl: with the sidebar open, 768-1279px clips the action column.
+          mobileCardBreakpoint="xl"
           mobileCard={withoutManagerCard(canEdit)}
           getRowKey={(row) => row.employmentId}
           emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="Everyone has a manager" description="Every active employee reports to someone or is a declared top-level role." />}
@@ -116,6 +118,7 @@ function CoverageTable({ view, data, canEdit, canReview, memberNameMap }: Covera
           {...common}
           data={data.fallback ?? []}
           columns={canEdit ? [...FALLBACK_COLUMNS, FALLBACK_ACTION_COLUMN] : FALLBACK_COLUMNS}
+          mobileCardBreakpoint="xl"
           mobileCard={fallbackCard(canEdit)}
           getRowKey={(row, index) => `${row.userId ?? "employee"}-${index}`}
           emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="No temporary managers" description="Nobody is waiting on a manager assigned by the onboarding policy." />}
@@ -127,6 +130,7 @@ function CoverageTable({ view, data, canEdit, canReview, memberNameMap }: Covera
           {...common}
           data={data.pendingReview ?? []}
           columns={pendingReviewColumns(canReview)}
+          mobileCardBreakpoint="xl"
           mobileCard={pendingReviewCard(canReview)}
           getRowKey={(row) => row.requestId}
           emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="No reviews pending" description="No employee has asked HR to check their manager." />}
@@ -138,6 +142,7 @@ function CoverageTable({ view, data, canEdit, canReview, memberNameMap }: Covera
           {...common}
           data={data.inactiveManager}
           columns={canEdit ? [...INACTIVE_MANAGER_COLUMNS, INACTIVE_MANAGER_ASSIGN_COLUMN] : INACTIVE_MANAGER_COLUMNS}
+          mobileCardBreakpoint="xl"
           mobileCard={inactiveManagerCard(canEdit)}
           getRowKey={(row, index) => `${row.userId ?? "employee"}-${index}`}
           emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="All managers are active" description="No employee reports to an exited, suspended or deactivated manager." />}
@@ -222,12 +227,12 @@ export function ManagerCoveragePage() {
       {data.policyMissing ? <PolicyMissingCallout canConfigure={canEdit} /> : null}
       {/* 2 / 3 / 6 columns; short labels so none truncates, the hint carries the detail. */}
       <div data-testid="coverage-summary" className={SUMMARY_GRID_CLASS}>
-        <StatCard label="No manager" value={counts.withoutManager} icon={UserX} tone={counts.withoutManager > 0 ? "red" : "emerald"} hint={`${summary.withManager} of ${summary.employees} covered${topLevel > 0 ? ` · ${topLevel} top-level by design` : ""}`} />
-        <StatCard label="Fallback" value={counts.fallback} icon={Hourglass} tone={counts.fallback > 0 ? "amber" : "emerald"} hint="Temporary manager" />
-        <StatCard label="In review" value={counts.pendingReview} icon={MessageSquareWarning} tone={counts.pendingReview > 0 ? "amber" : "emerald"} hint="Employee asked HR" />
-        <StatCard label="Inactive" value={counts.inactiveManager} icon={UserMinus} tone={counts.inactiveManager > 0 ? "amber" : "emerald"} hint="Manager has left" />
-        <StatCard label="Circular" value={counts.circular} icon={Repeat} tone={counts.circular > 0 ? "red" : "emerald"} hint="Reporting loops" />
-        <StatCard label="Over span" value={counts.overSpan} icon={Users} tone={counts.overSpan > 0 ? "amber" : "emerald"} hint={`Over ${data.spanOfControlLimit} reports`} />
+        <StatCard wrapHint label="No manager" value={counts.withoutManager} icon={UserX} tone={counts.withoutManager > 0 ? "red" : "emerald"} hint={`${summary.withManager} of ${summary.employees} covered${topLevel > 0 ? ` · ${topLevel} top-level by design` : ""}`} />
+        <StatCard wrapHint label="Fallback" value={counts.fallback} icon={Hourglass} tone={counts.fallback > 0 ? "amber" : "emerald"} hint="Temporary manager" />
+        <StatCard wrapHint label="In review" value={counts.pendingReview} icon={MessageSquareWarning} tone={counts.pendingReview > 0 ? "amber" : "emerald"} hint="Employee asked HR" />
+        <StatCard wrapHint label="Inactive" value={counts.inactiveManager} icon={UserMinus} tone={counts.inactiveManager > 0 ? "amber" : "emerald"} hint="Manager has left" />
+        <StatCard wrapHint label="Circular" value={counts.circular} icon={Repeat} tone={counts.circular > 0 ? "red" : "emerald"} hint="Reporting loops" />
+        <StatCard wrapHint label="Over span" value={counts.overSpan} icon={Users} tone={counts.overSpan > 0 ? "amber" : "emerald"} hint={`Over ${data.spanOfControlLimit} reports`} />
       </div>
       {healthy ? (
         <EmptyState

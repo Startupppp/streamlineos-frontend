@@ -59,9 +59,15 @@ describe("buildOnboardEmployeePayload — reporting managers (HRM-15)", () => {
   const ref = { userId: "u-m", name: "Maya", email: null, designation: null, state: "active" as const };
 
   it("omits a blank primary manager so the backend applies the policy", () => {
-    const payload = buildOnboardEmployeePayload({ ...base, reportingManagerUserId: "", secondaryManagers: [] });
+    const payload = buildOnboardEmployeePayload({
+      ...base,
+      reportingManagerUserId: "",
+      secondaryManagers: [],
+      policyDefaultPrimary: { userId: "u-d", name: "Dana Default" },
+    });
     expect(payload).not.toHaveProperty("reportingManagerUserId");
     expect(payload).not.toHaveProperty("secondaryManagers");
+    expect(payload).not.toHaveProperty("policyDefaultPrimary");
   });
 
   it("sends the chosen managers and never the display refs", () => {

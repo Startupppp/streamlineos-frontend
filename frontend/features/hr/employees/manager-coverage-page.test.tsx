@@ -135,6 +135,13 @@ describe("Manager coverage — HRM-15 states", () => {
     expect(summary.children).toHaveLength(6);
   });
 
+  it("wraps tile hints instead of cutting them off with an ellipsis", () => {
+    render(<ManagerCoveragePage />);
+    const hint = within(screen.getByTestId("coverage-summary")).getByText(/covered · 2 top-level by design/);
+    expect(hint).not.toHaveClass("truncate");
+    expect(hint).toHaveClass("break-words");
+  });
+
   it("keeps Assign and Keep reachable on small screens as a stacked card", async () => {
     search = "view=fallback";
     can.mockImplementation((key: string) => key === "hr:reporting-lines:manage");
@@ -145,6 +152,18 @@ describe("Manager coverage — HRM-15 states", () => {
     await userEvent.click(within(card).getByRole("button", { name: "Assign manager" }));
     expect(setLine).toHaveBeenCalledWith({ employeeUserId: "u-f", primaryManagerUserId: "u-new" }, expect.any(Object));
   });
+
+  it.each(["withoutManager", "fallback", "pendingReview"])(
+    "shows the %s view as stacked cards until xl, so its actions stay reachable at 768/1024 with the sidebar open",
+    (view) => {
+      search = `view=${view}`;
+      can.mockReturnValue(true);
+      const { container } = render(<ManagerCoveragePage />);
+      expect(screen.getByRole("table").closest(".hidden")).toHaveClass("xl:block");
+      expect(container.querySelector(".xl\\:hidden")).not.toBeNull();
+      expect(container.querySelector(".sm\\:hidden")).toBeNull();
+    },
+  );
 
   it("copes with a scope-filtered, empty pending-review list (and with none sent)", () => {
     search = "view=pendingReview";

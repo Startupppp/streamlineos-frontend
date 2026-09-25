@@ -118,6 +118,8 @@ export interface StatCardProps {
   color?: StatColor;
   delta?: { value: string; direction: "up" | "down" };
   hint?: string;
+  /** Wrap the hint instead of truncating it (a hint that carries data, not decoration). */
+  wrapHint?: boolean;
   href?: string;
   isLoading?: boolean;
   featured?: boolean;
@@ -273,6 +275,7 @@ export const StatCard = memo(function StatCard({
   color,
   delta,
   hint,
+  wrapHint = false,
   href,
   isLoading,
   featured,
@@ -359,7 +362,8 @@ export const StatCard = memo(function StatCard({
           <TruncatedTooltipText
             text={effectiveHint}
             className={cn(
-              "text-dense leading-snug truncate",
+              "text-dense leading-snug",
+              wrapHint ? "break-words" : "truncate",
               featured ? "text-primary-foreground/70" : "text-muted-foreground",
             )}
           />

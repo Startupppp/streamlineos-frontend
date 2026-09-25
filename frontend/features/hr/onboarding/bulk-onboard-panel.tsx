@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { useReportingManagerPolicy } from "@/hooks/api/hr/reporting-manager-policy";
+import { policyAssignedDefault } from "@/components/hr/reporting-lines/policy-default-primary";
 
 import { BULK_ONBOARD_COLUMNS, MAX_ROWS } from "./bulk-onboard-columns";
 import { downloadBulkOnboardTemplate } from "./bulk-onboard-download";
@@ -29,6 +30,7 @@ export function BulkOnboardPanel() {
   const { data: policy } = useReportingManagerPolicy();
   // Unknown until the policy loads: the server preview checks the cap meanwhile.
   const secondaryCap = policy ? policy.maxSecondaryManagersPerEmployee : null;
+  const assignedDefault = policyAssignedDefault(policy);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const deptNames = useMemo(() => {
@@ -46,7 +48,7 @@ export function BulkOnboardPanel() {
     return [...labels].sort((a, b) => a.localeCompare(b));
   }, [orgDepartments?.data]);
 
-  const flow = useBulkOnboardFlow(deptNames, secondaryCap);
+  const flow = useBulkOnboardFlow(deptNames, secondaryCap, assignedDefault);
   const heldBack = flow.rows.length - flow.committableCount;
 
   async function handleDownloadTemplate() {

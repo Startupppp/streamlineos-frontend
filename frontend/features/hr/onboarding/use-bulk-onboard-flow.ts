@@ -8,6 +8,7 @@ import type { BulkOnboardEmployeeRow, BulkOnboardPreviewRow, BulkOnboardResult }
 import { MAX_ROWS, sourceRowOf } from "./bulk-onboard-columns";
 import { parseFile } from "./bulk-onboard-parse";
 import { validateAndMap, type PreviewRow } from "./bulk-onboard-template";
+import type { AssignedDefault } from "@/components/hr/reporting-lines/policy-default-primary";
 
 export type BulkOnboardStep = "upload" | "preview" | "done";
 
@@ -35,10 +36,15 @@ export function isCommittable(row: BulkOnboardFlowRow): boolean {
   return row.payload !== null && row.server !== null && COMMITTABLE.has(row.server.status);
 }
 
-function checkFile(parsed: Array<Record<string, string>>, deptNames: Set<string>, secondaryCap: number | null): BulkOnboardFlowRow[] {
+function checkFile(
+  parsed: Array<Record<string, string>>,
+  deptNames: Set<string>,
+  secondaryCap: number | null,
+  assignedDefault: AssignedDefault | null,
+): BulkOnboardFlowRow[] {
   const seenEmails = new Set<string>();
   return parsed.map((raw, i) => {
-    const { payload, preview } = validateAndMap(raw, deptNames, secondaryCap);
+    const { payload, preview } = validateAndMap(raw, deptNames, secondaryCap, assignedDefault);
     if (preview.email && seenEmails.has(preview.email)) {
       preview.errors = [...preview.errors, "Duplicate email in this file"];
       preview.valid = false;
@@ -65,7 +71,7 @@ export function mergeServerPreview(rows: BulkOnboardFlowRow[], serverRows: BulkO
   });
 }
 
-export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number | null) {
+export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number | null, assignedDefault: AssignedDefault | null) {
   const preview = useBulkOnboardPreview();
   const bulkOnboard = useBulkOnboardEmployees();
   const [step, setStep] = useState<BulkOnboardStep>("upload");
@@ -100,7 +106,7 @@ export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number 
         toast.error(`Too many rows (${parsed.length}). Maximum is ${MAX_ROWS} per upload.`);
         return;
       }
-      const checked = checkFile(parsed, deptNames, secondaryCap);
+      const checked = checkFile(parsed, deptNames, secondaryCap, assignedDefault);
       setFileName(file.name);
       setRows(checked);
       setStep("preview");

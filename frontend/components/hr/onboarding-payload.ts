@@ -4,19 +4,23 @@ interface ReportingFields {
   designation: string;
   reportingManagerUserId?: string;
   reportingManagerRef?: unknown;
+  policyDefaultPrimary?: unknown;
   topLevelRole?: boolean;
   topLevelRoleReason?: string;
   secondaryManagers?: Array<{ managerUserId: string; label?: string; managerRef?: unknown }>;
 }
 
-type Payload<T> = Omit<Omit<T, "reportingManagerRef">, "secondaryManagers" | "reportingManagerUserId"> & {
+type Payload<T> = Omit<Omit<T, DisplayOnly>, "secondaryManagers" | "reportingManagerUserId"> & {
   reportingManagerUserId?: string;
   secondaryManagers?: Array<{ managerUserId: string; label?: string }>;
 };
 
-function withoutDisplayRef<T extends { reportingManagerRef?: unknown }>(value: T): Omit<T, "reportingManagerRef"> {
+type DisplayOnly = "reportingManagerRef" | "policyDefaultPrimary";
+
+function withoutDisplayRef<T extends { reportingManagerRef?: unknown; policyDefaultPrimary?: unknown }>(value: T): Omit<T, DisplayOnly> {
   const copy = { ...value };
   delete copy.reportingManagerRef;
+  delete copy.policyDefaultPrimary;
   return copy;
 }
 
@@ -28,7 +32,8 @@ function withoutDisplayRef<T extends { reportingManagerRef?: unknown }>(value: T
  *
  * HRM-15: a blank primary manager is omitted so the backend resolves it by
  * policy; a top-level role sends no manager at all; the display-only manager
- * refs the form keeps for naming never leave the browser.
+ * refs the form keeps for naming (and the policy default it validates
+ * against) never leave the browser.
  */
 export function buildOnboardEmployeePayload<T extends ReportingFields>(data: T): Payload<T> {
   const { secondaryManagers, reportingManagerUserId, ...rest } = withoutDisplayRef(data);

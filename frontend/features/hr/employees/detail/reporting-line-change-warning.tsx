@@ -30,7 +30,8 @@ export function ReportingLineChangeWarning({ changesLast24h, threshold, canOverr
         <p>
           {canOverride
             ? `Another primary change needs a reason of at least ${CHANGE_REASON_MIN_CHARS} characters. It is recorded against your name.`
-            : "Another primary change needs a reason and an HR or org admin. Ask one if the save is refused."}
+            : "Another primary change needs a reason and an HR or org admin. Ask one if the save is refused."}{" "}
+          The limit does not apply when only the additional managers change.
         </p>
       </div>
     </div>

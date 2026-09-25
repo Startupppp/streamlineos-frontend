@@ -9,10 +9,11 @@ import { DEFAULT_INVITE_ROLE } from "@/lib/constants/user-invite-roles";
 import { StepEmployment } from "./step-employment";
 
 let secondaryCap = 0;
+let policyExtra: Record<string, unknown> = {};
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 jest.mock("@/hooks/api/hr/reporting-manager-policy", () => ({
-  useReportingManagerPolicy: () => ({ data: { maxSecondaryManagersPerEmployee: secondaryCap } }),
+  useReportingManagerPolicy: () => ({ data: { maxSecondaryManagersPerEmployee: secondaryCap, ...policyExtra } }),
 }));
 jest.mock("@/components/hr/reporting-lines/policy-missing-banner", () => ({ PolicyMissingBanner: () => null }));
 jest.mock("@/components/hr/department-combobox", () => ({
@@ -100,6 +101,7 @@ async function expectValidity(expected: Validity) {
 
 beforeEach(() => {
   secondaryCap = 0;
+  policyExtra = {};
 });
 
 describe("Job Details — primary reporting manager (HRM-15 D2)", () => {
@@ -173,5 +175,65 @@ describe("Job Details — additional managers up to the org cap", () => {
 
     await expectValidity("invalid");
     expect(screen.getByText("Already the primary reporting manager.")).toBeInTheDocument();
+  });
+
+  it("moves focus to the new manager picker after Add additional manager", () => {
+    secondaryCap = 1;
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "Add additional manager" }));
+    expect(screen.getByRole("combobox", { name: "Additional manager 1" })).toHaveFocus();
+  });
+});
+
+describe("Job Details — an additional manager the policy would make primary (HRM-15 R3)", () => {
+  const DEFAULT_IS_MAYA = {
+    defaultPrimaryManager: { userId: "user-manager", name: "Maya Manager", email: null, designation: "Lead", state: "active" },
+    defaultPrimaryManagerEligible: true,
+    fallbackOrder: "CONFIGURED_MANAGER_THEN_UPLOADER",
+    actorQualifiesAsFallback: true,
+  };
+  const MESSAGE =
+    "Maya Manager is your organisation's default reporting manager and will be assigned as primary. Pick the primary explicitly or choose a different additional manager.";
+
+  function addMayaAsAdditional() {
+    fireEvent.click(screen.getByRole("button", { name: "Add additional manager" }));
+    fireEvent.click(screen.getByRole("combobox", { name: "Additional manager 1" }));
+  }
+
+  it("flags the field inline, before submit, when the primary is blank and the default is tried first", async () => {
+    secondaryCap = 1;
+    policyExtra = DEFAULT_IS_MAYA;
+    render(<Harness />);
+    addMayaAsAdditional();
+    expect(await screen.findByText(MESSAGE)).toBeInTheDocument();
+    await expectValidity("invalid");
+  });
+
+  it("flags it when the uploader is tried first but does not qualify", async () => {
+    secondaryCap = 1;
+    policyExtra = { ...DEFAULT_IS_MAYA, fallbackOrder: "UPLOADER_THEN_CONFIGURED_MANAGER", actorQualifiesAsFallback: false };
+    render(<Harness />);
+    addMayaAsAdditional();
+    expect(await screen.findByText(MESSAGE)).toBeInTheDocument();
+  });
+
+  it("allows it when the uploader would be assigned instead", async () => {
+    secondaryCap = 1;
+    policyExtra = { ...DEFAULT_IS_MAYA, fallbackOrder: "UPLOADER_THEN_CONFIGURED_MANAGER" };
+    render(<Harness />);
+    addMayaAsAdditional();
+    await expectValidity("valid");
+    expect(screen.queryByText(MESSAGE)).not.toBeInTheDocument();
+  });
+
+  it("clears once the primary is picked explicitly", async () => {
+    secondaryCap = 1;
+    policyExtra = DEFAULT_IS_MAYA;
+    render(<Harness />);
+    addMayaAsAdditional();
+    expect(await screen.findByText(MESSAGE)).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "pick omar" })[0] as HTMLElement);
+    await waitFor(() => expect(screen.queryByText(MESSAGE)).not.toBeInTheDocument());
+    await expectValidity("valid");
   });
 });

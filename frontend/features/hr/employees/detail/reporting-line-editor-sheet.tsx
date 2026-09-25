@@ -90,11 +90,14 @@ export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, l
   const currentId = line.current?.managerUserId ?? null;
   const nextId = topLevel ? null : primaryId;
   const primaryChanges = nextId !== currentId;
-  const reasonRequired = requiresChangeReason(line);
+  const overLimit = requiresChangeReason(line);
+  // The server asks for a reason only when the primary changes (or on emergency).
+  const reasonRequired = overLimit && primaryChanges;
   const canOverride = line.permittedActions.override;
 
   useEffect(() => {
     form.setValue("reasonRequired", reasonRequired);
+    if (form.formState.isSubmitted) void form.trigger("reason");
   }, [form, reasonRequired]);
 
   function handleCancel() {
@@ -143,7 +146,7 @@ export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, l
           {primaryChanges ? (
             <PrimaryPreview from={line.current?.managerName ?? null} to={topLevel ? "Top-level role" : (primaryRef?.name ?? null)} />
           ) : null}
-          {reasonRequired ? (
+          {overLimit ? (
             <ReportingLineChangeWarning
               changesLast24h={line.primaryChangesLast24h}
               threshold={line.changeThreshold}

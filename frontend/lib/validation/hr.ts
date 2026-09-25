@@ -30,12 +30,22 @@ export const secondaryManagerEntrySchema = z.object({
  * reason, and cannot carry any manager. Secondaries may not repeat the primary or
  * each other; the org cap is enforced where rows are added and by the server.
  */
+/**
+ * The server refuses an additional manager who is also the policy's default
+ * (SECONDARY_DUPLICATES_PRIMARY on ONBOARDING_FALLBACK) when a blank primary
+ * would resolve to them. One wording for the wizard and the bulk upload.
+ */
+export function defaultPrimaryConflictMessage(name: string): string {
+  return `${name} is your organisation's default reporting manager and will be assigned as primary. Pick the primary explicitly or choose a different additional manager.`;
+}
+
 function validateReportingChoice(
   value: {
     reportingManagerUserId?: string;
     topLevelRole?: boolean;
     topLevelRoleReason?: string;
     secondaryManagers?: Array<{ managerUserId: string }>;
+    policyDefaultPrimary?: { userId: string; name: string } | null;
   },
   ctx: z.RefinementCtx,
 ): void {
@@ -48,9 +58,16 @@ function validateReportingChoice(
     return;
   }
   const seen = new Set<string>(value.reportingManagerUserId ? [value.reportingManagerUserId] : []);
+  const assignedDefault = value.reportingManagerUserId ? null : (value.policyDefaultPrimary ?? null);
   secondaries.forEach((entry, index) => {
     if (!entry.managerUserId) return;
-    if (seen.has(entry.managerUserId))
+    if (entry.managerUserId === assignedDefault?.userId)
+      ctx.addIssue({
+        code: "custom",
+        message: defaultPrimaryConflictMessage(assignedDefault.name),
+        path: ["secondaryManagers", index, "managerUserId"],
+      });
+    else if (seen.has(entry.managerUserId))
       ctx.addIssue({
         code: "custom",
         message:
@@ -103,6 +120,8 @@ export const onboardEmployeeInputSchema = z.object({
   secondaryManagers: z.array(secondaryManagerEntrySchema).max(3, "At most three additional managers").optional(),
   topLevelRole: z.boolean().optional(),
   topLevelRoleReason: z.string().trim().max(500, "Keep the reason under 500 characters").optional(),
+  /** Who a blank primary resolves to under the loaded policy; set by the step, never sent. */
+  policyDefaultPrimary: z.object({ userId: z.string(), name: z.string() }).nullable().optional(),
   role: z.enum(USER_INVITE_ROLE_VALUES),
   employeeId: z
     .string()

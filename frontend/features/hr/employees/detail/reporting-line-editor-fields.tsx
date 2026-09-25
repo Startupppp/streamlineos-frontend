@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ManagerCandidatePicker } from "@/components/hr/reporting-lines/manager-candidate-picker";
+import { useFocusAddedPicker } from "@/components/hr/reporting-lines/use-focus-added-picker";
 import type { ManagerRef } from "@/hooks/api/hr/reporting-lines-schema";
 import type { ReportingLineEditorValues } from "./reporting-line-editor-schema";
 
@@ -82,6 +83,7 @@ function SecondaryRow({ form, employeeUserId, index, onRemove }: SecondaryRowPro
 
 export function ReportingLineEditorFields({ form, employeeUserId, maxSecondaryManagers, canOverride }: ReportingLineEditorFieldsProps) {
   const secondaries = useFieldArray({ control: form.control, name: "secondaryManagers" });
+  const { listRef, focusPickerAt } = useFocusAddedPicker<HTMLFieldSetElement>();
   const topLevel = form.watch("topLevel");
   const primaryId = form.watch("primaryManagerUserId");
   const primaryRef = form.watch("primaryManagerRef");
@@ -109,7 +111,8 @@ export function ReportingLineEditorFields({ form, employeeUserId, maxSecondaryMa
   }
 
   function handleAddSecondary() {
-    secondaries.append({ managerUserId: "", label: "", managerRef: null });
+    focusPickerAt(secondaries.fields.length);
+    secondaries.append({ managerUserId: "", label: "", managerRef: null }, { shouldFocus: false });
   }
 
   function handleRemoveSecondary(index: number) {
@@ -171,7 +174,7 @@ export function ReportingLineEditorFields({ form, employeeUserId, maxSecondaryMa
         />
       ) : null}
       {maxSecondaryManagers > 0 && !topLevel ? (
-        <fieldset className="flex flex-col gap-2">
+        <fieldset ref={listRef} className="flex flex-col gap-2">
           <legend className="text-sm font-medium">Additional reporting managers</legend>
           <p className="text-xs text-muted-foreground">Dotted-line contacts. They never approve requests. Up to {maxSecondaryManagers}.</p>
           <FormField control={form.control} name="secondaryManagers" render={() => <FormMessage />} />

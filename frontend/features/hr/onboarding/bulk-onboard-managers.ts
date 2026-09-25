@@ -1,5 +1,7 @@
 import type { BulkOnboardEmployeeRow } from "@/types/hr";
 import { SECONDARY_MANAGER_COLUMNS } from "@/components/hr/reporting-lines/manager-columns";
+import type { AssignedDefault } from "@/components/hr/reporting-lines/policy-default-primary";
+import { defaultPrimaryConflictMessage } from "@/lib/validation/hr";
 import { CONFLICT_KEY, EMAIL_RE, LEGACY_PRIMARY_KEY, type ParsedRow } from "./bulk-onboard-columns";
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -34,11 +36,15 @@ function read(row: ParsedRow, key: string): string {
  * `secondaryCap` is the organisation's `maxSecondaryManagersPerEmployee`, or
  * null while the policy is unknown — then the server preview alone judges it.
  * The server counts the secondaries a row names, not which columns hold them.
+ *
+ * `assignedDefault` is who a blank primary resolves to under the loaded policy
+ * (null while unknown); a row naming them as a secondary would be refused.
  */
 export function validateManagerColumns(
   row: ParsedRow,
   employeeEmail: string,
   secondaryCap: number | null,
+  assignedDefault: AssignedDefault | null = null,
 ): { errors: string[]; fields: ManagerFields } {
   const errors: string[] = [];
   const conflicts = read(row, CONFLICT_KEY);
@@ -67,6 +73,10 @@ export function validateManagerColumns(
   }
   if (primary && secondaries.includes(primary)) {
     errors.push("a secondary manager duplicates the primary manager");
+  }
+  const defaultEmail = assignedDefault?.email?.toLowerCase();
+  if (!primary && !topLevelRoleReason && assignedDefault && defaultEmail && secondaries.includes(defaultEmail)) {
+    errors.push(defaultPrimaryConflictMessage(assignedDefault.name));
   }
   const filledSecondaries = secondaries.filter(Boolean);
   if (new Set(filledSecondaries).size !== filledSecondaries.length) {

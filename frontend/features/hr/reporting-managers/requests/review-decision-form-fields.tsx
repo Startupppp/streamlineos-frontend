@@ -50,9 +50,14 @@ export function ReviewDecisionFormFields({ form, request }: ReviewDecisionFormFi
         name="decision"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Decision</FormLabel>
+            <FormLabel id="review-decision-label">Decision</FormLabel>
             <FormControl>
-              <RadioGroup value={field.value} onValueChange={handleDecisionChange} className="gap-2">
+              <RadioGroup
+                aria-labelledby="review-decision-label"
+                value={field.value}
+                onValueChange={handleDecisionChange}
+                className="gap-2"
+              >
                 {REVIEW_DECISIONS.map((option) => (
                   <label key={option} htmlFor={`review-decision-${option}`} className="flex cursor-pointer items-center gap-2 text-sm">
                     <RadioGroupItem id={`review-decision-${option}`} value={option} />

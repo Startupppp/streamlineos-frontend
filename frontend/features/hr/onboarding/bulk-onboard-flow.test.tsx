@@ -208,6 +208,11 @@ describe("BulkOnboardPanel — rows keep their file number through preview and r
     await user.upload(screen.getByLabelText("Choose employee onboard file"), file);
     const table = await screen.findByRole("region", { name: "Preview rows" });
     expect(within(table).getByText("fay@example.com").closest("tr")).toHaveTextContent(/^3/);
+    // One keyboard stop, and it is the element that scrolls.
+    expect(table).toHaveAttribute("tabindex", "0");
+    expect(table).toHaveClass("overflow-auto");
+    expect(within(table).queryByRole("region")).not.toBeInTheDocument();
+    expect(table.parentElement?.closest("[tabindex='0']")).toBeNull();
 
     await user.click(await screen.findByRole("button", { name: "Create 2 employees" }));
     await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Create 2 employees" }));

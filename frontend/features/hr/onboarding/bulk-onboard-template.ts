@@ -2,6 +2,7 @@ import type { BulkOnboardEmployeeRow } from "@/types/hr";
 import { isUserInviteRole } from "@/lib/constants/user-invite-roles";
 import { EMAIL_RE, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
 import { validateManagerColumns } from "./bulk-onboard-managers";
+import type { AssignedDefault } from "@/components/hr/reporting-lines/policy-default-primary";
 
 export interface PreviewRow {
   _idx: number;
@@ -31,6 +32,8 @@ export function validateAndMap(
   deptNames: Set<string>,
   /** The organisation's secondary-manager cap, or null while unknown; the server re-checks it. */
   secondaryCap: number | null = null,
+  /** Who a blank primary resolves to under the loaded policy, or null while unknown. */
+  assignedDefault: AssignedDefault | null = null,
 ): {
   payload: BulkOnboardEmployeeRow | null;
   errors: string[];
@@ -78,7 +81,7 @@ export function validateAndMap(
   if (roleRaw && !isUserInviteRole(roleRaw)) {
     errors.push("role must be MEMBER or ORG_ADMIN");
   }
-  const managers = validateManagerColumns(raw, email, secondaryCap);
+  const managers = validateManagerColumns(raw, email, secondaryCap, assignedDefault);
   errors.push(...managers.errors);
 
   if (dateOfBirth) {

@@ -113,6 +113,11 @@ describe("review decision payloads", () => {
     expect(screen.getByRole("textbox", { name: /reason|what the employee/i })).toHaveAttribute("aria-required", "true");
   });
 
+  it("names the decision radio group after its visible label", () => {
+    render(<ReportingRequestReviewSheet requestId="req-1" onOpenChange={jest.fn()} />);
+    expect(screen.getByRole("radiogroup", { name: "Decision" })).toBeInTheDocument();
+  });
+
   it("labels a rejection reason as visible to the employee", async () => {
     const user = userEvent.setup();
     render(<ReportingRequestReviewSheet requestId="req-1" onOpenChange={jest.fn()} />);

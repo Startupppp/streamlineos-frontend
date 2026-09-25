@@ -22,3 +22,13 @@ export function readSortKey(row: unknown, key: string): string | number | boolea
   }
   return null;
 }
+
+/**
+ * Where `mobileCard` swaps with the table. Literal classes so Tailwind emits
+ * them. `xl` suits tables whose last column holds actions that a sidebar-open
+ * 768-1024px layout would clip.
+ */
+export const MOBILE_CARD_BREAKPOINT: Record<"sm" | "xl", { cards: string; table: string }> = {
+  sm: { cards: "sm:hidden", table: "hidden sm:block" },
+  xl: { cards: "xl:hidden", table: "hidden xl:block" },
+};
