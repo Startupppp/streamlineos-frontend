@@ -100,8 +100,11 @@ jest.mock("@/components/ui/stat-card", () => ({
 }));
 
 jest.mock("@/components/shared/error-state", () => ({
-  ErrorState: ({ description }: { description?: string }) => (
-    <div data-testid="error-state">{description}</div>
+  ErrorState: ({ description, onRetry }: { description?: string; onRetry?: () => void }) => (
+    <div data-testid="error-state">
+      {description}
+      {onRetry ? <button onClick={onRetry}>Retry</button> : null}
+    </div>
   ),
 }));
 
@@ -154,7 +157,7 @@ beforeEach(() => {
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseProjects.mockReturnValue(baseProjectsResult());
   mockUseInfiniteAllWork.mockReturnValue(baseInfiniteResult());
-  mockUseAllWork.mockReturnValue({ data: undefined });
+  mockUseAllWork.mockReturnValue({ data: undefined, refetch: jest.fn() });
 });
 
 it("renders the page skeleton and not the ready panels while the access snapshot is still loading because useCan returns false before access lands and a disabled query yields empty not loading", () => {
@@ -194,4 +197,28 @@ it("renders the plan upgrade link the backend sent with a 402 MODULE_NOT_ENABLED
 it("renders the canonical Command Center heading", () => {
   render(<CommandCenterPage />);
   expect(screen.getByRole("heading", { name: "Command Center" })).toBeInTheDocument();
+});
+
+it("retries both server-derived summary queries with the page retry action", () => {
+  const refetchOpenIssues = jest.fn();
+  const refetchOverdueIssues = jest.fn();
+  const refetchProjects = jest.fn();
+  mockUseAllWork
+    .mockReturnValueOnce({ data: undefined, refetch: refetchOpenIssues })
+    .mockReturnValueOnce({ data: undefined, refetch: refetchOverdueIssues });
+  mockUseProjects.mockReturnValue(
+    baseProjectsResult({
+      data: undefined,
+      isError: true,
+      error: new ApiError("Request failed", 500, "INTERNAL_ERROR"),
+      refetch: refetchProjects,
+    }),
+  );
+  render(<CommandCenterPage />);
+  const retryButton = screen.getByRole("button", { name: /retry/i });
+  expect(retryButton).toBeInTheDocument();
+  retryButton.click();
+  expect(refetchProjects).toHaveBeenCalledTimes(1);
+  expect(refetchOpenIssues).toHaveBeenCalledTimes(1);
+  expect(refetchOverdueIssues).toHaveBeenCalledTimes(1);
 });

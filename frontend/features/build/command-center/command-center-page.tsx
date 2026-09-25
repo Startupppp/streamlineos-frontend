@@ -91,12 +91,18 @@ export function CommandCenterPage() {
     isFetchingNextPage,
   } = useInfiniteAllWork(COMMAND_CENTER_MY_ISSUES_FILTERS, { enabled: canViewTickets });
 
-  const { data: openIssuesSummary } = useAllWork(
+  const {
+    data: openIssuesSummary,
+    refetch: refetchOpenIssuesSummary,
+  } = useAllWork(
     { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1 },
     { enabled: canViewTickets },
   );
 
-  const { data: overdueIssuesSummary } = useAllWork(
+  const {
+    data: overdueIssuesSummary,
+    refetch: refetchOverdueIssuesSummary,
+  } = useAllWork(
     { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1, dueDateTo: overdueDueDateTo },
     { enabled: canViewTickets },
   );
@@ -124,7 +130,14 @@ export function CommandCenterPage() {
   const handleRetry = useCallback(() => {
     void refetchProjects();
     void refetchMyIssues();
-  }, [refetchProjects, refetchMyIssues]);
+    void refetchOpenIssuesSummary();
+    void refetchOverdueIssuesSummary();
+  }, [
+    refetchMyIssues,
+    refetchOpenIssuesSummary,
+    refetchOverdueIssuesSummary,
+    refetchProjects,
+  ]);
 
   const handleMyIssuesRetry = useCallback(() => void refetchMyIssues(), [refetchMyIssues]);
 
