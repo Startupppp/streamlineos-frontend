@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useKbResearchBrief, useRateResearchBrief, useRetryResearchBrief, useCancelResearchBrief, useConvertResearchBriefToPage } from "@/hooks/api/kb/research-briefs";
+import { useKbResearchBrief, useRateResearchBrief, useRetryResearchBrief, useCancelResearchBrief, useConvertResearchBriefToPage, useApproveResearchBrief } from "@/hooks/api/kb/research-briefs";
 import { useKbSpace } from "@/hooks/api/kb/spaces";
 import { pageHref } from "@/lib/knowledge-routes";
 import { useCan } from "@/hooks/api/access";
@@ -112,7 +112,9 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
   const retryMutation = useRetryResearchBrief();
   const cancelMutation = useCancelResearchBrief();
   const convertMutation = useConvertResearchBriefToPage();
+  const approveMutation = useApproveResearchBrief();
   const canCreatePages = useCan("kb:pages:create");
+  const canManagePages = useCan("kb:pages:manage");
   const router = useRouter();
   const [showFullReport, setShowFullReport] = useState(false);
 
@@ -158,6 +160,13 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
         toast.success("Brief converted to a page");
         router.push(pageHref(result.pageId));
       },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }
+
+  function handleApprove() {
+    approveMutation.mutate(briefId, {
+      onSuccess: () => toast.success("Research brief approved for publishing"),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }

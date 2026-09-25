@@ -1,4 +1,4 @@
-import { render as rtlRender, screen } from "@testing-library/react";
+import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
 import type { ReactElement } from "react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +17,7 @@ const useKbAnalyticsOverview = jest.fn();
 const useKbNoResults = jest.fn();
 const usePageAnalytics = jest.fn();
 const useKnowledgeGaps = jest.fn();
+const useGapRelatedPages = jest.fn();
 const useCitationReuse = jest.fn();
 const useReviewSla = jest.fn();
 
@@ -49,6 +50,7 @@ jest.mock("@/hooks/api/kb", () => ({
   useKbNoResults: (...args: unknown[]) => useKbNoResults(...args),
   usePageAnalytics: (...args: unknown[]) => usePageAnalytics(...args),
   useKnowledgeGaps: (...args: unknown[]) => useKnowledgeGaps(...args),
+  useGapRelatedPages: (...args: unknown[]) => useGapRelatedPages(...args),
   useCitationReuse: (...args: unknown[]) => useCitationReuse(...args),
   useReviewSla: (...args: unknown[]) => useReviewSla(...args),
   useCreateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
@@ -92,6 +94,20 @@ function settledPages<T>(data: T) {
   };
 }
 
+function settledGaps(rows: { query: string | null; count: number; lastOccurredAt: string }[]) {
+  return {
+    gaps: rows,
+    data: { pages: [{ data: rows, pagination: { limit: 50, hasMore: false, nextCursor: null } }], pageParams: [undefined] },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+  };
+}
+
 function cancelled() {
   return { data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() };
 }
@@ -107,7 +123,8 @@ beforeEach(() => {
   useKbAnalyticsOverview.mockReturnValue(settled(OVERVIEW));
   useKbNoResults.mockReturnValue(settled([]));
   usePageAnalytics.mockReturnValue(settledPages([]));
-  useKnowledgeGaps.mockReturnValue(settled([]));
+  useKnowledgeGaps.mockReturnValue(settledGaps([]));
+  useGapRelatedPages.mockReturnValue({ pages: [], isLoading: false, fetchNextPage: jest.fn(), hasNextPage: false, isFetchingNextPage: false });
   useCitationReuse.mockReturnValue(cancelled());
   useReviewSla.mockReturnValue(cancelled());
 });
@@ -328,5 +345,50 @@ describe("KnowledgeAnalyticsPage — stale high-use pages are reachable, not jus
     expect(usePageAnalytics).toHaveBeenCalledWith(
       expect.not.objectContaining({ staleOnly: true }),
     );
+  });
+});
+
+describe("KnowledgeAnalyticsPage — gap rows render without crashing and support drill-down", () => {
+  it("renders gap rows when the hook returns flattened gaps array", () => {
+    useKnowledgeGaps.mockReturnValue(
+      settledGaps([
+        { query: "how to export pdf", count: 12, lastOccurredAt: "2024-03-01T00:00:00Z" },
+        { query: "billing questions", count: 7, lastOccurredAt: "2024-02-28T00:00:00Z" },
+      ]),
+    );
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByText("how to export pdf")).toBeInTheDocument();
+    expect(screen.getByText("billing questions")).toBeInTheDocument();
+  });
+
+  it("the gaps list is not an array crash — gaps.map does not throw when hook shape changed", () => {
+    useKnowledgeGaps.mockReturnValue(settledGaps([
+      { query: "reset password", count: 5, lastOccurredAt: "2024-03-01T00:00:00Z" },
+    ]));
+
+    expect(() => render(<KnowledgeAnalyticsPage />)).not.toThrow();
+  });
+
+  it("shows the related-pages section when a gap row is clicked", () => {
+    useKnowledgeGaps.mockReturnValue(
+      settledGaps([{ query: "reset password", count: 5, lastOccurredAt: "2024-03-01T00:00:00Z" }]),
+    );
+    useGapRelatedPages.mockReturnValue({
+      pages: [{ id: 1, title: "Password Reset Guide", status: "published", updatedAt: "2024-01-01T00:00:00Z" }],
+      isLoading: false,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    const gapRow = screen.getByRole("button", { name: /Gap: reset password/i });
+    fireEvent.click(gapRow);
+
+    expect(screen.getByText("Password Reset Guide")).toBeInTheDocument();
+    expect(useGapRelatedPages).toHaveBeenCalledWith("reset password");
   });
 });

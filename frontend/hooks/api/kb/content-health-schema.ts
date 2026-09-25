@@ -9,7 +9,6 @@ export const contentHealthSignalTypeSchema = z.enum([
   "broken_link",
   "overexposed",
   "duplicate_candidate",
-  "contradictory_claim",
 ]);
 
 export type ContentHealthSignalType = z.infer<typeof contentHealthSignalTypeSchema>;

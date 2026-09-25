@@ -35,6 +35,10 @@ const kbConvertBriefToPageContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbConvertBriefToPageContract),
 );
 
+const kbResearchBriefApproveContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbResearchBriefApproveContract),
+);
+
 export function useKbResearchBriefs() {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
@@ -125,6 +129,19 @@ export function useCancelResearchBrief() {
     mutationKey: ["kb", "research-briefs", "cancel"],
     mutationFn: (briefId: number) =>
       apiClient.delete<void>(`/kb/research-briefs/${briefId}`, undefined, undefined),
+    onSuccess: (_, briefId) => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
+    },
+  });
+}
+
+export function useApproveResearchBrief() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:manage", {
+    mutationKey: ["kb", "research-briefs", "approve"],
+    mutationFn: (briefId: number) =>
+      apiClient.post<{ success: true }>(`/kb/research-briefs/${briefId}/approve`, {}, undefined, kbResearchBriefApproveContract),
     onSuccess: (_, briefId) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
