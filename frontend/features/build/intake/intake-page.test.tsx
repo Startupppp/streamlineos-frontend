@@ -20,6 +20,10 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(),
 }));
 
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: jest.fn(),
+}));
+
 jest.mock("@/components/shared/dirty-state-context", () => ({
   useRegisterDirtyState: jest.fn(),
 }));
@@ -285,6 +289,7 @@ import {
   useModules,
 } from "@/hooks/api/build";
 import { useCan, useAccess } from "@/hooks/api/access";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 
 const mockUseIntakeRequests = useIntakeRequests as jest.Mock;
 const mockUseCreateIntakeRequest = useCreateIntakeRequest as jest.Mock;
@@ -294,6 +299,7 @@ const mockUseCycles = useCycles as jest.Mock;
 const mockUseModules = useModules as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
+const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
@@ -317,6 +323,10 @@ function baseQueryResult(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   mockUseCan.mockReturnValue(false);
+  mockUseBuildListFilters.mockReturnValue({
+    value: () => "pending",
+    setValue: jest.fn(),
+  });
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseIntakeRequests.mockReturnValue(
     baseQueryResult({ data: { data: [] } }),
@@ -386,4 +396,26 @@ it("passes canManage=false to IntakeItemCard so action buttons are hidden", () =
   render(<IntakePage projectId={1} />);
   const card = screen.getByTestId("intake-item-card");
   expect(card.getAttribute("data-can-manage")).toBe("false");
+});
+
+it("uses the URL-backed intake tab when rendering the list", () => {
+  mockUseBuildListFilters.mockReturnValue({
+    value: () => "accepted",
+    setValue: jest.fn(),
+  });
+  mockUseIntakeRequests.mockReturnValue(
+    baseQueryResult({
+      data: {
+        data: [
+          { id: 1, title: "Pending item", status: "pending" },
+          { id: 2, title: "Accepted item", status: "accepted" },
+        ],
+      },
+    }),
+  );
+
+  render(<IntakePage projectId={1} />);
+
+  expect(screen.queryByText("No accepted items")).not.toBeInTheDocument();
+  expect(screen.getAllByTestId("intake-item-card")).toHaveLength(1);
 });

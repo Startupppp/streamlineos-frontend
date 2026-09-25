@@ -27,6 +27,7 @@ import { Plus, ExternalLink } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useForm, Controller, useController } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -47,13 +48,21 @@ import {
 } from "@/features/build/intake/intake-schema";
 
 const WORK_STATES = ["backlog", "todo", "in_progress", "done", "cancelled"] as const;
+const INTAKE_TAB_OPTIONS = ["pending", "accepted", "declined", "all"] as const;
+const INTAKE_FILTER_DEFINITIONS = [
+  { param: "tab", all: "pending", options: INTAKE_TAB_OPTIONS },
+] as const;
 
 export function IntakePage({ projectId }: { projectId: number }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [acceptOpen, setAcceptOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState("pending");
+  const listFilters = useBuildListFilters({
+    filters: INTAKE_FILTER_DEFINITIONS,
+    withSearch: false,
+  });
+  const activeTab = listFilters.value("tab");
 
   const {
     data: intakeData,
@@ -259,7 +268,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
       }
     >
       <PmPageShell>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(value) => listFilters.setValue("tab", value)}>
           <PmSection index={0}>
             <TabsList>
               <TabsTrigger value="pending">
