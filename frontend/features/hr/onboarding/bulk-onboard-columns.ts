@@ -50,17 +50,45 @@ export const BULK_ONBOARD_COLUMNS = [
     sample: "Engineering",
   },
   {
-    key: "reportingManagerEmail",
-    header: "reportingManagerEmail",
-    required: true,
+    key: "primaryManagerEmail",
+    header: "primaryManagerEmail",
+    required: false,
     width: 28,
     sample: "manager@company.com",
+  },
+  {
+    key: "secondaryManagerEmail1",
+    header: "secondaryManagerEmail1",
+    required: false,
+    width: 26,
+    sample: "",
+  },
+  {
+    key: "secondaryManagerEmail2",
+    header: "secondaryManagerEmail2",
+    required: false,
+    width: 26,
+    sample: "",
+  },
+  {
+    key: "secondaryManagerEmail3",
+    header: "secondaryManagerEmail3",
+    required: false,
+    width: 26,
+    sample: "",
   },
   {
     key: "topLevelRoleReason",
     header: "topLevelRoleReason",
     required: false,
     width: 24,
+    sample: "",
+  },
+  {
+    key: "effectiveFrom",
+    header: "effectiveFrom",
+    required: false,
+    width: 14,
     sample: "",
   },
   {
@@ -153,7 +181,19 @@ export type ColumnKey = (typeof BULK_ONBOARD_COLUMNS)[number]["key"];
 
 export type ParsedRow = Record<string, string>;
 
+/**
+ * Set on a parsed row when two headers fill the same column with different
+ * values (e.g. `primaryManagerEmail` and legacy `reportsTo`). Guessing which the
+ * operator meant would silently pick a manager, so the row is refused instead.
+ */
+export const CONFLICT_KEY = "__conflictingColumns";
+
+/** Manager columns, in slot order. Legacy primary headers are read, never written. */
+export const SECONDARY_MANAGER_KEYS = ["secondaryManagerEmail1", "secondaryManagerEmail2", "secondaryManagerEmail3"] as const;
+
 export const MAX_ROWS = 100;
+
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const HEADER_ALIASES: Record<string, ColumnKey> = {
   firstname: "firstName",
@@ -175,12 +215,25 @@ const HEADER_ALIASES: Record<string, ColumnKey> = {
   departmentid: "department",
   "department id": "department",
   role: "role",
-  reportingmanageremail: "reportingManagerEmail",
-  "reporting manager email": "reportingManagerEmail",
-  "reporting manager": "reportingManagerEmail",
-  "reports to": "reportingManagerEmail",
-  manager: "reportingManagerEmail",
-  "manager email": "reportingManagerEmail",
+  "primary manager email": "primaryManagerEmail",
+  "primary manager": "primaryManagerEmail",
+  reportingmanageremail: "primaryManagerEmail",
+  "reporting manager email": "primaryManagerEmail",
+  "reporting manager": "primaryManagerEmail",
+  reportsto: "primaryManagerEmail",
+  "reports to": "primaryManagerEmail",
+  manager: "primaryManagerEmail",
+  manageremail: "primaryManagerEmail",
+  "manager email": "primaryManagerEmail",
+  "secondary manager email 1": "secondaryManagerEmail1",
+  "secondary manager email 2": "secondaryManagerEmail2",
+  "secondary manager email 3": "secondaryManagerEmail3",
+  "secondary manager 1": "secondaryManagerEmail1",
+  "secondary manager 2": "secondaryManagerEmail2",
+  "secondary manager 3": "secondaryManagerEmail3",
+  effectivefrom: "effectiveFrom",
+  "effective from": "effectiveFrom",
+  "effective date": "effectiveFrom",
   toplevelrolereason: "topLevelRoleReason",
   "top level role reason": "topLevelRoleReason",
   "top-level role reason": "topLevelRoleReason",

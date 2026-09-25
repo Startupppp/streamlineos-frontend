@@ -1,6 +1,7 @@
 import type { BulkOnboardEmployeeRow } from "@/types/hr";
 import { isUserInviteRole } from "@/lib/constants/user-invite-roles";
-import type { ColumnKey, ParsedRow } from "./bulk-onboard-columns";
+import { EMAIL_RE, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
+import { validateManagerColumns } from "./bulk-onboard-managers";
 
 export interface PreviewRow {
   _idx: number;
@@ -15,7 +16,6 @@ export interface PreviewRow {
   errors: string[];
 }
 
-export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const GENDER_VALUES = new Set(["MALE", "FEMALE", "OTHER"]);
 
 function isGender(value: string): value is "MALE" | "FEMALE" | "OTHER" {
@@ -29,6 +29,8 @@ function cell(row: ParsedRow, key: ColumnKey): string {
 export function validateAndMap(
   raw: ParsedRow,
   deptNames: Set<string>,
+  /** The organisation's secondary-manager cap; the server re-checks it. */
+  secondaryCap = 3,
 ): {
   payload: BulkOnboardEmployeeRow | null;
   errors: string[];
@@ -43,8 +45,6 @@ export function validateAndMap(
   const phone = cell(raw, "phone");
   const genderRaw = cell(raw, "gender").toUpperCase();
   const roleRaw = cell(raw, "role").toUpperCase();
-  const reportingManagerEmail = cell(raw, "reportingManagerEmail").toLowerCase();
-  const topLevelRoleReason = cell(raw, "topLevelRoleReason");
   const employeeId = cell(raw, "employeeId");
   const joiningDate = cell(raw, "joiningDate");
   const dateOfBirth = cell(raw, "dateOfBirth");
@@ -78,13 +78,8 @@ export function validateAndMap(
   if (roleRaw && !isUserInviteRole(roleRaw)) {
     errors.push("role must be MEMBER or ORG_ADMIN");
   }
-  if (reportingManagerEmail && topLevelRoleReason) {
-    errors.push("a top-level role cannot also have a reportingManagerEmail");
-  } else if (!reportingManagerEmail && !topLevelRoleReason) {
-    errors.push("reportingManagerEmail is required (or topLevelRoleReason for a top-level role)");
-  } else if (reportingManagerEmail && !EMAIL_RE.test(reportingManagerEmail)) {
-    errors.push("invalid reportingManagerEmail");
-  }
+  const managers = validateManagerColumns(raw, email, secondaryCap);
+  errors.push(...managers.errors);
 
   if (dateOfBirth) {
     const dob = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)
@@ -142,8 +137,7 @@ export function validateAndMap(
     ...(phone ? { phone } : {}),
     ...(isGender(genderRaw) ? { gender: genderRaw } : {}),
     ...(roleRaw ? { role: roleRaw } : {}),
-    ...(reportingManagerEmail ? { reportingManagerEmail } : {}),
-    ...(topLevelRoleReason ? { topLevelRole: true, topLevelRoleReason } : {}),
+    ...managers.fields,
     ...(employeeId ? { employeeId } : {}),
     ...(joiningDate ? { joiningDate } : {}),
     ...(dateOfBirth ? { dateOfBirth } : {}),

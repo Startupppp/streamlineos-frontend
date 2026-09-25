@@ -1,50 +1,34 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import {
-  AlertCircle,
-  Download,
-  FileSpreadsheet,
-  Loader2,
-  Upload,
-  Users,
-  X,
-  CheckCircle2,
-} from "lucide-react";
+import { useMemo, useState } from "react";
+import { AlertCircle, CheckCircle2, Download, RefreshCw, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { cn } from "@/lib/utils";
-import { useBulkOnboardEmployees } from "@/hooks/api/hr";
 import { useOrgDepartments } from "@/hooks/api/org-hierarchy";
-import type { BulkOnboardEmployeeRow, BulkOnboardResult } from "@/types/hr";
+import { useReportingManagerPolicy } from "@/hooks/api/hr/reporting-manager-policy";
 
 import { BULK_ONBOARD_COLUMNS, MAX_ROWS } from "./bulk-onboard-columns";
-import { parseFile } from "./bulk-onboard-parse";
-import { validateAndMap, type PreviewRow } from "./bulk-onboard-template";
 import { downloadBulkOnboardTemplate } from "./bulk-onboard-download";
+import { buildBulkOnboardErrorReportRows } from "./bulk-onboard-error-report";
 import { BulkOnboardPreviewTable } from "./bulk-onboard-preview-table";
 import { BulkOnboardResultPanel } from "./bulk-onboard-result-panel";
+import { BulkOnboardUploadCard } from "./bulk-onboard-upload-card";
+import { useBulkOnboardFlow } from "./use-bulk-onboard-flow";
 
-type Step = "upload" | "preview" | "done";
-
-export { BULK_ONBOARD_COLUMNS };
+function plural(count: number, word: string) {
+  return `${count} ${word}${count === 1 ? "" : "s"}`;
+}
 
 export function BulkOnboardPanel() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: orgDepartments } = useOrgDepartments({ limit: 100, status: "ACTIVE" });
-  const bulkOnboard = useBulkOnboardEmployees();
-
-  const [step, setStep] = useState<Step>("upload");
-  const [fileName, setFileName] = useState("");
-  const [previewRows, setPreviewRows] = useState<PreviewRow[]>([]);
-  const [payloads, setPayloads] = useState<BulkOnboardEmployeeRow[]>([]);
-  const [result, setResult] = useState<BulkOnboardResult | null>(null);
-  const [parsing, setParsing] = useState(false);
+  const { data: policy } = useReportingManagerPolicy();
+  const secondaryCap = policy?.maxSecondaryManagersPerEmployee ?? 3;
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const deptNames = useMemo(() => {
     const names = new Set<string>();
@@ -57,289 +41,151 @@ export function BulkOnboardPanel() {
 
   const deptNameList = useMemo(() => {
     const labels = new Set<string>();
-    for (const d of orgDepartments?.data ?? []) {
-      if (d.name?.trim()) labels.add(d.name.trim());
-    }
+    for (const d of orgDepartments?.data ?? []) if (d.name?.trim()) labels.add(d.name.trim());
     return [...labels].sort((a, b) => a.localeCompare(b));
   }, [orgDepartments?.data]);
 
-  const validCount = useMemo(() => previewRows.filter((r) => r.valid).length, [previewRows]);
-  const invalidCount = previewRows.length - validCount;
+  const flow = useBulkOnboardFlow(deptNames, secondaryCap);
+  const heldBack = flow.rows.length - flow.committableCount;
 
-  const handleDownloadTemplate = useCallback(async () => {
+  async function handleDownloadTemplate() {
     try {
-      await downloadBulkOnboardTemplate(deptNameList);
+      await downloadBulkOnboardTemplate(deptNameList, policy?.maxSecondaryManagersPerEmployee ?? 0);
       toast.success("Template downloaded");
     } catch {
       toast.error("Could not download template");
     }
-  }, [deptNameList]);
+  }
 
-  const reset = useCallback(() => {
-    setStep("upload");
-    setFileName("");
-    setPreviewRows([]);
-    setPayloads([]);
-    setResult(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }, []);
+  function handleFile(file: File) {
+    void flow.handleFile(file);
+  }
 
-  const handleFile = useCallback(
-    async (file: File) => {
-      setParsing(true);
-      try {
-        const parsed = await parseFile(file);
-        if (parsed.length === 0) {
-          toast.error("No data rows found. Keep the header row and add employees below it.");
-          return;
-        }
-        if (parsed.length > MAX_ROWS) {
-          toast.error(`Too many rows (${parsed.length}). Maximum is ${MAX_ROWS} per upload.`);
-          return;
-        }
+  function handleOpenConfirm() {
+    setConfirmOpen(true);
+  }
 
-        const nextPreview: PreviewRow[] = [];
-        const nextPayloads: BulkOnboardEmployeeRow[] = [];
-        const seenEmails = new Set<string>();
-
-        parsed.forEach((row, i) => {
-          const { payload, preview } = validateAndMap(row, deptNames);
-          if (preview.email && seenEmails.has(preview.email)) {
-            preview.errors = [...preview.errors, "Duplicate email in this file"];
-            preview.valid = false;
-          } else if (preview.email) {
-            seenEmails.add(preview.email);
-          }
-          nextPreview.push({ ...preview, _idx: i + 1 });
-          if (payload && preview.valid) nextPayloads.push(payload);
-        });
-
-        setFileName(file.name);
-        setPreviewRows(nextPreview);
-        setPayloads(nextPayloads);
-        setStep("preview");
-      } catch {
-        toast.error("Failed to parse file. Use the template (.xlsx) or a CSV with the same headers.");
-      } finally {
-        setParsing(false);
-      }
-    },
-    [deptNames],
-  );
-
-  const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) void handleFile(file);
-      e.target.value = "";
-    },
-    [handleFile],
-  );
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      const file = e.dataTransfer.files[0];
-      if (file) void handleFile(file);
-    },
-    [handleFile],
-  );
-
-  const handleImport = useCallback(() => {
-    if (payloads.length === 0) {
-      toast.error("No valid rows to import. Fix errors in the file and re-upload.");
-      return;
-    }
-
-    bulkOnboard.mutate(payloads, {
-      onSuccess: (res) => {
-        setResult(res);
-        setStep("done");
-        if (res.created > 0 && res.failed === 0) {
-          toast.success(`Onboarded ${res.created} employee${res.created === 1 ? "" : "s"}`);
-        } else if (res.created > 0) {
-          toast.warning(`Onboarded ${res.created}, ${res.failed} failed`);
-        } else {
-          toast.error("No employees were created. Check the errors below.");
-        }
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }, [payloads, bulkOnboard]);
-
-  const handleDropZoneKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click();
-    },
-    [],
-  );
-
-  const handleDropZoneClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
+  function handleConfirm() {
+    setConfirmOpen(false);
+    flow.commitRows();
+  }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Users className="h-4 w-4 text-primary" aria-hidden="true" />
             Bulk onboard employees
           </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             Download the template, fill one row per employee, then upload to create up to {MAX_ROWS} accounts at once.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1.5 shrink-0"
-          onClick={() => void handleDownloadTemplate()}
-        >
-          <Download className="h-3.5 w-3.5" />
+        <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1.5" onClick={handleDownloadTemplate}>
+          <Download className="h-3.5 w-3.5" aria-hidden="true" />
           Download template
         </Button>
       </div>
 
       <Card className="border-border/70 shadow-sm">
         <CardContent className="p-3 sm:p-4">
-          <p className="text-dense font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            Required columns
-          </p>
+          <p className="mb-2 text-dense font-medium uppercase tracking-wide text-muted-foreground">Required columns</p>
           <div className="flex flex-wrap gap-1.5">
             {BULK_ONBOARD_COLUMNS.filter((c) => c.required).map((c) => (
-              <Badge key={c.key} variant="outline" className="text-micro h-5 font-mono font-normal">
+              <Badge key={c.key} variant="outline" className="h-5 font-mono text-micro font-normal">
                 {c.header}
               </Badge>
             ))}
           </div>
-          <p className="text-dense text-muted-foreground mt-2">
-            Optional: phone, gender, role, employeeId, joiningDate, dateOfBirth, taxId, monthlySalary, bank fields.
-            {deptNameList.length > 0 && (
-              <>
-                {" "}
-                Departments:{" "}
-                <span className="text-foreground/80">{deptNameList.join(", ")}</span>
-              </>
-            )}
+          <p className="mt-2 text-dense text-muted-foreground">
+            Reporting: primaryManagerEmail (blank = fallback policy), secondaryManagerEmail1–3, topLevelRoleReason,
+            effectiveFrom. Optional: phone, gender, role, employeeId, joiningDate, dateOfBirth, taxId, monthlySalary, bank fields.
+            {deptNameList.length > 0 ? <> Departments: <span className="text-foreground">{deptNameList.join(", ")}</span></> : null}
           </p>
         </CardContent>
       </Card>
 
-      {step === "upload" && (
-        <Card className="border-border/70 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Upload file</CardTitle>
-            <CardDescription className="text-xs">
-              CSV or Excel (.xlsx). Use the template headers for best results.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div
-              role="button"
-              tabIndex={0}
-              onKeyDown={handleDropZoneKeyDown}
-              onDrop={handleDrop}
-              onDragOver={(e) => e.preventDefault()}
-              onClick={handleDropZoneClick}
-              className={cn(
-                "border-2 border-dashed rounded-xl p-8 sm:p-10 text-center cursor-pointer transition-colors",
-                "hover:border-primary/50 hover:bg-primary/[0.02]",
-                parsing && "pointer-events-none opacity-70",
-              )}
-            >
-              {parsing ? (
-                <Loader2 className="h-9 w-9 mx-auto mb-3 text-primary animate-spin" />
-              ) : (
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                  <Upload className="h-5 w-5 text-primary" />
-                </div>
-              )}
-              <p className="text-sm font-medium">
-                {parsing ? "Parsing file…" : "Drag & drop or click to upload"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                .csv, .xlsx — max {MAX_ROWS} employees
-              </p>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,.xlsx,.xls"
-              className="hidden"
-              onChange={handleFileInput}
-              aria-label="Upload employee onboard file"
-            />
-            <div className="mt-3 flex items-start gap-2 text-dense text-muted-foreground">
-              <FileSpreadsheet className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-              <span>
-                Prefer downloading the template first so columns match. The sample row can be edited or deleted.
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {flow.step === "upload" ? <BulkOnboardUploadCard parsing={flow.parsing} onFile={handleFile} /> : null}
 
-      {step === "preview" && (
+      {flow.step === "preview" ? (
         <Card className="border-border/70 shadow-sm">
           <CardHeader className="pb-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
               <div>
-                <CardTitle className="text-sm">Preview · {fileName}</CardTitle>
-                <CardDescription className="text-xs mt-0.5">
-                  {previewRows.length} row{previewRows.length === 1 ? "" : "s"} ·{" "}
-                  <span className="text-status-success-ink">{validCount} ready</span>
-                  {invalidCount > 0 && (
-                    <>
-                      {" · "}
-                      <span className="text-destructive">{invalidCount} with errors</span>
-                    </>
-                  )}
+                <CardTitle className="text-sm">Preview · {flow.fileName}</CardTitle>
+                <CardDescription className="mt-0.5 text-xs" aria-live="polite">
+                  {flow.checking
+                    ? `Checking ${plural(flow.rows.length, "row")} against your organisation…`
+                    : `${plural(flow.rows.length, "row")} · ${flow.committableCount} ready to create${heldBack > 0 ? ` · ${heldBack} held back` : ""}`}
                 </CardDescription>
               </div>
-              <Button type="button" variant="ghost" size="sm" className="h-8 gap-1" onClick={reset}>
-                <X className="h-3.5 w-3.5" />
+              <Button type="button" variant="ghost" size="sm" className="h-8 gap-1" onClick={flow.reset}>
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
                 Clear
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {invalidCount > 0 && (
+          <CardContent className="flex flex-col gap-4">
+            {flow.checkFailed ? (
+              <div role="alert" className="flex flex-wrap items-center gap-2 rounded-lg border border-status-danger-rule bg-status-danger-surface px-3 py-2 text-xs text-status-danger-ink">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="flex-1">The rows could not be checked, so nothing can be created yet.</span>
+                <Button type="button" variant="outline" size="sm" className="h-7 gap-1" onClick={flow.retryPreview}>
+                  <RefreshCw className="h-3 w-3" aria-hidden="true" />
+                  Check again
+                </Button>
+              </div>
+            ) : heldBack > 0 && !flow.checking ? (
               <div className="flex items-start gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 <span>
-                  Rows with errors will be skipped. Fix them in your file and re-upload, or continue to import only the ready rows.
+                  Rows marked Error or Skipped will not be created. A row whose manager is another row that fails is
+                  skipped with that row named. Warnings are created as shown.
                 </span>
               </div>
-            )}
+            ) : null}
 
-            <BulkOnboardPreviewTable rows={previewRows} />
+            <BulkOnboardPreviewTable rows={flow.rows} />
 
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 pt-1">
-              <Button type="button" variant="outline" size="sm" className="h-8" onClick={reset}>
+            <div className="flex flex-col-reverse justify-between gap-2 pt-1 sm:flex-row sm:items-center">
+              <Button type="button" variant="outline" size="sm" className="h-8" onClick={flow.reset}>
                 Back
               </Button>
               <LoadingButton
                 type="button"
                 size="sm"
-                className="h-8 gap-1.5 min-w-[140px]"
-                disabled={payloads.length === 0}
-                isPending={bulkOnboard.isPending}
-                loadingText="Onboarding…"
-                onClick={handleImport}
+                className="h-8 gap-1.5"
+                disabled={flow.committableCount === 0 || flow.checking}
+                isPending={flow.committing}
+                loadingText="Creating…"
+                onClick={handleOpenConfirm}
               >
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Onboard {payloads.length} employee{payloads.length === 1 ? "" : "s"}
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Create {plural(flow.committableCount, "employee")}
               </LoadingButton>
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
-      {step === "done" && result && (
-        <BulkOnboardResultPanel result={result} onReset={reset} />
-      )}
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Create ${plural(flow.committableCount, "employee")}?`}
+        description={`Only rows marked Ready or Warning are created, each with the primary manager shown in the preview.${heldBack > 0 ? ` ${plural(heldBack, "row")} will not be created.` : ""}`}
+        confirmLabel={`Create ${plural(flow.committableCount, "employee")}`}
+        isPending={flow.committing}
+        onConfirm={handleConfirm}
+      />
+
+      {flow.step === "done" && flow.commit ? (
+        <BulkOnboardResultPanel
+          commit={flow.commit}
+          report={buildBulkOnboardErrorReportRows(flow.rows, flow.commit)}
+          onReset={flow.reset}
+        />
+      ) : null}
     </div>
   );
 }

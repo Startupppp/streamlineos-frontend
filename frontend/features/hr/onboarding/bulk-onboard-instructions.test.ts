@@ -18,18 +18,28 @@ describe("bulk onboard template instructions", () => {
     expect(undocumented).toEqual([]);
   });
 
-  it("says a manager may be another row of the same file", () => {
-    const row = buildBulkOnboardInstructionRows([]).find(
-      (entry) => entry.field === "reportingManagerEmail",
-    );
+  it("says a manager may be another row of the same file, and blank means fallback", () => {
+    const row = buildBulkOnboardInstructionRows([]).find((entry) => entry.field === "primaryManagerEmail");
     expect(row?.notes).toMatch(/same file/i);
+    expect(row?.notes).toMatch(/fallback policy/i);
+    expect(row?.notes).toMatch(/reportingManagerEmail is still read/i);
   });
 
-  it("says the two manager fields are alternatives, not both", () => {
-    const row = buildBulkOnboardInstructionRows([]).find(
-      (entry) => entry.field === "topLevelRoleReason",
-    );
+  it("says top-level and manager columns are alternatives, not both", () => {
+    const row = buildBulkOnboardInstructionRows([]).find((entry) => entry.field === "topLevelRoleReason");
     expect(row?.notes).toMatch(/never both/i);
+  });
+
+  it("gives selected, fallback and top-level examples", () => {
+    const fields = buildBulkOnboardInstructionRows([]).map((entry) => entry.field);
+    expect(fields).toEqual(expect.arrayContaining(["Example: selected", "Example: fallback", "Example: top-level"]));
+  });
+
+  it("states the organisation's secondary-manager cap per slot", () => {
+    const rows = buildBulkOnboardInstructionRows([], 1);
+    expect(rows.find((entry) => entry.field === "secondaryManagerEmail1")?.notes).toMatch(/dotted-line/i);
+    expect(rows.find((entry) => entry.field === "secondaryManagerEmail2")?.notes).toMatch(/at most 1 secondary manager/);
+    expect(buildBulkOnboardInstructionRows([], 0).find((entry) => entry.field === "secondaryManagerEmail1")?.notes).toMatch(/Not used/);
   });
 
   it("names the org's own departments when it knows them", () => {

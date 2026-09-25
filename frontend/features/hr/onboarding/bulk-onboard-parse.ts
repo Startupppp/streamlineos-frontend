@@ -1,4 +1,4 @@
-import { normalizeHeader, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
+import { CONFLICT_KEY, normalizeHeader, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
 
 function formatLocalDate(value: Date): string {
   const y = value.getFullYear();
@@ -44,10 +44,19 @@ function mapRawRows(
 
   return data.map((row) => {
     const out: ParsedRow = {};
+    const conflicts = new Set<string>();
     for (const [header, value] of Object.entries(row)) {
       const key = keyMap.get(header) ?? normalizeHeader(header);
-      if (key) out[key] = value ?? "";
+      if (!key) continue;
+      const next = (value ?? "").trim();
+      const previous = (out[key] ?? "").trim();
+      // Two headers for one column (canonical + legacy alias): a blank never
+      // erases a value, and two different values are refused, not guessed.
+      if (previous && next && previous.toLowerCase() !== next.toLowerCase()) conflicts.add(key);
+      if (!previous || next) out[key] = value ?? "";
+      if (previous && !next) out[key] = previous;
     }
+    if (conflicts.size > 0) out[CONFLICT_KEY] = [...conflicts].join(",");
     return out;
   });
 }

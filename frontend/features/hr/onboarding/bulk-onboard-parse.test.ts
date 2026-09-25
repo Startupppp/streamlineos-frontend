@@ -1,3 +1,4 @@
+import { CONFLICT_KEY } from "./bulk-onboard-columns";
 import { parseFile } from "./bulk-onboard-parse";
 
 function csvFile(text: string): File {
@@ -14,8 +15,23 @@ describe("parseFile (CSV)", () => {
     );
 
     expect(rows).toEqual([
-      { firstName: "Priya", email: "priya@example.com", reportingManagerEmail: "boss@example.com" },
+      { firstName: "Priya", email: "priya@example.com", primaryManagerEmail: "boss@example.com" },
     ]);
+  });
+
+  it("keeps a filled manager column when a legacy duplicate header is blank", async () => {
+    const rows = await parseFile(csvFile("email,primaryManagerEmail,reportsTo\na@example.com,boss@example.com,\n"));
+    expect(rows).toEqual([{ email: "a@example.com", primaryManagerEmail: "boss@example.com" }]);
+  });
+
+  it("flags two headers that give the primary manager different values", async () => {
+    const rows = await parseFile(csvFile("email,primaryManagerEmail,reportingManagerEmail\na@example.com,one@example.com,two@example.com\n"));
+    expect(rows[0]).toMatchObject({ [CONFLICT_KEY]: "primaryManagerEmail" });
+  });
+
+  it("does not flag the same value under both headers", async () => {
+    const rows = await parseFile(csvFile("email,primaryManagerEmail,managerEmail\na@example.com,Boss@example.com,boss@example.com\n"));
+    expect(rows[0]).not.toHaveProperty(CONFLICT_KEY);
   });
 
   it("skips blank lines", async () => {
@@ -41,7 +57,7 @@ describe("parseFile (xlsx)", () => {
     Object.defineProperty(file, "arrayBuffer", { value: () => Promise.resolve(buffer) });
 
     expect(await parseFile(file)).toEqual([
-      { firstName: "Priya", joiningDate: "2026-04-01", monthlySalary: "75000", reportingManagerEmail: "boss@example.com" },
+      { firstName: "Priya", joiningDate: "2026-04-01", monthlySalary: "75000", primaryManagerEmail: "boss@example.com" },
     ]);
   });
 });
