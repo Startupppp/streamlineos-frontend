@@ -181,6 +181,8 @@ describe("a11y — HR skills matrix table semantics", () => {
 });
 
 const HR_FEATURES = path.resolve(__dirname, "..", "hr");
+// Recruitment OS left features/hr on 2026-09-25; its sheets keep the same rule.
+const RECRUITMENT_FEATURES = path.resolve(__dirname, "..", "recruitment");
 
 function tsxFiles(dir: string, out: string[] = []): string[] {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -197,7 +199,7 @@ function tsxFiles(dir: string, out: string[] = []): string[] {
  */
 function sheetClassNames(): { file: string; line: number; className: string }[] {
   const found: { file: string; line: number; className: string }[] = [];
-  for (const file of tsxFiles(HR_FEATURES)) {
+  for (const file of [...tsxFiles(HR_FEATURES), ...tsxFiles(RECRUITMENT_FEATURES)]) {
     const src = fs.readFileSync(file, "utf8");
     const re = /<SheetContent\b([\s\S]*?)>/g;
     let match: RegExpExecArray | null;

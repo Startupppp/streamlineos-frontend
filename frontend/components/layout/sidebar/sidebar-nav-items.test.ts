@@ -68,7 +68,7 @@ describe("Home employee navigation", () => {
         "/me/recruitment",
       ]),
     );
-    expect(hrefs).not.toContain("/hr/recruitment/interviews");
+    expect(hrefs).not.toContain("/recruitment/interviews");
     expect(hrefs).not.toContain("/build/my-work");
     expect(hrefs).not.toContain("/build");
     expect(routes.find((route) => route.href === "/me/documents")?.module).toBeUndefined();

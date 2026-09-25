@@ -20,7 +20,6 @@ import {
 } from "@/features/hr/setup";
 import { HrHubQueues } from "./hr-hub-queues";
 import { HrHubMetrics } from "./hr-hub-metrics";
-import { HrHubRecruitment } from "./hr-hub-recruitment";
 import { HrHubToday } from "./hr-hub-today";
 import { HrHubActivity } from "./hr-hub-activity";
 
@@ -36,6 +35,15 @@ const ALL_QUICK_ACTIONS = [
   },
 ] as const;
 
+// The hub snapshot still reports hiring capabilities, but no HR hub panel reads
+// them: recruitment lives in Recruitment OS. They must not count as a panel.
+const RECRUITMENT_CAPABILITIES = new Set([
+  "canInterviews",
+  "canOffers",
+  "canRequisitions",
+  "canRequisitionsManage",
+]);
+
 export function HrHubPage() {
   const hub = useHrHubSnapshot();
   const setupSignals = useHrSetupSignals();
@@ -49,7 +57,9 @@ export function HrHubPage() {
     [access],
   );
 
-  const hasAnyPanel = Object.values(access).some(Boolean);
+  const hasAnyPanel = Object.entries(access).some(
+    ([capability, granted]) => granted && !RECRUITMENT_CAPABILITIES.has(capability),
+  );
 
   return (
     <PageWrapper
@@ -137,12 +147,6 @@ export function HrHubPage() {
           ) : null}
 
           <HrHubQueues
-            access={access}
-            snapshot={hub.data}
-            isLoading={hub.isLoading}
-            onRetry={handleRetry}
-          />
-          <HrHubRecruitment
             access={access}
             snapshot={hub.data}
             isLoading={hub.isLoading}

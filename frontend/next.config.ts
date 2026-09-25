@@ -87,6 +87,17 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
 
+    // Recruitment OS moved out of HRMS. Old links (bookmarks, sent emails) keep working.
+    {
+      source: "/hr/recruitment",
+      destination: "/recruitment",
+      permanent: true,
+    },
+    {
+      source: "/hr/recruitment/:path*",
+      destination: "/recruitment/:path*",
+      permanent: true,
+    },
     {
       source: "/hr/configuration",
       destination: "/hr/settings",

@@ -1,7 +1,5 @@
-// Moved 2026-09-25 [V-044 / V-042]: /hr/approvals now requires
-// ["hr:workflows:approve", "hr:leaves:approve"] rather than the workflow key
-// alone. The page is the single HR approvals queue and lists leave requests,
-// which route to a holder of hr:leaves:approve — an approver who is nobody's
-// manager was sent to /access-denied and never reached their own queue.
+// Moved 2026-09-25: Recruitment OS left HRMS. Its sixteen nav hrefs moved from
+// /hr/recruitment/** to /recruitment/**; labels, order and permission keys are
+// unchanged.
 export const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "9ed908e4a507fd22105f7f6f0a3eef3c215f58364a2af7a6ba44dd671ea8dcb6";
+  "5029ab6f67b0f5cca8bfc33b0c7384d351848caf93d3aa83152598915f4ee52a";

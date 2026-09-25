@@ -130,12 +130,6 @@ const DEFAULTS: Record<string, unknown> = {
   "/hr/analytics-plus/performance-distribution": { distribution: [] },
   "/hr/analytics-plus/compliance-gaps": { openCases: [] },
   "/hr/analytics-plus/payroll-cost": { monthly: [] },
-  "/hr/recruitment/stats": {
-    openJobs: 2,
-    totalCandidates: 0,
-    interviewsScheduled: 0,
-    offersExtended: 0,
-  },
   "/me/org-display": { currency: "INR", locale: "en-IN" },
 };
 

@@ -17,6 +17,8 @@ describe("a pathname resolves to a product through the navigation model", () => 
     expect(getProductFromPathname("/build/all-work")).toBe("build");
     expect(getProductFromPathname("/hr/employees/person-1")).toBe("hrms");
     expect(getProductFromPathname("/payroll/runs/42")).toBe("payroll");
+    expect(getProductFromPathname("/recruitment/candidates/c-1")).toBe("recruitment");
+    expect(getProductFromPathname("/recruitment")).toBe("recruitment");
     expect(getProductFromPathname("/inventory/stock/movements")).toBe(
       "inventory",
     );

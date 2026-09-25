@@ -6,7 +6,7 @@ export default function BackgroundVerificationLoading() {
   return (
     <PageWrapper
       title="Background Verification"
-      subtitle="Initiate, track employee background checks, and view candidate compliance"
+      subtitle="Initiate and track employee background checks"
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <div className="flex flex-col flex-1 min-h-0 gap-4">

@@ -72,17 +72,18 @@ describe("HRMS static route smoke list", () => {
         ),
     );
     expect(unaccounted).toEqual([]);
-    expect(hrHrefs.some((href) => href.startsWith("/hr/recruitment"))).toBe(true);
+    // Recruitment OS is its own product under /recruitment, never an HRMS route.
+    expect(hrHrefs.some((href) => href.startsWith("/hr/recruitment"))).toBe(false);
   });
 
-  it("excludes recruitment, payroll and dynamic segments by rule, not by hand", () => {
-    expect(isHrmsStaticSmokeRoute("/hr/recruitment")).toBe(false);
-    expect(isHrmsStaticSmokeRoute("/hr/recruitment/jobs")).toBe(false);
+  it("excludes Recruitment OS, payroll and dynamic segments by rule, not by hand", () => {
+    expect(isHrmsStaticSmokeRoute("/recruitment")).toBe(false);
+    expect(isHrmsStaticSmokeRoute("/recruitment/jobs")).toBe(false);
     expect(isHrmsStaticSmokeRoute("/payroll/runs")).toBe(false);
     expect(isHrmsStaticSmokeRoute("/hr/employees/[employeeId]")).toBe(false);
     expect(isHrmsStaticSmokeRoute("/hr/employees")).toBe(true);
     expect(isHrmsStaticSmokeRoute("/hr")).toBe(true);
-    expect(HRMS_STATIC_ROUTES.some((route) => route.startsWith("/hr/recruitment"))).toBe(false);
+    expect(HRMS_STATIC_ROUTES.some((route) => route.startsWith("/recruitment"))).toBe(false);
     expect(HRMS_STATIC_ROUTES.some((route) => route.startsWith("/payroll"))).toBe(false);
   });
 });
