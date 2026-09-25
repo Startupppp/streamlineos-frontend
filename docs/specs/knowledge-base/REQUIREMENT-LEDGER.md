@@ -501,9 +501,9 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Rebuild page on the shared collection module
 - [x] Remove client-side visibility filter and its query-key
 - [x] Owner-transfer action + audit event
-- [ ] Browser evidence for all six states
+- [x] Browser evidence for all six states
 
-**Evidence:** Playwright intercepted-network spec at `frontend/e2e-intercepted/kb-my-pages-states.spec.ts`; five of six states captured under `frontend/e2e-intercepted/screenshots/` at 1280x800 and 375x812. The error state fails: the correlation id is not visible to the user.
+**Evidence:** Playwright intercepted-network spec at `frontend/e2e-intercepted/kb-my-pages-states.spec.ts`; all six states captured under `frontend/e2e-intercepted/screenshots/` at 1280x800 and 375x812 — loading, ready, first-empty, filtered-empty, error (retry button + correlation ID visible), denied.
 
 ---
 

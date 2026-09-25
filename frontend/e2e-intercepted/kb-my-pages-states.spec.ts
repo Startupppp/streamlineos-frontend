@@ -1,38 +1,3 @@
-/**
- * S02 — KB "My pages" surface — browser state evidence.
- *
- * REQUIREMENT-LEDGER.md line 504 (slice S02) requires browser evidence for six
- * states: loading, ready, first empty, filtered empty, error+retry+requestId,
- * denied.
- *
- * PRODUCTION ISOLATION
- * All six tests run against the real Next.js app but with every outbound network
- * request intercepted:
- *
- *   • page.route('http://localhost:1500/**') catches every browser-originated
- *     backend call and serves fixture JSON. The real backend at :1500 never
- *     receives a connection from the browser.
- *
- *   • page.route on the auth session endpoint catches the browser-initiated
- *     NextAuth session call and returns a synthetic session including a fake
- *     backendJwt. The Next.js server's /api/auth/session handler never runs for
- *     these requests.
- *
- *   • The playwright-intercepted.config.ts sets API_INTERNAL_URL=http://localhost:9999
- *     so every server-side Next.js → backend call (fetchSessionData,
- *     exchangeSessionForBackendJwt) fails with ECONNREFUSED and the auth
- *     callbacks fall back to JWT token claims. Zero server-side production reads.
- *
- * This suite intentionally lives in e2e-intercepted/ and is run with
- * playwright-intercepted.config.ts, NOT playwright.config.ts.  The two configs
- * share no testDir, no port, and no dist directory, so the production-hitting
- * e2e suite cannot accidentally pick up these specs or vice-versa.
- *
- * SCREENSHOTS
- * Each state is captured at desktop (1280×800) and mobile (375×812) under
- * e2e-intercepted/screenshots/.
- */
-
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { test, expect, type Page, type BrowserContext } from "@playwright/test";
@@ -574,7 +539,7 @@ test.describe("S02 – KB My pages — six browser states", () => {
       timeout: STATE_TIMEOUT,
     });
 
-    const errorAlert = page.getByRole("alert");
+    const errorAlert = page.getByRole("alert").filter({ hasText: /Something went wrong/i });
     await expect(errorAlert, "error alert region must be present").toBeVisible({
       timeout: STATE_TIMEOUT,
     });
