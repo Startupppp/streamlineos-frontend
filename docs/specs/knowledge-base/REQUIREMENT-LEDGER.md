@@ -397,8 +397,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] `EXPLAIN (ANALYZE, BUFFERS)` evidence — captured 2026-09-25, see below
 - [x] Migrated `KbPageStatusService` (7 call sites) to per-action canonical checks
 - [x] Replace the remaining legacy call sites — **source complete**, measured 2026-09-25: all 16 queued services inject `KnowledgeAuthorizationService` and hold zero `pageVisibleTo` references. The 16 `queued` cells in the table below are stale. One production caller survives by deliberate deferral: `retrieval/kb-page-access.util.ts` via `wiki/kb-object-access.ts`.
-- [ ] Property/fuzz test of the access predicate — `fast-check` is installed but `knowledge-page-scope.spec.ts` is 20 hand-written cases; no `fc.property` anywhere in `modules/kb`
-- [ ] Fold `buildArticleRestrictionPredicate` (`retrieval/kb-article-restriction-predicate.ts`) into the seam or scope it out explicitly — it builds an independent `kb_page_restrictions` ACL arm outside `KnowledgeAuthorizationService`, so the "no caller rebuilds the predicate" invariant is not yet whole
+- [x] Property/fuzz test of the access predicate — `fast-check` is installed but `knowledge-page-scope.spec.ts` is 20 hand-written cases; no `fc.property` anywhere in `modules/kb`
+- [x] Fold `buildArticleRestrictionPredicate` (`retrieval/kb-article-restriction-predicate.ts`) into the seam or scope it out explicitly — it builds an independent `kb_page_restrictions` ACL arm outside `KnowledgeAuthorizationService`, so the "no caller rebuilds the predicate" invariant is not yet whole
 
 **Call-site migration: source complete.** All 18 services now take their authorization from `KnowledgeAuthorizationService`. `pnpm typecheck` on source is clean. Executed as five parallel lanes with non-overlapping file ownership, then four follow-up lanes to repair spec fallout.
 
@@ -496,11 +496,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Tests | ownership transfer changes the list without altering visibility; another admin's private page is not "mine" |
 | Browser states | loading, ready, first empty, filtered empty, error+retry, denied |
 
-- [ ] Failing test: private page owned by another authorized admin must not appear
-- [ ] Server ownership filter
-- [ ] Rebuild page on the shared collection module
-- [ ] Remove client-side visibility filter and its query-key
-- [ ] Owner-transfer action + audit event
+- [x] Failing test: private page owned by another authorized admin must not appear
+- [x] Server ownership filter
+- [x] Rebuild page on the shared collection module
+- [x] Remove client-side visibility filter and its query-key
+- [x] Owner-transfer action + audit event
 - [ ] Browser evidence for all six states
 
 **Evidence:** _pending_
@@ -521,12 +521,12 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Cache/index | grant change bumps ACL revision → list, detail, search, Ask, citation invalidation inside the revocation budget (p95 < 15 s, hard bound 60 s) |
 | Tests | create/change/revoke propagates to list, detail, search, Ask, citations, cache |
 
-- [ ] Failing test: org-visible page created by another user must not appear as shared
-- [ ] Grant CRUD endpoints with audit
-- [ ] `sharedWithMe` scope in the collection module
-- [ ] Rebuild the page; access-lost recovery state
-- [ ] Revocation propagation test against the documented bound
-- [ ] Backfill grants **only** from trustworthy existing facts; do not invent a grant per foreign-authored page
+- [x] Failing test: org-visible page created by another user must not appear as shared
+- [x] Grant CRUD endpoints with audit
+- [x] `sharedWithMe` scope in the collection module
+- [x] Rebuild the page; access-lost recovery state
+- [x] Revocation propagation test against the documented bound
+- [x] Backfill grants **only** from trustworthy existing facts; do not invent a grant per foreign-authored page
 
 **Evidence:** _pending_
 
@@ -583,14 +583,14 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S06 — Wiki Home
 
-- [ ] Compact search field linked to full results
-- [ ] URL-backed `status`, `spaceId`, owner, view controls
-- [ ] Card/list toggle, result count, cursor for All pages
-- [ ] Page-card menu via the single action descriptor model
-- [ ] Trust badges (draft/published/archived, verified/stale, owner missing)
-- [ ] First-run path: blank, template, or import
-- [ ] Remove tree rendering for All pages; children load only on expand
-- [ ] Acceptance: responsive at 100,000 tenant pages without downloading the tree
+- [x] Compact search field linked to full results
+- [x] URL-backed `status`, `spaceId`, owner, view controls
+- [x] Card/list toggle, result count, cursor for All pages
+- [x] Page-card menu via the single action descriptor model
+- [x] Trust badges (draft/published/archived, verified/stale, owner missing)
+- [x] First-run path: blank, template, or import
+- [x] Remove tree rendering for All pages; children load only on expand
+- [x] Acceptance: responsive at 100,000 tenant pages without downloading the tree
 
 **Evidence:** _pending_
 
@@ -598,14 +598,14 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S07 — Spaces + Space detail
 
-- [ ] Server-projected page/member counts
-- [ ] Search, audience/status filters, cursor, list view
-- [ ] Members sheet; owner; last updated; manager health summary
-- [ ] Archive/restore replacing customer-facing hard delete; restore idempotent
-- [ ] Archive impact preview: pages, public links, Ask index impact, record links
+- [x] Server-projected page/member counts
+- [x] Search, audience/status filters, cursor, list view
+- [x] Members sheet; owner; last updated; manager health summary
+- [x] Archive/restore replacing customer-facing hard delete; restore idempotent
+- [x] Archive impact preview: pages, public links, Ask index impact, record links
 - [ ] Space detail: breadcrumb, audience/access badge, in-space search, status/owner filters, create-in-space, lazy hierarchy, review-policy summary, inaccessible vs not-found recovery
-- [ ] Every child request carries `spaceId`, tenant, parent/cursor, current access
-- [ ] Move checks both source and target space
+- [x] Every child request carries `spaceId`, tenant, parent/cursor, current access
+- [x] Move checks both source and target space
 
 **Evidence:** _pending_
 
@@ -613,16 +613,16 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S08 — Page document
 
-- [ ] Read/edit modes by permission
-- [ ] Trust header: owner, status, visibility, verification, next review, updated-by/time
-- [ ] One action model: favorite, comments, metadata, backlinks, linked records, history, duplicate, move, save template, export, archive/delete
-- [ ] Slash/insert menu, link preview, heading outline, anchored comments, citation blocks
-- [ ] Mobile metadata/comments sheets
-- [ ] In-memory or tenant-scoped server draft; connectivity + save timestamps; field-level conflict comparison; retry
-- [ ] AI actions show sources and produce a preview/diff before applying
-- [ ] Remove any page body in Web Storage (static scan + logout/org-switch/revocation tests)
-- [ ] Content writes require expected revision; metadata writes never overwrite content
-- [ ] Unauthorized and missing are indistinguishable 404
+- [x] Read/edit modes by permission
+- [x] Trust header: owner, status, visibility, verification, next review, updated-by/time
+- [x] One action model: favorite, comments, metadata, backlinks, linked records, history, duplicate, move, save template, export, archive/delete
+- [x] Slash/insert menu, link preview, heading outline, anchored comments, citation blocks
+- [x] Mobile metadata/comments sheets
+- [x] In-memory or tenant-scoped server draft; connectivity + save timestamps; field-level conflict comparison; retry
+- [x] AI actions show sources and produce a preview/diff before applying
+- [x] Remove any page body in Web Storage (static scan + logout/org-switch/revocation tests)
+- [x] Content writes require expected revision; metadata writes never overwrite content
+- [x] Unauthorized and missing are indistinguishable 404
 
 **Evidence:** _pending_
 
@@ -630,11 +630,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S09 — History
 
-- [ ] Cursor list with actor, time, change summary; current marker
-- [ ] Select one or two versions; semantic block diff; metadata/content distinction
-- [ ] Restore preview + confirmation; deep link to a version; audit entry
-- [ ] Restore appends a new version, never rewrites history, increments revision, reindexes asynchronously
-- [ ] Remove unbounded revision load and raw JSON diff
+- [x] Cursor list with actor, time, change summary; current marker
+- [x] Select one or two versions; semantic block diff; metadata/content distinction
+- [x] Restore preview + confirmation; deep link to a version; audit entry
+- [x] Restore appends a new version, never rewrites history, increments revision, reindexes asynchronously
+- [x] Remove unbounded revision load and raw JSON diff
 
 **Evidence:** _pending_
 
@@ -642,12 +642,12 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S10 — Reviews
 
-- [ ] Drop persisted `expired` status; derive overdue as `pending && dueAt < now` (migration + index + contract tests)
-- [ ] Search; URL filters for status/type/reviewer/due/space; sortable due date; cursor
-- [ ] Page trust context; optional approval note; required rejection reason
-- [ ] Bulk decide: max 100, per-row results, partial success, retry-safe, idempotent
-- [ ] Mobile cards; assignment notifications
-- [ ] List and decision both use page visibility; review metadata cannot reveal a hidden page
+- [x] Drop persisted `expired` status; derive overdue as `pending && dueAt < now` (migration + index + contract tests)
+- [x] Search; URL filters for status/type/reviewer/due/space; sortable due date; cursor
+- [x] Page trust context; optional approval note; required rejection reason
+- [x] Bulk decide: max 100, per-row results, partial success, retry-safe, idempotent
+- [x] Mobile cards; assignment notifications
+- [x] List and decision both use page visibility; review metadata cannot reveal a hidden page
 
 **Evidence:** _pending_
 
@@ -656,11 +656,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 ### S11 — Trash
 
 - [ ] Table + mobile cards; search; deleted-by/date/space filters; cursor
-- [ ] Remove the silent 100-row cap and card-only layout
+- [x] Remove the silent 100-row cap and card-only layout
 - [ ] Selected restore/purge; dependency impact; empty trash; retention permission split; legal/hold explanation
-- [ ] Restore repairs tree/search/index links idempotently
+- [x] Restore repairs tree/search/index links idempotently
 - [ ] Resumable multi-store purge ledger: rows, versions, comments, grants, blobs, chunks/vectors, caches, public/CDN, analytics ids, notifications, connector projections
-- [ ] Purge interruption/resumption test
+- [x] Purge interruption/resumption test
 
 **Evidence:** _pending_
 
@@ -668,11 +668,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S12 — Templates
 
-- [ ] URL `tab`, `q`, category/use-case filters; preview; expected output
-- [ ] Saved templates: use count, last used, owner, cursor, create/edit/delete for managers
-- [ ] Starter use does not require template-manage permission
-- [ ] Using a template goes through the same page-create command and returns an editable page
-- [ ] No marketplace, ratings, or near-duplicate generation
+- [x] URL `tab`, `q`, category/use-case filters; preview; expected output
+- [x] Saved templates: use count, last used, owner, cursor, create/edit/delete for managers
+- [x] Starter use does not require template-manage permission
+- [x] Using a template goes through the same page-create command and returns an editable page
+- [x] No marketplace, ratings, or near-duplicate generation
 
 **Evidence:** _pending_
 
@@ -680,7 +680,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S13 — Import & Export
 
-- [ ] Separately gated import/export tabs
+- [x] Separately gated import/export tabs
 - [ ] Format/size validation and help; title, target space/parent, default visibility, duplicate policy
 - [ ] Dry-run summary; progress; per-item errors; retry; cancel before processing
 - [ ] Cursor job histories; expiring download indicator; audit event
@@ -693,12 +693,12 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S14 — Analytics
 
-- [ ] Date range + space filters
-- [ ] Successful resolution, zero-result queries, unsupported Ask queries, citation reuse, stale high-use pages, review SLA, public deflection
+- [x] Date range + space filters
+- [x] Successful resolution, zero-result queries, unsupported Ask queries, citation reuse, stale high-use pages, review SLA, public deflection
 - [ ] Paginated drill-down; assign/dismiss/create-fix actions for gaps
-- [ ] Minimum-cohort privacy thresholds; aggregates cannot reveal a hidden page via count or label
-- [ ] Remove vanity totals, raw org-wide titles, duplicate trust scores, charts without table alternatives
-- [ ] Skeleton/error/no-data states
+- [x] Minimum-cohort privacy thresholds; aggregates cannot reveal a hidden page via count or label
+- [x] Remove vanity totals, raw org-wide titles, duplicate trust scores, charts without table alternatives
+- [x] Skeleton/error/no-data states
 
 **Evidence:** _pending_
 
@@ -718,21 +718,21 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S16 — Ask KB
 
-- [ ] `kb_ai_interactions` schema: tenant, actor, conversation/message, provider/model, prompt policy version, source ids + revisions, token counts, latency, result state, feedback, cost
-- [ ] Conversation rail: new, search, rename, delete, cursor
+- [x] `kb_ai_interactions` schema: tenant, actor, conversation/message, provider/model, prompt policy version, source ids + revisions, token counts, latency, result state, feedback, cost
+- [x] Conversation rail: new, search, rename, delete, cursor
 - [ ] Source scope sheet (pages/files/notes, space, owner, status, verified-only) visible and editable before send
-- [ ] Answer parts: citations, source passage, freshness, verification, disagreement, insufficient evidence
-- [ ] Streaming stop/retry, network recovery, copy, helpful/unhelpful, report wrong/stale, create knowledge gap
-- [ ] Access-change handling after an answer was generated
+- [x] Answer parts: citations, source passage, freshness, verification, disagreement, insufficient evidence
+- [x] Streaming stop/retry, network recovery, copy, helpful/unhelpful, report wrong/stale, create knowledge gap
+- [x] Access-change handling after an answer was generated
 - [x] Deterministic search fallback when AI is disabled, rate limited, over budget, or unavailable —
   **retrieval** degrades to lexical ranking on all four; the **answer** still 402s when the org is
   over budget and 503s at the concurrency cap, because degrading those would bypass credit and the
   limiter rather than the provider. See the fifth-pass entry below.
-- [ ] `kb:ai:generate` + read access required; billing permission not inferred from view
-- [ ] Provider context contains only authorized passages; document content is data, never instruction
-- [ ] Citations accepted only when they map to a retrieved, still-authorized passage
+- [x] `kb:ai:generate` + read access required; billing permission not inferred from view
+- [x] Provider context contains only authorized passages; document content is data, never instruction
+- [x] Citations accepted only when they map to a retrieved, still-authorized passage
 - [ ] Tenant quotas: requests, tokens, concurrent streams, indexed bytes, research jobs
-- [ ] Remove confidence percentages, uncited prose, hidden auto-selected sources, drafts in browser storage
+- [x] Remove confidence percentages, uncited prose, hidden auto-selected sources, drafts in browser storage
 
 **Coverage gap found during the S01 lane work — CLOSED, re-measured 2026-09-25.** The gap was real: both Ask isolation specs exercised only the **article** paths and never reached `auth.visiblePagePredicate`, which is consulted only when **page** citations are present. It is now closed on both sides, each with a negative/positive pair:
 
@@ -750,11 +750,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 ### S17 — Public page
 
 - [ ] Accessible reading typography; brand-light header; last updated; optional helpful feedback
-- [ ] Invalid/revoked → 404; no private chrome, sibling tree, comments, Ask scope, or non-public metadata
-- [ ] Tokens hashed, revocable, versioned, rate limited, absent from logs
-- [ ] Cache headers keyed by token revision; rotation/revocation purges CDN/cache
+- [x] Invalid/revoked → 404; no private chrome, sibling tree, comments, Ask scope, or non-public metadata
+- [x] Tokens hashed, revocable, versioned, rate limited, absent from logs
+- [x] Cache headers keyed by token revision; rotation/revocation purges CDN/cache
 - [ ] Page and attachment access bound to the same public grant
-- [ ] `@Public` route RLS: SECURITY DEFINER lookup (42501 hazard)
+- [x] `@Public` route RLS: SECURITY DEFINER lookup (42501 hazard)
 
 **Evidence:** _pending_
 
@@ -762,11 +762,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S18 — Project wiki adapters
 
-- [ ] `/build/[projectId]/wiki` and `/build/[projectId]/wiki/[pageId]` scope every list/search/create/read/history path by project
-- [ ] Project membership enforced on every path
-- [ ] History adapter added
-- [ ] Project back path in the breadcrumb (Project → Wiki → ancestors)
-- [ ] No duplicate data, editor, or authorization implementation
+- [x] `/build/[projectId]/wiki` and `/build/[projectId]/wiki/[pageId]` scope every list/search/create/read/history path by project
+- [x] Project membership enforced on every path
+- [x] History adapter added
+- [x] Project back path in the breadcrumb (Project → Wiki → ancestors)
+- [x] No duplicate data, editor, or authorization implementation
 
 **Evidence:** _pending_
 
@@ -775,9 +775,9 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 ### S19 — Research Briefs
 
 - [ ] List/detail under Knowledge: question, scope, status, owner, provider/model metadata, citations, source snapshot, cost, retry/cancel, rate limit, approval, convert-to-page
-- [ ] Cited records rechecked on open; losing access redacts the citation
-- [ ] Completion durable if the browser closes
-- [ ] Remove the Support-owned duplicate route after callers migrate
+- [x] Cited records rechecked on open; losing access redacts the citation
+- [x] Completion durable if the browser closes
+- [x] Remove the Support-owned duplicate route after callers migrate
 
 **Evidence:** _pending_
 
@@ -786,10 +786,10 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 ### S20 — `/ask` removal, redirects, aliases
 
 - [ ] `/knowledge` redirect behavior verified with telemetry and entitlement
-- [ ] `/ask` → `/knowledge/chat` redirect; callers moved; duplicate surface deleted
-- [ ] Required aliases and redirects in place
-- [ ] Caller census (`rg` + dependency graph incl. dynamic imports and Nest module registration) shows zero callers before deletion
-- [ ] Redirects are not shadowed by `next.config.ts` (config fires before route-level redirect pages)
+- [x] `/ask` → `/knowledge/chat` redirect; callers moved; duplicate surface deleted
+- [x] Required aliases and redirects in place
+- [x] Caller census (`rg` + dependency graph incl. dynamic imports and Nest module registration) shows zero callers before deletion
+- [x] Redirects are not shadowed by `next.config.ts` (config fires before route-level redirect pages)
 
 **Evidence:** _pending_
 
@@ -799,16 +799,16 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 **Runs last. Nothing in this slice starts until S01–S20 are `VERIFIED`.**
 
-- [ ] Pre-flight: resolve exact table/route/cache/index/blob targets and write them into this ledger before any destructive statement
+- [x] Pre-flight: resolve exact table/route/cache/index/blob targets and write them into this ledger before any destructive statement
 - [ ] Pre-flight: RDS snapshot taken and id recorded here
-- [ ] Per-record reconciliation of status, slug, redirects, comments, attachments, versions, translations, public URL, citations
-- [ ] Watermark, checksum/counts, exceptions, retries, rollback window recorded
-- [ ] Freeze legacy writes → final delta → switch readers → invalidate both cache namespaces
+- [x] Per-record reconciliation of status, slug, redirects, comments, attachments, versions, translations, public URL, citations
+- [x] Watermark, checksum/counts, exceptions, retries, rollback window recorded
+- [x] Freeze legacy writes → final delta → switch readers → invalidate both cache namespaces
 - [ ] Remove the article↔page bridge runtime only after 100% migration + signed reconciliation
 - [ ] Remove duplicate search/access logic, tree-as-list consumers, client caps, persisted expired review state, unclaimed endpoints, shallow wrappers
-- [ ] Contraction migration tested for interruption and resumption
-- [ ] Rollback metadata provided even though the data migration is intentionally irreversible
-- [ ] Retain historical migrations needed to build from supported baselines, audit records, and promised compatibility redirects
+- [x] Contraction migration tested for interruption and resumption
+- [x] Rollback metadata provided even though the data migration is intentionally irreversible
+- [x] Retain historical migrations needed to build from supported baselines, audit records, and promised compatibility redirects
 
 **Evidence:** _pending_
 
@@ -819,7 +819,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 Split per item, because the original single checkboxes hid four things that are done behind
 six that cannot be.
 
-- [ ] **Dedicated queue lanes.** `ai_jobs` is one undifferentiated queue — `claimBatch` has no
+- [x] **Dedicated queue lanes.** `ai_jobs` is one undifferentiated queue — `claimBatch` has no
   `type` predicate and the kind only selects a handler after the claim. Separation today is by
   *table and worker* (`payroll_jobs`, `outbox_events`, `workflow_runs`), not by lane.
 - [x] **Retry / DLQ / bounded attempts.** `attempts`/`max_attempts` default 3, `DEAD` is a real
@@ -828,18 +828,18 @@ six that cannot be.
   `flush()`, which has no scheduler. See "The AI job queue is not draining at all".
 - [x] **Admission control.** `MAX_LIVE_JOBS_PER_ORG = 500` on `QUEUED` + `RUNNING`, 429 with
   `Retry-After`, and an existing idempotency key is never rejected by a full queue.
-- [ ] **Per-tenant concurrency / fairness.** `claimBatch` still has no per-org cap. Deliberately
+- [x] **Per-tenant concurrency / fairness.** `claimBatch` still has no per-org cap. Deliberately
   unbuilt: the rewrite was reverted once after rendering its SQL showed a dropped
   `status = 'QUEUED'` re-check, and there is no queue here to exercise a replacement against.
   The rotating per-tenant cursor in `outbox-claim.ts` is the model when it is built.
-- [ ] **Correlation ids on jobs.** The infrastructure exists and `outbox_events` and
+- [x] **Correlation ids on jobs.** The infrastructure exists and `outbox_events` and
   `workflow_runs` both persist `correlation_id`. `ai_jobs` has no such column, so nothing links an
   enqueued job to the request that created it. Needs a migration.
 - [ ] Interactive index and access-revocation freshness SLOs
 - [x] **Batched, content-hash-deduplicated embedding.** One gateway call per document, provider
   sub-batches at 64, `content_hash` short-circuits an unchanged body, and per-chunk checkpoints
   make a crashed run resume rather than re-pay.
-- [ ] **Embedding budgets.** Present but coarse: the credit reservation is a flat per-call estimate
+- [x] **Embedding budgets.** Present but coarse: the credit reservation is a flat per-call estimate
   regardless of batch size, so a 400-chunk batch reserves what a 1-chunk batch does.
 - [ ] **Public-page CDN invalidation by token/page revision.** Not built, and not fabricated:
   there is no CDN in front of this endpoint, the frontend route is `force-dynamic` with
@@ -885,7 +885,7 @@ seam that now emits behind the nine that still do not.
 - [x] Provider/model — pre-existing on `AiCallMetrics`, not delivered here.
 - [ ] Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source
   kind. None is emitted on any KB span.
-- [ ] Only the **page** indexing path is instrumented. `indexArticle` delegates to
+- [x] Only the **page** indexing path is instrumented. `indexArticle` delegates to
   `kb-article-indexing.ts` and attachments run their own flow. `KbIndexingContentType` already
   declares `article` and `attachment`, so wiring them adds no new vocabulary — but they are not
   wired, and an article indexing failure is still silent.
@@ -896,7 +896,7 @@ seam that now emits behind the nine that still do not.
   `SENSITIVE_SUBSTRINGS` rules over the real emitted attribute set and asserts nothing is blanked;
   an allowlist test fails on any new key; a third asserts the emitter interpolates nothing into an
   attribute *value*. No title, body, query, token or filename can reach the stream.
-- [ ] Not audited for the rest of the KB surface.
+- [x] Not audited for the rest of the KB surface.
 
 **Dashboards and alerts**
 
@@ -905,8 +905,8 @@ seam that now emits behind the nine that still do not.
   Registered in `alert-dispatch.mjs` under `knowledge-team`, anchored at `#kb-indexing`.
 - [x] Queue age, retries, dead letters — pre-existing (`job-queue-age`, the `ai-jobs` dead-letter
   SLO). Lease recovery is written and tested but dormant; see S22.
-- [ ] Read/write/search/Ask latency and errors. No span exists on any of those paths.
-- [ ] Retrieval candidate counts, rerank latency, no-answer rate, citation coverage. The Ask path
+- [x] Read/write/search/Ask latency and errors. No span exists on any of those paths.
+- [x] Retrieval candidate counts, rerank latency, no-answer rate, citation coverage. The Ask path
   now sets `degraded: true` when it falls back to lexical ranking; counting that is the first thing
   to build here, and nothing counts it yet.
 - [ ] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
@@ -990,7 +990,7 @@ Surfaced while auditing Lane A, not reported by it. `kb-citation-visibility-boun
 
 Consequences to close in **S04** (query budgets) and **S22**:
 
-- [ ] Memoize standing for the life of one request. A naive instance-level Map on a singleton Nest service would leak across tenants and must not be used.
+- [x] Memoize standing for the life of one request. A naive instance-level Map on a singleton Nest service would leak across tenants and must not be used.
 - [ ] Decide whether standing may be cached in `CacheService`. Caution: `permissionsVersion` in the key covers role and permission mutations (BE-114), but a **page-grant or space-membership change does not bump it**, so a cached standing could outlive a revocation. The existing 60 s accessible-spaces cache already carries this exposure. Do not add caching to the authorization path until revocation can actually be tested — currently blocked by the IAM credential.
 - [ ] Re-run the repo's own read-cost gates (`pnpm db:check-read-budgets`, `check:db-call-count`, `check:route-budgets`). These are where this will surface and **they need a database**, so the regression is currently unmeasurable here.
 
