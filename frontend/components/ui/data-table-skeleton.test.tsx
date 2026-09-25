@@ -24,11 +24,13 @@ describe("a table skeleton shows the real column headers before the rows arrive"
 const ROOT = path.resolve(__dirname, "..", "..");
 const HRMS_LOADING_ROOTS = [
   "app/(authenticated)/hr",
+  // Recruitment OS left /hr on 2026-09-25 and keeps the invariant it had there.
+  "app/(authenticated)/recruitment",
   "app/(authenticated)/payroll",
   "app/(authenticated)/timesheets",
   "app/(authenticated)/me",
 ] as const;
-const HRMS_FEATURE_ROOTS = ["features/hr", "features/payroll", "features/timesheets", "features/me"] as const;
+const HRMS_FEATURE_ROOTS = ["features/hr", "features/recruitment", "features/payroll", "features/timesheets", "features/me"] as const;
 
 function sourceFilesUnder(roots: readonly string[], keep: (relative: string) => boolean): string[] {
   const found: string[] = [];

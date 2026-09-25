@@ -59,7 +59,6 @@
   "features/hr/attendance/daily-history-table.tsx",
   "features/hr/attendance/team-attendance-card.tsx",
   "features/hr/automations/automation-runs-sheet.tsx",
-  "features/hr/background-verification/background-verification-page-client.tsx",
   "features/hr/benefits/benefits-claims-tab.tsx",
   "features/hr/benefits/benefits-my-tab.tsx",
   "features/hr/benefits/benefits-plans-admin-tab.tsx",
