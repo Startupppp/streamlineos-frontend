@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, type KeyboardEvent } from "react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm, type FieldPath, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +24,7 @@ import {
 import { describeUnsentInvite } from "@/components/hr/invite-delivery";
 import { buildOnboardEmployeePayload } from "@/components/hr/onboarding-payload";
 import { describeOnboardingSuccess } from "@/components/hr/onboarding-result";
+import { preventImplicitSubmit } from "@/components/hr/onboarding-enter-guard";
 import { StepPersonalInfo } from "./_onboarding/step-personal-info";
 import { StepEmployment } from "./_onboarding/step-employment";
 import { StepSkillsPay } from "./_onboarding/step-skills-pay";
@@ -124,6 +125,10 @@ export function OnboardingWizard() {
     setCurrentStep((prev) => Math.min(STEPS.length, prev + 1));
   }, [currentStep, form]);
 
+  function handleFormKeyDown(event: KeyboardEvent<HTMLFormElement>) {
+    preventImplicitSubmit(event, currentStep === STEPS.length);
+  }
+
   const handlePrev = useCallback(() => {
     setCurrentStep((prev) => Math.max(1, prev - 1));
   }, []);
@@ -193,11 +198,7 @@ export function OnboardingWizard() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && currentStep < STEPS.length) {
-              e.preventDefault();
-            }
-          }}
+          onKeyDown={handleFormKeyDown}
           className="flex flex-col flex-1 min-h-0"
         >
           <div className="min-h-0 flex-1">
