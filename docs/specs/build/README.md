@@ -927,10 +927,9 @@ Three live P1s, each sitting behind a green suite:
 
 Not claimed, deliberately:
 
-- The approvals cursor criterion stays **open**. Cursor *inputs* were added and
-  the `ORDER BY … , id ASC` tiebreaker is a real fix, but the responses are
-  still bare arrays — **no cursor is emitted**, so deep pagination is not
-  reachable. Emitting one is a coordinated frontend contract change.
+- The approvals cursor criterion is now implemented. Both approval list
+  endpoints return the shared cursor-page envelope, validate opaque due-date/id
+  cursors, and both approval screens load subsequent pages through the cursor.
 - `GET /build/scope-directory/search` has **no frontend consumer yet**. It is
   the backend half of `BLD-X-SB-DIR-001`; if that packet does not land, this is
   dead surface.

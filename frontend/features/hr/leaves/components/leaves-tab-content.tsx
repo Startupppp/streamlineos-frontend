@@ -22,9 +22,11 @@ import { LeaveCalendarWidget } from "./leave-calendar-widget";
 import { RequestActionCell } from "./leave-request-action-cell";
 import { useCancelLeave } from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
+
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useLeavePolicy } from "@/hooks/api/hr";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getUserDisplayName } from "@/lib/person-display";
 
 interface LeavesTabContentProps {
   balances: LeaveBalance[];
@@ -191,7 +193,10 @@ export function LeavesTabContent({
                   statusBadgeClass,
                 )}
               >
-                {status.charAt(0) + status.slice(1).toLowerCase()}
+                {/* V-046. A decided row said only "Approved"/"Rejected" while
+                    `my()` already hydrates the approver — the one thing the
+                    reader wants to know. */}
+                {decidedByLabel(status, row.approver)}
               </span>
               {row.managerComment && (
                 <TruncatedText
@@ -307,4 +312,22 @@ export function LeavesTabContent({
       )}
     </div>
   );
+}
+
+/**
+ * V-046. "Approved" / "Rejected" with no name leaves the reader asking the one
+ * question the row exists to answer. Names the approver when the relation is
+ * hydrated, and falls back to the bare status when it is not — never
+ * "Approved by Unassigned".
+ */
+export function decidedByLabel(
+  status: string,
+  approver: { name?: string | null; firstName?: string | null; lastName?: string | null } | null | undefined,
+): string {
+  const label = status.charAt(0) + status.slice(1).toLowerCase();
+  if (status !== "APPROVED" && status !== "REJECTED") return label;
+  const name = approver ? getUserDisplayName(approver) : null;
+  return name && name !== "Unassigned" && name !== "Unknown"
+    ? `${label} by ${name}`
+    : label;
 }

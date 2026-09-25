@@ -690,6 +690,59 @@ See `#provider-outage` when `provider_unavailable` accounts for the cluster.
 
 ---
 
+## #kb-search
+
+**Alert id:** `kb-search` — owner: `knowledge-team` — severity: high
+
+**What it measures:** Three independent predicates over `kb.search.operation` spans in the most recent one-hour window. Any one firing pages.
+
+1. **Fault ratio** — `error` outcomes over 5 % of operations, on at least 2 faults.
+2. **Denial anomaly** — `denied` outcomes over 25 % of operations, on at least 5 denials.
+3. **Empty-result anomaly** — `not_found` outcomes over 60 % of operations, on at least 10.
+
+The two anomaly predicates exist because a KB search that is *working correctly* and a KB search that is *silently denying or returning nothing to everybody* both produce a zero fault ratio. A fault-only alert would report health through an ACL regression and through an empty index alike.
+
+**Span name:** `kb.search.operation`
+
+**Outcome vocabulary:**
+
+- `found` — results returned. Healthy.
+- `not_found` — the query ran and matched nothing. Healthy in isolation; a sustained majority means the index is empty, the embedding column is unpopulated, or the ACL predicate is over-filtering.
+- `denied` — the caller is not permitted to search the requested scope. Correct behaviour per request; a spike is either an ACL misconfiguration that just revoked a population, or enumeration by a caller probing scopes.
+- `error` — a defect or a database failure inside the search path. Investigate.
+
+**Dimensions on every span:** `kb.search.outcome`, `kb.search.duration_ms`, `kb.search.results`, `org.id`. None carries query text or result titles.
+
+**First five minutes**
+
+```bash
+# 1. Outcome histogram, all three predicates, latency percentiles
+node backend/src/scripts/alert-kb-search.mjs --log=app.log --hours=1
+
+# 2. deniedBreached true — did an ACL change land? Compare against the window
+#    in which kb_pages.acl_revision last moved, then check whether the chunk
+#    snapshot caught up (a chunk whose acl_revision lags its page is dropped
+#    from vector candidates, which reads as denied or not_found, not as error)
+node backend/src/scripts/alert-kb-indexing.mjs --log=app.log --hours=1
+
+# 3. notFoundBreached true — is anything indexed at all? A high
+#    skipped_no_content or embedding_unavailable rate in the indexing
+#    histogram explains an empty search corpus
+node backend/src/scripts/alert-kb-indexing.mjs --log=app.log --hours=24
+
+# 4. faultBreached true — correlate on correlation.id and read the
+#    accompanying ERROR_REPORT span
+node backend/src/scripts/alert-p95.mjs --log=app.log | head -20
+```
+
+**Containment:** Search is a read path — it corrupts nothing. Do not "fix" a denial spike by widening the ACL predicate; a denial that is correct is the system working. Confirm the intended audience first.
+
+**Recovery:** For `denied`, identify the ACL mutation (space member removal, page grant revoke, space visibility change) and confirm it was intended; if the chunk ACL snapshot is stale rather than the grant wrong, re-run indexing for the affected space so `syncAclRevisionForSpace` converges. For `not_found`, re-drive indexing — the checkpointed resumption re-pays only for chunks that never landed. For `error`, correlate on `correlation.id`.
+
+**Verification:** `alert-kb-search.mjs --hours=1` exits 0 with `fired: false` and `faultBreached`, `deniedBreached` and `notFoundBreached` all false. An exit code of 2 is **not** a pass — it means no `kb.search.operation` span reached the log, so either the window is empty or `KbSearchMetrics` is unwired in `KbSearchService`. Note that `GET /kb/pages/full-search` runs through `KbPageSearchQueryService` and emits no `kb.search.operation` span; only `GET /kb/search` is measured here.
+
+---
+
 ## Incident response process
 
 On-call rotation, severity-to-escalation matrix, customer communication criteria and the post-incident review template are in [INCIDENT-RESPONSE.md](./INCIDENT-RESPONSE.md). That document also records the two operational limitations of the current alert delivery system (no-auth webhook, local suppression file) that affect escalation planning before production.

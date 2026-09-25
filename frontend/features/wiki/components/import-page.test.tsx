@@ -20,6 +20,10 @@ jest.mock("@/hooks/api/access", () => ({
   }),
 }));
 
+jest.mock("@/hooks/api/kb/spaces", () => ({
+  useKbSpaces: () => ({ data: { data: [], pagination: { limit: 50, hasMore: false, nextCursor: null } } }),
+}));
+
 jest.mock("@/hooks/api/kb", () => ({
   useImportKbPages: () => ({ mutate: jest.fn(), isPending: false }),
   useKbImportJobs: () => ({

@@ -46,6 +46,7 @@
     "node_modules",
     "drizzle",
     "scripts",
+    ".next-e2e",
     ".next/dev/types",
     "**/__tests__/**",
     "**/*.test.ts",

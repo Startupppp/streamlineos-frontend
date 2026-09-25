@@ -10,6 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -18,6 +25,7 @@ import {
 } from "@/components/ui/tabs";
 import { useCan } from "@/hooks/api/access";
 import { useImportKbPages } from "@/hooks/api/kb";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_IMPORT, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 import { KbUploadIcon, KbClipboardIcon } from "@/features/wiki/lib/kb-icons";
@@ -28,21 +36,37 @@ import { ImportPendingList, type ImportPendingItem } from "./import-pending-list
 const VALID_TABS = ["import", "export"] as const;
 type ImportExportTab = (typeof VALID_TABS)[number];
 
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
+
 function resolveTab(tabParam: string | null): ImportExportTab {
   return VALID_TABS.find((t) => t === tabParam) ?? "import";
 }
 
 export default function ImportPage() {
   const canImport = useCan("kb:pages:import");
+  const canExport = useCan("kb:pages:export");
   const importMutation = useImportKbPages();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab = resolveTab(searchParams.get("tab"));
+  const requestedTab = resolveTab(searchParams.get("tab"));
+  const activeTab =
+    requestedTab === "import" && !canImport
+      ? "export"
+      : requestedTab === "export" && !canExport
+        ? "import"
+        : requestedTab;
 
   const [items, setItems] = useState<ImportPendingItem[]>([]);
   const [showPaste, setShowPaste] = useState(false);
   const [pasteTitle, setPasteTitle] = useState("");
   const [pasteText, setPasteText] = useState("");
+  const [targetSpaceId, setTargetSpaceId] = useState<string>("none");
+  const [visibility, setVisibility] = useState<"private" | "org" | "public">("org");
+  const [duplicatePolicy, setDuplicatePolicy] = useState<"skip" | "update">("skip");
+  const [failedImportTitles, setFailedImportTitles] = useState<string[]>([]);
+
+  const { data: spacesPage } = useKbSpaces();
+  const spaces = spacesPage?.data ?? [];
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,8 +79,27 @@ export default function ImportPage() {
       const files = Array.from(e.target.files ?? []);
       if (files.length === 0) return;
 
+      const oversized = files.filter((f) => f.size > MAX_FILE_BYTES);
+      if (oversized.length > 0) {
+        toast.error(
+          `${oversized.length} file${oversized.length === 1 ? "" : "s"} exceed the 5 MB limit and were skipped: ${oversized.map((f) => f.name).join(", ")}`,
+        );
+      }
+
+      const validFiles = files.filter((f) => f.size <= MAX_FILE_BYTES);
       const remaining = 100 - items.length;
-      const toProcess = files.slice(0, remaining);
+      const toProcess = validFiles.slice(0, remaining);
+
+      if (validFiles.length > remaining) {
+        toast.error(
+          `Only ${remaining} file${remaining === 1 ? "" : "s"} added — ${validFiles.length - remaining} skipped to stay within the 100-item limit`,
+        );
+      }
+
+      if (toProcess.length === 0) {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
 
       let completed = 0;
       const newItems: ImportPendingItem[] = [];
@@ -128,12 +171,28 @@ export default function ImportPage() {
     setItems([]);
   }
 
+  function handleTargetSpaceChange(value: string) {
+    setTargetSpaceId(value);
+  }
+
+  function handleVisibilityChange(value: string) {
+    setVisibility(value as "private" | "org" | "public");
+  }
+
+  function handleDuplicatePolicyChange(value: string) {
+    setDuplicatePolicy(value as "skip" | "update");
+  }
+
   function handleImport() {
     if (items.length === 0) return;
+    setFailedImportTitles([]);
     importMutation.mutate(
       {
         items: items.map(({ title, contentText }) => ({ title, contentText })),
         sourceType: "markdown",
+        spaceId: targetSpaceId === "none" ? undefined : Number(targetSpaceId),
+        visibility,
+        duplicatePolicy,
       },
       {
         onSuccess: (result) => {
@@ -146,6 +205,9 @@ export default function ImportPage() {
               },
             },
           );
+          if (result.failedTitles.length > 0) {
+            setFailedImportTitles(result.failedTitles);
+          }
           setItems([]);
         },
         onError: (err) => {
@@ -163,7 +225,7 @@ export default function ImportPage() {
     router.replace(qs ? `${KB_IMPORT}?${qs}` : KB_IMPORT, { scroll: false });
   }
 
-  if (!canImport) {
+  if (!canImport && !canExport) {
     return (
       <PageWrapper title="Import & Export">
         <EmptyState
@@ -171,7 +233,7 @@ export default function ImportPage() {
             <KbUploadIcon className="w-8 text-muted-foreground" />
           }
           title="Access denied"
-          description="You don't have permission to import pages. Ask an admin to grant kb:pages:import."
+          description="You don't have permission to import or export pages. Ask an admin to grant kb:pages:import or kb:pages:export."
         />
       </PageWrapper>
     );
@@ -223,12 +285,24 @@ export default function ImportPage() {
         className="flex min-h-0 flex-1 flex-col gap-4"
       >
         <TabsList>
-          <TabsTrigger value="import">Import</TabsTrigger>
-          <TabsTrigger value="export">Export</TabsTrigger>
+          {canImport ? <TabsTrigger value="import">Import</TabsTrigger> : null}
+          {canExport ? <TabsTrigger value="export">Export</TabsTrigger> : null}
         </TabsList>
 
         <TabsContent value="import" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="space-y-4">
+            {failedImportTitles.length > 0 ? (
+              <div className="rounded-lg border border-status-warning-border bg-status-warning-subtle px-3 py-2 text-sm">
+                <p className="font-medium text-status-warning-ink">
+                  {failedImportTitles.length} page{failedImportTitles.length === 1 ? "" : "s"} failed to import:
+                </p>
+                <ul className="mt-1 list-disc pl-4 text-xs text-status-warning-ink">
+                  {failedImportTitles.map((title) => (
+                    <li key={title}>{title}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {showPaste || items.length > 0 ? (
               <PageSection title="Import Pages">
                 <div className="space-y-4">
@@ -271,6 +345,51 @@ export default function ImportPage() {
                       </Button>
                     </div>
                   ) : null}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Target space</Label>
+                      <Select value={targetSpaceId} onValueChange={handleTargetSpaceChange}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue placeholder="No space" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No space</SelectItem>
+                          {spaces.map((s) => (
+                            <SelectItem key={s.id} value={String(s.id)}>
+                              {s.icon ? `${s.icon} ` : ""}
+                              {s.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Default visibility</Label>
+                      <Select value={visibility} onValueChange={handleVisibilityChange}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="private">Private</SelectItem>
+                          <SelectItem value="org">Team</SelectItem>
+                          <SelectItem value="public">Public</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Duplicate items</Label>
+                      <Select value={duplicatePolicy} onValueChange={handleDuplicatePolicyChange}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="skip">Skip duplicates</SelectItem>
+                          <SelectItem value="update">Update duplicates</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
                   <ImportPendingList
                     items={items}

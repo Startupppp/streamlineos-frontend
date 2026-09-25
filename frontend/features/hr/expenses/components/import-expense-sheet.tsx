@@ -15,29 +15,22 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyUploadIllustration } from "@/components/illustrations/illustration-image";
 import { activationProps } from "@/lib/keyboard-activation";
+import {
+  EXPENSE_IMPORT_CATEGORIES,
+  EXPENSE_IMPORT_FIELDS,
+  resolveImportField,
+} from "@/features/hr/expenses/expense-import-headers";
 
 /**
- * One declaration of the import contract: what the parser reads, what the
- * template writes, and what the instructions below list.
- *
- * The template used to be generated from a private list with Title Case headers
- * ("Payment Method") while the instructions documented snake_case, and it
- * carried no rows at all although the copy beside it promised "sample rows to
- * guide you". Keeping the three in one place is what stops them drifting again.
+ * V-071. The column list, the header normalizer and the category list all come
+ * from `expense-import-headers`, which mirrors the backend's
+ * `expenses-import-contract.ts` field for field — so the template this dialog
+ * writes, the headers its parser reads and the fields the validator accepts
+ * cannot drift apart. Nothing about *which columns exist* is declared here.
  */
-const TEMPLATE_COLUMNS = [
-  { key: "category", hint: "Travel, Food, Software, …", sample: "Travel" },
-  { key: "amount", hint: "Positive number", sample: "450" },
-  { key: "description", hint: "Text (optional)", sample: "Cab to client site" },
-  { key: "merchant", hint: "Vendor name (optional)", sample: "City Cabs" },
-  { key: "payment_method", hint: "Cash, UPI, Company Card, … (optional)", sample: "CASH" },
-  { key: "expense_date", hint: "YYYY-MM-DD", sample: "2026-09-20" },
-] as const;
+const TEMPLATE_COLUMNS = EXPENSE_IMPORT_FIELDS;
 
-const ALLOWED_CATEGORIES = [
-  "Travel", "Food", "Office Supplies", "Software", "Hardware", "Marketing",
-  "Entertainment", "Utilities", "Rent", "Insurance", "Salary", "Miscellaneous", "Other",
-];
+const ALLOWED_CATEGORIES: readonly string[] = EXPENSE_IMPORT_CATEGORIES;
 
 interface ParsedRow {
   category: string;
@@ -110,7 +103,11 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
         return;
       }
 
-      const headers = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/['"]/g, ""));
+      // V-071. One normalizer, the backend's. `Payment-Method` and
+      // `Expense-Date` resolve like every other spelling of the same field.
+      const headers = lines[0]
+        .split(",")
+        .map((h) => resolveImportField(h.trim().replace(/['"]/g, "")));
       const dataLines = lines.slice(1);
       const allowedSet = new Set(ALLOWED_CATEGORIES.map((c) => c.toLowerCase()));
       const unmappedCategories = new Set<string>();
@@ -118,14 +115,17 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
       const parsed: ParsedRow[] = dataLines.map((line) => {
         const values = line.split(",").map((v) => v.trim().replace(/^["']|["']$/g, ""));
         const record: Record<string, string> = {};
-        headers.forEach((h, i) => { record[h] = values[i] || ""; });
+        headers.forEach((field, i) => {
+          // A column that is not ours is ignored, not written under a made-up key.
+          if (field) record[field] = values[i] || "";
+        });
 
         const rawCategory = record.category || "Other";
         const amount = parseFloat(record.amount);
         const description = record.description || "";
         const merchant = record.merchant || "";
-        const paymentMethod = record.paymentmethod || record["payment_method"] || record["payment method"] || "";
-        const expenseDate = record.expensedate || record["expense_date"] || record["expense date"] || record.date || "";
+        const paymentMethod = record.paymentMethod || "";
+        const expenseDate = record.expenseDate || "";
 
         const errors: string[] = [];
         if (isNaN(amount) || amount <= 0) errors.push("Invalid amount");
@@ -189,10 +189,9 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
       await downloadXlsx(`expense_import_template_${format(new Date(), "yyyy-MM-dd")}.xlsx`, [{
         name: "Expenses",
-        // snake_case, exactly as the instructions below document it and as the
-        // parser reads it. The header used to be Title Cased here and
-        // snake_case in the docs, so a file built from one did not match the
-        // other's description.
+        // V-071. The canonical keys, exactly as the instructions below list
+        // them and as the parser resolves them. Any other spelling of the same
+        // field (Payment Method, payment_method, Payment-Method) resolves too.
         columns: TEMPLATE_COLUMNS.map((col) => ({ header: col.key, key: col.key, width: 18 })),
         // One filled row, because the copy beside this button promises one.
         rows: [Object.fromEntries(TEMPLATE_COLUMNS.map((col) => [col.key, col.sample]))],

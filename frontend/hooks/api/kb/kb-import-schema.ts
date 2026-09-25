@@ -51,7 +51,9 @@ export const kbImportResultContract = z.object({
   jobId: z.number().int(),
   succeeded: z.number().int(),
   failed: z.number().int(),
+  duplicates: z.number().int(),
   total: z.number().int(),
+  failedTitles: z.array(z.string()),
 });
 
 export const kbFromTicketSuccessContract = z.object({ success: z.boolean() });

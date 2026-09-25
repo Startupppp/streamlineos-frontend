@@ -16,7 +16,7 @@ export const approvalRequestKindContract = z.enum([
 
 export type ApprovalRequestKind = z.infer<typeof approvalRequestKindContract>;
 
-const approvalRungContract = z.enum(["reporting_manager", "managers_manager", "department_head", "queue"]);
+export const approvalRungContract = z.enum(["reporting_manager", "managers_manager", "department_head", "queue"]);
 
 export type ApprovalRung = z.infer<typeof approvalRungContract>;
 

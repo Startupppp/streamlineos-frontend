@@ -100,7 +100,7 @@ export function ProjectApprovalsPage({
   const statusValue = listFilters.value("status");
   const entityTypeValue = listFilters.value("entityType");
 
-  const { data, isLoading, isError, error, refetch } = useProjectApprovals(
+  const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useProjectApprovals(
     projectId,
     {
       status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
@@ -308,7 +308,7 @@ export function ProjectApprovalsPage({
     error,
   });
 
-  const items = data ?? [];
+  const items = data?.pages.flatMap((page) => page.data) ?? [];
 
   return (
     <PageWrapper
@@ -363,7 +363,14 @@ export function ProjectApprovalsPage({
               data={items}
               columns={columns}
               getRowKey={(row) => row.id}
-              pagination={{ pageSize: 25 }}
+              pagination={{
+                mode: "cursor",
+                pageSize: 25,
+                hasMore: Boolean(hasNextPage),
+                hasPrevious: false,
+                onNext: () => void fetchNextPage(),
+              }}
+              isLoading={isFetchingNextPage}
               minWidth="720px"
               mobileCard={renderMobileCard}
               className={PM_FILL_PANEL}

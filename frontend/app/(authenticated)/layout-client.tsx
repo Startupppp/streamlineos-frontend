@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
 import { useAccessVersionSync } from "@/hooks/common/use-access-version-sync";
 import { useNotificationEvents } from "@/features/notifications/use-notification-events";
 import { BuildSidebarSkeleton } from "@/features/build/navigation/build-sidebar-skeleton";
@@ -22,6 +21,14 @@ const NotificationBell = dynamic(
   () =>
     import("@/features/notifications/notification-bell").then(
       (m) => m.NotificationBell,
+    ),
+  { ssr: false },
+);
+
+const ChatMobileBottomNav = dynamic(
+  () =>
+    import("@/features/chat/chat-mobile-bottom-nav").then(
+      (m) => m.ChatMobileBottomNav,
     ),
   { ssr: false },
 );

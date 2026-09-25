@@ -42,6 +42,22 @@ export function TrustBadge({ trustState }: TrustBadgeProps) {
   );
 }
 
+interface OwnerMissingBadgeProps {
+  ownerMembershipId: number | null;
+}
+
+export function OwnerMissingBadge({ ownerMembershipId }: OwnerMissingBadgeProps) {
+  if (ownerMembershipId !== null) return null;
+  return (
+    <Badge
+      variant="outline"
+      className="text-micro h-4 px-1.5 shrink-0 text-muted-foreground"
+    >
+      Owner missing
+    </Badge>
+  );
+}
+
 interface StatusBadgeProps {
   status: string;
 }

@@ -6,6 +6,7 @@ import {
   type KbPageActionCapabilities,
   type KbPageActionSubject,
 } from "@/features/wiki/lib/page-action-descriptors";
+import type { DataTableColumn } from "@/components/ui/data-table.types";
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
@@ -178,6 +179,25 @@ const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
 const { useCursorPager } = jest.requireMock(
   "@/components/ui/table-pagination",
 ) as { useCursorPager: jest.Mock };
+
+const { DataTable } = jest.requireMock("@/components/ui/data-table") as {
+  DataTable: jest.Mock;
+};
+
+type ListRow = ReturnType<typeof makeItem>;
+
+function lastRenderedListColumns(): DataTableColumn<ListRow>[] {
+  const lastCall = DataTable.mock.calls.at(-1);
+  if (!lastCall) throw new Error("DataTable was never rendered");
+  const props: { columns: DataTableColumn<ListRow>[] } = lastCall[0];
+  return props.columns;
+}
+
+function renderListCell(columnKey: string, row: ListRow) {
+  const column = lastRenderedListColumns().find((c) => c.key === columnKey);
+  if (!column) throw new Error(`No list column named ${columnKey}`);
+  return render(<>{column.cell(row)}</>);
+}
 
 function makeItem(id: number, extra: Record<string, unknown> = {}) {
   return {
@@ -389,5 +409,42 @@ describe("WikiHomeAllPages — card view cursor pagination", () => {
     await user.click(within(pagination).getByRole("button", { name: /next page/i }));
 
     expect(mockGoNext).toHaveBeenCalledWith("cursor-abc");
+  });
+});
+
+describe("WikiHomeAllPages — trust badges in the default list view", () => {
+  it("BITE: the list view flags a page whose owner membership is missing", () => {
+    mockSearchParams = new URLSearchParams();
+    const orphan = makeItem(1, { ownerMembershipId: null });
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([orphan]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<WikiHomeAllPages />);
+    const cell = renderListCell("trustState", orphan);
+
+    expect(within(cell.container).getByText("Owner missing")).toBeInTheDocument();
+  });
+
+  it("a page that has an owner carries no owner-missing flag in the list view", () => {
+    mockSearchParams = new URLSearchParams();
+    const owned = makeItem(2);
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([owned]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<WikiHomeAllPages />);
+    const cell = renderListCell("trustState", owned);
+
+    expect(within(cell.container).queryByText("Owner missing")).not.toBeInTheDocument();
+    expect(within(cell.container).getByText("Verified")).toBeInTheDocument();
   });
 });

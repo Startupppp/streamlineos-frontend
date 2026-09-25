@@ -283,13 +283,15 @@ export function WikiPageCollectionTable({
   const urlSpaceId = spaceParam !== "" ? Number(spaceParam) : undefined;
   const spaceId = fixedParams.spaceId ?? urlSpaceId;
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
+  const ownerParam = searchParams.get("owner") ?? "";
+  const owner = fixedParams.owner ?? (ownerParam === "me" ? "me" : undefined);
 
   const debouncedSearch = useDebouncedValue(rawSearch, 300);
 
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data;
 
-  const filterKey = `${debouncedSearch}|${sort}|${status}|${spaceParam}`;
+  const filterKey = `${debouncedSearch}|${sort}|${status}|${spaceParam}|${owner ?? ""}`;
   const pager = useCursorPager(filterKey);
 
   const queryParams: KbPageCollectionParams = {
@@ -298,6 +300,7 @@ export function WikiPageCollectionTable({
     sort,
     status: status || undefined,
     spaceId,
+    owner,
     cursor: pager.cursor,
     limit: PAGE_LIMIT,
   };
@@ -312,6 +315,7 @@ export function WikiPageCollectionTable({
     debouncedSearch !== "" ||
     status !== "" ||
     spaceParam !== "" ||
+    (fixedParams.owner === undefined && ownerParam !== "") ||
     sort !== "updated_desc";
 
   const isEmpty = data !== undefined && data.data.length === 0;
@@ -327,7 +331,7 @@ export function WikiPageCollectionTable({
   });
 
   function handleClearFilters() {
-    update({ q: null, status: null, sort: null, space: null });
+    update({ q: null, status: null, sort: null, space: null, owner: null });
   }
 
   function handleSearchChange(value: string) {
@@ -344,6 +348,10 @@ export function WikiPageCollectionTable({
 
   function handleSpaceChange(value: string) {
     update({ space: value === "all" ? null : value });
+  }
+
+  function handleOwnerChange(value: string) {
+    update({ owner: value === "me" ? "me" : null });
   }
 
   function handleViewList() {
@@ -409,6 +417,17 @@ export function WikiPageCollectionTable({
             ))}
           </SelectContent>
         </Select>
+        {fixedParams.owner === undefined && (
+          <Select value={owner ?? "all"} onValueChange={handleOwnerChange}>
+            <SelectTrigger className="h-9 w-32 shrink-0">
+              <SelectValue placeholder="Owner" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Anyone</SelectItem>
+              <SelectItem value="me">Me</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         {!fixedParams.spaceId && spaces && spaces.length > 0 && (
           <Select value={spaceParam || "all"} onValueChange={handleSpaceChange}>
             <SelectTrigger className="h-9 w-40 shrink-0">

@@ -94,7 +94,7 @@
 
 ## AI / Ask
 
-- `/ask` · **AI** · hooks: `→ feature/ask`
+- `/ask` · [RETIRED — redirects to `/knowledge/chat` via `next.config.ts`]
 - `/ai/executive-brief` · **AI** · hooks: `lib/api/hooks/executive-brief` → `features/ai/executive-brief-page` · streaming/cancel/failure states covered by `features/ai/executive-brief-streaming.test.tsx`; full page acceptance remains open
 
 ---
@@ -788,6 +788,8 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/knowledge/wiki/import` · **Knowledge** · hooks: `→ features/wiki` — sidebar label is Import & Export; Import and Export are URL-synced tabs (`?tab=export`); Choose files and Paste text are Import-tab header actions; recent imports show uploaded page titles (from job `errorReport.itemTitles`) with client-side pagination
 - `/knowledge/wiki/analytics` · **Knowledge** · hooks: `→ features/wiki`
 - `/knowledge/chat` · **Knowledge** · hooks: `→ features/wiki`
+- `/knowledge/research-briefs` · **Knowledge** · hooks: `requirePermission("kb:pages:view")`, `useKbResearchBriefs`, `useCreateResearchBrief`, `→ features/help-centre` — components live under `features/help-centre/`, the route under `knowledge/`; there is no Support-owned twin
+- `/knowledge/research-briefs/[briefId]` · **Knowledge** · hooks: `enforceRouteAccess`, `useKbResearchBrief`, `useRetryResearchBrief`, `useCancelResearchBrief`, `useRateResearchBrief`, `useConvertResearchBriefToPage`, `→ features/help-centre` — brief detail refuses the whole brief (404) when any cited record is no longer visible, rather than redacting the citation; Convert to page posts `/kb/research-briefs/:briefId/convert-to-page` and routes to the created page
 
 ### Legacy
 - `/knowledge-base` · **Knowledge (legacy)** [RETIRED 2026-08-30: file deleted; canonical KB is at `/knowledge/wiki/**`]
@@ -828,8 +830,8 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 ### Support KB (internal help content)
 - `/support/kb` · **Support** · hooks: `→ features/support/kb`
 - `/support/kb/[articleId]` · **Support** · hooks: `→ features/support/kb`
-- `/support/kb/research-briefs` · **Support** · hooks: `→ features/support/kb`
-- `/support/kb/research-briefs/[briefId]` · **Support** · hooks: `→ features/support/kb`
+- `/support/kb/research-briefs` · **Support** [RETIRED: no such file under `app/(authenticated)/support/kb/`; research briefs are Knowledge-owned at `/knowledge/research-briefs`]
+- `/support/kb/research-briefs/[briefId]` · **Support** [RETIRED: no such file under `app/(authenticated)/support/kb/`; research brief detail is Knowledge-owned at `/knowledge/research-briefs/[briefId]`]
 
 ### Portal (customer-facing)
 - `/support/portal` · **Support** · hooks: `→ features/support/portal`

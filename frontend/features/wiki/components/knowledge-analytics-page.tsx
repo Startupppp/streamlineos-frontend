@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -11,15 +11,34 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
   useKbAnalyticsOverview,
   useKbNoResults,
   usePageAnalytics,
   useKnowledgeGaps,
+  useCitationReuse,
+  useReviewSla,
   useCreateKbPage,
 } from "@/hooks/api/kb";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
+import {
+  ANALYTICS_RANGE_LABELS,
+  ANALYTICS_RANGE_PRESETS,
+  DEFAULT_ANALYTICS_RANGE_PRESET,
+  analyticsRangeFor,
+  analyticsSpaceIdFrom,
+} from "@/features/wiki/lib/analytics-range";
 import { pageHref } from "@/lib/knowledge-routes";
 import {
   KbBarChart2Icon,
@@ -28,6 +47,9 @@ import {
   KbFileTextIcon,
   KbEyeIcon,
   KbPlusIcon,
+  KbClockIcon,
+  KbCheckCircleIcon,
+  KbLink2Icon,
 } from "@/features/wiki/lib/kb-icons";
 import type { KbNoResultRow, KbPageAnalyticsRow, KbGapRow } from "@/types/kb";
 
@@ -143,6 +165,8 @@ const GapTableRow = memo(function GapTableRow({
   );
 });
 
+const ALL_SPACES_VALUE = "all";
+
 function formatRatioAsPercent(ratio: number): string {
   if (!Number.isFinite(ratio)) return "0%";
   return `${Math.round(Math.min(Math.max(ratio, 0), 1) * 100)}%`;
@@ -151,7 +175,7 @@ function formatRatioAsPercent(ratio: number): string {
 function AnalyticsSkeleton() {
   return (
     <div className="space-y-4">
-      <StatCardGridSkeleton cols={5} count={5} />
+      <StatCardGridSkeleton cols={6} count={6} />
       {Array.from({ length: 3 }).map((_, s) => (
         <div key={s} className="space-y-2">
           <Skeleton className="h-4 w-36" />
@@ -165,15 +189,65 @@ function AnalyticsSkeleton() {
 }
 
 export default function KnowledgeAnalyticsPage() {
+  const searchParams = useSearchParams();
+  const { update: updateFilters } = useUrlFilters();
+
+  const rangePreset = parseEnum<typeof ANALYTICS_RANGE_PRESETS>(
+    searchParams.get("range"),
+    ANALYTICS_RANGE_PRESETS,
+    DEFAULT_ANALYTICS_RANGE_PRESET,
+  );
+  const spaceId = analyticsSpaceIdFrom(searchParams.get("space"));
+  const staleOnly = searchParams.get("stale") === "1";
+  const range = analyticsRangeFor(rangePreset, new Date());
+  const isFiltered =
+    rangePreset !== DEFAULT_ANALYTICS_RANGE_PRESET ||
+    spaceId !== undefined ||
+    staleOnly;
+
+  const { data: spacesPage } = useKbSpaces();
+  const spaces = spacesPage?.data ?? [];
+
   const { data: overview, isLoading: overviewLoading, isError: overviewError, error: overviewQueryError, refetch: refetchOverview } =
-    useKbAnalyticsOverview();
+    useKbAnalyticsOverview(spaceId !== undefined ? { ...range, spaceId } : range);
   const { data: noResults = [], isLoading: noResultsLoading, isError: noResultsError, refetch: refetchNoResults } =
-    useKbNoResults();
-  const { data: pageAnalytics = [], isLoading: pagesLoading, isError: pagesError, refetch: refetchPages } =
-    usePageAnalytics();
-  const { data: gaps = [], isLoading: gapsLoading, isError: gapsError, refetch: refetchGaps } = useKnowledgeGaps();
+    useKbNoResults(range);
+  const {
+    data: pageAnalytics = [],
+    isLoading: pagesLoading,
+    isError: pagesError,
+    refetch: refetchPages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = usePageAnalytics(
+    staleOnly ? { spaceId, staleOnly: true } : { spaceId },
+  );
+  const { data: gaps = [], isLoading: gapsLoading, isError: gapsError, refetch: refetchGaps } = useKnowledgeGaps(range);
+  const { data: citationReuse } = useCitationReuse(range);
+  const { data: reviewSla } = useReviewSla(range);
   const createPage = useCreateKbPage();
   const router = useRouter();
+
+  function handleLoadMorePages() {
+    void fetchNextPage();
+  }
+
+  function handleRangeChange(value: string) {
+    updateFilters({ range: value });
+  }
+
+  function handleSpaceChange(value: string) {
+    updateFilters({ space: value === ALL_SPACES_VALUE ? null : value });
+  }
+
+  function handleStaleOnlyToggle() {
+    updateFilters({ stale: staleOnly ? null : "1" });
+  }
+
+  function handleClearFilters() {
+    updateFilters({ range: null, space: null, stale: null });
+  }
 
   function handleRetry() {
     void refetchOverview();
@@ -217,14 +291,60 @@ export default function KnowledgeAnalyticsPage() {
           />
         }
       >
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Select value={rangePreset} onValueChange={handleRangeChange}>
+          <SelectTrigger className="w-44" aria-label="Date range">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ANALYTICS_RANGE_PRESETS.map((preset) => (
+              <SelectItem key={preset} value={preset}>
+                {ANALYTICS_RANGE_LABELS[preset]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={spaceId === undefined ? ALL_SPACES_VALUE : String(spaceId)}
+          onValueChange={handleSpaceChange}
+        >
+          <SelectTrigger className="w-52" aria-label="Space">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_SPACES_VALUE}>All spaces</SelectItem>
+            {spaces.map((space) => (
+              <SelectItem key={space.id} value={String(space.id)}>
+                {space.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant={staleOnly ? "default" : "outline"}
+          size="sm"
+          aria-pressed={staleOnly}
+          onClick={handleStaleOnlyToggle}
+          className="gap-1"
+        >
+          <KbClockIcon className="h-3.5 w-3.5" />
+          Stale high-use only
+        </Button>
+        {isFiltered ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleClearFilters}
+          >
+            Clear filters
+          </Button>
+        ) : null}
+      </div>
+
       {overview ? (
       <StatCardGrid cols={5} className="mb-4">
-        <StatCard
-          label="Help centre articles"
-          value={overview.totalCount}
-          icon={KbFileTextIcon}
-          tone="default"
-        />
         <StatCard
           label="Article views"
           value={overview.totalViews}
@@ -238,8 +358,8 @@ export default function KnowledgeAnalyticsPage() {
           tone="violet"
         />
         <StatCard
-          label="Helpful votes"
-          value={overview.helpfulUp}
+          label="Helpful ratio"
+          value={formatRatioAsPercent(overview.helpfulRatio)}
           icon={KbThumbsUpIcon}
           tone="emerald"
         />
@@ -249,8 +369,35 @@ export default function KnowledgeAnalyticsPage() {
           icon={KbBarChart2Icon}
           tone="amber"
         />
+        <StatCard
+          label="Tickets deflected"
+          value={overview.ticketsDeflected}
+          icon={KbCheckCircleIcon}
+          tone="emerald"
+        />
       </StatCardGrid>
       ) : null}
+
+      {(reviewSla || citationReuse) && (
+      <StatCardGrid cols={2} className="mb-4">
+        {reviewSla ? (
+          <StatCard
+            label="Review SLA met"
+            value={formatRatioAsPercent(reviewSla.slaRate)}
+            icon={KbClockIcon}
+            tone="amber"
+          />
+        ) : null}
+        {citationReuse ? (
+          <StatCard
+            label="Reused citations"
+            value={citationReuse.length}
+            icon={KbLink2Icon}
+            tone="violet"
+          />
+        ) : null}
+      </StatCardGrid>
+      )}
 
       <div className="space-y-4">
         <section className="space-y-2">
@@ -269,8 +416,16 @@ export default function KnowledgeAnalyticsPage() {
               illustration={
                 <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
               }
-              title="No zero-result searches"
-              description="All recent searches returned at least one result."
+              title={
+                isFiltered
+                  ? "No searches match these filters"
+                  : "No zero-result searches"
+              }
+              description={
+                isFiltered
+                  ? "Widen the window or clear the filters to see zero-result searches."
+                  : "All recent searches returned at least one result."
+              }
               compact
             />
           ) : (
@@ -307,8 +462,14 @@ export default function KnowledgeAnalyticsPage() {
               illustration={
                 <KbFileTextIcon className="h-6 w-6 text-muted-foreground" />
               }
-              title="No page data yet"
-              description="Page view data will appear here once users start reading pages."
+              title={
+                isFiltered ? "No pages match these filters" : "No page data yet"
+              }
+              description={
+                isFiltered
+                  ? "Widen the window, pick another space, or clear the filters."
+                  : "Page view data will appear here once users start reading pages."
+              }
               compact
             />
           ) : (
@@ -339,6 +500,12 @@ export default function KnowledgeAnalyticsPage() {
               {pageAnalytics.map((row) => (
                 <PageAnalyticsTableRow key={row.id} row={row} />
               ))}
+              <InfiniteScrollSentinel
+                hasNextPage={!!hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={handleLoadMorePages}
+                label="Load more pages"
+              />
             </div>
           )}
         </section>
@@ -365,8 +532,14 @@ export default function KnowledgeAnalyticsPage() {
               illustration={
                 <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
               }
-              title="No knowledge gaps"
-              description="All searches are finding relevant content."
+              title={
+                isFiltered ? "No gaps match these filters" : "No knowledge gaps"
+              }
+              description={
+                isFiltered
+                  ? "Widen the window or clear the filters to see knowledge gaps."
+                  : "All searches are finding relevant content."
+              }
               compact
             />
           ) : (

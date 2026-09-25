@@ -42,3 +42,7 @@ export const kbResearchBriefDetailContract = z.object({
 });
 
 export const kbResearchBriefRateContract = z.object({ success: z.boolean() });
+
+export const kbConvertBriefToPageContract = z.object({
+  pageId: z.number().int(),
+});

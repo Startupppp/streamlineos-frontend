@@ -56,3 +56,11 @@ export function useKbAiAnswerFeedback() {
       apiClient.post<{ success: boolean }>("/kb/ai/feedback", input, undefined, kbAiFeedbackContract),
   });
 }
+
+export function useCreateKbKnowledgeGap() {
+  return useAuthorizedMutation("kb:pages:view", {
+    mutationKey: ["kb", "ask", "knowledge-gap"],
+    mutationFn: (input: { question: string }) =>
+      apiClient.post<{ success: boolean }>("/kb/ask/knowledge-gap", input, undefined, kbAiFeedbackContract),
+  });
+}

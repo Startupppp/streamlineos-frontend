@@ -28,6 +28,10 @@ import {
   KbAlertCircleIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
+import {
+  ContentHealthDismissDialog,
+  useDismissDialog,
+} from "@/features/wiki/components/content-health-dismiss-dialog";
 
 const SIGNAL_TYPES: ContentHealthSignalType[] = [
   "unowned",
@@ -119,6 +123,7 @@ export default function ContentHealthPage() {
   const searchParams = useSearchParams();
   const { update: updateFilters } = useUrlFilters({ pageParam: "cursor" });
   const cursorState = useCursorPagination();
+  const { state: dismissState, openDismiss, closeDialog } = useDismissDialog();
 
   const activeSignal = parseEnum<readonly ContentHealthSignalType[]>(
     searchParams.get("signal"),
@@ -164,6 +169,10 @@ export default function ContentHealthPage() {
 
   function handlePrevious() {
     cursorState.goPrevious();
+  }
+
+  function handleDismissOpenChange(open: boolean) {
+    if (!open) closeDialog();
   }
 
   const rows = signalsData?.data ?? [];
@@ -274,32 +283,59 @@ export default function ContentHealthPage() {
                 compact
               />
             ) : (
-              <div className="rounded-xl border border-border bg-card divide-y divide-border/60">
-                <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
-                  <span className="flex-1 text-xs font-medium text-muted-foreground">
-                    Title
-                  </span>
-                  <span className="text-xs font-medium text-muted-foreground w-24 text-right">
-                    Updated
-                  </span>
-                </div>
-                {rows.map((row) => (
-                  <div
-                    key={row.id}
-                    className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/40 transition-colors"
-                  >
-                    <Link
-                      href={pageHref(row.id)}
-                      className="flex-1 text-sm truncate hover:underline text-foreground"
-                    >
-                      {row.title || "Untitled"}
-                    </Link>
-                    <span className="text-xs text-muted-foreground w-24 text-right tabular-nums shrink-0">
-                      {kbFormatDate(row.updatedAt)}
+              <>
+                <div className="rounded-xl border border-border bg-card divide-y divide-border/60">
+                  <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
+                    <span className="flex-1 text-xs font-medium text-muted-foreground">
+                      Title
                     </span>
+                    <span className="text-xs font-medium text-muted-foreground w-12 text-right">
+                      Impact
+                    </span>
+                    <span className="text-xs font-medium text-muted-foreground w-24 text-right">
+                      Updated
+                    </span>
+                    <span className="w-16" />
                   </div>
-                ))}
-              </div>
+                  {rows.map((row) => (
+                    <div
+                      key={row.id}
+                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/40 transition-colors"
+                    >
+                      <Link
+                        href={pageHref(row.id)}
+                        className="flex-1 text-sm truncate hover:underline text-foreground"
+                      >
+                        {row.title || "Untitled"}
+                      </Link>
+                      <span className="text-xs text-muted-foreground w-12 text-right tabular-nums font-mono shrink-0">
+                        {row.impact}
+                      </span>
+                      <span className="text-xs text-muted-foreground w-24 text-right tabular-nums shrink-0">
+                        {kbFormatDate(row.updatedAt)}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-7 w-16 shrink-0"
+                        onClick={() => openDismiss(row.id, row.title || "Untitled", activeSignal)}
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                {dismissState && (
+                  <ContentHealthDismissDialog
+                    open={dismissState.open}
+                    onOpenChange={handleDismissOpenChange}
+                    pageId={dismissState.pageId}
+                    pageTitle={dismissState.pageTitle}
+                    kind={dismissState.kind}
+                  />
+                )}
+              </>
             )}
 
             {(cursorState.hasPrevious || hasMore) && (

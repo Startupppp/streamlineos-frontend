@@ -23,6 +23,8 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "kb", "pages", "trash"] as const)
         : ([...base, "kb", "pages", "trash", params] as const),
+    pagesTrashPurgeImpact: (pageIds: number[]) =>
+      [...base, "kb", "pages", "trash", "purge-impact", [...pageIds].sort((a, b) => a - b)] as const,
     pagesSearch: (searchQuery: string, aclVersion: string) =>
       [...base, "kb", "pages", "search", searchQuery, aclVersion] as const,
     page: (pageId: number) => [...base, "kb", "pages", pageId] as const,
@@ -34,7 +36,10 @@ export const knowledgeAndSurveysQueryKeys = {
       [...base, "kb", "pages", pageId, "versions", versionNumber] as const,
     pageComments: (pageId: number) =>
       [...base, "kb", "pages", pageId, "comments"] as const,
-    pageTemplates: () => [...base, "kb", "page-templates"] as const,
+    pageTemplates: (q?: string) =>
+      q === undefined
+        ? ([...base, "kb", "page-templates"] as const)
+        : ([...base, "kb", "page-templates", { q }] as const),
     spaces: () => [...base, "kb", "spaces"] as const,
     space: (spaceId: number) => [...base, "kb", "space", spaceId] as const,
     search: (params?: QueryKeyParams) =>
@@ -63,7 +68,18 @@ export const knowledgeAndSurveysQueryKeys = {
       [...base, "kb", "pages", pageId, "record-links"] as const,
     importJobs: () => [...base, "kb", "import-jobs"] as const,
     exportJobs: () => [...base, "kb", "export-jobs"] as const,
-    pageAnalytics: () => [...base, "kb", "pageAnalytics"] as const,
+    pageAnalytics: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "pageAnalytics"] as const)
+        : ([...base, "kb", "pageAnalytics", params] as const),
+    citationReuse: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "citationReuse"] as const)
+        : ([...base, "kb", "citationReuse", params] as const),
+    reviewSla: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "reviewSla"] as const)
+        : ([...base, "kb", "reviewSla", params] as const),
     knowledgeGaps: (range?: QueryKeyParams) =>
       range === undefined
         ? ([...base, "kb", "knowledgeGaps"] as const)
@@ -84,6 +100,13 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "kb", "page-collection"] as const)
         : ([...base, "kb", "page-collection", params] as const),
+    contentHealthSignalsAll: [...base, "kb", "contentHealthSignals"] as const,
+    contentHealthSignals: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "contentHealthSignals"] as const)
+        : ([...base, "kb", "contentHealthSignals", params] as const),
+    contentHealthCounts: () =>
+      [...base, "kb", "contentHealthCounts"] as const,
   },
 
   roadmap: {

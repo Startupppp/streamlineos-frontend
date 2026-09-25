@@ -14,6 +14,8 @@ export const kbSpaceListItemContract = z.object({
   articleCount: z.number().int(),
   pageCount: z.number().int(),
   memberCount: z.number().int(),
+  ownerName: z.string().nullable(),
+  pagesOverdueForReview: z.number().int(),
 });
 
 export type KbSpaceListItem = z.infer<typeof kbSpaceListItemContract>;
@@ -48,6 +50,9 @@ export const kbSpaceFullContract = z.object({
   defaultVisibility: z.string(),
   owningTeamId: z.string().nullable(),
   archivedAt: z.string().nullable(),
+  pagesOverdueForReview: z.number().int().optional(),
+  pagesWithReviewPolicy: z.number().int().optional(),
+  viewerSpaceRole: z.enum(["admin", "manager", "editor", "viewer"]).nullable().optional(),
 });
 
 export const kbSpaceSuccessContract = z.object({ success: z.boolean() });

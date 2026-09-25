@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Users } from "lucide-react";
 import { useHrTeamAttendanceStatus, useHrDepartments } from "@/hooks/api/hr";
+import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { cn } from "@/lib/utils";
 import type { TeamAttendanceEntry } from "@/types/hr";
@@ -70,6 +71,8 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
     setStatusFilter((prev) => (prev === status ? "ALL" : status));
     setCursorHistory([undefined]);
   }, []);
+
+  const canManageAttendance = useCan("hr:attendance:manage");
 
   const filtersActive =
     search.trim() !== "" || statusFilter !== "ALL" || departmentFilter !== "ALL";
@@ -219,6 +222,19 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
             description={filtersActive ? undefined : "No team attendance data for today yet."}
             filtersActive={filtersActive}
             onClearFilters={handleClearFilters}
+            // V-061. An org with nobody clocked in had a dead end here. The way
+            // out is shifts and rosters — offered only when the emptiness is
+            // the org's and not a filter's (EmptyState suppresses `action`
+            // while filtersActive anyway), and only to someone who may act on
+            // it (FE-44, FE-55).
+            action={
+              !filtersActive && canManageAttendance
+                ? {
+                    label: "Set up shifts and rosters",
+                    href: "/hr/rosters",
+                  }
+                : undefined
+            }
             compact
           />
         ) : (

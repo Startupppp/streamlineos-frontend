@@ -30,6 +30,17 @@ export const formRowContract = z.object({
 
 export const formListContract = z.array(formRowContract);
 
+export const formPageContract = z.object({
+  data: z.array(formRowContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const formResponseContract = z.union([formPageContract, formListContract]);
+
 export const submissionRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -44,6 +55,17 @@ export const submissionRowContract = z.object({
 });
 
 export const submissionListContract = z.array(submissionRowContract);
+
+export const submissionPageContract = z.object({
+  data: z.array(submissionRowContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+
+export const submissionResponseContract = z.union([submissionPageContract, submissionListContract]);
 
 export const submissionCreateResultContract = z.object({
   id: z.number().int(),

@@ -16,7 +16,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useKbResearchBrief, useRateResearchBrief, useRetryResearchBrief, useCancelResearchBrief } from "@/hooks/api/kb/research-briefs";
+import { useKbResearchBrief, useRateResearchBrief, useRetryResearchBrief, useCancelResearchBrief, useConvertResearchBriefToPage } from "@/hooks/api/kb/research-briefs";
+import { useKbSpace } from "@/hooks/api/kb/spaces";
+import { pageHref } from "@/lib/knowledge-routes";
+import { useCan } from "@/hooks/api/access";
+import { useRouter } from "next/navigation";
 import type { KbResearchBriefCitation, KbResearchBriefStatus } from "@/types/kb";
 
 interface KbResearchBriefDetailProps {
@@ -104,8 +108,12 @@ function BriefFeedback({ briefId, currentRating }: { briefId: number; currentRat
 
 export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDetailProps) {
   const { data: brief, isLoading, error, refetch } = useKbResearchBrief(briefId);
+  const { data: scopeSpace } = useKbSpace(brief?.spaceId ?? 0);
   const retryMutation = useRetryResearchBrief();
   const cancelMutation = useCancelResearchBrief();
+  const convertMutation = useConvertResearchBriefToPage();
+  const canCreatePages = useCan("kb:pages:create");
+  const router = useRouter();
   const [showFullReport, setShowFullReport] = useState(false);
 
   const citations = useMemo(() => {
@@ -144,6 +152,16 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
     cancelMutation.mutate(briefId, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
 
+  function handleConvertToPage() {
+    convertMutation.mutate(briefId, {
+      onSuccess: (result) => {
+        toast.success("Brief converted to a page");
+        router.push(pageHref(result.pageId));
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }
+
   if (isLoading) return <LoadingState variant="form" rows={6} />;
   if (error) {
     return <ErrorState description={getErrorMessage(error)} onRetry={handleRefetch} />;
@@ -180,6 +198,18 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
           </div>
         </CardHeader>
         <CardContent className="p-4 space-y-3">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span>
+              <span className="font-medium text-foreground">Owner: </span>
+              You
+            </span>
+            {brief.spaceId !== null && (
+              <span>
+                <span className="font-medium text-foreground">Scope: </span>
+                {scopeSpace?.name ?? `Space ${brief.spaceId}`}
+              </span>
+            )}
+          </div>
           {isInProgress && (
             <div className="flex items-center gap-2 rounded-lg bg-primary/5 border border-primary/10 px-3 py-2.5">
               <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
@@ -218,6 +248,19 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
               loadingText="Cancelling…"
             >
               Cancel
+            </LoadingButton>
+          )}
+
+          {brief.status === "completed" && brief.report !== null && canCreatePages && (
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleConvertToPage}
+              isPending={convertMutation.isPending}
+              loadingText="Converting…"
+            >
+              Convert to page
             </LoadingButton>
           )}
 

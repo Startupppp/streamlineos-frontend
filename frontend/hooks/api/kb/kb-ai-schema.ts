@@ -9,9 +9,18 @@ const aiUsageMetaContract = z.object({
   costUsd: z.number(),
 });
 
+export const kbPageSourcesEventContract = z.array(
+  z.object({
+    id: z.number().int(),
+    title: z.string(),
+    icon: z.string().nullable(),
+  }),
+);
+
 export const kbPageAiBufferedContract = z.object({
   text: z.string(),
   aiUsage: aiUsageMetaContract.optional(),
+  citations: kbPageSourcesEventContract.optional(),
 });
 
 export const kbArticleAiBufferedContract = z.object({

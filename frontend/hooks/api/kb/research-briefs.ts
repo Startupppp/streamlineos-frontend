@@ -31,6 +31,10 @@ const kbResearchBriefRateContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbResearchBriefRateContract),
 );
 
+const kbConvertBriefToPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbConvertBriefToPageContract),
+);
+
 export function useKbResearchBriefs() {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
@@ -94,6 +98,23 @@ export function useRetryResearchBrief() {
     onSuccess: (_, briefId) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
+    },
+  });
+}
+
+export function useConvertResearchBriefToPage() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:create", {
+    mutationKey: ["kb", "research-briefs", "convert-to-page"],
+    mutationFn: (briefId: number) =>
+      apiClient.post<{ pageId: number }>(
+        `/kb/research-briefs/${briefId}/convert-to-page`,
+        {},
+        undefined,
+        kbConvertBriefToPageContract,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection() });
     },
   });
 }

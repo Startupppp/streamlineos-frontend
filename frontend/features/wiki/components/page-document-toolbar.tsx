@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KbLink2Icon, KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
@@ -28,7 +27,6 @@ import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { KbPageAiActions } from "./kb-page-ai-actions";
 import PageSharePopover from "./page-share-popover";
 import { exportKbPage } from "@/features/wiki/lib/export-page";
-import { pageHref } from "@/lib/knowledge-routes";
 import {
   resolveKbPageActions,
   groupKbPageActions,
@@ -68,7 +66,6 @@ export function PageDocumentToolbar({
   onDelete,
   onNavigate,
 }: PageDocumentToolbarProps) {
-  const router = useRouter();
   const canCreate = useCan("kb:pages:create");
   const canUpdate = useCan("kb:pages:update");
   const canManage = useCan("kb:pages:manage");
@@ -111,7 +108,7 @@ export function PageDocumentToolbar({
     duplicatePage.mutate(pageId, {
       onSuccess: (dup) => {
         toast.success("Page duplicated");
-        router.push(pageHref(dup.id));
+        onNavigate(dup.id);
       },
       onError: () => toast.error("Failed to duplicate page"),
     });
@@ -164,7 +161,7 @@ export function PageDocumentToolbar({
   }
 
   return (
-    <div className="flex items-center gap-1.5 shrink-0">
+    <div className="flex shrink-0 items-center justify-end gap-1.5 self-end sm:self-auto">
       <KbPageAiActions
         pageId={pageId}
         currentContent={currentContent}

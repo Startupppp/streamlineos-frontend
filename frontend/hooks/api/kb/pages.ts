@@ -11,9 +11,11 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useKbSpaces } from "./spaces";
 import { kbPageTreeLevelContract } from "./kb-page-tree-schema";
 import type { KbSpaceListPage } from "./spaces";
+import type { KbPageTrashPurgeImpact } from "./kb-pages-schema";
 import type {
   CreateKbPageInput,
   KbPage,
@@ -31,9 +33,9 @@ type KbPageTreeLevel = {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
 
-const ACL_VERSION_SPACE_LIMIT = 100;
+export const ACL_VERSION_SPACE_LIMIT = 100;
 
-function deriveAclVersion(page: KbSpaceListPage | undefined): string {
+export function deriveAclVersion(page: KbSpaceListPage | undefined): string {
   if (page === undefined) return "";
   const ids = page.data.map((s) => s.id).sort((a, b) => a - b);
   return page.pagination.hasMore ? `${ids.join(",")}~truncated` : ids.join(",");
@@ -88,6 +90,12 @@ const kbTrashPageListContract = lazyContract(() =>
   ),
 );
 
+const kbPageTrashPurgeImpactContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-pages-schema").then(
+    (m) => m.kbPageTrashPurgeImpactContract,
+  ),
+);
+
 const kbBulkPageResultContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then(
     (m) => m.kbBulkPageResultContract,
@@ -110,24 +118,6 @@ const kbPagePermanentDeleteContract = lazyContract(() =>
   ),
 );
 
-export function useKbPagesTree() {
-  const canView = useCan("kb:pages:view");
-  return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
-    queryFn: async ({ signal }) => {
-      const page = await apiClient.get<KbPageTreeLevel>(
-        "/kb/pages/tree",
-        undefined,
-        signal,
-        kbPageTreeLevelContract,
-      );
-      return page.data;
-    },
-    staleTime: 30_000,
-    enabled: canView,
-  });
-}
-
 export function useKbProjectPagesTree(projectId: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
@@ -146,33 +136,13 @@ export function useKbProjectPagesTree(projectId: number) {
   });
 }
 
-export function useKbPageTreeLevel(params: {
-  parentId?: number;
-  spaceId?: number;
-  projectId?: number;
-  cursor?: string;
-}) {
-  const canView = useCan("kb:pages:view");
-  return useQuery({
-    queryKey: treeLevelKey(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageTreeLevel>(
-        "/kb/pages/tree",
-        params as Record<string, unknown>,
-        signal,
-        kbPageTreeLevelContract,
-      ),
-    staleTime: 30_000,
-    enabled: canView,
-  });
-}
-
 export function useKbPageTreeInfinite(params: {
   spaceId?: number;
   projectId?: number;
 }) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: [...treeLevelKey(params), "infinite"] as const,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<KbPageTreeLevel>(
@@ -195,15 +165,20 @@ export function useKbPageTreeInfinite(params: {
 export function useKbPageChildrenLevel(
   nodeId: number,
   enabled: boolean,
+  spaceId?: number,
 ) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: [...treeLevelKey({ parentId: nodeId }), "infinite"] as const,
+    queryKey: [
+      ...treeLevelKey({ parentId: nodeId, spaceId }),
+      "infinite",
+    ] as const,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<KbPageTreeLevel>(
         "/kb/pages/tree",
         {
           parentId: nodeId,
+          ...(spaceId === undefined ? {} : { spaceId }),
           ...(pageParam === undefined ? {} : { cursor: pageParam }),
         } as Record<string, unknown>,
         signal,
@@ -236,6 +211,7 @@ export function useKbPagesRecent() {
 export function useKbPagesFavorites() {
   const canView = useCan("kb:pages:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageListItem[]>(
@@ -287,16 +263,18 @@ export type BulkPageResult = {
 
 export function useKbBulkRestorePages() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "trash", "bulk-restore"],
     mutationFn: (pageIds: number[]) =>
       apiClient.post<BulkPageResult>(
         "/kb/pages/trash/restore",
         { pageIds },
-        undefined,
+        operation.configFor({ pageIds }),
         kbBulkPageResultContract,
       ),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
       });
@@ -310,18 +288,39 @@ export function useKbBulkRestorePages() {
   });
 }
 
+export function useKbTrashPurgeImpact(
+  pageIds: number[],
+  options?: { enabled?: boolean },
+) {
+  const canPurge = useCan("kb:pages:purge");
+  return useQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashPurgeImpact(pageIds),
+    queryFn: ({ signal }) =>
+      apiClient.post<KbPageTrashPurgeImpact>(
+        "/kb/pages/trash/purge-impact",
+        { pageIds },
+        { signal },
+        kbPageTrashPurgeImpactContract,
+      ),
+    staleTime: 15_000,
+    enabled: canPurge && pageIds.length > 0 && (options?.enabled ?? true),
+  });
+}
+
 export function useKbBulkPurgePages() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:purge", {
     mutationKey: ["kb", "pages", "trash", "bulk-purge"],
     mutationFn: (pageIds: number[]) =>
       apiClient.delete<BulkPageResult>(
         "/kb/pages/trash/purge",
         { pageIds },
-        undefined,
+        operation.configFor({ pageIds }),
         kbBulkPageResultContract,
       ),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
       });
@@ -529,16 +528,18 @@ export function useHardDeleteKbPage() {
 
 export function useEmptyKbTrash() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:purge", {
     mutationKey: ["kb", "pages", "emptyTrash"],
     mutationFn: () =>
       apiClient.delete<{ purgedCount: number }>(
         "/kb/pages/trash/empty",
         undefined,
-        undefined,
+        operation.configFor({ command: "kb.pages.trash-empty" }),
         kbPageEmptyTrashContract,
       ),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
       });

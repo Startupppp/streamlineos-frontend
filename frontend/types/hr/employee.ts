@@ -70,6 +70,15 @@ export type EmployeeListItem = Pick<
 > & {
   email: string;
   department: { id: string; name: string } | null;
+  /**
+   * PROVISIONAL (product default E-4): derived at read time by the server
+   * (`users.is_active AND users.email_verified IS NOT NULL`), never stored.
+   * `isActive` alone is set the moment an administrator creates the account,
+   * so without this an invitee who never opened the invitation badges "Active"
+   * beside a summary that counts them under "Pending invite".
+   * Optional so an older payload degrades to the previous behaviour.
+   */
+  hasAccepted?: boolean;
 };
 
 export interface EmployeeCursorPage {

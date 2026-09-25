@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 export type KbReviewType = "approval" | "freshness";
 export type KbReviewStatus = "pending" | "approved" | "rejected";
@@ -16,6 +17,7 @@ export type KbPageReview = {
   orgId: string;
   pageId: number;
   pageTitle: string | null;
+  pageTrustState: "unverified" | "verified" | "verification_expired" | null;
   type: KbReviewType;
   status: KbReviewStatus;
   isOverdue: boolean;
@@ -151,16 +153,18 @@ export function useRejectPageReview() {
 
 export function useBulkDecidePageReviews() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:reviews:manage", {
     mutationKey: knowledgeAndSurveysQueryKeys.kb.pageReviewsBulkDecide(),
     mutationFn: (body: BulkDecideReviewsInput) =>
       apiClient.post<{ results: BulkDecideResultItem[] }>(
         "/kb/page-reviews/bulk-decide",
         body,
-        undefined,
+        operation.configFor(body),
         kbPageReviewBulkDecideContract,
       ),
     onSuccess: () => {
+      operation.settle();
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews(),
       });

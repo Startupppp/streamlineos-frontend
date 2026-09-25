@@ -1,34 +1,37 @@
 import { z } from "zod";
 
+const citationEvidenceFields = {
+  title: z.string(),
+  updatedAt: z.string(),
+  passage: z.string().optional(),
+  verified: z.boolean().optional(),
+};
+
 const kbAskCitationContract = z.discriminatedUnion("kind", [
   z.object({
+    ...citationEvidenceFields,
     kind: z.literal("article"),
     articleId: z.number().int(),
     slug: z.string(),
-    title: z.string(),
     spaceId: z.number().int().nullable(),
-    updatedAt: z.string(),
   }),
   z.object({
+    ...citationEvidenceFields,
     kind: z.literal("page"),
     pageId: z.number().int(),
-    title: z.string(),
     spaceId: z.number().int().nullable(),
-    updatedAt: z.string(),
   }),
   z.object({
+    ...citationEvidenceFields,
     kind: z.literal("source"),
     sourceId: z.number().int(),
-    title: z.string(),
     spaceId: z.number().int().nullable(),
-    updatedAt: z.string(),
   }),
   z.object({
+    ...citationEvidenceFields,
     kind: z.literal("document"),
     linkedDocumentId: z.number().int(),
-    title: z.string(),
     spaceId: z.null(),
-    updatedAt: z.string(),
   }),
 ]);
 

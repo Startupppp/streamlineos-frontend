@@ -42,9 +42,11 @@ interface PageHistorySheetProps {
   pageId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  projectId?: number;
 }
 
-export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHistorySheetProps) {
+export default function PageHistorySheet({ pageId, open, onOpenChange, projectId }: PageHistorySheetProps) {
+  const isProjectScoped = projectId !== undefined && projectId > 0;
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const [restoreAlertOpen, setRestoreAlertOpen] = useState(false);
   const { data: versionsData, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useKbPageVersionsInfinite(pageId);
@@ -86,6 +88,10 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
 
   function handleRestoreAlertOpenChange(open: boolean) {
     setRestoreAlertOpen(open);
+  }
+
+  function handleCloseSheet() {
+    onOpenChange(false);
   }
 
   function handleBackToList() {
@@ -169,15 +175,17 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                   />
                 </div>
             </SheetBody>
-            <SheetFooter className="border-t px-6 py-3 flex items-center justify-end">
-              <Link
-                href={pageHistoryHref(pageId)}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => onOpenChange(false)}
-              >
-                Open full history →
-              </Link>
-            </SheetFooter>
+            {!isProjectScoped && (
+              <SheetFooter className="border-t px-6 py-3 flex items-center justify-end">
+                <Link
+                  href={pageHistoryHref(pageId)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={handleCloseSheet}
+                >
+                  Open full history →
+                </Link>
+              </SheetFooter>
+            )}
           </>
         ) : (
           <div className="flex-1 flex flex-col min-h-0">

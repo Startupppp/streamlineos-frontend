@@ -17,7 +17,14 @@ describe("WikiSidebarNav — company documents", () => {
     renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} showCompanyDocuments />);
 
     expect(screen.getByRole("link", { name: "Company documents" })).toHaveAttribute("href", "/knowledge/wiki/company-documents");
-    expect(screen.getByRole("link", { name: "Private" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "My pages" })).toBeInTheDocument();
+  });
+
+  it("labels the owned-pages destination My pages, matching the heading that route renders, not the retired Private wording", () => {
+    renderWithProviders(<WikiSidebarNav canViewAnalytics={false} canViewReviews={false} canManageContent={false} />);
+
+    expect(screen.getByRole("link", { name: "My pages" })).toHaveAttribute("href", "/knowledge/wiki/private");
+    expect(screen.queryByRole("link", { name: "Private" })).toBeNull();
   });
 });
 
@@ -46,7 +53,7 @@ describe("WikiSidebarNav — wiki hides the Documents product sidebar", () => {
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Private" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "My pages" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Templates" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Settings" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Recent" })).toBeNull();

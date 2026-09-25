@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
 import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
@@ -26,6 +26,7 @@ const mockRestore = jest.fn();
 const mockCreate = jest.fn();
 const mockUpdate = jest.fn();
 const mockArchiveImpact = jest.fn();
+const mockMembers = jest.fn();
 
 jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: (...args: unknown[]) => mockSpaces(...args),
@@ -34,6 +35,7 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
   useCreateKbSpace: () => mockCreate(),
   useUpdateKbSpace: () => mockUpdate(),
   useKbSpaceArchiveImpact: () => mockArchiveImpact(),
+  useKbSpaceMembers: () => mockMembers(),
 }));
 
 function space(over: Partial<KbSpaceListItem> = {}): KbSpaceListItem {
@@ -51,6 +53,8 @@ function space(over: Partial<KbSpaceListItem> = {}): KbSpaceListItem {
     articleCount: 0,
     pageCount: 12,
     memberCount: 5,
+    ownerName: null,
+    pagesOverdueForReview: 0,
     ...over,
   };
 }
@@ -84,6 +88,7 @@ beforeEach(() => {
   mockCreate.mockReturnValue(mutation());
   mockUpdate.mockReturnValue(mutation());
   mockArchiveImpact.mockReturnValue({ data: undefined, isLoading: false, isError: false });
+  mockMembers.mockReturnValue({ data: undefined, isLoading: false, isError: false });
 });
 
 describe("SpacesPage", () => {
@@ -162,13 +167,44 @@ describe("SpacesPage", () => {
     expect(screen.queryByRole("button", { name: /New space/i })).not.toBeInTheDocument();
   });
 
-  it("shows Edit and Archive buttons on each card for a manager", () => {
+  it("shows Edit, Members and Archive buttons on each card for a manager", () => {
     mockCan.mockImplementation((key) => key === "kb:spaces:manage");
 
     render(<SpacesPage />);
 
     expect(screen.getByRole("button", { name: /Edit/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Archive/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Members/i })).toBeInTheDocument();
+  });
+
+  it("BITE: shows the owner and last-updated line on each card", () => {
+    mockSpaces.mockReturnValue(listing([space({ ownerName: "Priya Shah" })]));
+
+    render(<SpacesPage />);
+
+    expect(screen.getByText(/Owned by Priya Shah/)).toBeInTheDocument();
+    expect(screen.getByText(/Updated/)).toBeInTheDocument();
+  });
+
+  it("BITE: shows an overdue-for-review health badge to a manager, and hides it from a non-manager", () => {
+    mockSpaces.mockReturnValue(listing([space({ pagesOverdueForReview: 3 })]));
+    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+
+    const { rerender } = render(<SpacesPage />);
+    expect(screen.getByText(/3 pages overdue for review/)).toBeInTheDocument();
+
+    mockCan.mockReturnValue(false);
+    rerender(<SpacesPage />);
+    expect(screen.queryByText(/overdue for review/)).not.toBeInTheDocument();
+  });
+
+  it("opens the members sheet for the clicked card when Members is pressed", async () => {
+    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+    render(<SpacesPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Members/i }));
+
+    expect(screen.getByText("Members — Engineering")).toBeInTheDocument();
   });
 
   it("shows the next-page button when the server signals there are more results", () => {
@@ -193,5 +229,39 @@ describe("SpacesPage", () => {
     expect(mockSpaces).toHaveBeenCalledWith(
       expect.objectContaining({ audience: "public", archived: true }),
     );
+  });
+});
+
+describe("SpacesPage — card/list view", () => {
+  it("BITE: renders the spaces as a table when the URL asks for the list view", () => {
+    mockSearchParams = new URLSearchParams("view=list");
+
+    render(<SpacesPage />);
+
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("Engineering")).toBeInTheDocument();
+    expect(within(table).getByText("Internal")).toBeInTheDocument();
+  });
+
+  it("BITE: the view toggle reflects the list view selected in the URL", () => {
+    mockSearchParams = new URLSearchParams("view=list");
+
+    render(<SpacesPage />);
+
+    expect(screen.getByRole("button", { name: "List view" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Card view" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  it("keeps the card grid as the default view when the URL names no view", () => {
+    render(<SpacesPage />);
+
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.getByText("Engineering")).toBeInTheDocument();
   });
 });

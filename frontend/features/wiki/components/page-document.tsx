@@ -11,8 +11,7 @@ import {
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { KbAlertCircleIcon, KbImageIcon } from "@/features/wiki/lib/kb-icons";
-import { Button } from "@/components/ui/button";
+import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -38,7 +37,9 @@ import { PageCoverPickerDialog } from "./page-cover-picker";
 import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";
 import PageRightPanel from "./page-right-panel";
-import { PageDocumentTrustHeader } from "./page-document-trust-header";
+import { PageDocumentMetaFooter } from "./page-document-meta-footer";
+import { PageDocumentPropertyActions } from "./page-document-property-actions";
+import { PageDocumentOutline } from "./page-document-outline";
 import {
   normalizePlateValue,
   getPlainText,
@@ -105,6 +106,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   const [editorDraft, setEditorDraft] = useState<unknown>(null);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
   const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
 
   const handleSavePage = useCallback(
@@ -285,8 +287,8 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
 
       <div className="flex min-w-0 flex-1">
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="sticky top-0 z-40 border-b border-border bg-background">
-            <div className="mx-auto w-full max-w-[46rem] px-4 py-2 sm:px-6">
+          <div className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+            <div className="mx-auto w-full max-w-[46rem] px-4 py-2.5 sm:px-8">
               <PageDocumentHeader
                 page={page}
                 pageId={pageId}
@@ -305,18 +307,51 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             {isEditable ? (
               <div
                 ref={handleToolbarHost}
-                className="mx-auto w-full max-w-[46rem] px-4 sm:px-6"
+                className="mx-auto w-full max-w-[46rem] border-t border-border/50 px-4 sm:px-8"
               />
             ) : null}
           </div>
 
-          <div className="mx-auto w-full min-w-0 max-w-[46rem] px-4 pb-24 pt-6 sm:px-6">
-            <div className="mb-6 flex items-start gap-2">
-              <PageIconPicker
+          <div className="mx-auto w-full min-w-0 max-w-[46rem] px-4 pb-16 pt-5 sm:px-8 sm:pt-6">
+            {conflict ? (
+              <div className="mb-5">
+                <PageEditConflict
+                  conflict={conflict}
+                  isReloading={isReloading}
+                  pendingFields={pendingFields}
+                  onKeepMine={keepLocalEdits}
+                  onDiscardMine={handleDiscardMine}
+                />
+              </div>
+            ) : null}
+
+            {page.isLocked && !canManage ? (
+              <div className="mb-5 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+                <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
+                <span>This page is locked and is read-only.</span>
+              </div>
+            ) : null}
+
+            <div className="group/title mb-5">
+              <PageDocumentPropertyActions
                 icon={page.icon}
+                hasCover={Boolean(page.coverImage)}
                 isEditable={isEditable}
                 onIconChange={handleIconChange}
+                onOpenCover={handleOpenCover}
               />
+
+              {page.icon ? (
+                <div className="mb-2">
+                  <PageIconPicker
+                    icon={page.icon}
+                    isEditable={isEditable}
+                    onIconChange={handleIconChange}
+                    variant="hero"
+                  />
+                </div>
+              ) : null}
+
               <textarea
                 ref={titleRef}
                 value={localTitle}
@@ -324,64 +359,40 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
                 onKeyDown={handleTitleKeyDown}
                 onMouseDown={handleTitleMouseDown}
                 placeholder="Untitled"
-                className="min-w-0 flex-1 resize-none overflow-hidden border-0 bg-transparent text-left text-2xl font-semibold leading-tight text-foreground outline-none placeholder:text-muted-foreground sm:text-3xl"
+                className="w-full resize-none overflow-hidden border-0 bg-transparent text-left text-[1.75rem] font-semibold leading-tight tracking-tight text-foreground outline-none placeholder:text-muted-foreground/70 sm:text-4xl sm:leading-[1.15]"
                 rows={1}
                 style={{ height: "auto" }}
                 readOnly={!isEditable}
                 aria-label="Page title"
               />
             </div>
-            {isEditable && !page.coverImage ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mb-4 h-8 px-2 text-muted-foreground"
-                onClick={handleOpenCover}
-              >
-                <KbImageIcon className="mr-1.5 h-4 w-4" />
-                Add cover
-              </Button>
-            ) : null}
 
-            {conflict && (
-              <PageEditConflict
-                conflict={conflict}
-                isReloading={isReloading}
-                pendingFields={pendingFields}
-                onKeepMine={keepLocalEdits}
-                onDiscardMine={handleDiscardMine}
+            <PageDocumentOutline
+              content={editorDraft ?? page.content}
+              containerRef={editorContainerRef}
+            />
+
+            <div ref={editorContainerRef} className="min-w-0">
+              <PlateDocumentEditor
+                value={editorDraft ?? page.content ?? undefined}
+                contentKey={`${pageId}:${reloadNonce}`}
+                editable={isEditable}
+                placeholder="Start writing…"
+                onChange={handleEditorChange}
+                fetchMentionUsers={fetchMentionUsers}
+                fetchPageLinks={fetchPageLinks}
+                onNavigateToPage={handleNavigateToPage}
+                uploadFile={isEditable ? handleUploadFile : undefined}
+                toolbarHost={toolbarHost}
               />
-            )}
+            </div>
 
-            <PageDocumentTrustHeader
-              status={page.status}
+            <PageDocumentMetaFooter
               trustState={page.trustState}
-              visibility={page.visibility}
               nextReviewAt={page.nextReviewAt}
               updatedAt={page.updatedAt}
               lastEditedById={page.lastEditedById}
               ownerUserId={page.ownerUserId}
-            />
-
-            {page.isLocked && !canManage && (
-              <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
-                <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
-                <span>This page is locked and is read-only.</span>
-              </div>
-            )}
-
-            <PlateDocumentEditor
-              value={editorDraft ?? page.content ?? undefined}
-              contentKey={`${pageId}:${reloadNonce}`}
-              editable={isEditable}
-              placeholder="Start writing…"
-              onChange={handleEditorChange}
-              fetchMentionUsers={fetchMentionUsers}
-              fetchPageLinks={fetchPageLinks}
-              onNavigateToPage={handleNavigateToPage}
-              uploadFile={isEditable ? handleUploadFile : undefined}
-              toolbarHost={toolbarHost}
             />
           </div>
         </div>

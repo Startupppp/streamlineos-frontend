@@ -88,6 +88,11 @@ export function PageCommentThread({ comment, replies, pageId, onReply, currentUs
               </Badge>
             )}
           </div>
+          {comment.anchorQuote && (
+            <blockquote className="mb-1 border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
+              {comment.anchorQuote}
+            </blockquote>
+          )}
           {editing ? (
             <div className="space-y-2">
               <Textarea

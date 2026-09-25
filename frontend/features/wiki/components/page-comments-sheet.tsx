@@ -8,6 +8,7 @@ import {
 } from "@/features/wiki/lib/kb-icons";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -22,15 +23,25 @@ import {
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageComment } from "@/hooks/api/kb/page-comments";
+import {
+  extractCommentAnchorTargets,
+  findCommentAnchorTarget,
+  type PageAnchorContent,
+} from "@/features/wiki/lib/page-comment-anchors";
 import { PageCommentThread } from "./page-comment-thread";
+
+const ANCHOR_CHIP_CLASS =
+  "rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground";
+const ANCHOR_CHIP_SELECTED_CLASS = "border-primary/30 bg-primary/10 text-primary";
 
 interface PageCommentsSheetProps {
   pageId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  content?: PageAnchorContent;
 }
 
-export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCommentsSheetProps) {
+export default function PageCommentsSheet({ pageId, open, onOpenChange, content = null }: PageCommentsSheetProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? null;
   const canUpdate = useCan("kb:pages:update");
@@ -38,7 +49,11 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
   const createComment = useCreateKbPageComment();
   const [newContent, setNewContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<KbPageComment | null>(null);
+  const [anchorBlockIndex, setAnchorBlockIndex] = useState<number | null>(null);
   const [postAnnouncement, setPostAnnouncement] = useState("");
+
+  const anchorTargets = extractCommentAnchorTargets(content);
+  const selectedAnchor = findCommentAnchorTarget(anchorTargets, anchorBlockIndex);
 
   const topLevel = comments.filter((c) => c.parentId === null && !c.resolvedAt);
   const resolved = comments.filter((c) => c.parentId === null && !!c.resolvedAt);
@@ -47,11 +62,18 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
     if (!newContent.trim()) return;
     const isReply = replyingTo !== null;
     createComment.mutate(
-      { pageId, content: newContent.trim(), parentId: replyingTo?.id ?? null },
+      {
+        pageId,
+        content: newContent.trim(),
+        parentId: replyingTo?.id ?? null,
+        anchorBlockIndex: isReply ? null : (selectedAnchor?.blockIndex ?? null),
+        anchorQuote: isReply ? null : (selectedAnchor?.quote ?? null),
+      },
       {
         onSuccess: () => {
           setNewContent("");
           setReplyingTo(null);
+          setAnchorBlockIndex(null);
           setPostAnnouncement(isReply ? "Reply posted." : "Comment posted.");
         },
         onError: (error) => toast.error(getErrorMessage(error)),
@@ -61,10 +83,16 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
 
   function handleSetReplyingTo(comment: KbPageComment) {
     setReplyingTo(comment);
+    setAnchorBlockIndex(null);
   }
 
   function handleClearReply() {
     setReplyingTo(null);
+  }
+
+  function handleAnchorSelect(e: React.MouseEvent<HTMLButtonElement>) {
+    const raw = e.currentTarget.dataset.blockIndex;
+    setAnchorBlockIndex(raw === undefined ? null : Number(raw));
   }
 
   function handleNewContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -172,6 +200,43 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                 <KbXIcon className="h-3 w-3" />
               </button>
             </div>
+          )}
+          {!replyingTo && anchorTargets.length > 0 && (
+            <div
+              role="group"
+              aria-label="Anchor this comment to a block"
+              className="flex flex-wrap gap-1"
+            >
+              <button
+                type="button"
+                aria-pressed={anchorBlockIndex === null}
+                onClick={handleAnchorSelect}
+                className={cn(ANCHOR_CHIP_CLASS, anchorBlockIndex === null && ANCHOR_CHIP_SELECTED_CLASS)}
+              >
+                Whole page
+              </button>
+              {anchorTargets.map((target) => (
+                <button
+                  key={target.blockIndex}
+                  type="button"
+                  data-block-index={String(target.blockIndex)}
+                  aria-pressed={anchorBlockIndex === target.blockIndex}
+                  onClick={handleAnchorSelect}
+                  className={cn(
+                    ANCHOR_CHIP_CLASS,
+                    "max-w-[12rem] truncate",
+                    anchorBlockIndex === target.blockIndex && ANCHOR_CHIP_SELECTED_CLASS,
+                  )}
+                >
+                  {target.quote}
+                </button>
+              ))}
+            </div>
+          )}
+          {selectedAnchor && (
+            <blockquote className="border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
+              {selectedAnchor.quote}
+            </blockquote>
           )}
           <Textarea
             aria-label={replyingTo ? "Reply to comment" : "Write a comment"}

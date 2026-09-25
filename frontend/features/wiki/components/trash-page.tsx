@@ -19,6 +19,7 @@ import { useKbPagesTrash, useEmptyKbTrash } from "@/hooks/api/kb";
 import {
   useKbBulkRestorePages,
   useKbBulkPurgePages,
+  useKbTrashPurgeImpact,
 } from "@/hooks/api/kb/pages";
 import { KbRotateCcwIcon, KbTrash2Icon } from "@/features/wiki/lib/kb-icons";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
@@ -47,9 +48,15 @@ export default function TrashPage() {
   const q = searchParams.get("q") ?? undefined;
   const spaceIdRaw = searchParams.get("spaceId");
   const spaceId = spaceIdRaw ? Number(spaceIdRaw) : undefined;
+  const deletedByRaw = searchParams.get("deletedByMembershipId");
+  const deletedByMembershipId =
+    deletedByRaw && Number.isInteger(Number(deletedByRaw)) && Number(deletedByRaw) > 0
+      ? Number(deletedByRaw)
+      : undefined;
 
   const [searchDraft, setSearchDraft] = useState(q ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [deletedByDraft, setDeletedByDraft] = useState(deletedByRaw ?? "");
 
   const cursorState = useCursorPagination();
   const params = {
@@ -57,6 +64,7 @@ export default function TrashPage() {
     limit: DEFAULT_LIMIT,
     q: q || undefined,
     spaceId,
+    deletedByMembershipId,
   };
 
   const { data, isLoading, isError, error, refetch } = useKbPagesTrash(params);
@@ -78,6 +86,10 @@ export default function TrashPage() {
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
   const [emptyConfirmOpen, setEmptyConfirmOpen] = useState(false);
   const [bulkPurgeConfirmOpen, setBulkPurgeConfirmOpen] = useState(false);
+  const selectedIds = [...selected].map(Number);
+  const { data: purgeImpact } = useKbTrashPurgeImpact(selectedIds, {
+    enabled: bulkPurgeConfirmOpen,
+  });
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
@@ -87,6 +99,13 @@ export default function TrashPage() {
       cursorState.reset();
       updateFilters({ q: value || null });
     }, 350);
+  }
+
+  function handleDeletedByChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setDeletedByDraft(value);
+    cursorState.reset();
+    updateFilters({ deletedByMembershipId: value || null });
   }
 
   function handleEmptyTrash() {
@@ -101,11 +120,10 @@ export default function TrashPage() {
   }
 
   function handleBulkRestore() {
-    const ids = [...selected].map(Number);
-    bulkRestore.mutate(ids, {
+    bulkRestore.mutate(selectedIds, {
       onSuccess: () => {
         toast.success(
-          `Restored ${ids.length} page${ids.length === 1 ? "" : "s"}`,
+          `Restored ${selectedIds.length} page${selectedIds.length === 1 ? "" : "s"}`,
         );
         setSelected(new Set());
       },
@@ -114,11 +132,10 @@ export default function TrashPage() {
   }
 
   function handleBulkPurge() {
-    const ids = [...selected].map(Number);
-    bulkPurge.mutate(ids, {
+    bulkPurge.mutate(selectedIds, {
       onSuccess: () => {
         toast.success(
-          `Permanently deleted ${ids.length} page${ids.length === 1 ? "" : "s"}`,
+          `Permanently deleted ${selectedIds.length} page${selectedIds.length === 1 ? "" : "s"}`,
         );
         setSelected(new Set());
       },
@@ -210,7 +227,7 @@ export default function TrashPage() {
         <div className="space-y-4">
           {canManageSettings ? <TrashRetentionSection /> : null}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Input
               type="search"
               placeholder="Search deleted pages…"
@@ -218,6 +235,15 @@ export default function TrashPage() {
               onChange={handleSearchChange}
               className="max-w-sm"
               aria-label="Search deleted pages"
+            />
+            <Input
+              type="number"
+              min={1}
+              placeholder="Deleted by membership ID…"
+              value={deletedByDraft}
+              onChange={handleDeletedByChange}
+              className="max-w-xs"
+              aria-label="Deleted by membership ID"
             />
           </div>
 
@@ -289,7 +315,11 @@ export default function TrashPage() {
         open={emptyConfirmOpen}
         onOpenChange={setEmptyConfirmOpen}
         title="Empty the trash?"
-        description={`All ${pageCount} page${pageCount === 1 ? "" : "s"} in the trash will be permanently deleted. This cannot be undone.`}
+        description={
+          data?.pagination.hasMore
+            ? "This permanently deletes every page currently in the trash, not just the ones shown on this page. This cannot be undone."
+            : `All ${pageCount} page${pageCount === 1 ? "" : "s"} in the trash will be permanently deleted. This cannot be undone.`
+        }
         confirmLabel="Empty Trash"
         destructive
         isPending={emptyTrash.isPending}
@@ -300,7 +330,11 @@ export default function TrashPage() {
         open={bulkPurgeConfirmOpen}
         onOpenChange={setBulkPurgeConfirmOpen}
         title={`Permanently delete ${selectedCount} page${selectedCount === 1 ? "" : "s"}?`}
-        description="This cannot be undone. The selected pages will be permanently removed along with their history, attachments, and index entries."
+        description={
+          purgeImpact && purgeImpact.descendantCount > 0
+            ? `This cannot be undone. ${purgeImpact.descendantCount} child page${purgeImpact.descendantCount === 1 ? "" : "s"} nested under the selection will also be permanently removed, along with history, attachments, and index entries.`
+            : "This cannot be undone. The selected pages will be permanently removed along with their history, attachments, and index entries."
+        }
         confirmLabel="Delete Forever"
         destructive
         isPending={bulkPurge.isPending}

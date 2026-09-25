@@ -180,3 +180,78 @@ describe("EmployeeSensitiveTab — access is three-valued, not a boolean", () =>
     expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
   });
 });
+
+/**
+ * V-134 / V-136. The encryption + audited-access sentence and the statutory
+ * guidance are already in the component, but nothing asserted them, so all of
+ * it could be deleted with every suite still green. These pin the promises the
+ * screen makes to whoever opens someone else's salary and Aadhaar.
+ */
+describe("EmployeeSensitiveTab — what the screen promises the viewer", () => {
+  const populatedSensitive = {
+    data: {
+      salaryAmountCents: 9000000,
+      salaryCurrency: "INR",
+      salaryFrequency: "monthly",
+      bankDetails: {
+        accountNumber: "123456789012",
+        bankName: "Example Bank",
+        ifsc: "EXMP0001234",
+        pfUanNumber: "100200300400",
+        esiIpNumber: "3100000000",
+      },
+      taxId: null,
+      panNumber: "ABCDE1234F",
+      passportNumber: null,
+      nationalId: null,
+    },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  };
+
+  it("keeps the encryption and audit notice when every sensitive field is empty", () => {
+    render(<EmployeeSensitiveTab userId="u1" />);
+
+    expect(screen.getByText(/encrypted at rest/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/recorded against your account, with your IP address and the time/i),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the same notice once values exist", () => {
+    mockUseEmployeeSensitive.mockReturnValue(populatedSensitive);
+
+    render(<EmployeeSensitiveTab userId="u1" />);
+
+    expect(screen.getByText(/encrypted at rest/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/recorded against your account, with your IP address and the time/i),
+    ).toBeInTheDocument();
+  });
+
+  it("explains when PF and ESI apply next to their fields", () => {
+    render(<EmployeeSensitiveTab userId="u1" />);
+
+    expect(
+      screen.getByText(/Universal Account Number from EPFO/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/It follows them between employers/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Insured Person number from ESIC/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Required only where ESI applies/i)).toBeInTheDocument();
+  });
+
+  it("links the statutory fields to the compliance pack", () => {
+    render(<EmployeeSensitiveTab userId="u1" />);
+
+    expect(
+      screen.getByText(/PF, ESI and TDS obligations depend on where this employee works/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /review statutory requirements/i }),
+    ).toHaveAttribute("href", "/hr/compliance");
+  });
+});

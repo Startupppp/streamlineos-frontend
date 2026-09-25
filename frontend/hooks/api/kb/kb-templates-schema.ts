@@ -8,6 +8,9 @@ const kbPageTemplateContract = z.object({
   description: z.string().nullable(),
   content: z.record(z.string(), z.unknown()).nullable(),
   createdById: z.string().nullable(),
+  createdByName: z.string().nullable(),
+  useCount: z.number().int(),
+  lastUsedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

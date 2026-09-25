@@ -19,6 +19,8 @@ export type KbPageComment = {
   authorName: string | null;
   parentId: number | null;
   content: string;
+  anchorBlockIndex: number | null;
+  anchorQuote: string | null;
   resolvedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -27,6 +29,8 @@ export type KbPageComment = {
 export type CreateKbPageCommentInput = {
   content: string;
   parentId?: number | null;
+  anchorBlockIndex?: number | null;
+  anchorQuote?: string | null;
 };
 
 const kbPageCommentListContract = lazyContract(() =>
