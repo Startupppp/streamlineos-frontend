@@ -88,7 +88,8 @@ Current release-candidate checks:
 The candidate was exercised through a real authenticated browser against the production API.
 
 - The current audit verified the authenticated production ticket route `/build/6/tickets/BQS-2` in the real browser.
-- The local candidate was directly loaded through all 65 authenticated Build page routes from the route snapshot: 25 organization routes and 40 project routes, including representative detail IDs; no visible runtime-error signal or browser console error was observed. A production full matrix and the mobile matrix remain open.
+- The authenticated production desktop sweep covered the 65 canonical org/project pages in parallel batches on 2026-09-25. The pre-deployment build had no errors on the 59 routes without missing fixture records; six stale-detail routes reported expected 404s through the route boundary: managed-product child pages, portfolio detail, team detail, meeting detail, and QA test-run detail. The latest frontend fixes are on `origin/main` at `9c9c1f2a0`; production must be rechecked after that deployment before this criterion can be marked complete.
+- The mobile matrix remains open.
 - Issues actions no longer clip at 375 px.
 - Ticket properties start closed on mobile, open only on explicit action, and expose a visible close control.
 - Programs and My Work preserve deep-linked URL state.
@@ -148,11 +149,9 @@ Completed:
 - Portfolio and managed-product list services now reject malformed cursors with a bounded `400`; the local UI remains stable against the currently deployed older API, which still treats that input as the first page.
 - Goal list and detail responses now resolve owner membership IDs to tenant-scoped user projections in one batch for collections, avoiding the previous always-unassigned response.
 - The production-domain unauthenticated `/build` smoke passed with the expected sign-in redirect and no console errors.
-- The current browser observation passed for `/build/6/tickets/BQS-2`; the full production route matrix remains open.
-- Production `/build/portfolios?q=platform` was rechecked in the real browser after rollout and rendered the filtered empty state without a visible error.
-- Production `/build/managed-products` and `/build/goals` were rechecked in the real browser and rendered their authenticated empty states without visible errors.
-- Local port `1000` browser verification rechecked `/build/inbox?view=drafts` and `/build/command-center`; both rendered their canonical headings and Build navigation without visible runtime errors. Browser logs contained only expected React DevTools and Next.js HMR messages.
-- Production browser verification rechecked `/build/command-center`; it now renders the canonical `Command Center` heading and Build navigation with no console errors, confirming the frontend deployment has caught up for this route.
+- The current browser observation passed for `/build/6/tickets/BQS-2`; the desktop matrix has been exercised, but its final pass remains open until the latest frontend deployment is observed on the six corrected stale-detail routes.
+- Production `/build/portfolios?q=platform`, `/build/managed-products`, `/build/goals`, and `/build/command-center` were rechecked in the real browser without visible errors.
+- Local port `1000` browser verification rechecked `/build/inbox?view=drafts` and `/build/command-center`; both rendered their canonical headings without visible runtime errors.
 
 ## Acceptance criteria
 
