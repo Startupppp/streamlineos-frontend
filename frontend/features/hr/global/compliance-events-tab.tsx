@@ -4,10 +4,11 @@ import { useState, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import {
   useComplianceEvents,
@@ -36,9 +37,15 @@ export function ComplianceEventsTab() {
   );
   const markDone = useMarkEventDone();
 
-  const handleMarkDone = useCallback((eventId: number) => {
+  const handleMarkDone = useCallback((eventId: number) => () => {
     markDone.mutate({ eventId });
   }, [markDone]);
+
+  const handleToggleFilter = useCallback(
+    (s: NonNullable<ComplianceEventsParams["status"]>) => () =>
+      setStatusFilter((current) => (current === s ? undefined : s)),
+    [],
+  );
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -48,29 +55,26 @@ export function ComplianceEventsTab() {
     setStatusFilter(undefined);
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load compliance events"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
-      />
-    );
-  }
-
   const events = data?.data ?? [];
   const filtersActive = statusFilter !== undefined;
+  const pageState = usePageState({
+    permission: "hr:compliance:manage",
+    isLoading,
+    isError,
+    error,
+  });
 
   return (
+    <PageState
+      resolution={pageState}
+      loading={
+        <div className="space-y-2">
+          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
+        </div>
+      }
+      onRetry={handleRetry}
+      className="flex-1"
+    >
     <div className="space-y-4">
       <div className="flex gap-2">
         {(["pending", "overdue", "done"] as const).map((s) => (
@@ -78,8 +82,9 @@ export function ComplianceEventsTab() {
             key={s}
             variant={statusFilter === s ? "default" : "outline"}
             size="sm"
-            onClick={() => setStatusFilter(statusFilter === s ? undefined : s)}
-            className="capitalize text-xs h-7"
+            aria-pressed={statusFilter === s}
+            onClick={handleToggleFilter(s)}
+            className="capitalize"
           >
             {s}
           </Button>
@@ -116,20 +121,21 @@ export function ComplianceEventsTab() {
               </div>
               <EventStatusBadge status={event.status} />
               {event.status !== "done" && (
-                <Button
+                <LoadingButton
                   size="sm"
                   variant="outline"
-                  className="text-xs"
+                  isPending={markDone.isPending && markDone.variables?.eventId === event.id}
                   disabled={markDone.isPending}
-                  onClick={() => handleMarkDone(event.id)}
+                  onClick={handleMarkDone(event.id)}
                 >
                   Mark done
-                </Button>
+                </LoadingButton>
               )}
             </div>
           ))}
         </div>
       )}
     </div>
+    </PageState>
   );
 }

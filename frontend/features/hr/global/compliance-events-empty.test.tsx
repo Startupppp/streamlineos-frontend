@@ -14,6 +14,16 @@ jest.mock("@/hooks/api/hr/global", () => ({
   useMarkEventDone: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
+// The tab resolves denial/loading/error through usePageState, which reads the
+// access query; these cases are about the granted, loaded branch.
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: (options: { isLoading: boolean; isError: boolean; error?: unknown }) =>
+    jest.requireActual("@/lib/page-state/resolve-page-state").resolvePageState({
+      ...options,
+      access: "granted",
+    }),
+}));
+
 const mockedEvents = useComplianceEvents as jest.Mock;
 
 function withEvents(data: unknown[]) {
