@@ -89,7 +89,7 @@ export function keyResultPercent(kr: {
   }
   const pct = ((current - start) / denominator) * 100;
   if (Number.isNaN(pct)) return 0;
-  return Math.min(Math.max(Math.round(pct), 0), 100);
+  return Math.min(Math.max(Number(pct.toFixed(1)), 0), 100);
 }
 
 export function formatMetricValue(
