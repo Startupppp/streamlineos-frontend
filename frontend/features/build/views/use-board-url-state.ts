@@ -20,6 +20,7 @@ import {
 } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { currentSearchParams } from "@/lib/current-search-params";
 import {
+  buildListSearchParams,
   parsePriorityParam,
   parseTicketTypeParam,
 } from "../shared/use-build-list-url-state";
@@ -107,17 +108,20 @@ export function useBoardUrlState(
   );
 
   useEffect(() => {
-    const next = new URLSearchParams(searchParams.toString());
+    const updates: Record<string, string | null> = {};
     let changed = false;
     if (rawPriority && !filterPriority) {
-      next.delete("priority");
+      updates.priority = null;
       changed = true;
     }
     if (rawType && !filterType) {
-      next.delete("type");
+      updates.type = null;
       changed = true;
     }
     if (!changed) return;
+    const next = buildListSearchParams(searchParams, updates, {
+      resetCursor: true,
+    });
     const query = next.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [filterPriority, filterType, pathname, rawPriority, rawType, router, searchParams]);
@@ -458,25 +462,32 @@ export function useBoardUrlState(
   ]);
 
   const handleClearSearch = useCallback(() => {
-    const next = currentSearchParams(searchParams);
-    next.delete("q");
-    next.delete("status");
-    next.delete("priority");
-    next.delete("type");
-    next.delete("assigneeId");
-    next.delete("labels");
-    next.delete("cycle");
-    next.delete("module");
-    next.delete("severity");
-    next.delete("qaState");
+    const next = buildListSearchParams(
+      searchParams,
+      {
+        q: null,
+        status: null,
+        priority: null,
+        type: null,
+        assigneeId: null,
+        labels: null,
+        cycle: null,
+        module: null,
+        severity: null,
+        qaState: null,
+      },
+      { resetCursor: true },
+    );
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [router, searchParams]);
 
   const handleQaFilterChange = useCallback(
     (key: "severity" | "qaState", value: string) => {
-      const next = currentSearchParams(searchParams);
-      if (value) next.set(key, value);
-      else next.delete(key);
+      const next = buildListSearchParams(
+        searchParams,
+        { [key]: value || null },
+        { resetCursor: true },
+      );
       router.replace(`?${next.toString()}`, { scroll: false });
     },
     [router, searchParams],

@@ -173,7 +173,7 @@ Ordered by dependency on the closure stages above.
 - **Owner:** frontend
 - **Depends on:** none
 - **Acceptance:** every Build list route reads and writes state through the shared hook; keyset cursors match their `ORDER BY`.
-- **Evidence:** `frontend/features/build/shared/use-build-list-url-state.ts` exists with **7 consumers** measured 2026-09-22; the remaining list surfaces are unconverted.
+- **Evidence:** `frontend/features/build/shared/use-build-list-url-state.ts` is now the canonical serializer used directly by the shared filter hook and its existing consumers; direct URL-state consumers remain limited and the remaining list surfaces are unconverted.
 - **Effort:** 4–6 d
 
 #### P1-3 — Canonical Issues explorer residual

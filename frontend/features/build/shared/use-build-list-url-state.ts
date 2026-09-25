@@ -59,6 +59,10 @@ export const BUILD_LIST_SHAPE_PARAMS = [
 
 export const BUILD_LIST_CURSOR_PARAM = "cursor";
 
+export interface BuildListSearchParamOptions {
+  resetCursor?: boolean;
+}
+
 function parseEnumCsv(raw: string | null, allowed: ReadonlySet<string>): string | undefined {
   if (!raw) return undefined;
   const values = Array.from(
@@ -130,6 +134,7 @@ export interface BuildListUrlState {
 export function buildListSearchParams(
   current: URLSearchParams,
   updates: Record<string, string | null>,
+  options: BuildListSearchParamOptions = {},
 ): URLSearchParams {
   const next = new URLSearchParams(current.toString());
   for (const [key, value] of Object.entries(updates)) {
@@ -142,7 +147,7 @@ export function buildListSearchParams(
   const shapeChanged = Object.keys(updates).some((key) =>
     BUILD_LIST_SHAPE_PARAMS.some((shapeParam) => shapeParam === key),
   );
-  if (shapeChanged) next.delete(BUILD_LIST_CURSOR_PARAM);
+  if (shapeChanged || options.resetCursor) next.delete(BUILD_LIST_CURSOR_PARAM);
   return next;
 }
 

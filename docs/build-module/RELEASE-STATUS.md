@@ -34,13 +34,13 @@ complete product definition of done.
 
 ## Backend and authorization
 
-- Backend release commit `e8d56b1c9` is contained in backend `origin/main`; the health endpoint responds 200 at `https://api.streamlineos.in/health`. The latest analytics, project-bound workflow-read, bounded ticket-detail relation, checklist-item read, malformed ticket-filter, bounded-search validation, filtered column-count, portfolio-search, malformed collection-cursor, and tenant-scoped goal-owner projection fixes are pushed and await the normal deployment rollout.
+- Backend release commit `b5a2553c1` is contained in backend `origin/main`; the health endpoint responds 200 at `https://api.streamlineos.in/health`. The latest analytics, project-bound workflow-read, bounded ticket-detail relation, checklist-item read, malformed ticket-filter, bounded-search validation, filtered column-count, portfolio-search, malformed collection-cursor, tenant-scoped goal-owner projection, and authorization-evidence refresh fixes are pushed and await the normal deployment rollout.
 - The current authorization census covers 49 controllers and 325 handlers:
   - `VULNERABLE=0`
   - `NEEDS-REVIEW=0`
   - `CLOSED=42`
   - `VERIFIED=283`
-- The generated Markdown and JSON census artifacts in `backend-docs/` match backend `origin/main`.
+- The generated Markdown and JSON census artifacts in the backend `docs/build-module/` match backend `origin/main`.
 - The focused backend integration matrix passed 41 suites and 482 tests. Backend typecheck, build, permission-key validation, route-budget self-test, feature-cycle scan, and migration-discipline checks passed.
 
 ## Production migrations
@@ -103,6 +103,14 @@ The candidate was exercised through a real authenticated browser against the pro
   `/build/inbox?view=drafts`, `/build/6/backlog`, and
   `/build/command-center` without a visible runtime error; the canonical
   page heading is `Command Center`.
+- A local port `1000` UI smoke traversed 16 authenticated organization routes,
+  including Projects, Command Center, My Work, Inbox, All Work, Goals,
+  Managed Products, Portfolios, Programs, Roadmap, Teams, Templates,
+  Approvals, and Build settings, without a visible runtime-error or failed-load
+  surface.
+- A second local port `1000` UI smoke traversed 29 project routes under
+  `/build/6`, including delivery, collaboration, QA, governance, settings,
+  and reporting surfaces, without a visible runtime-error or not-found surface.
 - Local port `1000` view-switcher verification routed `/build/6/issues` to
   `/calendar?q=login&status=TODO&cycle=7&projectId=6&source=build`; the unified
   Calendar surface rendered with no browser console errors.
@@ -139,7 +147,7 @@ These failures are measured and are not Build-owned:
 Completed:
 
 - Frontend `origin/main` contains `54a131d2f` (Command Center route labeling is consistent with its canonical route and page retry refreshes its server-derived summaries; portfolio search is sent as the server-side `q` parameter; the prior malformed-filter and board-count fixes remain in the same release line).
-- Backend `origin/main` contains `e8d56b1c9`, including the Build portfolio cursor validation and tenant-scoped goal-owner projection fixes.
+- Backend `origin/main` contains `b5a2553c1`, including the Build portfolio cursor validation, tenant-scoped goal-owner projection, refreshed authorization census, and migration-discipline baseline fixes.
 - The portfolio list UI renders its loading and empty states locally on port `1000`; authenticated production verification of `/build/portfolios?q=platform` now reaches the server-filtered empty state without a runtime error.
 - Portfolio and managed-product list services now reject malformed cursors with a bounded `400`; the local UI remains stable against the currently deployed older API, which still treats that input as the first page.
 - Goal list and detail responses now resolve owner membership IDs to tenant-scoped user projections in one batch for collections, avoiding the previous always-unassigned response.
@@ -147,6 +155,8 @@ Completed:
 - The current browser observation passed for `/build/6/tickets/BQS-2`; the full production route matrix remains open.
 - Production `/build/portfolios?q=platform` was rechecked in the real browser after rollout and rendered the filtered empty state without a visible error.
 - Production `/build/managed-products` and `/build/goals` were rechecked in the real browser and rendered their authenticated empty states without visible errors.
+- Local port `1000` browser verification rechecked `/build/inbox?view=drafts` and `/build/command-center`; both rendered their canonical headings and Build navigation without visible runtime errors. Browser logs contained only expected React DevTools and Next.js HMR messages.
+- Production browser verification rechecked `/build/command-center`; it now renders the canonical `Command Center` heading and Build navigation with no console errors, confirming the frontend deployment has caught up for this route.
 
 ## Acceptance criteria
 
