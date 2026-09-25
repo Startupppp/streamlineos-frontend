@@ -913,8 +913,8 @@ seam that now emits behind the nine that still do not.
   All need a live database.
 - [ ] ACL denial and not-found anomalies, revocation lag.
 - [ ] Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
-- [ ] Purge backlog and oldest incomplete ledger.
-- [ ] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
+- [x] Purge backlog and oldest incomplete ledger.
+- [x] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
   script over a log stream, and routing one to a human is a deployment concern that does not exist.
 
 **SLOs, rate limits, cost budgets, runbooks — drill-verified**
