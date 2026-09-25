@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { approvalRouteContract } from "@/hooks/api/hr/approval-route-schema";
+import {
+  approvalRouteContract,
+  approvalRungContract,
+} from "@/hooks/api/hr/approval-route-schema";
 
 const successContract = z.object({ success: z.literal(true) });
 
@@ -74,6 +77,18 @@ const leavesTeamItemSchema = leaveRequestRowSchema.extend({
       image: z.string().nullable(),
     })
     .nullable(),
+  /**
+   * V-044. Where this request is routed, so a queue row can name its target
+   * instead of being an anonymous link. Optional until the backend half lands;
+   * the row renders nothing rather than guessing.
+   */
+  approvalRoute: z
+    .object({
+      rung: approvalRungContract.nullable(),
+      queue: z.object({ label: z.string() }).nullable().optional(),
+      approver: z.object({ name: z.string().nullable() }).nullable().optional(),
+    })
+    .nullish(),
 });
 
 export const requestLeaveContract = z.object({
