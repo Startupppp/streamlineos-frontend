@@ -77,8 +77,10 @@ Migration: `backend/migrations/1205_kb_page_tree_children_index.sql` + its rollb
       Pre-fix: tenant-isolation spec failed (used old `getTree()` which did not exist on new API).
       Pre-fix: cursor-stability and acceptance specs failed (service method not yet present).
       Post-fix run: `Tests: 15 passed, 15 total` (2026-09-25).
-- [ ] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
-      (Not yet run — attempting after this update.)
+      PENDING ORCHESTRATOR GATE: final re-run with `-w 1 --no-coverage` serialized by orchestrator.
+- [x] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+      Backend: exit code 0 (2026-09-25). Frontend: `next typegen` + `tsc --noEmit` clean (2026-09-25).
+      PENDING ORCHESTRATOR GATE: final re-check serialized by orchestrator after all sessions quiet.
 
 ## Handoffs
 
@@ -110,6 +112,17 @@ Tests:       15 passed, 15 total
 ```
 
 Command: `cd backend && pnpm jest --runTestsByPath src/modules/kb/wiki/kb-page-tree-tenant-isolation.spec.ts src/modules/kb/wiki/kb-page-tree.cursor-stability.spec.ts src/modules/kb/wiki/kb-page-tree.acceptance.spec.ts -w 2 --no-coverage`
+
+### Frontend import-page test run (2026-09-25)
+```
+PASS features/wiki/components/import-page.test.tsx (15.93 s)
+Tests: 4 passed, 4 total
+```
+Removed stale `useKbPagesTree` mock from the test (hook no longer called by import-page.tsx).
+
+### Typecheck results (2026-09-25)
+- Backend: `pnpm typecheck` exit code 0 (under D:/agent-work/kb-sessions/typecheck.lock)
+- Frontend: `pnpm type-check` clean (next typegen + tsc --noEmit)
 
 ### Files created/modified
 - `backend/src/modules/kb/wiki/dto/kb-page-tree.dto.ts` — NEW: `listPageTreeChildrenSchema`, `KB_PAGE_TREE_PAGE_SIZE = 50`
