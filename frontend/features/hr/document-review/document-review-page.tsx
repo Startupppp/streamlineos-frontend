@@ -139,7 +139,7 @@ export function DocumentReviewPage() {
         <div className={FILTER_TOOLBAR_ROW}>
           <SearchInput placeholder="Search employees..." value={searchQuery} onValueChange={handleSearchChange} />
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+            <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)} aria-label="Filter by status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

@@ -155,7 +155,7 @@ function DateRangeSelector({
 
   return (
     <Select value={value} onValueChange={handleChange}>
-      <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
+      <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)} aria-label="Date range">
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -255,6 +255,9 @@ export function AnalyticsPageClient() {
           >
             <PageTabsToolbar
               tabsDensity="labeled"
+            // Six labelled tabs + the range select need ~1180px; below xl they
+            // pushed the select off-screen at 768 and 1024 (measured).
+            collapseBelow="xl"
               tabs={
                 <TabsList>
                   {visibleTabs.map(({ value, label, icon: Icon }) => (
