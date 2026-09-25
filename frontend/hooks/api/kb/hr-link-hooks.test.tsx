@@ -138,6 +138,13 @@ describe("useLinkedDocuments", () => {
 });
 
 describe("useOpenLinkedDocument", () => {
+  const SIGNED_URL = "https://files.example/signed?token=abc";
+  const mutationCacheHolds = (needle: string) =>
+    client
+      .getMutationCache()
+      .getAll()
+      .some((mutation) => JSON.stringify(mutation.state.data ?? null).includes(needle));
+
   it("posts to the entry's open route and hands back the short-lived link without caching it", async () => {
     mockPost.mockResolvedValue({ url: "https://files.example/signed", fileName: "coc.pdf", expiresIn: 300 });
 
@@ -150,5 +157,40 @@ describe("useOpenLinkedDocument", () => {
     expect(mockPost).toHaveBeenCalledWith("/kb/linked-documents/31/open", undefined, undefined, expect.anything());
     expect(opened?.url).toBe("https://files.example/signed");
     expect(client.getQueryCache().getAll()).toHaveLength(0);
+  });
+
+  it("leaves no trace of the signed link in the mutation cache once nothing is observing the mutation", async () => {
+    mockPost.mockResolvedValue({ url: SIGNED_URL, fileName: "coc.pdf", expiresIn: 300 });
+
+    const { result, unmount } = renderHook(() => useOpenLinkedDocument(), { wrapper });
+    await act(async () => {
+      await result.current.mutateAsync(31);
+    });
+
+    // While the page that opened the link is still watching, the entry is there: it proves the check below can see it.
+    expect(mutationCacheHolds(SIGNED_URL)).toBe(true);
+
+    unmount();
+
+    await waitFor(() => expect(mutationCacheHolds(SIGNED_URL)).toBe(false));
+    expect(client.getMutationCache().getAll()).toHaveLength(0);
+  });
+
+  it("lets the caller drop the link from the mutation's result and from the cache while it stays mounted", async () => {
+    mockPost.mockResolvedValue({ url: SIGNED_URL, fileName: "coc.pdf", expiresIn: 300 });
+
+    const { result } = renderHook(() => useOpenLinkedDocument(), { wrapper });
+    await act(async () => {
+      await result.current.mutateAsync(31);
+    });
+    await waitFor(() => expect(result.current.data?.url).toBe(SIGNED_URL));
+    expect(mutationCacheHolds(SIGNED_URL)).toBe(true);
+
+    act(() => {
+      result.current.reset();
+    });
+
+    await waitFor(() => expect(result.current.data).toBeUndefined());
+    await waitFor(() => expect(mutationCacheHolds(SIGNED_URL)).toBe(false));
   });
 });

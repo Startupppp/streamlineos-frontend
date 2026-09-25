@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ApiError } from "@/lib/api-envelope";
 import type { LinkedDocumentItem } from "@/hooks/api/kb/linked-documents";
 import CompanyDocumentsPage from "./company-documents-page";
 
@@ -11,21 +12,17 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
+// usePageState and PageState are the real ones: a test that stubs them decides the outcome the page is supposed to reach.
 const mockCan = jest.fn<boolean, [string]>();
-jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan(key) }));
+const mockAccess = jest.fn();
+jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan(key), useAccess: () => mockAccess() }));
+jest.mock("@/hooks/api/entitlements", () => ({ useEntitlements: () => ({ data: undefined }) }));
+
+const mockConfig = jest.fn();
+jest.mock("@/hooks/api/kb/hr-link-config", () => ({ useHrKbLinkConfig: () => mockConfig() }));
 
 const mockList = jest.fn();
 jest.mock("@/hooks/api/kb/linked-documents", () => ({ useLinkedDocuments: (...args: unknown[]) => mockList(...args) }));
-
-const mockPageState = jest.fn();
-jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: (...args: unknown[]) => mockPageState(...args) }));
-jest.mock("@/components/shared/page-state", () => ({
-  PageState: ({ resolution, loading, empty, children }: { resolution: { kind: string }; loading: React.ReactNode; empty?: React.ReactNode; children: React.ReactNode }) => {
-    if (resolution.kind === "loading") return <>{loading}</>;
-    if (resolution.kind === "empty") return <>{empty ?? children}</>;
-    return <>{children}</>;
-  },
-}));
 
 function item(over: Partial<LinkedDocumentItem> = {}): LinkedDocumentItem {
   return {
@@ -61,11 +58,25 @@ function listing(rows: LinkedDocumentItem[], over: Record<string, unknown> = {})
   };
 }
 
+function linkSwitch(link: boolean | undefined, over: Record<string, unknown> = {}) {
+  mockConfig.mockReturnValue({
+    data: link === undefined ? undefined : { link, search: false, ai: false },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    ...over,
+  });
+}
+
+const ON = { enabled: true };
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockSearchParams = new URLSearchParams();
   mockCan.mockReturnValue(false);
-  mockPageState.mockReturnValue({ kind: "ready" });
+  mockAccess.mockReturnValue({ data: { isOrgOwner: true, scopes: {}, modules: {} }, isLoading: false });
+  linkSwitch(true);
   mockList.mockReturnValue(listing([item()]));
 });
 
@@ -84,7 +95,7 @@ describe("CompanyDocumentsPage", () => {
 
     render(<CompanyDocumentsPage />);
 
-    expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ status: "active" }));
+    expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ status: "active" }), ON);
     expect(screen.queryByRole("combobox", { name: "Show entries" })).not.toBeInTheDocument();
   });
 
@@ -95,7 +106,7 @@ describe("CompanyDocumentsPage", () => {
 
     render(<CompanyDocumentsPage />);
 
-    expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ status: "unpublished" }));
+    expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ status: "unpublished" }), ON);
     expect(screen.getByRole("combobox", { name: "Show entries" })).toBeInTheDocument();
     // Once as the filter's current value, once as the badge on the row.
     expect(screen.getAllByText("Withdrawn")).toHaveLength(2);
@@ -107,16 +118,16 @@ describe("CompanyDocumentsPage", () => {
 
     render(<CompanyDocumentsPage />);
 
-    expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ status: "active" }));
+    expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ status: "active" }), ON);
   });
 
   it("explains an empty list instead of showing an empty table", () => {
     mockList.mockReturnValue(listing([]));
-    mockPageState.mockReturnValue({ kind: "empty" });
 
     render(<CompanyDocumentsPage />);
 
     expect(screen.getByText("No company documents yet")).toBeInTheDocument();
+    expect(screen.getByText("Company documents that HR shares with you will appear here.")).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
@@ -124,7 +135,6 @@ describe("CompanyDocumentsPage", () => {
     mockCan.mockImplementation((key) => key === "hr:documents:publish");
     mockSearchParams = new URLSearchParams("status=source_removed");
     mockList.mockReturnValue(listing([]));
-    mockPageState.mockReturnValue({ kind: "empty" });
 
     render(<CompanyDocumentsPage />);
 
@@ -137,7 +147,6 @@ describe("CompanyDocumentsPage", () => {
   it("titles a withdrawn entry whose document can no longer be shared as hidden, not as removed", () => {
     mockCan.mockImplementation((key) => key === "hr:documents:publish");
     mockList.mockReturnValue(listing([item({ id: 32, name: null, status: "unpublished", hasFile: false }), item({ id: 33, name: null, status: "source_removed", hasFile: false })]));
-    mockPageState.mockReturnValue({ kind: "ready" });
 
     render(<CompanyDocumentsPage />);
 
@@ -148,11 +157,12 @@ describe("CompanyDocumentsPage", () => {
 
   it("shows a skeleton while loading", () => {
     mockList.mockReturnValue(listing([], { data: undefined, isLoading: true }));
-    mockPageState.mockReturnValue({ kind: "loading" });
 
     render(<CompanyDocumentsPage />);
 
+    expect(screen.getByText("Loading results…")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Code of Conduct" })).not.toBeInTheDocument();
+    expect(screen.queryByText("No company documents yet")).not.toBeInTheDocument();
   });
 
   it("passes the keyset cursor to the next page", async () => {
@@ -161,6 +171,72 @@ describe("CompanyDocumentsPage", () => {
     render(<CompanyDocumentsPage />);
     await userEvent.click(screen.getByRole("button", { name: /next/i }));
 
-    expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ cursor: "cur-2" }));
+    expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ cursor: "cur-2" }), ON);
+  });
+
+  it("says company documents are not turned on, and does not ask for the list, while the switch is off", () => {
+    linkSwitch(false);
+    mockList.mockReturnValue(listing([], { data: undefined }));
+
+    render(<CompanyDocumentsPage />);
+
+    expect(screen.getByText("Company documents are not turned on")).toBeInTheDocument();
+    expect(screen.queryByText("No company documents yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(mockList).toHaveBeenCalledWith(expect.anything(), { enabled: false });
+    expect(mockList).not.toHaveBeenCalledWith(expect.anything(), ON);
+  });
+
+  it("does not list what it still holds from before the switch was turned off, and offers a publisher no status filter", () => {
+    mockCan.mockImplementation((key) => key === "hr:documents:publish");
+    linkSwitch(false);
+
+    render(<CompanyDocumentsPage />);
+
+    expect(screen.getByText("Company documents are not turned on")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Code of Conduct" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Show entries" })).not.toBeInTheDocument();
+  });
+
+  it("waits for the switch before deciding anything, and does not ask for the list until it is on", () => {
+    linkSwitch(undefined, { isLoading: true });
+    mockList.mockReturnValue(listing([], { data: undefined }));
+
+    render(<CompanyDocumentsPage />);
+
+    expect(screen.getByText("Loading results…")).toBeInTheDocument();
+    expect(screen.queryByText("Company documents are not turned on")).not.toBeInTheDocument();
+    expect(screen.queryByText("No company documents yet")).not.toBeInTheDocument();
+    expect(mockList).toHaveBeenCalledWith(expect.anything(), { enabled: false });
+  });
+
+  it("reports an error, and retries the switch rather than the list, when the switch cannot be read", async () => {
+    const refetchSwitch = jest.fn();
+    const refetchList = jest.fn();
+    linkSwitch(undefined, { isError: true, error: new ApiError("Down", 500, "INTERNAL", {}, "/kb/hr-link/config"), refetch: refetchSwitch });
+    mockList.mockReturnValue(listing([], { data: undefined, refetch: refetchList }));
+
+    render(<CompanyDocumentsPage />);
+
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.queryByText("Company documents are not turned on")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetchSwitch).toHaveBeenCalledTimes(1);
+    expect(refetchList).not.toHaveBeenCalled();
+  });
+
+  it("reports a failed list as an error, and retries the list, when the switch is on", async () => {
+    const refetchList = jest.fn();
+    mockList.mockReturnValue(
+      listing([], { data: undefined, isError: true, error: new ApiError("Boom", 500, "INTERNAL", {}, "/kb/linked-documents"), refetch: refetchList }),
+    );
+
+    render(<CompanyDocumentsPage />);
+
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.queryByText("Company documents are not turned on")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetchList).toHaveBeenCalledTimes(1);
   });
 });

@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useHrKbLinkConfig } from "@/hooks/api/kb/hr-link-config";
 import { useLinkedDocuments, type LinkedDocumentItem, type LinkedDocumentStatus } from "@/hooks/api/kb/linked-documents";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { companyDocumentHref } from "@/lib/knowledge-routes";
@@ -79,19 +80,35 @@ export default function CompanyDocumentsPage() {
   const requestedStatus = canPublish ? status : "active";
 
   const pager = useCursorPager(requestedStatus);
-  const { data, isLoading, isError, error, refetch } = useLinkedDocuments({ cursor: pager.cursor, limit: PAGE_LIMIT, status: requestedStatus });
+  const { data: linkFlags, isLoading: configLoading, isError: configFailed, error: configError, refetch: refetchConfig } = useHrKbLinkConfig();
+  const linkOn = linkFlags?.link === true;
+  const linkOff = linkFlags?.link === false;
+  const { data, isLoading, isError, error, refetch } = useLinkedDocuments(
+    { cursor: pager.cursor, limit: PAGE_LIMIT, status: requestedStatus },
+    { enabled: linkOn },
+  );
   const rows = useMemo(() => data?.data ?? [], [data]);
-  const isEmpty = data !== undefined && rows.length === 0;
-  const pageState = usePageState({ permission: "kb:pages:view", isLoading, isError, error, isEmpty });
+  const isEmpty = linkOff || (data !== undefined && rows.length === 0);
+  // A disabled query reports isLoading false, so the switch's own loading is added by hand.
+  const pageState = usePageState({
+    permission: "kb:pages:view",
+    isLoading: isLoading || configLoading,
+    isError: configFailed || (linkOn && isError),
+    error: configFailed ? configError : error,
+    isEmpty,
+  });
 
   const handleNext = useCallback(() => pager.goNext(data?.pagination.nextCursor), [pager, data?.pagination.nextCursor]);
   const handlePrevious = useCallback(() => pager.goPrevious(), [pager]);
-  const handleRetry = useCallback(() => void refetch(), [refetch]);
+  const handleRetry = useCallback(() => {
+    if (configFailed) void refetchConfig();
+    else void refetch();
+  }, [configFailed, refetchConfig, refetch]);
   const handleStatusChange = useCallback((value: string) => update({ status: value === "active" ? null : value }), [update]);
   const handleClearFilters = useCallback(() => update({ status: null }), [update]);
   const getRowKey = useCallback((row: LinkedDocumentItem) => row.id, []);
 
-  const filters = canPublish ? (
+  const filters = canPublish && !linkOff ? (
     <Select value={status} onValueChange={handleStatusChange}>
       <SelectTrigger className="h-9 w-44 shrink-0" aria-label="Show entries">
         <SelectValue />
@@ -117,9 +134,17 @@ export default function CompanyDocumentsPage() {
     />
   );
 
+  const notEnabled = (
+    <EmptyState
+      illustrationPreset="default"
+      title="Company documents are not turned on"
+      description="Your organisation has not turned on company documents, so there is nothing to show here."
+    />
+  );
+
   return (
     <PageWrapper title="Company documents" subtitle="Policies and documents HR has shared with you" filters={filters}>
-      <PageState resolution={pageState} loading={<DataTableSkeleton columns={COLUMNS.length} />} empty={empty} onRetry={handleRetry}>
+      <PageState resolution={pageState} loading={<DataTableSkeleton columns={COLUMNS.length} />} empty={linkOff ? notEnabled : empty} onRetry={handleRetry}>
         <DataTable
           data={rows}
           columns={COLUMNS}

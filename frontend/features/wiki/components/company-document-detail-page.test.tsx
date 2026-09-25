@@ -1,30 +1,28 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { LinkedDocumentDetail } from "@/hooks/api/kb/linked-documents";
 import CompanyDocumentDetailPage from "./company-document-detail-page";
 
 const mockToast = { error: jest.fn() };
 jest.mock("sonner", () => ({ toast: { error: (m: string) => mockToast.error(m) } }));
 
+// usePageState and PageState are the real ones: a test that stubs them decides the outcome the page is supposed to reach.
 const mockCan = jest.fn<boolean, [string]>();
-jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan(key) }));
+const mockAccess = jest.fn();
+jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan(key), useAccess: () => mockAccess() }));
+jest.mock("@/hooks/api/entitlements", () => ({ useEntitlements: () => ({ data: undefined }) }));
+
+const mockConfig = jest.fn();
+jest.mock("@/hooks/api/kb/hr-link-config", () => ({ useHrKbLinkConfig: () => mockConfig() }));
 
 const mockDetail = jest.fn();
 const mockOpen = jest.fn();
+const mockForgetOpen = jest.fn();
 jest.mock("@/hooks/api/kb/linked-documents", () => ({
-  useLinkedDocument: () => mockDetail(),
-  useOpenLinkedDocument: () => ({ mutateAsync: mockOpen, isPending: false }),
-}));
-
-const mockPageState = jest.fn();
-jest.mock("@/hooks/api/use-page-state", () => ({ usePageState: (...args: unknown[]) => mockPageState(...args) }));
-jest.mock("@/components/shared/page-state", () => ({
-  PageState: ({ resolution, loading, empty, children }: { resolution: { kind: string }; loading: React.ReactNode; empty?: React.ReactNode; children: React.ReactNode }) => {
-    if (resolution.kind === "loading") return <>{loading}</>;
-    if (resolution.kind === "empty") return <>{empty ?? children}</>;
-    return <>{children}</>;
-  },
+  useLinkedDocument: (...args: unknown[]) => mockDetail(...args),
+  useOpenLinkedDocument: () => ({ mutateAsync: mockOpen, reset: mockForgetOpen, isPending: false }),
 }));
 
 function detail(over: Partial<LinkedDocumentDetail> = {}): LinkedDocumentDetail {
@@ -57,13 +55,29 @@ function loaded(data: LinkedDocumentDetail | undefined, over: Record<string, unk
   mockDetail.mockReturnValue({ data, isLoading: false, isError: false, error: null, refetch: jest.fn(), ...over });
 }
 
+function linkSwitch(link: boolean | undefined, over: Record<string, unknown> = {}) {
+  mockConfig.mockReturnValue({
+    data: link === undefined ? undefined : { link, search: false, ai: false },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+    ...over,
+  });
+}
+
+function notFoundError() {
+  return new ApiError("Not found", 404, "NOT_FOUND", {}, "/kb/linked-documents/31");
+}
+
 const openSpy = jest.spyOn(window, "open").mockImplementation(() => null);
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockCan.mockReturnValue(false);
-  mockPageState.mockReturnValue({ kind: "ready" });
+  mockAccess.mockReturnValue({ data: { isOrgOwner: true, scopes: {}, modules: {} }, isLoading: false });
   mockOpen.mockResolvedValue({ url: "https://files.example/signed", fileName: "coc.pdf", expiresIn: 300 });
+  linkSwitch(true);
   loaded(detail());
 });
 
@@ -77,6 +91,7 @@ describe("CompanyDocumentDetailPage", () => {
     expect(screen.getByText("v3")).toBeInTheDocument();
     expect(screen.getByText("ethics")).toBeInTheDocument();
     expect(screen.queryByText("Who can see it")).not.toBeInTheDocument();
+    expect(mockDetail).toHaveBeenCalledWith(31, { enabled: true });
   });
 
   it("asks the server for a signed link when the reader opens the file, and opens it without a referrer", async () => {
@@ -86,16 +101,20 @@ describe("CompanyDocumentDetailPage", () => {
 
     await waitFor(() => expect(mockOpen).toHaveBeenCalledWith(31));
     expect(openSpy).toHaveBeenCalledWith("https://files.example/signed", "_blank", "noopener,noreferrer");
+    // The single-use URL is not left in the mutation's result once the browser has it.
+    expect(mockForgetOpen).toHaveBeenCalledTimes(1);
   });
 
   it("shows the server's message and opens nothing when the entry can no longer be opened", async () => {
-    mockOpen.mockRejectedValue(new ApiError("Not found", 404, "NOT_FOUND", {}, "/kb/linked-documents/31/open"));
+    const failure = new ApiError("Not found", 404, "NOT_FOUND", {}, "/kb/linked-documents/31/open");
+    mockOpen.mockRejectedValue(failure);
 
     render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
     await userEvent.click(screen.getByRole("button", { name: "Open file" }));
 
-    await waitFor(() => expect(mockToast.error).toHaveBeenCalled());
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(getErrorMessage(failure)));
     expect(openSpy).not.toHaveBeenCalled();
+    expect(mockForgetOpen).not.toHaveBeenCalled();
   });
 
   it("offers no file to open for an entry that links out to an external address", () => {
@@ -213,12 +232,118 @@ describe("CompanyDocumentDetailPage", () => {
   });
 
   it("says it was not found, without saying whether it exists, when the server answers 404", () => {
-    loaded(undefined, { isError: true, error: new ApiError("Not found", 404, "NOT_FOUND", {}, "/kb/linked-documents/31") });
-    mockPageState.mockReturnValue({ kind: "empty" });
+    loaded(undefined, { isError: true, error: notFoundError() });
 
     render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
 
     expect(screen.getByText("Document not found")).toBeInTheDocument();
     expect(screen.getByText(/may have been withdrawn, or you may not have access/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to company documents" })).toHaveAttribute("href", "/knowledge/wiki/company-documents");
+    expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
+  });
+
+  it("does not call an entry that is not there a removed document", () => {
+    loaded(undefined, { isError: true, error: notFoundError() });
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Company document" })).toBeInTheDocument();
+    expect(screen.queryByText("Removed document")).not.toBeInTheDocument();
+    expect(screen.queryByText("Details no longer shown")).not.toBeInTheDocument();
+  });
+
+  it("stops showing an entry that a refresh has since found gone, rather than keeping its title and file", () => {
+    loaded(detail(), { isError: true, error: notFoundError() });
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByText("Document not found")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Code of Conduct" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open file" })).not.toBeInTheDocument();
+  });
+
+  it("still reports any other failure as an error, with a way to try again, and not as a missing document", async () => {
+    const refetch = jest.fn();
+    loaded(undefined, { isError: true, error: new ApiError("Boom", 500, "INTERNAL", {}, "/kb/linked-documents/31"), refetch });
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.queryByText("Document not found")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not name the page after a removed document while the entry is still loading", () => {
+    loaded(undefined, { isLoading: true });
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Company document" })).toBeInTheDocument();
+    expect(screen.queryByText("Removed document")).not.toBeInTheDocument();
+    expect(screen.queryByText("Document not found")).not.toBeInTheDocument();
+    expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
+  });
+
+  it("keeps the neutral heading when the reader may not view the knowledge base", () => {
+    mockAccess.mockReturnValue({ data: { isOrgOwner: false, scopes: {}, modules: {} }, isLoading: false });
+    loaded(undefined);
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Company document" })).toBeInTheDocument();
+    expect(screen.queryByText("Removed document")).not.toBeInTheDocument();
+    expect(screen.queryByText("Document not found")).not.toBeInTheDocument();
+  });
+
+  it("says the document is not available, and does not ask for it, while company documents are switched off", () => {
+    linkSwitch(false);
+    loaded(undefined);
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByText("Document not found")).toBeInTheDocument();
+    expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
+    expect(mockDetail).toHaveBeenCalledWith(31, { enabled: false });
+    expect(mockDetail).not.toHaveBeenCalledWith(31, { enabled: true });
+  });
+
+  it("does not show a document it still holds from before the switch was turned off", () => {
+    linkSwitch(false);
+    loaded(detail());
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByText("Document not found")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Code of Conduct" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open file" })).not.toBeInTheDocument();
+  });
+
+  it("waits for the switch before deciding anything, and does not ask for the document until it is on", () => {
+    linkSwitch(undefined, { isLoading: true });
+    loaded(undefined);
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Company document" })).toBeInTheDocument();
+    expect(screen.queryByText("Document not found")).not.toBeInTheDocument();
+    expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
+    expect(mockDetail).toHaveBeenCalledWith(31, { enabled: false });
+  });
+
+  it("reports an error, and retries the switch rather than the document, when the switch cannot be read", async () => {
+    const refetchSwitch = jest.fn();
+    const refetchDocument = jest.fn();
+    linkSwitch(undefined, { isError: true, error: new ApiError("Down", 500, "INTERNAL", {}, "/kb/hr-link/config"), refetch: refetchSwitch });
+    loaded(undefined, { refetch: refetchDocument });
+
+    render(<CompanyDocumentDetailPage linkedDocumentId={31} />);
+
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.queryByText("Document not found")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(refetchSwitch).toHaveBeenCalledTimes(1);
+    expect(refetchDocument).not.toHaveBeenCalled();
   });
 });

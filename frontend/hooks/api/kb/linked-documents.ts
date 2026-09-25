@@ -81,10 +81,16 @@ export function useLinkedDocument(linkedDocumentId: number, options?: { enabled?
   });
 }
 
-/** Asks the server to authorise the entry again and sign a 300 second URL. The URL is used once and never stored. */
+/**
+ * Asks the server to authorise the entry again and sign a 300 second URL. The URL is used once and never stored:
+ * `gcTime: 0` drops the finished mutation, and the URL with it, from the MutationCache as soon as nothing observes
+ * it. The caller that opened the link should `reset()` right after using it, so the URL does not linger in
+ * `mutation.data` for as long as the page stays mounted either.
+ */
 export function useOpenLinkedDocument() {
   return useMutation({
     mutationKey: ["kb", "linkedDocuments", "open"],
+    gcTime: 0,
     mutationFn: (linkedDocumentId: number) =>
       apiClient.post<{ url: string; fileName: string; expiresIn: number }>(`/kb/linked-documents/${linkedDocumentId}/open`, undefined, undefined, openLazy),
   });
