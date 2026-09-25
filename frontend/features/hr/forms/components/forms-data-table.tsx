@@ -1,7 +1,9 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useState } from "react";
+import { DataTable, type DataTableColumn, type DataTableProps } from "@/components/ui/data-table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Pencil, Trash2, Play, Archive } from "lucide-react";
@@ -22,12 +24,28 @@ const STATUS_COLORS: Record<string, string> = {
 
 interface FormsDataTableProps {
   forms: HrForm[];
+  canManage: boolean;
+  pagination: DataTableProps<HrForm>["pagination"];
 }
 
-export function FormsDataTable({ forms }: FormsDataTableProps) {
+type PendingConfirm = { kind: "archive" | "delete"; form: HrForm } | null;
+
+export function FormsDataTable({ forms, canManage, pagination }: FormsDataTableProps) {
   const activate = useActivateHrForm();
   const archive = useArchiveHrForm();
   const del = useDeleteHrForm();
+  const [confirm, setConfirm] = useState<PendingConfirm>(null);
+
+  function handleConfirmOpenChange(open: boolean) {
+    if (!open) setConfirm(null);
+  }
+
+  async function handleConfirm() {
+    if (!confirm) return;
+    if (confirm.kind === "delete") await handleDelete(confirm.form.id);
+    else await handleArchive(confirm.form.id);
+    setConfirm(null);
+  }
 
   async function handleActivate(id: number) {
     try {
@@ -120,16 +138,16 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild>
               <Link href={"/hr/settings/forms/" + row.id}>
-                <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
+                <Pencil className="h-3.5 w-3.5 mr-2" /> {canManage ? "Edit" : "Open"}
               </Link>
             </DropdownMenuItem>
-            {row.status === "draft" && (
-              <DropdownMenuItem onClick={() => handleActivate(row.id)}>
+            {canManage && row.status === "draft" && (
+              <DropdownMenuItem disabled={activate.isPending} onSelect={() => handleActivate(row.id)}>
                 <Play className="h-3.5 w-3.5 mr-2" /> Activate
               </DropdownMenuItem>
             )}
-            {row.status === "active" && (
-              <DropdownMenuItem onClick={() => handleArchive(row.id)}>
+            {canManage && row.status === "active" && (
+              <DropdownMenuItem onSelect={() => setConfirm({ kind: "archive", form: row })}>
                 <Archive className="h-3.5 w-3.5 mr-2" /> Archive
               </DropdownMenuItem>
             )}
@@ -138,10 +156,14 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
                 Submissions
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(row.id)}>
-              <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
-            </DropdownMenuItem>
+            {canManage && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive" onSelect={() => setConfirm({ kind: "delete", form: row })}>
+                  <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -149,14 +171,32 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
   ];
 
   return (
-    <DataTable
-      className="flex-1 min-h-0"
-      data={forms}
-      columns={columns}
-      getRowKey={(row) => row.id}
-      emptyState={
-        <EmptyState className="border-0 bg-transparent min-h-[40vh]" title="No forms yet." description="Create your first form to get started." />
-      }
-    />
+    <>
+      <DataTable
+        className="flex-1 min-h-0"
+        data={forms}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        pagination={pagination}
+        emptyState={
+          <EmptyState className="border-0 bg-transparent min-h-[40vh]" title="No forms yet." description={canManage ? "Create your first form to get started." : undefined} />
+        }
+      />
+      <ConfirmDialog
+        open={confirm !== null}
+        onOpenChange={handleConfirmOpenChange}
+        title={confirm?.kind === "delete" ? "Delete this form?" : "Archive this form?"}
+        description={
+          confirm?.kind === "delete"
+            ? `"${confirm.form.name}" and its configuration are removed. This cannot be undone.`
+            : `"${confirm?.form.name ?? ""}" stops accepting submissions.`
+        }
+        confirmLabel={confirm?.kind === "delete" ? "Delete" : "Archive"}
+        destructive
+        keepOpenOnConfirm
+        isPending={del.isPending || archive.isPending}
+        onConfirm={handleConfirm}
+      />
+    </>
   );
 }

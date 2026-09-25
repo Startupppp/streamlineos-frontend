@@ -5,6 +5,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { FormBuilder } from "@/features/hr/forms/components/form-builder";
 import { useHrForm, useUpdateHrForm } from "@/features/hr/forms/hooks/use-hr-forms";
@@ -17,6 +18,7 @@ interface HrFormBuilderContentProps {
 export function HrFormBuilderContent({ formId }: HrFormBuilderContentProps) {
   const { data: form, isLoading, isError, error, refetch } = useHrForm(formId);
   const update = useUpdateHrForm(formId);
+  const canManage = useCan("hr:forms:manage");
 
   function handleRetry() {
     void refetch();
@@ -76,7 +78,7 @@ export function HrFormBuilderContent({ formId }: HrFormBuilderContentProps) {
       backHref="/hr/settings/forms"
     >
       <div className="pt-2 h-full min-h-0">
-        <FormBuilder form={form} onSave={handleSave} isPending={update.isPending} />
+        <FormBuilder form={form} onSave={handleSave} isPending={update.isPending} canSave={canManage} />
       </div>
     </PageWrapper>
   );

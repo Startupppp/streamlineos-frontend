@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, type DataTableColumn, type DataTableProps } from "@/components/ui/data-table";
+import { formatShortDate } from "@/lib/date-utils";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,6 +20,7 @@ interface SubmissionsDataTableProps {
   formId: number;
   submissions: HrFormSubmission[];
   canManage: boolean;
+  pagination: DataTableProps<HrFormSubmission>["pagination"];
 }
 
 async function noSubmitInReadOnlyView(): Promise<void> {}
@@ -30,7 +32,23 @@ const SUBMISSION_STATUSES = [
   "rejected",
 ] as const satisfies readonly HrFormSubmissionStatus[];
 
-export function SubmissionsDataTable({ formId, submissions, canManage }: SubmissionsDataTableProps) {
+interface ViewSubmissionButtonProps {
+  submission: HrFormSubmission;
+  onView: (submission: HrFormSubmission) => void;
+}
+
+function ViewSubmissionButton({ submission, onView }: ViewSubmissionButtonProps) {
+  function handleClick() {
+    onView(submission);
+  }
+  return (
+    <Button type="button" variant="ghost" size="sm" onClick={handleClick}>
+      View
+    </Button>
+  );
+}
+
+export function SubmissionsDataTable({ formId, submissions, canManage, pagination }: SubmissionsDataTableProps) {
   const [viewSub, setViewSub] = useState<HrFormSubmission | null>(null);
   const updateStatus = useUpdateSubmissionStatus(formId);
 
@@ -63,7 +81,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
       key: "submittedBy",
       header: "Submitted by",
       cell: (row) => (
-        <TruncatedText text={row.submittedByName ?? row.submittedBy ?? "Anonymous"} className="min-w-0 max-w-[180px] text-sm" />
+        <TruncatedText text={row.submittedByName ?? (row.submittedBy ? "Unknown user" : "Anonymous")} className="min-w-0 max-w-[180px] text-sm" />
       ),
     },
     {
@@ -71,7 +89,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
       header: "Date",
       cell: (row) => (
         <span className="text-muted-foreground text-xs">
-          {new Date(row.createdAt).toLocaleDateString()}
+          {formatShortDate(row.createdAt)}
         </span>
       ),
     },
@@ -83,8 +101,9 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
           <Select
             value={row.status}
             onValueChange={makeHandleStatusSelect(row.id)}
+            disabled={updateStatus.isPending}
           >
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-32" aria-label="Submission status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -104,9 +123,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
       header: "",
       className: "w-24",
       cell: (row) => (
-        <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleViewClick(row)}>
-          View
-        </Button>
+        <ViewSubmissionButton submission={row} onView={handleViewClick} />
       ),
     },
   ];
@@ -118,6 +135,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
         data={submissions}
         columns={columns}
         getRowKey={(row) => row.id}
+        pagination={pagination}
         emptyState={
           <EmptyState className="border-0 bg-transparent min-h-[40vh]" title="No submissions yet." />
         }

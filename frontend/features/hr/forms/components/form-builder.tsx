@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -68,6 +69,8 @@ interface FormBuilderProps {
   form?: HrForm;
   onSave: (data: CreateHrFormPayload) => void;
   isPending: boolean;
+  /** False for a caller without hr:forms:manage: PATCH/POST /hr/forms 403 for them. */
+  canSave?: boolean;
 }
 
 function generateKey(label: string, existing: string[]): string {
@@ -85,7 +88,7 @@ function generateKey(label: string, existing: string[]): string {
   return key;
 }
 
-export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
+export function FormBuilder({ form, onSave, isPending, canSave = true }: FormBuilderProps) {
   const [fields, setFields] = useState<HrFormField[]>(form?.schema ?? []);
   const [selectedFieldIdx, setSelectedFieldIdx] = useState<number | null>(null);
 
@@ -93,6 +96,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
     setSelectedFieldIdx((current) => (current === idx ? null : idx));
   }, []);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const handleOpenPalette = useCallback(() => setPaletteOpen(true), []);
 
   const rhf = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -286,10 +290,11 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
               type="button"
               variant="outline"
               size="sm"
-              className="text-xs"
-              onClick={() => setPaletteOpen(true)}
+              className="gap-1 text-xs"
+              onClick={handleOpenPalette}
             >
-              + Add Field
+              <Plus className="h-3.5 w-3.5" />
+              Add field
             </Button>
           </div>
 
@@ -351,7 +356,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                           handleMoveField(idx, -1);
                         }}
                       >
-                        ↑
+                        <ArrowUp className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         type="button"
@@ -364,7 +369,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                           handleMoveField(idx, 1);
                         }}
                       >
-                        ↓
+                        <ArrowDown className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -425,7 +430,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                           handleMoveField(idx, -1);
                         }}
                       >
-                        ↑
+                        <ArrowUp className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         type="button"
@@ -438,7 +443,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                           handleMoveField(idx, 1);
                         }}
                       >
-                        ↓
+                        <ArrowDown className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -447,11 +452,13 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
             ))}
           </div>
 
-          <div className="flex justify-end pt-2 border-t">
-            <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving...">
-              Save Form
-            </LoadingButton>
-          </div>
+          {canSave && (
+            <div className="flex justify-end pt-2 border-t">
+              <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving...">
+                Save form
+              </LoadingButton>
+            </div>
+          )}
           </div>
         </ScrollArea>
       </form>
