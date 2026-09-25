@@ -1,8 +1,9 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
-import { useHrKbLinkFlags, useHrKbLinkFlagsAdmin, useUpdateHrKbLinkFlags } from "./hr-link-config";
+import { useHrKbLinkConfig, useHrKbLinkFlags, useHrKbLinkFlagsAdmin, useUpdateHrKbLinkFlags } from "./hr-link-config";
 import { useLinkedDocuments, useOpenLinkedDocument } from "./linked-documents";
 
 const mockGet = jest.fn();
@@ -192,5 +193,45 @@ describe("useOpenLinkedDocument", () => {
 
     await waitFor(() => expect(result.current.data).toBeUndefined());
     await waitFor(() => expect(mutationCacheHolds(SIGNED_URL)).toBe(false));
+  });
+});
+
+describe("useHrKbLinkFlags under the production error policy", () => {
+  function productionClient() {
+    return new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, throwOnError: readErrorReachesBoundary },
+        mutations: { retry: false, throwOnError: false },
+      },
+    });
+  }
+
+  function productionWrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  }
+
+  beforeEach(() => {
+    client = productionClient();
+  });
+
+  it("degrades to all-off when the flag endpoint fails, instead of taking every Knowledge Base route to the error boundary", async () => {
+    mockGet.mockRejectedValue(new Error("Request failed with status code 500"));
+
+    const { result } = renderHook(
+      () => ({ config: useHrKbLinkConfig(), flags: useHrKbLinkFlags() }),
+      { wrapper: productionWrapper },
+    );
+
+    await waitFor(() => expect(result.current.config.isError).toBe(true));
+    expect(result.current.flags).toEqual({ link: false, search: false, ai: false });
+  });
+
+  it("still reports the switches the server sends, so the degraded path is not vacuous", async () => {
+    mockGet.mockResolvedValue({ link: true, search: true, ai: false });
+
+    const { result } = renderHook(() => useHrKbLinkFlags(), { wrapper: productionWrapper });
+
+    await waitFor(() => expect(result.current.search).toBe(true));
+    expect(result.current).toEqual({ link: true, search: true, ai: false });
   });
 });

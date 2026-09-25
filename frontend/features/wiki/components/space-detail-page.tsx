@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useKbSpace } from "@/hooks/api/kb/spaces";
+import { isApiError } from "@/lib/api-envelope";
 import { KB_SPACES } from "@/lib/knowledge-routes";
 import { KbLayoutGridIcon } from "@/features/wiki/lib/kb-icons";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -31,15 +32,21 @@ interface SpaceDetailPageProps {
 }
 
 export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
-  const { data: space, isLoading, isError, error } = useKbSpace(spaceId);
+  const { data: space, isLoading, isError, error, refetch } = useKbSpace(spaceId);
+
+  const isNotFound = isApiError(error) && error.status === 404;
 
   const pageState = usePageState({
     permission: "kb:spaces:view",
     isLoading,
-    isError,
-    error,
-    isEmpty: !isLoading && !isError && !space,
+    isError: isError && !isNotFound,
+    error: isNotFound ? null : error,
+    isEmpty: !isLoading && (isNotFound || (!isError && !space)),
   });
+
+  function handleRetry() {
+    void refetch();
+  }
 
   const audience: KbAudience = space?.audience ?? "internal";
 
@@ -51,6 +58,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
     >
       <PageState
         resolution={pageState}
+        onRetry={handleRetry}
         loading={
           <div className="space-y-4">
             <Skeleton className="h-24 w-full rounded-xl" />

@@ -57,6 +57,11 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
     setInputValue(value);
   }
 
+  function handleViewAllResults() {
+    router.push(`${KB_SEARCH}?q=${encodeURIComponent(debouncedQ)}`);
+    handleOpenChange(false);
+  }
+
   return (
     <CommandDialog open={open} onOpenChange={handleOpenChange}>
       <CommandInput
@@ -98,10 +103,7 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
             {page?.hasMore && (
               <CommandItem
                 value="__view-all-results__"
-                onSelect={() => {
-                  router.push(`${KB_SEARCH}?q=${encodeURIComponent(debouncedQ)}`);
-                  handleOpenChange(false);
-                }}
+                onSelect={handleViewAllResults}
                 className="justify-center text-xs text-muted-foreground"
               >
                 View all results for &ldquo;{debouncedQ}&rdquo;

@@ -39,6 +39,7 @@ import {
   DownloadIcon,
 } from "@animateicons/react/lucide";
 import {
+  Archive,
   Building2,
   Clock,
   FileDown,
@@ -159,6 +160,7 @@ export const KbEdit2Icon = createAnimatedIcon(UserPenIcon);
 
 export const KbClockIcon = createLucideIcon(Clock);
 export const KbRotateCcwIcon = createLucideIcon(RotateCcw);
+export const KbArchiveIcon = createLucideIcon(Archive);
 export const KbHistoryIcon = createLucideIcon(History);
 export const KbPanelRightOpenIcon = createLucideIcon(PanelRightOpen);
 export const KbPanelRightCloseIcon = createLucideIcon(PanelRightClose);

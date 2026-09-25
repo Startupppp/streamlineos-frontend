@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 
@@ -36,6 +37,7 @@ export function useHrKbLinkConfig() {
     queryFn: ({ signal }) =>
       apiClient.get<HrKbLinkFlags>("/kb/hr-link/config", undefined, signal, hrKbLinkFlagsLazy),
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

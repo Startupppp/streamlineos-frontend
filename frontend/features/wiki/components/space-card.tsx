@@ -7,8 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { spaceHref } from "@/lib/knowledge-routes";
 import {
+  KbArchiveIcon,
   KbPencilIcon,
-  KbTrash2Icon,
+  KbRotateCcwIcon,
 } from "@/features/wiki/lib/kb-icons";
 import type { KbAudience } from "@/types/kb";
 import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
@@ -42,7 +43,7 @@ interface SpaceCardProps {
   canManage: boolean;
   pageCount: number;
   onEdit: (space: KbSpaceListItem) => void;
-  onDelete: (space: KbSpaceListItem) => void;
+  onArchiveToggle: (space: KbSpaceListItem) => void;
 }
 
 export function SpaceCard({
@@ -50,19 +51,20 @@ export function SpaceCard({
   canManage,
   pageCount,
   onEdit,
-  onDelete,
+  onArchiveToggle,
 }: SpaceCardProps) {
   function handleEdit(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     onEdit(space);
   }
 
-  function handleDelete(e: React.MouseEvent<HTMLButtonElement>) {
+  function handleArchiveToggle(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
-    onDelete(space);
+    onArchiveToggle(space);
   }
 
   const audience = space.audience ?? "internal";
+  const isArchived = space.archivedAt !== null;
 
   return (
     <Link
@@ -84,8 +86,9 @@ export function SpaceCard({
       {space.description && (
         <TruncatedText text={space.description} className="text-sm text-muted-foreground" />
       )}
-      <p className="text-xs text-muted-foreground">
-        {pageCount} {pageCount === 1 ? "page" : "pages"}
+      <p className="text-xs text-muted-foreground tabular-nums">
+        {pageCount} {pageCount === 1 ? "page" : "pages"} · {space.memberCount}{" "}
+        {space.memberCount === 1 ? "member" : "members"}
       </p>
       {canManage && (
         <div className="flex items-center gap-1 pt-1">
@@ -101,11 +104,15 @@ export function SpaceCard({
           <Button
             variant="ghost"
             size="sm"
-            className="px-2 text-xs text-muted-foreground hover:text-destructive"
-            onClick={handleDelete}
+            className="px-2 text-xs text-muted-foreground"
+            onClick={handleArchiveToggle}
           >
-            <KbTrash2Icon className="h-3 w-3 mr-1" />
-            Delete
+            {isArchived ? (
+              <KbRotateCcwIcon className="h-3 w-3 mr-1" />
+            ) : (
+              <KbArchiveIcon className="h-3 w-3 mr-1" />
+            )}
+            {isArchived ? "Restore" : "Archive"}
           </Button>
         </div>
       )}

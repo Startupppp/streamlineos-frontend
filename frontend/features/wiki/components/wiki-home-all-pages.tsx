@@ -23,9 +23,15 @@ import {
 } from "@/components/ui/select";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
-import { pageHref, projectPageHref, KB_TEMPLATES } from "@/lib/knowledge-routes";
+import {
+  pageHref,
+  projectPageHref,
+  KB_IMPORT,
+  KB_TEMPLATES,
+} from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { WikiPageCard, WIKI_PAGE_CARD_GRID_CLASS } from "./wiki-page-card";
+import { Badge } from "@/components/ui/badge";
 import { StatusBadge, TrustBadge } from "./kb-collection-badges";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -126,6 +132,7 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
   const spaces = spacesPage?.data;
   const createPage = useCreateKbPage();
   const canCreate = useCan("kb:pages:create");
+  const canImport = useCan("kb:pages:import");
 
   const { data, isLoading, isError, error, refetch } = useKbPageCollection({
     sort,
@@ -208,6 +215,15 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
         subtitle={kbTimeAgo(row.updatedAt)}
       >
         <StatusBadge status={row.status} />
+        <TrustBadge trustState={row.trustState} />
+        {row.ownerMembershipId === null ? (
+          <Badge
+            variant="outline"
+            className="text-micro h-4 px-1.5 text-muted-foreground"
+          >
+            Owner missing
+          </Badge>
+        ) : null}
       </WikiPageCard>
     );
   }
@@ -227,6 +243,9 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
       description="Create your first page to build a shared knowledge base for your team."
       action={canCreate ? { label: "Create a page", onClick: handleNewPage } : undefined}
       secondaryAction={{ label: "Browse templates", href: KB_TEMPLATES }}
+      tertiaryAction={
+        canImport ? { label: "Import pages", href: KB_IMPORT } : undefined
+      }
     />
   );
 

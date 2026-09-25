@@ -20,7 +20,7 @@ export function useKbAsk() {
   useEffect(() => () => controllerRef.current?.abort(), []);
   function stop() { controllerRef.current?.abort(); }
   function resetAttempt() { if (!controllerRef.current) operation.settle(); }
-  const mutation = useAuthorizedMutation("kb:pages:view", {
+  const mutation = useAuthorizedMutation("kb:ai:generate", {
     mutationKey: ["kb", "ask"],
     mutationFn: async ({ signal, onToken, ...input }: KbAskInput & AiResultStreamOptions): Promise<KbAskResponse> => {
       if (controllerRef.current) throw new Error("An answer is already being generated");

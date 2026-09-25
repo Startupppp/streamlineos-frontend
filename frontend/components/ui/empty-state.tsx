@@ -23,6 +23,7 @@ interface EmptyStateProps {
   description?: string;
   action?: ActionProps;
   secondaryAction?: ActionProps;
+  tertiaryAction?: ActionProps;
   actionVariant?: "default" | "outline";
   className?: string;
   compact?: boolean;
@@ -97,6 +98,7 @@ export function EmptyState({
   description,
   action,
   secondaryAction,
+  tertiaryAction,
   actionVariant,
   className,
   compact = false,
@@ -180,7 +182,7 @@ export function EmptyState({
             Clear filters
           </Button>
         </div>
-      ) : (action || secondaryAction) ? (
+      ) : (action || secondaryAction || tertiaryAction) ? (
         <div className={cn("flex items-center gap-2", compact ? "mt-2" : "mt-5")}>
           {action && (
             <ActionButton
@@ -192,6 +194,13 @@ export function EmptyState({
           {secondaryAction && (
             <ActionButton
               action={secondaryAction}
+              size={compact ? "sm" : "default"}
+              variant="outline"
+            />
+          )}
+          {tertiaryAction && (
+            <ActionButton
+              action={tertiaryAction}
               size={compact ? "sm" : "default"}
               variant="outline"
             />

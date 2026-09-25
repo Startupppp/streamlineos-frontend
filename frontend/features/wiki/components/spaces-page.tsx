@@ -35,6 +35,7 @@ import {
   KbPlusIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { SpaceCard, SpaceCardSkeleton } from "./space-card";
+import { SpaceArchiveImpact } from "./space-archive-impact";
 import { SpaceSheet } from "./space-sheet";
 
 const AUDIENCE_FILTER_VALUES = ["all", "internal", "public", "mixed"] as const;
@@ -87,7 +88,7 @@ export default function SpacesPage() {
     limit: LIST_LIMIT,
   };
 
-  const { data, isLoading, isError, error } = useKbSpaces(queryParams);
+  const { data, isLoading, isError, error, refetch } = useKbSpaces(queryParams);
 
   const spaces = data?.data ?? [];
   const pagination = data?.pagination;
@@ -99,6 +100,10 @@ export default function SpacesPage() {
     error,
     isEmpty: !isLoading && !isError && spaces.length === 0,
   });
+
+  function handleRetry() {
+    void refetch();
+  }
 
   const archiveSpace = useArchiveKbSpace();
   const restoreSpace = useRestoreKbSpace();
@@ -257,6 +262,7 @@ export default function SpacesPage() {
 
         <PageState
           resolution={pageState}
+          onRetry={handleRetry}
           loading={
             <SpacesGrid>
               {Array.from({ length: 6 }).map((_, i) => (
@@ -275,7 +281,9 @@ export default function SpacesPage() {
                   canManage={canManage}
                   pageCount={space.pageCount}
                   onEdit={handleEdit}
-                  onDelete={space.archivedAt ? handleRestore : handleArchive}
+                  onArchiveToggle={
+                    space.archivedAt ? handleRestore : handleArchive
+                  }
                 />
               ))}
             </SpacesGrid>
@@ -308,9 +316,14 @@ export default function SpacesPage() {
         }}
         title="Archive space?"
         description={
-          archiveTarget
-            ? `Archiving "${archiveTarget.name}" will hide it from users. Pages and content are preserved and can be restored.`
-            : ""
+          archiveTarget ? (
+            <>
+              {`Archiving "${archiveTarget.name}" will hide it from users. Pages and content are preserved and can be restored.`}
+              <SpaceArchiveImpact spaceId={archiveTarget.id} />
+            </>
+          ) : (
+            ""
+          )
         }
         confirmLabel="Archive"
         destructive
