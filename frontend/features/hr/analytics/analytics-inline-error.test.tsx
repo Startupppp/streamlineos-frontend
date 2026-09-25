@@ -167,8 +167,8 @@ describe("HR analytics degrades in place, because the provider's default throwOn
 
     renderUnderBoundary(<AnalyticsPageClient />);
 
-    expect(await screen.findByText("Analytics didn't load")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    expect(await screen.findByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
     expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
   });
 
@@ -208,7 +208,7 @@ describe("a money-formatting read is decorative, so its failure must not take a 
 
     renderUnderBoundary(<AnalyticsPageClient />);
 
-    expect(await screen.findByText("Total Employees")).toBeInTheDocument();
+    expect(await screen.findByText("Total employees")).toBeInTheDocument();
     expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
   });
 });

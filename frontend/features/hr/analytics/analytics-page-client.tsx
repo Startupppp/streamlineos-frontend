@@ -10,7 +10,8 @@ import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getCorrelationId } from "@/lib/api-envelope";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   CONTENT_FILL_PANEL,
   FILTER_SELECT_TRIGGER,
@@ -210,123 +211,110 @@ export function AnalyticsPageClient() {
     if (isSectionTab(v)) setActiveSection(v);
   }, []);
 
-  if (isError) {
-    const supportCode = getCorrelationId(error);
-    return (
-      <PageWrapper
-        title="People analytics"
-        subtitle="Workforce insights and operational metrics">
-        <EmptyState
-          illustrationPreset="alert"
-          title="Analytics didn't load"
-          description={
-            supportCode
-              ? `We couldn't reach the analytics service. Try again — if it keeps happening, quote ${supportCode} to support.`
-              : "We couldn't reach the analytics service. Try again in a moment."
-          }
-          action={{ label: "Retry", onClick: handleRetry }}
-          className={CONTENT_FILL_PANEL}
-        />
-      </PageWrapper>
-    );
-  }
-
-  if (!isAnalyticsLoading && data !== undefined && data.headcount.total === 0) {
-    return (
-      <PageWrapper
-        title="People analytics"
-        subtitle="Workforce insights and operational metrics">
-        <EmptyState
-          illustrationPreset="team"
-          title="No people to report on yet"
-          description="Analytics fill in as you add employees — headcount, attendance, leave and attrition all read from your people records."
-          action={{ label: "Add your first employee", href: "/hr/onboarding" }}
-          secondaryAction={{ label: "View people", href: "/hr/employees" }}
-          className={CONTENT_FILL_PANEL}
-        />
-      </PageWrapper>
-    );
-  }
+  const pageState = usePageState({
+    permission: "hr:analytics:read",
+    isLoading: isAnalyticsLoading,
+    isError,
+    error,
+    isEmpty: data !== undefined && data.headcount.total === 0,
+  });
 
   return (
     <PageWrapper
       title="People analytics"
       subtitle="Workforce insights and operational metrics">
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <ExecutiveKPIs
-          totalEmployees={totalEmployees}
-          attritionRate={attritionRate}
-          openPositions={openPositions}
-          attendanceLogs={attendanceLogs}
-          isLoading={isTopLoading}
-        />
-
-        <Tabs
-          value={selectedSection}
-          onValueChange={handleSectionChange}
-          className="flex min-h-0 flex-1 flex-col gap-4"
-        >
-          <PageTabsToolbar
-            tabsDensity="labeled"
-            tabs={
-              <TabsList>
-                {visibleTabs.map(({ value, label, icon: Icon }) => (
-                  <TabsTrigger key={value} value={value} className="gap-1.5">
-                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                    {label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            }
-            filters={<DateRangeSelector value={dateRange} onChange={setDateRange} />}
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        className={CONTENT_FILL_PANEL}
+        loading={<StatCardGridSkeleton cols={4} />}
+        empty={
+          <EmptyState
+            illustrationPreset="team"
+            title="No people to report on yet"
+            description="Analytics fill in as you add employees — headcount, attendance, leave and attrition all read from your people records."
+            action={{ label: "Add your first employee", href: "/hr/onboarding" }}
+            secondaryAction={{ label: "View people", href: "/hr/employees" }}
+            className={CONTENT_FILL_PANEL}
+          />
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <ExecutiveKPIs
+            totalEmployees={totalEmployees}
+            attritionRate={attritionRate}
+            openPositions={openPositions}
+            attendanceLogs={attendanceLogs}
+            isLoading={isTopLoading}
           />
 
-          <div className="rounded-2xl border border-border/70 bg-card/90 shadow-card overflow-hidden flex min-h-0 flex-1 flex-col">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
-              <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                <BarChart3
-                  className="h-3.5 w-3.5 text-primary"
-                  aria-hidden="true"
-                />
+          <Tabs
+            value={selectedSection}
+            onValueChange={handleSectionChange}
+            className="flex min-h-0 flex-1 flex-col gap-4"
+          >
+            <PageTabsToolbar
+              tabsDensity="labeled"
+              tabs={
+                <TabsList>
+                  {visibleTabs.map(({ value, label, icon: Icon }) => (
+                    <TabsTrigger key={value} value={value} className="gap-1.5">
+                      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                      {label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              }
+              filters={<DateRangeSelector value={dateRange} onChange={setDateRange} />}
+            />
+
+            <div className="rounded-2xl border border-border/70 bg-card/90 shadow-card overflow-hidden flex min-h-0 flex-1 flex-col">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
+                <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <BarChart3
+                    className="h-3.5 w-3.5 text-primary"
+                    aria-hidden="true"
+                  />
+                </div>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Detailed analytics
+                </h2>
               </div>
-              <h2 className="text-sm font-semibold text-foreground">
-                Detailed analytics
-              </h2>
-            </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
-              <TabsContent value="command-center" className="mt-0 flex-none">
-                <CommandCenterSection />
-              </TabsContent>
-
-              <TabsContent value="workforce" className="mt-0 flex-none">
-                <WorkforceSection data={data} isLoading={isAnalyticsLoading} />
-              </TabsContent>
-
-              {canViewRecruitment ? (
-                <TabsContent value="recruitment" className="mt-0 flex-none">
-                  <RecruitmentSection isLoading={isRecruitmentLoading} />
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
+                <TabsContent value="command-center" className="mt-0 flex-none">
+                  <CommandCenterSection />
                 </TabsContent>
-              ) : null}
 
-              <TabsContent value="attendance" className="mt-0 flex-none">
-                <AttendanceSection
-                  year={analyticsYear}
-                  month={analyticsMonth}
-                />
-              </TabsContent>
+                <TabsContent value="workforce" className="mt-0 flex-none">
+                  <WorkforceSection data={data} isLoading={isAnalyticsLoading} />
+                </TabsContent>
 
-              <TabsContent value="leaves" className="mt-0 flex-none">
-                <LeaveSection year={analyticsYear} />
-              </TabsContent>
+                {canViewRecruitment ? (
+                  <TabsContent value="recruitment" className="mt-0 flex-none">
+                    <RecruitmentSection isLoading={isRecruitmentLoading} />
+                  </TabsContent>
+                ) : null}
 
-              <TabsContent value="attrition" className="mt-0 flex-none">
-                <AttritionSection isLoading={isAttritionLoading} />
-              </TabsContent>
+                <TabsContent value="attendance" className="mt-0 flex-none">
+                  <AttendanceSection
+                    year={analyticsYear}
+                    month={analyticsMonth}
+                  />
+                </TabsContent>
+
+                <TabsContent value="leaves" className="mt-0 flex-none">
+                  <LeaveSection year={analyticsYear} />
+                </TabsContent>
+
+                <TabsContent value="attrition" className="mt-0 flex-none">
+                  <AttritionSection isLoading={isAttritionLoading} />
+                </TabsContent>
+              </div>
             </div>
-          </div>
-        </Tabs>
-      </div>
+          </Tabs>
+        </div>
+      </PageState>
     </PageWrapper>
   );
 }
