@@ -166,6 +166,31 @@ describe("useBoardUrlState — ticket round trips preserve issue collection stat
   });
 });
 
+describe("useBoardUrlState — canonical calendar deep link", () => {
+  it("opens the unified calendar with Build scope and keeps compatible filters", () => {
+    setParams({
+      view: "list",
+      q: "login",
+      status: "TODO",
+      cycle: "7",
+      viewId: "9",
+      ticket: "22",
+      comment: "8",
+    });
+
+    const { result } = renderHook(() => useBoardUrlState(42));
+
+    act(() => {
+      result.current.handleViewChange("calendar");
+    });
+
+    expect(mockPush).toHaveBeenCalledWith(
+      "/calendar?q=login&status=TODO&cycle=7&source=build&projectId=42",
+    );
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+});
+
 describe("useBoardUrlState — grouping, sort and column config survive a copied link", () => {
   it("reads groupBy, orderBy, rowBy, columnBy and completed straight off the URL so a shared link reproduces the sender's grouping", () => {
     setParams({

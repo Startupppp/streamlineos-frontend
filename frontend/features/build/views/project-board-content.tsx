@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { TableView } from "./table-view";
-import { CalendarView } from "./calendar-view";
 import { GanttView } from "./gantt-view";
 import { WorkloadView } from "./workload-view";
 import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
@@ -18,9 +17,6 @@ import { SearchX, WifiOff } from "lucide-react";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { ViewType } from "./view-switcher";
 
-function assertNever(x: never): never {
-  throw new Error(`Unhandled view type: ${String(x)}`);
-}
 import { type FilterState as WorkloadFilterState, type MemberCapacityData } from "./workload-types";
 import type { Cycle } from "@/types/projects";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
@@ -194,6 +190,8 @@ export function ProjectBoardContent({
 
   function renderViewPane(v: ViewType): React.ReactNode {
     switch (v) {
+      case "calendar":
+        return null;
       case "board":
         return (
           <motion.div
@@ -307,25 +305,6 @@ export function ProjectBoardContent({
             </ScrollArea>
           </motion.div>
         );
-      case "calendar":
-        return (
-          <motion.div
-            key="calendar"
-            className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
-            variants={viewVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={pmSnappy}
-          >
-            <CalendarView
-              tickets={filteredTickets}
-              onTicketClick={onTicketSelect}
-              projectId={projectId}
-              projectStatuses={statuses}
-            />
-          </motion.div>
-        );
       case "timeline":
         return (
           <motion.div
@@ -368,7 +347,7 @@ export function ProjectBoardContent({
           </motion.div>
         );
       default:
-        return assertNever(v);
+        return null;
     }
   }
 

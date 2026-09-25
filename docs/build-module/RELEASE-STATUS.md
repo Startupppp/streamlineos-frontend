@@ -74,6 +74,9 @@ Current release-candidate checks:
 - Latest frontend Build navigation fixes are on `origin/main` at `b2c605b69`:
   backlog, My Work, draft, and keyboard shortcut navigation now use the shared
   dirty-state guard; focused regressions pass.
+- The Build view switcher now routes Calendar to the unified `/calendar` surface
+  with `source=build` and `projectId`, and the local Build calendar renderer was
+  removed; focused URL-state and view-render tests pass.
 - Build-owned unsafe assertion findings: zero. The assertion gate still reports unrelated pre-existing Inventory, HR, Wiki, editor, and infrastructure debt.
 - Build-owned gated-read findings: zero. The gate still reports two unrelated HR recruitment reads.
 - The dead-code classifier reports no Build deletion candidate. Its current dead files are in Knowledge Base, outside this release.
@@ -95,6 +98,9 @@ The candidate was exercised through a real authenticated browser against the pro
 - Local port `1000` browser checks also rendered `/build/my-work`,
   `/build/inbox?view=drafts`, `/build/6/backlog`, and
   `/build/command-center` without a visible runtime error.
+- Local port `1000` view-switcher verification routed `/build/6/issues` to
+  `/calendar?q=login&status=TODO&cycle=7&projectId=6&source=build`; the unified
+  Calendar surface rendered with no browser console errors.
 - A mismatched project ticket URL `/build/5/tickets/BQS-2` resolved to the
   unavailable-scope state and Page Not Found surface without exposing ticket
   data or crashing the shell.

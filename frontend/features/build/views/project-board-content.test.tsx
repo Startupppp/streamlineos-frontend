@@ -32,7 +32,6 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("./table-view", () => ({ TableView: () => null }));
-jest.mock("./calendar-view", () => ({ CalendarView: () => null }));
 jest.mock("./gantt-view", () => ({ GanttView: () => null }));
 let lastWorkloadViewProps: Record<string, unknown> | null = null;
 jest.mock("./workload-view", () => ({

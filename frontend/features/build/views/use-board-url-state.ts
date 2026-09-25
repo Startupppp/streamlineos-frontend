@@ -335,6 +335,18 @@ export function useBoardUrlState(
 
   const handleViewChange = useCallback(
     (v: ViewType) => {
+      if (v === "calendar") {
+        const p = currentSearchParams(searchParams);
+        p.delete("view");
+        p.delete("viewId");
+        p.delete("ticket");
+        p.delete("comment");
+        p.set("source", "build");
+        p.set("projectId", String(projectId));
+        router.push(`/calendar?${p.toString()}`);
+        setSelectedIds(new Set());
+        return;
+      }
       if (v === "workload") {
         const p = currentSearchParams(searchParams);
         p.delete("view");
