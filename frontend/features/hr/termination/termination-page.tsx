@@ -7,7 +7,8 @@ import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { TerminationList } from "./termination-list";
 import { TerminationFormSheet } from "./termination-form-sheet";
@@ -36,6 +37,7 @@ export function TerminationPage() {
     isLoading,
     isFetching,
     isError,
+    error,
     refetch,
   } = useTerminations({
     cursor,
@@ -51,6 +53,9 @@ export function TerminationPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+  // FE-41: the old branch printed "Something went wrong" for every failure,
+  // discarding the 402 upgrade path and the backend message.
+  const pageState = usePageState({ permission: "hr:exit:manage", isLoading, isError, error });
 
   const handleStatusFilterChange = useCallback((value: StatusFilter) => {
     setStatusFilter(value);
@@ -69,25 +74,25 @@ export function TerminationPage() {
       setCursorHistory((history) => [...history, nextCursor]);
   }, [terminationsData?.pagination.nextCursor]);
 
-  if (isLoading || isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper
         title="Termination Management"
         subtitle="Manage employee terminations"
       >
-        {isLoading ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
-            {Array.from({ length: 10 }).map((_, skeletonIndex) => (
-              <Skeleton key={skeletonIndex} className="h-20 rounded-2xl" />
-            ))}
-          </div>
-        ) : (
-          <ErrorState
-            title="Failed to load terminations"
-            description="Something went wrong. Please try again."
-            onRetry={handleRetry}
-          />
-        )}
+        <PageState
+          resolution={pageState}
+          onRetry={handleRetry}
+          loading={
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
+              {Array.from({ length: 10 }).map((_, skeletonIndex) => (
+                <Skeleton key={skeletonIndex} className="h-20 rounded-2xl" />
+              ))}
+            </div>
+          }
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }

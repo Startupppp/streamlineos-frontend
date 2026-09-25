@@ -72,7 +72,7 @@ function TerminationCard({
   const extraCount = reasonsList.length - 2;
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-rose-500">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-status-danger-rule">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           <Avatar className="h-9 w-9 shrink-0 mt-0.5">
