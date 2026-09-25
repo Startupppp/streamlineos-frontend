@@ -177,7 +177,7 @@ Over-quota is a 7th surfaced state (OverQuotaBanner).
 
 **Tests — fail-before / pass-after verified:**
 - `sources-poll.test.ts` — 7/7 PASS (backend sources poll, already existed, kept passing).
-- `kb-citation-contracts.test.ts` — 10/10 PASS (6 new "answer parts" tests added; verified fail against schemas without `passage`/`verified`/`disagreement` fields).
+- `kb-citation-contracts.test.ts` — 11/11 PASS (6 new "answer parts" tests + 1 undeclared-key strictness test added; `.strict()` restored to all 6 schema objects after coordinator correction; verified fail against schemas without declared optional fields or when unknown key present).
 - `ask-idempotency.test.tsx` — 6/6 PASS (idempotency key logic; verified fail on wrong key reuse).
 - `chat-history-signal.test.tsx` — 3/3 PASS (abort signal forwarding).
 - `kb-ask-generate-permission.spec.ts` — 2/2 PASS (backend permission gate).

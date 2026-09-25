@@ -5,6 +5,7 @@ export * from "./chat-history";
 export * from "./analytics";
 export * from "./from-ticket";
 export * from "./pages";
+export * from "./page-versions";
 export * from "./page-comments";
 export * from "./page-templates";
 export * from "./page-reviews";
