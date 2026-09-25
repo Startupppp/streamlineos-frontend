@@ -73,7 +73,7 @@ it("opens a saved view on the project Issues route from Workload", () => {
   fireEvent.click(screen.getByRole("button", { name: "Todo list" }));
 
   expect(replace).toHaveBeenCalledWith(
-    "/build/42/issues?status=TODO&viewId=9&view=list",
+    "/build/42/issues?viewId=9&view=list&status=TODO",
     { scroll: false },
   );
 });

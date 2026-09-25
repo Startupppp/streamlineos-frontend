@@ -54,7 +54,7 @@ it("opens a newly saved workload view on the project Issues route", () => {
   });
 
   expect(replace).toHaveBeenCalledWith(
-    "/build/42/issues?status=TODO&viewId=9",
+    "/build/42/issues?viewId=9&status=TODO",
     { scroll: false },
   );
 });
