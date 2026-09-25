@@ -56,7 +56,7 @@ export function ListView({ holidays, canManage, onEdit, onDelete, onAdd, yearFil
           value={search}
           onValueChange={handleSearchChange}
         />
-        <Button variant="outline" size="sm" className="text-xs" onClick={handleSortToggle}>
+        <Button variant="outline" size="sm" onClick={handleSortToggle} aria-label={`Sort by date, ${sortDir === "asc" ? "oldest" : "newest"} first`}>
           Date {sortDir === "asc" ? "↑" : "↓"}
         </Button>
       </div>

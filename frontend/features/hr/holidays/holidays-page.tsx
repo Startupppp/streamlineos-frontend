@@ -7,6 +7,7 @@ import { addMonths, subMonths } from "date-fns";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -72,9 +73,21 @@ export function HolidaysPage() {
     setEditingHoliday(holiday);
     setSheetOpen(true);
   }
+  // Delete fired straight from the row icon with no confirmation (FE-83).
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   function handleDeleteClick(id: string) {
-    deleteMutation.mutate(id, {
-      onSuccess: () => toast.success("Holiday deleted"),
+    setPendingDeleteId(id);
+  }
+  function handleDeleteOpenChange(open: boolean) {
+    if (!open) setPendingDeleteId(null);
+  }
+  function handleDeleteConfirm() {
+    if (pendingDeleteId === null) return;
+    deleteMutation.mutate(pendingDeleteId, {
+      onSuccess: () => {
+        toast.success("Holiday deleted");
+        setPendingDeleteId(null);
+      },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
@@ -235,6 +248,18 @@ export function HolidaysPage() {
           </motion.div>
         </AnimatePresence>
       </PageState>
+
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete this holiday?"
+        description="It is removed from everyone's holiday calendar."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteMutation.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleDeleteConfirm}
+      />
 
       <HolidaySheet
         open={sheetOpen}
