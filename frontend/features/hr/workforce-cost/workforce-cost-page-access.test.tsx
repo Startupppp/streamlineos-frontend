@@ -50,6 +50,8 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
 }));
 
+jest.mock("@/hooks/api/org-display", () => ({ useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }) }));
+
 jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
