@@ -1,4 +1,4 @@
-import { fireEvent, render as rtlRender, screen } from "@testing-library/react";
+import { fireEvent, render as rtlRender, screen, waitFor } from "@testing-library/react";
 import type { AnchorHTMLAttributes, PropsWithChildren, ReactElement } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -47,6 +47,10 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ data: undefined, isLoading: false }),
 }));
 
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
 jest.mock("framer-motion", () => {
   const React = jest.requireActual<typeof import("react")>("react");
 
@@ -74,12 +78,12 @@ jest.mock("framer-motion", () => {
 });
 
 describe("ProductSwitcherMenu", () => {
-  it("marks Home as selected without rendering a removal control", () => {
+  it("marks Home as selected without rendering a removal control", async () => {
     render(<ProductSwitcherMenu />);
 
     fireEvent.mouseEnter(screen.getByRole("button", { name: "Switch module" }));
 
-    expect(screen.getByLabelText("Selected module")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByLabelText("Selected module")).toBeInTheDocument());
     expect(screen.getAllByRole("button")).toHaveLength(1);
   });
 });
