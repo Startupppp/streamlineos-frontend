@@ -7,7 +7,13 @@ import {
   Trash2Icon,
   BookOpenTextIcon,
 } from "@animateicons/react/lucide";
-import { StickyNote, Loader2, Check, ShieldCheck } from "lucide-react";
+import {
+  StickyNote,
+  Loader2,
+  Check,
+  ShieldCheck,
+  UserIcon,
+} from "lucide-react";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
@@ -51,10 +57,17 @@ interface KbSourcesSheetScopeProps {
   onSelectionChange: (ids: number[]) => void;
   verifiedOnly: boolean;
   onVerifiedOnlyChange: (verifiedOnly: boolean) => void;
+  currentUserId?: string;
+  kindFilter: SourceKindFilter;
+  onKindFilterChange: (kind: SourceKindFilter) => void;
+  ownerFilter: OwnerFilter;
+  onOwnerFilterChange: (owner: OwnerFilter) => void;
   onConfirm: () => void;
 }
 
-export type KbSourcesSheetProps = KbSourcesSheetManageProps | KbSourcesSheetScopeProps;
+export type KbSourcesSheetProps =
+  | KbSourcesSheetManageProps
+  | KbSourcesSheetScopeProps;
 
 export function KbSourcesSheet(props: KbSourcesSheetProps) {
   if (props.mode === "scope") {
@@ -125,9 +138,13 @@ function KbSourcesManageSheet({
 }
 
 const SOURCE_KINDS = ["all", "file", "note"] as const;
-type SourceKindFilter = (typeof SOURCE_KINDS)[number];
+export type SourceKindFilter = (typeof SOURCE_KINDS)[number];
 
-const KIND_LABELS: Record<SourceKindFilter, string> = { all: "All", file: "Files", note: "Notes" };
+const KIND_LABELS: Record<SourceKindFilter, string> = {
+  all: "All",
+  file: "Files",
+  note: "Notes",
+};
 
 function KindFilterButton({
   kind,
@@ -138,17 +155,54 @@ function KindFilterButton({
   active: boolean;
   onSelect: (kind: SourceKindFilter) => void;
 }) {
-  function handleClick() { onSelect(kind); }
+  function handleClick() {
+    onSelect(kind);
+  }
   return (
     <button
       type="button"
       onClick={handleClick}
       className={cn(
         "flex-1 rounded px-2 py-1 text-xs font-medium transition-colors",
-        active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+        active
+          ? "bg-background text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground",
       )}
     >
       {KIND_LABELS[kind]}
+    </button>
+  );
+}
+
+const OWNER_FILTERS = ["all", "mine"] as const;
+export type OwnerFilter = (typeof OWNER_FILTERS)[number];
+
+const OWNER_LABELS: Record<OwnerFilter, string> = { all: "All", mine: "Mine" };
+
+function OwnerFilterButton({
+  owner,
+  active,
+  onSelect,
+}: {
+  owner: OwnerFilter;
+  active: boolean;
+  onSelect: (owner: OwnerFilter) => void;
+}) {
+  function handleClick() {
+    onSelect(owner);
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "flex-1 rounded px-2 py-1 text-xs font-medium transition-colors",
+        active
+          ? "bg-background text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {OWNER_LABELS[owner]}
     </button>
   );
 }
@@ -162,15 +216,17 @@ function KbSourcesScopeSheet({
   onSelectionChange,
   verifiedOnly,
   onVerifiedOnlyChange,
+  currentUserId,
+  kindFilter,
+  onKindFilterChange,
+  ownerFilter,
+  onOwnerFilterChange,
   onConfirm,
 }: Omit<KbSourcesSheetScopeProps, "mode">) {
-  const [kindFilter, setKindFilter] = React.useState<SourceKindFilter>("all");
-
-  const visibleSources = kindFilter === "all"
-    ? sources
-    : sources.filter((s) => s.kind === kindFilter);
-  const readyVisible = visibleSources.filter((s) => s.status === "ready");
-  const allSelected = readyVisible.length > 0 && readyVisible.every((s) => selectedIds.includes(s.id));
+  const readyVisible = sources.filter((s) => s.status === "ready");
+  const allSelected =
+    readyVisible.length > 0 &&
+    readyVisible.every((s) => selectedIds.includes(s.id));
   const noneSelected = selectedIds.length === 0;
 
   const description = noneSelected
@@ -179,9 +235,13 @@ function KbSourcesScopeSheet({
 
   function handleToggleAll() {
     if (allSelected) {
-      onSelectionChange(selectedIds.filter((id) => !readyVisible.some((s) => s.id === id)));
+      onSelectionChange(
+        selectedIds.filter((id) => !readyVisible.some((s) => s.id === id)),
+      );
     } else {
-      const toAdd = readyVisible.filter((s) => !selectedIds.includes(s.id)).map((s) => s.id);
+      const toAdd = readyVisible
+        .filter((s) => !selectedIds.includes(s.id))
+        .map((s) => s.id);
       onSelectionChange([...selectedIds, ...toAdd]);
     }
   }
@@ -194,10 +254,6 @@ function KbSourcesScopeSheet({
     }
   }
 
-  function handleKindFilter(kind: SourceKindFilter) {
-    setKindFilter(kind);
-  }
-
   return (
     <AppSheet
       open={open}
@@ -207,15 +263,30 @@ function KbSourcesScopeSheet({
       className="sm:max-w-md"
     >
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-1">
-          {SOURCE_KINDS.map((kind) => (
-            <KindFilterButton
-              key={kind}
-              kind={kind}
-              active={kindFilter === kind}
-              onSelect={handleKindFilter}
-            />
-          ))}
+        <div className="flex gap-2">
+          <div className="flex flex-1 items-center gap-1 rounded-md border border-border bg-muted p-1">
+            {SOURCE_KINDS.map((kind) => (
+              <KindFilterButton
+                key={kind}
+                kind={kind}
+                active={kindFilter === kind}
+                onSelect={onKindFilterChange}
+              />
+            ))}
+          </div>
+          {currentUserId !== undefined && (
+            <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-1">
+              <UserIcon className="ml-1 h-3 w-3 shrink-0 text-muted-foreground" />
+              {OWNER_FILTERS.map((owner) => (
+                <OwnerFilterButton
+                  key={owner}
+                  owner={owner}
+                  active={ownerFilter === owner}
+                  onSelect={onOwnerFilterChange}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2">
@@ -236,9 +307,16 @@ function KbSourcesScopeSheet({
         {readyVisible.length > 1 && (
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">
-              {noneSelected ? "No filter — searching all sources" : `${selectedIds.length} of ${sources.filter((s) => s.status === "ready").length} selected`}
+              {noneSelected
+                ? "No filter — searching all sources"
+                : `${selectedIds.length} of ${sources.filter((s) => s.status === "ready").length} selected`}
             </span>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleToggleAll}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleToggleAll}
+            >
               {allSelected ? "Deselect all" : "Select all"}
             </Button>
           </div>
@@ -246,7 +324,7 @@ function KbSourcesScopeSheet({
 
         <ScopeSourcesList
           isLoading={isLoading}
-          sources={visibleSources}
+          sources={sources}
           selectedIds={selectedIds}
           onToggle={handleToggleSource}
         />
@@ -254,10 +332,16 @@ function KbSourcesScopeSheet({
         <Button
           className="w-full gap-1.5"
           onClick={onConfirm}
-          aria-label={noneSelected ? "Search all sources" : `Search ${selectedIds.length} selected source${selectedIds.length === 1 ? "" : "s"}`}
+          aria-label={
+            noneSelected
+              ? "Search all sources"
+              : `Search ${selectedIds.length} selected source${selectedIds.length === 1 ? "" : "s"}`
+          }
         >
           <Check className="h-4 w-4" />
-          {noneSelected ? "Search all sources" : `Search ${selectedIds.length} source${selectedIds.length === 1 ? "" : "s"}`}
+          {noneSelected
+            ? "Search all sources"
+            : `Search ${selectedIds.length} source${selectedIds.length === 1 ? "" : "s"}`}
         </Button>
       </div>
     </AppSheet>
@@ -320,7 +404,12 @@ interface ScopeSourcesListProps {
   onToggle: (id: number) => void;
 }
 
-function ScopeSourcesList({ isLoading, sources, selectedIds, onToggle }: ScopeSourcesListProps) {
+function ScopeSourcesList({
+  isLoading,
+  sources,
+  selectedIds,
+  onToggle,
+}: ScopeSourcesListProps) {
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -366,7 +455,9 @@ function ScopeSourceRow({
 }) {
   const isReady = source.status === "ready";
   const isChecked = selectedIds.includes(source.id);
-  function handleCheckedChange() { if (isReady) onToggle(source.id); }
+  function handleCheckedChange() {
+    if (isReady) onToggle(source.id);
+  }
   return (
     <li
       className={cn(
@@ -392,7 +483,10 @@ function ScopeSourceRow({
         htmlFor={`scope-source-${source.id}`}
         className="min-w-0 flex-1 cursor-pointer"
       >
-        <TruncatedText text={source.title ?? ""} className="text-sm font-medium text-foreground" />
+        <TruncatedText
+          text={source.title ?? ""}
+          className="text-sm font-medium text-foreground"
+        />
         <p className="text-xs text-muted-foreground">
           {source.chunkCount > 0 ? `${source.chunkCount} chunks` : "—"}
         </p>
@@ -422,7 +516,10 @@ function SourceRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <TruncatedText text={source.title ?? ""} className="text-sm font-medium text-foreground" />
+        <TruncatedText
+          text={source.title ?? ""}
+          className="text-sm font-medium text-foreground"
+        />
         <p className="text-xs text-muted-foreground">
           {source.chunkCount > 0 ? `${source.chunkCount} chunks` : "—"}
         </p>

@@ -100,7 +100,10 @@ export const knowledgeAndSurveysQueryKeys = {
     researchBrief: (researchBriefId: number) =>
       [...base, "kb", "research-brief", researchBriefId] as const,
     settings: () => [...base, "kb", "settings"] as const,
-    sources: () => [...base, "kb", "sources"] as const,
+    sources: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "sources"] as const)
+        : ([...base, "kb", "sources", params] as const),
     pageCollection: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "kb", "page-collection"] as const)

@@ -720,7 +720,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 - [x] `kb_ai_interactions` schema: tenant, actor, conversation/message, provider/model, prompt policy version, source ids + revisions, token counts, latency, result state, feedback, cost
 - [x] Conversation rail: new, search, rename, delete, cursor
-- [ ] Source scope sheet (pages/files/notes, space, owner, status, verified-only) visible and editable before send
+- [x] Source scope sheet (pages/files/notes, space, owner, status, verified-only) visible and editable before send
 - [x] Answer parts: citations, source passage, freshness, verification, disagreement, insufficient evidence
 - [x] Streaming stop/retry, network recovery, copy, helpful/unhelpful, report wrong/stale, create knowledge gap
 - [x] Access-change handling after an answer was generated
@@ -805,7 +805,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Watermark, checksum/counts, exceptions, retries, rollback window recorded
 - [x] Freeze legacy writes → final delta → switch readers → invalidate both cache namespaces
 - [x] Remove the article↔page bridge runtime only after 100% migration + signed reconciliation
-- [ ] Remove duplicate search/access logic, tree-as-list consumers, client caps, persisted expired review state, unclaimed endpoints, shallow wrappers
+- [x] Remove duplicate search/access logic, tree-as-list consumers, client caps, persisted expired review state, unclaimed endpoints, shallow wrappers
 - [x] Contraction migration tested for interruption and resumption
 - [x] Rollback metadata provided even though the data migration is intentionally irreversible
 - [x] Retain historical migrations needed to build from supported baselines, audit records, and promised compatibility redirects
@@ -883,7 +883,7 @@ seam that now emits behind the nine that still do not.
   `kb.content_type`, `kb.outcome`, `kb.chunks`, `kb.embedded`, `kb.reused`, `kb.duration_ms` and
   `org.id`; `startSpan` joins `correlation.id` and `http.route` from the ambient context.
 - [x] Provider/model — pre-existing on `AiCallMetrics`, not delivered here.
-- [ ] Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source
+- [x] Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source
   kind. None is emitted on any KB span.
 - [x] Only the **page** indexing path is instrumented. `indexArticle` delegates to
   `kb-article-indexing.ts` and attachments run their own flow. `KbIndexingContentType` already

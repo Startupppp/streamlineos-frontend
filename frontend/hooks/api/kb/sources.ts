@@ -20,6 +20,7 @@ export interface KbSource {
   chunkCount: number;
   errorMessage: string | null;
   spaceId: number | null;
+  createdById?: string | null;
   createdAt: string;
 }
 
@@ -66,13 +67,20 @@ const kbSourceSuccessContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-sources-schema").then((m) => m.kbSourceSuccessContract),
 );
 
-export function useKbSources() {
+export interface KbSourcesParams {
+  kind?: "file" | "note";
+  createdById?: string;
+}
+
+export function useKbSources(filters?: KbSourcesParams) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.sources(),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.sources(filters),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: SOURCES_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
+      if (filters?.kind !== undefined) params.kind = filters.kind;
+      if (filters?.createdById !== undefined) params.createdById = filters.createdById;
       return apiClient.get<KbSourcePage>("/kb/sources", params, signal, kbSourcePageContract);
     },
     initialPageParam: NO_CURSOR_YET,
