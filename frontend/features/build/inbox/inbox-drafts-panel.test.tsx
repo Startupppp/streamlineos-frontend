@@ -5,6 +5,7 @@ const useMyCommentDrafts = jest.fn();
 const useDeleteCommentDraft = jest.fn();
 const useDeleteAllCommentDrafts = jest.fn();
 const push = jest.fn();
+const requestLeave = jest.fn((action: () => void) => action());
 
 const accessLoading = { data: undefined, isLoading: true };
 const accessGranted = {
@@ -29,6 +30,9 @@ jest.mock("@/hooks/api/build/comment-drafts", () => ({
 }));
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
+}));
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useNavigationLeave: () => requestLeave,
 }));
 
 import { InboxDraftsPanel } from "./inbox-drafts-panel";
@@ -55,6 +59,7 @@ function makeDraft(id: number) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  requestLeave.mockImplementation((action: () => void) => action());
   useAccess.mockReturnValue(accessGranted);
   useMyCommentDrafts.mockReturnValue({
     data: [],
@@ -139,5 +144,28 @@ describe("InboxDraftsPanel — composition, not page duplication", () => {
     });
     render(<InboxDraftsPanel />);
     expect(screen.getByRole("button", { name: /delete draft/i })).toBeInTheDocument();
+  });
+
+  it("routes draft opening through the shared leave guard", async () => {
+    const drafts = [makeDraft(1)];
+    useMyCommentDrafts.mockReturnValue({
+      data: drafts,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    let pendingNavigation: (() => void) | undefined;
+    requestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+
+    render(<InboxDraftsPanel />);
+    await screen.getByRole("button", { name: /BLD-1 Ticket 1/i }).click();
+
+    expect(requestLeave).toHaveBeenCalledTimes(1);
+    expect(push).not.toHaveBeenCalled();
+    pendingNavigation?.();
+    expect(push).toHaveBeenCalledWith("/build/proj-1/tickets/BLD-1");
   });
 });

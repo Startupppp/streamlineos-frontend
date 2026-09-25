@@ -19,6 +19,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { CommentDraftRow } from "@/features/build/drafts/comment-draft-row";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 const DRAFTS_RENDER_LIMIT = 100;
 
@@ -44,6 +45,7 @@ function DraftsPanelSkeleton() {
 
 export function InboxDraftsPanel() {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const { data, isLoading, isError, error, refetch } = useMyCommentDrafts();
   const deleteDraft = useDeleteCommentDraft();
   const deleteAll = useDeleteAllCommentDrafts();
@@ -64,9 +66,11 @@ export function InboxDraftsPanel() {
     (draft: CommentDraftListItem) => {
       const { projectId, projectKey, ticketNumber } = draft.ticket;
       if (!projectId) return;
-      router.push(getTicketDetailHref(projectId, projectKey, ticketNumber));
+      requestLeave(() =>
+        router.push(getTicketDetailHref(projectId, projectKey, ticketNumber)),
+      );
     },
-    [router],
+    [requestLeave, router],
   );
 
   const handleDelete = useCallback(
