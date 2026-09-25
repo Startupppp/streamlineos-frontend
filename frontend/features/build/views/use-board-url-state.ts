@@ -45,7 +45,12 @@ export function useBoardUrlState(
   const router = useRouter();
   const pathname = usePathname();
 
-  const view: ViewType = parseViewType(searchParams.get("view") ?? defaultView);
+  const viewParam = searchParams.get("view");
+  const calendarHref = `/calendar?source=build&projectId=${projectId}`;
+  const isCalendarDeepLink =
+    pathname === `/build/${projectId}/issues` && viewParam === "calendar";
+  const view: ViewType =
+    isCalendarDeepLink ? "board" : parseViewType(viewParam ?? defaultView);
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
   const commentParam = searchParams.get("comment");
@@ -140,7 +145,12 @@ export function useBoardUrlState(
   );
 
   useEffect(() => {
-    if (!viewId || !views) return;
+    if (!isCalendarDeepLink) return;
+    router.replace(calendarHref);
+  }, [calendarHref, isCalendarDeepLink, router]);
+
+  useEffect(() => {
+    if (isCalendarDeepLink || !viewId || !views) return;
     if (appliedViewIdRef.current === viewId) return;
     const savedView = views.find((v) => v.id.toString() === viewId);
     if (!savedView) return;
@@ -163,7 +173,14 @@ export function useBoardUrlState(
       writeDisplayOptionParams(next, hydrated);
     }
     router.replace(`?${next.toString()}`, { scroll: false });
-  }, [viewId, views, searchParams, router, setStoredDisplayOptions]);
+  }, [
+    isCalendarDeepLink,
+    viewId,
+    views,
+    searchParams,
+    router,
+    setStoredDisplayOptions,
+  ]);
 
   const activeView = viewId
     ? views?.find((v) => v.id.toString() === viewId)
@@ -365,7 +382,7 @@ export function useBoardUrlState(
       router.replace(`?${p.toString()}`, { scroll: false });
       setSelectedIds(new Set());
     },
-    [router, searchParams, projectId, pathname],
+    [calendarHref, router, searchParams, projectId, pathname],
   );
 
   const handleWorkloadFilterChange = useCallback(

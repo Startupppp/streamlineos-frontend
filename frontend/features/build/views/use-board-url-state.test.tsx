@@ -166,8 +166,29 @@ describe("useBoardUrlState — ticket round trips preserve issue collection stat
   });
 });
 
-describe("useBoardUrlState — canonical calendar deep link", () => {
-  it("opens the unified calendar with Build scope and keeps compatible filters", () => {
+describe("useBoardUrlState — Calendar has one canonical owner", () => {
+  it("normalizes an Issues calendar deep link to the unified Calendar without rendering the local calendar layout", () => {
+    mockViews = [
+      {
+        id: 9,
+        name: "Saved list",
+        layoutType: "list",
+        filters: { status: "DONE" },
+        isPinned: false,
+      },
+    ];
+    setParams({ view: "calendar", viewId: "9", status: "TODO" });
+
+    const { result } = renderHook(() => useBoardUrlState(1));
+
+    expect(result.current.view).toBe("board");
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    expect(mockReplace).toHaveBeenLastCalledWith(
+      "/calendar?source=build&projectId=1",
+    );
+  });
+
+  it("opens the unified Calendar when Calendar is selected from Issues", () => {
     setParams({
       view: "list",
       q: "login",
