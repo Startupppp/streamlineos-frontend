@@ -14,7 +14,8 @@ import { CustomFieldsDataTable } from "@/features/hr/custom-fields/components/cu
 import { CustomFieldUpsertSheet } from "@/features/hr/custom-fields/components/custom-field-upsert-sheet";
 import { useHrCustomFields, useCreateCustomField } from "@/features/hr/custom-fields/hooks/use-hr-custom-fields";
 import { useCan } from "@/hooks/api/access";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import type { CreateCustomFieldPayload, UpdateCustomFieldPayload } from "@/features/hr/forms/lib/types";
 
 const ENTITY_TYPES = [
@@ -27,8 +28,16 @@ export function CustomFieldsSettingsPage() {
   const [entityType, setEntityType] = useState("employee");
   const [open, setOpen] = useState(false);
   const canManage = useCan("hr:custom-fields:manage");
-  const { data: fields, isLoading, isError, refetch } = useHrCustomFields(entityType, {
+  const { data: fields, isLoading, isError, error, refetch } = useHrCustomFields(entityType, {
     enabled: canManage,
+  });
+  // FE-42: page state from usePageState, not the useCan boolean, so a permitted
+  // user is not shown "Access Restricted" while their access is still loading.
+  const pageState = usePageState({
+    permission: "hr:custom-fields:manage",
+    isLoading,
+    isError,
+    error,
   });
   const create = useCreateCustomField(entityType);
 
@@ -55,18 +64,6 @@ export function CustomFieldsSettingsPage() {
     void refetch();
   }
 
-  if (!canManage) {
-    return (
-      <PageWrapper title="Custom Fields" subtitle="Define additional fields for HR entities">
-        <NoPermissionState
-          permission="hr:custom-fields:manage"
-          title="Access Restricted"
-          description="You don't have permission to view custom field definitions."
-        />
-      </PageWrapper>
-    );
-  }
-
   return (
     <>
       <PageWrapper
@@ -90,23 +87,21 @@ export function CustomFieldsSettingsPage() {
           ) : undefined
         }
       >
-        {isLoading ? (
-          <div className="flex flex-1 min-h-0 flex-col gap-2 pt-2">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full rounded-lg" />
-            ))}
-          </div>
-        ) : isError ? (
-          <ErrorState
-            title="Couldn't load custom fields"
-            description="Check your connection and try again."
-            onRetry={handleRetry}
-          />
-        ) : (
+        <PageState
+          resolution={pageState}
+          onRetry={handleRetry}
+          loading={
+            <div className="flex flex-1 min-h-0 flex-col gap-2 pt-2">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-lg" />
+              ))}
+            </div>
+          }
+        >
           <div className="flex flex-1 min-h-0 flex-col pt-2">
             <CustomFieldsDataTable entityType={entityType} fields={fields ?? []} />
           </div>
-        )}
+        </PageState>
       </PageWrapper>
 
       <CustomFieldUpsertSheet
