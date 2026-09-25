@@ -41,7 +41,18 @@ export const EmployeeCard = memo(function EmployeeCard({
   const initials = employeeInitials(emp);
   const designation = emp.designation?.trim() || null;
   const employeeId = emp.employeeId?.trim() || null;
-  const isActive = emp.isActive;
+  // PROVISIONAL (product default E-4): an account exists from the moment an
+  // administrator creates it, so `isActive` alone badges a never-accepted
+  // invitee as "Active" right beside a summary counting them "Pending invite".
+  // Acceptance is the server-derived `hasAccepted`; absent, fall back to the
+  // old two-state reading rather than inventing a Pending.
+  const status: "active" | "pending" | "inactive" = !emp.isActive
+    ? "inactive"
+    : emp.hasAccepted === false
+      ? "pending"
+      : "active";
+  const statusLabel =
+    status === "active" ? "Active" : status === "pending" ? "Pending" : "Inactive";
 
   return (
     <Link
@@ -74,19 +85,29 @@ export const EmployeeCard = memo(function EmployeeCard({
                 <span
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-micro font-semibold leading-none",
-                    isActive
+                    status === "active"
                       ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
-                      : "border-border bg-muted text-muted-foreground",
+                      : status === "pending"
+                        ? "border-status-warning-rule bg-status-warning-surface text-status-warning-ink"
+                        : "border-border bg-muted text-muted-foreground",
                   )}
-                  title={isActive ? "Active" : "Inactive"}
+                  title={
+                    status === "pending"
+                      ? "Invited, not yet accepted"
+                      : statusLabel
+                  }
                 >
                   <span
                     className={cn(
                       "h-1.5 w-1.5 rounded-full",
-                      isActive ? "bg-status-success-fill" : "bg-muted-foreground/60",
+                      status === "active"
+                        ? "bg-status-success-fill"
+                        : status === "pending"
+                          ? "bg-status-warning-fill"
+                          : "bg-muted-foreground/60",
                     )}
                   />
-                  {isActive ? "Active" : "Inactive"}
+                  {statusLabel}
                 </span>
               </div>
 

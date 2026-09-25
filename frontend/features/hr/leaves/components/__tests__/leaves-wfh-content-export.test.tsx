@@ -142,6 +142,20 @@ jest.mock("@/features/hr/leaves/wfh-request-sheet", () => ({
   WfhRequestSheet: () => null,
 }));
 
+// V-048. The catch arm at leaves-wfh-content.tsx was uncovered: nothing proved
+// a failing workbook build ends in an error toast rather than in silence.
+let exceljsFails = false;
+jest.mock("exceljs", () => {
+  const actual = jest.requireActual("exceljs");
+  return {
+    __esModule: true,
+    get default() {
+      if (exceljsFails) throw new Error("Workbook engine unavailable");
+      return actual.default ?? actual;
+    },
+  };
+});
+
 const downloadBlob = jest.fn();
 jest.mock("@/lib/download-blob", () => ({
   downloadBlob: (blob: Blob, filename: string) => downloadBlob(blob, filename),
@@ -177,6 +191,7 @@ async function clickExport() {
 
 describe("LeavesWfhContent — leave export never ends in silence", () => {
   beforeEach(() => {
+    exceljsFails = false;
     minePages = MINE_EMPTY;
     downloadBlob.mockClear();
     toastSuccess.mockClear();
@@ -202,6 +217,20 @@ describe("LeavesWfhContent — leave export never ends in silence", () => {
     expect(downloadBlob).toHaveBeenCalledTimes(1);
     expect(toastError).not.toHaveBeenCalled();
     expect(toastSuccess).toHaveBeenCalledWith(expect.stringMatching(/empty|no leave/i));
+  });
+
+  it("a failing export shows an error toast", async () => {
+    exceljsFails = true;
+    minePages = MINE_FOUR;
+    renderPage();
+
+    await clickExport();
+
+    expect(downloadBlob).not.toHaveBeenCalled();
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith(
+      expect.stringContaining("Workbook engine unavailable"),
+    );
   });
 
   it("exports the approvals the admin is looking at, not their own empty list", async () => {

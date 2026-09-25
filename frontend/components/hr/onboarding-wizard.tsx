@@ -39,10 +39,12 @@ const STEPS = [
   { id: 5, label: "Review" },
 ];
 
-const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
+// Exported so the Skills & Pay step's test can prove the gate actually covers
+// the fields that step marks required (V-135).
+export const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
   1: ["firstName", "lastName", "email", "phone", "gender", "dateOfBirth"],
   2: ["designation", "departmentId", "reportingManagerUserId", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
-  3: ["taxId"],
+  3: ["taxId", "monthlySalary"],
   4: [],
 };
 

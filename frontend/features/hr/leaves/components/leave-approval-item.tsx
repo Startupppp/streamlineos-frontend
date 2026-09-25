@@ -1,18 +1,15 @@
 "use client";
 
-import { useCallback } from "react";
 import { format } from "date-fns";
-import { CheckCircle2, XCircle, UserCheck, AlertTriangle } from "lucide-react";
+import { UserCheck, AlertTriangle } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 import type { LeaveRequest } from "./leaves-shared";
 import { priorityConfig } from "./leaves-shared";
-import { LeaveStatusBadge } from "./leave-status-badge";
+import { LeaveDecisionButtons } from "./leave-decision-controls";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 
 interface LeaveApprovalItemProps {
@@ -33,16 +30,6 @@ export function LeaveApprovalItem({
   const priority = req.priority ?? "MEDIUM";
   const pConfig = priorityConfig[priority] ?? priorityConfig.MEDIUM;
   const lopDays = Number(req.lopDays ?? 0);
-  const isSelfRequest = !!currentUserId && req.user?.id === currentUserId;
-
-  const handleApprove = useCallback(
-    () => onProcess(req.id, "APPROVED"),
-    [req.id, onProcess],
-  );
-  const handleReject = useCallback(
-    () => onProcess(req.id, "REJECTED"),
-    [req.id, onProcess],
-  );
 
   return (
     <div
@@ -109,36 +96,13 @@ export function LeaveApprovalItem({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 ml-3">
-          {isPending ? (
-            isSelfRequest ? (
-              <span className="text-xs text-muted-foreground italic">
-                Cannot approve own request
-              </span>
-            ) : (
-              <>
-                <LoadingButton
-                  size="sm"
-                  className="h-7 rounded-full bg-status-success-fill hover:bg-status-success-fill-hover text-white text-dense font-semibold px-3 gap-1 border-0 transition-colors duration-200"
-                  isPending={processingId === req.id}
-                  onClick={handleApprove}
-                >
-                  <CheckCircle2 className="h-3 w-3" />
-                  Approve
-                </LoadingButton>
-                <Button
-                  size="sm"
-                  className="h-7 rounded-full bg-transparent border border-destructive/30 text-destructive hover:bg-destructive/10 text-dense font-semibold px-3 gap-1 transition-colors duration-200"
-                  disabled={processingId === req.id}
-                  onClick={handleReject}
-                >
-                  <XCircle className="h-3 w-3" />
-                  Reject
-                </Button>
-              </>
-            )
-          ) : (
-            <LeaveStatusBadge status={status} />
-          )}
+          {/* V-044. The same controls /hr/approvals mounts. */}
+          <LeaveDecisionButtons
+            request={req}
+            currentUserId={currentUserId}
+            processingId={processingId}
+            onProcess={onProcess}
+          />
         </div>
       </div>
     </div>

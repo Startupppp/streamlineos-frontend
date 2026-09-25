@@ -34,6 +34,7 @@ import { EmployeeHeaderCard } from "@/features/hr/employees/detail/employee-head
 import { OverviewTab } from "@/features/hr/employees/detail/overview-tab";
 import { EmployeeTabsList } from "@/features/hr/employees/detail/employee-tabs-list";
 import { LIFECYCLE_BADGE, profileCompletenessScore } from "@/features/hr/employees/detail/employee-detail-constants";
+import { getUserDisplayName } from "@/lib/person-display";
 
 const EmployeeTimelineTab = dynamic(
   () => import("@/features/hr/employees/detail/timeline-tab").then(m => ({ default: m.EmployeeTimelineTab })),
@@ -79,8 +80,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const isSelf = hydrated && session?.user?.id === employee.id;
   const showManageActions = hydrated && canManageEmployees;
   const showSensitiveTab = hydrated && canViewSensitive;
-  const employeeName =
-    `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() || "Employee";
+  // V-023/V-025: the same helper the header card uses. Composing first+last
+  // here ignored `employee.name`, so a display-name-only person exported a PDF
+  // called "Employee".
+  const employeeName = getUserDisplayName(employee);
 
   const scrollActiveTabIntoView = useCallback(() => {
     const active = tabsListRef.current?.querySelector<HTMLElement>(
@@ -237,12 +240,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
           Back
         </Button>
       }
-      title={
-        <>
-          <span className="sr-only sm:hidden">{employeeName}</span>
-          <span className="hidden sm:inline">{employeeName}</span>
-        </>
-      }
+      // V-023: the header card below already carries the name as its <h2>, so
+      // the page title only names the page for assistive tech — it is not a
+      // second visible copy of the same words.
+      title={<span className="sr-only">{employeeName}</span>}
       actionsInline
       actions={
         <div className="flex items-center gap-1.5">
