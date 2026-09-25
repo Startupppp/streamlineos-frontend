@@ -71,7 +71,7 @@ Current release-candidate checks:
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
 - `git diff --check`: pass.
-- Latest frontend Build navigation, filtered board-count, malformed-filter normalization, portfolio-search, Command Center title consistency, retry-refresh, stale-detail recovery, expected missing-record telemetry, invalid project-id rejection, dirty-navigation protection, scope-switch stale-data fixes, project-scoped ticket-detail cache identity, and cross-tab access/entitlement freshness hardening are on `origin/main` at `a538d26ea` plus the pending release commit:
+- Latest frontend Build navigation, filtered board-count, malformed-filter normalization, portfolio-search, Command Center title consistency, retry-refresh, stale-detail recovery, expected missing-record telemetry, invalid project-id rejection, dirty-navigation protection, scope-switch stale-data fixes, project-scoped ticket-detail cache identity, and cross-tab access/entitlement freshness hardening are on `origin/main` at `0824ccb68`:
   backlog, My Work, draft, and keyboard shortcut navigation now use the shared
   dirty-state guard; focused regressions pass.
 - The Build view switcher now routes Calendar to the unified `/calendar` surface
@@ -144,7 +144,7 @@ These failures are measured and are not Build-owned:
 
 Completed:
 
-- Frontend `origin/main` contains `a538d26ea` (Command Center route labeling is consistent with its canonical route and page retry refreshes its server-derived summaries; portfolio search is sent as the server-side `q` parameter; stale detail reads remain recoverable; expected 404 rejections are excluded from global browser error reporting; invalid project IDs fail before prefetch; dirty navigation is guarded; project list queries do not retain previous-scope rows; ticket-detail caches include project and ticket identity; the prior malformed-filter and board-count fixes remain in the same release line).
+- Frontend `origin/main` contains `0824ccb68` (Command Center route labeling is consistent with its canonical route and page retry refreshes its server-derived summaries; portfolio search is sent as the server-side `q` parameter; stale detail reads remain recoverable; expected 404 rejections are excluded from global browser error reporting; invalid project IDs fail before prefetch; dirty navigation is guarded; project list queries do not retain previous-scope rows; ticket-detail caches include project and ticket identity; access and entitlement reads refresh on focus/reconnect and entitlement invalidation is organization-scoped; the prior malformed-filter and board-count fixes remain in the same release line).
 - Access and entitlement queries now refresh on focus/reconnect, and organization-scoped storage listeners invalidate entitlement reads in another tab; focused cross-tab and billing regressions pass.
 - Backend `origin/main` contains `b5a2553c1`, including the Build portfolio cursor validation, tenant-scoped goal-owner projection, refreshed authorization census, and migration-discipline baseline fixes.
 - The portfolio list UI renders its loading and empty states locally on port `1000`; authenticated production verification of `/build/portfolios?q=platform` now reaches the server-filtered empty state without a runtime error.
