@@ -2,20 +2,32 @@ import { z } from "zod";
 import type { ReportingLineView } from "@/hooks/api/hr/reporting-lines-schema";
 import type { SetReportingLineInput } from "@/hooks/api/hr/reporting-lines";
 
-/** PRD D4: a reason counts at least 10 non-whitespace characters (backend CHANGE_REASON_MIN_CHARS). */
+/**
+ * The one client mirror of the D4 contract: a required change reason counts at
+ * least this many non-whitespace characters (backend CHANGE_REASON_MIN_CHARS).
+ * Everything else about the frequency guard — when it applies, who may pass it —
+ * is the server's to decide; the UI only reads its counts and shows its answer.
+ */
 export const CHANGE_REASON_MIN_CHARS = 10;
 
 export function nonWhitespaceLength(value: string | undefined): number {
   return (value ?? "").replace(/\s/g, "").length;
 }
 
-/**
- * Whether this change is past the org's repeated-change threshold: only a change
- * of the primary counts, and the next change after `threshold` in 24 hours is
- * the one that needs a reason and elevated authority.
- */
-export function exceedsChangeThreshold(line: Pick<ReportingLineView, "primaryChangesLast24h" | "changeThreshold">, primaryChanges: boolean): boolean {
-  return primaryChanges && line.primaryChangesLast24h >= line.changeThreshold;
+/** Read straight from the server's fields (CONTRACT §4.3); no client rule on top. */
+export function requiresChangeReason(line: Pick<ReportingLineView, "primaryChangesLast24h" | "changeThreshold">): boolean {
+  return line.primaryChangesLast24h >= line.changeThreshold;
+}
+
+type SecondaryEntry = ReportingLineView["secondary"][number];
+
+function isCurrentOn(entry: SecondaryEntry, today: string): boolean {
+  return entry.effectiveFrom <= today && (entry.effectiveTo === null || entry.effectiveTo >= today);
+}
+
+/** Additional managers scheduled to start after `today` — shown read-only, never re-dated. */
+export function upcomingSecondaries(line: ReportingLineView, today: string): SecondaryEntry[] {
+  return line.secondary.filter((entry) => entry.effectiveFrom > today);
 }
 
 const managerRefSchema = z
@@ -79,7 +91,11 @@ export const reportingLineEditorSchema = z
 
 export type ReportingLineEditorValues = z.infer<typeof reportingLineEditorSchema>;
 
-export function editorDefaults(line: ReportingLineView): ReportingLineEditorValues {
+/**
+ * `today` is the viewer's local date; the form edits only the additional
+ * managers in force on it (a scheduled one would otherwise be re-dated).
+ */
+export function editorDefaults(line: ReportingLineView, today: string): ReportingLineEditorValues {
   const current = line.current;
   return {
     primaryManagerUserId: current?.managerUserId ?? null,
@@ -96,7 +112,7 @@ export function editorDefaults(line: ReportingLineView): ReportingLineEditorValu
     topLevel: line.topLevel !== null && current === null,
     topLevelReason: line.topLevel?.reason ?? "",
     secondaryManagers: line.secondary
-      .filter((entry) => entry.effectiveTo === null)
+      .filter((entry) => isCurrentOn(entry, today))
       .map((entry) => ({ managerUserId: entry.manager.userId, label: entry.label ?? "", managerRef: entry.manager })),
     effectiveFrom: "",
     reason: "",
@@ -105,18 +121,31 @@ export function editorDefaults(line: ReportingLineView): ReportingLineEditorValu
   };
 }
 
-/** The PUT body (CONTRACT §4.4). Blank optional fields are omitted; secondaries are always sent (the full set). */
-export function editorPayload(employeeUserId: string, values: ReportingLineEditorValues): SetReportingLineInput {
+/**
+ * The PUT body (CONTRACT §4.4). Blank optional fields are omitted.
+ * `secondaryManagers` is the desired full set, and the server re-dates every line
+ * in it from the effective date — so it is sent only when the user changed the
+ * set (or a top-level role ends them); otherwise it is omitted, meaning "unchanged".
+ */
+export function editorPayload(
+  employeeUserId: string,
+  values: ReportingLineEditorValues,
+  { secondariesChanged }: { secondariesChanged: boolean },
+): SetReportingLineInput {
   return {
     employeeUserId,
     primaryManagerUserId: values.topLevel ? null : values.primaryManagerUserId,
     ...(values.topLevel ? { topLevelReason: values.topLevelReason } : {}),
-    secondaryManagers: values.topLevel
-      ? []
-      : values.secondaryManagers.map((entry) => ({
-          managerUserId: entry.managerUserId,
-          ...(entry.label ? { label: entry.label } : {}),
-        })),
+    ...(values.topLevel
+      ? { secondaryManagers: [] }
+      : secondariesChanged
+        ? {
+            secondaryManagers: values.secondaryManagers.map((entry) => ({
+              managerUserId: entry.managerUserId,
+              ...(entry.label ? { label: entry.label } : {}),
+            })),
+          }
+        : {}),
     ...(values.effectiveFrom ? { effectiveFrom: values.effectiveFrom } : {}),
     ...(values.reason ? { reason: values.reason } : {}),
     ...(values.emergency ? { emergency: true } : {}),

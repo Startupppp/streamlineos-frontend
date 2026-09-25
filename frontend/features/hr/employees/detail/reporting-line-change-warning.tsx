@@ -3,6 +3,7 @@
 import { AlertTriangle } from "lucide-react";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
+import { CHANGE_REASON_MIN_CHARS } from "./reporting-line-editor-schema";
 
 interface ReportingLineChangeWarningProps {
   changesLast24h: number;
@@ -12,8 +13,9 @@ interface ReportingLineChangeWarningProps {
 }
 
 /**
- * PRD D4: the change past the org's 24-hour threshold is a soft guard, not a
- * lock — it warns, needs a reason, and needs an HR or org admin to save.
+ * PRD D4, as the server reports it: past the org's 24-hour threshold a primary
+ * change needs a reason and an HR or org admin. A soft guard — the server
+ * decides; this only explains what it will ask for.
  */
 export function ReportingLineChangeWarning({ changesLast24h, threshold, canOverride }: ReportingLineChangeWarningProps) {
   const tone = statusToneClasses("warning");
@@ -27,8 +29,8 @@ export function ReportingLineChangeWarning({ changesLast24h, threshold, canOverr
         </p>
         <p>
           {canOverride
-            ? "Another change needs a reason of at least 10 characters. It is recorded against your name."
-            : "Another change needs a reason and an HR or org admin. Ask one to make this change."}
+            ? `Another primary change needs a reason of at least ${CHANGE_REASON_MIN_CHARS} characters. It is recorded against your name.`
+            : "Another primary change needs a reason and an HR or org admin. Ask one if the save is refused."}
         </p>
       </div>
     </div>

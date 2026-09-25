@@ -1,9 +1,9 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReportingLineView } from "@/hooks/api/hr/reporting-lines-schema";
 import { ApiError } from "@/lib/api-envelope";
 import { ReportingLineSection } from "./reporting-line-section";
-import { editorPayload, exceedsChangeThreshold, reportingLineEditorSchema, editorDefaults } from "./reporting-line-editor-schema";
+import { editorPayload, requiresChangeReason, reportingLineEditorSchema, editorDefaults, upcomingSecondaries } from "./reporting-line-editor-schema";
 
 const can = jest.fn();
 const setLine = jest.fn();
@@ -29,7 +29,27 @@ jest.mock("@/components/hr/reporting-lines/manager-candidate-picker", () => ({
     </button>
   ),
 }));
+jest.mock("@/lib/date-utils", () => ({ ...jest.requireActual("@/lib/date-utils"), getTodayString: () => "2026-09-26" }));
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn() } }));
+
+function secondaryEntry(lineId: number, name: string, effectiveFrom: string): ReportingLineView["secondary"][number] {
+  return {
+    lineId,
+    relationshipType: "SECONDARY",
+    label: "Project",
+    manager: { userId: `u-${lineId}`, name, email: null, designation: null, state: "active" },
+    effectiveFrom,
+    effectiveTo: null,
+    source: "MANUAL",
+    isFallback: false,
+    fallbackConfirmedAt: null,
+    recordedAt: "2026-09-01T00:00:00Z",
+    changeReason: null,
+  };
+}
+
+const CURRENT_SECONDARY = secondaryEntry(21, "Cara Current", "2026-01-01");
+const SCHEDULED_SECONDARY = secondaryEntry(22, "Fern Future", "2026-10-01");
 
 function makeLine(overrides: Partial<ReportingLineView> = {}): ReportingLineView {
   return {
@@ -118,17 +138,22 @@ describe("Reporting line editor — change-warning UI (PRD D4)", () => {
     line = makeLine({ primaryChangesLast24h: 2 });
     await openEditor();
     await userEvent.click(screen.getByRole("combobox", { name: "Primary reporting manager" }));
-    expect(screen.queryByText(/changed .* in the last 24 hours/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/in the last 24 hours/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
   });
 
-  it("warns past the threshold and blocks saving without elevated authority", async () => {
+  it("derives the warning from the server's counts alone, before any edit", async () => {
+    line = makeLine({ primaryChangesLast24h: 3, changeThreshold: 3 });
+    await openEditor();
+    expect(screen.getByRole("status")).toHaveTextContent("changed 3 times in the last 24 hours (limit 3)");
+    expect(screen.getByRole("textbox", { name: /Reason \*/ })).toBeInTheDocument();
+  });
+
+  it("leaves the authority decision to the server for a viewer without override", async () => {
     line = makeLine({ primaryChangesLast24h: 3 });
     await openEditor();
-    await userEvent.click(screen.getByRole("combobox", { name: "Primary reporting manager" }));
-    expect(screen.getByRole("status")).toHaveTextContent("changed 3 times in the last 24 hours (limit 3)");
-    expect(screen.getByRole("status")).toHaveTextContent("Ask one to make this change.");
-    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent("an HR or org admin");
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
   });
 
   it("lets an admin save past the threshold only with a 10-character reason", async () => {
@@ -148,7 +173,6 @@ describe("Reporting line editor — change-warning UI (PRD D4)", () => {
       employeeUserId: "u-emp",
       primaryManagerUserId: "u-new",
       reason: "Team reorganisation",
-      secondaryManagers: [],
     });
   });
 
@@ -163,23 +187,66 @@ describe("Reporting line editor — change-warning UI (PRD D4)", () => {
   });
 });
 
+describe("Reporting line editor — scheduled additional managers (never re-dated)", () => {
+  async function openEditor() {
+    can.mockImplementation((key: string) => key === "hr:reporting-lines:manage");
+    render(<ReportingLineSection employeeId="u-emp" />);
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+  }
+
+  it("loads only current additional managers into the form and lists scheduled ones read-only with their start", async () => {
+    line = makeLine({ secondary: [CURRENT_SECONDARY, SCHEDULED_SECONDARY] });
+    await openEditor();
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Additional manager 1")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Additional manager 2")).not.toBeInTheDocument();
+    expect(within(dialog).getByText("Fern Future")).toBeInTheDocument();
+    expect(within(dialog).getByText(/starts/i)).toHaveTextContent(/Oct/);
+  });
+
+  it("does not send additional managers when only the primary changed, so a scheduled one keeps its date", async () => {
+    line = makeLine({ secondary: [CURRENT_SECONDARY, SCHEDULED_SECONDARY] });
+    await openEditor();
+    await userEvent.click(screen.getByRole("combobox", { name: "Primary reporting manager" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(setLine).toHaveBeenCalled());
+    expect(setLine.mock.calls[0]?.[0]).not.toHaveProperty("secondaryManagers");
+  });
+
+  it("sends the edited set when additional managers change", async () => {
+    line = makeLine({ secondary: [CURRENT_SECONDARY] });
+    await openEditor();
+    await userEvent.click(screen.getByRole("button", { name: "Remove additional manager 1" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(setLine).toHaveBeenCalled());
+    expect(setLine.mock.calls[0]?.[0]).toMatchObject({ secondaryManagers: [] });
+  });
+});
+
 describe("editor schema", () => {
-  it("counts only a change of the primary against the threshold", () => {
-    expect(exceedsChangeThreshold({ primaryChangesLast24h: 3, changeThreshold: 3 }, false)).toBe(false);
-    expect(exceedsChangeThreshold({ primaryChangesLast24h: 3, changeThreshold: 3 }, true)).toBe(true);
-    expect(exceedsChangeThreshold({ primaryChangesLast24h: 2, changeThreshold: 3 }, true)).toBe(false);
+  it("splits current from scheduled additional managers on the given day", () => {
+    const withBoth = makeLine({ secondary: [CURRENT_SECONDARY, SCHEDULED_SECONDARY] });
+    expect(editorDefaults(withBoth, "2026-09-26").secondaryManagers.map((entry) => entry.managerUserId)).toEqual(["u-21"]);
+    expect(upcomingSecondaries(withBoth, "2026-09-26").map((entry) => entry.lineId)).toEqual([22]);
+    expect(editorDefaults(withBoth, "2026-10-01").secondaryManagers).toHaveLength(2);
+  });
+
+  it("requires a reason exactly when the server's counts reach its threshold", () => {
+    expect(requiresChangeReason({ primaryChangesLast24h: 3, changeThreshold: 3 })).toBe(true);
+    expect(requiresChangeReason({ primaryChangesLast24h: 2, changeThreshold: 3 })).toBe(false);
+    expect(requiresChangeReason({ primaryChangesLast24h: 1, changeThreshold: 1 })).toBe(true);
   });
 
   it("requires a primary manager unless top-level, and a reason for top-level", () => {
-    const base = { ...editorDefaults(makeLine()), primaryManagerUserId: null };
+    const base = { ...editorDefaults(makeLine(), "2026-09-26"), primaryManagerUserId: null };
     expect(reportingLineEditorSchema.safeParse(base).success).toBe(false);
     expect(reportingLineEditorSchema.safeParse({ ...base, topLevel: true }).success).toBe(false);
     expect(reportingLineEditorSchema.safeParse({ ...base, topLevel: true, topLevelReason: "Founder" }).success).toBe(true);
   });
 
   it("sends top-level as a null primary with its reason and no secondaries", () => {
-    const values = { ...editorDefaults(makeLine()), topLevel: true, topLevelReason: "Founder", effectiveFrom: "2026-10-01" };
-    expect(editorPayload("u-emp", values)).toEqual({
+    const values = { ...editorDefaults(makeLine(), "2026-09-26"), topLevel: true, topLevelReason: "Founder", effectiveFrom: "2026-10-01" };
+    expect(editorPayload("u-emp", values, { secondariesChanged: false })).toEqual({
       employeeUserId: "u-emp",
       primaryManagerUserId: null,
       topLevelReason: "Founder",

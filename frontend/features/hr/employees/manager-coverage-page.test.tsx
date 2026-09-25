@@ -9,6 +9,7 @@ const can = jest.fn();
 const setLine = jest.fn();
 const confirmFallback = jest.fn();
 
+let report: ManagerCoverageReport;
 const REPORT: ManagerCoverageReport = {
   generatedAt: "2026-09-26T00:00:00Z",
   spanOfControlLimit: 12,
@@ -30,7 +31,7 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(search),
 }));
 jest.mock("@/hooks/api/hr/reporting-lines", () => ({
-  useManagerCoverage: () => ({ data: REPORT, isLoading: false, isError: false, error: null, refetch: jest.fn() }),
+  useManagerCoverage: () => ({ data: report, isLoading: false, isError: false, error: null, refetch: jest.fn() }),
   useSetReportingLine: () => ({ mutate: setLine, isPending: false }),
   useConfirmReportingFallback: () => ({ mutate: confirmFallback, isPending: false }),
 }));
@@ -60,6 +61,7 @@ jest.mock("@/components/ui/select", () => ({
 }));
 
 beforeEach(() => {
+  report = REPORT;
   search = "";
   replace.mockReset();
   setLine.mockReset();
@@ -120,5 +122,19 @@ describe("Manager coverage — HRM-15 states", () => {
     render(<ManagerCoveragePage />);
     await userEvent.click(screen.getByRole("button", { name: "Assign manager" }));
     expect(setLine).toHaveBeenCalledWith({ employeeUserId: "u-w", primaryManagerUserId: "u-new" }, expect.any(Object));
+  });
+
+  it("copes with a scope-filtered, empty pending-review list (and with none sent)", () => {
+    search = "view=pendingReview";
+    can.mockImplementation((key: string) => key === "hr:reporting-lines:review");
+    report = { ...REPORT, summary: { ...REPORT.summary, pendingReview: 0 }, pendingReview: [] };
+    const { unmount } = render(<ManagerCoveragePage />);
+    expect(screen.getByText("No reviews pending")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Review" })).not.toBeInTheDocument();
+    unmount();
+
+    report = { ...REPORT, summary: { ...REPORT.summary, pendingReview: undefined }, pendingReview: undefined };
+    render(<ManagerCoveragePage />);
+    expect(screen.getByText("No reviews pending")).toBeInTheDocument();
   });
 });

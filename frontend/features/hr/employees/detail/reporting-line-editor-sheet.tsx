@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight } from "lucide-react";
@@ -12,6 +12,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useSetReportingLine } from "@/hooks/api/hr/reporting-lines";
 import type { ReportingLineView } from "@/hooks/api/hr/reporting-lines-schema";
 import { getApiErrorCode } from "@/lib/api-envelope";
+import { formatShortDate, getTodayString } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ReportingLineChangeWarning } from "./reporting-line-change-warning";
 import { ReportingLineEditorFields } from "./reporting-line-editor-fields";
@@ -19,8 +20,9 @@ import {
   ERROR_FIELD,
   editorDefaults,
   editorPayload,
-  exceedsChangeThreshold,
   reportingLineEditorSchema,
+  requiresChangeReason,
+  upcomingSecondaries,
   type ReportingLineEditorValues,
 } from "./reporting-line-editor-schema";
 
@@ -31,6 +33,35 @@ interface ReportingLineEditorSheetProps {
   onOpenChange: (open: boolean) => void;
   employeeUserId: string;
   line: ReportingLineView;
+}
+
+function sameSecondaries(a: ReportingLineEditorValues["secondaryManagers"], b: ReportingLineEditorValues["secondaryManagers"]): boolean {
+  const key = (list: ReportingLineEditorValues["secondaryManagers"]) =>
+    list.map((entry) => `${entry.managerUserId}|${entry.label.trim()}`).join(",");
+  return key(a) === key(b);
+}
+
+function ScheduledSecondaries({ entries }: { entries: ReportingLineView["secondary"] }) {
+  if (entries.length === 0) return null;
+  return (
+    <section aria-labelledby="scheduled-secondaries" className="flex flex-col gap-1 rounded-lg border border-border px-3 py-2">
+      <h3 id="scheduled-secondaries" className="text-xs font-medium text-muted-foreground">Scheduled additional managers</h3>
+      <ul className="flex flex-col gap-1 text-sm">
+        {entries.map((entry) => (
+          <li key={entry.lineId} className="flex flex-wrap items-baseline gap-x-2">
+            <span className="font-medium">{entry.manager.name}</span>
+            {entry.label ? <span className="text-xs text-muted-foreground">{entry.label}</span> : null}
+            <span className="text-xs text-muted-foreground">
+              starts <span className="font-mono">{formatShortDate(entry.effectiveFrom)}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-muted-foreground">
+        These keep their start date. Changing the additional managers below replaces this schedule.
+      </p>
+    </section>
+  );
 }
 
 function PrimaryPreview({ from, to }: { from: string | null; to: string | null }) {
@@ -51,9 +82,12 @@ function PrimaryPreview({ from, to }: { from: string | null; to: string | null }
  */
 export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, line }: ReportingLineEditorSheetProps) {
   const setLine = useSetReportingLine();
+  // Read once at mount (the sheet mounts per open), like the defaults.
+  const [today] = useState(getTodayString);
+  const [initial] = useState(() => editorDefaults(line, today));
   const form = useForm<ReportingLineEditorValues>({
     resolver: zodResolver(reportingLineEditorSchema),
-    defaultValues: editorDefaults(line),
+    defaultValues: initial,
   });
 
   const topLevel = form.watch("topLevel");
@@ -62,7 +96,7 @@ export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, l
   const currentId = line.current?.managerUserId ?? null;
   const nextId = topLevel ? null : primaryId;
   const primaryChanges = nextId !== currentId;
-  const reasonRequired = exceedsChangeThreshold(line, primaryChanges);
+  const reasonRequired = requiresChangeReason(line);
   const canOverride = line.permittedActions.override;
 
   useEffect(() => {
@@ -74,7 +108,8 @@ export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, l
   }
 
   function handleSubmit(values: ReportingLineEditorValues) {
-    setLine.mutate(editorPayload(employeeUserId, values), {
+    const secondariesChanged = !sameSecondaries(values.secondaryManagers, initial.secondaryManagers);
+    setLine.mutate(editorPayload(employeeUserId, values, { secondariesChanged }), {
       onSuccess: (result) => {
         toast.success(values.effectiveFrom ? "Reporting line change scheduled" : "Reporting line updated");
         for (const warning of result.warnings) toast.warning(warning);
@@ -104,7 +139,6 @@ export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, l
             form={FORM_ID}
             className="flex-1"
             isPending={setLine.isPending}
-            disabled={reasonRequired && !canOverride}
           >
             Save
           </LoadingButton>
@@ -123,6 +157,7 @@ export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, l
               canOverride={canOverride}
             />
           ) : null}
+          <ScheduledSecondaries entries={upcomingSecondaries(line, today)} />
           <ReportingLineEditorFields
             form={form}
             employeeUserId={employeeUserId}
