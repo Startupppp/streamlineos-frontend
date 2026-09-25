@@ -65,6 +65,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         <Input
           ref={ref}
           id={id}
+          suppressHydrationWarning
           type="search"
           value={value}
           onChange={handleChange}
