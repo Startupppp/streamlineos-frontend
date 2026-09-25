@@ -70,7 +70,7 @@ application.
 
 ## Route Repairs
 
-- [ ] **BLD-01-001** Feedback rows include and validate their owning
+- [x] **BLD-01-001** Feedback rows include and validate their owning
   `projectId`, then open
   `/build/{projectId}/feedbucket/{submissionId}`.
 - [ ] **BLD-01-002** Saved views open under
