@@ -31,4 +31,23 @@ describe("JobHistoryTable", () => {
 
     expect(screen.queryByText("0 · 0 · 0")).not.toBeInTheDocument();
   });
+
+  it("offers the failed rows of a committed job whose only failures were validation failures, which the commit does not count in errorRows", () => {
+    history([importJob({ status: "committed", totalRows: 10, validRows: 7, errorRows: 0 })]);
+
+    render(<JobHistoryTable />);
+
+    expect(screen.getByText("Not imported")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "View errors" })).toBeInTheDocument();
+  });
+
+  it("offers no error view for a job that imported every row", () => {
+    history([importJob({ status: "committed", totalRows: 10, validRows: 10, errorRows: 0 })]);
+
+    render(<JobHistoryTable />);
+
+    expect(screen.queryByRole("button", { name: "View errors" })).not.toBeInTheDocument();
+    expect(screen.getByText("0")).toBeInTheDocument();
+  });
 });

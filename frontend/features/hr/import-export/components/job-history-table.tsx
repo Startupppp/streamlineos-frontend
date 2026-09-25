@@ -15,6 +15,7 @@ import {
 } from "@/hooks/api/hr/import-export";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { JobErrorsSheet } from "./job-errors-sheet";
+import { tallyImportRows } from "./import-result-summary";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatShortDate } from "@/lib/date-utils";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
@@ -95,10 +96,10 @@ const COLUMNS: DataTableColumn<HrImportJob>[] = [
   },
   {
     key: "errorRows",
-    header: "Errors",
+    header: "Not imported",
     headerClassName: "text-right",
     className: "text-right tabular-nums text-status-danger-ink",
-    cell: (row) => <span className="text-xs">{row.errorRows}</span>,
+    cell: (row) => <span className="text-xs">{tallyImportRows(row).notImported}</span>,
   },
   {
     key: "createdAt",
@@ -148,7 +149,7 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
       header: "",
       className: "text-right",
       cell: (row) =>
-        row.errorRows > 0 ? (
+        tallyImportRows(row).notImported > 0 ? (
           <Button
             variant="ghost"
             size="sm"
