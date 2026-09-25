@@ -76,8 +76,25 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
 - [x] Content writes carry `expectedContentRevision`; metadata writes never overwrite content.
 - [x] Read and edit modes resolve from permission, and the trust header shows owner, status,
       visibility, verification, next review, and updated-by/time.
-- [ ] AI actions show their sources and produce a preview/diff before applying.
-      **Preview/diff: DONE 2026-09-25** (`cbcf66907`). **Sources: still open**, see below.
+- [x] AI actions show their sources and produce a preview/diff before applying.
+      **Preview/diff: DONE 2026-09-25** (`cbcf66907`). **Sources: DONE 2026-09-25**
+      (`c3c78e60f` backend, `fbf43a55c` frontend, `5c258d8fd` + `a9a9f13da` repairs).
+      The backend now emits a named SSE data event (`data-kb-page-sources`) ahead of the text
+      deltas via `makeSourcesEventPipe`; `kbPageAiBufferedContract` gained the matching optional
+      `citations`; `streamKbDocAi` collects them through the `onData` hook that already existed and
+      `safeParse`s them, so a malformed event is ignored rather than fatal.
+      **The part that would have shipped inert — again.** Citations reached `AiActionResult` and
+      stopped one line short of the screen. `AiActionsMenu` passes `contentOnly` unconditionally,
+      and that branch of `AiActionResultBody` returned a bare `AiDraftText`; only the carded branch
+      read `result.citations`. The streaming branch was already drawing a chip *skeleton* through
+      `expectsCitations`, so the loading state promised sources the ready state never delivered.
+      The `contentOnly` branch now renders the chips, and
+      `ai-action-result-citations.test.tsx` pins all three cases — with citations, without, and the
+      carded branch — so the two branches cannot diverge again.
+      **Note on scope:** the citation for a page-level action is the page itself, which is honest
+      but thin. The retrieval-backed surfaces (`ask`) already cite their real sources. Whether the
+      page-level actions should cite the *retrieved context* rather than the page is a product
+      question, recorded here rather than decided.
       The prior DEFERRED note is superseded — it deferred on file ownership, not on the defect.
       The defect was real: `improve` replaced the entire page draft the moment Apply was clicked,
       with nothing showing what changed. `kb-page-improve-diff-dialog.tsx` now renders an LCS line
@@ -148,8 +165,10 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       containers. **Not** verified: real-browser focus behaviour and header overflow at 375 px with
       a long breadcrumb — jsdom cannot see layout overflow.
 - [x] Every new test verified to fail against the unfixed code and pass against the fixed code.
-- [ ] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
-      PENDING ORCHESTRATOR GATE — coordinator halted all full typechecks during session.
+- [x] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+      **DONE 2026-09-25**, serialized orchestrator pass. Backend `typecheck` and `typecheck:test`
+      both clean; frontend `type-check`, `type-check:specs` and `check:named-handlers` clean.
+      Backend `typecheck` was red on arrival — see SESSION-07 for the `data-${string}` finding.
 
 ## Handoffs
 

@@ -110,8 +110,30 @@ Frontend:
         PASS (after fix): `card-pagination` testid present, buttons found. Run confirmed ✓
         FAIL (before fix): "card menu exposes the same action ids" — no action items rendered.
         PASS (after fix): all action testids present ✓
-- [ ] Frontend `type-check` and `type-check:specs` clean for your files.
-      PENDING ORCHESTRATOR GATE — coordinator has suspended full typecheck runs due to resource contention.
+- [x] Frontend `type-check` and `type-check:specs` clean for your files.
+      **DONE 2026-09-25**, serialized orchestrator pass once every lane was quiet.
+      `type-check` clean. `type-check:specs` opened red with 10 errors in 4 files; all were repaired
+      and it is now clean. `check:named-handlers` clean (4825 files, 1530 inline closures, 53
+      excluded by scope).
+      | file | what tsc saw |
+      |---|---|
+      | `kb-documents-a11y.test.tsx` | `KbSourcesSheetProps` became a discriminated union; the render lacked `mode` |
+      | `kb-conversation-list.test.tsx` | `KbConversation` requires `createdAt`; the fixture omitted it (3 sites) |
+      | `page-document-toolbar.test.tsx` | `jest.fn(() => true)` infers `[]` args, so the `useCan` key argument was rejected (5 sites) |
+      | `hooks/api/kb/pages.versions.test.tsx` | imported `useKbPageVersions` from `./pages` — **the export does not exist** |
+      That last one is the same defect class as the `getTree` spec: the hook moved to
+      `hooks/api/kb/page-versions.ts` as `useKbPageVersionsInfinite` and the spec was never
+      repointed, so it had stopped verifying anything. `page-history-cursor.test.tsx` already covers
+      cursor forwarding and `getNextPageParam`, so the file was reduced to the one assertion that is
+      **not** duplicated — that `signal` is passed as the third positional argument rather than
+      inside `params` (FE-26) — and renamed `page-versions.signal.test.tsx`.
+      While there, `page-history-cursor.test.tsx` case (b) was titled "returns undefined when hasMore
+      is false and **nextCursor is present**" but passed `nextCursor: undefined`, making it a
+      re-run of case (a) under a false name. All ten KB cursor hooks read `nextCursor ?? undefined`
+      and never consult `hasMore`, so the hook is the house pattern and the title was the lie; the
+      case now pins the real behaviour.
+      **Verification:** 63 suites / 476 tests pass across `components/ai`, `features/wiki`,
+      `hooks/api/kb`.
 
 ## Handoffs
 
