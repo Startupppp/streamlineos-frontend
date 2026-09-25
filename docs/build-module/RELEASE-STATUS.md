@@ -71,7 +71,7 @@ Current release-candidate checks:
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
 - `git diff --check`: pass.
-- Latest frontend Build navigation and filtered board-count fixes are on `origin/main` at `43045dfab`:
+- Latest frontend Build navigation, filtered board-count, and malformed-filter normalization fixes are on `origin/main` at `1c09bd20d`:
   backlog, My Work, draft, and keyboard shortcut navigation now use the shared
   dirty-state guard; focused regressions pass.
 - The Build view switcher now routes Calendar to the unified `/calendar` surface
@@ -108,6 +108,9 @@ The candidate was exercised through a real authenticated browser against the pro
 - A mismatched project ticket URL `/build/5/tickets/BQS-2` resolved to the
   unavailable-scope state and Page Not Found surface without exposing ticket
   data or crashing the shell.
+- Local port `1000` malformed enum deep links such as
+  `/build/6/issues?priority=NOT_A_PRIORITY&type=NOT_A_TYPE` now remove the
+  invalid parameters and remain on the Issues page without an error state.
 - Local port `1000` remains the browser verification target for the current
   candidate; production behavior for the new filtered aggregate endpoint stays
   pending until the backend deployment containing its release commit is observed.
