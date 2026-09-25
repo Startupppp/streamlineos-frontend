@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState as UiEmptyState } from "@/components/ui/empty-state";
@@ -62,15 +63,22 @@ export function LeavePoliciesPage() {
     setSheetOpen(true);
   }, []);
 
-  const handleDeleteClick = useCallback(
-    (id: number) => {
-      deleteMutation.mutate(id, {
-        onSuccess: () => toast.success("Policy deleted"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      });
-    },
-    [deleteMutation],
-  );
+  // Delete fired straight from the card icon with no confirmation (FE-83).
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const handleDeleteClick = useCallback((id: number) => setPendingDeleteId(id), []);
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setPendingDeleteId(null);
+  }, []);
+  const handleDeleteConfirm = useCallback(() => {
+    if (pendingDeleteId === null) return;
+    deleteMutation.mutate(pendingDeleteId, {
+      onSuccess: () => {
+        toast.success("Policy deleted");
+        setPendingDeleteId(null);
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }, [deleteMutation, pendingDeleteId]);
 
   const handleSheetOpenChange = useCallback(
     (open: boolean) => {
@@ -96,7 +104,7 @@ export function LeavePoliciesPage() {
             iconSize={16}
             onClick={handleCreateClick}
           >
-            {" Create leave policy"}
+            Create leave policy
           </AnimatedIconButton>
         ) : undefined
       }
@@ -139,6 +147,17 @@ export function LeavePoliciesPage() {
         onOpenChange={handleSheetOpenChange}
         editingPolicy={editingPolicy}
         onCreated={handleCreated}
+      />
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete this leave policy?"
+        description="Its accrual and carry-forward rules stop applying to the leave type."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteMutation.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleDeleteConfirm}
       />
     </PageWrapper>
   );
