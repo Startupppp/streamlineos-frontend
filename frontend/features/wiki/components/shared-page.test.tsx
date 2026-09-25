@@ -13,6 +13,9 @@ jest.mock("@/hooks/api/kb/page-collection", () => ({
 
 jest.mock("@/hooks/api/kb", () => ({
   useKbSpaces: jest.fn(() => ({ data: [], isLoading: false, isError: false })),
+  useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/access", () => ({

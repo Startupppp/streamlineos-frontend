@@ -16,7 +16,7 @@ import {
 import { AiCancelledOutput, AiStreamingOutput } from "./ai-partial-output";
 import { AiFieldPopoverFooter } from "./ai-field-popover-layout";
 import type { AiFailureState } from "./ai-error-state";
-import type { Citation } from "./ai-citation-chips";
+import { AiCitationChips, type Citation } from "./ai-citation-chips";
 import type { AiUsageMeta } from "./ai-usage-chip";
 
 export interface AiActionResult {
@@ -171,7 +171,14 @@ export function AiActionResultBody({
   }
 
   if (contentOnly) {
-    return <AiDraftText text={state.result.text} />;
+    const citations = state.result.citations;
+    if (!citations?.length) return <AiDraftText text={state.result.text} />;
+    return (
+      <div className="space-y-3">
+        <AiDraftText text={state.result.text} />
+        <AiCitationChips citations={citations} />
+      </div>
+    );
   }
 
   return (
