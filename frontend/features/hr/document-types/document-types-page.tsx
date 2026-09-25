@@ -3,7 +3,9 @@
 import { useState, useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, AlertCircle } from "lucide-react";
+import { Plus } from "lucide-react";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -46,7 +48,8 @@ export function DocumentTypesPage() {
   const limit: LimitOption = isValidLimit(limitParam) ? limitParam : 20;
 
   const pager = useCursorPager(String(limit));
-  const { data, isLoading, isError, refetch } = useHrDocumentTypesPage(pager.cursor, limit);
+  const { data, isLoading, isError, error, refetch } = useHrDocumentTypesPage(pager.cursor, limit);
+  const pageState = usePageState({ permission: "hr:documents:manage", isLoading, isError, error });
   const createMutation = useCreateHrDocumentType();
   const updateMutation = useUpdateHrDocumentType();
   const deactivateMutation = useDeactivateHrDocumentType();
@@ -180,28 +183,18 @@ export function DocumentTypesPage() {
       }
     : undefined;
 
-  if (isLoading) {
-    return (
-      <PageWrapper
-        title="Document Types"
-        subtitle="Configure required onboarding documents"
-      >
-        <Skeleton className="flex-1 rounded-lg" />
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
+    // Was a hand-rolled "Something went wrong" that dropped the error (FE-41).
     return (
       <PageWrapper title="Document Types" subtitle="Configure required onboarding documents">
-        <div className="flex flex-1 flex-col items-center justify-center text-center gap-3">
-          <AlertCircle className="w-8 text-destructive" />
-          <div>
-            <p className="text-sm font-medium text-foreground">Failed to load document types</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
-          </div>
-          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
-        </div>
+        <PageState
+          resolution={pageState}
+          onRetry={handleRetry}
+          className="flex-1"
+          loading={<Skeleton className="flex-1 rounded-lg" />}
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }
