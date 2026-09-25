@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { numericFieldChange } from "@/lib/numeric-field";
+import { formatTime } from "@/lib/format-utils";
 
 const SHIFT_TYPES = ["FIXED", "ROTATIONAL", "NIGHT", "FLEXIBLE"] as const;
 
@@ -320,7 +321,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
         description={
           isEdit
             ? `Update "${pendingValues?.name ?? shift?.name ?? "this shift"}"? Existing assignments keep using this template.`
-            : `Create shift template "${pendingValues?.name ?? "this shift"}" (${pendingValues?.startTime ?? "—"} – ${pendingValues?.endTime ?? "—"})?`
+            : `Create shift template "${pendingValues?.name ?? "this shift"}" (${formatTime(pendingValues?.startTime) || "—"} – ${formatTime(pendingValues?.endTime) || "—"})?`
         }
         confirmLabel={isEdit ? "Save Changes" : "Create Shift"}
         isPending={isPending}
