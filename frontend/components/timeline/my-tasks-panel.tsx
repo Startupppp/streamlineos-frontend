@@ -3,8 +3,8 @@
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { CheckSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import {
@@ -109,17 +109,12 @@ export function MyTasksPanel({ className }: MyTasksPanelProps) {
         ))}
       </ul>
 
-      {tasks.hasNextPage ? (
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-fit"
-          onClick={handleLoadMore}
-          disabled={tasks.isFetchingNextPage}
-        >
-          {tasks.isFetchingNextPage ? "Loading…" : "Show more"}
-        </Button>
-      ) : null}
+      <InfiniteScrollSentinel
+        hasNextPage={tasks.hasNextPage}
+        isFetchingNextPage={tasks.isFetchingNextPage}
+        onLoadMore={handleLoadMore}
+        label="Show more tasks"
+      />
     </section>
   );
 }

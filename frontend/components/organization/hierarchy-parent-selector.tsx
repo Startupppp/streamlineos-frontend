@@ -22,6 +22,7 @@ import {
   useHierarchyParentOptions,
   type HierarchyParentKind,
 } from "@/hooks/api/org-hierarchy";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -276,22 +277,13 @@ function HierarchyParentSelector(
                 ))}
               </CommandGroup>
             ) : null}
-            {optionsQuery.hasNextPage && !optionsQuery.isError ? (
-              <div className="border-t p-1.5">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="w-full"
-                  disabled={optionsQuery.isFetchingNextPage}
-                  onClick={handleLoadMore}
-                >
-                  {optionsQuery.isFetchingNextPage
-                    ? "Loading more…"
-                    : "Load more"}
-                </Button>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={optionsQuery.hasNextPage && !optionsQuery.isError}
+              isFetchingNextPage={optionsQuery.isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+              label="Load more options"
+              rootMargin="0px"
+            />
           </CommandList>
         </Command>
       </PopoverContent>

@@ -19,7 +19,7 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { usePublicChannels, useJoinChannel, useLeaveChannel } from "@/hooks/api";
 import { PublicChannelRow } from "./public-channel-row";
 import { NewGroupDialog } from "./new-group-dialog";
-import { ChannelLoadMore } from "./channel-load-more";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 const PAGE_SIZE = 10;
 
@@ -184,15 +184,19 @@ export function ChannelsDiscoveryPage() {
               ))}
             </div>
 
-            <ChannelLoadMore
-              hasMore={hasMore}
-              isTruncated={isTruncated}
-              isLoading={isFetchingNextPage}
-              onLoadMore={loadMore}
-              label="Load more channels"
-              truncatedHint="Search by name to reach the rest."
-              className="mt-3"
-            />
+            {isTruncated ? (
+              <p role="status" className="px-2 py-1.5 text-dense text-muted-foreground mt-3">
+                {"Showing the channels loaded so far. Search by name to reach the rest."}
+              </p>
+            ) : (
+              <InfiniteScrollSentinel
+                hasNextPage={hasMore}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={loadMore}
+                label="Load more channels"
+                className="mt-3"
+              />
+            )}
 
             <div className="flex items-center justify-end gap-3 mt-4 text-xs text-muted-foreground">
               <span>

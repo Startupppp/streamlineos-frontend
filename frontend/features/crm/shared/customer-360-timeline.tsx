@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
 import { Loader2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCompany360Timeline } from "@/hooks/api/crm";
 import type { TimelineEvent } from "@/types/crm";
@@ -47,10 +46,6 @@ export function Customer360Timeline({ companyId }: Customer360TimelineProps) {
 
   const allEvents = data?.pages.flatMap((p) => p.items) ?? [];
 
-  const handleLoadMore = useCallback(() => {
-    void fetchNextPage();
-  }, [fetchNextPage]);
-
   if (isLoading) {
     return (
       <Card className="shadow-sm">
@@ -79,17 +74,12 @@ export function Customer360Timeline({ companyId }: Customer360TimelineProps) {
             {allEvents.map((event, idx) => (
               <TimelineEventRow key={`${event.type}-${event.entityId}-${idx}`} event={event} />
             ))}
-            {hasNextPage && (
-              <LoadingButton
-                variant="ghost"
-                size="sm"
-                className="w-full mt-2 h-7 text-xs text-muted-foreground"
-                isPending={isFetchingNextPage}
-                onClick={handleLoadMore}
-              >
-                Load more
-              </LoadingButton>
-            )}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={fetchNextPage}
+              label="Load more timeline events"
+            />
           </>
         )}
       </CardContent>

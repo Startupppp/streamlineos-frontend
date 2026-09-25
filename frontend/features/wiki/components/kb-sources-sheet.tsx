@@ -271,45 +271,62 @@ function ScopeSourcesList({ isLoading, sources, selectedIds, onToggle }: ScopeSo
 
   return (
     <ul className="space-y-2">
-      {sources.map((source) => {
-        const isReady = source.status === "ready";
-        const isChecked = selectedIds.includes(source.id);
-        return (
-          <li
-            key={source.id}
-            className={cn(
-              "flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm",
-              !isReady && "opacity-50",
-            )}
-          >
-            <Checkbox
-              id={`scope-source-${source.id}`}
-              checked={isChecked}
-              disabled={!isReady}
-              onCheckedChange={() => isReady && onToggle(source.id)}
-              aria-label={`Include ${source.title ?? "source"} in search`}
-            />
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
-              {source.kind === "file" ? (
-                <BookOpenTextIcon size={16} className="text-muted-foreground" />
-              ) : (
-                <StickyNote className="h-4 w-4 text-muted-foreground" />
-              )}
-            </div>
-            <label
-              htmlFor={`scope-source-${source.id}`}
-              className="min-w-0 flex-1 cursor-pointer"
-            >
-              <TruncatedText text={source.title ?? ""} className="text-sm font-medium text-foreground" />
-              <p className="text-xs text-muted-foreground">
-                {source.chunkCount > 0 ? `${source.chunkCount} chunks` : "—"}
-              </p>
-            </label>
-            <SourceStatusBadge source={source} />
-          </li>
-        );
-      })}
+      {sources.map((source) => (
+        <ScopeSourceRow
+          key={source.id}
+          source={source}
+          selectedIds={selectedIds}
+          onToggle={onToggle}
+        />
+      ))}
     </ul>
+  );
+}
+
+function ScopeSourceRow({
+  source,
+  selectedIds,
+  onToggle,
+}: {
+  source: KbSource;
+  selectedIds: number[];
+  onToggle: (id: number) => void;
+}) {
+  const isReady = source.status === "ready";
+  const isChecked = selectedIds.includes(source.id);
+  function handleCheckedChange() { if (isReady) onToggle(source.id); }
+  return (
+    <li
+      className={cn(
+        "flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm",
+        !isReady && "opacity-50",
+      )}
+    >
+      <Checkbox
+        id={`scope-source-${source.id}`}
+        checked={isChecked}
+        disabled={!isReady}
+        onCheckedChange={handleCheckedChange}
+        aria-label={`Include ${source.title ?? "source"} in search`}
+      />
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
+        {source.kind === "file" ? (
+          <BookOpenTextIcon size={16} className="text-muted-foreground" />
+        ) : (
+          <StickyNote className="h-4 w-4 text-muted-foreground" />
+        )}
+      </div>
+      <label
+        htmlFor={`scope-source-${source.id}`}
+        className="min-w-0 flex-1 cursor-pointer"
+      >
+        <TruncatedText text={source.title ?? ""} className="text-sm font-medium text-foreground" />
+        <p className="text-xs text-muted-foreground">
+          {source.chunkCount > 0 ? `${source.chunkCount} chunks` : "—"}
+        </p>
+      </label>
+      <SourceStatusBadge source={source} />
+    </li>
   );
 }
 

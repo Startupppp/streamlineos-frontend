@@ -17,9 +17,9 @@ import type {
   CommissionDealContribution,
   CommissionRuleContribution,
 } from "@/types/crm/commission";
+import { formatMinor } from "@/lib/pricing-format";
 import {
   formatBps,
-  formatCommissionMoney,
   formatEarnedOn,
   formatMultiplier,
   formatTierFrom,
@@ -124,10 +124,10 @@ export function AccrualWorking({ accrual, locale }: AccrualWorkingProps) {
                     {formatMultiplier(rule.multiplierBps)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {formatCommissionMoney(rule.basisMinor, accrual.currency, locale)}
+                    {formatMinor(rule.basisMinor, accrual.currency, locale)}
                   </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
-                    {formatCommissionMoney(rule.amountMinor, accrual.currency, locale)}
+                    {formatMinor(rule.amountMinor, accrual.currency, locale)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -173,10 +173,10 @@ function DealRows({ deal, currency, locale, quotaBased, open, onToggle }: DealRo
           {formatEarnedOn(deal.earnedOn, locale)}
         </TableCell>
         <TableCell className="text-right tabular-nums">
-          {formatCommissionMoney(deal.basisMinor, currency, locale)}
+          {formatMinor(deal.basisMinor, currency, locale)}
         </TableCell>
         <TableCell className="text-right font-medium tabular-nums">
-          {formatCommissionMoney(deal.amountMinor, currency, locale)}
+          {formatMinor(deal.amountMinor, currency, locale)}
         </TableCell>
       </TableRow>
 
@@ -214,10 +214,10 @@ function BandRow({
         {rule.multiplierBps === 10_000 ? "" : ` × ${formatMultiplier(rule.multiplierBps)}`}
       </TableCell>
       <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-        {formatCommissionMoney(rule.basisMinor, currency, locale)}
+        {formatMinor(rule.basisMinor, currency, locale)}
       </TableCell>
       <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-        {formatCommissionMoney(rule.amountMinor, currency, locale)}
+        {formatMinor(rule.amountMinor, currency, locale)}
       </TableCell>
     </TableRow>
   );

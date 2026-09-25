@@ -9,6 +9,7 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -211,10 +212,6 @@ export function SchedulerPage() {
     void refetch();
   }
 
-  function handleLoadMore() {
-    void fetchNextPage();
-  }
-
   const list = useMemo(
     () => schedules?.pages.flatMap((page) => page.data) ?? [],
     [schedules],
@@ -258,17 +255,12 @@ export function SchedulerPage() {
               isToggling={togglingId === schedule.id}
             />
           ))}
-          {hasNextPage ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="self-center"
-              onClick={handleLoadMore}
-              disabled={isFetchingNextPage}
-            >
-              {isFetchingNextPage ? "Loading…" : "Load more schedules"}
-            </Button>
-          ) : null}
+          <InfiniteScrollSentinel
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={fetchNextPage}
+            label="Load more schedules"
+          />
         </div>
       )}
 

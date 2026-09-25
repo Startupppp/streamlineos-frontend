@@ -10,7 +10,8 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBillingLeakageReport } from "@/hooks/api/timesheets-core/reports";
 import type { BillingLeakageReport } from "./reports-types";
-import { formatReportHours, formatReportMoney, formatReportPercent } from "./report-format";
+import { formatCurrencyFull } from "@/lib/format-utils";
+import { formatReportHours, formatReportPercent } from "./report-format";
 
 interface BillingLeakageTabProps {
   params: { startDate: string; endDate: string };
@@ -118,7 +119,7 @@ function BillingLeakageBody({ data }: { data: BillingLeakageReport }) {
                       className="flex items-center justify-between text-sm tabular-nums"
                     >
                       <span className="text-muted-foreground">{a.currency}</span>
-                      <span className="font-medium">{formatReportMoney(a.amount, a.currency)}</span>
+                      <span className="font-medium">{formatCurrencyFull(a.amount, a.currency)}</span>
                     </div>
                   ))}
                 </div>

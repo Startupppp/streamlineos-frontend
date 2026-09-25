@@ -2,6 +2,7 @@
 
 import { useState, useMemo, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody } from "@/components/ui/dialog";
@@ -229,18 +230,12 @@ export function SuccessionTab() {
               </Card>
             );
           })}
-          {hasNextPage && (
-            <div className="flex justify-center pt-2">
-              <LoadingButton
-                variant="outline"
-                size="sm"
-                isPending={isFetchingNextPage}
-                onClick={() => void fetchNextPage()}
-              >
-                Load more
-              </LoadingButton>
-            </div>
-          )}
+          <InfiniteScrollSentinel
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={fetchNextPage}
+            label="Load more succession entries"
+          />
         </div>
       )}
 

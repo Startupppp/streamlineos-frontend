@@ -29,8 +29,8 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { ErrorState } from "@/components/shared/error-state";
@@ -242,17 +242,12 @@ export function ChangeRequestAffectedTickets({
               }
             />
           ))}
-          {data?.pagination.hasMore ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="w-full text-micro text-muted-foreground"
-              onClick={handleLoadMore}
-            >
-              Load more
-            </Button>
-          ) : null}
+          <InfiniteScrollSentinel
+            hasNextPage={data?.pagination.hasMore ?? false}
+            isFetchingNextPage={isLoading}
+            onLoadMore={handleLoadMore}
+            label="Load more affected tickets"
+          />
         </div>
       )}
     </div>

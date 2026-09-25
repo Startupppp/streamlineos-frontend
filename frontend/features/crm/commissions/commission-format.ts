@@ -16,14 +16,6 @@ import { formatMinor } from "@/lib/pricing-format";
 
 export const BPS_SCALE = 10_000;
 
-export function formatCommissionMoney(
-  minor: number,
-  currency: string,
-  locale: string,
-): string {
-  return formatMinor(minor, currency, locale);
-}
-
 /** Basis points as a percentage. 1250 → "12.5%". */
 export function formatBps(bps: number | null): string {
   if (bps === null) return "—";

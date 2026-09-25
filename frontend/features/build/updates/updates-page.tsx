@@ -15,7 +15,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { EntityFormDialog } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Card, CardContent } from "@/components/ui/card";
@@ -122,9 +122,6 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
 
   const handleDialogOpenChange = useCallback((open: boolean) => setDialogOpen(open), []);
 
-  const handleFetchMore = useCallback(() => {
-    void fetchNextPage();
-  }, [fetchNextPage]);
 
   const pageState = usePageState({ permission: "build:updates:view", isLoading, isError, error });
 
@@ -177,19 +174,12 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
                 />
               ))}
             </div>
-            {hasNextPage ? (
-              <div className="flex justify-center pt-2">
-                <LoadingButton
-                  variant="outline"
-                  size="sm"
-                  isPending={isFetchingNextPage}
-                  onClick={handleFetchMore}
-                  type="button"
-                >
-                  Load more
-                </LoadingButton>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={fetchNextPage}
+              label="Load more updates"
+            />
           </>
         )}
       </div>

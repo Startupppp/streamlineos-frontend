@@ -10,7 +10,8 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { cn } from "@/lib/utils";
 import { useClientProfitabilityReport } from "@/hooks/api/timesheets-core/reports";
 import type { ClientProfitabilityClient, ReportCurrencyAmount } from "./reports-types";
-import { formatReportHours, formatReportMoney } from "./report-format";
+import { formatCurrencyFull } from "@/lib/format-utils";
+import { formatReportHours } from "./report-format";
 
 interface ClientProfitabilityTabProps {
   params: { startDate: string; endDate: string };
@@ -67,7 +68,7 @@ const COLUMNS: DataTableColumn<ClientProfitabilityClient>[] = [
     cell: (row) => (
       <AmountLines
         amounts={row.amounts}
-        render={(a) => ({ text: formatReportMoney(a.billableAmount, a.currency) })}
+        render={(a) => ({ text: formatCurrencyFull(a.billableAmount, a.currency) })}
       />
     ),
   },
@@ -78,7 +79,7 @@ const COLUMNS: DataTableColumn<ClientProfitabilityClient>[] = [
       <AmountLines
         amounts={row.amounts}
         render={(a) =>
-          a.costAmount === null ? null : { text: formatReportMoney(a.costAmount, a.currency) }
+          a.costAmount === null ? null : { text: formatCurrencyFull(a.costAmount, a.currency) }
         }
       />
     ),
@@ -92,7 +93,7 @@ const COLUMNS: DataTableColumn<ClientProfitabilityClient>[] = [
         render={(a) =>
           a.margin === null
             ? null
-            : { text: formatReportMoney(a.margin, a.currency), negative: a.margin < 0 }
+            : { text: formatCurrencyFull(a.margin, a.currency), negative: a.margin < 0 }
         }
       />
     ),
@@ -128,8 +129,8 @@ function renderClientMobileCard(row: ClientProfitabilityClient) {
       </div>
       {row.amounts.map((a) => (
         <p key={a.currency} className="text-xs tabular-nums text-muted-foreground">
-          {formatReportMoney(a.billableAmount, a.currency)} billed
-          {a.margin !== null ? ` · ${formatReportMoney(a.margin, a.currency)} margin` : ""}
+          {formatCurrencyFull(a.billableAmount, a.currency)} billed
+          {a.margin !== null ? ` · ${formatCurrencyFull(a.margin, a.currency)} margin` : ""}
         </p>
       ))}
       {row.missingRateHours > 0 ? (

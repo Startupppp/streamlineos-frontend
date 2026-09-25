@@ -3,9 +3,9 @@
 import { AlertTriangle, Coins, Target, TrendingUp } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import type { CommissionAccrual } from "@/types/crm/commission";
+import { formatMinor } from "@/lib/pricing-format";
 import {
   formatBps,
-  formatCommissionMoney,
   formatPeriodRange,
 } from "./commission-format";
 
@@ -32,7 +32,7 @@ export function AccrualSummary({ accrual, locale }: AccrualSummaryProps) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Accrued this period"
-          value={formatCommissionMoney(accrual.amountMinor, accrual.currency, locale)}
+          value={formatMinor(accrual.amountMinor, accrual.currency, locale)}
           icon={Coins}
           tone="emerald"
           featured
@@ -40,7 +40,7 @@ export function AccrualSummary({ accrual, locale }: AccrualSummaryProps) {
         />
         <StatCard
           label="Basis"
-          value={formatCommissionMoney(accrual.basisMinor, accrual.currency, locale)}
+          value={formatMinor(accrual.basisMinor, accrual.currency, locale)}
           icon={TrendingUp}
           hint="What the rate was applied to"
         />

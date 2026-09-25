@@ -1,7 +1,6 @@
 import {
   SAVED_VIEW_LAYOUTS,
   VIEW_TYPES,
-  fromSavedViewLayout,
   isKnownViewParam,
   isViewType,
   parseViewType,
@@ -39,7 +38,7 @@ describe("legacy gantt deep links", () => {
   });
 
   it("keeps a saved view persisted as gantt rendering as timeline", () => {
-    expect(fromSavedViewLayout("gantt")).toBe("timeline");
+    expect(parseViewType("gantt")).toBe("timeline");
   });
 });
 
@@ -60,7 +59,7 @@ describe("saved view persistence boundary", () => {
 
   it("round-trips every layout the backend can return into a renderable view type", () => {
     for (const layout of SAVED_VIEW_LAYOUTS) {
-      const view: ViewType = fromSavedViewLayout(layout);
+      const view: ViewType = parseViewType(layout);
       expect(VIEW_TYPES).toContain(view);
     }
   });
@@ -68,7 +67,7 @@ describe("saved view persistence boundary", () => {
   it("round-trips every non-collapsing view type through persistence unchanged", () => {
     for (const view of VIEW_TYPES) {
       if (view === "workload") continue;
-      expect(fromSavedViewLayout(toSavedViewLayout(view))).toBe(view);
+      expect(parseViewType(toSavedViewLayout(view))).toBe(view);
     }
   });
 });

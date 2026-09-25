@@ -50,6 +50,3 @@ export function toSavedViewLayout(view: ViewType): SavedViewLayout {
   return view;
 }
 
-export function fromSavedViewLayout(layout: string): ViewType {
-  return parseViewType(layout);
-}

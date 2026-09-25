@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import {
   Select,
   SelectContent,
@@ -65,7 +66,7 @@ export function IssuesPage() {
   const [recordType, setRecordType] = useState<IssueRecordType>("issue");
   const [stage, setStage] = useState<IssueStage | "all">("all");
   const [severity, setSeverity] = useState<IssueSeverity | "all">("all");
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const pager = useCursorPager(`${recordType}-${stage}-${severity}`);
   const [openRecordId, setOpenRecordId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<IssueRecord | null>(null);
@@ -75,7 +76,7 @@ export function IssuesPage() {
   const records = useIssues({
     recordType,
     limit: PAGE_SIZE,
-    cursor,
+    cursor: pager.cursor,
     ...(stage === "all" ? {} : { stage }),
     ...(severity === "all" ? {} : { severity }),
   });
@@ -86,7 +87,7 @@ export function IssuesPage() {
     types.data?.recordTypes.find((candidate) => candidate.recordType === recordType);
 
   function resetPaging() {
-    setCursor(undefined);
+    pager.reset();
   }
 
   function handleRecordTypeChange(value: string) {
@@ -109,8 +110,7 @@ export function IssuesPage() {
   }
 
   function handleNextPage() {
-    const next = records.data?.pagination.nextCursor;
-    if (next) setCursor(next);
+    pager.goNext(records.data?.pagination.nextCursor);
   }
 
   function handleOpenCreate() {
@@ -277,13 +277,14 @@ export function IssuesPage() {
               minWidth="760px"
               className={CONTENT_FILL_PANEL}
             />
-            {hasMore ? (
-              <div className="flex shrink-0 justify-end px-1">
-                <Button variant="outline" size="sm" onClick={handleNextPage}>
-                  Load more
-                </Button>
-              </div>
-            ) : null}
+            <TablePagination
+              mode="cursor"
+              rowCount={rows.length}
+              hasMore={hasMore}
+              hasPrevious={pager.hasPrevious}
+              onNext={handleNextPage}
+              onPrevious={pager.goPrevious}
+            />
           </>
         </PageState>
       </div>

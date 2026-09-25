@@ -18,6 +18,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -203,7 +204,6 @@ export function FilesPage({ projectId }: FilesPageProps) {
   );
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleFetchMore = useCallback(() => { void fetchNextPage(); }, [fetchNextPage]);
 
   const pageState = usePageState({ permission: "build:files:view", isLoading, isError, error });
 
@@ -272,19 +272,12 @@ export function FilesPage({ projectId }: FilesPageProps) {
                 />
               ))}
             </div>
-            {hasNextPage ? (
-              <div className="flex justify-center pt-2">
-                <LoadingButton
-                  variant="outline"
-                  size="sm"
-                  isPending={isFetchingNextPage}
-                  onClick={handleFetchMore}
-                  type="button"
-                >
-                  Load more
-                </LoadingButton>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={fetchNextPage}
+              label="Load more files"
+            />
           </>
         )}
         </PmSection>

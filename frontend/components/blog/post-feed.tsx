@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { useInfiniteBlogFeed } from "@/hooks/api/blog";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { BlogCard } from "./blog-card";
 import { BlogCardSkeleton } from "./blog-card-skeleton";
 import type { BlogPostWithRelations } from "@/types/blog";
@@ -45,8 +45,9 @@ export function PostFeed({
     );
   }
 
-  const loading = query.isFetchingNextPage;
-  const hasMore = query.hasNextPage ?? false;
+  function handleLoadMorePosts() {
+    void query.fetchNextPage();
+  }
 
   return (
     <div>
@@ -54,24 +55,18 @@ export function PostFeed({
         {posts.map((post) => (
           <BlogCard key={post.id} post={post} />
         ))}
-        {loading &&
+        {query.isFetchingNextPage &&
           Array.from({ length: 6 }).map((_, i) => (
             <BlogCardSkeleton key={`s-${i}`} />
           ))}
       </div>
 
-      {hasMore && (
-        <div className="mt-10 flex justify-center">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => query.fetchNextPage()}
-            disabled={loading}
-          >
-            {loading ? "Loading…" : "Load more"}
-          </Button>
-        </div>
-      )}
+      <InfiniteScrollSentinel
+        hasNextPage={query.hasNextPage ?? false}
+        isFetchingNextPage={query.isFetchingNextPage}
+        onLoadMore={handleLoadMorePosts}
+        label="Load more posts"
+      />
     </div>
   );
 }

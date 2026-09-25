@@ -16,8 +16,7 @@ import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -190,11 +189,6 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [handleBulkUpdate],
   );
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
-  const handleLoadMore = useCallback(
-    () => void fetchMoreTickets(),
-    [fetchMoreTickets],
-  );
-
   const handleSelectionChange = useCallback((sel: Set<string | number>) => {
     setSelectedIds(sel);
   }, []);
@@ -411,24 +405,12 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
               mobileCard={renderMobileCard}
               className="border-0 rounded-none flex-1 min-h-0"
             />
-            {isTruncated ? (
-              <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border/40 px-3 py-2">
-                <ListTruncationNotice
-                  shown={tickets.length}
-                  hint="Load more to see additional tickets."
-                  className="flex-1 border-0 px-0 py-0"
-                />
-                <LoadingButton
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  isPending={isFetchingMoreTickets}
-                  onClick={handleLoadMore}
-                >
-                  Load more
-                </LoadingButton>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={isTruncated}
+              isFetchingNextPage={isFetchingMoreTickets}
+              onLoadMore={fetchMoreTickets}
+              label="Load more tickets"
+            />
           </PmPanel>
         </PageState>
       </PmPageShell>

@@ -11,7 +11,6 @@ import {
   emptyPartyForm,
   partyFormSchema,
   toCreatePartyInput,
-  toUpdatePartyInput,
   partyFormFromDetail,
   type PartyFormValues,
 } from "./party-schema";
@@ -42,7 +41,7 @@ export function PartyFormSheet({
   function handleSubmit(values: PartyFormValues): void {
     if (party) {
       updateParty.mutate(
-        { partyId: party.id, input: toUpdatePartyInput(values) },
+        { partyId: party.id, input: toCreatePartyInput(values) },
         {
           onSuccess: () => {
             toast.success("Customer updated");

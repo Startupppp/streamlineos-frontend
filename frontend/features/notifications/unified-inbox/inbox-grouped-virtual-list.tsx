@@ -2,8 +2,8 @@
 
 import { memo, useCallback, useMemo, type Key } from "react";
 import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { InboxItemCard, type InboxItemCardProps } from "./inbox-item-card";
 import type { UnifiedInboxItem } from "@/types/inbox";
 import type { InboxGroup } from "./inbox-grouping";
@@ -16,12 +16,9 @@ import {
 const ROW_GAP_PX = 8;
 const OVERSCAN_COUNT = 5;
 const DEFAULT_LIST_HEIGHT = 600;
-const LOAD_MORE_KEY = "loadmore";
 
 interface GroupedRowData {
   rows: FlatRow[];
-  isFetchingNextPage: boolean;
-  isOnline: boolean;
   selectedKeys: Set<string> | undefined;
   onToggleSelect: ((key: string) => void) | undefined;
   onNotificationClick: InboxItemCardProps["onNotificationClick"];
@@ -36,14 +33,12 @@ interface GroupedRowData {
   rejectingId: number | undefined;
   archivingId: number | undefined;
   deletingId: number | undefined;
-  onLoadMore: () => void;
 }
 
 function getRowKey(index: number, data: GroupedRowData): Key {
   const row = data.rows[index];
   if (!row) return index;
   if (row.type === "header") return `header:${row.groupKey}`;
-  if (row.type === "loadmore") return LOAD_MORE_KEY;
   return row.item.dedupKey;
 }
 
@@ -52,8 +47,6 @@ function GroupedInboxVirtualRow({
   index,
   style,
   rows,
-  isFetchingNextPage,
-  isOnline,
   selectedKeys,
   onToggleSelect,
   onNotificationClick,
@@ -68,33 +61,9 @@ function GroupedInboxVirtualRow({
   rejectingId,
   archivingId,
   deletingId,
-  onLoadMore,
 }: RowComponentProps<GroupedRowData>) {
   const row = rows[index];
   if (!row) return <div style={style} {...ariaAttributes} />;
-
-  if (row.type === "loadmore") {
-    return (
-      <div
-        style={{ ...style, paddingBottom: ROW_GAP_PX, boxSizing: "border-box" }}
-        {...ariaAttributes}
-        className="flex items-center justify-center py-2"
-      >
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onLoadMore}
-          disabled={isFetchingNextPage || !isOnline}
-        >
-          {!isOnline
-            ? "Offline — reconnect to load more"
-            : isFetchingNextPage
-              ? "Loading…"
-              : "Load more"}
-        </Button>
-      </div>
-    );
-  }
 
   if (row.type === "header") {
     return (
@@ -197,19 +166,15 @@ export const InboxGroupedVirtualList = memo(function InboxGroupedVirtualList({
   onLoadMore,
 }: InboxGroupedVirtualListProps) {
   const rows = useMemo(
-    () => buildFlatRows(groups, hasNextPage),
-    [groups, hasNextPage],
+    () => buildFlatRows(groups),
+    [groups],
   );
 
   const heightKey = useMemo(
     () =>
       rows
         .map((r) =>
-          r.type === "item"
-            ? r.item.dedupKey
-            : r.type === "header"
-              ? `hdr:${r.groupKey}`
-              : "loadmore",
+          r.type === "item" ? r.item.dedupKey : `hdr:${r.groupKey}`,
         )
         .join("|"),
     [rows],
@@ -223,8 +188,6 @@ export const InboxGroupedVirtualList = memo(function InboxGroupedVirtualList({
   const rowProps = useMemo(
     (): GroupedRowData => ({
       rows,
-      isFetchingNextPage,
-      isOnline,
       selectedKeys,
       onToggleSelect,
       onNotificationClick,
@@ -239,13 +202,12 @@ export const InboxGroupedVirtualList = memo(function InboxGroupedVirtualList({
       rejectingId,
       archivingId,
       deletingId,
-      onLoadMore,
     }),
     [
-      rows, isFetchingNextPage, isOnline, selectedKeys, onToggleSelect,
+      rows, selectedKeys, onToggleSelect,
       onNotificationClick, onBroadcastClick, onMailClick, onApprovalClick,
       onArchive, onDelete, onApprove, onReject,
-      approvingId, rejectingId, archivingId, deletingId, onLoadMore,
+      approvingId, rejectingId, archivingId, deletingId,
     ],
   );
 
@@ -254,17 +216,36 @@ export const InboxGroupedVirtualList = memo(function InboxGroupedVirtualList({
     [],
   );
 
+  const handleRowsRendered = useCallback(
+    ({ stopIndex }: { startIndex: number; stopIndex: number }) => {
+      if (stopIndex >= rows.length - 1 && hasNextPage && !isFetchingNextPage && isOnline) {
+        onLoadMore();
+      }
+    },
+    [rows.length, hasNextPage, isFetchingNextPage, isOnline, onLoadMore],
+  );
+
   return (
-    <List<GroupedRowData>
-      aria-label="Inbox items grouped"
-      rowComponent={GroupedInboxVirtualRow}
-      rowCount={rows.length}
-      rowHeight={rowHeight}
-      rowProps={rowProps}
-      rowKey={stableRowKey}
-      defaultHeight={DEFAULT_LIST_HEIGHT}
-      overscanCount={OVERSCAN_COUNT}
-      style={{ height: "100%" }}
-    />
+    <div className="flex flex-col h-full">
+      <List<GroupedRowData>
+        aria-label="Inbox items grouped"
+        rowComponent={GroupedInboxVirtualRow}
+        rowCount={rows.length}
+        rowHeight={rowHeight}
+        rowProps={rowProps}
+        rowKey={stableRowKey}
+        defaultHeight={DEFAULT_LIST_HEIGHT}
+        overscanCount={OVERSCAN_COUNT}
+        style={{ flex: "1 1 0", minHeight: 0 }}
+        onRowsRendered={handleRowsRendered}
+      />
+      <InfiniteScrollSentinel
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={onLoadMore}
+        label="Load more items"
+        className="py-2"
+      />
+    </div>
   );
 });

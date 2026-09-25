@@ -35,7 +35,7 @@ import {
 } from "./ar-document-readonly";
 import {
   documentRevision,
-  toUpdateDocumentInput,
+  toCreateDocumentInput,
   type ArDocumentFormValues,
 } from "./ar-document-schema";
 
@@ -97,7 +97,7 @@ export function CreditNoteDetailClient({
     try {
       await updateDraft.mutateAsync({
         creditNoteId,
-        input: toUpdateDocumentInput(values),
+        input: toCreateDocumentInput(values),
       });
       toast.success("Draft saved");
     } catch (error) {

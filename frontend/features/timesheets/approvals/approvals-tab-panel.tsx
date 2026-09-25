@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { APPROVALS_PAGE_SIZE, useApprovals } from "@/hooks/api/timesheets-core/approvals";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
@@ -218,18 +218,12 @@ function ApprovalsTable({
           />
         }
       />
-      {hasMore && (
-        <div className="flex justify-center pb-2">
-          <LoadingButton
-            variant="outline"
-            size="sm"
-            isPending={isFetchingMore}
-            onClick={onLoadMore}
-          >
-            Load more
-          </LoadingButton>
-        </div>
-      )}
+      <InfiniteScrollSentinel
+        hasNextPage={hasMore}
+        isFetchingNextPage={isFetchingMore}
+        onLoadMore={onLoadMore}
+        label="Load more approvals"
+      />
     </div>
   );
 }
@@ -293,10 +287,6 @@ export function ApprovalsTabPanel({
     void refetch();
   }, [refetch]);
 
-  const handleLoadMore = useCallback(() => {
-    void fetchNextPage();
-  }, [fetchNextPage]);
-
   const filtersActive = memberFilter !== "all" || !!dateFrom || !!dateTo;
 
   return (
@@ -317,7 +307,7 @@ export function ApprovalsTabPanel({
           isBulkPending={isBulkPending}
           hasMore={hasNextPage}
           isFetchingMore={isFetchingNextPage}
-          onLoadMore={handleLoadMore}
+          onLoadMore={fetchNextPage}
           filtersActive={filtersActive}
           onClearFilters={onClearFilters}
         />

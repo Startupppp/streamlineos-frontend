@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { Channel } from "./chat-types";
 import { ChannelSectionList } from "./channel-section-list";
-import { ChannelLoadMore } from "./channel-load-more";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 interface ChannelArchivedSectionProps {
   isLoading: boolean;
@@ -75,9 +75,9 @@ export function ChannelArchivedSection({
             onStartCall={onStartCall}
             onOpenSettings={onOpenSettings}
           />
-          <ChannelLoadMore
-            hasMore={hasMore}
-            isLoading={isLoadingMore}
+          <InfiniteScrollSentinel
+            hasNextPage={hasMore}
+            isFetchingNextPage={isLoadingMore}
             onLoadMore={onLoadMore}
             label="Load more archived chats"
           />

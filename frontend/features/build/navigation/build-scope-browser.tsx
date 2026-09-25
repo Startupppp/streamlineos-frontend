@@ -7,7 +7,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -365,19 +365,12 @@ export function BuildScopeBrowser({
             ) : (
               searchResults.map(renderSearchRow)
             )}
-            {directory.hasMoreSearchResults ? (
-              <div className="flex justify-center py-1">
-                <LoadingButton
-                  variant="outline"
-                  size="sm"
-                  type="button"
-                  isPending={directory.isFetchingMoreSearchResults}
-                  onClick={handleFetchMoreSearchResults}
-                >
-                  Load more results
-                </LoadingButton>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={directory.hasMoreSearchResults}
+              isFetchingNextPage={directory.isFetchingMoreSearchResults}
+              onLoadMore={handleFetchMoreSearchResults}
+              label="Load more search results"
+            />
           </div>
         ) : (
           <div className="p-1.5">
@@ -406,33 +399,19 @@ export function BuildScopeBrowser({
               {rootProjects.map(renderRootRow)}
             </div>
 
-            {directory.hasMoreHierarchy ? (
-              <div className="flex justify-center py-1">
-                <LoadingButton
-                  variant="outline"
-                  size="sm"
-                  type="button"
-                  isPending={directory.isFetchingMoreHierarchy}
-                  onClick={handleFetchMoreHierarchy}
-                >
-                  Load more products
-                </LoadingButton>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={directory.hasMoreHierarchy}
+              isFetchingNextPage={directory.isFetchingMoreHierarchy}
+              onLoadMore={handleFetchMoreHierarchy}
+              label="Load more products"
+            />
 
-            {directory.hasMoreProjects ? (
-              <div className="flex justify-center py-1">
-                <LoadingButton
-                  variant="outline"
-                  size="sm"
-                  type="button"
-                  isPending={directory.isFetchingMoreProjects}
-                  onClick={handleFetchMoreProjects}
-                >
-                  Load more projects
-                </LoadingButton>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={directory.hasMoreProjects}
+              isFetchingNextPage={directory.isFetchingMoreProjects}
+              onLoadMore={handleFetchMoreProjects}
+              label="Load more projects"
+            />
 
             {!hasBrowseContent && !hasQuarantinedItems ? (
               <EmptyState

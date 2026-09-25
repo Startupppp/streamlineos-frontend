@@ -5,7 +5,7 @@ import { UserPlus, X, Pencil, Loader2, KeyRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
@@ -225,9 +225,6 @@ export function ModuleMembersTab({
   const handleGrantsClose = useCallback((open: boolean) => {
     if (!open) setGrantsTarget(null);
   }, []);
-  const handleLoadMore = useCallback(() => {
-    void membersQuery.fetchNextPage();
-  }, [membersQuery]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -287,18 +284,12 @@ export function ModuleMembersTab({
                 />
               ))}
             </div>
-            {membersQuery.hasNextPage ? (
-              <div className="border-t border-border/60 px-4 py-3 flex justify-center">
-                <LoadingButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLoadMore}
-                  isPending={membersQuery.isFetchingNextPage}
-                >
-                  Load more
-                </LoadingButton>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={membersQuery.hasNextPage}
+              isFetchingNextPage={membersQuery.isFetchingNextPage}
+              onLoadMore={membersQuery.fetchNextPage}
+              label="Load more members"
+            />
           </>
         )}
       </div>

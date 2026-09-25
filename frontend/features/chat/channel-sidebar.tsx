@@ -24,7 +24,7 @@ import { ChatSidebarNav } from "./chat-sidebar-nav";
 import { ChannelCompactRail } from "./channel-compact-rail";
 import { ChannelArchivedSection } from "./channel-archived-section";
 import { ChannelSidebarHeader } from "./channel-sidebar-header";
-import { ChannelLoadMore } from "./channel-load-more";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 const NewDMDialog = dynamic(
   () => import("./new-dm-dialog").then((m) => ({ default: m.NewDMDialog })),
@@ -392,12 +392,18 @@ export function ChannelSidebar({
                   />
                 )}
 
-                <ChannelLoadMore
-                  hasMore={hasMoreChannels}
-                  isTruncated={channelsTruncated}
-                  isLoading={isLoadingMoreChannels}
-                  onLoadMore={loadMoreChannels}
-                />
+                {channelsTruncated ? (
+                  <p role="status" className="px-2 py-1.5 text-dense text-muted-foreground">
+                    {"Showing the channels loaded so far. Search by name to reach the rest."}
+                  </p>
+                ) : (
+                  <InfiniteScrollSentinel
+                    hasNextPage={hasMoreChannels}
+                    isFetchingNextPage={isLoadingMoreChannels}
+                    onLoadMore={loadMoreChannels}
+                    label="Load more conversations"
+                  />
+                )}
               </div>
             </>
           )}

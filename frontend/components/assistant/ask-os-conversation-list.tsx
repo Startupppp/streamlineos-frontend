@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { SearchInput } from "@/components/ui/search-input";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import type { AiConversation } from "@/hooks/api/chat-ai-assistant";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -183,14 +184,12 @@ export function AskOsConversationList({
             );
           })
         )}
-        {hasNextPage && (
-          <div className="flex justify-center py-2">
-            <button type="button" onClick={onLoadMore} disabled={isFetchingNextPage}
-              className="rounded-full border border-border bg-background px-3 py-1 text-dense font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50">
-              {isFetchingNextPage ? "Loading…" : "Load more"}
-            </button>
-          </div>
-        )}
+        <InfiniteScrollSentinel
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={onLoadMore}
+          label="Load more conversations"
+        />
         </div>
       </ScrollArea>
 

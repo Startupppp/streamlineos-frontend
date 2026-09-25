@@ -12,7 +12,7 @@ import { useChatChannels, useSendMessage } from "@/hooks/api";
 import type { Channel, MessageMetadata } from "@/types/chat";
 import { getForwardedDisplay } from "./chat-helpers";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { ChannelLoadMore } from "./channel-load-more";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 export interface ForwardableMessage {
   content: string | null;
@@ -193,13 +193,19 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
           {filteredChannels.length === 0 && !hasMore && (
             <div className="py-6 text-center text-xs text-muted-foreground">No conversations found</div>
           )}
-          <ChannelLoadMore
-            hasMore={hasMore}
-            isTruncated={isTruncated}
-            isLoading={isFetchingNextPage}
-            onLoadMore={loadMore}
-            className="px-3 py-2"
-          />
+          {isTruncated ? (
+            <p role="status" className="px-3 py-2 text-dense text-muted-foreground">
+              {"Showing the channels loaded so far. Search by name to reach the rest."}
+            </p>
+          ) : (
+            <InfiniteScrollSentinel
+              hasNextPage={hasMore}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={loadMore}
+              label="Load more conversations"
+              className="px-3 py-2"
+            />
+          )}
         </div>
 
         <input

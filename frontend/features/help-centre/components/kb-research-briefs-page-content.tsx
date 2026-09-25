@@ -3,7 +3,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KbResearchBriefForm } from "@/features/help-centre/components/kb-research-brief-form";
 import { KbResearchBriefCard } from "@/features/help-centre/components/kb-research-brief-card";
@@ -31,10 +31,6 @@ export function KbResearchBriefsPageContent({ basePath }: KbResearchBriefsPageCo
   const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useKbResearchBriefs();
   const allBriefs = data?.pages.flatMap((p) => p.items) ?? [];
-
-  function handleLoadMore() {
-    void fetchNextPage();
-  }
 
   function handleRetry() {
     void refetch();
@@ -68,19 +64,12 @@ export function KbResearchBriefsPageContent({ basePath }: KbResearchBriefsPageCo
             {allBriefs.map((brief) => (
               <KbResearchBriefCard key={brief.id} brief={brief} basePath={basePath} />
             ))}
-            {hasNextPage && (
-              <div className="flex justify-center pt-2">
-                <LoadingButton
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLoadMore}
-                  isPending={isFetchingNextPage}
-                  loadingText="Loading…"
-                >
-                  Load more
-                </LoadingButton>
-              </div>
-            )}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={fetchNextPage}
+              label="Load more research briefs"
+            />
           </div>
         )}
       </div>

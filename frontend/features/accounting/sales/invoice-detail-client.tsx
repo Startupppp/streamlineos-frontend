@@ -35,7 +35,7 @@ import {
   FrozenTaxLinesCard,
 } from "./ar-document-readonly";
 import { CreditNoteFromInvoiceDialog } from "./credit-note-from-invoice-dialog";
-import { documentRevision, toUpdateDocumentInput, type ArDocumentFormValues } from "./ar-document-schema";
+import { documentRevision, toCreateDocumentInput, type ArDocumentFormValues } from "./ar-document-schema";
 
 const PREVIEW_DEBOUNCE_MS = 400;
 
@@ -85,7 +85,7 @@ export function InvoiceDetailClient({ invoiceId }: { invoiceId: string }) {
   async function handleSave(values: ArDocumentFormValues): Promise<void> {
     setErrorLineIndex(undefined);
     try {
-      await updateDraft.mutateAsync({ invoiceId, input: toUpdateDocumentInput(values) });
+      await updateDraft.mutateAsync({ invoiceId, input: toCreateDocumentInput(values) });
       toast.success("Draft saved");
     } catch (error) {
       handleFailure(error);

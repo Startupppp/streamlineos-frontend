@@ -308,6 +308,7 @@ export default function KnowledgeBasePage() {
 
   function handleScopeSelectionChange(ids: number[]) { setPendingScopeIds(ids); }
   function handleScopeConfirm() { setScopeSourceIds(pendingScopeIds); setSourcesSheet({ kind: "closed" }); }
+  function handleClearScope() { setScopeSourceIds([]); }
 
   function makeDeleteHandler(id: number) {
     return function handleDeleteSource() {
@@ -455,7 +456,7 @@ export default function KnowledgeBasePage() {
                     Searching {scopeSourceIds.length} selected source{scopeSourceIds.length === 1 ? "" : "s"}.{" "}
                     <button type="button" onClick={handleScopeClick} className="underline hover:text-foreground">Edit</button>
                     {" · "}
-                    <button type="button" onClick={() => setScopeSourceIds([])} className="underline hover:text-foreground">Clear</button>
+                    <button type="button" onClick={handleClearScope} className="underline hover:text-foreground">Clear</button>
                   </p>
                 )}
               </div>

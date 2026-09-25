@@ -5,6 +5,7 @@ import { useChatChannels, useChatChannel } from "@/hooks/api/chat";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Combobox } from "@/components/ui/combobox";
 import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 const MAX_CHANNEL_OPTIONS = 50;
 
@@ -108,14 +109,13 @@ export function ChatChannelCombobox({
               />
             ) : null}
             {hasMore ? (
-              <button
-                type="button"
-                onClick={loadMore}
-                disabled={isFetchingNextPage}
-                className="w-full border-t border-border/40 px-3 py-2 text-left text-dense font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground disabled:opacity-60"
-              >
-                {isFetchingNextPage ? "Loading more channels…" : "Load more channels"}
-              </button>
+              <InfiniteScrollSentinel
+                hasNextPage={hasMore}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={loadMore}
+                label="Load more channels"
+                rootMargin="0px"
+              />
             ) : null}
           </div>
         ) : null

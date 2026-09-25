@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -45,7 +46,7 @@ function GapListSkeletons() {
 
 export function KnowledgeGapsPage() {
   const [cursor, setCursor] = useState<number | undefined>(undefined);
-  const { data, isLoading, isError, refetch } = useKnowledgeGaps(cursor);
+  const { data, isLoading, isFetching, isError, refetch } = useKnowledgeGaps(cursor);
   const detectMutation = useDetectGaps();
   const draftMutation = useDraftGap();
   const dismissMutation = useDismissGap();
@@ -133,13 +134,12 @@ export function KnowledgeGapsPage() {
               isDismissing={dismissMutation.isPending && dismissMutation.variables?.gapId === gap.id}
             />
           ))}
-          {data.nextCursor !== null && (
-            <div className="flex justify-center pt-2">
-              <LoadingButton variant="outline" size="sm" isPending={isLoading} onClick={handleLoadMore}>
-                Load more
-              </LoadingButton>
-            </div>
-          )}
+          <InfiniteScrollSentinel
+            hasNextPage={(data.nextCursor ?? null) !== null}
+            isFetchingNextPage={isFetching && !isLoading}
+            onLoadMore={handleLoadMore}
+            label="Load more knowledge gaps"
+          />
         </div>
       )}
     </PageWrapper>

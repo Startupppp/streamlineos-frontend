@@ -13,6 +13,7 @@ import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -414,18 +415,14 @@ export function EmployeesListPage() {
           </div>
         </div>
 
-        {!isError && (hasNextPage || hasUnrenderedEmployees) ? (
-          <div className="flex shrink-0 justify-center rounded-xl border border-border/70 p-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isFetchingNextPage}
-              onClick={handleLoadMore}
-            >
-              {isFetchingNextPage ? "Loading..." : "Load more employees"}
-            </Button>
-          </div>
-        ) : null}
+        {!isError && (
+          <InfiniteScrollSentinel
+            hasNextPage={hasNextPage || hasUnrenderedEmployees}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={handleLoadMore}
+            label="Load more employees"
+          />
+        )}
       </div>
     </PageWrapper>
   );

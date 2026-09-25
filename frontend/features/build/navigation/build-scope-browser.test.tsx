@@ -271,11 +271,12 @@ describe("BSN-02-014 — real load-more buttons replace the old silent truncatio
     expect(fetchMoreProjects).toHaveBeenCalledTimes(1);
   });
 
-  test("Load more projects button is disabled and shows a spinner while isFetchingMoreProjects is true", () => {
+  test("shows a loading status indicator while isFetchingMoreProjects is true instead of a button", () => {
     const project = makeEntry({ key: "project:1", name: "Alpha" });
     setupMocks({ projects: [project], hasMoreProjects: true, isFetchingMoreProjects: true });
     renderBrowser();
-    expect(screen.getByRole("button", { name: /Load more projects/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /Load more projects/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
   test("Load more products button is present when hasMoreHierarchy is true", () => {

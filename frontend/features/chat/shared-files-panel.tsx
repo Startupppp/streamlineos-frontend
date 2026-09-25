@@ -11,7 +11,8 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { useChannelFiles } from "@/hooks/api";
 import { ChatAttachment } from "./chat-attachment";
-import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
+import { usePanelRenderWindow } from "./panel-render-window";
+import { TablePagination } from "@/components/ui/table-pagination";
 
 const FilesPanelCloseButton = React.forwardRef<
   HTMLButtonElement,
@@ -24,6 +25,8 @@ const FilesPanelCloseButton = React.forwardRef<
     </button>
   );
 });
+
+function handleNoPrevious() {}
 
 export function SharedFilesPanel({ channelId, onClose }: { channelId: number; onClose: () => void }) {
   const { data, isLoading, isError, error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
@@ -98,16 +101,15 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
               ))}
             </div>
             {renderWindow.hasMore && (
-              <div className="flex justify-center py-3">
-                <button
-                  type="button"
-                  onClick={renderWindow.onLoadMore}
-                  disabled={isFetchingNextPage}
-                  className="text-dense text-primary hover:underline disabled:opacity-50"
-                >
-                  {panelRevealLabel(renderWindow, total, isFetchingNextPage, "Load more")}
-                </button>
-              </div>
+              <TablePagination
+                mode="cursor"
+                rowCount={renderWindow.visibleCount}
+                hasMore={renderWindow.hasMore}
+                hasPrevious={false}
+                onNext={renderWindow.onLoadMore}
+                onPrevious={handleNoPrevious}
+                disabled={isFetchingNextPage}
+              />
             )}
           </div>
         )}

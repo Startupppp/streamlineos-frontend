@@ -2,33 +2,27 @@
 
 import { memo, useCallback, useMemo, type Key } from "react";
 import { List, type RowComponentProps } from "react-window";
-import { Button } from "@/components/ui/button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { MailMessageRow, type MailListAction } from "./mail-message-row";
 import type { MailFolder, MailMessageSummary } from "@/types/mail";
 import type { MailTriageGroup } from "./mail-group-messages";
 
 const MESSAGE_ROW_HEIGHT = 72;
 const HEADER_ROW_HEIGHT = 36;
-const LOAD_MORE_ROW_HEIGHT = 52;
 const OVERSCAN_COUNT = 5;
 const DEFAULT_LIST_HEIGHT = 600;
 
 type FlatItem =
   | { kind: "header"; label: string; count: number }
-  | { kind: "message"; message: MailMessageSummary }
-  | { kind: "loadmore" };
+  | { kind: "message"; message: MailMessageSummary };
 
-function buildFlatItems(
-  groups: MailTriageGroup[],
-  hasNextPage: boolean,
-): FlatItem[] {
+function buildFlatItems(groups: MailTriageGroup[]): FlatItem[] {
   const items: FlatItem[] = [];
   for (const group of groups) {
     if (group.label)
       items.push({ kind: "header", label: group.label, count: group.messages.length });
     for (const msg of group.messages) items.push({ kind: "message", message: msg });
   }
-  if (hasNextPage) items.push({ kind: "loadmore" });
   return items;
 }
 
@@ -45,22 +39,18 @@ interface MailVirtualRowData {
     threadId?: string,
   ) => void;
   onAiBrief: (accountId: number, threadId: string) => void;
-  isFetchingNextPage: boolean;
-  onLoadMore: () => void;
 }
 
 function getRowHeight(index: number, data: MailVirtualRowData): number {
   const item = data.items[index];
   if (!item || item.kind === "message") return MESSAGE_ROW_HEIGHT;
-  if (item.kind === "header") return HEADER_ROW_HEIGHT;
-  return LOAD_MORE_ROW_HEIGHT;
+  return HEADER_ROW_HEIGHT;
 }
 
 function getRowKey(index: number, data: MailVirtualRowData): Key {
   const item = data.items[index];
   if (!item) return index;
   if (item.kind === "header") return `h-${item.label}`;
-  if (item.kind === "loadmore") return "loadmore";
   return `${item.message.accountId}-${item.message.id}`;
 }
 
@@ -75,8 +65,6 @@ function MailVirtualRow({
   onSelect,
   onAction,
   onAiBrief,
-  isFetchingNextPage,
-  onLoadMore,
 }: RowComponentProps<MailVirtualRowData>) {
   const item = items[index];
   if (!item) return <div style={style} {...ariaAttributes} />;
@@ -94,22 +82,6 @@ function MailVirtualRow({
         <span className="text-micro tabular-nums text-muted-foreground">
           {item.count}
         </span>
-      </div>
-    );
-  }
-
-  if (item.kind === "loadmore") {
-    return (
-      <div style={style} {...ariaAttributes} className="flex justify-center items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onLoadMore}
-          disabled={isFetchingNextPage}
-          className="text-xs"
-        >
-          {isFetchingNextPage ? "Loading…" : "Load more"}
-        </Button>
       </div>
     );
   }
@@ -161,8 +133,8 @@ export const MailVirtualList = memo(function MailVirtualList({
   onLoadMore,
 }: MailVirtualListProps) {
   const items = useMemo(
-    () => buildFlatItems(groups, hasNextPage),
-    [groups, hasNextPage],
+    () => buildFlatItems(groups),
+    [groups],
   );
 
   const rowProps = useMemo(
@@ -174,10 +146,8 @@ export const MailVirtualList = memo(function MailVirtualList({
       onSelect,
       onAction,
       onAiBrief,
-      isFetchingNextPage,
-      onLoadMore,
     }),
-    [items, selectedMessageId, activeFolder, canAi, onSelect, onAction, onAiBrief, isFetchingNextPage, onLoadMore],
+    [items, selectedMessageId, activeFolder, canAi, onSelect, onAction, onAiBrief],
   );
 
   const stableRowKey = useCallback(
@@ -189,16 +159,35 @@ export const MailVirtualList = memo(function MailVirtualList({
     [],
   );
 
+  const handleRowsRendered = useCallback(
+    ({ stopIndex }: { startIndex: number; stopIndex: number }) => {
+      if (stopIndex >= items.length - 1 && hasNextPage && !isFetchingNextPage) {
+        onLoadMore();
+      }
+    },
+    [items.length, hasNextPage, isFetchingNextPage, onLoadMore],
+  );
+
   return (
-    <List<MailVirtualRowData>
-      rowComponent={MailVirtualRow}
-      rowCount={items.length}
-      rowHeight={stableRowHeight}
-      rowProps={rowProps}
-      rowKey={stableRowKey}
-      defaultHeight={DEFAULT_LIST_HEIGHT}
-      overscanCount={OVERSCAN_COUNT}
-      style={{ height: "100%" }}
-    />
+    <div className="flex flex-col h-full">
+      <List<MailVirtualRowData>
+        rowComponent={MailVirtualRow}
+        rowCount={items.length}
+        rowHeight={stableRowHeight}
+        rowProps={rowProps}
+        rowKey={stableRowKey}
+        defaultHeight={DEFAULT_LIST_HEIGHT}
+        overscanCount={OVERSCAN_COUNT}
+        style={{ flex: "1 1 0", minHeight: 0 }}
+        onRowsRendered={handleRowsRendered}
+      />
+      <InfiniteScrollSentinel
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={onLoadMore}
+        label="Load more messages"
+        className="py-2"
+      />
+    </div>
   );
 });

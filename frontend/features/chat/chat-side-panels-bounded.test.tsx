@@ -134,15 +134,15 @@ describe("SharedFilesPanel — the mounted row count is bounded", () => {
   it("mounts every row when the accumulated pages already fit one window", () => {
     renderPanel(12);
     expect(screen.getAllByRole("listitem")).toHaveLength(12);
-    expect(screen.queryByRole("button", { name: /show .* more/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /next page/i })).toBeNull();
   });
 
   it("keeps row 51 reachable behind the bound", async () => {
     const user = userEvent.setup();
     renderPanel(500);
     expect(screen.queryByText("file-51.pdf")).toBeNull();
-    await user.click(screen.getByRole("button", { name: /show 25 more \(25 of 500\)/i }));
-    await user.click(screen.getByRole("button", { name: /show 25 more \(50 of 500\)/i }));
+    await user.click(screen.getByRole("button", { name: /next page/i }));
+    await user.click(screen.getByRole("button", { name: /next page/i }));
     expect(screen.getByText("file-51.pdf")).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(PANEL_RENDER_PAGE_SIZE * 3);
   });
@@ -169,7 +169,7 @@ describe("SharedFilesPanel — the mounted row count is bounded", () => {
       infiniteResult([{ files: makeFiles(500), nextCursor: undefined }], false),
     );
     const { rerender } = render(<SharedFilesPanel channelId={1} onClose={noop} />);
-    await user.click(screen.getByRole("button", { name: /show 25 more/i }));
+    await user.click(screen.getByRole("button", { name: /next page/i }));
     expect(screen.getAllByRole("listitem")).toHaveLength(PANEL_RENDER_PAGE_SIZE * 2);
     rerender(<SharedFilesPanel channelId={2} onClose={noop} />);
     expect(screen.getAllByRole("listitem")).toHaveLength(PANEL_RENDER_PAGE_SIZE);
@@ -188,7 +188,7 @@ describe("SharedFilesPanel — revealing held rows is not a cursor request", () 
       infiniteResult([{ files: makeFiles(500), nextCursor: 500 }], true),
     );
     render(<SharedFilesPanel channelId={1} onClose={noop} />);
-    await user.click(screen.getByRole("button", { name: /show 25 more/i }));
+    await user.click(screen.getByRole("button", { name: /next page/i }));
     expect(fetchNextPage).not.toHaveBeenCalled();
   });
 
@@ -198,7 +198,7 @@ describe("SharedFilesPanel — revealing held rows is not a cursor request", () 
       infiniteResult([{ files: makeFiles(10), nextCursor: 10 }], true),
     );
     render(<SharedFilesPanel channelId={1} onClose={noop} />);
-    await user.click(screen.getByRole("button", { name: /load more/i }));
+    await user.click(screen.getByRole("button", { name: /next page/i }));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 });
@@ -220,8 +220,8 @@ describe("SavedMessagesPanel — the mounted row count is bounded", () => {
     const user = userEvent.setup();
     renderPanel(500);
     expect(screen.queryByText("saved-51")).toBeNull();
-    await user.click(screen.getByRole("button", { name: /show 25 more \(25 of 500\)/i }));
-    await user.click(screen.getByRole("button", { name: /show 25 more \(50 of 500\)/i }));
+    await user.click(screen.getByRole("button", { name: /next page/i }));
+    await user.click(screen.getByRole("button", { name: /next page/i }));
     expect(screen.getByText("saved-51")).toBeInTheDocument();
   });
 
