@@ -50,7 +50,7 @@ function TagRemoveButton({ tag, onClick }: { tag: string; onClick: (e: React.Mou
       data-tag={tag}
       onClick={onClick}
       aria-label={`Remove tag ${tag}`}
-      className="text-muted-foreground hover:text-foreground transition-colors"
+      className="rounded-sm text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       {...hoverHandlers}
     >
       <XIcon ref={iconRef} size={12} />

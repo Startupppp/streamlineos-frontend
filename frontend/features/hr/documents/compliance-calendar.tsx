@@ -7,6 +7,8 @@ import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useComplianceCalendar } from "@/hooks/api/hr/compliance-calendar";
 import { cn } from "@/lib/utils";
@@ -28,6 +30,8 @@ export function ComplianceCalendar() {
   const [month, setMonth] = useState(today.getMonth() + 1);
 
   const { data, isLoading, isError, error, refetch } = useComplianceCalendar(year, month);
+  // GET /hr/compliance/calendar is `hr:compliance:manage`; resolve denial before "No compliance events" (FE-47).
+  const access = usePageState({ permission: "hr:compliance:manage", isLoading: false, isError: false, error: null });
 
   const handlePrev = useCallback(() => {
     if (month === 1) { setYear((y) => y - 1); setMonth(12); }
@@ -41,6 +45,10 @@ export function ComplianceCalendar() {
 
   const events = data?.events ?? [];
   const monthLabel = format(new Date(year, month - 1, 1), "MMMM yyyy");
+
+  if (access.kind !== "ready") {
+    return <PageState resolution={access} loading={null} compact>{null}</PageState>;
+  }
 
   return (
     <div className="space-y-3">
@@ -89,9 +97,9 @@ export function ComplianceCalendar() {
         />
       ) : (
         <div className="space-y-2">
-          {events.map((ev, i) => (
+          {events.map((ev) => (
             <div
-              key={i}
+              key={`${ev.date}-${ev.type}-${ev.entityName}`}
               className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors duration-200"
             >
               <div className="shrink-0 text-center">

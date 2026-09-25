@@ -16,6 +16,17 @@ jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: null }),
 }));
 
+// Page state keeps its real branch order; access is granted as useCan is below.
+jest.mock("@/hooks/api/use-page-state", () => {
+  const { resolvePageState } = jest.requireActual<typeof import("@/lib/page-state/resolve-page-state")>(
+    "@/lib/page-state/resolve-page-state",
+  );
+  return {
+    usePageState: (options: Omit<Parameters<typeof resolvePageState>[0], "access">) =>
+      resolvePageState({ ...options, access: "granted" }),
+  };
+});
+
 const mockScope = jest.fn<DataScope, [string]>();
 jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
@@ -107,7 +118,7 @@ jest.mock("@/features/hr/documents/document-page-actions", () => ({
 
 jest.mock("@/features/hr/documents/document-page-states", () => ({
   DocumentLibrarySkeleton: () => null,
-  DocumentLibraryError: () => null,
+  DocumentLibraryState: () => null,
 }));
 
 import { DocumentsPage } from "./documents-page";

@@ -48,7 +48,7 @@ function TokenButton({ token, colorClasses, onInsert }: TokenButtonProps) {
       type="button"
       onClick={handleClick}
       className={cn(
-        "inline-flex items-center px-2 py-1 rounded-full text-dense font-mono border transition-colors duration-200 cursor-pointer",
+        "inline-flex items-center px-2 py-1 rounded-full text-dense font-mono border transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         colorClasses,
       )}
       title={`Insert {{${token}}}`}

@@ -31,7 +31,9 @@ import { useCan } from "@/hooks/api/access";
 import { RichDocumentsSection } from "@/features/hr/documents/rich-documents-section";
 import { DocumentsExtendedSection } from "@/features/hr/documents/documents-extended-section";
 import { DocumentPageActions } from "@/features/hr/documents/document-page-actions";
-import { DocumentLibrarySkeleton, DocumentLibraryError } from "@/features/hr/documents/document-page-states";
+import { DocumentLibrarySkeleton, DocumentLibraryState } from "@/features/hr/documents/document-page-states";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -93,7 +95,7 @@ export function DocumentsPage() {
   const page = cursorHistory.length;
   const qc = useQueryClient();
 
-  const { data: documentsPage, isLoading, isFetching, isError, refetch } = useHrDocumentList({
+  const { data: documentsPage, isLoading, isFetching, isError, error, refetch } = useHrDocumentList({
     cursor,
     limit: pageSize,
     type: typeFilter,
@@ -158,6 +160,7 @@ export function DocumentsPage() {
   const handleClassify = useCallback((doc: Document) => setClassifyingDocument(doc), []);
   const handleClassifySheetChange = useCallback((open: boolean) => { if (!open) setClassifyingDocument(null); }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const pageState = usePageState({ permission: "hr:documents:view", isLoading, isError, error });
   const handleOpenLetterGen = useCallback(() => setIsLetterGenOpen(true), []);
   const handleLetterSaved = useCallback(() => { void refetch(); }, [refetch]);
   const handleUploadSuccess = useCallback(() => {
@@ -182,8 +185,18 @@ export function DocumentsPage() {
     toast.success(`Folder "${name}" created`);
   }, [foldersKey, resetCursor]);
 
-  if (isLoading) return <DocumentLibrarySkeleton />;
-  if (isError) return <DocumentLibraryError onRetry={handleRetry} />;
+  if (pageState.kind === "loading") return <DocumentLibrarySkeleton />;
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
+    // The old error branch said "Something went wrong" for every failure and
+    // dropped the error, so a 402 never showed its upgrade path (FE-41).
+    return (
+      <DocumentLibraryState>
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </DocumentLibraryState>
+    );
+  }
 
   return (
     <PageWrapper

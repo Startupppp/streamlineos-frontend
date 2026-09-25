@@ -82,7 +82,8 @@ function TemplateButton({
     <button
       type="button"
       onClick={handleClick}
-      className={`text-left p-4 rounded-lg border transition-all ${
+      aria-pressed={isSelected}
+      className={`text-left p-4 rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         isSelected
           ? "border-primary bg-primary/5 ring-1 ring-primary/30"
           : "border-border hover:border-primary/30 bg-card"

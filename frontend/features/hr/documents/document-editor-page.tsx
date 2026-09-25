@@ -14,7 +14,8 @@ import { toast } from "sonner";
 import { Save, Globe, GlobeLock } from "lucide-react";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 
 const TiptapEditor = dynamic(
@@ -30,6 +31,7 @@ export function DocumentEditorPage() {
   const publishDoc = usePublishRichDocument();
   const { data: doc, isLoading, isError, error, refetch } = useRichDocument(documentId);
   const router = useRouter();
+  const pageState = usePageState({ permission: "hr:documents:view", isLoading, isError, error });
 
   const [title, setTitle] = useState("");
   const [contentJson, setContentJson] = useState<unknown>(null);
@@ -103,26 +105,23 @@ export function DocumentEditorPage() {
     requestLeave(() => router.push("/hr/documents"));
   }, [requestLeave, router]);
 
-  if (isLoading) {
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper title="Document Editor" subtitle="Loading...">
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-[400px] w-full" />
+          <Skeleton className="h-100 w-full" />
         </div>
       </PageWrapper>
     );
   }
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper title="Document Editor" backHref="/hr/documents">
-        <ErrorState
-          title="Couldn't load document"
-          description={getErrorMessage(error)}
-          onRetry={() => void refetch()}
-          className="flex-1"
-        />
+        <PageState resolution={pageState} loading={null} onRetry={() => void refetch()} className="flex-1">
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }
@@ -186,7 +185,7 @@ export function DocumentEditorPage() {
             value={title}
             onChange={handleTitleChange}
             placeholder="Document title"
-            className="rounded-none border-0 border-b px-0 text-lg font-semibold focus-visible:ring-0"
+            className="rounded-none border-0 border-b px-0 text-lg font-semibold focus-visible:ring-0 focus-visible:border-primary"
           />
           <TiptapEditor
             content={contentJson}
