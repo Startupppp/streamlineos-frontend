@@ -72,9 +72,10 @@ beforeEach(() => {
 describe("Manager coverage — HRM-15 states", () => {
   it("counts temporary fallbacks and pending reviews, and states top-level roles are by design", () => {
     render(<ManagerCoveragePage />);
-    expect(screen.getByText("Temporary fallback")).toBeInTheDocument();
-    expect(screen.getByText("Pending employee review")).toBeInTheDocument();
-    expect(screen.getByText(/2 top-level by design/)).toBeInTheDocument();
+    const summary = screen.getByTestId("coverage-summary");
+    expect(within(summary).getByText("Fallback")).toBeInTheDocument();
+    expect(within(summary).getByText("In review")).toBeInTheDocument();
+    expect(within(summary).getByText(/2 top-level by design/)).toBeInTheDocument();
   });
 
   it("warns when no default reporting manager is configured", () => {
@@ -92,25 +93,27 @@ describe("Manager coverage — HRM-15 states", () => {
     search = "view=pendingReview";
     const { unmount } = render(<ManagerCoveragePage />);
     expect(screen.queryByRole("link", { name: "Review" })).not.toBeInTheDocument();
-    expect(screen.getByText("Awaiting HR review")).toBeInTheDocument();
+    expect(screen.getAllByText("Awaiting HR review").length).toBeGreaterThan(0);
     unmount();
 
     can.mockImplementation((key: string) => key === "hr:reporting-lines:review");
     render(<ManagerCoveragePage />);
-    expect(screen.getByRole("link", { name: "Review" })).toHaveAttribute("href", "/hr/employees/reporting-requests?request=r-1");
+    // Both the table row and the small-screen card link to the drawer.
+    for (const link of screen.getAllByRole("link", { name: "Review" }))
+      expect(link).toHaveAttribute("href", "/hr/employees/reporting-requests?request=r-1");
   });
 
   it("shows fallback rows with the PRD badge, and replace/keep only for managers of reporting lines", async () => {
     search = "view=fallback";
     const { unmount } = render(<ManagerCoveragePage />);
-    const row = screen.getByText("Fay Fallback").closest("tr") as HTMLElement;
+    const row = within(screen.getByRole("table")).getByText("Fay Fallback").closest("tr") as HTMLElement;
     expect(within(row).getByText("Temporarily assigned by onboarding policy")).toBeInTheDocument();
     expect(within(row).queryByRole("button", { name: "Keep" })).not.toBeInTheDocument();
     unmount();
 
     can.mockImplementation((key: string) => key === "hr:reporting-lines:manage");
     render(<ManagerCoveragePage />);
-    const managed = screen.getByText("Fay Fallback").closest("tr") as HTMLElement;
+    const managed = within(screen.getByRole("table")).getByText("Fay Fallback").closest("tr") as HTMLElement;
     await userEvent.click(within(managed).getByRole("button", { name: "Keep" }));
     expect(confirmFallback).toHaveBeenCalledWith("u-f", expect.any(Object));
     await userEvent.click(within(managed).getByRole("button", { name: "Assign manager" }));
@@ -120,8 +123,27 @@ describe("Manager coverage — HRM-15 states", () => {
   it("assigns a missing manager through the reporting-line PUT, not the profile PATCH", async () => {
     can.mockImplementation((key: string) => key === "hr:reporting-lines:manage");
     render(<ManagerCoveragePage />);
-    await userEvent.click(screen.getByRole("button", { name: "Assign manager" }));
+    const row = within(screen.getByRole("table")).getByText("Wanda Without").closest("tr") as HTMLElement;
+    await userEvent.click(within(row).getByRole("button", { name: "Assign manager" }));
     expect(setLine).toHaveBeenCalledWith({ employeeUserId: "u-w", primaryManagerUserId: "u-new" }, expect.any(Object));
+  });
+
+  it("lays the six tiles out 2 / 3 / 6 across 375 / 768 / 1280 with short labels", () => {
+    render(<ManagerCoveragePage />);
+    const summary = screen.getByTestId("coverage-summary");
+    expect(summary).toHaveClass("grid-cols-2", "md:grid-cols-3", "xl:grid-cols-6");
+    expect(summary.children).toHaveLength(6);
+  });
+
+  it("keeps Assign and Keep reachable on small screens as a stacked card", async () => {
+    search = "view=fallback";
+    can.mockImplementation((key: string) => key === "hr:reporting-lines:manage");
+    render(<ManagerCoveragePage />);
+    const cards = screen.getAllByText("Fay Fallback").map((node) => node.closest("div.rounded-lg")).filter(Boolean);
+    const card = cards.find((node) => node && !node.closest("table")) as HTMLElement;
+    expect(within(card).getByRole("button", { name: "Keep" })).toBeInTheDocument();
+    await userEvent.click(within(card).getByRole("button", { name: "Assign manager" }));
+    expect(setLine).toHaveBeenCalledWith({ employeeUserId: "u-f", primaryManagerUserId: "u-new" }, expect.any(Object));
   });
 
   it("copes with a scope-filtered, empty pending-review list (and with none sent)", () => {

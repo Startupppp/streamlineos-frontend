@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -183,4 +184,89 @@ export function pendingReviewColumns(canReview: boolean): DataTableColumn<Pendin
         ),
     },
   ];
+}
+
+/**
+ * Below `sm` the coverage tables render as stacked cards (DataTable `mobileCard`),
+ * so the Assign / Keep / Review actions stay on screen at 375px.
+ */
+function MobileCard({ title, meta, children }: { title: ReactNode; meta?: ReactNode; children?: ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-border p-3">
+      <div className="min-w-0 text-sm font-medium">{title}</div>
+      {meta ? <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-muted-foreground">{meta}</div> : null}
+      {children ? <div className="flex min-w-0 flex-wrap items-center gap-2">{children}</div> : null}
+    </div>
+  );
+}
+
+export function withoutManagerCard(canEdit: boolean) {
+  return function WithoutManagerCard(row: WithoutManagerRow) {
+    return (
+      <MobileCard title={personLink(row.userId, row.name, row.employeeNumber)} meta={<span>{row.designation ?? row.lifecycleStatus}</span>}>
+        {canEdit ? <AssignManagerCell userId={row.userId} /> : null}
+      </MobileCard>
+    );
+  };
+}
+
+export function fallbackCard(canEdit: boolean) {
+  return function FallbackCard(row: FallbackRow) {
+    return (
+      <MobileCard
+        title={personLink(row.userId, row.name, "Unnamed employee")}
+        meta={
+          <>
+            {personLink(row.managerUserId, row.managerName, "Unnamed manager")}
+            <ReportingRelationshipBadge kind="fallback" />
+          </>
+        }
+      >
+        {canEdit && row.userId ? (
+          <>
+            <AssignManagerCell userId={row.userId} currentManagerUserId={row.managerUserId} />
+            <KeepFallbackButton userId={row.userId} />
+          </>
+        ) : null}
+      </MobileCard>
+    );
+  };
+}
+
+export function inactiveManagerCard(canEdit: boolean) {
+  return function InactiveManagerCard(row: InactiveManagerRow) {
+    return (
+      <MobileCard
+        title={personLink(row.userId, row.name, "Unnamed employee")}
+        meta={
+          <>
+            <span>Reports to</span>
+            {personLink(row.managerUserId, row.managerName, "Unnamed manager")}
+            <span>({MANAGER_STATE_LABEL[row.managerState]})</span>
+          </>
+        }
+      >
+        {canEdit ? <AssignManagerCell userId={row.userId} currentManagerUserId={row.managerUserId} /> : null}
+      </MobileCard>
+    );
+  };
+}
+
+export function pendingReviewCard(canReview: boolean) {
+  return function PendingReviewCard(row: PendingReviewRow) {
+    return (
+      <MobileCard
+        title={personLink(row.userId, row.name, "Unnamed employee")}
+        meta={<span>Asked <span className="font-mono">{formatShortDate(row.createdAt)}</span></span>}
+      >
+        {canReview ? (
+          <Link href={`/hr/employees/reporting-requests?request=${row.requestId}`} className="text-sm text-primary hover:underline">
+            Review
+          </Link>
+        ) : (
+          <span className="text-xs text-muted-foreground">Awaiting HR review</span>
+        )}
+      </MobileCard>
+    );
+  };
 }
