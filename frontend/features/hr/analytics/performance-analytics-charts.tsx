@@ -16,7 +16,7 @@ import {
 } from "recharts";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
-const CHART_COLORS = ["#1d4ed8", "#06b6d4", "#60a5fa", "#8b5cf6"];
+const CHART_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)"];
 
 interface PerformanceAnalyticsChartsProps {
   typeData: Array<{ name: string; count: number }>;
@@ -50,10 +50,10 @@ export function PerformanceAnalyticsCharts({
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  contentStyle={{ borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
+                  contentStyle={{ borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" }}
                   cursor={{ fill: "var(--muted)" }}
                 />
-                <Bar dataKey="count" fill="#1d4ed8" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="count" fill="var(--chart-1)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -85,7 +85,7 @@ export function PerformanceAnalyticsCharts({
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
+                  contentStyle={{ borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" }}
                 />
                 <Legend
                   iconType="circle"
@@ -114,8 +114,8 @@ export function PerformanceAnalyticsCharts({
             <BarChart data={ratingDist} barSize={32}>
               <XAxis dataKey="rating" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
-              <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }} />
-              <Bar dataKey="count" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
+              <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "var(--shadow-card)" }} />
+              <Bar dataKey="count" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

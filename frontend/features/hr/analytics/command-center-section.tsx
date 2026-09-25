@@ -156,7 +156,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
     [leaveTrends],
   );
 
-  const leaveTypeColors = ["#1d4ed8", "#06b6d4", "#60a5fa", "#8b5cf6", "#10b981"];
+  const leaveTypeColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--status-success-fill)"];
 
   function handleAttritionDrilldown() {
     openDrilldown("attrition", "Attrition");
@@ -247,7 +247,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
               <JoinsExitsChart data={attrition.joinsVsExits} />
               <div className="mt-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleAttritionDrilldown}>
-                  View Details
+                  View attrition details
                 </Button>
               </div>
             </>
@@ -268,7 +268,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
               />
               <div className="mt-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleLeaveDrilldown}>
-                  View Details
+                  View leave details
                 </Button>
               </div>
             </>
@@ -285,7 +285,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
               <MoodTrendChart data={engagement.moodByMonth} />
               <div className="mt-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleEngagementDrilldown}>
-                  View Details
+                  View mood details
                 </Button>
               </div>
             </>
@@ -298,14 +298,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
           ) : !perfDist?.distribution.length ? (
             <EmptyChart label="No performance data" />
           ) : (
-            <>
-              <PerformanceDistChart data={perfDist.distribution} />
-              <div className="mt-2 flex justify-end">
-                <Button variant="ghost" size="sm" onClick={handleAttritionDrilldown}>
-                  View Attrition Details
-                </Button>
-              </div>
-            </>
+            <PerformanceDistChart data={perfDist.distribution} />
           )}
         </AnalyticsChartCard>
       </div>
@@ -330,7 +323,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
               </div>
               <div className="mt-3 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleComplianceDrilldown}>
-                  View Details
+                  View compliance details
                 </Button>
               </div>
             </>
@@ -344,14 +337,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
             ) : !payrollCost?.monthly.length ? (
               <EmptyChart label="No payroll data" />
             ) : (
-              <>
-                <PayrollCostChart data={payrollCost.monthly} formatCurrency={formatCurrency} />
-                <div className="mt-2 flex justify-end">
-                  <Button variant="ghost" size="sm" onClick={handleLeaveDrilldown}>
-                    View Leave Details
-                  </Button>
-                </div>
-              </>
+              <PayrollCostChart data={payrollCost.monthly} formatCurrency={formatCurrency} />
             )}
           </AnalyticsChartCard>
         ) : null}

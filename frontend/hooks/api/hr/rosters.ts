@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
@@ -108,10 +110,12 @@ export function useUpsertRosterEntry() {
 
 export function usePublishRoster() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:attendance:manage", {
+  // PATCH .../publish is @Idempotent("hr.roster.publish"): the key must belong
+  // to the intent, not the attempt, or a retried publish is a new command.
+  return useAuthorizedIdempotentMutation<Roster, Error, number>("hr:attendance:manage", {
     mutationKey: ["hr", "rosters", "publish"],
-    mutationFn: (rosterId: number) =>
-      apiClient.patch<Roster>(`/hr/rosters/${rosterId}/publish`, {}, undefined, publishRosterC),
+    mutationFn: (rosterId, idempotencyKey) =>
+      apiClient.patch<Roster>(`/hr/rosters/${rosterId}/publish`, {}, { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey } }, publishRosterC),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] }),
   });
 }

@@ -73,14 +73,16 @@ export function HrQueueCard({
         <p className="flex-1 min-w-0 text-xs text-muted-foreground truncate">
           {label} — {getErrorMessage(new Error("unavailable"))}
         </p>
-        <button
+        <Button
           type="button"
+          variant="link"
+          size="sm"
           onClick={onRetry}
-          className="shrink-0 text-micro text-status-info-ink hover:underline flex items-center gap-0.5"
+          className="h-auto shrink-0 gap-1 p-0 text-micro text-status-info-ink"
         >
           <RefreshCcw className="h-3 w-3" />
           Retry
-        </button>
+        </Button>
       </div>
     );
   }

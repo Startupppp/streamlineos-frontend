@@ -44,6 +44,7 @@ const ALL_SENTINEL = "all";
 
 function buildTemplateColumns(
   onEdit: (t: HrTemplateListItem) => void,
+  canManage: boolean,
 ): DataTableColumn<HrTemplateListItem>[] {
   return [
     {
@@ -57,8 +58,6 @@ function buildTemplateColumns(
           )}
         </div>
       ),
-      sortable: true,
-      sortValue: (t) => t.name,
     },
     {
       key: "kind",
@@ -94,8 +93,8 @@ function buildTemplateColumns(
           {(t.kind === "letter" || t.kind === "email") && (
             <TemplatePreviewDialog template={t} />
           )}
-          <TemplateLifecycleActions template={t} />
-          {(t.status === "draft" || t.status === "review") && (
+          {canManage && <TemplateLifecycleActions template={t} />}
+          {canManage && (t.status === "draft" || t.status === "review") && (
             <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(t); }}>
               Edit
             </Button>
@@ -261,16 +260,24 @@ export function TemplatesSettingsPage() {
           <DataTable<HrTemplateListItem>
             className="flex-1 min-h-0"
             data={templates}
-            columns={buildTemplateColumns(handleOpenEdit)}
+            columns={buildTemplateColumns(handleOpenEdit, canManage)}
             getRowKey={(t) => t.id}
             isLoading={isLoading}
             emptyState={
-              <EmptyState
-                illustrationPreset="documents"
-                title="No templates yet"
-                description="Create your first template or seed default templates to get started."
-                action={{ label: "New Template", onClick: handleOpenCreate }}
-              />
+              kind !== ALL_SENTINEL || status !== ALL_SENTINEL || debouncedSearch.trim() ? (
+                <EmptyState
+                  illustrationPreset="documents"
+                  title="No templates match these filters"
+                  description="Change the search or filters to see other templates."
+                />
+              ) : (
+                <EmptyState
+                  illustrationPreset="documents"
+                  title="No templates yet"
+                  description="Create your first template or seed default templates to get started."
+                  action={canManage ? { label: "Create template", onClick: handleOpenCreate } : undefined}
+                />
+              )
             }
           />
           {data && (page > 1 || data.pagination.hasMore) ? (

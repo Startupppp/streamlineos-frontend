@@ -167,8 +167,9 @@ describe("HR analytics degrades in place, because the provider's default throwOn
 
     renderUnderBoundary(<AnalyticsPageClient />);
 
-    expect(await screen.findByText("Analytics didn't load")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    // The page now resolves its error through the shared PageState/ErrorState.
+    expect(await screen.findByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
     expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
   });
 

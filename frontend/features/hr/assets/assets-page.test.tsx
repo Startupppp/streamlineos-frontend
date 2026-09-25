@@ -30,9 +30,13 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
+  useAccess: jest.fn(() => ({ data: { scopes: { "hr:assets:view": "all" }, modules: {}, isOrgOwner: false }, isLoading: false, refetch: jest.fn() })),
   useCan: jest.fn(() => true),
   useModuleEnabled: jest.fn(() => true),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: jest.fn(() => ({ data: undefined })),
 }));
 
 jest.mock("@/lib/api-client", () => ({

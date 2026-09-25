@@ -15,15 +15,13 @@ import { FormsDataTable } from "./forms-data-table";
 import { FormBuilder } from "./form-builder";
 import { useHrForms, useCreateHrForm } from "../hooks/use-hr-forms";
 import type { CreateHrFormPayload } from "../lib/types";
-import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPager } from "@/components/ui/table-pagination";
 
 export function HrFormsSettingsPage() {
   const canManage = useCan("hr:forms:manage");
   const [open, setOpen] = useState(false);
-  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
-  const page = cursorHistory.length;
-  const cursor = cursorHistory.at(-1);
-  const { data, isLoading, isFetching, isError, error } = useHrForms({ cursor, limit: 20 });
+  const pager = useCursorPager();
+  const { data, isLoading, isError, error } = useHrForms({ cursor: pager.cursor, limit: 20 });
   const create = useCreateHrForm();
 
   async function handleCreate(payload: CreateHrFormPayload) {
@@ -44,14 +42,10 @@ export function HrFormsSettingsPage() {
     setOpen(true);
   }
 
-  const handlePreviousPage = useCallback(() => {
-    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
-  }, []);
-
+  const nextCursor = data?.pagination.nextCursor;
   const handleNextPage = useCallback(() => {
-    const nextCursor = data?.pagination.nextCursor;
-    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
-  }, [data?.pagination.nextCursor]);
+    pager.goNext(nextCursor);
+  }, [pager, nextCursor]);
 
   const pageState = usePageState({ permission: "hr:forms:view", isLoading: false, isError, error });
 
@@ -62,8 +56,8 @@ export function HrFormsSettingsPage() {
         subtitle="Build forms for requests, intake, and approvals"
         actions={
           canManage ? (
-            <Button size="sm" className="gap-1.5" onClick={handleCreateClick}>
-              <Plus className="h-4 w-4" /> New Form
+            <Button type="button" size="sm" className="gap-1.5" onClick={handleCreateClick}>
+              <Plus className="h-4 w-4" /> New form
             </Button>
           ) : undefined
         }
@@ -77,17 +71,18 @@ export function HrFormsSettingsPage() {
             </div>
           ) : (
             <div className="flex flex-1 min-h-0 flex-col pt-2">
-              <FormsDataTable forms={data?.data ?? []} />
-              {data && (page > 1 || data.pagination.hasMore) ? (
-                <CursorPageControls
-                  page={page}
-                  hasNext={data.pagination.hasMore}
-                  disabled={isFetching}
-                  onPrevious={handlePreviousPage}
-                  onNext={handleNextPage}
-                  className="mt-3"
-                />
-              ) : null}
+              <FormsDataTable
+                forms={data?.data ?? []}
+                canManage={canManage}
+                pagination={{
+                  mode: "cursor",
+                  pageSize: 20,
+                  hasMore: data?.pagination.hasMore ?? false,
+                  hasPrevious: pager.hasPrevious,
+                  onNext: handleNextPage,
+                  onPrevious: pager.goPrevious,
+                }}
+              />
             </div>
           )}
         </PageState>

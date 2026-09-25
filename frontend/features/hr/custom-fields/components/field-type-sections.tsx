@@ -47,7 +47,6 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   <Input
                     type="number"
                     {...form.register("validationMinLength")}
-                    className="text-xs"
                     placeholder="0"
                     min={0}
                   />
@@ -57,7 +56,6 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   <Input
                     type="number"
                     {...form.register("validationMaxLength")}
-                    className="text-xs"
                     placeholder="500"
                     min={1}
                   />
@@ -71,7 +69,6 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   <Input
                     type="number"
                     {...form.register("validationMinValue")}
-                    className="text-xs"
                   />
                 </div>
                 <div className="space-y-1">
@@ -79,7 +76,6 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   <Input
                     type="number"
                     {...form.register("validationMaxValue")}
-                    className="text-xs"
                   />
                 </div>
               </>
@@ -91,7 +87,6 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   <Input
                     type="date"
                     {...form.register("validationDateMin")}
-                    className="text-xs"
                   />
                 </div>
                 <div className="space-y-1">
@@ -99,7 +94,6 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   <Input
                     type="date"
                     {...form.register("validationDateMax")}
-                    className="text-xs"
                   />
                 </div>
               </>

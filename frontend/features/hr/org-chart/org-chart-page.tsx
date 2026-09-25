@@ -10,6 +10,8 @@ import {
 import { AlertCircle, Building2, Network } from "lucide-react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -227,24 +229,31 @@ function OrgChartCollection({ search }: { search?: string }) {
     void query.refetch();
   }
 
-  if (query.isPending) {
-    return (
-      <div className="flex min-h-0 flex-1 flex-col gap-2">
-        {Array.from({ length: 9 }, (_, index) => (
-          <Skeleton key={index} className="h-14 w-full rounded-lg" />
-        ))}
-      </div>
-    );
-  }
+  // The route has no server guard and useOrgChart is gated on hr:employees:view:
+  // a denied caller got an endless skeleton (a disabled query stays pending).
+  const pageState = usePageState({
+    permission: "hr:employees:view",
+    isLoading: query.isPending,
+    isError: query.isError,
+    error: query.error,
+  });
 
-  if (query.isError) {
+  if (pageState.kind !== "ready" || query.isPending || query.isError) {
     return (
-      <ErrorState
+      <PageState
+        resolution={pageState}
         className="flex-1 min-h-0"
-        title="Couldn't load the organization chart"
-        description={getErrorMessage(query.error)}
         onRetry={handleRetry}
-      />
+        loading={
+          <div className="flex min-h-0 flex-1 flex-col gap-2">
+            {Array.from({ length: 9 }, (_, index) => (
+              <Skeleton key={index} className="h-14 w-full rounded-lg" />
+            ))}
+          </div>
+        }
+      >
+        {null}
+      </PageState>
     );
   }
 

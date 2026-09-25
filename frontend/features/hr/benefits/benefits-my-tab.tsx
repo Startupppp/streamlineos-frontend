@@ -6,14 +6,16 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { BenefitPlanCard } from "@/features/hr/benefits/benefit-plan-card";
 import { DependentsManager } from "@/features/hr/benefits/dependents-manager";
 import { useBenefitPlans, useEnroll, useMyBenefits, useWaive } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 export function BenefitsMyTab() {
-  const { data, isLoading, isError, refetch } = useMyBenefits();
+  const { data, isLoading, isError, error, refetch } = useMyBenefits();
+  const pageState = usePageState({ permission: "hr:benefits:view", module: "hr", isLoading, isError, error });
   const [cursors, setCursors] = useState<(string | null)[]>([null]);
   const [cursorIndex, setCursorIndex] = useState(0);
   const { data: plansResult, isFetching } = useBenefitPlans({
@@ -56,20 +58,23 @@ export function BenefitsMyTab() {
     setCursorIndex((current) => current + 1);
   }
 
-  if (isLoading) {
+  if (pageState.kind !== "ready") {
     return (
-      <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <Skeleton key={index} className="h-40 rounded-xl" />
-          ))}
-        </div>
-      </div>
+      <PageState
+        resolution={pageState}
+        loading={
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <Skeleton key={index} className="h-40 rounded-xl" />
+            ))}
+          </div>
+        }
+        onRetry={handleRetry}
+        className="flex-1"
+      >
+        {null}
+      </PageState>
     );
-  }
-
-  if (isError) {
-    return <ErrorState title="Couldn't load your benefits" description="Failed to load benefit information. Please try again." onRetry={handleRetry} className="flex-1" />;
   }
 
   const plans = plansResult?.data ?? [];
@@ -86,7 +91,10 @@ export function BenefitsMyTab() {
               enrolled={enrolledPlanIds.has(plan.id)}
               onEnroll={() => handleEnroll(plan.id)}
               onWaive={() => handleWaive(plan.id)}
-              isPending={enroll.isPending || waive.isPending}
+              isPending={
+                (enroll.isPending && enroll.variables?.planId === plan.id) ||
+                (waive.isPending && waive.variables?.planId === plan.id)
+              }
             />
           ))}
         </div>

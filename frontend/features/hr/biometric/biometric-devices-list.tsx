@@ -3,13 +3,13 @@
 import { useCallback } from "react";
 import { motion } from "framer-motion";
 import { Wifi, WifiOff, Edit2 } from "lucide-react";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useBiometricDevices, type BiometricDevice } from "@/hooks/api/hr/biometric";
 import { format } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -26,24 +26,26 @@ export function BiometricDevicesList({ canManage, onEdit }: Props) {
     void refetch();
   }, [refetch]);
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-44 rounded-2xl" />
-        ))}
-      </div>
-    );
-  }
+  // hr:attendance:manage gates this read and the route has no server guard: a denied
+  // caller read "No biometric devices" (FE-47).
+  const pageState = usePageState({ permission: "hr:attendance:manage", isLoading, isError, error });
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
-      <ErrorState
+      <PageState
+        resolution={pageState}
         className="flex-1"
-        title="Couldn't load biometric devices"
-        description={getErrorMessage(error)}
         onRetry={handleRetry}
-      />
+        loading={
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-44 rounded-2xl" />
+            ))}
+          </div>
+        }
+      >
+        {null}
+      </PageState>
     );
   }
 
@@ -89,7 +91,7 @@ export function BiometricDevicesList({ canManage, onEdit }: Props) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-7 shrink-0"
+                className="shrink-0"
                 onClick={() => onEdit(device)}
                 aria-label={`Edit ${device.name}`}
               >

@@ -159,10 +159,10 @@ export function DocumentTable({
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {folders.map((folder) => (
-              <button
+              // A summary tile: it was a <button> with no handler (rubric test 1).
+              <div
                 key={folder.name}
-                type="button"
-                className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors duration-200 text-left"
+                className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border bg-card text-left"
               >
                 <div
                   className={cn(
@@ -181,7 +181,7 @@ export function DocumentTable({
                     {folder.count} files
                   </p>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>

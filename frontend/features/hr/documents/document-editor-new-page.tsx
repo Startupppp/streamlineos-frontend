@@ -82,7 +82,8 @@ function TemplateButton({
     <button
       type="button"
       onClick={handleClick}
-      className={`text-left p-4 rounded-lg border transition-all ${
+      aria-pressed={isSelected}
+      className={`text-left p-4 rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         isSelected
           ? "border-primary bg-primary/5 ring-1 ring-primary/30"
           : "border-border hover:border-primary/30 bg-card"
@@ -247,8 +248,9 @@ export function DocumentEditorNewPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Title</label>
+                <label htmlFor="rich-doc-title" className="text-sm font-medium">Title</label>
                 <Input
+                  id="rich-doc-title"
                   placeholder="e.g. Employee Handbook 2026"
                   value={title}
                   onChange={handleTitleChange}
@@ -256,9 +258,9 @@ export function DocumentEditorNewPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Template</label>
+                <label htmlFor="rich-doc-template" className="text-sm font-medium">Template</label>
                 <Select value={template} onValueChange={setTemplate}>
-                  <SelectTrigger>
+                  <SelectTrigger id="rich-doc-template" aria-label="Template">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

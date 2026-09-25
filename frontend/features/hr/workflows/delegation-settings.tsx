@@ -70,6 +70,12 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
     );
   }, [create, form]);
 
+  function removeHandler(id: number) {
+    return function handleRemoveClick() {
+      handleRemove(id);
+    };
+  }
+
   function handleRemove(id: number) {
     remove.mutate(id, {
       onSuccess: () => toast.success("Delegation removed"),
@@ -116,7 +122,8 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                 <TooltipIconButton
                   variant="ghost"
                   className="h-6 w-6 text-destructive shrink-0"
-                  onClick={() => handleRemove(d.id)}
+                  onClick={removeHandler(d.id)}
+                  disabled={remove.isPending}
                   icon={Trash2Icon}
                   iconSize={12}
                   label="Remove delegation"
@@ -141,7 +148,6 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Search for delegate…"
-                      className="text-xs"
                     />
                   </FormControl>
                   <FormMessage />
@@ -162,7 +168,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                     <SelectContent>
                       <SelectItem value={ALL_OBJECT_TYPES}>All types</SelectItem>
                       {HR_WORKFLOW_OBJECT_TYPES.map((t) => (
-                        <SelectItem key={t} value={t} className="text-xs">{HR_WORKFLOW_OBJECT_TYPE_LABELS[t]}</SelectItem>
+                        <SelectItem key={t} value={t}>{HR_WORKFLOW_OBJECT_TYPE_LABELS[t]}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -177,7 +183,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">Starts At</FormLabel>
-                    <FormControl><Input type="date" className="text-xs" {...field} /></FormControl>
+                    <FormControl><Input type="date" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -188,7 +194,7 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">Ends At</FormLabel>
-                    <FormControl><Input type="date" className="text-xs" {...field} /></FormControl>
+                    <FormControl><Input type="date" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

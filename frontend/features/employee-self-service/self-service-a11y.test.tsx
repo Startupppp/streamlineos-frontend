@@ -108,9 +108,22 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useCanState: () => "granted",
   useAccess: () => ({ data: { isOrgOwner: false, scopes: {} }, isLoading: false }),
   useModuleEnabled: () => true,
 }));
+
+// MyDocumentsPage resolves through usePageState; keep its real branch order
+// (loading -> error -> empty -> ready) with access granted, as useCan above is.
+jest.mock("@/hooks/api/use-page-state", () => {
+  const { resolvePageState } = jest.requireActual<typeof import("@/lib/page-state/resolve-page-state")>(
+    "@/lib/page-state/resolve-page-state",
+  );
+  return {
+    usePageState: (options: Omit<Parameters<typeof resolvePageState>[0], "access">) =>
+      resolvePageState({ ...options, access: "granted" }),
+  };
+});
 
 jest.mock("@/hooks/api/hr/documents", () => ({
   useMyOnboardingDocs: () => stub({ data: rows([DOCUMENT]) }),

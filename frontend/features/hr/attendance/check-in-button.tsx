@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { useCanState } from "@/hooks/api/access";
 import {
   Tooltip,
   TooltipContent,
@@ -53,6 +55,32 @@ export const TimerCard = memo(function TimerCard({
     isCheckingOut,
     isTogglingBreak,
   } = useAttendanceTimer();
+  // The status read and every punch go to /me/attendance/* (self:attendance).
+  // Without it the disabled status query looked like "Not clocked in" beside
+  // an enabled Check In that could only 403.
+  const selfAccess = useCanState("self:attendance");
+
+  if (selfAccess === "denied") {
+    const denied = (
+      <NoPermissionState
+        compact
+        permission="self:attendance"
+        description="Your role can't record your own attendance."
+      />
+    );
+    if (!chrome) return denied;
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader className="shrink-0 border-b px-4 pb-3 pt-3">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            Time Tracker
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-4 pt-4">{denied}</CardContent>
+      </Card>
+    );
+  }
 
   if (statusFailed) {
     /*
@@ -84,7 +112,7 @@ export const TimerCard = memo(function TimerCard({
     );
   }
 
-  if (isLoading) {
+  if (isLoading || selfAccess === "loading") {
     return (
       <div
         className={cn(

@@ -22,6 +22,11 @@ const useHrLeaveApprovals = jest.fn();
 const approveMutate = jest.fn();
 const rejectMutate = jest.fn();
 
+let mockCanApproveLeave = true;
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => key === "hr:leaves:approve" && mockCanApproveLeave,
+}));
+
 jest.mock("@/hooks/api/hr", () => ({
   useHrLeaveApprovals: (...args: unknown[]) => useHrLeaveApprovals(...args),
   useApproveLeaveDedicated: () => ({
@@ -75,6 +80,7 @@ function withPages(rows: unknown[]) {
 }
 
 beforeEach(() => {
+  mockCanApproveLeave = true;
   useHrLeaveApprovals.mockReset();
   approveMutate.mockReset();
   rejectMutate.mockReset();
@@ -115,6 +121,17 @@ describe("PendingLeaveApprovals", () => {
       expect.objectContaining({ leaveId: 41 }),
       expect.anything(),
     );
+  });
+
+  it("shows a decider without hr:leaves:approve the status, not controls that can only 403", () => {
+    // Paired with the approving case above: that one proves the buttons render
+    // when permitted, so this absence is the gate and not a broken row.
+    mockCanApproveLeave = false;
+    withPages([request()]);
+    render(<PendingLeaveApprovals />);
+
+    expect(screen.queryByRole("button", { name: /Approve/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Reject/i })).not.toBeInTheDocument();
   });
 
   it("each row names the queue or the approver it is routed to", () => {

@@ -83,7 +83,7 @@ export {
   parseExpenseReceipts,
   serializeExpenseReceipts,
   getReceiptFileKind,
-  receiptKindEmoji,
+  receiptKindIcon,
   receiptKindLabel,
 } from "@/lib/expense-receipts";
 export type { ExpenseReceipt, ReceiptFileKind } from "@/lib/expense-receipts";

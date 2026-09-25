@@ -15,9 +15,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 export function CompensationPlanningPage() {
   const canManage = useCan("hr:compensation:manage");
+  const money = useOrgDisplay();
   const [selectedCycle, setSelectedCycle] = useState<CompCycle | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -77,10 +79,7 @@ export function CompensationPlanningPage() {
       backLabel="All Cycles"
       actions={
         !selectedCycle && canManage ? (
-          <Button
-            onClick={handleOpenCreate}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
+          <Button onClick={handleOpenCreate}>
             <Plus className="h-4 w-4 mr-2" />
             Create compensation cycle
           </Button>
@@ -108,24 +107,27 @@ export function CompensationPlanningPage() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label>Cycle Name</Label>
+              <Label htmlFor="comp-cycle-name">Cycle name</Label>
               <Input
+                id="comp-cycle-name"
                 placeholder="Annual Merit 2026"
                 value={newCycleName}
                 onChange={handleCycleNameChange}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Fiscal Year</Label>
+              <Label htmlFor="comp-cycle-fy">Fiscal year</Label>
               <Input
+                id="comp-cycle-fy"
                 type="number"
                 value={newCycleFY}
                 onChange={handleCycleFYChange}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Budget Pool ($)</Label>
+              <Label htmlFor="comp-cycle-budget">Budget pool ({money.currency})</Label>
               <Input
+                id="comp-cycle-budget"
                 type="number"
                 placeholder="500000"
                 value={newCycleBudget}
@@ -136,10 +138,11 @@ export function CompensationPlanningPage() {
           <DialogFooter>
             <LoadingButton
               isPending={createMut.isPending}
+              disabled={!newCycleName.trim()}
               onClick={handleCreate}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground w-full"
+              className="w-full"
             >
-              Create Cycle
+              Create cycle
             </LoadingButton>
           </DialogFooter>
         </DialogContent>

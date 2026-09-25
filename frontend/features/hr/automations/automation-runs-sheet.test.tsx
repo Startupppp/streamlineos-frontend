@@ -9,10 +9,28 @@ jest.mock("@/hooks/api/hr/hr-automations", () => ({
   useHrAutomationRuns: () => mockUseHrAutomationRuns(),
 }));
 
+const mockAccess = jest.fn(() => "granted");
+jest.mock("@/hooks/api/access", () => ({
+  useCanState: () => mockAccess(),
+}));
+
 function noop(): void {}
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockAccess.mockReturnValue("granted");
+});
+
+it("says access is restricted, not 'No runs yet', when hr:automations:view is denied (FE-47)", () => {
+  mockAccess.mockReturnValue("denied");
+  mockUseHrAutomationRuns.mockReturnValue({
+    data: undefined, isLoading: false, isError: false, error: null, refetch,
+  });
+
+  render(<AutomationRunsSheet ruleId={1} ruleName="Rule" onClose={noop} />);
+
+  expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+  expect(screen.queryByText("No runs yet for this rule.")).toBeNull();
 });
 
 describe("the automation runs sheet distinguishes a failed load from an empty history", () => {

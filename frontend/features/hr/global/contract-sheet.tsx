@@ -30,8 +30,6 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateContract,
   useUpdateContract,
@@ -126,11 +124,7 @@ export function ContractSheet({ open, onOpenChange, existing, defaultEmploymentI
 
     const mutation = existing ? update : create;
     mutation.mutate(body, {
-      onSuccess: () => {
-        toast.success(existing ? "Contract updated" : "Contract created");
-        onOpenChange(false);
-      },
-      onError: (err) => toast.error(getErrorMessage(err)),
+      onSuccess: () => onOpenChange(false),
     });
   }, [existing, create, update, onOpenChange]);
 

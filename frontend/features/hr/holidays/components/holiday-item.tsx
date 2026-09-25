@@ -47,14 +47,14 @@ export function HolidayItem({ holiday, canManage, onEdit, onDelete }: HolidayIte
       )}
       {canManage && (
         <div className="flex gap-1 shrink-0">
-          <Button variant="ghost" size="icon" className="w-7" aria-label={`Edit ${holiday.name}`} onClick={handleEditClick}>
+          <Button variant="ghost" size="icon" aria-label={`Edit ${holiday.name}`} onClick={handleEditClick}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <AnimatedIconButton
             icon={Trash2Icon}
             variant="ghost"
             size="icon"
-            className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
             iconSize={14}
             aria-label={`Delete ${holiday.name}`}
             onClick={handleDeleteClick}

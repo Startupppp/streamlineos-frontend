@@ -32,7 +32,7 @@ function intersect(index = 0) {
   observer.callback([{ isIntersecting: true } as IntersectionObserverEntry]);
 }
 
-const mockSearchParamsGet = jest.fn(() => null as string | null);
+const mockSearchParamsGet = jest.fn((_key: string) => null as string | null);
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn() })),

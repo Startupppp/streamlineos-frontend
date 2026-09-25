@@ -3,7 +3,8 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
@@ -34,6 +35,8 @@ export function OvertimeList({ canManage }: Props) {
   const requests = data?.items;
   const approve = useApproveOvertime();
   const reject = useRejectOvertime();
+  // One decision in flight disables that row only, not every row.
+  const busyId = approve.isPending ? approve.variables : reject.isPending ? reject.variables : undefined;
 
   const userIds = useMemo(
     () => [...new Set((requests ?? []).map((r) => r.userId))],
@@ -136,20 +139,19 @@ export function OvertimeList({ canManage }: Props) {
               <LoadingButton
                 size="sm"
                 variant="outline"
-                className="text-xs"
                 onClick={() => handleApprove(req.id)}
-                disabled={reject.isPending}
-                isPending={approve.isPending}
+                disabled={busyId === req.id}
+                isPending={approve.isPending && approve.variables === req.id}
               >
                 Approve
               </LoadingButton>
               <LoadingButton
                 size="sm"
                 variant="outline"
-                className="text-xs text-destructive hover:text-destructive"
+                className="text-destructive hover:text-destructive"
                 onClick={() => handleReject(req.id)}
-                disabled={approve.isPending}
-                isPending={reject.isPending}
+                disabled={busyId === req.id}
+                isPending={reject.isPending && reject.variables === req.id}
               >
                 Reject
               </LoadingButton>
@@ -159,16 +161,17 @@ export function OvertimeList({ canManage }: Props) {
     }
 
     return cols;
-  }, [canManage, approve.isPending, reject.isPending, memberById, handleApprove, handleReject]);
+  }, [canManage, busyId, approve.isPending, approve.variables, reject.isPending, reject.variables, memberById, handleApprove, handleReject]);
 
-  if (isError) {
+  // useOvertimeRequests is gated on hr:attendance:view and the route has no
+  // guard: a denied caller read "No overtime requests" (FE-47).
+  const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load overtime requests"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
-      />
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        {null}
+      </PageState>
     );
   }
 

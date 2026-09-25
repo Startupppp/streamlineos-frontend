@@ -5,6 +5,7 @@ import { Shield } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/components/shared/hr-sheet";
@@ -45,7 +46,7 @@ interface AccessRequestsTabProps {
 
 function getEmployeeName(employees: EmployeeListItem[], id: string) {
   const emp = employees.find((e) => e.id === id);
-  if (!emp) return id;
+  if (!emp) return "Unknown employee";
   return `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim() || emp.email;
 }
 
@@ -135,7 +136,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-foreground whitespace-nowrap">Software &amp; System Access</p>
         {canManage && (
-          <AnimatedIconButton size="sm" className="gap-1.5 h-7 text-xs shrink-0" onClick={handleOpenCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
+          <AnimatedIconButton size="sm" className="gap-1.5 shrink-0" onClick={handleOpenCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
             Request Access
           </AnimatedIconButton>
         )}
@@ -153,7 +154,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
             </p>
           </div>
           {canManage && (
-            <AnimatedIconButton size="sm" variant="outline" className="text-xs gap-1.5" onClick={handleOpenCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
+            <AnimatedIconButton size="sm" variant="outline" className="gap-1.5" onClick={handleOpenCreate} icon={PlusIcon} iconSize={14} iconClassName="mr-1.5">
               Request Access
             </AnimatedIconButton>
           )}
@@ -186,7 +187,6 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
                     <LoadingButton
                       size="sm"
                       variant="outline"
-                      className="h-6 text-micro px-2"
                       onClick={() => handleGrant(req.id)}
                       isPending={updateMutation.isPending}
                     >
@@ -194,15 +194,24 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
                     </LoadingButton>
                   )}
                   {canManage && req.status === "granted" && (
-                    <LoadingButton
-                      size="sm"
-                      variant="outline"
-                      className="h-6 text-micro px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
-                      onClick={() => handleRevoke(req.id)}
+                    <ConfirmDialog
+                      trigger={
+                        <LoadingButton
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                          isPending={updateMutation.isPending}
+                        >
+                          Revoke
+                        </LoadingButton>
+                      }
+                      title="Revoke access?"
+                      description={`${getEmployeeName(employees, req.employeeId)} loses ${req.accessLevel} access to ${req.systemName}.`}
+                      confirmLabel="Revoke"
+                      destructive
                       isPending={updateMutation.isPending}
-                    >
-                      Revoke
-                    </LoadingButton>
+                      onConfirm={() => handleRevoke(req.id)}
+                    />
                   )}
                 </div>
               </div>

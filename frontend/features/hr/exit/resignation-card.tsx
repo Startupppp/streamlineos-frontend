@@ -105,7 +105,7 @@ export function ResignationCard({
   }, [r.id]);
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-rose-400">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-status-danger-rule">
       <CardContent className="p-4 flex items-center gap-4">
         <Avatar className="h-9 w-9 shrink-0">
           <AvatarImage src={resolveImageUrl(r.user?.image ?? null)} />
@@ -222,15 +222,17 @@ export function ResignationCard({
           )}
 
           {r.hasResignationLetter && (
-            <button
-              type="button"
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1"
               onClick={handleViewUploadedLetter}
-              className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-200"
+              aria-label="View uploaded resignation letter"
               title="View uploaded resignation letter"
             >
-              <ExternalLink className="h-3 w-3" />
+              <ExternalLink className="h-3 w-3" aria-hidden="true" />
               <span className="hidden sm:inline">Letter</span>
-            </button>
+            </Button>
           )}
 
           {onViewLetter && (

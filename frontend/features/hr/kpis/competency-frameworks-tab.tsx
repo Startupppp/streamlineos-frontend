@@ -4,11 +4,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -75,25 +76,12 @@ interface CompetencyFormState {
   weight: string;
 }
 
-function RemoveLevelButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button
-      type="button"
-      aria-label="Remove level"
-      onClick={onClick}
-      className="text-muted-foreground hover:text-destructive"
-      {...hoverHandlers}
-    >
-      <XIcon ref={iconRef} size={14} />
-    </button>
-  );
-}
-
 export function CompetencyFrameworksTab() {
   const { data: frameworks = [], isLoading, isError, error, refetch } = useCompetencyFrameworks();
   const createFramework = useCreateCompetencyFramework();
   const createCompetency = useCreateCompetency();
+  const canManage = useCan("hr:performance:manage");
+  const pageState = usePageState({ permission: "hr:performance:view", isLoading, isError, error });
 
   const [frameworkSheetOpen, setFrameworkSheetOpen] = useState(false);
   const [competencyDialogFrameworkId, setCompetencyDialogFrameworkId] = useState<number | null>(null);
@@ -160,8 +148,8 @@ export function CompetencyFrameworksTab() {
       toast.success("Framework created");
       setFrameworkSheetOpen(false);
       setFrameworkForm({ name: "", description: "", ratingScale: "5", levels: [{ level: 1, label: "", description: "" }] });
-    } catch {
-      toast.error("Failed to create framework");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
@@ -181,13 +169,12 @@ export function CompetencyFrameworksTab() {
       toast.success("Competency added");
       setCompetencyDialogFrameworkId(null);
       setCompetencyForm({ name: "", category: "", description: "", weight: "1" });
-    } catch {
-      toast.error("Failed to add competency");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
-  if (isLoading) {
-    return (
+  const loadingSkeleton = (
       <div className="space-y-3">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="bg-card rounded-2xl border border-border p-5 animate-pulse space-y-2">
@@ -196,30 +183,18 @@ export function CompetencyFrameworksTab() {
           </div>
         ))}
       </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load competency frameworks"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
-      />
-    );
-  }
+  );
 
   return (
+    <PageState resolution={pageState} loading={loadingSkeleton} onRetry={handleRetry} className="flex-1">
     <div className="space-y-4">
+      {canManage && (
       <div className="flex justify-end">
         <Sheet open={frameworkSheetOpen} onOpenChange={setFrameworkSheetOpen}>
           <SheetTrigger asChild>
-            <motion.div whileTap={{ scale: 0.97 }}>
-              <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2">
-                Add Framework
-              </AnimatedIconButton>
-            </motion.div>
+            <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2">
+              Add Framework
+            </AnimatedIconButton>
           </SheetTrigger>
           <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-[480px]">
             <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left gap-1">
@@ -250,7 +225,16 @@ export function CompetencyFrameworksTab() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">Level {idx + 1}</span>
                       {frameworkForm.levels.length > 1 && (
-                        <RemoveLevelButton onClick={() => removeLevel(idx)} />
+                        <AnimatedIconButton
+                          type="button"
+                          icon={XIcon}
+                          iconSize={14}
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive"
+                          aria-label={`Remove level ${idx + 1}`}
+                          onClick={() => removeLevel(idx)}
+                        />
                       )}
                     </div>
                     <Input
@@ -266,20 +250,19 @@ export function CompetencyFrameworksTab() {
                   </div>
                 ))}
               </div>
-              <motion.div whileTap={{ scale: 0.97 }}>
-                <LoadingButton
-                  className="w-full"
-                  onClick={handleCreateFramework}
-                  isPending={createFramework.isPending}
-                  loadingText="Creating…"
-                >
-                  Create Framework
-                </LoadingButton>
-              </motion.div>
+              <LoadingButton
+                className="w-full"
+                onClick={handleCreateFramework}
+                isPending={createFramework.isPending}
+                loadingText="Creating…"
+              >
+                Create Framework
+              </LoadingButton>
             </SheetBody>
           </SheetContent>
         </Sheet>
       </div>
+      )}
 
       {frameworks.length === 0 ? (
         <ChartEmptyState message="No frameworks yet" height={220} />
@@ -290,7 +273,7 @@ export function CompetencyFrameworksTab() {
               key={framework.id}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.22, ease: "easeOut", delay: i * 0.06 }}
+              transition={{ duration: 0.22, ease: "easeOut", delay: Math.min(i, 8) * 0.04 }}
             >
               <AccordionItem
                 value={String(framework.id)}
@@ -336,7 +319,7 @@ export function CompetencyFrameworksTab() {
                     ) : (
                       <p className="text-sm text-muted-foreground py-2">No competencies yet</p>
                     )}
-                    <Dialog
+                    {canManage && <Dialog
                       open={competencyDialogFrameworkId === framework.id}
                       onOpenChange={(open) => {
                         setCompetencyDialogFrameworkId(open ? framework.id : null);
@@ -385,19 +368,17 @@ export function CompetencyFrameworksTab() {
                               onChange={(e) => setCompetencyForm((p) => ({ ...p, weight: e.target.value }))}
                             />
                           </div>
-                          <motion.div whileTap={{ scale: 0.97 }}>
-                            <LoadingButton
-                              className="w-full"
-                              onClick={() => handleCreateCompetency(framework.id)}
-                              isPending={createCompetency.isPending}
-                              loadingText="Adding…"
-                            >
-                              Add Competency
-                            </LoadingButton>
-                          </motion.div>
+                          <LoadingButton
+                            className="w-full"
+                            onClick={() => handleCreateCompetency(framework.id)}
+                            isPending={createCompetency.isPending}
+                            loadingText="Adding…"
+                          >
+                            Add Competency
+                          </LoadingButton>
                         </div>
                       </DialogContent>
-                    </Dialog>
+                    </Dialog>}
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -406,5 +387,6 @@ export function CompetencyFrameworksTab() {
         </Accordion>
       )}
     </div>
+    </PageState>
   );
 }

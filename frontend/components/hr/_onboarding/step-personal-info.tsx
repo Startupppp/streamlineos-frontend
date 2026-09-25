@@ -110,7 +110,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
               {attachNotice ? (
                 <p
                   role="status"
-                  className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                  className="rounded-md border border-status-warning-rule bg-status-warning-surface px-2.5 py-1.5 text-xs text-status-warning-ink"
                 >
                   {attachNotice}
                 </p>

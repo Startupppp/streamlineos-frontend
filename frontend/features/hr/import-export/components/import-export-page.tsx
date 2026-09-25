@@ -13,6 +13,7 @@ import { type HrImportEntity } from "@/hooks/api/hr/import-export";
 import { ImportWizardSheet } from "./import-wizard-sheet";
 import { JobHistoryTable } from "./job-history-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useCan } from "@/hooks/api/access";
 
 interface ImportEntityConfig {
   id: HrImportEntity;
@@ -127,6 +128,17 @@ export function ImportExportPage() {
 
   const activeConfig = IMPORT_ENTITIES.find((e) => e.id === openEntity);
 
+  // FE-44/45: the route admits either key, so each section is gated on the
+  // exact key its endpoint enforces — hr:import:manage for /hr/import/jobs,
+  // hr:export:manage for GET /hr/export/:entity, hr:expenses:read for the
+  // expenses export job.
+  const canImport = useCan("hr:import:manage");
+  const canExport = useCan("hr:export:manage");
+  const canExportExpenses = useCan("hr:expenses:read");
+  const exportEntities = HR_IMPORT_EXPORT_ENTITIES.filter((entity) =>
+    entity.id === "expenses" ? canExportExpenses : canExport,
+  );
+
   return (
     <>
       <PageWrapper
@@ -134,25 +146,31 @@ export function ImportExportPage() {
         subtitle="Bulk manage HR data with CSV imports and exports"
       >
         <div className="space-y-8">
-          <PageSection title="Export Data" description="Download HR data as Excel files">
-            <ImportExportGrid entities={HR_IMPORT_EXPORT_ENTITIES} />
-          </PageSection>
+          {exportEntities.length > 0 && (
+            <PageSection title="Export Data" description="Download HR data as Excel files">
+              <ImportExportGrid entities={exportEntities} />
+            </PageSection>
+          )}
 
-          <PageSection title="Import Data" description="Upload CSV files to create or update records">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {IMPORT_ENTITIES.map((config) => (
-                <ImportCard
-                  key={config.id}
-                  config={config}
-                  onImport={handleImport}
-                />
-              ))}
-            </div>
-          </PageSection>
+          {canImport && (
+            <>
+              <PageSection title="Import Data" description="Upload CSV files to create or update records">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {IMPORT_ENTITIES.map((config) => (
+                    <ImportCard
+                      key={config.id}
+                      config={config}
+                      onImport={handleImport}
+                    />
+                  ))}
+                </div>
+              </PageSection>
 
-          <PageSection title="Import History" description="Past import jobs and their results">
-            <JobHistoryTable />
-          </PageSection>
+              <PageSection title="Import History" description="Past import jobs and their results">
+                <JobHistoryTable />
+              </PageSection>
+            </>
+          )}
         </div>
       </PageWrapper>
 

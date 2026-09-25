@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useCaseNotes, useCaseDocuments, useAddCaseNote } from "@/hooks/api/hr/cases";
+import { useCan } from "@/hooks/api/access";
 import { formatDistanceToNow } from "date-fns";
 
 function AddNoteButton({
@@ -42,6 +43,8 @@ function AddNoteButton({
 export function NoteThread({ caseId }: { caseId: number }) {
   const { data: notes, isLoading } = useCaseNotes(caseId);
   const addNote = useAddCaseNote(caseId);
+  // POST /hr/cases/:id/notes is @RequirePermission("hr:cases:manage").
+  const canAddNote = useCan("hr:cases:manage");
   const [text, setText] = useState("");
   const [isConfidential, setIsConfidential] = useState(false);
 
@@ -88,6 +91,7 @@ export function NoteThread({ caseId }: { caseId: number }) {
         </div>
       ))}
 
+      {canAddNote && (
       <div className="space-y-2 pt-2">
         <Textarea
           rows={3}
@@ -108,6 +112,7 @@ export function NoteThread({ caseId }: { caseId: number }) {
           />
         </div>
       </div>
+      )}
     </div>
   );
 }

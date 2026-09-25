@@ -24,6 +24,9 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { useSafetyIncidents, useWellnessPulse } from "@/hooks/api/hr/safety";
 import type { SafetyIncident, IncidentStatus, IncidentType, IncidentSeverity } from "@/hooks/api/hr/safety";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -168,6 +171,8 @@ export function SafetyPageContent() {
     severity: severity || undefined,
   });
 
+  const incidentsState = usePageState({ permission: "hr:safety:view", isLoading, isError, error });
+
   const filtersActive =
     search.trim() !== "" || status !== "" || type !== "" || severity !== "";
 
@@ -295,14 +300,14 @@ export function SafetyPageContent() {
       subtitle="Track workplace incidents and monitor employee wellbeing"
       filters={activeTab === "incidents" ? filters : undefined}
       actions={
-        activeTab === "incidents" ? (
+        activeTab === "incidents" && canManage ? (
           <AnimatedIconButton
             icon={PlusIcon}
             iconSize={14}
             iconClassName="mr-1.5"
             size="sm"
-            className="gap-1.5 text-sm"
-            onClick={() => setShowReport(true)}
+            className="gap-1.5"
+            onClick={handleOpenReport}
           >
             Report Incident
           </AnimatedIconButton>
@@ -318,11 +323,12 @@ export function SafetyPageContent() {
               role="tab"
               aria-selected={activeTab === tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 py-2 text-xs font-medium capitalize border-b-2 transition-colors ${
+              className={cn(
+                "px-3 py-2 text-sm font-medium capitalize border-b-2 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 activeTab === tab
                   ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
             >
               {tab === "incidents" ? "Incidents" : "Wellness"}
             </button>
@@ -331,19 +337,11 @@ export function SafetyPageContent() {
 
         {activeTab === "incidents" && (
           <div className="flex min-h-0 flex-1 flex-col gap-2">
-            {isError ? (
-              <ErrorState
-                className="flex-1"
-                title="Couldn't load safety incidents"
-                description={getErrorMessage(error)}
-                onRetry={handleRetry}
-              />
-            ) : (
+            <PageState resolution={incidentsState} loading={<DataTableSkeleton />} onRetry={handleRetry} className="flex-1">
               <DataTable
                 className="flex-1 min-h-0"
                 columns={columns}
                 data={data?.data ?? []}
-                isLoading={isLoading}
                 getRowKey={(row) => row.id}
                 emptyState={
                   <EmptyState
@@ -358,15 +356,15 @@ export function SafetyPageContent() {
                     filtersActive={filtersActive}
                     onClearFilters={handleClearFilters}
                     action={
-                      filtersActive
+                      filtersActive || !canManage
                         ? undefined
                         : { label: "Report Incident", onClick: handleOpenReport }
                     }
                   />
                 }
               />
-            )}
-            {!isError && (pagination.hasPrevious || data?.pagination.hasMore) ? (
+            </PageState>
+            {incidentsState.kind === "ready" && (pagination.hasPrevious || data?.pagination.hasMore) ? (
               <CursorPageControls
                 page={pagination.page}
                 hasNext={data?.pagination.hasMore ?? false}
@@ -385,7 +383,8 @@ export function SafetyPageContent() {
               {canManage && <WellnessPulseCard />}
             </div>
             <div className="space-y-4">
-              <WellnessTrendChart />
+              {/* Trend reads hr:safety:manage; ungated it rendered "Not enough data yet" to viewers (FE-47). */}
+              {canManage && <WellnessTrendChart />}
               {canManage && <BurnoutFlagsList />}
             </div>
           </div>

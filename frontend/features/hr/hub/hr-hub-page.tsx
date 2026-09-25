@@ -114,14 +114,16 @@ export function HrHubPage() {
             >
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span className="flex-1">The HR hub is temporarily unavailable.</span>
-              <button
+              <Button
                 type="button"
+                variant="link"
+                size="sm"
                 onClick={handleRetry}
-                className="flex shrink-0 items-center gap-1 text-status-info-ink hover:underline"
+                className="h-auto shrink-0 gap-1 p-0 text-sm text-status-info-ink"
               >
                 <RefreshCcw className="h-3.5 w-3.5" />
                 Retry
-              </button>
+              </Button>
             </div>
           ) : null}
 

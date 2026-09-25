@@ -5,7 +5,8 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
@@ -17,7 +18,6 @@ import { DownloadIcon } from "@animateicons/react/lucide";
 import { AttendanceEmailDialog } from "./attendance-email-dialog";
 import { formatDuration } from "./attendance-utils";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
 import type { AttendanceLog } from "@/types/hr";
 
 const statusBadgeClasses: Record<string, string> = {
@@ -205,6 +205,21 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
     pageSizeOptions: [10, 20, 50] as const,
   } as const;
 
+  // Reads /me/attendance/history (self:attendance): a caller without it must
+  // be told so, not "No attendance records" (FE-47).
+  const pageState = usePageState({
+    permission: "self:attendance",
+    isLoading,
+    isError: Boolean(error),
+    error,
+  });
+  const isInterrupted =
+    pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading";
+
+  function handleRetry() {
+    void refetch();
+  }
+
   function handleDownloadClick() {
     void handleDownloadReport(logs);
   }
@@ -219,13 +234,11 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
   );
 
   if (!chrome) {
-    if (error) {
+    if (isInterrupted) {
       return (
-        <ErrorState
-          title="Unable to load attendance history"
-          description={getErrorMessage(error)}
-          onRetry={() => void refetch()}
-        />
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry}>
+          {null}
+        </PageState>
       );
     }
 
@@ -288,13 +301,10 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
         className={cn("p-0", fill && "min-h-0 flex-1 overflow-auto")}
         aria-live="polite"
       >
-        {error ? (
-          <ErrorState
-            title="Unable to load attendance history"
-            description={getErrorMessage(error)}
-            onRetry={() => void refetch()}
-            compact
-          />
+        {isInterrupted ? (
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} compact>
+            {null}
+          </PageState>
         ) : (
           <DataTable
             data={logs}

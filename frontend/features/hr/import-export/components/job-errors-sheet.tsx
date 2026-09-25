@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { ErrorState } from "@/components/shared/error-state";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -173,14 +174,20 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
 
         {job?.status === "committed" && (
           <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
-            <LoadingButton
-              variant="destructive"
+            <ConfirmDialog
+              trigger={
+                <Button type="button" variant="destructive">
+                  Roll back import
+                </Button>
+              }
+              title="Roll back this import?"
+              description="Every record this import created is deleted. Records it only updated keep their new values. This cannot be undone."
+              confirmLabel="Roll back import"
+              destructive
+              keepOpenOnConfirm
               isPending={rollback.isPending}
-              loadingText="Rolling back…"
-              onClick={handleRollback}
-            >
-              Rollback import
-            </LoadingButton>
+              onConfirm={handleRollback}
+            />
           </SheetFooter>
         )}
       </SheetContent>

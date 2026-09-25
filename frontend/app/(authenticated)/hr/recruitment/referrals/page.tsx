@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { InternalReferralsTab } from "@/features/hr/recruitment/referrals/internal-referrals-tab";
@@ -12,11 +11,7 @@ export default async function ReferralsHRPage() {
       subtitle="Employee and external referrals — track candidates, hiring outcomes, and reward payments."
       actions={<InviteReferrersSheet />}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-      >
+      <div>
         <Tabs defaultValue="internal">
           <TabsList className="mb-4">
             <TabsTrigger value="internal">Internal (Employees)</TabsTrigger>
@@ -29,7 +24,7 @@ export default async function ReferralsHRPage() {
             <ExternalReferralsTab />
           </TabsContent>
         </Tabs>
-      </motion.div>
+      </div>
     </PageWrapper>
   );
 }

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Lock, Pencil } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -38,6 +39,7 @@ function DeleteFieldButton({ onClick }: { onClick: () => void }) {
 
 export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTableProps) {
   const [editField, setEditField] = useState<HrCustomFieldDefinition | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<HrCustomFieldDefinition | null>(null);
   const update = useUpdateCustomField(entityType);
   const del = useDeleteCustomField(entityType);
 
@@ -52,13 +54,19 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
     }
   }
 
-  async function handleDelete(id: number) {
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
     try {
-      await del.mutateAsync(id);
-      toast.success("Field deactivated");
+      await del.mutateAsync(deleteTarget.id);
+      toast.success(`Field "${deleteTarget.name}" deactivated`);
+      setDeleteTarget(null);
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
+  }
+
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) setDeleteTarget(null);
   }
 
   function handleEditClick(field: HrCustomFieldDefinition) {
@@ -117,7 +125,7 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
           <Button variant="ghost" size="icon" className="w-7" onClick={() => handleEditClick(row)} aria-label="Edit field">
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <DeleteFieldButton onClick={() => handleDelete(row.id)} />
+          <DeleteFieldButton onClick={() => setDeleteTarget(row)} />
         </div>
       ),
     },
@@ -131,6 +139,18 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
         columns={columns}
         getRowKey={getRowKey}
         emptyState={emptyState}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={handleDeleteDialogChange}
+        title="Deactivate custom field?"
+        description={`"${deleteTarget?.name ?? ""}" will stop appearing on ${entityType.replace("_", " ")} records. Stored values are kept.`}
+        confirmLabel="Deactivate"
+        destructive
+        isPending={del.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmDelete}
       />
 
       <CustomFieldUpsertSheet

@@ -1,6 +1,8 @@
 "use client";
 
 import { Shield, Heart, Umbrella, PiggyBank, Smile, Star, Package } from "lucide-react";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoney } from "@/lib/format-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +36,7 @@ interface Props {
 
 export function BenefitPlanCard({ plan, enrolled, onEnroll, onWaive, onEdit, isAdmin, isPending }: Props) {
   const meta = CATEGORY_META[plan.category];
+  const money = useOrgDisplay();
 
   return (
     <Card className="bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -61,7 +64,7 @@ export function BenefitPlanCard({ plan, enrolled, onEnroll, onWaive, onEdit, isA
 
         <div className="flex flex-wrap gap-3 mb-4 text-xs text-muted-foreground">
           {plan.premiumCents != null && (
-            <span>₹{(plan.premiumCents / 100).toLocaleString("en-IN")}/mo</span>
+            <span className="tabular-nums">{formatMoney(plan.premiumCents / 100, money)}/mo</span>
           )}
           {plan.employerContributionPct > 0 && (
             <span className="text-status-success-ink">{plan.employerContributionPct}% employer</span>

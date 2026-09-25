@@ -29,8 +29,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useCreateAccommodation } from "@/hooks/api/hr/enterprise-ops-accommodations";
 
@@ -76,7 +74,6 @@ export function AccommodationSheet({ open, onOpenChange }: Props) {
           form.reset();
           onOpenChange(false);
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }

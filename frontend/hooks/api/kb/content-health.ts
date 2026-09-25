@@ -55,7 +55,7 @@ export function useDismissHealthItem() {
   return useMutation({
     mutationKey: ["knowledge", "kb", "contentHealth", "dismiss"],
     mutationFn: (params: DismissHealthItemParams) =>
-      apiClient.post("/kb/wiki/content-health/signals/dismiss", params, dismissHealthItemContract),
+      apiClient.post("/kb/wiki/content-health/signals/dismiss", params, undefined, dismissHealthItemContract),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthCounts(),

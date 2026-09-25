@@ -6,12 +6,12 @@ import { motion } from "framer-motion";
 import { useHrWfhRequests } from "@/hooks/api/hr";
 
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { TrendingUp, Clock } from "lucide-react";
-import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useMotionVariants } from "@/lib/motion-variants";
 import type { WfhRequest } from "./leaves-shared";
@@ -59,6 +59,18 @@ export function WfhTabContent({
 }: WfhTabContentProps) {
   const { staggerContainer, fadeIn } = useMotionVariants();
   const { data: myWfhRequests, isLoading: wfhLoading, isError: wfhError, error: wfhErrorDetail, refetch: wfhRefetch } = useHrWfhRequests();
+  // /me/time-off/wfh needs self:attendance: a caller without it must be told
+  // so, not "No WFH requests yet" (FE-47).
+  const pageState = usePageState({
+    permission: "self:attendance",
+    isLoading: wfhLoading,
+    isError: wfhError,
+    error: wfhErrorDetail,
+  });
+
+  function handleRetry() {
+    void wfhRefetch();
+  }
 
   const filteredWfhRequests = useMemo(() => {
     if (!myWfhRequests) return [];
@@ -110,19 +122,21 @@ export function WfhTabContent({
         className="flex h-full min-h-0 w-full flex-1 flex-col"
         aria-live="polite"
       >
-        {wfhLoading ? (
-          <div className={PAGE_BODY_SKELETON_CLASS}>
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-xl" />
-            ))}
-          </div>
-        ) : wfhError ? (
-          <ErrorState
+        {pageState.kind !== "ready" && pageState.kind !== "empty" ? (
+          <PageState
+            resolution={pageState}
             className="flex-1"
-            title="Couldn't load WFH requests"
-            description={getErrorMessage(wfhErrorDetail)}
-            onRetry={wfhRefetch}
-          />
+            onRetry={handleRetry}
+            loading={
+              <div className={PAGE_BODY_SKELETON_CLASS}>
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                ))}
+              </div>
+            }
+          >
+            {null}
+          </PageState>
         ) : filteredWfhRequests.length === 0 ? (
           <EmptyState
             illustrationPreset="calendar"

@@ -10,8 +10,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
@@ -41,43 +42,45 @@ function getRowStatus(row: OnboardingStatus): RowStatus {
 export function OnboardingList() {
   const { data, isLoading, isError, error, refetch } = useOnboardingStatus();
   const [initiateOpen, setInitiateOpen] = useState(false);
+  const canManage = useCan("hr:onboarding:manage");
+  const pageState = usePageState({ permission: "hr:onboarding:manage", isLoading, isError, error });
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2 pt-2">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-[60px] rounded-2xl" />
-        ))}
-      </div>
-    );
+  function handleRetry() {
+    void refetch();
   }
 
-  if (isError) {
-    return (
-      <ErrorState
-        compact
-        title="Couldn't load onboardings"
-        description={getErrorMessage(error)}
-        onRetry={() => void refetch()}
-      />
-    );
+  function handleOpenInitiate() {
+    setInitiateOpen(true);
   }
 
   const rows = data ?? [];
 
   return (
+    <PageState
+      resolution={pageState}
+      onRetry={handleRetry}
+      compact
+      loading={
+        <div className="space-y-2 pt-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 rounded-2xl" />
+          ))}
+        </div>
+      }
+    >
     <div className="space-y-4">
+      {canManage && (
       <div className="flex items-center justify-center w-full gap-3">
         <Button
           size="sm"
           className="gap-1.5"
-          onClick={() => setInitiateOpen(true)}
-          aria-label="Initiate onboarding for an employee"
+          onClick={handleOpenInitiate}
         >
           <UserPlus className="h-3.5 w-3.5" />
           Initiate Onboarding
         </Button>
       </div>
+      )}
 
       {rows.length === 0 ? (
         <EmptyState
@@ -95,8 +98,8 @@ export function OnboardingList() {
                 key={row.userId}
                 className={cn(
                   "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4",
-                  rowStatus === "completed" && "border-l-emerald-500",
-                  (rowStatus === "stalled" || rowStatus === "in_progress") && "border-l-amber-500",
+                  rowStatus === "completed" && "border-l-status-success-rule",
+                  (rowStatus === "stalled" || rowStatus === "in_progress") && "border-l-status-warning-rule",
                   rowStatus === "not_started" && "border-l-border"
                 )}
               >
@@ -199,5 +202,6 @@ export function OnboardingList() {
 
       <OnboardingInitiateSheet open={initiateOpen} onOpenChange={setInitiateOpen} />
     </div>
+    </PageState>
   );
 }

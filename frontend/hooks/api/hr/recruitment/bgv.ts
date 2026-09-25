@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import type { BgvCheckType, BgvView } from "@/hooks/api/hr/recruitment/bgv-schema";
@@ -33,18 +33,18 @@ export function useCandidateBgv(candidateId: number) {
 /**
  * Opens a case with the connected agency.
  *
- * Idempotency is the server's, keyed on the route: opening a case costs money
- * and a double-submit would buy the same check twice.
+ * Opening a case costs money and a double-submit would buy the same check twice;
+ * the route is @Idempotent, so the key is held per intent, not minted per attempt.
  */
 export function useInitiateBgv(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:manage", {
+  return useAuthorizedIdempotentMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", candidateId, "bgv", "initiate"],
-    mutationFn: (checks: BgvCheckType[]) =>
+    mutationFn: (checks: BgvCheckType[], idempotencyKey: string) =>
       apiClient.post<BgvView>(
         `/hr/recruitment/candidates/${candidateId}/bgv/initiate`,
         { checks },
-        undefined,
+        { headers: { "Idempotency-Key": idempotencyKey } },
         bgvViewC,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: bgvKey(candidateId) }),

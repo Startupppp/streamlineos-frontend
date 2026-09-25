@@ -20,11 +20,10 @@ import {
 } from "@/features/hr/asset-returns/asset-return-constants";
 import { buildAssetReturnColumns } from "@/features/hr/asset-returns/asset-return-columns";
 import { AssetReturnLogSheet, type AssetReturnFieldErrors } from "@/features/hr/asset-returns/asset-return-log-sheet";
-import {
-  AssetReturnsSkeleton,
-  AssetReturnsError,
-  AssetReturnsEmptyState,
-} from "@/features/hr/asset-returns/asset-return-page-states";
+import { AssetReturnsEmptyState } from "@/features/hr/asset-returns/asset-return-page-states";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import {
   useAssetReturns,
   useCreateAssetReturn,
@@ -32,7 +31,8 @@ import {
 } from "@/hooks/api/hr/asset-returns";
 
 export function AssetReturnsPage() {
-  const isAdmin = useCan("hr:employees:manage");
+  // Backend POST/PATCH /hr/asset-returns require hr:assets:manage (assets.controller.ts).
+  const isAdmin = useCan("hr:assets:manage");
 
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const employees = useMemo(() => unwrapEmployees(employeesRaw), [employeesRaw]);
@@ -85,7 +85,8 @@ export function AssetReturnsPage() {
     [employees, resolvedUserId],
   );
 
-  const { data: items, isLoading, isError, refetch } = useAssetReturns();
+  const { data: items, isLoading, isError, error, refetch } = useAssetReturns();
+  const pageState = usePageState({ permission: "hr:assets:view", isLoading, isError, error });
 
   const create = useCreateAssetReturn();
   const markReturned = useMarkAssetReturned();
@@ -172,9 +173,6 @@ export function AssetReturnsPage() {
   const handleCloseConfirm = useCallback((open: boolean) => { if (!open) setReturnId(null); }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
-  if (isLoading) return <AssetReturnsSkeleton />;
-  if (isError) return <AssetReturnsError onRetry={handleRetry} />;
-
   return (
     <PageWrapper
       title="Asset Returns"
@@ -188,6 +186,7 @@ export function AssetReturnsPage() {
         ) : undefined
       }
     >
+      <PageState resolution={pageState} loading={<DataTableSkeleton />} onRetry={handleRetry} className="flex-1">
       <DataTable<AssetReturn>
         className="flex-1 min-h-0"
         data={items ?? []}
@@ -200,6 +199,7 @@ export function AssetReturnsPage() {
         minWidth="640px"
         emptyState={<AssetReturnsEmptyState isAdmin={isAdmin} onOpenSheet={handleOpenSheet} />}
       />
+      </PageState>
 
       <AssetReturnLogSheet
         open={sheetOpen}

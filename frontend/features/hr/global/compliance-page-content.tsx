@@ -11,23 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlusIcon, GlobeIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import {
   useComplianceRequirements,
   useDeleteComplianceRequirement,
@@ -73,6 +65,7 @@ function WorkAuthStatusBadge({ status }: { status: WorkAuthorization["status"] }
 }
 
 export function CompliancePageContent() {
+  const canManage = useCan("hr:compliance:manage");
   const [reqSheetOpen, setReqSheetOpen] = useState(false);
   const [editingReq, setEditingReq] = useState<ComplianceRequirement | undefined>(undefined);
   const [authSheetOpen, setAuthSheetOpen] = useState(false);
@@ -144,6 +137,27 @@ export function CompliancePageContent() {
   }
 
   const handleOpenSeedDialog = useCallback(() => setSeedDialogOpen(true), []);
+  const handleGenerateEvents = useCallback(() => generateEvents.mutate(undefined), [generateEvents]);
+  const handleDeleteReqDialogChange = useCallback((open: boolean) => { if (!open) setDeleteReqId(null); }, []);
+  const handleDeleteAuthDialogChange = useCallback((open: boolean) => { if (!open) setDeleteAuthId(null); }, []);
+
+  const requirementsState = usePageState({
+    permission: "hr:compliance:manage",
+    isLoading: reqLoading,
+    isError: reqIsError,
+    error: reqError,
+    isEmpty: (reqData?.data ?? []).length === 0,
+  });
+  // Listing work authorizations needs hr:employees:view, not the compliance key
+  // this page is gated on — a compliance manager without it was told "No work
+  // authorizations on record" (FE-47).
+  const workAuthState = usePageState({
+    permission: "hr:employees:view",
+    isLoading: authLoading,
+    isError: authIsError,
+    error: authError,
+    isEmpty: (authData?.data ?? []).length === 0,
+  });
 
   const selectedPack = packFor(seedCountry);
 
@@ -152,10 +166,12 @@ export function CompliancePageContent() {
       title="Compliance"
       subtitle="Manage labor law requirements, work authorizations, and compliance calendars."
       actions={
-        <Button size="sm" onClick={handleOpenNewReq} className="gap-1.5 h-8">
-          <PlusIcon size={14} />
-          Add requirement
-        </Button>
+        canManage ? (
+          <Button size="sm" onClick={handleOpenNewReq} className="gap-1.5">
+            <PlusIcon size={14} />
+            Add requirement
+          </Button>
+        ) : null
       }
     >
       <Tabs defaultValue="calendar" className="space-y-4">
@@ -166,21 +182,23 @@ export function CompliancePageContent() {
         </TabsList>
 
         <TabsContent value="calendar" className="mt-0">
-          <div className="flex justify-end gap-2 mb-4">
-            <LoadingButton
-              variant="outline"
-              size="sm"
-              isPending={generateEvents.isPending}
-              onClick={() => generateEvents.mutate(undefined)}
-              className="text-xs"
-            >
-              Generate events (next 12 months)
-            </LoadingButton>
-          </div>
+          {canManage ? (
+            <div className="flex justify-end gap-2 mb-4">
+              <LoadingButton
+                variant="outline"
+                size="sm"
+                isPending={generateEvents.isPending}
+                onClick={handleGenerateEvents}
+              >
+                Generate events (next 12 months)
+              </LoadingButton>
+            </div>
+          ) : null}
           <ComplianceEventsTab />
         </TabsContent>
 
         <TabsContent value="requirements" className="mt-0">
+          {canManage ? (
           <div className="flex justify-end gap-2 mb-4">
             <div className="flex items-center gap-2">
               <Select value={seedCountry} onValueChange={setSeedCountry}>
@@ -197,24 +215,20 @@ export function CompliancePageContent() {
                 size="sm"
                 isPending={seedPack.isPending}
                 onClick={handleOpenSeedDialog}
-                className="text-xs gap-1.5"
+                className="gap-1.5"
               >
                 <GlobeIcon size={12} />
                 Set up {selectedPack.label} compliance
               </LoadingButton>
             </div>
           </div>
+          ) : null}
 
-          {reqLoading ? (
-            <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
-          ) : reqIsError ? (
-            <ErrorState
-              className="flex-1"
-              title="Couldn't load compliance requirements"
-              description={getErrorMessage(reqError)}
-              onRetry={handleRetryRequirements}
-            />
-          ) : (reqData?.data ?? []).length === 0 ? (
+          <PageState
+            resolution={requirementsState}
+            loading={<div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>}
+            onRetry={handleRetryRequirements}
+            empty={
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
               <StateIllustration preset="security" className="h-28 w-28" />
               <div className="max-w-sm space-y-1">
@@ -226,27 +240,32 @@ export function CompliancePageContent() {
                 </p>
               </div>
               <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
-                <LoadingButton
-                  size="sm"
-                  isPending={seedPack.isPending}
-                  onClick={handleOpenSeedDialog}
-                  className="h-8 gap-1.5"
-                >
-                  <GlobeIcon size={14} />
-                  Set up {selectedPack.label} compliance
-                </LoadingButton>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenNewReq}
-                  className="h-8 gap-1.5"
-                >
-                  <PlusIcon size={14} />
-                  Add requirement
-                </Button>
+                {canManage ? (
+                  <>
+                    <LoadingButton
+                      size="sm"
+                      isPending={seedPack.isPending}
+                      onClick={handleOpenSeedDialog}
+                      className="gap-1.5"
+                    >
+                      <GlobeIcon size={14} />
+                      Set up {selectedPack.label} compliance
+                    </LoadingButton>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleOpenNewReq}
+                      className="gap-1.5"
+                    >
+                      <PlusIcon size={14} />
+                      Add requirement
+                    </Button>
+                  </>
+                ) : null}
               </div>
             </div>
-          ) : (
+            }
+          >
             <div className="space-y-2">
               {(reqData?.data ?? []).map((req) => (
                 <div key={req.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
@@ -260,46 +279,48 @@ export function CompliancePageContent() {
                   <Badge variant={req.active ? "secondary" : "outline"} className="text-xs">
                     {req.active ? "Active" : "Inactive"}
                   </Badge>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleOpenEditReq(req)}>Edit</Button>
-                    <Button variant="ghost" size="sm" className="text-xs text-destructive hover:text-destructive" onClick={() => setDeleteReqId(req.id)}>Delete</Button>
-                  </div>
+                  {canManage ? (
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => handleOpenEditReq(req)}>Edit</Button>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteReqId(req.id)}>Delete</Button>
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
-          )}
+          </PageState>
         </TabsContent>
 
         <TabsContent value="work-auth" className="mt-0">
-          <div className="flex justify-end mb-4">
-            <Button size="sm" onClick={handleOpenNewAuth} className="gap-1.5 h-8">
-              <PlusIcon size={14} />
-              Add authorization
-            </Button>
-          </div>
+          {canManage && workAuthState.kind !== "denied" ? (
+            <div className="flex justify-end mb-4">
+              <Button size="sm" onClick={handleOpenNewAuth} className="gap-1.5">
+                <PlusIcon size={14} />
+                Add authorization
+              </Button>
+            </div>
+          ) : null}
 
-          {authLoading ? (
-            <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
-          ) : authIsError ? (
-            <ErrorState
-              className="flex-1"
-              title="Couldn't load work authorizations"
-              description={getErrorMessage(authError)}
-              onRetry={handleRetryWorkAuth}
-            />
-          ) : (authData?.data ?? []).length === 0 ? (
+          <PageState
+            resolution={workAuthState}
+            loading={<div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>}
+            onRetry={handleRetryWorkAuth}
+            empty={
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
               <StateIllustration preset="security" className="h-28 w-28" />
               <div className="space-y-1">
                 <p className="text-sm font-medium text-foreground">No work authorizations on record</p>
                 <p className="text-xs text-muted-foreground">Track visa, work permit, and right-to-work documentation for employees.</p>
               </div>
-              <Button size="sm" onClick={handleOpenNewAuth} className="mt-1 gap-1.5 h-8">
-                <PlusIcon size={14} />
-                Add authorization
-              </Button>
+              {canManage ? (
+                <Button size="sm" onClick={handleOpenNewAuth} className="mt-1 gap-1.5">
+                  <PlusIcon size={14} />
+                  Add authorization
+                </Button>
+              ) : null}
             </div>
-          ) : (
+            }
+          >
             <div className="space-y-2">
               {(authData?.data ?? []).map((auth) => (
                 <div key={auth.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
@@ -311,14 +332,16 @@ export function CompliancePageContent() {
                     </p>
                   </div>
                   <WorkAuthStatusBadge status={auth.status} />
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleOpenEditAuth(auth)}>Edit</Button>
-                    <Button variant="ghost" size="sm" className="text-xs text-destructive hover:text-destructive" onClick={() => setDeleteAuthId(auth.id)}>Delete</Button>
-                  </div>
+                  {canManage ? (
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => handleOpenEditAuth(auth)}>Edit</Button>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteAuthId(auth.id)}>Delete</Button>
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
-          )}
+          </PageState>
         </TabsContent>
       </Tabs>
 
@@ -333,61 +356,40 @@ export function CompliancePageContent() {
         existing={editingAuth}
       />
 
-      <AlertDialog open={deleteReqId !== null} onOpenChange={(v) => { if (!v) setDeleteReqId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete requirement?</AlertDialogTitle>
-            <AlertDialogDescription>This will delete the compliance requirement and all associated events.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={handleDeleteRequirement}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteReqId !== null}
+        onOpenChange={handleDeleteReqDialogChange}
+        title="Delete requirement?"
+        description="This will delete the compliance requirement and all associated events."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteReq.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleDeleteRequirement}
+      />
 
-      <AlertDialog open={deleteAuthId !== null} onOpenChange={(v) => { if (!v) setDeleteAuthId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete work authorization?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={handleDeleteAuth}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteAuthId !== null}
+        onOpenChange={handleDeleteAuthDialogChange}
+        title="Delete work authorization?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteAuth.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleDeleteAuth}
+      />
 
-      <AlertDialog open={seedDialogOpen} onOpenChange={setSeedDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Set up {selectedPack.label} compliance?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {selectedPack.summary} Anything you already track is left alone, and
-              every item stays editable afterwards.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSeedPack}>
-              Set up {selectedPack.label} compliance
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={seedDialogOpen}
+        onOpenChange={setSeedDialogOpen}
+        title={`Set up ${selectedPack.label} compliance?`}
+        description={`${selectedPack.summary} Anything you already track is left alone, and every item stays editable afterwards.`}
+        confirmLabel={`Set up ${selectedPack.label} compliance`}
+        isPending={seedPack.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleSeedPack}
+      />
     </PageWrapper>
   );
 }

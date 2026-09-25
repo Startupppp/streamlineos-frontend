@@ -8,7 +8,10 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Radio, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { Radio, CheckCircle, AlertCircle, Clock, ArrowLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -29,6 +32,7 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
   const canManage = useCan("hr:emergency:manage");
   const [respondStatus, setRespondStatus] = useState<"safe" | "need_help" | null>(null);
   const [broadcastMsg, setBroadcastMsg] = useState("");
+  const [confirmResolve, setConfirmResolve] = useState(false);
 
   const { data: event, isLoading, isError, error, refetch } = useEmergencyEvent(eventId);
   const { data: status } = useEmergencyEventStatus(eventId);
@@ -42,9 +46,9 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse p-8 space-y-3">
-        <div className="h-5 bg-muted rounded w-1/3" />
-        <div className="h-4 bg-muted rounded w-2/3" />
+      <div className="space-y-3 p-8">
+        <Skeleton className="h-5 w-1/3" />
+        <Skeleton className="h-4 w-2/3" />
       </div>
     );
   }
@@ -55,7 +59,8 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
         title="Emergency event"
         leading={
           <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2">
-            ← Back
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            Back
           </Button>
         }
       >
@@ -88,12 +93,24 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
   }
 
   function handleRespond(s: "safe" | "need_help") {
-    respond.mutate({ status: s });
     setRespondStatus(s);
+    respond.mutate({ status: s });
+  }
+
+  function handleRespondSafe() {
+    handleRespond("safe");
+  }
+
+  function handleRespondNeedHelp() {
+    handleRespond("need_help");
+  }
+
+  function handleOpenResolve() {
+    setConfirmResolve(true);
   }
 
   function handleResolve() {
-    update.mutate({ status: "resolved" });
+    update.mutate({ status: "resolved" }, { onSuccess: () => setConfirmResolve(false) });
   }
 
   return (
@@ -102,20 +119,15 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
       subtitle={`${event.type.replace(/_/g, " ")} · ${event.status}`}
       leading={
         <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2">
-          ← Back
+          <ArrowLeft className="mr-1.5 h-4 w-4" />
+          Back
         </Button>
       }
       actions={
         canManage && event.status === "active" ? (
-          <LoadingButton
-            onClick={handleResolve}
-            isPending={update.isPending}
-            loadingText="Resolving…"
-            variant="outline"
-            size="sm"
-          >
+          <Button onClick={handleOpenResolve} variant="outline" size="sm">
             Mark Resolved
-          </LoadingButton>
+          </Button>
         ) : null
       }
     >
@@ -143,24 +155,25 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
               <p className="text-sm font-medium">Your Safety Status</p>
               <div className="flex gap-3">
-                <Button
-                  onClick={() => handleRespond("safe")}
+                <LoadingButton
+                  onClick={handleRespondSafe}
+                  isPending={respond.isPending && respondStatus === "safe"}
                   disabled={respond.isPending}
                   className="flex-1 bg-status-success-fill hover:bg-status-success-fill-hover text-white"
-                  variant={respondStatus === "safe" ? "default" : "outline"}
                 >
                   <CheckCircle className="h-4 w-4 mr-1.5" />
                   I&apos;m Safe
-                </Button>
-                <Button
-                  onClick={() => handleRespond("need_help")}
+                </LoadingButton>
+                <LoadingButton
+                  onClick={handleRespondNeedHelp}
+                  isPending={respond.isPending && respondStatus === "need_help"}
                   disabled={respond.isPending}
                   variant="destructive"
                   className="flex-1"
                 >
                   <AlertCircle className="h-4 w-4 mr-1.5" />
                   Need Help
-                </Button>
+                </LoadingButton>
               </div>
             </div>
 
@@ -170,8 +183,8 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
                   <Radio className="h-4 w-4 text-primary" />
                   Broadcast Check-in
                 </p>
-                <textarea
-                  className="w-full text-sm rounded-md border border-border bg-background px-3 py-2 resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                <Textarea
+                  aria-label="Check-in message"
                   rows={2}
                   placeholder="Optional override message…"
                   value={broadcastMsg}
@@ -181,7 +194,6 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
                   onClick={handleBroadcast}
                   isPending={broadcast.isPending}
                   loadingText="Broadcasting…"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   Send Check-in
                 </LoadingButton>
@@ -190,6 +202,16 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
           </>
         )}
       </div>
+      <ConfirmDialog
+        open={confirmResolve}
+        onOpenChange={setConfirmResolve}
+        title="Mark this event resolved?"
+        description="Employees can no longer report their safety status once the event is resolved."
+        confirmLabel="Mark resolved"
+        isPending={update.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleResolve}
+      />
     </PageWrapper>
   );
 }

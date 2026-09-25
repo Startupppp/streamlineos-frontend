@@ -7,6 +7,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockUseCan(key),
 }));
 
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => ({ kind: "ready" }),
+}));
+
 jest.mock("@/hooks/api/hr/analytics", () => ({
   useHrAnalytics: () => ({
     data: { headcount: { active: 12 }, attendance: { totalLogsThisMonth: 40 } },

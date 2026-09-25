@@ -12,6 +12,8 @@ import {
 } from "@/lib/person-display";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { numericSelectChange } from "@/lib/numeric-field";
@@ -39,6 +41,8 @@ export function NineBoxGrid() {
   const { data: cycles = [], isError: cyclesError, error: cyclesErrorData, refetch: refetchCycles } = useReviewCycles();
   const { data: entries = [], isError: nineBoxError, error: nineBoxErrorData, refetch: refetchNineBox } = useNineBox(selectedCycleId);
   const { data: membersData } = useOrgMembers(1, 200);
+  // GET /hr/performance/calibration/nine-box is `hr:performance:manage` (calibration.controller.ts:58).
+  const pageState = usePageState({ permission: "hr:performance:manage", isLoading: false, isError: false, error: null });
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();
@@ -61,6 +65,10 @@ export function NineBoxGrid() {
     const cell = grouped.get(entry.box) ?? [];
     cell.push(entry);
     grouped.set(entry.box, cell);
+  }
+
+  if (pageState.kind !== "ready") {
+    return <PageState resolution={pageState} loading={null} className="flex-1">{null}</PageState>;
   }
 
   if (cyclesError) {

@@ -18,12 +18,14 @@ import { WorkLogMonthGroup } from "@/features/hr/work-logs/work-log-month-group"
 import {
   WorkLogDeptPromptCard,
   WorkLogLoadingCard,
-  WorkLogErrorCard,
   WorkLogNoResultsCard,
   WorkLogTotalHoursCard,
 } from "@/features/hr/work-logs/work-log-state-cards";
 import { exportWorkLogsToXlsx } from "@/features/hr/work-logs/work-log-export";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export function WorkLogsPage() {
   const { data: session } = useSession();
@@ -155,7 +157,7 @@ export function WorkLogsPage() {
     return dateSet;
   }, [myLeaveData]);
 
-  const { data: logs, isLoading, isError, refetch } = useGetWorkLogs({
+  const { data: logs, isLoading, isError, error, refetch } = useGetWorkLogs({
     year,
     quarter,
     ...(selectedUserId ? { userId: selectedUserId } : {}),
@@ -164,9 +166,14 @@ export function WorkLogsPage() {
     ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
   });
 
+  // The route has no server guard and useGetWorkLogs is gated on
+  // hr:attendance:view: a denied caller got a quarter of editable empty days
+  // whose every Save would 403 (FE-47).
+  const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
+
   const upsertLog = useUpsertWorkLog({
-    onSuccess: () => { toast.success("Work log saved successfully"); },
-    onError: () => { toast.error("Failed to save log"); },
+    onSuccess: () => { toast.success("Work log saved"); },
+    onError: (err) => { toast.error(getErrorMessage(err)); },
   });
 
   const days = useMemo(() => {
@@ -323,10 +330,10 @@ export function WorkLogsPage() {
       <div className="space-y-4">
         {filters.departmentId && !filters.selectedUserId ? (
           <WorkLogDeptPromptCard />
-        ) : isLoading ? (
-          <WorkLogLoadingCard />
-        ) : isError ? (
-          <WorkLogErrorCard onRetry={handleRetryWorkLogs} />
+        ) : pageState.kind !== "ready" && pageState.kind !== "empty" ? (
+          <PageState resolution={pageState} loading={<WorkLogLoadingCard />} onRetry={handleRetryWorkLogs}>
+            {null}
+          </PageState>
         ) : !hasVisibleDays ? (
           <WorkLogNoResultsCard searchTerm={searchTerm} onClear={handleClearDayFilters} />
         ) : (

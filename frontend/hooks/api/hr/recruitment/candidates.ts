@@ -1,5 +1,6 @@
 "use client";
 
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -517,5 +518,9 @@ export function useRecruitmentAnalytics() {
     queryFn: ({ signal }) => apiClient.get<RecruitmentAnalytics>("/hr/recruitment/analytics", undefined, signal, recruitmentAnalyticsContract),
     staleTime: 2 * 60_000,
     enabled: canViewRequisitions,
+    // Backend declares GET /hr/recruitment/analytics twice; the windowed handler
+    // (from/to required) wins and 400s this unwindowed read. Kept inline so the
+    // 400 cannot take the command center and analytics pages to the error boundary.
+    ...INLINE_READ_ERROR,
   });
 }

@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { CandidateReferral, CreateReferralInput } from "@/types/hr/recruitment";
 
@@ -30,10 +31,10 @@ export function useAllReferrals() {
 
 export function useSubmitReferral() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:view", {
+  return useAuthorizedIdempotentMutation("hr:requisitions:view", {
     mutationKey: ["hr", "recruitment", "referrals", "submit"],
-    mutationFn: (data: CreateReferralInput) =>
-      apiClient.post<CandidateReferral>("/hr/recruitment/referrals", data, undefined, submitReferralC),
+    mutationFn: (data: CreateReferralInput, idempotencyKey: string) =>
+      apiClient.post<CandidateReferral>("/hr/recruitment/referrals", data, { headers: { "Idempotency-Key": idempotencyKey } }, submitReferralC),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.referrals() });
     },

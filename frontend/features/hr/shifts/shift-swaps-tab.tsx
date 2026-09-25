@@ -3,7 +3,8 @@
 import { useCallback, useMemo, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
@@ -47,6 +48,9 @@ export function ShiftSwapsTab({ canManage }: Props) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  // One swap in flight must not spin every row's buttons.
+  const pendingSwapId = updateStatus.isPending ? updateStatus.variables?.swapId : undefined;
 
   const handleApprove = useCallback((id: number) => {
     updateStatus.mutate({ swapId: id, status: "APPROVED" }, {
@@ -107,18 +111,19 @@ export function ShiftSwapsTab({ canManage }: Props) {
               <LoadingButton
                 size="sm"
                 variant="outline"
-                className="text-xs"
                 onClick={() => handleApprove(swap.id)}
-                isPending={updateStatus.isPending}
+                isPending={pendingSwapId === swap.id && updateStatus.variables?.status === "APPROVED"}
+                disabled={pendingSwapId === swap.id}
               >
                 Approve
               </LoadingButton>
               <LoadingButton
                 size="sm"
                 variant="outline"
-                className="text-xs text-destructive hover:text-destructive"
+                className="text-destructive hover:text-destructive"
                 onClick={() => handleReject(swap.id)}
-                isPending={updateStatus.isPending}
+                isPending={pendingSwapId === swap.id && updateStatus.variables?.status === "REJECTED"}
+                disabled={pendingSwapId === swap.id}
               >
                 Reject
               </LoadingButton>
@@ -128,16 +133,17 @@ export function ShiftSwapsTab({ canManage }: Props) {
     }
 
     return cols;
-  }, [canManage, updateStatus.isPending, memberById, handleApprove, handleReject]);
+  }, [canManage, pendingSwapId, updateStatus.variables?.status, memberById, handleApprove, handleReject]);
 
-  if (isError) {
+  // No route guard; the read is gated on hr:attendance:view, so a denied
+  // caller must be told so, not "No swap requests" (FE-47).
+  const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load swap requests"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
-      />
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        {null}
+      </PageState>
     );
   }
 
@@ -148,6 +154,7 @@ export function ShiftSwapsTab({ canManage }: Props) {
       columns={columns}
       getRowKey={(swap) => swap.id}
       isLoading={isLoading}
+      pagination={{ pageSize: 25 }}
       emptyState={
         <EmptyState
           illustrationPreset="calendar"

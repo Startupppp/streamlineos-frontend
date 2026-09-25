@@ -88,7 +88,9 @@ export default function HrSettingsLayout({
   useEffect(() => {
     if (activeTabRef.current) {
       activeTabRef.current.scrollIntoView({
-        behavior: "smooth",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
         block: "nearest",
         inline: "center",
       });
@@ -125,17 +127,15 @@ export default function HrSettingsLayout({
                 key={tab.href}
                 href={tab.href}
                 ref={isActive ? activeTabRef : null}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors",
+                  "inline-flex h-7 shrink-0 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-1 focus-visible:ring-ring",
                   isActive
                     ? "bg-muted text-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {tab.label}
-                {isActive && (
-                  <span className="absolute bottom-0 left-1 right-1 sm:left-0 sm:right-0 h-0.5 bg-primary rounded-full" />
-                )}
               </Link>
             );
           })}

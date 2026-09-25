@@ -133,7 +133,6 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
                 placeholder="Options (comma-separated)"
                 value={q.options?.join(", ") ?? ""}
                 onChange={optionListHandler(q.id)}
-                className="text-xs"
               />
             </div>
           )}

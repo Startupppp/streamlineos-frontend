@@ -28,8 +28,6 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateEmergencyEvent } from "@/hooks/api/hr/enterprise-ops-emergency";
 
@@ -70,7 +68,6 @@ export function EmergencyEventSheet({ open, onOpenChange }: Props) {
           form.reset();
           onOpenChange(false);
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }

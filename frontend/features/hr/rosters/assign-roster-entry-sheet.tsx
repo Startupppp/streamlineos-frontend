@@ -25,6 +25,7 @@ import {
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { titleCaseLabel } from "@/lib/title-case";
+import { useCanState } from "@/hooks/api/access";
 import { useHrShifts } from "@/hooks/api/hr/shifts";
 import { useUpsertRosterEntry } from "@/hooks/api/hr/rosters";
 import {
@@ -52,6 +53,10 @@ export function AssignRosterEntrySheet({
   weekEnd,
 }: AssignRosterEntrySheetProps) {
   const { data: shifts } = useHrShifts();
+  // The shift list is gated on its own read key; a denied caller must be told
+  // so, not told that no shifts exist (FE-47).
+  const shiftsAccess = useCanState("hr:attendance:view");
+  const shiftsDenied = shiftsAccess === "denied";
   const upsert = useUpsertRosterEntry();
 
   const handleSubmit = useCallback(
@@ -152,10 +157,16 @@ export function AssignRosterEntrySheet({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Shift</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={shiftsAccess !== "granted"}
+                    >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a shift…" />
+                          <SelectValue
+                            placeholder={shiftsDenied ? "Access restricted" : "Select a shift…"}
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
@@ -167,9 +178,11 @@ export function AssignRosterEntrySheet({
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      {(shifts ?? []).length === 0
-                        ? "No shifts exist yet — create one under Shifts first."
-                        : "Leave blank only for a day off."}
+                      {shiftsDenied
+                        ? "You don't have access to view shifts."
+                        : (shifts ?? []).length === 0
+                          ? "No shifts exist yet — create one under Shifts first."
+                          : "Leave blank only for a day off."}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

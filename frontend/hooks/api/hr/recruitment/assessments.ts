@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import type { AssessmentView } from "@/hooks/api/hr/recruitment/assessments-schema";
@@ -35,13 +35,13 @@ export function useCandidateAssessments(candidateId: number) {
 
 export function useInviteAssessment(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:manage", {
+  return useAuthorizedIdempotentMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", candidateId, "assessments", "invite"],
-    mutationFn: (testId: string) =>
+    mutationFn: (testId: string, idempotencyKey: string) =>
       apiClient.post<AssessmentView>(
         `/hr/recruitment/candidates/${candidateId}/assessments`,
         { testId },
-        undefined,
+        { headers: { "Idempotency-Key": idempotencyKey } },
         viewC,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: assessmentsKey(candidateId) }),

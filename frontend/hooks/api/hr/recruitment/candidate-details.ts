@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const noContentContract = lazyContract(() =>
@@ -251,7 +252,7 @@ export function useCandidateReferrals(candidateId: number) {
 
 export function useCreateReferral(candidateId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:manage", {
+  return useAuthorizedIdempotentMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "referrals", "create", candidateId],
     mutationFn: (data: {
       referredBy: string;
@@ -259,7 +260,7 @@ export function useCreateReferral(candidateId: number) {
       notes?: string;
       bonusEligible?: boolean;
       bonusAmount?: number;
-    }) => apiClient.post<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data, undefined, referralContract),
+    }, idempotencyKey: string) => apiClient.post<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data, { headers: { "Idempotency-Key": idempotencyKey } }, referralContract),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "referrals"] });
     },

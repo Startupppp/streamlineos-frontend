@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
   SheetContent,
@@ -40,8 +38,12 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { useCan } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { useCursorPager } from "@/components/ui/table-pagination";
+import { useAccess, useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useOrgDelegations, useGrantProxy, useRevokeProxy, type ProxyAccess } from "../hooks/use-delegations";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
@@ -67,9 +69,14 @@ function isExpired(endsAt: string) {
 export function DelegationSheet() {
   const canManage = useCan("hr:workflows:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [page, setPage] = useState(1);
+  const [revoking, setRevoking] = useState<ProxyAccess | null>(null);
+  const pager = useCursorPager();
+  const { data: session } = useSession();
+  const { data: access } = useAccess();
 
-  const { data, isLoading, isError, error, refetch } = useOrgDelegations({ page, limit: 20 });
+  // Keyset endpoint: the `page` this used to send was ignored, so rows past
+  // the first 20 were unreachable.
+  const { data, isLoading, isError, error, refetch } = useOrgDelegations({ cursor: pager.cursor, limit: 20 });
   const { data: membersData } = useOrgMembers(1, 200);
   const grantProxy = useGrantProxy();
   const revokeProxy = useRevokeProxy();
@@ -98,17 +105,36 @@ export function DelegationSheet() {
   function handleGrant(values: ProxyForm) {
     grantProxy.mutate(values, {
       onSuccess: () => {
-        toast.success("Delegation granted");
         form.reset();
         setSheetOpen(false);
       },
-      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
-  function handleRevoke(id: number) {
-    revokeProxy.mutate(id);
+  // The backend lets only the grantor or the org owner revoke; anyone else
+  // with hr:workflows:manage got a 403 from this button.
+  function canRevoke(row: ProxyAccess) {
+    return (
+      canManage &&
+      !isExpired(row.endsAt) &&
+      (access?.isOrgOwner === true || row.grantorUserId === session?.user?.id)
+    );
   }
+
+  function handleConfirmRevoke() {
+    if (!revoking) return;
+    revokeProxy.mutate(revoking.id, { onSuccess: () => setRevoking(null) });
+  }
+
+  function handleRevokeDialogChange(open: boolean) {
+    if (!open) setRevoking(null);
+  }
+
+  function handleNext() {
+    pager.goNext(data?.pagination.nextCursor);
+  }
+
+  const pageState = usePageState({ permission: "hr:workflows:manage", isLoading, isError, error });
 
   function handleOpenSheet() {
     setSheetOpen(true);
@@ -152,53 +178,37 @@ export function DelegationSheet() {
       key: "actions",
       header: "",
       cell: (row) =>
-        canManage && !isExpired(row.endsAt) ? (
-          <LoadingButton
+        canRevoke(row) ? (
+          <Button
             variant="ghost"
             size="sm"
             className="text-destructive hover:text-destructive"
-            onClick={() => handleRevoke(row.id)}
-            isPending={revokeProxy.isPending}
+            onClick={() => setRevoking(row)}
           >
             Revoke
-          </LoadingButton>
+          </Button>
         ) : null,
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load delegations"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
-      />
-    );
-  }
-
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground whitespace-nowrap">
-          {data?.data?.length ?? 0} {(data?.data?.length ?? 0) === 1 ? "proxy" : "proxies"}
-        </p>
-        {canManage && (
-          <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+      {canManage && (
+        <div className="flex items-center justify-end mb-4">
+          <Button onClick={handleOpenSheet} size="sm">
             <PlusIcon size={16} className="mr-1.5" />
             Grant Proxy
           </Button>
-        )}
-      </div>
+        </div>
+      )}
+      <PageState
+        resolution={pageState}
+        loading={<DataTableSkeleton columns={5} className="flex-1" />}
+        onRetry={handleRetry}
+        className="flex-1"
+      >
       <DataTable
+        className="flex-1 min-h-0"
         columns={columns}
         data={data?.data ?? []}
         getRowKey={(row) => row.id}
@@ -211,7 +221,30 @@ export function DelegationSheet() {
             action={canManage ? { label: "Grant Proxy", onClick: handleOpenSheet } : undefined}
           />
         }
-        pagination={{ mode: "server", page, pageSize: 20, total: data?.data?.length ?? 0, onPageChange: setPage }}
+        pagination={{
+          mode: "cursor",
+          pageSize: 20,
+          hasMore: data?.pagination.hasMore ?? false,
+          hasPrevious: pager.hasPrevious,
+          onNext: handleNext,
+          onPrevious: pager.goPrevious,
+        }}
+      />
+      </PageState>
+      <ConfirmDialog
+        open={revoking !== null}
+        onOpenChange={handleRevokeDialogChange}
+        title="Revoke proxy access?"
+        description={
+          revoking
+            ? `${resolveMemberName(revoking.proxyUserId)} immediately stops acting for ${resolveMemberName(revoking.grantorUserId)}.`
+            : ""
+        }
+        confirmLabel="Revoke"
+        destructive
+        isPending={revokeProxy.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmRevoke}
       />
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
@@ -300,15 +333,15 @@ export function DelegationSheet() {
                   </FormItem>
                 )}
               />
+              </SheetBody>
               <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
                 <div className="grid w-full grid-cols-2 gap-2">
                   <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                  <LoadingButton type="submit" isPending={grantProxy.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <LoadingButton type="submit" isPending={grantProxy.isPending}>
                     Grant Access
                   </LoadingButton>
                 </div>
               </SheetFooter>
-              </SheetBody>
             </form>
           </Form>
         </SheetContent>

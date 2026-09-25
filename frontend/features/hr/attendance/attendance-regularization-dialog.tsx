@@ -17,6 +17,7 @@ import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateRegularization } from "@/hooks/api/hr/attendance";
+import { useCan } from "@/hooks/api/access";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { FilePen } from "lucide-react";
 
@@ -121,6 +122,8 @@ export function AttendanceRegularizationDialog({
   const open = openProp ?? uncontrolledOpen;
   const setOpen = onOpenChange ?? setUncontrolledOpen;
   const mutation = useCreateRegularization();
+  // POST /me/attendance/regularizations requires self:attendance (FE-44).
+  const canRequest = useCan("self:attendance");
 
   const defaultValues = useMemo<RegularizationFormValues>(
     () => ({
@@ -160,7 +163,7 @@ export function AttendanceRegularizationDialog({
 
   return (
     <>
-      {!hideTrigger ? (
+      {!hideTrigger && canRequest ? (
         <Button
           type="button"
           variant="ghost"

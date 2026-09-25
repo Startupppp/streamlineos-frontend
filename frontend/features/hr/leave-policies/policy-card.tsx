@@ -53,7 +53,6 @@ export function PolicyCard({
             <Button
               variant="ghost"
               size="icon"
-              className="w-7"
               aria-label={`Edit ${policy.name}`}
               onClick={handleEditClick}
             >
@@ -63,7 +62,7 @@ export function PolicyCard({
               icon={Trash2Icon}
               variant="ghost"
               size="icon"
-              className="w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
               iconSize={14}
               aria-label={`Delete ${policy.name}`}
               onClick={handleDeleteClick}

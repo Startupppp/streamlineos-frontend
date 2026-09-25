@@ -12,8 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useFindExpert, useHrDepartments, type ExpertResult } from "@/hooks/api/hr";
 import { Search, X } from "lucide-react";
@@ -55,6 +54,15 @@ export function FindExpertPage() {
     skill: activeParams.skill,
     department: activeParams.department || undefined,
     role: activeParams.role || undefined,
+  });
+
+  // No server-side requirePermission guards this route, so a caller without
+  // hr:employees:view must be told so here — not "No experts found" (FE-47).
+  const pageState = usePageState({
+    permission: "hr:employees:view",
+    isLoading: false,
+    isError,
+    error,
   });
 
   const handleRetry = useCallback(() => {
@@ -113,6 +121,8 @@ export function FindExpertPage() {
     <PageWrapper
       title="Find Expert"
       subtitle="Search across the org to find colleagues with specific skills"
+      state={pageState}
+      onRetry={handleRetry}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-3">
         <form onSubmit={handleSearch} className="flex gap-2 max-w-lg">
@@ -155,7 +165,7 @@ export function FindExpertPage() {
           </Select>
 
           {hasActiveFilters && (
-            <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>
+            <Button size="sm" variant="ghost" onClick={handleClearFilters}>
               <X className="h-3 w-3 mr-1" />
               Clear filters
             </Button>
@@ -176,13 +186,6 @@ export function FindExpertPage() {
               <Skeleton key={i} className="h-28 w-full rounded-lg" />
             ))}
           </div>
-        ) : isError ? (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't search for experts"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
         ) : !experts || experts.length === 0 ? (
           <EmptyState
             illustration={<EmptyPersonIllustration className="h-40 w-40" />}

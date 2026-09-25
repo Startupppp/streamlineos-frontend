@@ -11,6 +11,10 @@ import { Database } from "lucide-react";
 import { DownloadIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { downloadBlob } from "@/lib/download-blob";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -38,7 +42,7 @@ export function EventStreamPageContent() {
   const [activeTab, setActiveTab] = useState("events");
 
   const { data, isLoading, isFetching, isError, error, refetch } = useHrEvents({ cursor });
-  const { data: dictionary, isError: dictionaryIsError, error: dictionaryError, refetch: refetchDictionary } = useHrEventDataDictionary();
+  const { data: dictionary, isLoading: dictionaryLoading, isError: dictionaryIsError, error: dictionaryError, refetch: refetchDictionary } = useHrEventDataDictionary();
   const { data: metrics, isLoading: metricsLoading, isError: metricsIsError, error: metricsError, refetch: refetchMetrics } = useHrMetricDefinitions();
   const exportMutation = useExportHrEvents();
   const { data: membersData } = useOrgMembers(1, 200);
@@ -133,6 +137,23 @@ export function EventStreamPageContent() {
   }, [data?.pagination.nextCursor]);
 
   const handleRetryEvents = useCallback(() => { void refetch(); }, [refetch]);
+  const eventsState = usePageState({ permission: "hr:eventstream:view", isLoading, isError, error });
+
+  // The export route returns the rows as JSON; without a download the button
+  // spun and then did nothing visible.
+  const handleExport = useCallback(() => {
+    exportMutation.mutate(
+      { limit: 100 },
+      {
+        onSuccess: (result) => {
+          downloadBlob(
+            new Blob([JSON.stringify(result, null, 2)], { type: "application/json" }),
+            `hr-events-${result.exportedAt.slice(0, 10)}.json`,
+          );
+        },
+      },
+    );
+  }, [exportMutation]);
   const handleRetryDictionary = useCallback(() => { void refetchDictionary(); }, [refetchDictionary]);
   const handleRetryMetrics = useCallback(() => { void refetchMetrics(); }, [refetchMetrics]);
 
@@ -149,14 +170,14 @@ export function EventStreamPageContent() {
       actions={
         canExport ? (
           <LoadingButton
-            onClick={() => exportMutation.mutate({ limit: 100 })}
+            onClick={handleExport}
             isPending={exportMutation.isPending}
             loadingText="Exporting…"
             variant="outline"
             size="sm"
           >
             <DownloadIcon size={16} className="mr-1.5" />
-            Export
+            Export latest 100
           </LoadingButton>
         ) : null
       }
@@ -172,21 +193,18 @@ export function EventStreamPageContent() {
           <div className="mb-3 shrink-0 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
             This log is <strong>append-only</strong>. Events cannot be edited or deleted.
           </div>
-          {isError ? (
-            <ErrorState
-              className="flex-1"
-              title="Couldn't load the event stream"
-              description={getErrorMessage(error)}
-              onRetry={handleRetryEvents}
-            />
-          ) : (
+          <PageState
+            resolution={eventsState}
+            loading={<DataTableSkeleton columns={5} className="flex-1" />}
+            onRetry={handleRetryEvents}
+            className="flex-1"
+          >
             <div className="flex flex-1 min-h-0 flex-col gap-3">
               <DataTable
                 className="flex-1 min-h-0"
                 data={data?.data ?? []}
                 columns={eventColumns}
                 getRowKey={(r) => r.id}
-                isLoading={isLoading}
                 emptyState={
                   <EmptyState
                     illustrationPreset="documents"
@@ -206,7 +224,7 @@ export function EventStreamPageContent() {
                 />
               ) : null}
             </div>
-          )}
+          </PageState>
         </TabsContent>
 
         <TabsContent value="dictionary" className="mt-0 flex flex-1 min-h-0 flex-col">
@@ -224,6 +242,7 @@ export function EventStreamPageContent() {
                 data={dictionary?.catalog ?? []}
                 columns={catalogColumns}
                 getRowKey={(e) => e.eventType}
+                isLoading={dictionaryLoading}
                 emptyState={
                   <EmptyState
                     illustrationPreset="documents"

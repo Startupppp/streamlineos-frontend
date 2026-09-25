@@ -31,7 +31,7 @@ import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCheckIcon, HouseIcon, PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
+import { HouseIcon, PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadBlob } from "@/lib/download-blob";
 import { ErrorState } from "@/components/shared";
@@ -66,8 +66,17 @@ interface LeavesWfhContentProps {
 export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps) {
   const { data: session } = useSession();
   const hrModuleEnabled = useModuleEnabled("hr");
-  const canManageHr = useCan("hr:employees:manage");
-  const isAdmin = !selfService && canManageHr && hrModuleEnabled;
+  // The Approvals tab decides leave (PUT /hr/leaves/:id/approve|reject →
+  // hr:leaves:approve) and WFH (PATCH /hr/wfh/:id → hr:attendance:manage).
+  // It was gated on hr:employees:manage, which hid it from approvers and showed
+  // it to people whose every decision would 403.
+  const canApproveLeaves = useCan("hr:leaves:approve");
+  const canDecideWfh = useCan("hr:attendance:manage");
+  const isAdmin = !selfService && hrModuleEnabled && (canApproveLeaves || canDecideWfh);
+  // POST /me/time-off → self:leaves; POST /me/time-off/wfh → self:attendance.
+  // The route also admits hr:leaves:view alone, so neither can be assumed.
+  const canRequestLeave = useCan("self:leaves");
+  const canRequestWfh = useCan("self:attendance");
 
   const [activeTab, setActiveTab] = useState("my-leaves");
   const [wfhStatusFilter, setWfhStatusFilter] = useState("ALL");
@@ -124,7 +133,6 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
   }, []);
-  const handleReviewRequests = useCallback(() => setActiveTab("approvals"), []);
 
   const balances = (contextData?.balances ?? []) as LeaveBalance[];
   const leaveTypes = (contextData?.types ?? []) as LeaveType[];
@@ -292,7 +300,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                       variant="outline"
                       size="sm"
                       onClick={handleExportExcel}
-                      className="h-8 gap-1.5"
+                      className="gap-1.5"
                       aria-label={`Export ${exportView.noun}s to Excel`}
                     >
                       Export
@@ -317,38 +325,29 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
           }
           actions={
             <>
-              <AnimatedIconButton
-                icon={HouseIcon}
-                iconSize={14}
-                iconClassName="mr-1.5"
-                variant="outline"
-                size="sm"
-                onClick={handleOpenWfhSheet}
-                className="h-8 gap-1.5"
-              >
-                Request WFH
-              </AnimatedIconButton>
-              <AnimatedIconButton
-                icon={PlusIcon}
-                iconSize={14}
-                iconClassName="mr-1.5"
-                variant={isAdmin ? "outline" : "default"}
-                size="sm"
-                onClick={handleOpenLeaveSheet}
-                className="h-8 gap-1.5"
-              >
-                Request leave
-              </AnimatedIconButton>
-              {isAdmin ? (
+              {canRequestWfh ? (
                 <AnimatedIconButton
-                  icon={CheckCheckIcon}
+                  icon={HouseIcon}
+                  iconSize={14}
+                  iconClassName="mr-1.5"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenWfhSheet}
+                  className="gap-1.5"
+                >
+                  Request WFH
+                </AnimatedIconButton>
+              ) : null}
+              {canRequestLeave ? (
+                <AnimatedIconButton
+                  icon={PlusIcon}
                   iconSize={14}
                   iconClassName="mr-1.5"
                   size="sm"
-                  onClick={handleReviewRequests}
-                  className="h-8 gap-1.5"
+                  onClick={handleOpenLeaveSheet}
+                  className="gap-1.5"
                 >
-                  Review requests
+                  Request leave
                 </AnimatedIconButton>
               ) : null}
             </>
@@ -371,7 +370,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                   myLeaveRequests={myLeaveRequests}
                   approvedLeavesThisWeek={selfService ? [] : approvedLeavesThisWeek}
                   compact={selfService}
-                  onRequestLeave={handleOpenLeaveSheet}
+                  onRequestLeave={canRequestLeave ? handleOpenLeaveSheet : undefined}
                   hasMore={hasMoreMyRequests}
                   isLoadingMore={isLoadingMoreMyRequests}
                   onLoadMore={() => void fetchMoreMyRequests()}
@@ -383,7 +382,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
               <WfhTabContent
                 compact={selfService}
                 statusFilter={wfhStatusFilter}
-                onRequestWfh={handleOpenWfhSheet}
+                onRequestWfh={canRequestWfh ? handleOpenWfhSheet : undefined}
               />
             </TabsContent>
 

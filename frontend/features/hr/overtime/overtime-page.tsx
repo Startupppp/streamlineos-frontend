@@ -13,6 +13,8 @@ import { OvertimeRequestSheet } from "./overtime-request-sheet";
 
 export function OvertimePage() {
   const canManage = useCan("hr:attendance:manage");
+  // POST /hr/overtime requires hr:attendance:view; the route itself is unguarded.
+  const canRequest = useCan("hr:attendance:view");
   const [open, setOpen] = useState(false);
 
   function handleOpen() {
@@ -24,12 +26,12 @@ export function OvertimePage() {
       title="Overtime & Comp-Off"
       subtitle="Manage overtime requests and compensatory leave balances"
       actions={
-        <Button
-          onClick={handleOpen}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200">
-          <Plus className="h-4 w-4 mr-2" />
-          Request Overtime
-        </Button>
+        canRequest ? (
+          <Button size="sm" onClick={handleOpen}>
+            <Plus className="h-4 w-4" />
+            Request overtime
+          </Button>
+        ) : undefined
       }
     >
       <motion.div

@@ -44,6 +44,11 @@ jest.mock("@/hooks/api/hr/shifts", () => ({
   useDeleteShift: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
+// Access is not under test here; the tab resolves it through usePageState.
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => ({ kind: "ready" }),
+}));
+
 jest.mock("framer-motion", () => ({
   motion: { div: ({ children, ...rest }: React.ComponentProps<"div">) => <div {...rest}>{children}</div> },
 }));

@@ -1,18 +1,23 @@
 "use client";
 
+import { ListChecks, SlidersHorizontal } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 import { HubGrid } from "@/features/hr/settings-hub/hub-grid";
 import { useHrSettingsMode } from "@/features/hr/settings-hub/use-hr-settings-mode";
+
+type SettingsMode = "simple" | "advanced";
+
+const MODE_OPTIONS: ViewOption<SettingsMode>[] = [
+  { value: "simple", icon: ListChecks, label: "Simple" },
+  { value: "advanced", icon: SlidersHorizontal, label: "Advanced" },
+];
 
 export default function HrSettingsHubPage() {
   const [isAdvanced, setMode] = useHrSettingsMode();
 
-  function handleSelectSimple() {
-    setMode(false);
-  }
-
-  function handleSelectAdvanced() {
-    setMode(true);
+  function handleModeChange(next: SettingsMode) {
+    setMode(next === "advanced");
   }
 
   return (
@@ -20,35 +25,15 @@ export default function HrSettingsHubPage() {
       title="HR configuration"
       subtitle={isAdvanced ? "Every configuration surface, including workflows, automations and versioning" : "The guided essentials"}
       actions={
-        <div className="bg-muted/40 border border-border/70 rounded-xl p-0.5 flex backdrop-blur-sm">
-          <button
-            type="button"
-            onClick={handleSelectSimple}
-            aria-pressed={!isAdvanced}
-            className={
-              !isAdvanced
-                ? "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors bg-background shadow-sm text-foreground"
-                : "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors text-muted-foreground hover:text-foreground"
-            }
-          >
-            Simple
-          </button>
-          <button
-            type="button"
-            onClick={handleSelectAdvanced}
-            aria-pressed={isAdvanced}
-            className={
-              isAdvanced
-                ? "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors bg-background shadow-sm text-foreground"
-                : "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors text-muted-foreground hover:text-foreground"
-            }
-          >
-            Advanced
-          </button>
-        </div>
+        <ViewToggle
+          value={isAdvanced ? "advanced" : "simple"}
+          options={MODE_OPTIONS}
+          onChange={handleModeChange}
+          showLabel
+        />
       }
     >
-      <HubGrid isAdvanced={isAdvanced} onSwitchToAdvanced={handleSelectAdvanced} />
+      <HubGrid isAdvanced={isAdvanced} />
     </PageWrapper>
   );
 }

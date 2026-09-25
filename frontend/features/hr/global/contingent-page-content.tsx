@@ -8,17 +8,18 @@ import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { SanitizedHtml } from "@/components/shared/sanitized-html";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText } from "lucide-react";
@@ -71,7 +72,7 @@ function CertificateViewer({ contractId }: { contractId: number }) {
       <Button
         variant="ghost"
         size="sm"
-        className="text-xs gap-1"
+        className="gap-1"
         onClick={handleClick}
       >
         <FileText className="h-3 w-3" />
@@ -98,6 +99,8 @@ function CertificateViewer({ contractId }: { contractId: number }) {
 }
 
 export function ContingentPageContent() {
+  // The page is gated on hr:contracts:view; every mutation needs :manage.
+  const canManage = useCan("hr:contracts:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<HrContract | undefined>(undefined);
   const [endContractId, setEndContractId] = useState<number | null>(null);
@@ -134,37 +137,48 @@ export function ContingentPageContent() {
     void refetch();
   }, [refetch]);
 
+  const handleOpenNew = useCallback(() => {
+    setEditingContract(undefined);
+    setSheetOpen(true);
+  }, []);
+  const handleEndDialogChange = useCallback((open: boolean) => { if (!open) setEndContractId(null); }, []);
+  const handleConvertDialogChange = useCallback((open: boolean) => { if (!open) setConvertContractId(null); }, []);
+
+  const pageState = usePageState({
+    permission: "hr:contracts:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: (data?.data ?? []).length === 0,
+  });
+
   return (
     <PageWrapper
       title="Contingent Workforce"
       subtitle="Manage contractor, intern, temporary, and agency engagements."
       actions={
-        <Button size="sm" onClick={() => { setEditingContract(undefined); setSheetOpen(true); }} className="gap-1.5 h-8">
-          <PlusIcon size={14} />
-          New contract
-        </Button>
+        canManage ? (
+          <Button size="sm" onClick={handleOpenNew} className="gap-1.5">
+            <PlusIcon size={14} />
+            New contract
+          </Button>
+        ) : null
       }
     >
-      {isLoading ? (
-        <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
-      ) : isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load contracts"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : (data?.data ?? []).length === 0 ? (
-        <EmptyState
-          illustrationPreset="team"
-          title="No contingent contracts yet"
-          description="Track contractors, interns, temporary, and agency engagements."
-          action={{
-            label: "Add the first contract",
-            onClick: () => setSheetOpen(true),
-          }}
-        />
-      ) : (
+      <PageState
+        resolution={pageState}
+        loading={<div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>}
+        onRetry={handleRetry}
+        className="flex-1"
+        empty={
+          <EmptyState
+            illustrationPreset="team"
+            title="No contingent contracts yet"
+            description="Track contractors, interns, temporary, and agency engagements."
+            action={canManage ? { label: "Add the first contract", onClick: handleOpenNew } : undefined}
+          />
+        }
+      >
         <div className="space-y-2">
           {(data?.data ?? []).map((contract) => (
             <div key={contract.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
@@ -183,18 +197,19 @@ export function ContingentPageContent() {
               </div>
               <ContractStatusBadge status={contract.status} />
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" className="text-xs" onClick={() => handleOpenEdit(contract)}>Edit</Button>
+                {canManage && (
+                  <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(contract)}>Edit</Button>
+                )}
                 {contract.contractType === "intern" && contract.status !== "ended" && (
                   <CertificateViewer contractId={contract.id} />
                 )}
-                {["contractor", "consultant", "intern", "temporary", "agency", "freelancer"].includes(contract.contractType) &&
-                  contract.status === "active" && (
-                    <Button variant="ghost" size="sm" className="text-xs text-primary hover:text-primary/80" onClick={() => setConvertContractId(contract.id)}>
-                      Convert
-                    </Button>
-                  )}
-                {contract.status === "active" && (
-                  <Button variant="ghost" size="sm" className="text-xs text-destructive hover:text-destructive" onClick={() => setEndContractId(contract.id)}>
+                {canManage && contract.status === "active" && (
+                  <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80" onClick={() => setConvertContractId(contract.id)}>
+                    Convert
+                  </Button>
+                )}
+                {canManage && contract.status === "active" && (
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setEndContractId(contract.id)}>
                     End
                   </Button>
                 )}
@@ -202,7 +217,7 @@ export function ContingentPageContent() {
             </div>
           ))}
         </div>
-      )}
+      </PageState>
 
       <ContractSheet
         open={sheetOpen}
@@ -210,40 +225,28 @@ export function ContingentPageContent() {
         existing={editingContract}
       />
 
-      <AlertDialog open={endContractId !== null} onOpenChange={(v) => { if (!v) setEndContractId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>End contract?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will mark the contract as ended. Access revocation and offboarding events will be triggered.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleConfirmEndContract}>
-              End contract
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={endContractId !== null}
+        onOpenChange={handleEndDialogChange}
+        title="End contract?"
+        description="This will mark the contract as ended. Access revocation and offboarding events will be triggered."
+        confirmLabel="End contract"
+        destructive
+        isPending={endContract.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmEndContract}
+      />
 
-      <AlertDialog open={convertContractId !== null} onOpenChange={(v) => { if (!v) setConvertContractId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Convert to full-time employee?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will update the employment record worker type to FULL_TIME and mark the contract as converted.
-              No duplicate record will be created — the existing employment is updated in place.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmConvertContract}>
-              Convert to employee
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={convertContractId !== null}
+        onOpenChange={handleConvertDialogChange}
+        title="Convert to full-time employee?"
+        description="This will update the employment record worker type to FULL_TIME and mark the contract as converted. No duplicate record will be created — the existing employment is updated in place."
+        confirmLabel="Convert to employee"
+        isPending={convert.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmConvertContract}
+      />
     </PageWrapper>
   );
 }

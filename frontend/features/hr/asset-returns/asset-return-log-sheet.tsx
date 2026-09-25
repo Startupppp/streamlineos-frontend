@@ -153,7 +153,7 @@ export function AssetReturnLogSheet({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-9 text-xs text-muted-foreground"
+              className="text-muted-foreground"
               onClick={handleOverrideClick}
             >
               Change

@@ -16,7 +16,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { Form } from "@/components/ui/form";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
@@ -53,6 +55,16 @@ export function GoalsTab() {
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
+  const canManage = useCan("hr:performance:manage");
+  const canUpdate = useCan("hr:performance:view");
+  const pageState = usePageState({
+    permission: "hr:performance:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !Array.isArray(goals) || goals.length === 0,
+  });
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editGoal, setEditGoal] = useState<HrGoal | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -231,17 +243,24 @@ export function GoalsTab() {
 
   const watchedUserId = goalForm.watch("userId");
 
-  if (isLoading) {
-    return <LoadingState variant="cards" rows={9} />;
-  }
-
-  if (isError) {
-    return <ErrorState className="flex-1" title="Couldn't load goals" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
-  }
-
   const goalsList = Array.isArray(goals) ? goals : [];
 
   return (
+    <>
+    <PageState
+      resolution={pageState}
+      onRetry={handleRetry}
+      className="flex-1"
+      loading={<LoadingState variant="cards" rows={9} />}
+      empty={
+        <EmptyState
+          illustration={<EmptyGoalsIllustration className="h-full w-full" />}
+          title="No goals set yet"
+          description="Set a goal to track progress and keep your team aligned."
+          action={canManage ? { label: "New Goal", onClick: handleOpenSheet } : undefined}
+        />
+      }
+    >
     <div className="flex flex-col flex-1 min-h-0 gap-4">
       <div className="flex items-center justify-between shrink-0">
         <div>
@@ -252,28 +271,22 @@ export function GoalsTab() {
             {goalsList.length}
           </p>
         </div>
-        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5" />
-          New Goal
-        </Button>
+        {canManage && (
+          <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
+            <Plus className="h-3.5 w-3.5" />
+            New Goal
+          </Button>
+        )}
       </div>
 
-      {goalsList.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyGoalsIllustration className="h-full w-full" />}
-          title="No goals set yet"
-          description="Set a goal to track progress and keep your team aligned."
-          action={{ label: "New Goal", onClick: handleOpenSheet }}
-        />
-      ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {goalsList.map((goal) => {
             const progress = goal.progress ?? 0;
             const isCompleted = goal.status === "COMPLETED" || progress >= 100;
             const accentClass = isCompleted
-              ? "border-l-emerald-500"
+              ? "border-l-status-success-rule"
               : progress > 0
-                ? "border-l-blue-500"
+                ? "border-l-status-info-rule"
                 : "border-l-border";
             const statusBadgeClass = isCompleted
               ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
@@ -293,6 +306,7 @@ export function GoalsTab() {
                     >
                       {(goal.status ?? "IN_PROGRESS").replace("_", " ")}
                     </Badge>
+                    {(canUpdate || canManage) && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <AnimatedIconButton
@@ -304,25 +318,32 @@ export function GoalsTab() {
                         />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleOpenEdit(goal)}>
-                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleIncrementProgress(goal)}>
-                          +10% Progress
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleMarkGoalComplete(goal.id)}>
-                          Mark Complete
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onClick={() => setDeleteId(goal.id)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                          Delete
-                        </DropdownMenuItem>
+                        {canUpdate && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleOpenEdit(goal)}>
+                              <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem disabled={updateGoal.isPending} onClick={handleIncrementProgress(goal)}>
+                              +10% Progress
+                            </DropdownMenuItem>
+                            <DropdownMenuItem disabled={updateGoal.isPending} onClick={handleMarkGoalComplete(goal.id)}>
+                              Mark Complete
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        {canManage && (
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => setDeleteId(goal.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                            Delete
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    )}
                   </div>
                   <TruncatedText
                     text={goal.title}
@@ -362,8 +383,9 @@ export function GoalsTab() {
             );
           })}
         </div>
-      )}
 
+    </div>
+    </PageState>
       <HrSheet
         open={sheetOpen}
         onOpenChange={(open) => {
@@ -397,6 +419,6 @@ export function GoalsTab() {
         onConfirm={handleDelete}
         isPending={deleteGoal.isPending}
       />
-    </div>
+    </>
   );
 }

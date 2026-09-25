@@ -54,9 +54,9 @@ export const STATUS_COLORS: Record<HrAnnouncement["status"], string> = {
 
 const STATUS_ACCENT: Record<HrAnnouncement["status"], string> = {
   DRAFT: "border-l-muted-foreground/40",
-  SCHEDULED: "border-l-blue-500 dark:border-l-blue-400",
-  PUBLISHED: "border-l-emerald-500 dark:border-l-emerald-400",
-  EXPIRED: "border-l-amber-500 dark:border-l-amber-400",
+  SCHEDULED: "border-l-status-info-rule",
+  PUBLISHED: "border-l-status-success-rule",
+  EXPIRED: "border-l-status-warning-rule",
 };
 
 function getInitials(id: string): string {
@@ -190,7 +190,7 @@ export function AnnouncementCard({
             <button
               type="button"
               onClick={handleToggleExpand}
-              className="mt-1 inline-flex items-center gap-0.5 text-dense font-medium text-primary hover:underline"
+              className="mt-1 inline-flex items-center gap-0.5 rounded-sm text-dense font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {expanded ? (
                 <>

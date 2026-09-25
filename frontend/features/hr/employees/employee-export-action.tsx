@@ -121,7 +121,7 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
       <Button
         variant="outline"
         size="sm"
-        className="h-8 w-full gap-1.5 sm:w-auto"
+        className="w-full gap-1.5 sm:w-auto"
         disabled={isActive || createExport.isPending || downloadExport.isPending}
         onClick={handleClick}
         title={job?.status === "failed" ? (job.errorMessage ?? undefined) : undefined}

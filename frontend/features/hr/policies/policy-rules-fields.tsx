@@ -56,7 +56,6 @@ function NumberField({
           <FormControl>
             <Input
               type="number"
-              className="text-xs"
               value={(field.value as number) ?? 0}
               onChange={numericFieldChangeOr(field.onChange, 0)}
               disabled={disabled}

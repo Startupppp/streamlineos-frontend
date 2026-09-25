@@ -10,8 +10,9 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Lock } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import {
   useAccommodations,
@@ -120,6 +121,15 @@ export function AccommodationsPageContent() {
     void refetch();
   }, [refetch]);
 
+  const handleOpenCreate = useCallback(() => setShowCreate(true), []);
+
+  const pageState = usePageState({
+    permission: "hr:accommodations:view",
+    isLoading,
+    isError,
+    error,
+  });
+
   return (
     <>
       <PageWrapper
@@ -127,21 +137,19 @@ export function AccommodationsPageContent() {
         subtitle="Manage workplace accommodation requests"
         actions={
           canManage ? (
-            <Button size="sm" onClick={() => setShowCreate(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button size="sm" onClick={handleOpenCreate}>
               <PlusIcon size={16} className="mr-1.5" />
               Create accommodation request
             </Button>
           ) : null
         }
       >
-        {isError ? (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load accommodations"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        ) : (
+        <PageState
+          resolution={pageState}
+          loading={<DataTableSkeleton columns={5} className="flex-1" />}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           <div className="flex min-h-0 flex-1 flex-col gap-3">
             <DataTable
               className="flex-1 min-h-0"
@@ -149,7 +157,6 @@ export function AccommodationsPageContent() {
               columns={columns}
               getRowKey={(r) => r.id}
               onRowClick={(r) => setSelectedId(r.id)}
-              isLoading={isLoading}
               emptyState={
                 <EmptyState
                   illustrationPreset="team"
@@ -157,7 +164,7 @@ export function AccommodationsPageContent() {
                   description="Create a request to track workplace accommodations from intake through decision."
                   action={
                     canManage
-                      ? { label: "Create accommodation request", onClick: () => setShowCreate(true) }
+                      ? { label: "Create accommodation request", onClick: handleOpenCreate }
                       : undefined
                   }
                   compact
@@ -174,7 +181,7 @@ export function AccommodationsPageContent() {
               />
             ) : null}
           </div>
-        )}
+        </PageState>
       </PageWrapper>
 
       <AccommodationSheet open={showCreate} onOpenChange={setShowCreate} />

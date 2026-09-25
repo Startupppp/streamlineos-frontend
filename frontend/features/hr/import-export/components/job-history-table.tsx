@@ -18,7 +18,9 @@ import { JobErrorsSheet } from "./job-errors-sheet";
 import { tallyImportRows } from "./import-result-summary";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatShortDate } from "@/lib/date-utils";
-import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPager } from "@/components/ui/table-pagination";
+import { useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 
 interface JobHistoryTableProps {
   entity?: HrImportEntity;
@@ -112,12 +114,27 @@ const COLUMNS: DataTableColumn<HrImportJob>[] = [
   },
 ];
 
+interface ViewErrorsButtonProps {
+  jobId: string;
+  onView: (jobId: string) => void;
+}
+
+function ViewErrorsButton({ jobId, onView }: ViewErrorsButtonProps) {
+  function handleClick() {
+    onView(jobId);
+  }
+  return (
+    <Button type="button" variant="ghost" size="sm" onClick={handleClick}>
+      View errors
+    </Button>
+  );
+}
+
 export function JobHistoryTable({ entity }: JobHistoryTableProps) {
   const [errorJobId, setErrorJobId] = useState<string | null>(null);
-  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
-  const page = cursorHistory.length;
-  const cursor = cursorHistory.at(-1);
-  const { data, isLoading, isFetching, isError, error, refetch } = useHrImportJobs(entity, { cursor, limit: 20 });
+  const pager = useCursorPager(entity ?? "");
+  const importAccess = useCanState("hr:import:manage");
+  const { data, isLoading, isError, error, refetch } = useHrImportJobs(entity, { cursor: pager.cursor, limit: 20 });
 
   const handleViewErrors = useCallback((jobId: string) => {
     setErrorJobId(jobId);
@@ -129,14 +146,10 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
 
   const jobs = data?.data ?? [];
 
-  const handlePreviousPage = useCallback(() => {
-    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
-  }, []);
-
+  const nextCursor = data?.pagination.nextCursor;
   const handleNextPage = useCallback(() => {
-    const nextCursor = data?.pagination.nextCursor;
-    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
-  }, [data?.pagination.nextCursor]);
+    pager.goNext(nextCursor);
+  }, [pager, nextCursor]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -150,17 +163,16 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
       className: "text-right",
       cell: (row) =>
         tallyImportRows(row).notImported > 0 ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 text-dense px-2"
-            onClick={() => handleViewErrors(row.id)}
-          >
-            View errors
-          </Button>
+          <ViewErrorsButton jobId={row.id} onView={handleViewErrors} />
         ) : null,
     },
   ];
+
+  // FE-47: the read is disabled without hr:import:manage, which would render
+  // as "No import history yet".
+  if (importAccess === "denied") {
+    return <NoPermissionState permission="hr:import:manage" compact />;
+  }
 
   if (isError) {
     return (
@@ -179,7 +191,15 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
         data={jobs}
         columns={columns}
         getRowKey={(row) => row.id}
-        isLoading={isLoading}
+        isLoading={isLoading || importAccess === "loading"}
+        pagination={{
+          mode: "cursor",
+          pageSize: 20,
+          hasMore: data?.pagination.hasMore ?? false,
+          hasPrevious: pager.hasPrevious,
+          onNext: handleNextPage,
+          onPrevious: pager.goPrevious,
+        }}
         emptyState={
           <EmptyState
             illustrationPreset="upload"
@@ -189,16 +209,6 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
           />
         }
       />
-      {data && (page > 1 || data.pagination.hasMore) ? (
-        <CursorPageControls
-          page={page}
-          hasNext={data.pagination.hasMore}
-          disabled={isFetching}
-          onPrevious={handlePreviousPage}
-          onNext={handleNextPage}
-          className="mt-3"
-        />
-      ) : null}
 
       <JobErrorsSheet
         jobId={errorJobId ?? ""}

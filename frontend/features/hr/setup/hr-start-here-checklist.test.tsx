@@ -11,14 +11,14 @@ import type { HrSetupSignals } from "./hr-start-here";
  * the "N of M" line only appears when at least one signal is readable.
  */
 function signals(overrides: Partial<HrSetupSignals> = {}): HrSetupSignals {
-  return { people: 0, leaveTypes: 0, shifts: 0, documents: 0, ...overrides };
+  return { people: 0, leavePolicies: 0, shifts: 0, documents: 0, ...overrides };
 }
 
 describe("HrStartHereChecklist", () => {
   it("renders nothing once every readable step is done", () => {
     const { container } = render(
       <HrStartHereChecklist
-        signals={signals({ people: 4, leaveTypes: 3, shifts: 1, documents: 9 })}
+        signals={signals({ people: 4, leavePolicies: 3, shifts: 1, documents: 9 })}
       />,
     );
 
@@ -30,7 +30,7 @@ describe("HrStartHereChecklist", () => {
     // would satisfy the case above.
     render(
       <HrStartHereChecklist
-        signals={signals({ people: 4, leaveTypes: 3, shifts: 1, documents: 0 })}
+        signals={signals({ people: 4, leavePolicies: 3, shifts: 1, documents: 0 })}
       />,
     );
 
@@ -58,7 +58,7 @@ describe("HrStartHereChecklist", () => {
   it("shows N of M only when at least one signal is readable", () => {
     const unreadable = render(
       <HrStartHereChecklist
-        signals={{ people: null, leaveTypes: null, shifts: null, documents: null }}
+        signals={{ people: null, leavePolicies: null, shifts: null, documents: null }}
       />,
     );
 
@@ -70,7 +70,7 @@ describe("HrStartHereChecklist", () => {
 
     render(
       <HrStartHereChecklist
-        signals={{ people: 4, leaveTypes: 0, shifts: null, documents: null }}
+        signals={{ people: 4, leavePolicies: 0, shifts: null, documents: null }}
       />,
     );
 

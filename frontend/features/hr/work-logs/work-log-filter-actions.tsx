@@ -114,7 +114,8 @@ export function WorkLogFilterActions({
               variant="outline"
               role="combobox"
               aria-expanded={employeeSearchOpen}
-              className="w-[170px] justify-between text-xs font-normal"
+              aria-label="Show work logs for"
+              className="w-[170px] justify-between font-normal"
             >
               <span className="flex items-center gap-1.5 truncate">
                 <Users className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -182,7 +183,7 @@ export function WorkLogFilterActions({
       />
 
       {canManageEmployees && (
-        <AnimatedIconButton icon={DownloadIcon} iconSize={12} iconClassName="mr-0" variant="outline" onClick={onExport}>
+        <AnimatedIconButton icon={DownloadIcon} iconSize={12} iconClassName="mr-0" variant="outline" onClick={onExport} aria-label="Export work logs">
           <span className="hidden sm:inline">Export</span>
         </AnimatedIconButton>
       )}

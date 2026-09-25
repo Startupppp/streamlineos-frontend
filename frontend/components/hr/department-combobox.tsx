@@ -12,6 +12,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useHrDepartments, useCreateDepartment } from "@/hooks/api/hr";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -73,9 +74,14 @@ export function DepartmentCombobox({
   >([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data: loadedDepartments = [] } = useHrDepartments({
-    enabled: providedDepartments === undefined,
-  });
+  const selfLoading = providedDepartments === undefined;
+  const { data: loadedDepartments = [], isLoading: listLoading } =
+    useHrDepartments({ enabled: selfLoading });
+  // FE-47: the picker's own read is disabled without hr:employees:view, which
+  // looks exactly like an empty list. Say "denied", not "no departments".
+  const listAccess = useCanState("hr:employees:view");
+  const listDenied = selfLoading && listAccess === "denied";
+  const canCreate = useCan("hr:employees:manage");
   const createDepartment = useCreateDepartment();
 
   const departments = useMemo(() => {
@@ -106,6 +112,7 @@ export function DepartmentCombobox({
   );
   const canAdd =
     allowCreate &&
+    canCreate &&
     search.trim().length > 0 &&
     !exactMatch &&
     !createDepartment.isPending;
@@ -175,7 +182,7 @@ export function DepartmentCombobox({
           aria-label={placeholder ?? "Select department"}
           disabled={disabled}
           className={cn(
-            "h-8 w-full justify-between font-normal border-input bg-card data-[placeholder]:text-muted-foreground",
+            "h-9 w-full justify-between font-normal border-input bg-card data-[placeholder]:text-muted-foreground",
             !selectedDept && "text-muted-foreground",
             className,
           )}
@@ -222,8 +229,12 @@ export function DepartmentCombobox({
             )}
             {filtered.length === 0 && !canAdd && (
               <p className="py-6 text-center text-sm text-muted-foreground">
-                {departments.length === 0
-                  ? allowCreate
+                {listDenied
+                  ? "You don't have permission to view departments."
+                  : selfLoading && listLoading
+                  ? "Loading departments…"
+                  : departments.length === 0
+                  ? allowCreate && canCreate
                     ? "No departments yet — type a name above to create one."
                     : "No departments yet. Ask an HR admin to add one."
                   : "No department matches that search."}

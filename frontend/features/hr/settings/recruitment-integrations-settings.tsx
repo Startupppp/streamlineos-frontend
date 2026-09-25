@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useSession } from "next-auth/react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -29,13 +28,14 @@ import {
   type UpsertPortalInput,
 } from "@/hooks/api/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 
 interface PlatformConfig {
   id: UpsertPortalInput["platform"];
   label: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
-  webhookEnvVar: string;
 }
 
 const PLATFORMS: PlatformConfig[] = [
@@ -44,21 +44,18 @@ const PLATFORMS: PlatformConfig[] = [
     label: "LinkedIn Talent Solutions",
     description: "Receive applications from LinkedIn job postings via webhook.",
     icon: Linkedin,
-    webhookEnvVar: "LINKEDIN_WEBHOOK_SECRET",
   },
   {
     id: "NAUKRI",
     label: "Naukri.com",
     description: "Sync applications from Naukri job postings.",
     icon: Globe,
-    webhookEnvVar: "NAUKRI_WEBHOOK_SECRET",
   },
   {
     id: "INDEED",
     label: "Indeed",
     description: "Receive inbound applications from Indeed Apply.",
     icon: Search,
-    webhookEnvVar: "INDEED_WEBHOOK_SECRET",
   },
 ];
 
@@ -70,13 +67,11 @@ function PortalCard({
   portal: SourcePortal | undefined;
 }) {
   const upsert = useUpsertSourcePortal();
+  const canManage = useCan("hr:requisitions:manage");
   const [toggling, setToggling] = useState(false);
 
   const Icon = config.icon;
   const connected = portal?.isActive ?? false;
-
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "YOUR_ORG_ID";
 
   const handleToggle = useCallback(
     async (active: boolean) => {
@@ -144,16 +139,6 @@ function PortalCard({
           </div>
         )}
 
-        <div className="rounded-md border bg-muted/30 p-3 text-xs space-y-1">
-          <p className="font-medium text-foreground">Webhook URL</p>
-          <p className="font-mono text-muted-foreground break-all">
-            {`${typeof window !== "undefined" ? window.location.origin : ""}/crm/ingress/job-boards/${config.id.toLowerCase()}/${orgId}`}
-          </p>
-          <p className="text-muted-foreground mt-1">
-            Set <code className="bg-muted px-1 rounded">{config.webhookEnvVar}</code> env var to enable signature verification.
-          </p>
-        </div>
-
         <div className="flex items-center justify-between">
           <Label htmlFor={`toggle-${config.id}`} className="text-sm cursor-pointer">
             {connected ? "Disable integration" : "Enable integration"}
@@ -162,7 +147,7 @@ function PortalCard({
             id={`toggle-${config.id}`}
             checked={connected}
             onCheckedChange={handleToggle}
-            disabled={toggling || upsert.isPending}
+            disabled={!canManage || toggling || upsert.isPending}
           />
         </div>
       </CardContent>
@@ -175,7 +160,7 @@ interface HrRecruitmentIntegrationsSettingsProps {
 }
 
 export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecruitmentIntegrationsSettingsProps) {
-  const { data: portals, isLoading, isError, error, refetch } = useSourcePortals();
+  const { data: portals, isLoading, isError, error, refetch, access } = useSourcePortals();
 
   const portalByPlatform = useCallback(
     (platform: string) => portals?.find((p) => p.platform === platform),
@@ -188,7 +173,10 @@ export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecrui
 
   const content = (
     <RequireModule module="hr">
-      {isError ? (
+      {access.denied ? (
+        // FE-47: a disabled read would render every board as "Inactive".
+        <NoPermissionState permission="hr:requisitions:manage" compact />
+      ) : isError ? (
         <ErrorState
           className="flex-1"
           title="Couldn't load recruitment integrations"
@@ -198,12 +186,12 @@ export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecrui
       ) : (
         <div className="space-y-6">
           <div className="rounded-lg border border-status-info-rule bg-status-info-surface p-4 text-sm text-status-info-ink">
-            <strong>How it works:</strong> Each platform sends a webhook to the URL shown below
-            whenever a candidate applies. The ATS automatically creates a candidate record and
-            deduplicates by email/phone.
+            <strong>How it works:</strong> Enabled boards are pulled into the ATS using the
+            board credentials configured for your organisation. Each card shows when it last
+            synced and how many candidates it fetched.
           </div>
 
-          {isLoading ? (
+          {isLoading || access.pending ? (
             <div className="space-y-4">
               {PLATFORMS.map((p) => (
                 <Skeleton key={p.id} className="h-48 w-full rounded-xl" />

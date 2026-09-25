@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -20,7 +21,7 @@ import {
   ADMIN_CATEGORY_LABELS,
   parseExpenseReceipts,
   getReceiptFileKind,
-  receiptKindEmoji,
+  receiptKindIcon,
   receiptKindLabel,
 } from "@/lib/expense-constants";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -32,6 +33,8 @@ interface AdminExpenseItemProps {
   rejectingId: number | null;
   rejectionReason: string;
   isPending: boolean;
+  /** The row whose decision is in flight, so only its button shows busy. */
+  pendingId: number | null;
   onApprove: (id: number) => void;
   onRejectStart: (id: number) => void;
   onRejectConfirm: (id: number) => void;
@@ -45,6 +48,7 @@ export function AdminExpenseItem({
   rejectingId,
   rejectionReason,
   isPending,
+  pendingId,
   onApprove,
   onRejectStart,
   onRejectConfirm,
@@ -55,6 +59,9 @@ export function AdminExpenseItem({
   const catConfig = getCategoryConfig(expense.category || "Other");
   const CatIcon = catConfig.icon;
   const isRejecting = rejectingId === expense.id;
+  const isRowPending = isPending && pendingId === expense.id;
+  // The backend refuses a decision on your own claim (403), so do not offer one.
+  const isOwnExpense = !!currentUserId && expense.userId === currentUserId;
   const adminCatLabel =
     ADMIN_CATEGORY_LABELS[expense.category || ""] || catConfig.label;
   const receipts = parseExpenseReceipts(expense.receiptUrl, expense.receiptFileName);
@@ -62,6 +69,7 @@ export function AdminExpenseItem({
   const receiptKind = primaryReceipt
     ? getReceiptFileKind(primaryReceipt.url, primaryReceipt.fileName)
     : null;
+  const ReceiptKindIcon = receiptKindIcon(receiptKind ?? "file");
   const primaryImageSrc =
     primaryReceipt && receiptKind === "image"
       ? resolveImageUrl(primaryReceipt.url)
@@ -94,9 +102,9 @@ export function AdminExpenseItem({
     <div
       className={cn(
         "flex items-start gap-4 px-4 py-4 hover:bg-muted/20 transition-colors duration-200 border-l-4",
-        status === "PENDING" && "border-l-amber-400",
-        status === "APPROVED" && "border-l-emerald-400",
-        status === "REJECTED" && "border-l-rose-400",
+        status === "PENDING" && "border-l-status-warning-rule",
+        status === "APPROVED" && "border-l-status-success-rule",
+        status === "REJECTED" && "border-l-status-danger-rule",
         status === "PAID" && "border-l-border",
       )}
     >
@@ -119,9 +127,7 @@ export function AdminExpenseItem({
             />
           ) : receiptKind ? (
             <div className="flex flex-col items-center justify-center gap-0.5 px-1">
-              <span className="text-2xl leading-none" aria-hidden>
-                {receiptKindEmoji(receiptKind)}
-              </span>
+              <ReceiptKindIcon className="h-6 w-6 text-muted-foreground" aria-hidden />
               <span className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
                 {receiptKindLabel(receiptKind)}
               </span>
@@ -271,35 +277,38 @@ export function AdminExpenseItem({
               >
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="destructive"
                 className="text-xs gap-1.5"
-                disabled={!rejectionReason}
+                disabled={!rejectionReason.trim() || isPending}
+                isPending={isRowPending}
                 onClick={handleConfirmReject}
               >
-                Confirm Reject
-              </Button>
+                Confirm reject
+              </LoadingButton>
             </div>
           </div>
-        ) : status === "PENDING" ? (
+        ) : status === "PENDING" && !isOwnExpense ? (
           <div className="flex justify-end gap-1.5">
             <Button
               variant="outline"
               size="sm"
               className="text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
               onClick={handleStartReject}
+              disabled={isPending}
             >
               Reject
             </Button>
-            <Button
+            <LoadingButton
               size="sm"
               className="text-xs gap-1.5"
               onClick={handleApproveExpense}
               disabled={isPending}
+              isPending={isRowPending}
             >
               Approve
-            </Button>
+            </LoadingButton>
           </div>
         ) : null}
       </div>

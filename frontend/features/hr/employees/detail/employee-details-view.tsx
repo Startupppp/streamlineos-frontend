@@ -54,7 +54,11 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const router = useRouter();
   const { data: session } = useSession();
   const canManageEmployees = useCan("hr:employees:manage");
-  const canUpdateEmployee = useCan("hr:employees:update");
+  // Terminate lands on /hr/termination, which requires hr:exit:manage, and the
+  // review draft posts to /ai/generate-review, which requires hr:performance:manage.
+  // Gating either on an HR-employees key sends a permitted-looking user to a 403.
+  const canManageExits = useCan("hr:exit:manage");
+  const canDraftReview = useCan("hr:performance:manage");
   const canViewSensitive = useCan("hr:sensitive:view");
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
@@ -166,7 +170,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
   const aiActions = useMemo<AiAction[]>(() => {
     if (!canManageEmployees) return [];
-    return [
+    const actions: AiAction[] = [
       {
         key: "attrition-risk",
         label: "Attrition insight (advisory)",
@@ -178,6 +182,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
           };
         },
       },
+    ];
+    if (!canDraftReview) return actions;
+    return [
+      ...actions,
       {
         key: "draft-review",
         label: "Draft performance review",
@@ -194,7 +202,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         },
       },
     ];
-  }, [canManageEmployees, employee.id, attritionRiskMutation, generateReviewMutation]);
+  }, [canManageEmployees, canDraftReview, employee.id, attritionRiskMutation, generateReviewMutation]);
 
   const employmentStatusRaw = employee.employmentStatus;
   const employmentStatus =
@@ -211,7 +219,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       employee.id,
       true,
       session?.user?.id,
-      canUpdateEmployee,
+      canManageExits,
     );
 
   const lifecycleBadgeLabel = lifecycleStatus
@@ -233,7 +241,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         <Button
           variant="ghost"
           size="sm"
-          className="-ml-2 h-9 shrink-0 gap-1.5 px-2.5 sm:h-8"
+          className="-ml-2 shrink-0 gap-1.5 px-2.5"
           onClick={handleBack}
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -251,7 +259,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             <LoadingButton
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5 px-2.5 sm:h-8"
+              className="gap-1.5 px-2.5"
               isPending={exportPdfMutation.isPending}
               loadingText="…"
               onClick={handleExportPdf}
@@ -265,8 +273,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             <Button
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5 border-destructive/30 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive sm:h-8"
+              className="gap-1.5 border-destructive/30 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={handleTerminateClick}
+              aria-label="Terminate employee"
             >
               <UserX className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Terminate</span>

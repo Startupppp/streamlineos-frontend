@@ -64,12 +64,15 @@ export default function RecruitmentAnalyticsPage() {
   const {
     data: analytics,
     isLoading: analyticsLoading,
-    isError: analyticsError,
     refetch: refetchAnalytics,
   } = useRecruitmentAnalytics();
 
+  // GET /hr/recruitment/analytics is declared twice in the backend and the windowed
+  // handler (from/to required) wins, so this unwindowed read 400s. Its failure must
+  // not blank the stats and the conversion funnel, which read other routes.
   const isLoading = statsLoading || analyticsLoading;
-  const isError = statsError || analyticsError;
+  const isError = statsError;
+  const hireRate = analytics ? `${analytics.hireRate}%` : "—";
 
   const funnelData = FUNNEL_STAGES.map((stage) => ({
     stage: FUNNEL_LABELS[stage],
@@ -121,7 +124,7 @@ export default function RecruitmentAnalyticsPage() {
               <StatCard
                 label="Hired This Month"
                 value={stats?.hiredThisMonth ?? 0}
-                hint={`${analytics?.hireRate ?? 0}% hire rate`}
+                hint={`${hireRate} hire rate`}
                 icon={UserCheck}
                 tone="emerald"
               />
@@ -140,8 +143,8 @@ export default function RecruitmentAnalyticsPage() {
               />
               <StatCard
                 label="Hire Rate"
-                value={`${analytics?.hireRate ?? 0}%`}
-                hint={`${analytics?.totalHired ?? 0} of ${analytics?.totalCandidates ?? 0} hired`}
+                value={hireRate}
+                hint={analytics ? `${analytics.totalHired} of ${analytics.totalCandidates} hired` : "Unavailable"}
                 icon={Percent}
                 tone="emerald"
               />

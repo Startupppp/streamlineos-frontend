@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { useApproveLeaveDedicated, useRejectLeaveDedicated } from "@/hooks/api/hr";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { LeaveStatusBadge } from "./leave-status-badge";
@@ -233,6 +234,10 @@ export function LeaveDecisionButtons({
 }: LeaveDecisionButtonsProps) {
   const status = request.status ?? "PENDING";
   const isSelfRequest = !!currentUserId && request.user?.id === currentUserId;
+  // PUT /hr/leaves/:id/approve|reject require hr:leaves:approve (FE-44). The
+  // approvals surfaces are also open to WFH-only deciders, who must not see
+  // controls that can only fail for them.
+  const canDecide = useCan("hr:leaves:approve");
 
   const handleApprove = useCallback(
     () => onProcess(request.id, "APPROVED"),
@@ -243,7 +248,7 @@ export function LeaveDecisionButtons({
     [request.id, onProcess],
   );
 
-  if (status !== "PENDING") return <LeaveStatusBadge status={status} />;
+  if (status !== "PENDING" || !canDecide) return <LeaveStatusBadge status={status} />;
 
   if (isSelfRequest)
     return (

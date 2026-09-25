@@ -79,7 +79,7 @@ function ProgressBar({ approved, total }: { approved: number; total: number }) {
     pct === 100 ? "bg-status-success-fill" : pct > 50 ? "bg-status-info-fill" : "bg-status-warning-fill";
 
   return (
-    <div className="flex flex-col gap-1 min-w-[160px]">
+    <div className="flex flex-col gap-1 min-w-40">
       <div className="flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
           <div

@@ -108,12 +108,12 @@ export function TerminationDetailSheet({
               "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 p-4 flex items-center gap-3",
               reviewRecord.status === "APPROVED" ||
                 reviewRecord.status === "COMPLETED"
-                ? "border-l-emerald-500"
+                ? "border-l-status-success-rule"
                 : reviewRecord.status === "REJECTED"
-                  ? "border-l-rose-500"
+                  ? "border-l-status-danger-rule"
                   : reviewRecord.status === "PENDING_FINAL"
-                    ? "border-l-amber-400"
-                    : "border-l-slate-300 dark:border-l-slate-600",
+                    ? "border-l-status-warning-rule"
+                    : "border-l-border",
             )}
           >
             <Avatar className="h-10 w-10 shrink-0">

@@ -20,6 +20,9 @@ import { hrAssetListPrefix } from "@/hooks/api/hr/assets";
 import { AccessRequestsTab } from "@/features/hr/assets/access-requests-tab";
 import { useCan } from "@/hooks/api/access";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { Asset } from "@/types/hr";
@@ -56,12 +59,13 @@ export function AssetsPage() {
   const assignAsset = useAssignAsset();
   const canManageAssets = useCan("hr:assets:manage");
   const pager = useCursorPager();
-  const { data, isLoading, isError, refetch } = useHrAssetList({
+  const { data, isLoading, isError, error, refetch } = useHrAssetList({
     cursor: pager.cursor,
     limit: PAGE_SIZE,
     status: statusFilter,
   });
   const { data: employeesRaw } = useHrEmployees(undefined);
+  const pageState = usePageState({ permission: "hr:assets:view", isLoading, isError, error });
 
   const employees = useMemo(() => unwrapEmployees(employeesRaw), [employeesRaw]);
   const addForm = useAssetForm();
@@ -295,10 +299,12 @@ export function AssetsPage() {
             <Download className="h-3.5 w-3.5" />
             Export
           </Button>
-          <Button size="sm" className="gap-1.5" onClick={handleOpenAdd}>
-            <Plus className="h-3.5 w-3.5" />
-            Register Asset
-          </Button>
+          {canManageAssets && (
+            <Button size="sm" className="gap-1.5" onClick={handleOpenAdd}>
+              <Plus className="h-3.5 w-3.5" />
+              Register Asset
+            </Button>
+          )}
         </div>
       }
       filters={
@@ -312,6 +318,7 @@ export function AssetsPage() {
         />
       }
     >
+      <PageState resolution={pageState} loading={<DataTableSkeleton />} onRetry={handleRetry} className="flex-1">
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <StatCardGrid cols={4}>
           <StatCard label="Total Assets" value={counts.total} icon={Package} color="blue" />
@@ -324,14 +331,12 @@ export function AssetsPage() {
           filteredItems={filteredItems}
           columns={columns}
           isLoading={isLoading}
-          isError={isError}
           hasMore={hasMore}
           hasPrevious={pager.hasPrevious}
           statusFilter={statusFilter}
           onNextPage={handleNextPage}
           onPreviousPage={pager.goPrevious}
-          onRetry={handleRetry}
-          onOpenAdd={handleOpenAdd}
+          onOpenAdd={canManageAssets ? handleOpenAdd : undefined}
         />
 
         <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
@@ -340,6 +345,7 @@ export function AssetsPage() {
           </CardContent>
         </Card>
       </div>
+      </PageState>
 
       <AddAssetSheet
         open={addOpen}
@@ -376,6 +382,7 @@ export function AssetsPage() {
         description="Are you sure you want to retire this asset? Its status will be set to Retired."
         confirmLabel="Retire"
         destructive
+        isPending={updateAsset.isPending}
         onConfirm={handleConfirmDelete}
       />
     </PageWrapper>

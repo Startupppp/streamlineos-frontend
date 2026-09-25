@@ -16,6 +16,7 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useRouter } from "next/navigation";
 import { PlusIcon, UserXIcon } from "@animateicons/react/lucide";
 import { EmptyPersonIllustration } from "@/components/illustrations";
@@ -81,8 +82,8 @@ export function ExitManagementPage() {
         `<!DOCTYPE html><html><head><title>Resignation Letter</title><style>body{margin:0;padding:20px 40px;}</style></head><body>${sanitizeHtml(data.html)}</body></html>`,
       );
       win.document.close();
-    } catch {
-      toast.error("Failed to load resignation letter");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }, []);
 

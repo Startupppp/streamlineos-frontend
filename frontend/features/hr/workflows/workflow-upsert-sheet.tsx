@@ -252,7 +252,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                       render={({ field: f }) => (
                         <FormItem>
                           <FormControl>
-                            <Input placeholder="Step name" className="text-xs" {...f} />
+                            <Input placeholder="Step name" {...f} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -324,7 +324,6 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                           type="number"
                           min={1}
                           placeholder="e.g. 48"
-                          className="text-xs"
                           value={f.value ?? ""}
                           onChange={numericFieldChange(f.onChange)}
                         />

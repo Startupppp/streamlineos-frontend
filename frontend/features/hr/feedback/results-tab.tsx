@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { Button } from "@/components/ui/button";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useFeedbackResults } from "@/hooks/api/hr";
@@ -13,13 +14,15 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { BarChart3, CheckCircle2, Star, TrendingUp } from "lucide-react";
 
 export function ResultsTab() {
-  const [subjectId, setSubjectId] = useState("");
   const [searched, setSearched] = useState("");
 
   const { data: results, isLoading, isError, error, refetch } = useFeedbackResults(searched);
+  // Surface gate only; the per-employee read keeps its own branches below.
+  const pageState = usePageState({ permission: "hr:performance:view", isLoading: false, isError: false, error: null });
 
-  function handleSearch() {
-    setSearched(subjectId.trim());
+  // Picking an employee loads their results; a separate Search button repeated the pick.
+  function handleSubjectChange(id: string) {
+    setSearched(id.trim());
   }
 
   const completionPct =
@@ -28,18 +31,16 @@ export function ResultsTab() {
       : 0;
 
   return (
+    <PageState resolution={pageState} loading={null} className="flex-1">
     <div className="space-y-4">
       <div className="flex gap-2">
         <div className="max-w-xs min-w-0 flex-1">
           <UserCombobox
-            value={subjectId}
-            onChange={setSubjectId}
+            value={searched}
+            onChange={handleSubjectChange}
             placeholder="Select employee"
           />
         </div>
-        <Button onClick={handleSearch} variant="outline">
-          Search
-        </Button>
       </div>
 
       {!searched && (
@@ -76,7 +77,7 @@ export function ResultsTab() {
           transition={{ duration: 0.22, ease: "easeOut" }}
           className="bg-card rounded-2xl border border-border shadow-sm p-6 space-y-5"
         >
-          <h3 className="font-semibold text-foreground">Results for {results.subjectId}</h3>
+          <h3 className="font-semibold text-foreground">360° feedback results</h3>
           <StatCardGrid cols={4}>
             <StatCard label="Total Requests" value={results.totalRequests} icon={BarChart3} tone="default" />
             <StatCard label="Completed" value={results.completedRequests} icon={CheckCircle2} tone="emerald" />
@@ -90,7 +91,7 @@ export function ResultsTab() {
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-primary rounded-full transition-all duration-700"
+                className="h-full bg-primary rounded-full transition-[width] duration-300"
                 style={{ width: `${completionPct}%` }}
               />
             </div>
@@ -98,5 +99,6 @@ export function ResultsTab() {
         </motion.div>
       )}
     </div>
+    </PageState>
   );
 }

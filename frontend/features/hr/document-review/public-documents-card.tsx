@@ -268,16 +268,15 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
           <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
           Public Documents
         </CardTitle>
-        <Link href="/hr/documents">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hover:bg-primary/10 hover:text-primary"
-            aria-label="View all documents"
-          >
-            View All
-          </Button>
-        </Link>
+        {/* asChild: a <button> inside <a> is a nested interactive control. */}
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="hover:bg-primary/10 hover:text-primary"
+        >
+          <Link href="/hr/documents" aria-label="View all documents">View All</Link>
+        </Button>
       </CardHeader>
       <CardContent className="px-4 pt-0 pb-4" aria-live="polite">
         <MyPendingUploadsSection />
@@ -320,13 +319,14 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
           ) : documentsError ? (
             <div className="space-y-2 py-2">
               <p role="alert" className="text-sm text-destructive">{getErrorMessage(documentsError)}</p>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => void refetchDocuments()}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 Retry
-              </button>
+              </Button>
             </div>
           ) : !documents?.length ? (
             <EmptyState
