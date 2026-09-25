@@ -103,6 +103,11 @@ The candidate was exercised through a real authenticated browser against the pro
   `/build/inbox?view=drafts`, `/build/6/backlog`, and
   `/build/command-center` without a visible runtime error; the canonical
   page heading is `Command Center`.
+- A local port `1000` UI smoke traversed 16 authenticated organization routes,
+  including Projects, Command Center, My Work, Inbox, All Work, Goals,
+  Managed Products, Portfolios, Programs, Roadmap, Teams, Templates,
+  Approvals, and Build settings, without a visible runtime-error or failed-load
+  surface.
 - Local port `1000` view-switcher verification routed `/build/6/issues` to
   `/calendar?q=login&status=TODO&cycle=7&projectId=6&source=build`; the unified
   Calendar surface rendered with no browser console errors.
