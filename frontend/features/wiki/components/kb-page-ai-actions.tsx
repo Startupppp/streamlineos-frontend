@@ -74,7 +74,12 @@ export function KbPageAiActions({
         ...(onToken !== undefined ? { onToken } : {}),
         ...(signal !== undefined ? { signal } : {}),
       });
-      return { text: outcome.text };
+      return {
+        text: outcome.text,
+        ...(outcome.status === "completed" && outcome.citations !== undefined
+          ? { citations: outcome.citations }
+          : {}),
+      };
     };
   }
 

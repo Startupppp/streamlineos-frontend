@@ -12,11 +12,7 @@ import { useCan } from "@/hooks/api/access";
 import { useForms, useCreateForm } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
-import {
-  PmPageShell,
-  PmSection,
-  PM_FILL_PANEL,
-} from "@/components/pm-chrome";
+import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { FORM_TYPE_LABELS, FORM_TYPES } from "./field-type-meta";
 import type { ProjectForm } from "@/types/projects/forms";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
@@ -62,10 +58,23 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
   const statusValue = listFilters.value("status");
 
   const isActiveParam =
-    statusValue === "active" ? true : statusValue === "inactive" ? false : undefined;
+    statusValue === "active"
+      ? true
+      : statusValue === "inactive"
+        ? false
+        : undefined;
   const formTypeValue = FORM_TYPES.find((t) => t === typeValue);
 
-  const { data, isLoading, isError, error, refetch } = useForms(projectId, {
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useForms(projectId, {
     type: formTypeValue,
     isActive: isActiveParam,
   });
@@ -109,18 +118,15 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
   );
 
   const search = listFilters.debouncedSearch.trim().toLowerCase();
+  const items = Array.isArray(data)
+    ? data
+    : (data?.pages.flatMap((page) => page.data) ?? []);
   const filtered = useMemo(
-    () =>
-      (data ?? []).filter(
-        (f) => !search || f.name.toLowerCase().includes(search),
-      ),
-    [data, search],
+    () => items.filter((f) => !search || f.name.toLowerCase().includes(search)),
+    [items, search],
   );
 
-  const columns = useMemo(
-    () => buildFormsColumns({ projectId }),
-    [projectId],
-  );
+  const columns = useMemo(() => buildFormsColumns({ projectId }), [projectId]);
 
   const renderMobileCard = useCallback(
     (row: ProjectForm) => <FormMobileCard form={row} />,
@@ -195,7 +201,12 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
         loading={
           <PmPageShell>
             <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-              <DataTableSkeleton mobileCards rows={12} headers={FORMS_TABLE_HEADERS} className="flex-1" />
+              <DataTableSkeleton
+                mobileCards
+                rows={12}
+                headers={FORMS_TABLE_HEADERS}
+                className="flex-1"
+              />
             </PmSection>
           </PmPageShell>
         }
@@ -230,7 +241,14 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
                 minWidth="680px"
                 className={PM_FILL_PANEL}
                 mobileCard={renderMobileCard}
-                pagination={{ pageSize: 25 }}
+                pagination={{
+                  mode: "cursor",
+                  pageSize: 25,
+                  hasMore: Boolean(hasNextPage),
+                  hasPrevious: false,
+                  onNext: () => void fetchNextPage(),
+                }}
+                isLoading={isFetchingNextPage}
               />
             )}
           </PmSection>
