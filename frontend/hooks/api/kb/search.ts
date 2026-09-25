@@ -6,7 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useKbSpaces } from "./spaces";
-import type { KbSpaceListPage } from "./spaces";
+import { ACL_VERSION_SPACE_LIMIT, deriveAclVersion } from "./pages";
 import type { KbSearchParams } from "@/types/kb";
 import type {
   KbSearchApiResponse,
@@ -24,14 +24,6 @@ const kbPageFullSearchResponseContract = lazyContract(() =>
     (m) => m.kbPageFullSearchResponseContract,
   ),
 );
-
-const ACL_VERSION_SPACE_LIMIT = 100;
-
-function deriveAclVersion(page: KbSpaceListPage | undefined): string {
-  if (page === undefined) return "";
-  const ids = page.data.map((s) => s.id).sort((a, b) => a - b);
-  return page.pagination.hasMore ? `${ids.join(",")}~truncated` : ids.join(",");
-}
 
 export function useKbSearch(
   params: KbSearchParams,

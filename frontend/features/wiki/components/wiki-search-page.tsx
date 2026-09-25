@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useKbPageFullSearch } from "@/hooks/api/kb/search";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
 import { WikiSearchCompanyDocuments } from "@/features/wiki/components/wiki-search-company-documents";
 import { pageHref } from "@/lib/knowledge-routes";
@@ -138,6 +139,8 @@ export default function WikiSearchPage() {
   const searchParams = useSearchParams();
   const hrDocumentSearch = useHrKbLinkFlags().search;
   const { update } = useUrlFilters();
+  const { data: spacesData } = useKbSpaces({ limit: 100 });
+  const spacesById = new Map((spacesData?.data ?? []).map((s) => [s.id, s.name]));
 
   const q = searchParams.get("q") ?? "";
   const status = searchParams.get("status") ?? undefined;
@@ -149,6 +152,8 @@ export default function WikiSearchPage() {
       : verifiedParam === "unverified"
         ? false
         : undefined;
+  const spaceParam = searchParams.get("space");
+  const spaceId = spaceParam !== null ? parseInt(spaceParam, 10) : undefined;
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
 
   const [inputValue, setInputValue] = useState(q);
@@ -182,6 +187,7 @@ export default function WikiSearchPage() {
       q,
       status,
       type,
+      ...(spaceId !== undefined && !Number.isNaN(spaceId) ? { spaceId } : {}),
       ...(verified === undefined ? {} : { verified }),
       facets: true,
     },
@@ -189,7 +195,7 @@ export default function WikiSearchPage() {
   );
 
   const items = data?.pages.flatMap((page) => page.items) ?? [];
-  const hasFilters = !!status || !!type || verified !== undefined;
+  const hasFilters = !!status || !!type || verified !== undefined || spaceId !== undefined;
   const queryActive = q.trim().length > 0;
 
   const bottomSentinelRef = useRef<HTMLDivElement | null>(null);
@@ -236,7 +242,18 @@ export default function WikiSearchPage() {
   );
 
   const handleClearFilters = useCallback(() => {
-    update({ status: null, type: null, verified: null });
+    update({ status: null, type: null, verified: null, space: null });
+  }, [update]);
+
+  const handleSpaceChange = useCallback(
+    (value: string) => {
+      update({ space: value === "all" ? null : value });
+    },
+    [update],
+  );
+
+  const handleClearSpace = useCallback(() => {
+    update({ space: null });
   }, [update]);
 
   const handleVerifiedChange = useCallback(
@@ -278,6 +295,7 @@ export default function WikiSearchPage() {
   const facetStatusCounts = data?.pages[0]?.facets?.status ?? [];
   const facetTypeCounts = data?.pages[0]?.facets?.type ?? [];
   const facetVerifiedCounts = data?.pages[0]?.facets?.verified ?? [];
+  const facetSpaceCounts = data?.pages[0]?.facets?.space ?? [];
   const verifiedCount = facetVerifiedCounts.find(
     (f) => f.value === "verified",
   )?.count;
@@ -363,6 +381,29 @@ export default function WikiSearchPage() {
                 </SelectItem>
               </SelectContent>
             </Select>
+            {facetSpaceCounts.length > 0 && (
+              <Select
+                value={spaceId !== undefined ? String(spaceId) : "all"}
+                onValueChange={handleSpaceChange}
+              >
+                <SelectTrigger className="h-9 w-40">
+                  <SelectValue placeholder="Any space" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any space</SelectItem>
+                  {facetSpaceCounts.map((f) => {
+                    const sid = f.spaceId;
+                    if (sid === null) return null;
+                    const name = spacesById.get(sid) ?? `Space ${sid}`;
+                    return (
+                      <SelectItem key={sid} value={String(sid)}>
+                        {`${name} (${f.count})`}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            )}
             <div className="flex rounded-md border border-border">
               <Button
                 type="button"
@@ -422,6 +463,17 @@ export default function WikiSearchPage() {
                 aria-label={`Remove type filter: ${type}`}
               >
                 {type}
+                <X className="size-3" />
+              </button>
+            )}
+            {spaceId !== undefined && !Number.isNaN(spaceId) && (
+              <button
+                type="button"
+                onClick={handleClearSpace}
+                className="flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-xs hover:bg-muted/80"
+                aria-label={`Remove space filter: ${spacesById.get(spaceId) ?? spaceId}`}
+              >
+                {spacesById.get(spaceId) ?? `Space ${spaceId}`}
                 <X className="size-3" />
               </button>
             )}

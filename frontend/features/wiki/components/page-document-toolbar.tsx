@@ -161,7 +161,7 @@ export function PageDocumentToolbar({
   }
 
   return (
-    <div className="flex items-center gap-1.5 shrink-0">
+    <div className="flex shrink-0 items-center justify-end gap-1.5 self-end sm:self-auto">
       <KbPageAiActions
         pageId={pageId}
         currentContent={currentContent}

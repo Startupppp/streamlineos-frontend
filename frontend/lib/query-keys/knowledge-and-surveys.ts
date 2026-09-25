@@ -100,6 +100,13 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "kb", "page-collection"] as const)
         : ([...base, "kb", "page-collection", params] as const),
+    contentHealthSignalsAll: [...base, "kb", "contentHealthSignals"] as const,
+    contentHealthSignals: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "contentHealthSignals"] as const)
+        : ([...base, "kb", "contentHealthSignals", params] as const),
+    contentHealthCounts: () =>
+      [...base, "kb", "contentHealthCounts"] as const,
   },
 
   roadmap: {

@@ -2,6 +2,15 @@ import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export type KbAudience = "internal" | "public" | "mixed";
 
+export type KbSpaceRole = "admin" | "manager" | "editor" | "viewer";
+
+export const KB_ACCESS_LABELS: Record<KbSpaceRole, string> = {
+  admin: "Admin",
+  manager: "Manager",
+  editor: "Editor",
+  viewer: "Viewer",
+};
+
 export interface KbSpace {
   id: number;
   name: string;
@@ -16,6 +25,7 @@ export interface KbSpace {
   archivedAt?: string | null;
   pagesOverdueForReview?: number;
   pagesWithReviewPolicy?: number;
+  viewerSpaceRole?: KbSpaceRole | null;
 }
 
 export interface CreateSpaceInput {

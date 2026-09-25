@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Button } from "@/components/ui/button";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useCan } from "@/hooks/api/access";
 import { useCreateKbPage, useKbPageTreeInfinite } from "@/hooks/api/kb";
@@ -11,6 +12,7 @@ import { pageHref } from "@/lib/knowledge-routes";
 import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
 import PageTreeItem from "./page-tree-item";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface PageTreeProps {
   onCloseMobile?: () => void;
@@ -30,6 +32,9 @@ export default function PageTree({
   const {
     data,
     isLoading,
+    isError,
+    error,
+    refetch,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
@@ -53,6 +58,10 @@ export default function PageTree({
     );
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-1 pr-2 pl-0">
@@ -63,6 +72,25 @@ export default function PageTree({
             style={{ width: `${55 + (i % 3) * 15}%` }}
           />
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-2 px-2 py-4 text-center">
+        <p className="text-xs text-muted-foreground">
+          {getErrorMessage(error)}
+        </p>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-7 text-xs"
+          onClick={handleRetry}
+        >
+          Try again
+        </Button>
       </div>
     );
   }

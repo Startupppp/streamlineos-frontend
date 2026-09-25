@@ -52,6 +52,7 @@ export const kbSpaceFullContract = z.object({
   archivedAt: z.string().nullable(),
   pagesOverdueForReview: z.number().int().optional(),
   pagesWithReviewPolicy: z.number().int().optional(),
+  viewerSpaceRole: z.enum(["admin", "manager", "editor", "viewer"]).nullable().optional(),
 });
 
 export const kbSpaceSuccessContract = z.object({ success: z.boolean() });

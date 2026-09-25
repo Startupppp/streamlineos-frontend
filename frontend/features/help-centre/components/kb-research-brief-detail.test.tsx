@@ -21,6 +21,10 @@ jest.mock("@/hooks/api/kb/research-briefs", () => ({
   useConvertResearchBriefToPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
+jest.mock("@/hooks/api/kb/spaces", () => ({
+  useKbSpace: jest.fn(() => ({ data: undefined })),
+}));
+
 jest.mock("@/components/ai/ai-citation-chips", () => ({
   AiCitationChips: () => <div data-testid="citation-chips" />,
 }));
@@ -61,9 +65,14 @@ function mockBrief(overrides: Record<string, unknown> = {}) {
   } as unknown as ReturnType<typeof useKbResearchBrief>);
 }
 
+const { useKbSpace } = jest.requireMock("@/hooks/api/kb/spaces") as {
+  useKbSpace: jest.Mock;
+};
+
 describe("KbResearchBriefDetail — convert to page", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    useKbSpace.mockReturnValue({ data: undefined });
   });
 
   it("offers a convert-to-page action for a completed brief, so the backend convert route has a caller", () => {
@@ -107,5 +116,53 @@ describe("KbResearchBriefDetail — convert to page", () => {
     expect(
       screen.queryByRole("button", { name: /convert to page/i }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("KbResearchBriefDetail — S19 scope and owner", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useKbSpace.mockReturnValue({ data: undefined });
+  });
+
+  it("always renders an Owner row showing 'You', because a brief is always created by the calling user", () => {
+    mockBrief();
+
+    render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
+
+    expect(screen.getByText(/Owner:/i)).toBeInTheDocument();
+    expect(screen.getByText("You")).toBeInTheDocument();
+  });
+
+  it("renders the space name as the Scope when spaceId is set and the space resolves", () => {
+    useKbSpace.mockReturnValue({ data: { id: 3, name: "Engineering Hub" } });
+    mockBrief({ spaceId: 3 });
+
+    render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
+
+    expect(screen.getByText(/Scope:/i)).toBeInTheDocument();
+    expect(screen.getByText("Engineering Hub")).toBeInTheDocument();
+  });
+
+  it("falls back to 'Space N' while the space name is loading, so the label is never empty", () => {
+    useKbSpace.mockReturnValue({ data: undefined });
+    mockBrief({ spaceId: 3 });
+
+    render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
+
+    expect(screen.getByText(/Scope:/i)).toBeInTheDocument();
+    expect(screen.getByText("Space 3")).toBeInTheDocument();
+  });
+
+  it("omits the Scope row entirely when spaceId is null, so a global brief does not show a misleading label (CONTROL: scope renders when spaceId is set)", () => {
+    useKbSpace.mockReturnValue({ data: { id: 3, name: "Engineering Hub" } });
+
+    mockBrief({ spaceId: null });
+    render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
+    expect(screen.queryByText(/Scope:/i)).not.toBeInTheDocument();
+
+    mockBrief({ spaceId: 3 });
+    render(<KbResearchBriefDetail briefId={1} basePath="/knowledge/research-briefs" />);
+    expect(screen.getAllByText(/Scope:/i).length).toBeGreaterThan(0);
   });
 });

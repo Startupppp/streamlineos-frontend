@@ -248,4 +248,22 @@ describe("SpaceDetailPage", () => {
     expect(screen.getByText(/8 pages under review policy/)).toBeInTheDocument();
     expect(screen.getByText(/3 overdue/)).toBeInTheDocument();
   });
+
+  it("S07: renders an access badge showing the viewer's role when viewerSpaceRole is present (CONTROL: badge absent when viewerSpaceRole is null)", () => {
+    mockKbSpace.mockReturnValue(
+      spaceQuery({ data: spaceData({ viewerSpaceRole: "editor" } as Record<string, unknown>) }),
+    );
+
+    render(<SpaceDetailPage spaceId={5} />);
+
+    expect(screen.getByText("Editor")).toBeInTheDocument();
+
+    mockKbSpace.mockReturnValue(
+      spaceQuery({ data: spaceData({ viewerSpaceRole: null } as Record<string, unknown>) }),
+    );
+    const { unmount } = render(<SpaceDetailPage spaceId={5} />);
+    const editorBadges = screen.queryAllByText("Editor");
+    expect(editorBadges).toHaveLength(1);
+    unmount();
+  });
 });

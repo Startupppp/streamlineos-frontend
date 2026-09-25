@@ -36,6 +36,8 @@ import { ImportPendingList, type ImportPendingItem } from "./import-pending-list
 const VALID_TABS = ["import", "export"] as const;
 type ImportExportTab = (typeof VALID_TABS)[number];
 
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
+
 function resolveTab(tabParam: string | null): ImportExportTab {
   return VALID_TABS.find((t) => t === tabParam) ?? "import";
 }
@@ -61,6 +63,7 @@ export default function ImportPage() {
   const [targetSpaceId, setTargetSpaceId] = useState<string>("none");
   const [visibility, setVisibility] = useState<"private" | "org" | "public">("org");
   const [duplicatePolicy, setDuplicatePolicy] = useState<"skip" | "update">("skip");
+  const [failedImportTitles, setFailedImportTitles] = useState<string[]>([]);
 
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
@@ -76,8 +79,27 @@ export default function ImportPage() {
       const files = Array.from(e.target.files ?? []);
       if (files.length === 0) return;
 
+      const oversized = files.filter((f) => f.size > MAX_FILE_BYTES);
+      if (oversized.length > 0) {
+        toast.error(
+          `${oversized.length} file${oversized.length === 1 ? "" : "s"} exceed the 5 MB limit and were skipped: ${oversized.map((f) => f.name).join(", ")}`,
+        );
+      }
+
+      const validFiles = files.filter((f) => f.size <= MAX_FILE_BYTES);
       const remaining = 100 - items.length;
-      const toProcess = files.slice(0, remaining);
+      const toProcess = validFiles.slice(0, remaining);
+
+      if (validFiles.length > remaining) {
+        toast.error(
+          `Only ${remaining} file${remaining === 1 ? "" : "s"} added — ${validFiles.length - remaining} skipped to stay within the 100-item limit`,
+        );
+      }
+
+      if (toProcess.length === 0) {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
 
       let completed = 0;
       const newItems: ImportPendingItem[] = [];
@@ -163,6 +185,7 @@ export default function ImportPage() {
 
   function handleImport() {
     if (items.length === 0) return;
+    setFailedImportTitles([]);
     importMutation.mutate(
       {
         items: items.map(({ title, contentText }) => ({ title, contentText })),
@@ -182,6 +205,9 @@ export default function ImportPage() {
               },
             },
           );
+          if (result.failedTitles.length > 0) {
+            setFailedImportTitles(result.failedTitles);
+          }
           setItems([]);
         },
         onError: (err) => {
@@ -265,6 +291,18 @@ export default function ImportPage() {
 
         <TabsContent value="import" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="space-y-4">
+            {failedImportTitles.length > 0 ? (
+              <div className="rounded-lg border border-status-warning-border bg-status-warning-subtle px-3 py-2 text-sm">
+                <p className="font-medium text-status-warning-ink">
+                  {failedImportTitles.length} page{failedImportTitles.length === 1 ? "" : "s"} failed to import:
+                </p>
+                <ul className="mt-1 list-disc pl-4 text-xs text-status-warning-ink">
+                  {failedImportTitles.map((title) => (
+                    <li key={title}>{title}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {showPaste || items.length > 0 ? (
               <PageSection title="Import Pages">
                 <div className="space-y-4">

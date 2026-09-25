@@ -38,6 +38,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
 jest.mock("@/hooks/api/kb/content-health", () => ({
   useContentHealthCounts: () => useContentHealthCounts(),
   useContentHealthSignals: () => useContentHealthSignals(),
+  useDismissHealthItem: () => ({ mutateAsync: jest.fn(), isPending: false }),
 }));
 
 import ContentHealthPage from "./content-health-page";
@@ -82,6 +83,7 @@ const SIGNAL_PAGE_WITH_ROWS = {
       ownerMembershipId: null,
       updatedAt: "2025-01-01T00:00:00.000Z",
       nextReviewAt: null,
+      impact: 60,
     },
   ],
   hasMore: false,
@@ -133,6 +135,17 @@ describe("ContentHealthPage — populated state", () => {
     render(<ContentHealthPage />);
     const gapLink = screen.getByRole("link", { name: /knowledge gaps/i });
     expect(gapLink).toHaveAttribute("href", "/support/knowledge-gaps");
+  });
+
+  it("renders the impact score for each row so curators can see relative severity", () => {
+    render(<ContentHealthPage />);
+    expect(screen.getByText("60")).toBeInTheDocument();
+  });
+
+  it("renders a Dismiss button for each signal row so curators can suppress known non-issues, and also renders a positive control link so the test cannot pass on a blank render", () => {
+    render(<ContentHealthPage />);
+    expect(screen.getByRole("button", { name: /dismiss/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Policy Draft" })).toBeInTheDocument();
   });
 });
 

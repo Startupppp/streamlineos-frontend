@@ -35,6 +35,7 @@ import { SpaceMembersSheet } from "./space-members-sheet";
 import { SpaceArchiveImpact } from "./space-archive-impact";
 import PageTree from "./page-tree";
 import type { KbAudience } from "@/types/kb";
+import { KB_ACCESS_LABELS, type KbSpaceRole } from "@/types/kb";
 
 const AUDIENCE_LABELS: Record<KbAudience, string> = {
   internal: "Internal",
@@ -47,6 +48,13 @@ const AUDIENCE_BADGE_CLASS: Record<KbAudience, string> = {
   public:
     "bg-status-success-surface text-status-success-ink border-status-success-rule",
   mixed: "bg-primary/10 text-foreground border-primary/20",
+};
+
+const ACCESS_BADGE_CLASS: Record<KbSpaceRole, string> = {
+  admin: "bg-primary/10 text-primary border-primary/30",
+  manager: "bg-primary/10 text-primary border-primary/30",
+  editor: "bg-muted text-muted-foreground border-border",
+  viewer: "bg-muted text-muted-foreground border-border",
 };
 
 interface SpaceDetailPageProps {
@@ -196,6 +204,14 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
                 >
                   {AUDIENCE_LABELS[audience]}
                 </Badge>
+                {space?.viewerSpaceRole != null && (
+                  <Badge
+                    variant="outline"
+                    className={`text-micro h-4 px-1.5 ${ACCESS_BADGE_CLASS[space.viewerSpaceRole]}`}
+                  >
+                    {KB_ACCESS_LABELS[space.viewerSpaceRole]}
+                  </Badge>
+                )}
                 {isArchived && (
                   <Badge variant="outline" className="text-micro h-4 px-1.5 bg-muted text-muted-foreground border-border">
                     Archived

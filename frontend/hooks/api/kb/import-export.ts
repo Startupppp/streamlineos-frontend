@@ -28,6 +28,7 @@ export type ImportResult = {
   failed: number;
   duplicates: number;
   total: number;
+  failedTitles: string[];
 };
 
 export type KbImportJob = {

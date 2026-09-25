@@ -48,9 +48,15 @@ export default function TrashPage() {
   const q = searchParams.get("q") ?? undefined;
   const spaceIdRaw = searchParams.get("spaceId");
   const spaceId = spaceIdRaw ? Number(spaceIdRaw) : undefined;
+  const deletedByRaw = searchParams.get("deletedByMembershipId");
+  const deletedByMembershipId =
+    deletedByRaw && Number.isInteger(Number(deletedByRaw)) && Number(deletedByRaw) > 0
+      ? Number(deletedByRaw)
+      : undefined;
 
   const [searchDraft, setSearchDraft] = useState(q ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [deletedByDraft, setDeletedByDraft] = useState(deletedByRaw ?? "");
 
   const cursorState = useCursorPagination();
   const params = {
@@ -58,6 +64,7 @@ export default function TrashPage() {
     limit: DEFAULT_LIMIT,
     q: q || undefined,
     spaceId,
+    deletedByMembershipId,
   };
 
   const { data, isLoading, isError, error, refetch } = useKbPagesTrash(params);
@@ -92,6 +99,13 @@ export default function TrashPage() {
       cursorState.reset();
       updateFilters({ q: value || null });
     }, 350);
+  }
+
+  function handleDeletedByChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setDeletedByDraft(value);
+    cursorState.reset();
+    updateFilters({ deletedByMembershipId: value || null });
   }
 
   function handleEmptyTrash() {
@@ -213,7 +227,7 @@ export default function TrashPage() {
         <div className="space-y-4">
           {canManageSettings ? <TrashRetentionSection /> : null}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Input
               type="search"
               placeholder="Search deleted pages…"
@@ -221,6 +235,15 @@ export default function TrashPage() {
               onChange={handleSearchChange}
               className="max-w-sm"
               aria-label="Search deleted pages"
+            />
+            <Input
+              type="number"
+              min={1}
+              placeholder="Deleted by membership ID…"
+              value={deletedByDraft}
+              onChange={handleDeletedByChange}
+              className="max-w-xs"
+              aria-label="Deleted by membership ID"
             />
           </div>
 

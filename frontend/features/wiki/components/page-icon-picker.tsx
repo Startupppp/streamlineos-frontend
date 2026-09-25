@@ -20,7 +20,7 @@ interface PageIconPickerProps {
   isEditable: boolean;
   onIconChange: (icon: string | null) => void;
   id?: string;
-  variant?: "inline" | "field";
+  variant?: "inline" | "field" | "action" | "hero";
 }
 
 export default function PageIconPicker({
@@ -46,10 +46,21 @@ export default function PageIconPicker({
 
   if (!isEditable) {
     if (!icon) return null;
-    return <span className="text-4xl leading-none shrink-0">{icon}</span>;
+    return (
+      <span
+        className={cn(
+          "leading-none shrink-0",
+          variant === "hero" ? "text-5xl" : "text-4xl",
+        )}
+      >
+        {icon}
+      </span>
+    );
   }
 
   const isField = variant === "field";
+  const isAction = variant === "action";
+  const isHero = variant === "hero";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -66,10 +77,24 @@ export default function PageIconPicker({
           >
             {icon ?? "📄"}
           </button>
+        ) : isAction ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+            aria-label="Add icon"
+          >
+            <KbSmileIcon className="h-3.5 w-3.5" aria-hidden />
+            Add icon
+          </Button>
         ) : icon ? (
           <button
             type="button"
-            className="text-4xl leading-none shrink-0 hover:opacity-80 transition-opacity"
+            className={cn(
+              "leading-none shrink-0 transition-opacity hover:opacity-80",
+              isHero ? "text-5xl" : "text-4xl",
+            )}
             aria-label="Change page icon"
           >
             {icon}
@@ -78,7 +103,7 @@ export default function PageIconPicker({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-muted-foreground shrink-0"
+            className="h-9 w-9 shrink-0 text-muted-foreground"
             aria-label="Add icon"
           >
             <KbSmileIcon className="h-4 w-4" />

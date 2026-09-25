@@ -146,7 +146,7 @@ export default function PageDocumentHeader({
 
   return (
     <>
-      <div className="flex min-w-0 items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <PageDocumentBreadcrumb
           page={page}
           saveState={saveState}

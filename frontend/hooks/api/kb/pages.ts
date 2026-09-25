@@ -33,9 +33,9 @@ type KbPageTreeLevel = {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
 
-const ACL_VERSION_SPACE_LIMIT = 100;
+export const ACL_VERSION_SPACE_LIMIT = 100;
 
-function deriveAclVersion(page: KbSpaceListPage | undefined): string {
+export function deriveAclVersion(page: KbSpaceListPage | undefined): string {
   if (page === undefined) return "";
   const ids = page.data.map((s) => s.id).sort((a, b) => a - b);
   return page.pagination.hasMore ? `${ids.join(",")}~truncated` : ids.join(",");
@@ -136,33 +136,13 @@ export function useKbProjectPagesTree(projectId: number) {
   });
 }
 
-export function useKbPageTreeLevel(params: {
-  parentId?: number;
-  spaceId?: number;
-  projectId?: number;
-  cursor?: string;
-}) {
-  const canView = useCan("kb:pages:view");
-  return useQuery({
-    queryKey: treeLevelKey(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageTreeLevel>(
-        "/kb/pages/tree",
-        params as Record<string, unknown>,
-        signal,
-        kbPageTreeLevelContract,
-      ),
-    staleTime: 30_000,
-    enabled: canView,
-  });
-}
-
 export function useKbPageTreeInfinite(params: {
   spaceId?: number;
   projectId?: number;
 }) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: [...treeLevelKey(params), "infinite"] as const,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<KbPageTreeLevel>(
@@ -231,6 +211,7 @@ export function useKbPagesRecent() {
 export function useKbPagesFavorites() {
   const canView = useCan("kb:pages:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageListItem[]>(
