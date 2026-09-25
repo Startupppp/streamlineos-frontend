@@ -363,7 +363,7 @@ describe("DashboardShell /chat mobile bottom nav", () => {
     );
 
     expect(layoutClient).toContain(
-      'import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";',
+      'import("@/features/chat/chat-mobile-bottom-nav")',
     );
     expect(layoutClient).toContain("chatMobileNavSlot={renderChatMobileNav}");
     expect(layoutClient).toMatch(
