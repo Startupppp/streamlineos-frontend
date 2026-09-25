@@ -43,6 +43,7 @@ import { AllWorkViewsMenu } from "./all-work-views-menu";
 import { useAllWorkFilters } from "./use-all-work-filters";
 import { useAllWorkBulk } from "./use-all-work-bulk";
 import { useAllWorkKeyboard } from "./use-all-work-keyboard";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 const GROUP_OPTIONS = [
   { value: "project", label: "By Project" },
@@ -54,6 +55,7 @@ const GROUP_OPTIONS = [
 
 export function AllWorkPage() {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const shouldReduceMotion = useReducedMotion();
   const swapVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
   const isOnline = useOnlineStatus();
@@ -161,11 +163,13 @@ export function AllWorkPage() {
     (ticketId: number) => {
       const ticket = tickets.find((t) => t.id === ticketId);
       if (!ticket || ticket.projectId === null) return;
-      router.push(
-        getTicketDetailHref(ticket.projectId, ticket.projectKey, ticket.ticketNumber),
+      requestLeave(() =>
+        router.push(
+          getTicketDetailHref(ticket.projectId, ticket.projectKey, ticket.ticketNumber),
+        ),
       );
     },
-    [tickets, router],
+    [tickets, requestLeave, router],
   );
 
   const handleViewChangeWithReset = useCallback(
@@ -191,10 +195,12 @@ export function AllWorkPage() {
   const handleKeyboardOpen = useCallback(() => {
     const ticket = tickets[focusedIndex];
     if (!ticket || ticket.projectId === null) return;
-    router.push(
-      getTicketDetailHref(ticket.projectId, ticket.projectKey ?? "", ticket.ticketNumber),
+    requestLeave(() =>
+      router.push(
+        getTicketDetailHref(ticket.projectId, ticket.projectKey ?? "", ticket.ticketNumber),
+      ),
     );
-  }, [tickets, focusedIndex, router]);
+  }, [tickets, focusedIndex, requestLeave, router]);
 
   const handleKeyboardNext = useCallback(
     () => setFocusedIndex((i) => Math.min(i + 1, tickets.length - 1)),

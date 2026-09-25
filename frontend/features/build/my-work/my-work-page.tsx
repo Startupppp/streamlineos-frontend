@@ -23,6 +23,7 @@ import { MyWorkContent } from "./my-work-content";
 import { MyWorkSortControl } from "./my-work-sort-control";
 import { useMyWorkBulk } from "./use-my-work-bulk";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import {
   useMyWorkData,
   parseWorkTab,
@@ -47,6 +48,7 @@ const DISPLAY_STORAGE_ID = -1;
 
 export function MyWorkPage() {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const searchParams = useSearchParams();
 
   const activeTab = parseWorkTab(searchParams.get("tab"));
@@ -115,7 +117,11 @@ export function MyWorkPage() {
       const ticket = kanbanTickets[index];
       if (ticket) {
         const meta = ticketMeta.get(ticket.id);
-        if (meta) router.push(`/build/${meta.projectId}/${meta.projectKey}-${meta.ticketNumber}`);
+        if (meta) {
+          requestLeave(() =>
+            router.push(`/build/${meta.projectId}/${meta.projectKey}-${meta.ticketNumber}`),
+          );
+        }
       }
     },
     onClearSelection: bulk.handleClearSelection,

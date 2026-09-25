@@ -383,4 +383,21 @@ describe("ProjectBacklogPage — unsaved-work navigation", () => {
     expect(mockRequestLeave).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
   });
+
+  it("routes the legacy ticket query redirect through the shared leave guard", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("ticket=1");
+    mockBuildTicketDetailUrl.mockReturnValue("/build/1/TST-1");
+    let pendingNavigation: (() => void) | undefined;
+    mockRequestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+
+    renderPage();
+
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    pendingNavigation?.();
+    expect(mockReplace).toHaveBeenCalledWith("/build/1/TST-1");
+  });
 });

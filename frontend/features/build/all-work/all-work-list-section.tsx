@@ -10,6 +10,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
 import type { AllWorkTicket } from "@/types/projects";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import type { TicketGroup } from "./all-work-ticket-utils";
 
 function toListTicket(t: AllWorkTicket) {
@@ -52,16 +53,19 @@ const GroupSection = memo(function GroupSection({
   selection?: ListSelection;
 }) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
 
   const handleTicketClick = useCallback(
     (ticketId: number) => {
       const ticket = group.tickets.find((t) => t.id === ticketId);
       if (!ticket || !group.projectId || !group.projectKey) return;
-      router.push(
-        getTicketDetailHref(group.projectId, group.projectKey, ticket.ticketNumber),
+      requestLeave(() =>
+        router.push(
+          getTicketDetailHref(group.projectId, group.projectKey, ticket.ticketNumber),
+        ),
       );
     },
-    [router, group.projectId, group.projectKey, group.tickets],
+    [router, requestLeave, group.projectId, group.projectKey, group.tickets],
   );
 
   const firstTicket = group.tickets[0];

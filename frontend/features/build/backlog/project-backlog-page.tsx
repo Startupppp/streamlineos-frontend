@@ -151,8 +151,8 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   useEffect(() => {
     if (!selectedTicketId || !data) return;
     const href = buildTicketDetailUrl(projectId, data.key, selectedTicketId, tickets);
-    if (href) router.replace(href);
-  }, [selectedTicketId, data, tickets, projectId, router]);
+    if (href) requestLeave(() => router.replace(href));
+  }, [selectedTicketId, data, tickets, projectId, requestLeave, router]);
 
   const handleBulkUpdate = useCallback(
     (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "cycleId" | "priority" | "parentTicketId">>) => {

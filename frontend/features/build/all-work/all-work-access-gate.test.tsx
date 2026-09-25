@@ -17,11 +17,17 @@ const accessDenied = {
 const useAllWork = jest.fn();
 const useProjects = jest.fn();
 const groupTicketsMock = jest.fn<TicketGroup[], [AllWorkTicket[], BuildListGrouping]>(() => []);
+const mockPush = jest.fn();
+const mockRequestLeave = jest.fn((action: () => void) => action());
+const mockUseAllWorkKeyboard = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useRouter: () => ({ push: mockPush, replace: jest.fn() }),
   usePathname: () => "/build/all-work",
   useSearchParams: () => new URLSearchParams(),
+}));
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useNavigationLeave: () => mockRequestLeave,
 }));
 jest.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
@@ -79,7 +85,7 @@ jest.mock("./use-all-work-bulk", () => ({
   }),
 }));
 jest.mock("./use-all-work-keyboard", () => ({
-  useAllWorkKeyboard: jest.fn(),
+  useAllWorkKeyboard: (...args: unknown[]) => mockUseAllWorkKeyboard(...args),
 }));
 jest.mock("./all-work-view-switcher", () => ({
   AllWorkViewSwitcher: () => null,
@@ -176,10 +182,38 @@ const stubGroup: TicketGroup = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockRequestLeave.mockImplementation((action: () => void) => action());
   useAccess.mockReturnValue(accessGranted);
   useAllWork.mockReturnValue(pendingQuery());
   useProjects.mockReturnValue({ data: undefined });
   groupTicketsMock.mockReturnValue([]);
+});
+
+describe("AllWorkPage — unsaved-work navigation", () => {
+  it("routes keyboard ticket opens through the shared leave guard", () => {
+    useAllWork.mockReturnValue({
+      ...pendingQuery(),
+      data: { data: [stubTicket], hasMore: false, nextCursor: null, limit: 50 },
+    });
+
+    render(<AllWorkPage />);
+
+    const options = mockUseAllWorkKeyboard.mock.calls[0]?.[0] as {
+      onOpen: () => void;
+    };
+    let pendingNavigation: (() => void) | undefined;
+    mockRequestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+
+    options.onOpen();
+
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    pendingNavigation?.();
+    expect(mockPush).toHaveBeenCalledWith("/build/1/tickets/1");
+  });
 });
 
 describe("AllWorkPage — access is three-valued, not a boolean", () => {

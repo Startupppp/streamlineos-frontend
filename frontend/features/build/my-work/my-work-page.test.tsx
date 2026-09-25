@@ -18,6 +18,9 @@ import {
   withDataCursor,
 } from "./my-work-page-test-harness";
 
+const mockRequestLeave = jest.fn((action: () => void) => action());
+const mockUseBuildListKeyboard = jest.fn();
+
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
     replace: mockReplace,
@@ -25,6 +28,14 @@ jest.mock("next/navigation", () => ({
   }),
   usePathname: () => "/build/my-work",
   useSearchParams: () => mockSearchParamsContainer.current,
+}));
+
+jest.mock("@/components/shared/dirty-state-context", () => ({
+  useNavigationLeave: () => mockRequestLeave,
+}));
+
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -147,9 +158,34 @@ import { MyWorkPage } from "./my-work-page";
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockRequestLeave.mockImplementation((action: () => void) => action());
   mockUseAccess.mockReturnValue(accessGranted);
   mockSearchParamsContainer.current = new URLSearchParams();
   mockUseAllWork.mockReturnValue(defaultAllWork());
+});
+
+describe("MyWorkPage — unsaved-work navigation", () => {
+  it("routes keyboard ticket opens through the shared leave guard", () => {
+    mockUseAllWork.mockReturnValue(withData());
+
+    render(<MyWorkPage />);
+
+    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as {
+      onOpen: (index: number) => void;
+    };
+    let pendingNavigation: (() => void) | undefined;
+    mockRequestLeave.mockImplementation((action: () => void) => {
+      pendingNavigation = action;
+    });
+
+    options.onOpen(0);
+
+    expect(mockRequestLeave).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    pendingNavigation?.();
+    expect(mockPush).toHaveBeenCalledWith("/build/42/ENG-1");
+  });
 });
 
 describe("MyWorkPage — access is three-valued, not a boolean", () => {

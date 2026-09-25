@@ -10,6 +10,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
 import { toKanbanTicket, type TicketGroup } from "./all-work-ticket-utils";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 function BoardGroupSection({
   group,
@@ -21,6 +22,7 @@ function BoardGroupSection({
   selection?: ListSelection;
 }) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const kanbanTickets = useMemo(() => group.tickets.map(toKanbanTicket), [group.tickets]);
   const projectId = group.projectId;
   const projectKey = group.projectKey ?? "";
@@ -29,9 +31,11 @@ function BoardGroupSection({
     (id: number) => {
       const ticket = group.tickets.find((t) => t.id === id);
       if (!ticket || projectId === undefined) return;
-      router.push(getTicketDetailHref(projectId, projectKey, ticket.ticketNumber));
+      requestLeave(() =>
+        router.push(getTicketDetailHref(projectId, projectKey, ticket.ticketNumber)),
+      );
     },
-    [router, projectId, projectKey, group.tickets],
+    [router, requestLeave, projectId, projectKey, group.tickets],
   );
 
   if (projectId === undefined) return null;
