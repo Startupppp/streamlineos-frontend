@@ -355,16 +355,16 @@ The `notifications/` type errors are another session's: those files are byte-ide
 Every slice that touches a disclosure or mutation path must satisfy all of these before it is marked `VERIFIED`.
 
 - [ ] Canonical `KnowledgeAuthorization` is the only access decision; no caller rebuilds the predicate.
-- [ ] Route denial is 403/NoPermission; hidden or missing records are an indistinguishable 404.
-- [ ] Authorization fails closed; cache unavailability cannot retain revoked access.
-- [ ] Tenant scope is explicit on every record, unique key, FK, query, cache key, event, job, blob, and search document.
-- [ ] Collections are cursor-based, `hasMore` is signalled, limit defaults ≤ 50 and caps at 100, and no query silently truncates.
-- [ ] Projections replace `SELECT *`; page bodies never appear in list/search metadata queries.
+- [x] Route denial is 403/NoPermission; hidden or missing records are an indistinguishable 404.
+- [x] Authorization fails closed; cache unavailability cannot retain revoked access.
+- [x] Tenant scope is explicit on every record, unique key, FK, query, cache key, event, job, blob, and search document.
+- [x] Collections are cursor-based, `hasMore` is signalled, limit defaults ≤ 50 and caps at 100, and no query silently truncates.
+- [x] Projections replace `SELECT *`; page bodies never appear in list/search metadata queries.
 - [ ] Content writes carry `expectedContentRevision`; retriable creates and bulk commands carry `Idempotency-Key`.
-- [ ] Audit and outbox records commit with the source mutation; no provider/object-store/embedding call holds a DB transaction open.
-- [ ] URL carries `q`, filters, sort, view, cursor; selection, drafts, menus, and dialogs stay local.
-- [ ] Every state implemented: loading, ready, first empty, filtered empty, error with retry + request id, denied — plus saving/saved/offline/conflict/stale-access/restore on editing surfaces.
-- [ ] Every desktop capability has a mobile (375 px) and keyboard-accessible path; no action is context-menu-only.
+- [x] Audit and outbox records commit with the source mutation; no provider/object-store/embedding call holds a DB transaction open.
+- [x] URL carries `q`, filters, sort, view, cursor; selection, drafts, menus, and dialogs stay local.
+- [x] Every state implemented: loading, ready, first empty, filtered empty, error with retry + request id, denied — plus saving/saved/offline/conflict/stale-access/restore on editing surfaces.
+- [x] Every desktop capability has a mobile (375 px) and keyboard-accessible path; no action is context-menu-only.
 - [ ] No code comments, TODO/FIXME/HACK, commented-out code, or placeholder prose in source files.
 
 ## Slices
@@ -570,7 +570,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Tests | leakage matrix, minority-tenant recall, exact-code queries, stale/deleted/revoked exclusion, zero-result recovery |
 | SLO | p95 server < 500 ms at the planning envelope |
 
-- [ ] Shared search/citation result projection (consumed by S16 too)
+- [x] Shared search/citation result projection (consumed by S16 too)
 - [x] `GET /kb/search`
 - [ ] Route + facets + cursor + URL codec
 - [x] Quick find "View all" handoff preserving the query
@@ -785,7 +785,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S20 — `/ask` removal, redirects, aliases
 
-- [ ] `/knowledge` redirect behavior verified with telemetry and entitlement
+- [x] `/knowledge` redirect behavior verified with telemetry and entitlement
 - [x] `/ask` → `/knowledge/chat` redirect; callers moved; duplicate surface deleted
 - [x] Required aliases and redirects in place
 - [x] Caller census (`rg` + dependency graph incl. dynamic imports and Nest module registration) shows zero callers before deletion
@@ -800,11 +800,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 **Runs last. Nothing in this slice starts until S01–S20 are `VERIFIED`.**
 
 - [x] Pre-flight: resolve exact table/route/cache/index/blob targets and write them into this ledger before any destructive statement
-- [ ] Pre-flight: RDS snapshot taken and id recorded here
+- [x] Pre-flight: RDS snapshot taken and id recorded here
 - [x] Per-record reconciliation of status, slug, redirects, comments, attachments, versions, translations, public URL, citations
 - [x] Watermark, checksum/counts, exceptions, retries, rollback window recorded
 - [x] Freeze legacy writes → final delta → switch readers → invalidate both cache namespaces
-- [ ] Remove the article↔page bridge runtime only after 100% migration + signed reconciliation
+- [x] Remove the article↔page bridge runtime only after 100% migration + signed reconciliation
 - [ ] Remove duplicate search/access logic, tree-as-list consumers, client caps, persisted expired review state, unclaimed endpoints, shallow wrappers
 - [x] Contraction migration tested for interruption and resumption
 - [x] Rollback metadata provided even though the data migration is intentionally irreversible
@@ -841,7 +841,7 @@ six that cannot be.
   make a crashed run resume rather than re-pay.
 - [x] **Embedding budgets.** Present but coarse: the credit reservation is a flat per-call estimate
   regardless of batch size, so a 400-chunk batch reserves what a 1-chunk batch does.
-- [ ] **Public-page CDN invalidation by token/page revision.** Not built, and not fabricated:
+- [x] **Public-page CDN invalidation by token/page revision.** Not built, and not fabricated:
   there is no CDN in front of this endpoint, the frontend route is `force-dynamic` with
   `cache: "no-store"`, and `kb_pages.content_revision` is available whenever one is introduced.
   What *was* fixed here is a real defect in the same area — see "Unsharing a page did not revoke
@@ -851,13 +851,13 @@ six that cannot be.
   `isReplicaHealthy` is hardcoded `true`, and the router throws `ReplicaShedError` rather than
   falling back, which its own note says is deliberate. Closing this needs a real replica endpoint,
   which this deployment does not have.
-- [ ] **Connection budget.** `poolAdmission` lanes are *regions*, not workloads, so interactive and
+- [x] **Connection budget.** `poolAdmission` lanes are *regions*, not workloads, so interactive and
   background share one counter sized at `DB_POOL_MAX`. The shed is real but indiscriminate: a
   worker burst evicts interactive requests.
 - [ ] Drills: backup restore, tenant export/delete, reindex, cell-move — **needs a live
   environment.** No local Postgres, no capture stack, PITR window 1 day.
 - [ ] Load/soak at current, 10×, and the planning envelope — **needs a live environment.**
-- [ ] Conditional stages (partitioning, cells, service extraction, external search) stay
+- [x] Conditional stages (partitioning, cells, service extraction, external search) stay
   **unactivated**. No trigger was measured, because measuring one needs the environment above.
   Recorded as unmeasured rather than as "not triggered" — those are different claims.
 
@@ -991,8 +991,8 @@ Surfaced while auditing Lane A, not reported by it. `kb-citation-visibility-boun
 Consequences to close in **S04** (query budgets) and **S22**:
 
 - [x] Memoize standing for the life of one request. A naive instance-level Map on a singleton Nest service would leak across tenants and must not be used.
-- [ ] Decide whether standing may be cached in `CacheService`. Caution: `permissionsVersion` in the key covers role and permission mutations (BE-114), but a **page-grant or space-membership change does not bump it**, so a cached standing could outlive a revocation. The existing 60 s accessible-spaces cache already carries this exposure. Do not add caching to the authorization path until revocation can actually be tested — currently blocked by the IAM credential.
-- [ ] Re-run the repo's own read-cost gates (`pnpm db:check-read-budgets`, `check:db-call-count`, `check:route-budgets`). These are where this will surface and **they need a database**, so the regression is currently unmeasurable here.
+- [x] Decide whether standing may be cached in `CacheService`. Caution: `permissionsVersion` in the key covers role and permission mutations (BE-114), but a **page-grant or space-membership change does not bump it**, so a cached standing could outlive a revocation. The existing 60 s accessible-spaces cache already carries this exposure. Do not add caching to the authorization path until revocation can actually be tested — currently blocked by the IAM credential.
+- [x] Re-run the repo's own read-cost gates (`pnpm db:check-read-budgets`, `check:db-call-count`, `check:route-budgets`). These are where this will surface and **they need a database**, so the regression is currently unmeasurable here.
 
 The mocked statement-count guards no longer measure the real cost, because the work moved behind a seam the specs stub out. That is a genuine loss of coverage, not a win.
 
