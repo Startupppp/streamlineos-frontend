@@ -11,7 +11,6 @@ import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PmPageShell, PmSection, PM_FILL_SECTION } from "@/components/pm-chrome";
 import { ViewSwitcher, type ViewType } from "@/features/build/views/view-switcher";
-import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { useDisplayOptions } from "@/features/build/views/use-display-options";
 import { Button } from "@/components/ui/button";
 import { PanelRight } from "lucide-react";
@@ -41,6 +40,12 @@ const TicketFilterBar = dynamic(
     import("@/features/build/shared/ticket-filter-bar").then((m) => ({
       default: m.TicketFilterBar,
     })),
+  { ssr: false },
+);
+const DisplayOptionsPanel = dynamic(
+  () => import("@/features/build/views/display-options-panel").then((m) => ({
+    default: m.DisplayOptionsPanel,
+  })),
   { ssr: false },
 );
 
