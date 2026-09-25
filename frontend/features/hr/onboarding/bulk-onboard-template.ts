@@ -29,8 +29,8 @@ function cell(row: ParsedRow, key: ColumnKey): string {
 export function validateAndMap(
   raw: ParsedRow,
   deptNames: Set<string>,
-  /** The organisation's secondary-manager cap; the server re-checks it. */
-  secondaryCap = 3,
+  /** The organisation's secondary-manager cap, or null while unknown; the server re-checks it. */
+  secondaryCap: number | null = null,
 ): {
   payload: BulkOnboardEmployeeRow | null;
   errors: string[];

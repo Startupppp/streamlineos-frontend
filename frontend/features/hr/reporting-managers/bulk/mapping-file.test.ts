@@ -26,6 +26,17 @@ describe("bulk reporting-change mapping file", () => {
     });
   });
 
+  it("refuses a row whose canonical and legacy manager headers disagree (MANAGER_COLUMN_CONFLICT)", () => {
+    const result = mapMappingRows([
+      { employeeEmail: "a@example.com", primaryManagerEmail: "one@example.com", reportsTo: "two@example.com" },
+      { employeeEmail: "b@example.com", primaryManagerEmail: "same@example.com", managerEmail: "Same@example.com" },
+    ]);
+    expect(result.errors).toEqual([
+      "Row 2: MANAGER_COLUMN_CONFLICT — two columns give different values for primaryManagerEmail; keep one",
+    ]);
+    expect(result.rows).toEqual([{ employeeEmail: "b@example.com", primaryManagerEmail: "same@example.com" }]);
+  });
+
   it("reports a filled row without an employee email by its sheet row", () => {
     const result = mapMappingRows([{ employeeEmail: "a@example.com" }, { primaryManagerEmail: "boss@example.com" }]);
     expect(result.errors).toEqual(["Row 3: employeeEmail is required"]);

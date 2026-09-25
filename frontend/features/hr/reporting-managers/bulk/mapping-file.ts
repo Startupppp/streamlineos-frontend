@@ -1,14 +1,15 @@
 import { downloadXlsx } from "@/lib/export/xlsx-utils";
+import { collectManagerColumns, resolveManagerHeader } from "@/components/hr/reporting-lines/manager-columns";
 import {
   BULK_REASSIGNMENT_ROW_CAP,
   type BulkReassignmentRowInput,
 } from "@/hooks/api/hr/reporting-line-bulk-jobs-schema";
 
 /**
- * The bulk reporting-change mapping file (PRD §7.6.1). Header matching mirrors the
- * backend's one manager-column normaliser (`reporting-manager-columns.ts`): case,
- * spaces, `_` and `-` are ignored, and the legacy single-manager headers read as
- * `primaryManagerEmail`. The server re-validates every row; this only shapes them.
+ * The bulk reporting-change mapping file (PRD §7.6.1). Manager headers resolve
+ * through the one shared alias map (`components/hr/reporting-lines/manager-columns`,
+ * mirroring the backend's normaliser); a row whose canonical and legacy manager
+ * headers disagree is refused, as the server would. The server re-validates the rest.
  */
 
 export const MAPPING_COLUMNS = [
@@ -23,19 +24,16 @@ export const MAPPING_COLUMNS = [
 
 type MappingKey = (typeof MAPPING_COLUMNS)[number]["key"];
 
-const LEGACY_PRIMARY_HEADERS = ["reportingManagerEmail", "reportsTo", "managerEmail"];
-
 function headerKey(header: string): string {
   return header.toLowerCase().replace(/[\s_-]/g, "");
 }
 
-const KEY_BY_HEADER = new Map<string, MappingKey>([
-  ...MAPPING_COLUMNS.map((column): [string, MappingKey] => [headerKey(column.key), column.key]),
-  ...LEGACY_PRIMARY_HEADERS.map((header): [string, MappingKey] => [headerKey(header), "primaryManagerEmail"]),
-]);
+const KEY_BY_HEADER = new Map<string, MappingKey>(
+  MAPPING_COLUMNS.map((column): [string, MappingKey] => [headerKey(column.key), column.key]),
+);
 
 export function normalizeMappingHeader(header: string): MappingKey | null {
-  return KEY_BY_HEADER.get(headerKey(header)) ?? null;
+  return resolveManagerHeader(header)?.column ?? KEY_BY_HEADER.get(headerKey(header)) ?? null;
 }
 
 export interface ParsedMapping {
@@ -50,11 +48,20 @@ export function mapMappingRows(raw: Array<Record<string, string>>): ParsedMappin
   raw.forEach((source, index) => {
     const row: Partial<Record<MappingKey, string>> = {};
     for (const [header, value] of Object.entries(source)) {
+      if (resolveManagerHeader(header)) continue;
       const key = normalizeMappingHeader(header);
       const trimmed = (value ?? "").trim();
       if (key && trimmed && !row[key]) row[key] = key === "reason" || key === "effectiveFrom" ? trimmed : trimmed.toLowerCase();
     }
-    if (Object.keys(row).length === 0) return;
+    const managers = collectManagerColumns(source);
+    Object.assign(row, managers.values);
+    if (Object.keys(row).length === 0 && managers.conflicts.length === 0) return;
+    if (managers.conflicts.length > 0) {
+      errors.push(
+        `Row ${index + 2}: MANAGER_COLUMN_CONFLICT — two columns give different values for ${managers.conflicts.join(", ")}; keep one`,
+      );
+      return;
+    }
     if (!row.employeeEmail) {
       errors.push(`Row ${index + 2}: employeeEmail is required`);
       return;

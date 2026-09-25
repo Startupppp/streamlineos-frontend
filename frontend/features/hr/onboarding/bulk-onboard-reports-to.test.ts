@@ -1,4 +1,4 @@
-import { BULK_ONBOARD_COLUMNS, CONFLICT_KEY, normalizeHeader, type ParsedRow } from "./bulk-onboard-columns";
+import { BULK_ONBOARD_COLUMNS, CONFLICT_KEY, LEGACY_PRIMARY_KEY, normalizeHeader, type ParsedRow } from "./bulk-onboard-columns";
 import { validateAndMap } from "./bulk-onboard-template";
 
 const DEPARTMENTS = new Set(["engineering"]);
@@ -40,7 +40,7 @@ describe("bulk onboarding reporting columns (HRM-15 §7.3)", () => {
     expect(result.payload).not.toHaveProperty("topLevelRole");
   });
 
-  it("maps every manager column, canonicalised, and never sends reportingManagerEmail", () => {
+  it("maps every manager column, canonicalised, and sends no legacy alias for a canonical header", () => {
     const result = validateAndMap(
       row({
         primaryManagerEmail: "Boss@Example.com",
@@ -82,18 +82,40 @@ describe("bulk onboarding reporting columns (HRM-15 §7.3)", () => {
     ).toContain("the same secondary manager is listed twice");
   });
 
-  it("holds secondary slots to the organisation's cap", () => {
-    const twoSecondaries = row({ secondaryManagerEmail1: "a@example.com", secondaryManagerEmail2: "b@example.com" });
+  it("holds a row to the organisation's cap by how many secondaries it names, not which columns", () => {
+    // The server counts the non-blank secondaries; column 2 alone is one manager.
+    expect(validateAndMap(row({ secondaryManagerEmail2: "b@example.com" }), DEPARTMENTS, 1).errors).toEqual([]);
+    expect(validateAndMap(row({ secondaryManagerEmail3: "c@example.com" }), DEPARTMENTS, 1).errors).toEqual([]);
+
+    const twoSecondaries = row({ secondaryManagerEmail1: "a@example.com", secondaryManagerEmail3: "b@example.com" });
     expect(validateAndMap(twoSecondaries, DEPARTMENTS, 2).errors).toEqual([]);
     expect(validateAndMap(twoSecondaries, DEPARTMENTS, 1).errors).toEqual([
-      "secondaryManagerEmail2: your organisation allows at most 1 secondary manager",
+      "this row names 2 secondary managers; your organisation allows at most 1",
     ]);
-    expect(validateAndMap(twoSecondaries, DEPARTMENTS, 0).errors).toHaveLength(2);
+    expect(validateAndMap(row({ secondaryManagerEmail2: "b@example.com" }), DEPARTMENTS, 0).errors).toEqual([
+      "your organisation does not use secondary managers",
+    ]);
+  });
+
+  it("leaves the cap to the server preview while the policy is unknown", () => {
+    const three = row({ secondaryManagerEmail1: "a@example.com", secondaryManagerEmail2: "b@example.com", secondaryManagerEmail3: "c@example.com" });
+    expect(validateAndMap(three, DEPARTMENTS, null).errors).toEqual([]);
   });
 
   it("refuses malformed manager emails and dates", () => {
     const errors = validateAndMap(row({ primaryManagerEmail: "boss", effectiveFrom: "2026-02-30" }), DEPARTMENTS).errors;
     expect(errors).toEqual(["invalid primaryManagerEmail", "invalid effectiveFrom (use YYYY-MM-DD)"]);
+  });
+
+  it("sends a primary read from a legacy header as reportingManagerEmail, so the server records legacyManagerHeader", () => {
+    const legacy = validateAndMap(row({ primaryManagerEmail: "Boss@Example.com", [LEGACY_PRIMARY_KEY]: "reportsTo" }), DEPARTMENTS);
+    expect(legacy.errors).toEqual([]);
+    expect(legacy.payload).toMatchObject({ reportingManagerEmail: "boss@example.com" });
+    expect(legacy.payload).not.toHaveProperty("primaryManagerEmail");
+
+    const canonical = validateAndMap(row({ primaryManagerEmail: "boss@example.com" }), DEPARTMENTS);
+    expect(canonical.payload).toMatchObject({ primaryManagerEmail: "boss@example.com" });
+    expect(canonical.payload).not.toHaveProperty("reportingManagerEmail");
   });
 
   it("refuses a row whose canonical and legacy manager headers disagree", () => {

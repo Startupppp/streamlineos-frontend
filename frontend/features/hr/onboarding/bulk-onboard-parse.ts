@@ -1,4 +1,5 @@
-import { CONFLICT_KEY, normalizeHeader, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
+import { collectManagerColumns, resolveManagerHeader } from "@/components/hr/reporting-lines/manager-columns";
+import { CONFLICT_KEY, LEGACY_PRIMARY_KEY, normalizeHeader, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
 
 function formatLocalDate(value: Date): string {
   const y = value.getFullYear();
@@ -46,6 +47,8 @@ function mapRawRows(
     const out: ParsedRow = {};
     const conflicts = new Set<string>();
     for (const [header, value] of Object.entries(row)) {
+      // Manager columns are read by the shared reader below, like the backend's.
+      if (resolveManagerHeader(header)) continue;
       const key = keyMap.get(header) ?? normalizeHeader(header);
       if (!key) continue;
       const next = (value ?? "").trim();
@@ -56,6 +59,10 @@ function mapRawRows(
       if (!previous || next) out[key] = value ?? "";
       if (previous && !next) out[key] = previous;
     }
+    const managers = collectManagerColumns(row);
+    Object.assign(out, managers.values);
+    for (const column of managers.conflicts) conflicts.add(column);
+    if (managers.legacyPrimaryHeader) out[LEGACY_PRIMARY_KEY] = managers.legacyPrimaryHeader;
     if (conflicts.size > 0) out[CONFLICT_KEY] = [...conflicts].join(",");
     return out;
   });

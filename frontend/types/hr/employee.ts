@@ -329,6 +329,12 @@ export interface BulkOnboardEmployeeRow {
   department?: string;
   reportingManagerUserId?: string;
   primaryManagerEmail?: string;
+  /**
+   * Read-only legacy alias of `primaryManagerEmail` (CONTRACT §4.20). Sent only
+   * when the uploaded file used a legacy manager header, so the backend records
+   * `legacyManagerHeader`; never alongside `primaryManagerEmail`.
+   */
+  reportingManagerEmail?: string;
   secondaryManagerEmail1?: string;
   secondaryManagerEmail2?: string;
   secondaryManagerEmail3?: string;

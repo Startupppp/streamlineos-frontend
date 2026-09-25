@@ -145,3 +145,24 @@ describe("BulkOnboardPanel — commits only Ready and Warning rows after confirm
     expect(submitted[1]).not.toHaveProperty("reportingManagerEmail");
   });
 });
+
+describe("BulkOnboardPanel — while the reporting policy is still loading", () => {
+  it("does not assume a secondary cap: the row reaches the server preview", async () => {
+    const user = userEvent.setup();
+    const csv = [
+      "firstName,lastName,email,designation,department,secondaryManagerEmail1,secondaryManagerEmail2,secondaryManagerEmail3",
+      "Ann,One,ann@example.com,Dev,Engineering,a@example.com,b@example.com,c@example.com",
+    ].join("\n");
+    const file = new File([csv], "people.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
+    previewMutateAsync.mockResolvedValue({ rows: [serverRow(1, "ERROR", { codes: ["SECONDARY_CAP_EXCEEDED"] })], counts: { ready: 0, warning: 0, error: 1, skipped: 0 } });
+
+    render(<BulkOnboardPanel />);
+    await user.upload(screen.getByLabelText("Choose employee onboard file"), file);
+
+    await waitFor(() => expect(previewMutateAsync).toHaveBeenCalled());
+    expect(previewMutateAsync.mock.calls.at(-1)?.[0]).toEqual([
+      expect.objectContaining({ email: "ann@example.com", secondaryManagerEmail3: "c@example.com" }),
+    ]);
+  });
+});

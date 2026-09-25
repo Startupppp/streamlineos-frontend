@@ -1,3 +1,4 @@
+import { resolveManagerHeader } from "@/components/hr/reporting-lines/manager-columns";
 /** Canonical template columns — keep in sync with backend bulkOnboardEmployeeRowSchema. */
 export const BULK_ONBOARD_COLUMNS = [
   {
@@ -188,8 +189,12 @@ export type ParsedRow = Record<string, string>;
  */
 export const CONFLICT_KEY = "__conflictingColumns";
 
-/** Manager columns, in slot order. Legacy primary headers are read, never written. */
-export const SECONDARY_MANAGER_KEYS = ["secondaryManagerEmail1", "secondaryManagerEmail2", "secondaryManagerEmail3"] as const;
+/**
+ * Set on a parsed row whose primary manager came from a legacy header
+ * (`reportsTo` …). The payload then carries it as `reportingManagerEmail`, the
+ * backend's read-only alias, so the server records `legacyManagerHeader`.
+ */
+export const LEGACY_PRIMARY_KEY = "__legacyPrimaryHeader";
 
 export const MAX_ROWS = 100;
 
@@ -215,22 +220,6 @@ const HEADER_ALIASES: Record<string, ColumnKey> = {
   departmentid: "department",
   "department id": "department",
   role: "role",
-  "primary manager email": "primaryManagerEmail",
-  "primary manager": "primaryManagerEmail",
-  reportingmanageremail: "primaryManagerEmail",
-  "reporting manager email": "primaryManagerEmail",
-  "reporting manager": "primaryManagerEmail",
-  reportsto: "primaryManagerEmail",
-  "reports to": "primaryManagerEmail",
-  manager: "primaryManagerEmail",
-  manageremail: "primaryManagerEmail",
-  "manager email": "primaryManagerEmail",
-  "secondary manager email 1": "secondaryManagerEmail1",
-  "secondary manager email 2": "secondaryManagerEmail2",
-  "secondary manager email 3": "secondaryManagerEmail3",
-  "secondary manager 1": "secondaryManagerEmail1",
-  "secondary manager 2": "secondaryManagerEmail2",
-  "secondary manager 3": "secondaryManagerEmail3",
   effectivefrom: "effectiveFrom",
   "effective from": "effectiveFrom",
   "effective date": "effectiveFrom",
@@ -268,7 +257,10 @@ const HEADER_ALIASES: Record<string, ColumnKey> = {
   uan: "pfUanNumber",
 };
 
+/** Manager headers resolve through the one shared alias map; everything else here. */
 export function normalizeHeader(h: string): ColumnKey | null {
+  const manager = resolveManagerHeader(h);
+  if (manager) return manager.column;
   const key = h
     .trim()
     .toLowerCase()

@@ -35,7 +35,7 @@ export function isCommittable(row: BulkOnboardFlowRow): boolean {
   return row.payload !== null && row.server !== null && COMMITTABLE.has(row.server.status);
 }
 
-function checkFile(parsed: Array<Record<string, string>>, deptNames: Set<string>, secondaryCap: number): BulkOnboardFlowRow[] {
+function checkFile(parsed: Array<Record<string, string>>, deptNames: Set<string>, secondaryCap: number | null): BulkOnboardFlowRow[] {
   const seenEmails = new Set<string>();
   return parsed.map((raw, i) => {
     const { payload, preview } = validateAndMap(raw, deptNames, secondaryCap);
@@ -64,7 +64,7 @@ export function mergeServerPreview(rows: BulkOnboardFlowRow[], serverRows: BulkO
   });
 }
 
-export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number) {
+export function useBulkOnboardFlow(deptNames: Set<string>, secondaryCap: number | null) {
   const preview = useBulkOnboardPreview();
   const bulkOnboard = useBulkOnboardEmployees();
   const [step, setStep] = useState<BulkOnboardStep>("upload");

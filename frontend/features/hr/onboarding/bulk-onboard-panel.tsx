@@ -27,7 +27,8 @@ function plural(count: number, word: string) {
 export function BulkOnboardPanel() {
   const { data: orgDepartments } = useOrgDepartments({ limit: 100, status: "ACTIVE" });
   const { data: policy } = useReportingManagerPolicy();
-  const secondaryCap = policy?.maxSecondaryManagersPerEmployee ?? 3;
+  // Unknown until the policy loads: the server preview checks the cap meanwhile.
+  const secondaryCap = policy ? policy.maxSecondaryManagersPerEmployee : null;
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const deptNames = useMemo(() => {

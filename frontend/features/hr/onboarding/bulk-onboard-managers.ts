@@ -1,10 +1,12 @@
 import type { BulkOnboardEmployeeRow } from "@/types/hr";
-import { CONFLICT_KEY, EMAIL_RE, SECONDARY_MANAGER_KEYS, type ParsedRow } from "./bulk-onboard-columns";
+import { SECONDARY_MANAGER_COLUMNS } from "@/components/hr/reporting-lines/manager-columns";
+import { CONFLICT_KEY, EMAIL_RE, LEGACY_PRIMARY_KEY, type ParsedRow } from "./bulk-onboard-columns";
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 type ManagerFields = Pick<
   BulkOnboardEmployeeRow,
   | "primaryManagerEmail"
+  | "reportingManagerEmail"
   | "secondaryManagerEmail1"
   | "secondaryManagerEmail2"
   | "secondaryManagerEmail3"
@@ -29,12 +31,14 @@ function read(row: ParsedRow, key: string): string {
  * be known from the file alone. A blank primary manager is valid: the
  * organisation's fallback policy decides it.
  *
- * `secondaryCap` is the organisation's `maxSecondaryManagersPerEmployee`.
+ * `secondaryCap` is the organisation's `maxSecondaryManagersPerEmployee`, or
+ * null while the policy is unknown — then the server preview alone judges it.
+ * The server counts the secondaries a row names, not which columns hold them.
  */
 export function validateManagerColumns(
   row: ParsedRow,
   employeeEmail: string,
-  secondaryCap: number,
+  secondaryCap: number | null,
 ): { errors: string[]; fields: ManagerFields } {
   const errors: string[] = [];
   const conflicts = read(row, CONFLICT_KEY);
@@ -43,7 +47,7 @@ export function validateManagerColumns(
   }
 
   const primary = read(row, "primaryManagerEmail").toLowerCase();
-  const secondaries = SECONDARY_MANAGER_KEYS.map((key) => read(row, key).toLowerCase());
+  const secondaries = SECONDARY_MANAGER_COLUMNS.map((key) => read(row, key).toLowerCase());
   const topLevelRoleReason = read(row, "topLevelRoleReason");
   const effectiveFrom = read(row, "effectiveFrom");
   const named = [primary, ...secondaries].filter(Boolean);
@@ -53,7 +57,7 @@ export function validateManagerColumns(
   }
   const cells: Array<[string, string]> = [
     ["primaryManagerEmail", primary],
-    ...SECONDARY_MANAGER_KEYS.map((key, i): [string, string] => [key, secondaries[i] ?? ""]),
+    ...SECONDARY_MANAGER_COLUMNS.map((key, i): [string, string] => [key, secondaries[i] ?? ""]),
   ];
   for (const [label, value] of cells) {
     if (value && !EMAIL_RE.test(value)) errors.push(`invalid ${label}`);
@@ -68,19 +72,19 @@ export function validateManagerColumns(
   if (new Set(filledSecondaries).size !== filledSecondaries.length) {
     errors.push("the same secondary manager is listed twice");
   }
-  secondaries.forEach((value, index) => {
-    if (value && index >= secondaryCap) {
-      errors.push(
-        secondaryCap === 0
-          ? `${SECONDARY_MANAGER_KEYS[index]}: your organisation does not use secondary managers`
-          : `${SECONDARY_MANAGER_KEYS[index]}: your organisation allows at most ${secondaryCap} secondary manager${secondaryCap === 1 ? "" : "s"}`,
-      );
-    }
-  });
+  if (secondaryCap !== null && filledSecondaries.length > secondaryCap) {
+    errors.push(
+      secondaryCap === 0
+        ? "your organisation does not use secondary managers"
+        : `this row names ${filledSecondaries.length} secondary managers; your organisation allows at most ${secondaryCap}`,
+    );
+  }
   if (effectiveFrom && !isIsoDate(effectiveFrom)) errors.push("invalid effectiveFrom (use YYYY-MM-DD)");
 
   const fields: ManagerFields = {
-    ...(primary ? { primaryManagerEmail: primary } : {}),
+    // A primary read from a legacy header travels under the legacy alias so the
+    // server can count legacy-header use (legacyManagerHeader telemetry).
+    ...(primary ? (read(row, LEGACY_PRIMARY_KEY) ? { reportingManagerEmail: primary } : { primaryManagerEmail: primary }) : {}),
     ...(secondaries[0] ? { secondaryManagerEmail1: secondaries[0] } : {}),
     ...(secondaries[1] ? { secondaryManagerEmail2: secondaries[1] } : {}),
     ...(secondaries[2] ? { secondaryManagerEmail3: secondaries[2] } : {}),
