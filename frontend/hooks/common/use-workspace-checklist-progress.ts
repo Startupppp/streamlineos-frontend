@@ -18,6 +18,18 @@ export const CHECKLIST_ITEM_IDS = [
 
 export type ChecklistItemId = (typeof CHECKLIST_ITEM_IDS)[number];
 
+/**
+ * Sign-up stores the email's local part as the name, so a name equal to it is a
+ * placeholder the person never chose (HRMS-E2E-025). Compared case-sensitively:
+ * sign-up writes the normalised lower-case form, so "Asha" was typed by a person.
+ */
+export function hasChosenProfileName(name: string | null | undefined, email: string | null | undefined): boolean {
+  const trimmed = name?.trim() ?? "";
+  if (trimmed.length < 2) return false;
+  const localPart = email?.split("@")[0]?.trim();
+  return trimmed !== localPart;
+}
+
 export function useWorkspaceChecklistProgress(enabled = true) {
   const { data: session } = useSession();
 
@@ -54,8 +66,7 @@ export function useWorkspaceChecklistProgress(enabled = true) {
       done.add("email");
     }
 
-    const name = session?.user?.name?.trim() ?? "";
-    if (name.length >= 2) {
+    if (hasChosenProfileName(session?.user?.name, session?.user?.email)) {
       done.add("profile");
     }
 
@@ -71,6 +82,7 @@ export function useWorkspaceChecklistProgress(enabled = true) {
     connections,
     leadsData,
     session?.user?.name,
+    session?.user?.email,
     aiUsage,
   ]);
 
