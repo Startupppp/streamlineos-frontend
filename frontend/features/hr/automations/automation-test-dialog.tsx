@@ -86,7 +86,7 @@ export function AutomationTestDialog({ rule, onClose }: Props) {
               value={payloadText}
               onChange={handlePayloadChange}
               rows={8}
-              className="font-mono text-xs resize-none"
+              className="font-mono resize-none"
             />
             {jsonError && <p className="text-xs text-destructive mt-1">{jsonError}</p>}
           </div>

@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { useHrAutomationRuns } from "@/hooks/api/hr/hr-automations";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { useCanState } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { HrAutomationRun, HrAutomationRunStatus } from "@/types/hr/automations";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -103,6 +105,8 @@ interface Props {
 
 export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
   const pager = useCursorPager();
+  // FE-47: the runs read is disabled without hr:automations:view; say so.
+  const viewAccess = useCanState("hr:automations:view");
   const { data: runsData, isLoading, isError, error, refetch } = useHrAutomationRuns(ruleId, {
     cursor: pager.cursor,
     limit: 20,
@@ -127,7 +131,10 @@ export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
         </SheetHeader>
 
         <SheetBody className="space-y-2 px-6 py-4">
-          {isLoading && Array.from({ length: 8 }).map((_, i) => (
+          {viewAccess === "denied" && (
+            <NoPermissionState compact permission="hr:automations:view" />
+          )}
+          {viewAccess !== "denied" && isLoading && Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full rounded-lg" />
           ))}
           {isError && (
@@ -138,7 +145,7 @@ export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
               onRetry={handleRetry}
             />
           )}
-          {!isLoading && !isError && (!runs || runs.length === 0) && (
+          {viewAccess === "granted" && !isLoading && !isError && (!runs || runs.length === 0) && (
             <p className="text-sm text-muted-foreground text-center py-12">No runs yet for this rule.</p>
           )}
           {!isError && runs?.map((run) => <RunRow key={run.id} run={run} />)}
