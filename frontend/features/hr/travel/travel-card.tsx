@@ -1,7 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Plane, MapPin, Calendar, DollarSign, Building } from "lucide-react";
+import { Plane, MapPin, Calendar, Wallet, Building } from "lucide-react";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoney } from "@/lib/format-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useMotionVariants } from "@/lib/motion-variants";
@@ -13,6 +15,7 @@ import type { TravelRequest } from "@/hooks/api/hr";
 export function TravelCard({ request }: { request: TravelRequest }) {
   const { fadeUp } = useMotionVariants();
   const cfg = getStatusConfig(request.status);
+  const money = useOrgDisplay();
   return (
     <motion.div variants={fadeUp}>
       <Card className="bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -56,8 +59,8 @@ export function TravelCard({ request }: { request: TravelRequest }) {
             </div>
             {request.estimatedCost && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <DollarSign className="h-3 w-3" />
-                <span>₹{Number(request.estimatedCost).toLocaleString("en-IN")}</span>
+                <Wallet className="h-3 w-3" />
+                <span className="tabular-nums">{formatMoney(request.estimatedCost, money)}</span>
               </div>
             )}
             {request.advanceRequired && (

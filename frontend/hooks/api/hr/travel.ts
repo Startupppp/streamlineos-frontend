@@ -1,8 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 const travelListContract = lazyContract(() =>
@@ -100,10 +101,11 @@ export function useFinanceApproveTravelRequest() {
 
 export function useRejectTravelRequest() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:travel:manage", {
+  // PATCH /hr/travel/:id/reject is @Idempotent: one key per intent, not per attempt.
+  return useAuthorizedIdempotentMutation<unknown, Error, { travelId: number; reason: string }>("hr:travel:manage", {
     mutationKey: ["hr", "travel", "reject"],
-    mutationFn: ({ travelId, reason }: { travelId: number; reason: string }) =>
-      apiClient.patch(`/hr/travel/${travelId}/reject`, { reason }, undefined, travelRowContract),
+    mutationFn: ({ travelId, reason }, idempotencyKey) =>
+      apiClient.patch(`/hr/travel/${travelId}/reject`, { reason }, { headers: { "Idempotency-Key": idempotencyKey } }, travelRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.travelAll }),
   });
 }
