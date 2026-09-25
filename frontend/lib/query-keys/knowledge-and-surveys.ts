@@ -84,6 +84,10 @@ export const knowledgeAndSurveysQueryKeys = {
       range === undefined
         ? ([...base, "kb", "knowledgeGaps"] as const)
         : ([...base, "kb", "knowledgeGaps", range] as const),
+    gapRelatedPages: (searchQuery: string | undefined) =>
+      searchQuery === undefined
+        ? ([...base, "kb", "gapRelatedPages"] as const)
+        : ([...base, "kb", "gapRelatedPages", searchQuery] as const),
     contentGaps: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "kb", "content-gaps"] as const)

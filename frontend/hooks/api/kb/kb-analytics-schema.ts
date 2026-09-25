@@ -46,13 +46,36 @@ export const kbAnalyticsPagesContract = z.object({
   }),
 });
 
-export const kbAnalyticsGapsContract = z.array(
-  z.object({
-    query: z.string().nullable(),
-    count: z.number().int(),
-    lastOccurredAt: z.string(),
+const kbAnalyticsGapItemContract = z.object({
+  query: z.string().nullable(),
+  count: z.number().int(),
+  lastOccurredAt: z.string(),
+});
+
+export const kbAnalyticsGapsContract = z.object({
+  data: z.array(kbAnalyticsGapItemContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
   }),
-);
+});
+
+export const kbAnalyticsGapRelatedPagesContract = z.object({
+  data: z.array(
+    z.object({
+      id: z.number().int(),
+      title: z.string(),
+      status: z.string(),
+      updatedAt: z.string(),
+    }),
+  ),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
 
 export const kbAnalyticsContentGapsContract = z.array(
   z.object({

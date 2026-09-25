@@ -158,6 +158,13 @@ export interface KbGapRow {
   lastOccurredAt: string;
 }
 
+export interface KbGapRelatedPageRow {
+  id: number;
+  title: string;
+  status: string;
+  updatedAt: string;
+}
+
 export interface KbContentGapRow {
   query: string | null;
   count: number;

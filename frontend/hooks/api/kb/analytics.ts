@@ -12,6 +12,7 @@ import type {
   KbNoResultRow,
   KbPageAnalyticsRow,
   KbGapRow,
+  KbGapRelatedPageRow,
   KbContentGapRow,
   KbCitationReuseRow,
   KbReviewSla,
@@ -43,6 +44,10 @@ const kbAnalyticsCitationReuseContract = lazyContract(() =>
 
 const kbAnalyticsReviewSlaContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-analytics-schema").then((m) => m.kbAnalyticsReviewSlaContract),
+);
+
+const kbAnalyticsGapRelatedPagesContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-analytics-schema").then((m) => m.kbAnalyticsGapRelatedPagesContract),
 );
 
 export function useKbAnalyticsOverview(range?: KbAnalyticsRange) {
@@ -137,15 +142,78 @@ export function useReviewSla(range?: KbAnalyticsRange) {
   });
 }
 
+export interface GapsPage {
+  data: KbGapRow[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+}
+
 export function useKnowledgeGaps(range?: KbAnalyticsRange) {
   const canViewAnalytics = useCan("kb:analytics:view");
-  const queryParams: Record<string, unknown> = { from: range?.from, to: range?.to };
-  return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.knowledgeGaps(queryParams),
-    queryFn: ({ signal }) => apiClient.get<KbGapRow[]>("/kb/analytics/gaps", queryParams, signal, kbAnalyticsGapsContract),
+  const { from, to } = range ?? {};
+  const keyParams: Record<string, unknown> = {
+    ...(from !== undefined ? { from } : {}),
+    ...(to !== undefined ? { to } : {}),
+  };
+  const query = useInfiniteQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.kb.knowledgeGaps(
+      Object.keys(keyParams).length > 0 ? keyParams : undefined,
+    ),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) => {
+      const params: Record<string, unknown> = {
+        ...(pageParam !== undefined ? { cursor: pageParam } : {}),
+        ...(from !== undefined ? { from } : {}),
+        ...(to !== undefined ? { to } : {}),
+      };
+      return apiClient.get<GapsPage>(
+        "/kb/analytics/gaps",
+        Object.keys(params).length > 0 ? params : undefined,
+        signal,
+        kbAnalyticsGapsContract,
+      );
+    },
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
     enabled: canViewAnalytics,
   });
+
+  return {
+    ...query,
+    gaps: query.data?.pages.flatMap((page) => page.data),
+  };
+}
+
+export interface GapRelatedPagesPage {
+  data: KbGapRelatedPageRow[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+}
+
+export function useGapRelatedPages(searchQuery: string | undefined) {
+  const canViewAnalytics = useCan("kb:analytics:view");
+  const query = useInfiniteQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.kb.gapRelatedPages(searchQuery),
+    initialPageParam: NO_CURSOR_YET,
+    queryFn: ({ signal, pageParam }) => {
+      const params: Record<string, unknown> = {
+        query: searchQuery,
+        ...(pageParam !== undefined ? { cursor: pageParam } : {}),
+      };
+      return apiClient.get<GapRelatedPagesPage>(
+        "/kb/analytics/gaps/related-pages",
+        params,
+        signal,
+        kbAnalyticsGapRelatedPagesContract,
+      );
+    },
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    staleTime: 30_000,
+    enabled: canViewAnalytics && typeof searchQuery === "string" && searchQuery.length > 0,
+  });
+
+  return {
+    ...query,
+    pages: query.data?.pages.flatMap((page) => page.data),
+  };
 }
 
 export function useKbContentGaps(range?: KbAnalyticsRange) {
