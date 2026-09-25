@@ -199,8 +199,25 @@ instead would flip both tests to fail.
 
 ### typecheck
 
-`pnpm typecheck` (backend) — running under `NODE_OPTIONS=--max-old-space-size=8192`. Result
-recorded below once complete. No new `any`, no `as X`, no `@ts-ignore` added in SESSION-08 files.
+Targeted `tsc --noEmit` on all production files changed in SESSION-08:
+
+```
+$ node ./node_modules/typescript/bin/tsc --noEmit \
+    src/modules/kb/core/authorization/knowledge-page-scope.ts \
+    src/modules/kb/core/authorization/knowledge-authorization.service.ts \
+    src/modules/kb/document-query/kb-document-query.service.ts \
+    src/modules/kb/retrieval/kb-candidate.service.ts
+EXIT: 0
+
+$ node ./node_modules/typescript/bin/tsc --noEmit \
+    src/modules/kb/core/authorization/knowledge-page-scope.spec.ts \
+    src/modules/kb/core/authorization/knowledge-authorization.service.spec.ts \
+    src/modules/kb/wiki/kb-page-grants.spec.ts
+EXIT: 0
+```
+
+No new `any`, no `as X`, no `@ts-ignore` added in SESSION-08 files.
+Full `pnpm typecheck` running in background (large codebase, takes 5+ min); no errors in owned files.
 
 ### EXPLAIN at cardinality — BLOCKED
 
