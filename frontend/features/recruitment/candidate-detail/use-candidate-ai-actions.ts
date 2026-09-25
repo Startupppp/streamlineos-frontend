@@ -30,7 +30,9 @@ export function useCandidateAiActions({ candidateId, firstJobPostingId }: UseCan
         run: async (signal?: AbortSignal) => {
           const result = await scoreCandidateMutation.mutateAsync({ candidateId, signal });
           return {
-            text: `Fit score: ${result.score}/100 (${result.fitLevel})\n\nReasoning: ${result.reasoning}\n\nStrengths:\n${result.strengths.map((s) => "• " + s).join("\n")}\n\nConcerns:\n${result.concerns.map((c) => "• " + c).join("\n")}\n\nSuggested questions:\n${result.suggestedQuestions.map((q) => "• " + q).join("\n")}\n\n⚠ Advisory only. This AI estimate must not be used to automatically accept or reject candidates — human decision required.`,
+            text: `Fit score: ${result.score}/100 (${result.fitLevel})\n\nReasoning: ${result.reasoning}\n\nStrengths:\n${result.strengths.map((s) => "• " + s).join("\n")}\n\nConcerns:\n${result.concerns.map((c) => "• " + c).join("\n")}\n\nSuggested questions:\n${result.suggestedQuestions.map((q) => "• " + q).join("\n")}`,
+            advisory:
+              "Advisory only. This AI estimate must not be used to automatically accept or reject candidates — human decision required.",
           };
         },
       },
@@ -42,7 +44,7 @@ export function useCandidateAiActions({ candidateId, firstJobPostingId }: UseCan
           const jobPostingId = firstJobPostingId ?? candidateId;
           const result = await interviewKitMutation.mutateAsync({ jobPostingId, signal });
           const body = result.roundKits.map((kit) => `## ${kit.round}\n${kit.questions.map((q) => `Q: ${q.question}\nCategory: ${q.category}\nExpected: ${q.expectedAnswer}`).join("\n\n")}`).join("\n\n---\n\n");
-          return { text: body + (result.disclaimer ? `\n\n⚠ ${result.disclaimer}` : "") };
+          return { text: body, advisory: result.disclaimer ?? undefined };
         },
       },
       {
@@ -55,7 +57,7 @@ export function useCandidateAiActions({ candidateId, firstJobPostingId }: UseCan
             signal,
           });
           const body = `Recommendation: ${result.overallRecommendation}\nConfidence: ${result.confidence}\n\nStrengths: ${result.strengthsSummary}\n\nConcerns: ${result.concernsSummary}\n\nSuggested next step: ${result.suggestedNextStep}`;
-          return { text: body + (result.disclaimer ? `\n\n⚠ ${result.disclaimer}` : "") };
+          return { text: body, advisory: result.disclaimer ?? undefined };
         },
       },
     ];
