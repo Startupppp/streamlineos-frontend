@@ -69,6 +69,8 @@ export function useBoardUrlState(
   const filterLabels = searchParams.get("labels") ?? "";
   const filterCycle = searchParams.get("cycle") ?? "";
   const filterModule = searchParams.get("module") ?? "";
+  const dueDateFrom = searchParams.get("dueDateFrom") ?? "";
+  const dueDateTo = searchParams.get("dueDateTo") ?? "";
   const filterSeverity = searchParams.get("severity") ?? "";
   const filterQaState = searchParams.get("qaState") ?? "";
   const createParamOpen = searchParams.get("create") === "1";
@@ -92,6 +94,8 @@ export function useBoardUrlState(
       labels: filterLabels || undefined,
       cycle: filterCycle || undefined,
       module: filterModule || undefined,
+      dueDateFrom: dueDateFrom || undefined,
+      dueDateTo: dueDateTo || undefined,
     }),
     [
       q,
@@ -102,6 +106,8 @@ export function useBoardUrlState(
       filterLabels,
       filterCycle,
       filterModule,
+      dueDateFrom,
+      dueDateTo,
     ],
   );
 
@@ -309,6 +315,8 @@ export function useBoardUrlState(
     filterLabels ||
     filterCycle ||
     filterModule ||
+    dueDateFrom ||
+    dueDateTo ||
     filterSeverity ||
     filterQaState
   );
@@ -340,6 +348,8 @@ export function useBoardUrlState(
     if (filterLabels) filters.labels = filterLabels;
     if (filterCycle) filters.cycle = filterCycle;
     if (filterModule) filters.module = filterModule;
+    if (dueDateFrom) filters.dueDateFrom = dueDateFrom;
+    if (dueDateTo) filters.dueDateTo = dueDateTo;
     if (filterSeverity) filters.severity = filterSeverity;
     if (filterQaState) filters.qaState = filterQaState;
     return filters;
@@ -352,6 +362,8 @@ export function useBoardUrlState(
     filterLabels,
     filterCycle,
     filterModule,
+    dueDateFrom,
+    dueDateTo,
     filterSeverity,
     filterQaState,
   ]);

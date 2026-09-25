@@ -164,6 +164,8 @@ export function useBoardNavigationActions({
         labels: null,
         cycle: null,
         module: null,
+        dueDateFrom: null,
+        dueDateTo: null,
         severity: null,
         qaState: null,
       },

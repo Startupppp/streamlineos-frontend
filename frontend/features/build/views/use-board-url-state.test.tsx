@@ -139,6 +139,36 @@ describe("useBoardUrlState — saving a view persists every filter the board was
     });
   });
 
+  it("forwards a deep-linked due-date range to the board and saved view", () => {
+    setParams({
+      dueDateFrom: "2026-01-01",
+      dueDateTo: "2026-01-31",
+    });
+
+    const { result } = renderHook(() => useBoardUrlState(1));
+
+    expect(mockBoardFilters).toMatchObject({
+      dueDateFrom: "2026-01-01",
+      dueDateTo: "2026-01-31",
+    });
+    expect(result.current.hasActiveFilters).toBe(true);
+
+    act(() => {
+      result.current.handleSaveViewNameChange(nameEvent("January due dates"));
+    });
+    act(() => {
+      result.current.handleSaveView();
+    });
+
+    const payload = mockCreateViewMutate.mock.calls[0][0] as {
+      filters: Record<string, string>;
+    };
+    expect(payload.filters).toEqual({
+      dueDateFrom: "2026-01-01",
+      dueDateTo: "2026-01-31",
+    });
+  });
+
   it("omits filters that are not set rather than writing empty strings the board would later treat as active", () => {
     setParams({ status: "Todo" });
 
@@ -422,7 +452,13 @@ describe("useBoardUrlState — QA filters replace the standalone Bugs page", () 
   });
 
   it("clears severity and QA state alongside the other filters", () => {
-    setParams({ type: "BUG", severity: "blocker", qaState: "verified" });
+    setParams({
+      type: "BUG",
+      severity: "blocker",
+      qaState: "verified",
+      dueDateFrom: "2026-01-01",
+      dueDateTo: "2026-01-31",
+    });
 
     const { result } = renderHook(() => useBoardUrlState(1));
 
@@ -433,6 +469,8 @@ describe("useBoardUrlState — QA filters replace the standalone Bugs page", () 
     const written = new URLSearchParams(mockReplace.mock.calls[0][0].slice(1));
     expect(written.get("severity")).toBeNull();
     expect(written.get("qaState")).toBeNull();
+    expect(written.get("dueDateFrom")).toBeNull();
+    expect(written.get("dueDateTo")).toBeNull();
   });
 
   it("writes a QA filter to the URL so a filtered defect list is shareable", () => {
