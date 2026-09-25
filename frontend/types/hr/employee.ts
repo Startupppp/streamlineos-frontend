@@ -292,7 +292,9 @@ export interface OnboardEmployeeInput {
   gender?: string;
   designation: string;
   departmentId?: string;
+  /** Optional since HRM-15: omitted means the backend resolves it by policy. */
   reportingManagerUserId?: string;
+  secondaryManagers?: Array<{ managerUserId: string; label?: string }>;
   topLevelRole?: boolean;
   topLevelRoleReason?: string;
   role: string;
@@ -326,7 +328,11 @@ export interface BulkOnboardEmployeeRow {
   departmentId?: string;
   department?: string;
   reportingManagerUserId?: string;
-  reportingManagerEmail?: string;
+  primaryManagerEmail?: string;
+  secondaryManagerEmail1?: string;
+  secondaryManagerEmail2?: string;
+  secondaryManagerEmail3?: string;
+  effectiveFrom?: string;
   topLevelRole?: boolean;
   topLevelRoleReason?: string;
   role?: string;
@@ -346,17 +352,48 @@ export interface BulkOnboardEmployeeRow {
   };
 }
 
+export type BulkOnboardRowStatus = "READY" | "WARNING" | "ERROR" | "SKIPPED";
+export type BulkOnboardCommitStatus = BulkOnboardRowStatus | "CREATED" | "FAILED";
+export type ManagerResolutionKind = "SELECTED" | "IN_FILE" | "FALLBACK_CONFIGURED" | "FALLBACK_UPLOADER";
+
+export interface OnboardingPrimaryManager {
+  userId: string | null;
+  name: string;
+  email: string;
+  resolution: ManagerResolutionKind;
+}
+
 export interface BulkOnboardResultRow {
   row: number;
   email: string;
   success: boolean;
   userId?: string;
   error?: string;
+  status: BulkOnboardCommitStatus;
+  codes: string[];
+  primaryManager: OnboardingPrimaryManager | null;
 }
 
 export interface BulkOnboardResult {
   total: number;
   created: number;
   failed: number;
+  skipped: number;
   results: BulkOnboardResultRow[];
+}
+
+export interface BulkOnboardPreviewRow {
+  row: number;
+  email: string;
+  status: BulkOnboardRowStatus;
+  codes: string[];
+  messages: string[];
+  primaryManager: OnboardingPrimaryManager | null;
+  secondaryManagers: Array<{ name: string; email: string }>;
+  dependsOnRow: number | null;
+}
+
+export interface BulkOnboardPreview {
+  rows: BulkOnboardPreviewRow[];
+  counts: { ready: number; warning: number; error: number; skipped: number };
 }

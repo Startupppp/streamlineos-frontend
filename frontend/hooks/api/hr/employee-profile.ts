@@ -43,6 +43,11 @@ const _bulkOnboardContract = lazyContract(() =>
     (m) => m.bulkOnboardResultContract,
   ),
 );
+const _bulkOnboardPreviewContract = lazyContract(() =>
+  import("@/hooks/api/hr/employee-profile-schema").then(
+    (m) => m.bulkOnboardPreviewContract,
+  ),
+);
 const _employmentContract = lazyContract(() =>
   import("@/hooks/api/hr/employee-profile-schema").then(
     (m) => m.employmentByUserIdContract,
@@ -128,18 +133,37 @@ export function useCreateEmployeeInviteLink() {
   });
 }
 
+/**
+ * The key belongs to the upload, not the HTTP call: a retry of the same rows
+ * (timeout, network drop, double click) replays the first result instead of
+ * creating people twice. Only a completed commit releases it, so a failed
+ * attempt retried with the same rows keeps its key (PRD §7.3.10).
+ */
 export function useBulkOnboardEmployees() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("hr:onboarding:manage", {
     mutationKey: ["hr", "employee", "onboard", "bulk"],
     mutationFn: (employees: BulkOnboardEmployeeRow[]) =>
       apiClient.post(
         "/hr/employees/onboard/bulk",
         { employees },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        operation.configFor({ employees }),
         _bulkOnboardContract,
       ),
-    onSuccess: () => void invalidateHrWorkforceQueries(qc),
+    onSuccess: () => {
+      operation.settle();
+      void invalidateHrWorkforceQueries(qc);
+    },
+  });
+}
+
+/** Server-side dry run (CONTRACT §4.20): resolves managers and fallbacks, writes nothing. */
+export function useBulkOnboardPreview() {
+  return useAuthorizedMutation("hr:onboarding:manage", {
+    mutationKey: ["hr", "employee", "onboard", "bulk", "preview"],
+    mutationFn: (employees: BulkOnboardEmployeeRow[]) =>
+      apiClient.post("/hr/employees/onboard/bulk/preview", { employees }, undefined, _bulkOnboardPreviewContract),
   });
 }
 

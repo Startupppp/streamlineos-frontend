@@ -249,9 +249,31 @@ export const humanResourcesQueryKeys = {
     hrTemplateVariables: () => [...base, "hr", "templateVariables"] as const,
     employeeEmployment: (userId: string) =>
       [...base, "hr", "employeeEmployment", userId] as const,
+    reportingLinesAll: () => [...base, "hr", "reportingLine"] as const,
     reportingLine: (userId: string) =>
       [...base, "hr", "reportingLine", userId] as const,
     managerCoverage: () => [...base, "hr", "reportingLines", "coverage"] as const,
+    reportingManagerPolicy: () => [...base, "hr", "reportingManagerPolicy"] as const,
+    managerCandidates: (q: string, excludeUserId?: string) =>
+      [...base, "hr", "reportingLines", "managerCandidates", { q, excludeUserId: excludeUserId ?? null }] as const,
+    reportingManagerRequests: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "hr", "reportingManagerRequests"] as const)
+        : ([...base, "hr", "reportingManagerRequests", params] as const),
+    reportingManagerRequest: (requestId: string) =>
+      [...base, "hr", "reportingManagerRequest", requestId] as const,
+    reportingLineBulkJobs: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "hr", "reportingLines", "bulkJobs"] as const)
+        : ([...base, "hr", "reportingLines", "bulkJobs", params] as const),
+    reportingLineBulkJob: (jobId: string, rowCursor?: string) =>
+      rowCursor === undefined
+        ? ([...base, "hr", "reportingLines", "bulkJob", jobId] as const)
+        : ([...base, "hr", "reportingLines", "bulkJob", jobId, rowCursor] as const),
+    myReportingLine: () => [...base, "me", "reportingLine"] as const,
+    myReportingManagerRequests: () => [...base, "me", "reportingManagerRequests"] as const,
+    myManagerCandidates: (q: string) => [...base, "me", "reportingManagerRequests", "managerCandidates", q] as const,
+    myApprovers: () => [...base, "me", "approvers"] as const,
     myApprover: (kind: string) => [...base, "me", "approvers", kind] as const,
     myTeam: () => [...base, "me", "team"] as const,
     employeeTimeline: (employmentId: number, params?: QueryKeyParams) =>
