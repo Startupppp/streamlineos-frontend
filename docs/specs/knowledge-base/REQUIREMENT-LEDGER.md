@@ -572,7 +572,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 - [x] Shared search/citation result projection (consumed by S16 too)
 - [x] `GET /kb/search`
-- [ ] Route + facets + cursor + URL codec
+- [x] Route + facets + cursor + URL codec
 - [x] Quick find "View all" handoff preserving the query
 - [x] Leakage and recall suites
 - [x] All six states + keyboard navigation evidence
