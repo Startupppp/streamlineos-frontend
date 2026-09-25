@@ -50,6 +50,7 @@ export const KanbanColumnWip = memo(function KanbanColumnWip({
   }
 
   const tone = statusToneClasses(WIP_TONE[state]);
+  const textInk = tone.ink.replace(/-ink$/, "-ink-strong");
   const description = `${count} of ${wipLimit} tickets, ${WIP_STATE_SUFFIX[state]}`;
 
   return (
@@ -62,7 +63,7 @@ export const KanbanColumnWip = memo(function KanbanColumnWip({
       className={cn(
         "h-5 shrink-0 gap-0 px-1.5 py-0 text-micro font-semibold tabular-nums",
         tone.surface,
-        tone.ink,
+        textInk,
         tone.rule,
         className,
       )}
