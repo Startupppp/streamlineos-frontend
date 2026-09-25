@@ -29,6 +29,8 @@ interface HandbookVersionCardProps {
   onEdit: (version: HandbookVersion) => void;
   onDelete: (id: number) => void;
   isUpdating: boolean;
+  /** hr:handbook:manage — PATCH/DELETE /hr/handbook/:id. */
+  canManage: boolean;
 }
 
 export function HandbookVersionCard({
@@ -38,6 +40,7 @@ export function HandbookVersionCard({
   onEdit,
   onDelete,
   isUpdating,
+  canManage,
 }: HandbookVersionCardProps) {
   const isPublished = !!v.publishedAt;
 
@@ -54,7 +57,7 @@ export function HandbookVersionCard({
     <div
       className={cn(
         "rounded-2xl border border-border/70 bg-card/90 shadow-sm overflow-hidden border-l-4",
-        isPublished ? "border-l-emerald-500" : "border-l-amber-500"
+        isPublished ? "border-l-status-success-rule" : "border-l-status-warning-rule"
       )}
     >
       <div className="p-4 flex items-center gap-3">
@@ -121,6 +124,7 @@ export function HandbookVersionCard({
           </div>
         </div>
 
+        {canManage && (
         <div className="flex items-center gap-1.5 shrink-0">
           {!isPublished && (
             <Button
@@ -129,7 +133,7 @@ export function HandbookVersionCard({
               className="w-8 p-0 hover:bg-muted transition-colors duration-200"
               onClick={handleEdit}
               disabled={isUpdating}
-              aria-label="Edit version"
+              aria-label={`Edit ${v.title || `version ${v.version}`}`}
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
@@ -166,9 +170,10 @@ export function HandbookVersionCard({
             variant="ghost"
             className="w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
             onClick={handleDelete}
-            aria-label="Delete version"
+            aria-label={`Delete ${v.title || `version ${v.version}`}`}
           />
         </div>
+        )}
       </div>
     </div>
   );

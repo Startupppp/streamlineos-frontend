@@ -88,8 +88,9 @@ export function HandbookCreateForm({
           <button
             type="button"
             onClick={onSwitchToUrl}
+            aria-pressed={values.documentInputMode === "url"}
             className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-colors duration-200",
+              "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               values.documentInputMode === "url"
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:bg-muted"
@@ -101,8 +102,9 @@ export function HandbookCreateForm({
           <button
             type="button"
             onClick={onSwitchToFile}
+            aria-pressed={values.documentInputMode === "file"}
             className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-colors duration-200",
+              "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               values.documentInputMode === "file"
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:bg-muted"
