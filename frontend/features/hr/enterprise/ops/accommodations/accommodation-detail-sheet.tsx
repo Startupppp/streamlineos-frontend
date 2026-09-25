@@ -12,8 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { Textarea } from "@/components/ui/textarea";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Lock } from "lucide-react";
@@ -96,9 +96,7 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
   }
 
   function handleApprove() {
-    approve.mutate({ note: approvingNote || undefined }, {
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
+    approve.mutate({ note: approvingNote || undefined });
   }
 
   return (
@@ -152,8 +150,8 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
               <Separator />
               <div className="space-y-2">
                 <p className="text-sm font-medium">Approve Request</p>
-                <textarea
-                  className="w-full text-sm rounded-md border border-border bg-background px-3 py-2 resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                <Textarea
+                  aria-label="Approval note"
                   rows={2}
                   placeholder="Approval note (optional)"
                   value={approvingNote}
@@ -163,7 +161,7 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
                   onClick={handleApprove}
                   isPending={approve.isPending}
                   loadingText="Approving…"
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  className="w-full"
                 >
                   Approve
                 </LoadingButton>

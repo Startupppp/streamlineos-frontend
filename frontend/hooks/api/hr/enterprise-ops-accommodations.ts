@@ -5,6 +5,8 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
+import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { queryKeyBase } from "@/lib/query-keys/base";
@@ -127,12 +129,22 @@ export function useCreateAccommodation() {
 
 export function useApproveAccommodation(accommodationId: string) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:accommodations:manage", {
+  // The route is @Idempotent("hr.accommodation.approve"): the key must outlive a retry.
+  return useAuthorizedIdempotentMutation("hr:accommodations:manage", {
     mutationKey: ["hr-accommodations", "approve", accommodationId],
-    mutationFn: (body: {
-      note?: string;
-      tasks?: Array<{ title: string; assigneeUserId?: string; dueDate?: string }>;
-    }) => apiClient.post(`${BASE}/${accommodationId}/approve`, body, undefined, _approveAccommodationContract),
+    mutationFn: (
+      body: {
+        note?: string;
+        tasks?: Array<{ title: string; assigneeUserId?: string; dueDate?: string }>;
+      },
+      idempotencyKey: string,
+    ) =>
+      apiClient.post(
+        `${BASE}/${accommodationId}/approve`,
+        body,
+        { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey } },
+        _approveAccommodationContract,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: accKeys.detail(accommodationId) });
       void qc.invalidateQueries({ queryKey: accKeys.all });
