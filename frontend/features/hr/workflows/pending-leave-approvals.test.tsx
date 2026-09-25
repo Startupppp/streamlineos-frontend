@@ -11,14 +11,40 @@
  * These assertions pin both halves: the requests appear, and the page stops
  * claiming an empty queue while they do.
  */
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { PendingLeaveApprovals } from "./pending-leave-approvals";
-import { formatDateRange } from "./leave-approval-row-format";
+import {
+  approvalRouteTargetLabel,
+  formatDateRange,
+} from "./leave-approval-row-format";
 
 const useHrLeaveApprovals = jest.fn();
+const approveMutate = jest.fn();
+const rejectMutate = jest.fn();
 
 jest.mock("@/hooks/api/hr", () => ({
   useHrLeaveApprovals: (...args: unknown[]) => useHrLeaveApprovals(...args),
+  useApproveLeaveDedicated: () => ({
+    mutate: approveMutate,
+    isPending: false,
+    variables: undefined,
+  }),
+  useRejectLeaveDedicated: () => ({
+    mutate: rejectMutate,
+    isPending: false,
+    variables: undefined,
+  }),
+}));
+
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: { user: { id: "usr-approver" } },
+    status: "authenticated",
+  }),
+}));
+
+jest.mock("sonner", () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
 }));
 
 function request(overrides: Record<string, unknown> = {}) {
@@ -48,7 +74,11 @@ function withPages(rows: unknown[]) {
   });
 }
 
-beforeEach(() => useHrLeaveApprovals.mockReset());
+beforeEach(() => {
+  useHrLeaveApprovals.mockReset();
+  approveMutate.mockReset();
+  rejectMutate.mockReset();
+});
 
 describe("PendingLeaveApprovals", () => {
   it("asks only for pending requests", () => {
@@ -67,6 +97,54 @@ describe("PendingLeaveApprovals", () => {
     expect(screen.getByText("QA RoleMember")).toBeInTheDocument();
     expect(screen.getByText(/Casual Leave/)).toBeInTheDocument();
     expect(screen.getByText(/Oct 5 – Oct 6/)).toBeInTheDocument();
+  });
+
+  /**
+   * V-044. /hr/approvals is meant to be the single HR approvals queue, but
+   * every row was a plain link — nothing on the page could be acted on, and no
+   * row said which queue or approver it was routed to.
+   */
+  it("approving from /hr/approvals calls the same mutation Leave > Approvals does", () => {
+    withPages([request()]);
+    render(<PendingLeaveApprovals />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Approve/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Approve$/ }));
+
+    expect(approveMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ leaveId: 41 }),
+      expect.anything(),
+    );
+  });
+
+  it("each row names the queue or the approver it is routed to", () => {
+    withPages([
+      request({
+        id: 41,
+        approvalRoute: { rung: "queue", queue: { label: "HR approvals queue" } },
+      }),
+      request({
+        id: 42,
+        user: {
+          id: "usr-2",
+          name: "QA RoleTwo",
+          firstName: "QA",
+          lastName: "RoleTwo",
+          image: null,
+        },
+        approvalRoute: {
+          rung: "reporting_manager",
+          queue: null,
+          approver: { name: "Ada Lovelace" },
+        },
+      }),
+    ]);
+    render(<PendingLeaveApprovals />);
+
+    expect(screen.getByText("Routed to HR approvals queue")).toBeInTheDocument();
+    expect(
+      screen.getByText("Routed to Ada Lovelace (reporting manager)"),
+    ).toBeInTheDocument();
   });
 
   it("links each row to the surface that can act on it", () => {
@@ -121,5 +199,30 @@ describe("formatDateRange", () => {
 
   it("returns the raw value rather than throwing inside a list of good rows", () => {
     expect(formatDateRange("not-a-date", "2026-10-06")).toBe("not-a-date");
+  });
+});
+
+describe("approvalRouteTargetLabel", () => {
+  it("names the queue when the request sits in one", () => {
+    expect(
+      approvalRouteTargetLabel({
+        rung: "queue",
+        queue: { label: "HR approvals queue" },
+      }),
+    ).toBe("Routed to HR approvals queue");
+  });
+
+  it("names the approver and the rung that reached them", () => {
+    expect(
+      approvalRouteTargetLabel({
+        rung: "department_head",
+        approver: { name: "Ada Lovelace" },
+      }),
+    ).toBe("Routed to Ada Lovelace (department head)");
+  });
+
+  it("says nothing rather than inventing a target when no route was sent", () => {
+    expect(approvalRouteTargetLabel(null)).toBeNull();
+    expect(approvalRouteTargetLabel({ rung: null })).toBeNull();
   });
 });

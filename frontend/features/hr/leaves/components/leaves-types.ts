@@ -9,6 +9,8 @@ export interface LeaveBalance {
 export interface LeaveType {
   id: number;
   name: string;
+  /** V-049. The configured policy's name. Optional until the backend half lands. */
+  policyName?: string | null;
 }
 
 export interface LeaveRequest {

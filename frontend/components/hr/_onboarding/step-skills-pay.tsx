@@ -103,10 +103,15 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
           name="monthlySalary"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Monthly Salary (CTC) <span className="text-status-danger-ink">*</span></FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-muted-foreground">&#8377;</span>
+              <FormLabel>Monthly Salary (CTC, INR) <span className="text-status-danger-ink">*</span></FormLabel>
+              {/* V-135: FormControl's id/aria-* land on its single Slot child,
+                  so the Input has to be that child — wrapping it in the
+                  positioning div left the field with no accessible name. */}
+              <div className="relative">
+                {/* Decorative: the currency is in the label, so a screen
+                    reader is not left with a bare number. */}
+                <span aria-hidden="true" className="absolute left-3 top-2.5 text-muted-foreground">&#8377;</span>
+                <FormControl>
                   <Input
                     type="number"
                     placeholder="25000"
@@ -117,8 +122,8 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
                     ref={field.ref}
                     className="pl-8"
                   />
-                </div>
-              </FormControl>
+                </FormControl>
+              </div>
               <FormMessage />
             </FormItem>
           )}

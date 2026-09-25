@@ -7,11 +7,20 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatDayCount } from "@/lib/format-utils";
 import type { LeaveBalance } from "./leaves-shared";
 
+/**
+ * V-045. The no-policy copy keys on whether the org has *configured* a leave
+ * type, never on whether the viewer holds balance rows. A configured 12-day
+ * policy nobody has used yet also has zero stored balances, and that is exactly
+ * the org this copy used to lie to.
+ * PROVISIONAL: `noPolicyConfigured` comes from /me/time-off; until the backend
+ * half lands the caller falls back to "no configured types".
+ */
 export function buildAvailableHint(
   balances: LeaveBalance[],
   joiningDate: string | null,
+  noPolicyConfigured = false,
 ): string | undefined {
-  if (balances.length === 0)
+  if (noPolicyConfigured)
     return "No leave policy is set up yet, so nothing has accrued — an HR admin can add leave types under Leave settings.";
 
   const perType = balances
@@ -33,12 +42,12 @@ export const LeavesSummaryStrip = React.memo(function LeavesSummaryStrip({
   totalAvailable,
   availableHint,
   pendingCount,
-  approvedCount,
+  approvedDays,
 }: {
   totalAvailable: number;
   availableHint?: string;
   pendingCount: number;
-  approvedCount: number;
+  approvedDays: number;
 }) {
   return (
     <StatCardGrid cols={3}>
@@ -57,7 +66,7 @@ export const LeavesSummaryStrip = React.memo(function LeavesSummaryStrip({
       />
       <StatCard
         label="Approved (YTD)"
-        value={approvedCount}
+        value={formatDayCount(approvedDays)}
         icon={BadgeCheck}
         color="blue"
       />

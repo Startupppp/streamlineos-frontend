@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { approvalRouteContract } from "@/hooks/api/hr/approval-route-schema";
+import {
+  approvalRouteContract,
+  approvalRungContract,
+} from "@/hooks/api/hr/approval-route-schema";
 
 const successContract = z.object({ success: z.literal(true) });
 
@@ -9,6 +12,8 @@ const leaveTypeRowSchema = z.object({
   name: z.string(),
   daysPerYear: z.number().int(),
   carryForward: z.boolean(),
+  /** V-049. The configured policy's own name. Optional until the backend half lands. */
+  policyName: z.string().nullish(),
 });
 
 const leaveRequestRowSchema = z.object({
@@ -74,6 +79,18 @@ const leavesTeamItemSchema = leaveRequestRowSchema.extend({
       image: z.string().nullable(),
     })
     .nullable(),
+  /**
+   * V-044. Where this request is routed, so a queue row can name its target
+   * instead of being an anonymous link. Optional until the backend half lands;
+   * the row renders nothing rather than guessing.
+   */
+  approvalRoute: z
+    .object({
+      rung: approvalRungContract.nullable(),
+      queue: z.object({ label: z.string() }).nullable().optional(),
+      approver: z.object({ name: z.string().nullable() }).nullable().optional(),
+    })
+    .nullish(),
 });
 
 export const requestLeaveContract = z.object({
@@ -128,6 +145,11 @@ export const leaveContextContract = z.object({
     }),
   ),
   approvalRoute: approvalRouteContract,
+  /**
+   * V-045. True when the org has configured no leave type at all. Optional
+   * until the backend half lands; the page falls back to `types.length === 0`.
+   */
+  noPolicyConfigured: z.boolean().optional(),
 });
 
 const idCursorPageInfoSchema = z.object({

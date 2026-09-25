@@ -23,6 +23,7 @@ import { FileUpload } from "@/components/storage/file-upload";
 import Link from "next/link";
 
 import { isWeekend } from "./leave-date-helpers";
+import { leaveTypeOptionLabel } from "./leave-type-option-label";
 import { LeaveBalancePreview, LeaveLimitError } from "./leave-balance-preview";
 import type { LeaveFormValues } from "./leave-request-schema";
 import type { LeaveType, LeaveBalance } from "./components/leaves-shared";
@@ -100,7 +101,7 @@ export function LeaveRequestFormFields({
                 >
                   {leaveTypes.map((t) => (
                     <SelectItem key={t.id} value={t.id.toString()}>
-                      {t.name}
+                      {leaveTypeOptionLabel(t)}
                     </SelectItem>
                   ))}
                 </SelectContent>

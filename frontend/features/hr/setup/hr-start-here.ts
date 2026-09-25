@@ -4,7 +4,7 @@ export type HrSetupStepStatus = "done" | "next" | "todo" | "unknown";
 
 export interface HrSetupSignals {
   people: number | null;
-  leaveTypes: number | null;
+  leavePolicies: number | null;
   shifts: number | null;
   documents: number | null;
 }
@@ -44,7 +44,7 @@ const STEP_DEFINITIONS: readonly StepDefinition[] = [
       "Create the leave types you actually grant — Casual, Sick and Earned cover most Indian SMBs — then a policy for each.",
     href: "/hr/settings/policies",
     actionLabel: "Configure leave",
-    signal: "leaveTypes",
+    signal: "leavePolicies",
   },
   {
     // The step is named for a shift, its completion is counted in shifts, and

@@ -82,10 +82,16 @@ jest.mock("@/features/hr/assets/asset-table-section", () => ({
   AssetTableSection: ({
     filteredItems,
   }: {
-    filteredItems: { name: string }[];
+    filteredItems: { name: string; assignedTo: string | null }[];
   }) =>
     filteredItems.map((a) => (
-      <div key={a.name} data-testid="asset-row">
+      <div
+        key={a.name}
+        data-testid="asset-row"
+        // V-082. The rows read `assignedTo`; the Assigned summary reads the
+        // backend aggregate. The test below holds the two together.
+        data-assigned={a.assignedTo ? "yes" : "no"}
+      >
         {a.name}
       </div>
     )),
@@ -177,5 +183,56 @@ describe("AssetsPage server-prefetch seam", () => {
       expect.anything(),
       expect.anything(),
     );
+  });
+});
+
+/**
+ * V-082. The Assigned summary card was rendered from a status-derived backend
+ * count while the rows and the assignment filter both read `assignedTo` — so an
+ * asset whose status said ASSIGNED but whose `assigned_to` was empty made the
+ * card and the list disagree, with nothing on screen to explain it. The backend
+ * half makes the aggregate count `assigned_to`; this is the frontend half's
+ * guard, that the card binds to that aggregate and to nothing else.
+ */
+describe("AssetsPage assignment summary", () => {
+  function assetRow(id: number, overrides: Partial<Asset>): Asset {
+    return { ...asset, id, name: `Asset ${id}`, ...overrides };
+  }
+
+  const MIXED = {
+    data: [
+      assetRow(1, { assignedTo: "usr-1", status: "ASSIGNED" }),
+      assetRow(2, { assignedTo: "usr-2", status: "ASSIGNED" }),
+      assetRow(3, { assignedTo: null, status: "AVAILABLE" }),
+      assetRow(4, { assignedTo: null, status: "MAINTENANCE" }),
+    ],
+    counts: { total: 4, available: 1, assigned: 2, maintenance: 1, retired: 0 },
+    pagination: { limit: 20, hasMore: false, nextCursor: null },
+  };
+
+  it("the Assigned summary equals the number of rows showing an assignee, for a mix of assigned and unassigned assets", () => {
+    const seed = new QueryClient();
+    seed.setQueryData(queryKeys.hr.assets({ limit: 20 }), MIXED);
+    const client = new QueryClient();
+
+    render(
+      <Wrapper client={client}>
+        <HydrationBoundary state={dehydrate(seed)}>
+          <AssetsPage />
+        </HydrationBoundary>
+      </Wrapper>,
+    );
+
+    const rowsWithAssignee = screen
+      .getAllByTestId("asset-row")
+      .filter((row) => row.getAttribute("data-assigned") === "yes");
+    expect(rowsWithAssignee).toHaveLength(2);
+
+    const assignedCard = screen.getByText("Assigned").closest("div")
+      ?.parentElement as HTMLElement;
+    expect(assignedCard).toHaveTextContent(String(rowsWithAssignee.length));
+    // Paired with the totals, so a card bound to the wrong aggregate cannot pass.
+    expect(screen.getByText("Total Assets").closest("div")?.parentElement)
+      .toHaveTextContent("4");
   });
 });

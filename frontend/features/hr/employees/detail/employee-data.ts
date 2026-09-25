@@ -55,6 +55,12 @@ export const employeeDataSchema = z
     orgDepartmentId: z.string().nullable(),
     image: z.string().nullable(),
     isActive: z.boolean().nullable(),
+    /**
+     * PROVISIONAL (product default E-4): derived at read time, never stored.
+     * Optional because `GET /hr/employees/:id` does not project it yet — the
+     * list endpoint does. Until it lands here the header keeps its old badge.
+     */
+    hasAccepted: z.boolean().optional(),
     joiningDate: z.string().nullable(),
     reportingTo: z.string().nullable(),
     bio: z.string().nullable(),

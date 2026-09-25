@@ -1,6 +1,6 @@
 import { hrSetupProgress, hrStartHereSteps, type HrSetupSignals } from "./hr-start-here";
 
-const NOTHING: HrSetupSignals = { people: 0, leaveTypes: 0, shifts: 0, documents: 0 };
+const NOTHING: HrSetupSignals = { people: 0, leavePolicies: 0, shifts: 0, documents: 0 };
 
 describe("hrStartHereSteps", () => {
   it("orders the path People → Leave → Attendance → Documents, because each step unblocks the next", () => {
@@ -20,7 +20,7 @@ describe("hrStartHereSteps", () => {
   });
 
   it("advances next past the steps already done rather than restarting at the top", () => {
-    const steps = hrStartHereSteps({ ...NOTHING, people: 3, leaveTypes: 2 });
+    const steps = hrStartHereSteps({ ...NOTHING, people: 3, leavePolicies: 2 });
 
     expect(steps.find((step) => step.status === "next")?.id).toBe("shifts");
     expect(steps.filter((step) => step.status === "done").map((s) => s.id)).toEqual([
@@ -36,7 +36,7 @@ describe("hrStartHereSteps", () => {
   });
 
   it("still names a next step when an earlier signal is unreadable, so the checklist stays actionable", () => {
-    const steps = hrStartHereSteps({ people: null, leaveTypes: 0, shifts: 0, documents: 0 });
+    const steps = hrStartHereSteps({ people: null, leavePolicies: 0, shifts: 0, documents: 0 });
 
     expect(steps.find((step) => step.status === "next")?.id).toBe("leave");
   });
@@ -56,7 +56,7 @@ describe("hrStartHereSteps", () => {
 
 describe("hrSetupProgress", () => {
   it("counts only the steps it can actually see, so a restricted viewer is not told 0 of 4", () => {
-    const steps = hrStartHereSteps({ people: 5, leaveTypes: 1, shifts: null, documents: null });
+    const steps = hrStartHereSteps({ people: 5, leavePolicies: 1, shifts: null, documents: null });
 
     expect(hrSetupProgress(steps)).toEqual({ done: 2, known: 2, complete: true });
   });
@@ -70,7 +70,7 @@ describe("hrSetupProgress", () => {
   });
 
   it("is never complete when nothing at all is readable, so the panel does not vanish on a permissions error", () => {
-    const steps = hrStartHereSteps({ people: null, leaveTypes: null, shifts: null, documents: null });
+    const steps = hrStartHereSteps({ people: null, leavePolicies: null, shifts: null, documents: null });
 
     expect(hrSetupProgress(steps).complete).toBe(false);
   });
@@ -87,7 +87,7 @@ describe("hrSetupProgress", () => {
  * send them somewhere else without a test noticing.
  */
 describe("every Start here step links where it says it does", () => {
-  const steps = hrStartHereSteps({ people: 0, leaveTypes: 0, shifts: 0, documents: 0 });
+  const steps = hrStartHereSteps({ people: 0, leavePolicies: 0, shifts: 0, documents: 0 });
   const hrefOf = (id: string): string | undefined => steps.find((step) => step.id === id)?.href;
 
   it("sends 'Define a shift' to the shifts screen, not to attendance", () => {
