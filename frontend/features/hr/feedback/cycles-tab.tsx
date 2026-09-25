@@ -8,7 +8,6 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -44,7 +43,10 @@ import {
 } from "@/lib/date-constraints";
 import { getTodayString } from "@/lib/date-utils";
 import { randomId } from "@/lib/random-id";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const CYCLE_STATUS_STYLES: Record<string, string> = {
@@ -69,25 +71,13 @@ interface CycleFormState {
   questions: QuestionBuilder[];
 }
 
-function RemoveQuestionButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button
-      type="button"
-      aria-label="Remove question"
-      onClick={onClick}
-      className="text-muted-foreground hover:text-status-danger-ink"
-      {...hoverHandlers}
-    >
-      <XIcon ref={iconRef} size={14} />
-    </button>
-  );
-}
-
 export function CyclesTab() {
   const { data: cycles = [], isLoading, isError, error, refetch } = useFeedbackCycles();
   const createCycle = useCreateFeedbackCycle();
   const updateStatus = useUpdateFeedbackCycleStatus();
+  const canManage = useCan("hr:performance:manage");
+  const pageState = usePageState({ permission: "hr:performance:view", isLoading, isError, error });
+  const [closeTarget, setCloseTarget] = useState<FeedbackCycle | null>(null);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<CycleFormState>({
@@ -173,8 +163,8 @@ export function CyclesTab() {
         isAnonymous: true,
         questions: [{ id: randomId(), text: "", type: "rating" }],
       });
-    } catch {
-      toast.error("Failed to create cycle");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
@@ -182,22 +172,31 @@ export function CyclesTab() {
     try {
       await updateStatus.mutateAsync({ cycleId: cycle.id, status: "ACTIVE" });
       toast.success("Cycle activated");
-    } catch {
-      toast.error("Failed to activate cycle");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
-  async function handleClose(cycle: FeedbackCycle) {
+  async function handleConfirmClose() {
+    if (!closeTarget) return;
     try {
-      await updateStatus.mutateAsync({ cycleId: cycle.id, status: "CLOSED" });
+      await updateStatus.mutateAsync({ cycleId: closeTarget.id, status: "CLOSED" });
       toast.success("Cycle closed");
-    } catch {
-      toast.error("Failed to close cycle");
+      setCloseTarget(null);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
-  if (isLoading) {
-    return (
+  function handleCloseOpenChange(open: boolean) {
+    if (!open) setCloseTarget(null);
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
+
+  const loadingSkeleton = (
       <div className="space-y-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="bg-card rounded-2xl border border-border p-5 animate-pulse space-y-3">
@@ -209,23 +208,18 @@ export function CyclesTab() {
           </div>
         ))}
       </div>
-    );
-  }
-
-  if (isError) {
-    return <ErrorState className="flex-1" title="Couldn't load feedback cycles" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
-  }
+  );
 
   return (
+    <PageState resolution={pageState} loading={loadingSkeleton} onRetry={handleRetry} className="flex-1">
     <div className="space-y-4">
+      {canManage && (
       <div className="flex justify-end">
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <motion.div whileTap={{ scale: 0.97 }}>
-              <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2">
-                Create Cycle
-              </AnimatedIconButton>
-            </motion.div>
+            <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-2">
+              Create Cycle
+            </AnimatedIconButton>
           </SheetTrigger>
           <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-[480px]">
             <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left gap-1">
@@ -299,7 +293,16 @@ export function CyclesTab() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">Q{idx + 1}</span>
                       {form.questions.length > 1 && (
-                        <RemoveQuestionButton onClick={() => removeQuestion(q.id)} />
+                        <AnimatedIconButton
+                          type="button"
+                          icon={XIcon}
+                          iconSize={14}
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-status-danger-ink"
+                          aria-label={`Remove question ${idx + 1}`}
+                          onClick={() => removeQuestion(q.id)}
+                        />
                       )}
                     </div>
                     <Input
@@ -322,20 +325,19 @@ export function CyclesTab() {
                   </div>
                 ))}
               </div>
-              <motion.div whileTap={{ scale: 0.97 }}>
-                <LoadingButton
-                  className="w-full"
-                  onClick={handleCreate}
-                  isPending={createCycle.isPending}
-                  loadingText="Creating…"
-                >
-                  Create Cycle
-                </LoadingButton>
-              </motion.div>
+              <LoadingButton
+                className="w-full"
+                onClick={handleCreate}
+                isPending={createCycle.isPending}
+                loadingText="Creating…"
+              >
+                Create Cycle
+              </LoadingButton>
             </SheetBody>
           </SheetContent>
         </Sheet>
       </div>
+      )}
 
       {cycles.length === 0 ? (
         <EmptyState
@@ -350,7 +352,7 @@ export function CyclesTab() {
               key={cycle.id}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.22, ease: "easeOut", delay: i * 0.06 }}
+              transition={{ duration: 0.22, ease: "easeOut", delay: Math.min(i, 8) * 0.04 }}
               className="bg-card rounded-2xl border border-border shadow-sm p-5"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -370,32 +372,46 @@ export function CyclesTab() {
                   </p>
                   <p className="text-xs text-muted-foreground">{cycle.questions.length} questions</p>
                 </div>
+                {canManage && (
                 <div className="flex gap-2">
                   {cycle.status === "DRAFT" && (
-                    <Button
+                    <LoadingButton
                       size="sm"
-                      className="bg-gradient-to-r from-gradient-success-from to-gradient-success-to hover:from-gradient-success-from hover:to-gradient-success-to text-white text-xs"
+                      isPending={updateStatus.isPending && updateStatus.variables?.cycleId === cycle.id}
+                      disabled={updateStatus.isPending}
                       onClick={() => handleActivate(cycle)}
                     >
-                      Activate
-                    </Button>
+                      Activate cycle
+                    </LoadingButton>
                   )}
                   {cycle.status === "ACTIVE" && (
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-xs text-muted-foreground"
-                      onClick={() => handleClose(cycle)}
+                      onClick={() => setCloseTarget(cycle)}
                     >
-                      Close
+                      Close cycle
                     </Button>
                   )}
                 </div>
+                )}
               </div>
             </motion.div>
           ))}
         </div>
       )}
+
+      <ConfirmSheet
+        open={closeTarget !== null}
+        onOpenChange={handleCloseOpenChange}
+        title="Close feedback cycle"
+        description={`Closing "${closeTarget?.name ?? ""}" stops further responses.`}
+        confirmLabel="Close cycle"
+        destructive
+        onConfirm={handleConfirmClose}
+        isPending={updateStatus.isPending}
+      />
     </div>
+    </PageState>
   );
 }

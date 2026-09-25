@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import { Star } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -42,6 +44,15 @@ interface ReviewAnswers {
 export function MyReviewsTab() {
   const { data: reviews = [], isLoading, isError, error, refetch } = useMyPendingReviews();
   const submitFeedback = useSubmitFeedbackResponse();
+  // POST /hr/feedback/requests/:id/respond is `hr:performance:view` (feedback.controller.ts:80).
+  const canRespond = useCan("hr:performance:view");
+  const pageState = usePageState({
+    permission: "hr:performance:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: reviews.length === 0,
+  });
   const { data: cycles = [] } = useFeedbackCycles();
 
   const reviewUserIds = useMemo(
@@ -87,13 +98,18 @@ export function MyReviewsTab() {
       });
       toast.success("Review submitted");
       setReviewingRequest(null);
-    } catch {
-      toast.error("Failed to submit review");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
-  if (isLoading) {
-    return (
+  function handleRetry() {
+    void refetch();
+  }
+
+  const STAR_BUTTON = "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+  const loadingSkeleton = (
       <div className="space-y-3">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="bg-card rounded-2xl border border-border p-5 animate-pulse space-y-2">
@@ -102,35 +118,32 @@ export function MyReviewsTab() {
           </div>
         ))}
       </div>
-    );
-  }
-
-  if (isError) {
-    return <ErrorState className="flex-1" title="Couldn't load reviews" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
-  }
-
-  if (reviews.length === 0) {
-    return (
-      <EmptyState
-        illustrationPreset="approval"
-        title="No pending reviews"
-        description="You're all caught up!"
-        className={CONTENT_FILL_PANEL}
-      />
-    );
-  }
+  );
 
   const currentQuestions = reviewingRequest ? getCycleQuestions(reviewingRequest.cycleId) : [];
 
   return (
-    <>
+    <PageState
+      resolution={pageState}
+      loading={loadingSkeleton}
+      onRetry={handleRetry}
+      className="flex-1"
+      empty={
+        <EmptyState
+          illustrationPreset="approval"
+          title="No pending reviews"
+          description="You're all caught up!"
+          className={CONTENT_FILL_PANEL}
+        />
+      }
+    >
       <div className="space-y-3">
         {reviews.map((req, i) => (
           <motion.div
             key={req.id}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.22, ease: "easeOut", delay: i * 0.06 }}
+            transition={{ duration: 0.22, ease: "easeOut", delay: Math.min(i, 8) * 0.04 }}
             className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-between gap-4"
           >
             <div className="space-y-2">
@@ -146,7 +159,7 @@ export function MyReviewsTab() {
                 </Badge>
               </div>
             </div>
-            {req.status === "PENDING" && (
+            {req.status === "PENDING" && canRespond && (
               <Button
                 size="sm"
                 onClick={() => handleOpenReview(req)}
@@ -186,12 +199,12 @@ export function MyReviewsTab() {
                               [q.id]: { ...prev[q.id], rating: star },
                             }))
                           }
-                          className="transition-colors"
+                          className={`transition-colors ${STAR_BUTTON}`}
                         >
                           <Star
                             className={`w-6 h-6 ${
                               (answers[q.id]?.rating ?? 0) >= star
-                                ? "fill-amber-400 text-status-warning-ink"
+                                ? "fill-status-warning-fill text-status-warning-ink"
                                 : "text-muted-foreground"
                             }`}
                           />
@@ -221,30 +234,29 @@ export function MyReviewsTab() {
                       type="button"
                       aria-label={`Rate ${star} star${star > 1 ? "s" : ""} overall`}
                       onClick={() => setOverallRating(star)}
+                      className={STAR_BUTTON}
                     >
                       <Star
                         className={`w-6 h-6 ${
-                          overallRating >= star ? "fill-amber-400 text-status-warning-ink" : "text-muted-foreground"
+                          overallRating >= star ? "fill-status-warning-fill text-status-warning-ink" : "text-muted-foreground"
                         }`}
                       />
                     </button>
                   ))}
                 </div>
               </div>
-              <motion.div whileTap={{ scale: 0.97 }}>
-                <LoadingButton
-                  className="w-full"
-                  onClick={handleSubmitReview}
-                  isPending={submitFeedback.isPending}
-                  loadingText="Submitting…"
-                >
-                  Submit Feedback
-                </LoadingButton>
-              </motion.div>
+              <LoadingButton
+                className="w-full"
+                onClick={handleSubmitReview}
+                isPending={submitFeedback.isPending}
+                loadingText="Submitting…"
+              >
+                Submit Feedback
+              </LoadingButton>
             </div>
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </PageState>
   );
 }
