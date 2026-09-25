@@ -8,7 +8,7 @@ import {
   useInfiniteHrEmployees,
   useHrDepartments,
 } from "@/hooks/api/hr";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useFlushableDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -160,7 +160,10 @@ export function EmployeesListPage() {
     () => VIEW_MODES.find((candidate) => candidate === searchParams.get("view")) ?? "grid",
   );
 
-  const debouncedSearch = useDebouncedValue(search, 300);
+  // FE-87. One request per settled query, not per keystroke — and Enter flushes
+  // the pending value so an impatient search is immediate without a second
+  // source of truth for `q`.
+  const [debouncedSearch, flushSearch] = useFlushableDebouncedValue(search, 300);
   const { data: departments } = useHrDepartments();
   const deptList = departments as Department[] | undefined;
 
@@ -349,6 +352,7 @@ export function EmployeesListPage() {
           departments={deptList}
           hasFilters={hasFilters}
           onSearchChange={updateSearch}
+          onSearchSubmit={flushSearch}
           onDepartmentIdChange={handleDepartmentFilterChange}
           onStatusChange={handleStatusFilterChange}
           onClear={clearFilters}

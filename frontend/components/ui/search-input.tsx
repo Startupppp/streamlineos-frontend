@@ -18,6 +18,12 @@ export interface SearchInputProps
   value: string;
   onValueChange: (value: string) => void;
   onClear?: () => void;
+  /**
+   * Enter pressed in the field. Debounced searches use it to publish the typed
+   * value at once instead of waiting out the timer; the default is still a
+   * trailing debounce, so this never turns into a request per keystroke.
+   */
+  onSubmitSearch?: () => void;
   inputClassName?: string;
   /** Span the container instead of capping at the shared filter max-width. */
   fill?: boolean;
@@ -29,6 +35,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       value,
       onValueChange,
       onClear,
+      onSubmitSearch,
       className,
       inputClassName,
       placeholder = "Search…",
@@ -41,6 +48,14 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
   ) {
     function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
       onValueChange(e.target.value);
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+      props.onKeyDown?.(e);
+      if (e.key !== "Enter" || e.defaultPrevented) return;
+      // A search row often sits inside a form; Enter must search, not submit.
+      e.preventDefault();
+      onSubmitSearch?.();
     }
 
     function handleClear() {
@@ -76,6 +91,9 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             inputClassName,
           )}
           {...props}
+          // After the spread: a caller's own onKeyDown is chained inside
+          // handleKeyDown, never allowed to replace it.
+          onKeyDown={handleKeyDown}
         />
         {value ? (
           <button
