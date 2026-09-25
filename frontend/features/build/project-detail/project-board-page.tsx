@@ -1,7 +1,9 @@
 "use client";
 
 import { use, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { format, addDays } from "date-fns";
+import { Clock3 } from "lucide-react";
 import { useProject, useCycles, useBulkUpdateTickets } from "@/hooks/api";
 import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
 import type { BulkUpdateTicketsInput } from "@/hooks/api";
@@ -14,6 +16,7 @@ import { ProjectAiMenu } from "@/features/build/ai/project-ai-menu";
 import { TicketImportExportDialog } from "@/features/build/import-export/components/ticket-import-export-dialog";
 import { SaveViewDialog } from "@/features/build/views/save-view-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
@@ -212,6 +215,12 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       className="relative"
       actions={
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center [&>*]:w-full sm:[&>*]:w-auto [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/timesheets?projectId=${projectId}`}>
+              <Clock3 aria-hidden="true" />
+              Log time
+            </Link>
+          </Button>
           <ProjectAiMenu projectId={projectId} />
           <TicketImportExportDialog projectId={projectId} />
           <CreateTicketDialog
