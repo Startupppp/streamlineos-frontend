@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useCreateWfhRequest } from "@/hooks/api/hr";
 import { useMyApprover } from "@/hooks/api/hr/approvers";
 import { ApprovalRoutePanel, summarizeApprovalRoute } from "@/components/shared/approval-route-panel";
+import { useNoApproverFix } from "./no-approver-fix";
 
 import {
   Form,
@@ -54,6 +55,7 @@ export function WfhRequestSheet({
   const createWfhRequest = useCreateWfhRequest();
   const { data: approvalRoute, isLoading: routeLoading, error: routeError } = useMyApprover("wfh", { enabled: open });
   const approverAvailable = approvalRoute !== undefined && approvalRoute.rung !== null;
+  const noApproverAction = useNoApproverFix(approvalRoute);
 
   const form = useForm<WfhFormValues>({
     resolver: zodResolver(wfhFormSchema),
@@ -164,7 +166,12 @@ export function WfhRequestSheet({
             )}
           />
 
-          <ApprovalRoutePanel route={approvalRoute && summarizeApprovalRoute(approvalRoute)} isLoading={routeLoading} error={routeError} />
+          <ApprovalRoutePanel
+            route={approvalRoute && summarizeApprovalRoute(approvalRoute)}
+            isLoading={routeLoading}
+            error={routeError}
+            unownedAction={noApproverAction}
+          />
 
           <FormField
             control={form.control}
