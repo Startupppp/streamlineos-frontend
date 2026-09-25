@@ -71,7 +71,7 @@ Current release-candidate checks:
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
 - `git diff --check`: pass.
-- Latest frontend Build navigation, filtered board-count, malformed-filter normalization, portfolio-search, Command Center title consistency, and Command Center retry-refresh fixes are on `origin/main` at `54a131d2f`:
+- Latest frontend Build navigation, filtered board-count, malformed-filter normalization, portfolio-search, Command Center title consistency, retry-refresh, and stale-detail recovery fixes are on `origin/main` at `9c9c1f2a0`:
   backlog, My Work, draft, and keyboard shortcut navigation now use the shared
   dirty-state guard; focused regressions pass.
 - The Build view switcher now routes Calendar to the unified `/calendar` surface
@@ -143,7 +143,7 @@ These failures are measured and are not Build-owned:
 
 Completed:
 
-- Frontend `origin/main` contains `54a131d2f` (Command Center route labeling is consistent with its canonical route and page retry refreshes its server-derived summaries; portfolio search is sent as the server-side `q` parameter; the prior malformed-filter and board-count fixes remain in the same release line).
+- Frontend `origin/main` contains `9c9c1f2a0` (Command Center route labeling is consistent with its canonical route and page retry refreshes its server-derived summaries; portfolio search is sent as the server-side `q` parameter; stale detail reads remain recoverable; the prior malformed-filter and board-count fixes remain in the same release line).
 - Backend `origin/main` contains `b5a2553c1`, including the Build portfolio cursor validation, tenant-scoped goal-owner projection, refreshed authorization census, and migration-discipline baseline fixes.
 - The portfolio list UI renders its loading and empty states locally on port `1000`; authenticated production verification of `/build/portfolios?q=platform` now reaches the server-filtered empty state without a runtime error.
 - Portfolio and managed-product list services now reject malformed cursors with a bounded `400`; the local UI remains stable against the currently deployed older API, which still treats that input as the first page.
