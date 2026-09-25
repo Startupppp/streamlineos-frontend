@@ -3,6 +3,9 @@
 import { useMemo } from "react";
 import { useListFilterParams, type ListFilterSpec } from "@/components/list-view";
 
+const VALID_PRIORITIES = new Set(["LOW", "MEDIUM", "HIGH", "URGENT"]);
+const VALID_TICKET_TYPES = new Set(["TASK", "BUG", "STORY", "EPIC", "SUBTASK"]);
+
 /**
  * Build's declaration, and the first caller of the shared list-filter hook. The
  * categories below used to be a closed union inside the hook itself, which
@@ -32,6 +35,16 @@ export function useTicketFilterParams() {
 
   return useMemo(() => {
     const group = (key: string): string[] => [...(values[key] ?? [])];
+    const selectedPriorities = group("priority")
+      .map((value) => value.toUpperCase())
+      .filter((value) => VALID_PRIORITIES.has(value));
+    const selectedTypes = group("type")
+      .map((value) => value.toUpperCase())
+      .filter((value) => VALID_TICKET_TYPES.has(value));
+    const invalidCategoryCount = [
+      group("priority").length > 0 && selectedPriorities.length === 0,
+      group("type").length > 0 && selectedTypes.length === 0,
+    ].filter(Boolean).length;
     const makeRemove = (key: string) => (value: string) =>
       function onRemove() {
         remove(key, value);
@@ -42,14 +55,14 @@ export function useTicketFilterParams() {
       dueDateFrom: values["dates"]?.[0] ?? "",
       dueDateTo: values["dates"]?.[1] ?? "",
       selectedStatuses: group("status"),
-      selectedPriorities: group("priority"),
-      selectedTypes: group("type"),
+      selectedPriorities,
+      selectedTypes,
       selectedAssignees: group("assignee"),
       selectedLabels: group("label"),
       selectedCycles: group("cycle"),
       selectedProjectIds: group("project"),
       localSearch: filters.localSearch,
-      activeFilterCount: filters.activeFilterCount,
+      activeFilterCount: Math.max(0, filters.activeFilterCount - invalidCategoryCount),
       handleSearchChange: filters.setSearch,
       handleToggleStatus: (status: string) => toggle("status", status),
       handleTogglePriority: (priority: string) => toggle("priority", priority),

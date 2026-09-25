@@ -149,6 +149,14 @@ describe("ticket filter URL state", () => {
     expect(result.current.activeFilterCount).toBe(0);
   });
 
+  it("fails closed for malformed priority and type values", () => {
+    const { result } = renderWith("priority=NOT_A_PRIORITY&type=NOT_A_TYPE");
+
+    expect(result.current.selectedPriorities).toEqual([]);
+    expect(result.current.selectedTypes).toEqual([]);
+    expect(result.current.activeFilterCount).toBe(0);
+  });
+
   it("settles rapid search input into one navigation", () => {
     jest.useFakeTimers();
     const { result } = renderWith("");
