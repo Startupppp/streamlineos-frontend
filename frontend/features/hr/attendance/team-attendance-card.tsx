@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -20,7 +21,6 @@ import { useHrTeamAttendanceStatus, useHrDepartments } from "@/hooks/api/hr";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { cn } from "@/lib/utils";
 import type { TeamAttendanceEntry } from "@/types/hr";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { STATUS_META, SUMMARY_TONES, MemberRow } from "./team-attendance-member-row";
 
 type StatusFilter = TeamAttendanceEntry["status"] | "ALL";
@@ -50,6 +50,13 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
     departmentId: departmentFilter === "ALL" ? undefined : departmentFilter,
   });
   const { data: departmentsData } = useHrDepartments();
+  // Gated on hr:attendance:view: a denied caller must not read "No team attendance yet".
+  const pageState = usePageState({
+    permission: "hr:attendance:view",
+    isLoading,
+    isError: Boolean(error),
+    error,
+  });
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
@@ -178,7 +185,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
             onValueChange={handleSearchChange}
           />
           <Select value={departmentFilter} onValueChange={handleDepartmentChange}>
-            <SelectTrigger className="h-9 w-full sm:w-[160px]" size="sm">
+            <SelectTrigger className="w-full sm:w-[160px]" size="sm">
               <SelectValue placeholder="Department" />
             </SelectTrigger>
             <SelectContent>
@@ -192,7 +199,11 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
           </Select>
         </div>
 
-        {isLoading ? (
+        {pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading" ? (
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} compact>
+            {null}
+          </PageState>
+        ) : isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, skeletonIndex) => (
               <Skeleton
@@ -201,13 +212,6 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
               />
             ))}
           </div>
-        ) : error ? (
-          <ErrorState
-            title="Unable to load team attendance"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-            compact
-          />
         ) : entries.length === 0 ? (
           <EmptyState
             illustrationPreset="team"
