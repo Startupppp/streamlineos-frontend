@@ -22,6 +22,7 @@ import {
   fetchEmployeeAdmissionCheck,
 } from "@/components/hr/check-employee-email";
 import { describeUnsentInvite } from "@/components/hr/invite-delivery";
+import { buildOnboardEmployeePayload } from "@/components/hr/onboarding-payload";
 import { StepPersonalInfo } from "./_onboarding/step-personal-info";
 import { StepEmployment } from "./_onboarding/step-employment";
 import { StepSkillsPay } from "./_onboarding/step-skills-pay";
@@ -46,19 +47,6 @@ const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
 };
 
 const COMMON_DEPARTMENTS = ["HR", "Sales", "Customer Support", "Engineering", "Design", "Video Editing"];
-
-const KNOWN_ACRONYMS = new Set(["FINAL", "CTO", "CFO", "COO", "CMO", "CIO", "CHRO", "VP", "SVP", "EVP", "AVP", "HR", "IT", "QA", "UI", "UX"]);
-
-function toTitleCase(str: string) {
-  return str.trim().replace(/\s+/g, " ").split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-}
-
-function formatDesignation(str: string) {
-  return str.trim().replace(/\s+/g, " ").split(" ").map((word) => {
-    const upper = word.toUpperCase();
-    return KNOWN_ACRONYMS.has(upper) ? upper : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-  }).join(" ");
-}
 
 export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -143,12 +131,7 @@ export function OnboardingWizard() {
       if (currentStep !== STEPS.length || submittingRef.current) return;
       submittingRef.current = true;
       onboardEmployee.mutate(
-        {
-          ...data,
-          firstName: toTitleCase(data.firstName),
-          lastName: toTitleCase(data.lastName),
-          designation: formatDesignation(data.designation),
-        },
+        buildOnboardEmployeePayload(data),
         {
           onSuccess: (result) => {
             toast.success("Employee created successfully");
