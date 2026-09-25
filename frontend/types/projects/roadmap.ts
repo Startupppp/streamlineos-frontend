@@ -32,6 +32,8 @@ export interface FeedbackPost {
   submittedByEmail: string | null;
   crmContactId: number | null;
   crmOrganizationId: number | null;
+  accountValueSnapshot: string | null;
+  accountTierSnapshot: "free" | "pro" | "enterprise" | null;
   linkedRoadmapItemId: number | null;
   duplicateOfId: number | null;
   mergedAt: string | null;

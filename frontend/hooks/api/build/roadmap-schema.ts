@@ -103,6 +103,8 @@ export const feedbackPostContract = z.object({
   submittedByEmail: z.string().nullable(),
   crmContactId: z.number().int().nullable(),
   crmOrganizationId: z.number().int().nullable(),
+  accountValueSnapshot: z.string().nullable(),
+  accountTierSnapshot: z.enum(CRM_ACCOUNT_TIERS).nullable(),
   linkedRoadmapItemId: z.number().int().nullable(),
   duplicateOfId: z.number().int().nullable(),
   mergedAt: z.string().nullable(),

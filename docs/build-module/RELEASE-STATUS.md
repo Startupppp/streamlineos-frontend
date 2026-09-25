@@ -48,6 +48,7 @@ complete product definition of done.
 
 - The production ledger was queried through the backend IAM-aware migration client on 2026-09-25.
 - Migration `1197_build_cycle_permissions.sql` is applied on production RDS; its journal hash is present exactly once.
+- Build migration `1204_build_feedback_account_snapshots.sql` is applied to production RDS; `build.feedback_posts.account_tier_snapshot`, its tenant-scoped partial index, and the exact journal hash were read back after commit.
 - Production contains canonical `build:cycles:view` and `build:cycles:manage` permissions, and the legacy sprint permission rows are absent.
 - The general migration runner reports a large mixed-module backlog because production is not at the current repository journal state. It was not replayed; unrelated HR, CRM, billing, and platform migrations were deliberately left untouched.
 - Canonical Build search migrations are:

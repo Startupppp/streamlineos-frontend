@@ -72,6 +72,8 @@ function baseFeedbackPost(status: string) {
     submittedByEmail: null,
     crmContactId: null,
     crmOrganizationId: null,
+    accountValueSnapshot: null,
+    accountTierSnapshot: null,
     linkedRoadmapItemId: null,
     duplicateOfId: null,
     mergedAt: null,
