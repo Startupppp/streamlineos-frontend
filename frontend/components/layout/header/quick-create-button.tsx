@@ -394,7 +394,10 @@ export function QuickCreateButton({ compact = false }: { compact?: boolean }) {
         onMouseEnter={handleHoverEnter}
         onMouseLeave={handleHoverLeave}
       >
-        <ScrollArea className="max-h-[min(22rem,var(--radix-popover-content-available-height))]">
+        <ScrollArea
+          hideScrollbar
+          className="max-h-[min(22rem,var(--radix-popover-content-available-height))]"
+        >
           <QuickCreateMenuItems
             groups={groups}
             onCreateIssue={handleCreateIssue}

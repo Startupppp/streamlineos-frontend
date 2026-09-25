@@ -52,8 +52,9 @@ const AUDIENCE_BADGE_CLASS: Record<KbAudience, string> = {
 
 const ACCESS_BADGE_CLASS: Record<KbSpaceRole, string> = {
   admin: "bg-primary/10 text-primary border-primary/30",
-  manager: "bg-primary/10 text-primary border-primary/30",
+  publisher: "bg-primary/10 text-primary border-primary/30",
   editor: "bg-muted text-muted-foreground border-border",
+  commenter: "bg-muted text-muted-foreground border-border",
   viewer: "bg-muted text-muted-foreground border-border",
 };
 

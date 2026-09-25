@@ -2,12 +2,13 @@ import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export type KbAudience = "internal" | "public" | "mixed";
 
-export type KbSpaceRole = "admin" | "manager" | "editor" | "viewer";
+export type KbSpaceRole = "admin" | "publisher" | "editor" | "commenter" | "viewer";
 
 export const KB_ACCESS_LABELS: Record<KbSpaceRole, string> = {
   admin: "Admin",
-  manager: "Manager",
+  publisher: "Publisher",
   editor: "Editor",
+  commenter: "Commenter",
   viewer: "Viewer",
 };
 

@@ -1,6 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { KbImageIcon } from "@/features/wiki/lib/kb-icons";
 import PageIconPicker from "./page-icon-picker";
 
@@ -12,9 +17,6 @@ interface PageDocumentPropertyActionsProps {
   onOpenCover: () => void;
 }
 
-/**
- * Compact property actions sit on the same row as the title.
- */
 export function PageDocumentPropertyActions({
   icon,
   hasCover,
@@ -36,16 +38,23 @@ export function PageDocumentPropertyActions({
         />
       ) : null}
       {!hasCover ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 gap-1 px-1.5 text-xs text-muted-foreground hover:text-foreground"
-          onClick={onOpenCover}
-        >
-          <KbImageIcon className="h-3.5 w-3.5" aria-hidden />
-          Add cover
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={onOpenCover}
+              aria-label="Add cover"
+            >
+              <KbImageIcon className="h-3.5 w-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">
+            Add cover
+          </TooltipContent>
+        </Tooltip>
       ) : null}
     </div>
   );

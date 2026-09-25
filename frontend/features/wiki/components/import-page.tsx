@@ -291,6 +291,9 @@ export default function ImportPage() {
 
         <TabsContent value="import" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="space-y-4">
+            <p className="text-xs text-muted-foreground">
+              Accepts .md, .markdown and .txt files · 5 MB per file · max 100 pages per import. Pasted text has a 50,000 character limit. Set a duplicate policy to control what happens when a page title already exists.
+            </p>
             {failedImportTitles.length > 0 ? (
               <div className="rounded-lg border border-status-warning-border bg-status-warning-subtle px-3 py-2 text-sm">
                 <p className="font-medium text-status-warning-ink">

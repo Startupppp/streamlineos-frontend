@@ -20,12 +20,14 @@ import {
 } from "@/components/ui/sheet";
 import { useKbPageBacklinks } from "@/hooks/api/kb";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
-import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
+import { kbTimeAgo, kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 import {
   KB_STATUS_LABELS,
   KB_STATUS_BADGE_CLASS,
 } from "@/features/wiki/lib/kb-page-status";
+import { getUserDisplayName } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "wiki-right-panel-collapsed";
@@ -80,12 +82,31 @@ function Stat({
 function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps) {
   const { data: backlinks = [] } = useKbPageBacklinks(pageId);
   const { data: recordLinks = [] } = useKbPageRecordLinks(pageId);
+  const memberIds = [page.lastEditedById, page.ownerUserId].filter(
+    (id): id is string => id !== null && id !== undefined,
+  );
+  const { data: membersPage } = useOrgMembersByIds(memberIds);
+  const members = membersPage?.data ?? [];
 
   function handleBacklinkClick(event: React.MouseEvent<HTMLButtonElement>) {
     const id = Number(event.currentTarget.dataset.pageId);
     if (!Number.isFinite(id)) return;
     onNavigate(id);
   }
+
+  function memberName(userId: string | null | undefined): string | null {
+    if (!userId) return null;
+    const member = members.find((m) => m.userId === userId);
+    return member
+      ? getUserDisplayName({ name: member.name, email: member.email })
+      : null;
+  }
+
+  const editorName = memberName(page.lastEditedById);
+  const ownerName = memberName(page.ownerUserId);
+  const editedValue = editorName
+    ? `${kbTimeAgo(page.updatedAt)} · ${editorName}`
+    : kbTimeAgo(page.updatedAt);
 
   const trustLabel =
     page.trustState === "verified"
@@ -118,7 +139,15 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
         </div>
         <Stat label="Words" value={wordCount.toLocaleString()} />
         <Stat label="Created" value={kbTimeAgo(page.createdAt)} suppressHydrationWarning />
-        <Stat label="Edited" value={kbTimeAgo(page.updatedAt)} suppressHydrationWarning />
+        <Stat label="Edited" value={editedValue} suppressHydrationWarning />
+        {ownerName ? <Stat label="Owner" value={ownerName} /> : null}
+        {page.nextReviewAt ? (
+          <Stat
+            label="Review due"
+            value={kbFormatDate(page.nextReviewAt)}
+            suppressHydrationWarning
+          />
+        ) : null}
       </section>
 
       <section className="border-t border-border/70 pt-4">

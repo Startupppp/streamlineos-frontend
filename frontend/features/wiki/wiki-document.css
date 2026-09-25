@@ -1,0 +1,21 @@
+/* Wiki document surfaces follow the active palette via --brand-core.
+   Light stays a paper wash; dark stays a lifted tint, never a flat black. */
+
+.wiki-document {
+  background: color-mix(in srgb, var(--brand-core) 9%, var(--background));
+}
+
+.dark .wiki-document {
+  background: color-mix(in srgb, var(--brand-core) 16%, var(--background));
+}
+
+.wiki-document-chrome {
+  background: color-mix(in srgb, var(--brand-core) 6%, var(--card));
+  border-bottom-color: color-mix(in srgb, var(--brand-core) 32%, var(--border));
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--brand-core) 28%, transparent);
+}
+
+.dark .wiki-document-chrome {
+  background: color-mix(in srgb, var(--brand-core) 12%, var(--card));
+  border-bottom-color: color-mix(in srgb, var(--brand-bright) 40%, var(--border));
+}
