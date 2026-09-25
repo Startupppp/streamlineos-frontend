@@ -706,11 +706,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S15 — Content Health (`/knowledge/wiki/manage`)
 
-- [ ] `kb_health_items` schema: tenant, page, kind, versioned evidence JSON, impact, state, assignee, due, detected/resolved/dismissed, rule version; unique active `(org_id, page_id, kind, rule_version)`
+- [x] `kb_health_items` schema: tenant, page, kind, versioned evidence JSON, impact, state, assignee, due, detected/resolved/dismissed, rule version; unique active `(org_id, page_id, kind, rule_version)`
 - [ ] Impact-ranked inbox with presets: unowned, stale, unverified, empty, broken link, overexposed, duplicate candidate, contradictory claim, overdue review
 - [ ] Filters; owner/due; reason/explanation; bulk repair; dismiss/snooze with reason; before/after health trend
 - [ ] Every item links to evidence and an allowed repair; no automated fix publishes without a human
-- [ ] Dismissals expire or record a durable exception
+- [x] Dismissals expire or record a durable exception
 
 **Evidence:** _pending_
 
