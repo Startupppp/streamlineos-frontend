@@ -53,7 +53,7 @@ describe("EmployeesDirectoryStats — the summary is the filtered list's own cou
       />,
     );
 
-    expect(screen.getByTestId("stat-loaded")).toHaveTextContent("Loaded: 2 (of 3 matching)");
+    expect(screen.getByTestId("stat-showing")).toHaveTextContent("Showing: 2 (of 3 matching)");
     expect(screen.getByTestId("stat-active")).toHaveTextContent("Active: 3 (Current filters)");
     expect(screen.queryByTestId("stat-inactive")).not.toBeInTheDocument();
     expect(screen.queryByText(/Org-wide/)).not.toBeInTheDocument();
@@ -72,7 +72,7 @@ describe("EmployeesDirectoryStats — the summary is the filtered list's own cou
       />,
     );
 
-    expect(screen.getByTestId("stat-loaded")).toHaveTextContent("Loaded: 5 (of 5 matching)");
+    expect(screen.getByTestId("stat-showing")).toHaveTextContent("Showing: 5 (of 5 matching)");
     expect(screen.getByTestId("stat-active")).toHaveAttribute("data-href", "/hr/employees?dept=eng&status=active");
     expect(screen.getByTestId("stat-inactive")).toHaveAttribute("data-href", "/hr/employees?dept=eng&status=inactive");
   });
@@ -90,7 +90,7 @@ describe("EmployeesDirectoryStats — the summary is the filtered list's own cou
       />,
     );
 
-    expect(screen.getByTestId("stat-loaded")).toHaveTextContent("Loaded: 0 (of 0 matching)");
+    expect(screen.getByTestId("stat-showing")).toHaveTextContent("Showing: 0 (of 0 matching)");
     expect(screen.getByTestId("stat-active")).toHaveTextContent("Active: 0");
   });
 
@@ -124,7 +124,7 @@ describe("EmployeesDirectoryStats — the summary is the filtered list's own cou
       />,
     );
 
-    expect(screen.getByTestId("stat-loaded")).toHaveTextContent("Loaded: 4 (More results available)");
+    expect(screen.getByTestId("stat-showing")).toHaveTextContent("Showing: 4 (More results available)");
     expect(screen.queryByTestId("stat-active")).not.toBeInTheDocument();
     expect(screen.queryByTestId("stat-inactive")).not.toBeInTheDocument();
   });
