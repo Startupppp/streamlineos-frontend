@@ -118,9 +118,13 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
   );
 
   const search = listFilters.debouncedSearch.trim().toLowerCase();
-  const items = Array.isArray(data)
-    ? data
-    : (data?.pages.flatMap((page) => page.data) ?? []);
+  const items = useMemo(
+    () =>
+      Array.isArray(data)
+        ? data
+        : (data?.pages.flatMap((page) => page.data) ?? []),
+    [data],
+  );
   const filtered = useMemo(
     () => items.filter((f) => !search || f.name.toLowerCase().includes(search)),
     [items, search],
