@@ -1,128 +1,66 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { UserX, UserMinus, Repeat, Users } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { UserX, UserMinus, Repeat, Users, Hourglass, MessageSquareWarning } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useManagerCoverage } from "@/hooks/api/hr/reporting-lines";
-import type { ManagerCoverageReport, ManagerState } from "@/hooks/api/hr/reporting-lines-schema";
-import { formatShortDate } from "@/lib/date-utils";
-import { UserCombobox } from "@/components/ui/user-combobox";
-import { useUpdateProfile } from "@/hooks/api/hr/employee-profile";
+import type { ManagerCoverageReport } from "@/hooks/api/hr/reporting-lines-schema";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
-import { circularChainRows, type CircularChainRow } from "@/features/hr/employees/manager-coverage-names";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { toast } from "sonner";
+import { statusToneClasses } from "@/lib/design-tokens";
+import { cn } from "@/lib/utils";
+import { circularChainRows } from "@/features/hr/employees/manager-coverage-names";
+import {
+  CIRCULAR_COLUMNS,
+  FALLBACK_ACTION_COLUMN,
+  FALLBACK_COLUMNS,
+  INACTIVE_MANAGER_ASSIGN_COLUMN,
+  INACTIVE_MANAGER_COLUMNS,
+  OVER_SPAN_COLUMNS,
+  WITHOUT_MANAGER_ASSIGN_COLUMN,
+  WITHOUT_MANAGER_COLUMNS,
+  pendingReviewColumns,
+} from "@/features/hr/employees/manager-coverage-columns";
 
 const PAGE_TITLE = "Manager coverage";
 const PAGE_SUBTITLE = "Employees whose approvals have no dependable owner, and reporting lines that need repair";
 
-type CoverageTab = "withoutManager" | "inactiveManager" | "circular" | "overSpan";
+const VIEWS = [
+  { value: "withoutManager", label: "Without a manager" },
+  { value: "fallback", label: "Temporary fallback manager" },
+  { value: "pendingReview", label: "Pending employee review" },
+  { value: "inactiveManager", label: "Inactive manager" },
+  { value: "circular", label: "Circular lines" },
+  { value: "overSpan", label: "Span of control" },
+] as const;
 
-const MANAGER_STATE_LABEL: Record<ManagerState, string> = {
-  active: "Active",
-  "on-notice": "On notice",
-  inactive: "Inactive",
-  exited: "Exited",
-};
+type CoverageView = (typeof VIEWS)[number]["value"];
 
-function personLink(userId: string | null, name: string | null, fallback: string) {
-  const label = name ?? fallback;
-  if (!userId) return <span className="truncate">{label}</span>;
-  return (
-    <Link href={`/hr/employees/${userId}`} className="truncate text-primary hover:underline">
-      {label}
-    </Link>
-  );
+function parseView(value: string | null): CoverageView {
+  return VIEWS.find((view) => view.value === value)?.value ?? "withoutManager";
 }
 
-// Writes through the same employee PATCH the profile form uses, so the new
-// line is dated today and kept in reporting-line history; the mutation
-// invalidates this report, so a fixed row drops out on its own.
-function AssignManagerCell({ userId, currentManagerUserId }: { userId: string | null; currentManagerUserId?: string | null }) {
-  const updateProfile = useUpdateProfile();
-  if (!userId) return <span className="text-xs text-muted-foreground">No user account</span>;
+const WITHOUT_MANAGER_HEADERS = WITHOUT_MANAGER_COLUMNS.map((column) => column.header);
+const TABLE_EMPTY_CLASS = "border-0 bg-transparent min-h-[40vh]";
 
-  function handleChange(managerUserId: string) {
-    if (!userId || !managerUserId) return;
-    updateProfile.mutate(
-      { userId, reportingTo: managerUserId },
-      {
-        onSuccess: () => toast.success("Manager updated"),
-        onError: (error) => toast.error(getErrorMessage(error)),
-      },
-    );
-  }
-
+function LoadingBody() {
   return (
-    <UserCombobox
-      value={currentManagerUserId ?? ""}
-      onChange={handleChange}
-      placeholder="Assign manager"
-      excludeUserId={userId}
-      disabled={updateProfile.isPending}
-      className="w-56"
-    />
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <StatCardGridSkeleton cols={3} />
+      <DataTableSkeleton rows={8} headers={WITHOUT_MANAGER_HEADERS} />
+    </div>
   );
 }
-
-const WITHOUT_MANAGER_COLUMNS: DataTableColumn<ManagerCoverageReport["withoutManager"][number]>[] = [
-  { key: "employee", header: "Employee", cell: (row) => personLink(row.userId, row.name, row.employeeNumber) },
-  { key: "designation", header: "Designation", cell: (row) => <span className="truncate">{row.designation ?? "—"}</span> },
-  { key: "status", header: "Employment", cell: (row) => <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">{row.lifecycleStatus}</Badge> },
-  { key: "employeeNumber", header: "Employee no.", cell: (row) => <span className="font-mono text-dense">{row.employeeNumber}</span> },
-];
-
-const INACTIVE_MANAGER_COLUMNS: DataTableColumn<ManagerCoverageReport["inactiveManager"][number]>[] = [
-  { key: "employee", header: "Employee", cell: (row) => personLink(row.userId, row.name, "Unnamed employee") },
-  { key: "manager", header: "Reports to", cell: (row) => personLink(row.managerUserId, row.managerName, "Unnamed manager") },
-  { key: "state", header: "Manager state", cell: (row) => <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">{MANAGER_STATE_LABEL[row.managerState]}</Badge> },
-  { key: "since", header: "Since", cell: (row) => <span className="font-mono text-dense">{formatShortDate(row.effectiveFrom)}</span> },
-];
-
-const CIRCULAR_COLUMNS: DataTableColumn<CircularChainRow>[] = [
-  {
-    key: "chain",
-    header: "Reporting loop",
-    cell: (row) => (
-      <div className="flex flex-wrap items-center gap-1">
-        {row.members.map((member, index) => (
-          <span key={member.userId} className="flex items-center gap-1">
-            {index > 0 ? <span className="text-muted-foreground" aria-hidden="true">→</span> : null}
-            {personLink(member.userId, member.name, "Unnamed employee")}
-          </span>
-        ))}
-      </div>
-    ),
-  },
-];
-
-const OVER_SPAN_COLUMNS: DataTableColumn<ManagerCoverageReport["overSpan"][number]>[] = [
-  { key: "manager", header: "Manager", cell: (row) => personLink(row.managerUserId, row.managerName, "Unnamed manager") },
-  { key: "reports", header: "Direct reports", cell: (row) => <span className="font-mono tabular-nums">{row.directReports}</span> },
-];
-
-const WITHOUT_MANAGER_ASSIGN_COLUMN: DataTableColumn<ManagerCoverageReport["withoutManager"][number]> = {
-  key: "assign",
-  header: "Manager",
-  cell: (row) => <AssignManagerCell userId={row.userId} />,
-};
-
-const INACTIVE_MANAGER_ASSIGN_COLUMN: DataTableColumn<ManagerCoverageReport["inactiveManager"][number]> = {
-  key: "assign",
-  header: "Change manager",
-  cell: (row) => <AssignManagerCell userId={row.userId} currentManagerUserId={row.managerUserId} />,
-};
 
 function memberNames(members: Array<{ userId: string; name: string | null }> | undefined): Map<string, string> {
   const names = new Map<string, string>();
@@ -130,40 +68,123 @@ function memberNames(members: Array<{ userId: string; name: string | null }> | u
   return names;
 }
 
-const WITHOUT_MANAGER_HEADERS = WITHOUT_MANAGER_COLUMNS.map((column) => column.header);
-
-function LoadingBody() {
+function PolicyMissingCallout({ canConfigure }: { canConfigure: boolean }) {
+  const tone = statusToneClasses("warning");
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <StatCardGridSkeleton cols={4} />
-      <DataTableSkeleton rows={8} headers={WITHOUT_MANAGER_HEADERS} />
+    <div role="status" className={cn("rounded-lg border px-3 py-2 text-sm", tone.surface, tone.ink, tone.rule)}>
+      <span className="font-medium">No default reporting manager is set.</span> New employees onboarded without a manager
+      are refused unless the person uploading qualifies as the fallback.{" "}
+      {canConfigure ? (
+        <Link href="/hr/settings/reporting-managers" className="font-medium underline underline-offset-2">
+          Set the reporting manager policy
+        </Link>
+      ) : null}
     </div>
   );
 }
 
+interface CoverageTableProps {
+  view: CoverageView;
+  data: ManagerCoverageReport;
+  canEdit: boolean;
+  canReview: boolean;
+  memberNameMap: Map<string, string>;
+}
+
+function CoverageTable({ view, data, canEdit, canReview, memberNameMap }: CoverageTableProps) {
+  const common = { className: "flex-1 min-h-0", pagination: { pageSize: 25 } };
+  switch (view) {
+    case "withoutManager":
+      return (
+        <DataTable
+          {...common}
+          data={data.withoutManager}
+          columns={canEdit ? [...WITHOUT_MANAGER_COLUMNS, WITHOUT_MANAGER_ASSIGN_COLUMN] : WITHOUT_MANAGER_COLUMNS}
+          getRowKey={(row) => row.employmentId}
+          emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="Everyone has a manager" description="Every active employee reports to someone or is a declared top-level role." />}
+        />
+      );
+    case "fallback":
+      return (
+        <DataTable
+          {...common}
+          data={data.fallback ?? []}
+          columns={canEdit ? [...FALLBACK_COLUMNS, FALLBACK_ACTION_COLUMN] : FALLBACK_COLUMNS}
+          getRowKey={(row, index) => `${row.userId ?? "employee"}-${index}`}
+          emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="No temporary managers" description="Nobody is waiting on a manager assigned by the onboarding policy." />}
+        />
+      );
+    case "pendingReview":
+      return (
+        <DataTable
+          {...common}
+          data={data.pendingReview ?? []}
+          columns={pendingReviewColumns(canReview)}
+          getRowKey={(row) => row.requestId}
+          emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="No reviews pending" description="No employee has asked HR to check their manager." />}
+        />
+      );
+    case "inactiveManager":
+      return (
+        <DataTable
+          {...common}
+          data={data.inactiveManager}
+          columns={canEdit ? [...INACTIVE_MANAGER_COLUMNS, INACTIVE_MANAGER_ASSIGN_COLUMN] : INACTIVE_MANAGER_COLUMNS}
+          getRowKey={(row, index) => `${row.userId ?? "employee"}-${index}`}
+          emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="All managers are active" description="No employee reports to an exited, suspended or deactivated manager." />}
+        />
+      );
+    case "circular":
+      return (
+        <DataTable
+          {...common}
+          data={circularChainRows(data, memberNameMap)}
+          columns={CIRCULAR_COLUMNS}
+          getRowKey={(row) => row.key}
+          emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="No circular reporting lines" description="No chain of managers loops back on itself." />}
+        />
+      );
+    case "overSpan":
+      return (
+        <DataTable
+          {...common}
+          data={data.overSpan}
+          columns={OVER_SPAN_COLUMNS}
+          getRowKey={(row, index) => `${row.managerUserId ?? "manager"}-${index}`}
+          emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="Spans of control are within limits" description={`No manager has more than ${data.spanOfControlLimit} direct reports.`} />}
+        />
+      );
+  }
+}
+
 export function ManagerCoveragePage() {
   const { data, isLoading, isError, error, refetch } = useManagerCoverage();
-  const [tab, setTab] = useState<CoverageTab>("withoutManager");
-  const canEdit = useCan("hr:employees:update");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const view = parseView(searchParams.get("view"));
+  const canEdit = useCan("hr:reporting-lines:manage");
+  const canReview = useCan("hr:reporting-lines:review");
   const pageState = usePageState({ permission: "hr:employees:view", module: "hr", isLoading, isError, error });
-  const cycleUserIds = [...new Set((data?.circular ?? []).flatMap((cycle) => cycle.userIds))].slice(0, 100);
-  const { data: cycleMembers } = useOrgMembersByIds(cycleUserIds);
+  // Names for loop members the read model did not name (older payloads carry ids only).
+  const unnamed = (data?.circular ?? []).filter((cycle) => !cycle.members).flatMap((cycle) => cycle.userIds);
+  const { data: cycleMembers } = useOrgMembersByIds([...new Set(unnamed)].slice(0, 100));
 
   function handleRetry() {
     void refetch();
   }
 
-  function handleTabChange(value: string) {
-    if (value === "withoutManager" || value === "inactiveManager" || value === "circular" || value === "overSpan") setTab(value);
+  function handleViewChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", parseView(value));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
-  if (pageState.kind === "loading") {
-    return (
-      <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE}>
-        <LoadingBody />
-      </PageWrapper>
-    );
-  }
+  const actions = canEdit ? (
+    <Button asChild variant="outline" size="sm">
+      <Link href="/hr/employees/reporting-changes">Bulk reporting change</Link>
+    </Button>
+  ) : undefined;
 
   if (pageState.kind !== "ready" || !data) {
     return (
@@ -175,73 +196,53 @@ export function ManagerCoveragePage() {
     );
   }
 
-  const healthy = data.summary.withoutManager + data.summary.inactiveManager + data.summary.circular + data.summary.overSpan === 0;
+  const summary = data.summary;
+  const counts: Record<CoverageView, number> = {
+    withoutManager: summary.withoutManager,
+    fallback: summary.fallback ?? data.fallback?.length ?? 0,
+    pendingReview: summary.pendingReview ?? data.pendingReview?.length ?? 0,
+    inactiveManager: summary.inactiveManager,
+    circular: summary.circular,
+    overSpan: summary.overSpan,
+  };
+  const healthy = Object.values(counts).every((count) => count === 0);
+  const topLevel = summary.topLevel ?? 0;
 
   return (
-    <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE} contentClassName="flex min-h-0 flex-1 flex-col gap-4">
-      <StatCardGrid cols={4}>
-        <StatCard label="Without a manager" value={data.summary.withoutManager} icon={UserX} tone={data.summary.withoutManager > 0 ? "red" : "emerald"} hint={`${data.summary.withManager} of ${data.summary.employees} covered`} />
-        <StatCard label="Inactive manager" value={data.summary.inactiveManager} icon={UserMinus} tone={data.summary.inactiveManager > 0 ? "amber" : "emerald"} />
-        <StatCard label="Circular lines" value={data.summary.circular} icon={Repeat} tone={data.summary.circular > 0 ? "red" : "emerald"} />
-        <StatCard label={`Over ${data.spanOfControlLimit} reports`} value={data.summary.overSpan} icon={Users} tone={data.summary.overSpan > 0 ? "amber" : "emerald"} />
+    <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE} actions={actions} contentClassName="flex min-h-0 flex-1 flex-col gap-4">
+      {data.policyMissing ? <PolicyMissingCallout canConfigure={canEdit} /> : null}
+      <StatCardGrid cols={3}>
+        <StatCard label="Without a manager" value={counts.withoutManager} icon={UserX} tone={counts.withoutManager > 0 ? "red" : "emerald"} hint={`${summary.withManager} of ${summary.employees} covered${topLevel > 0 ? ` · ${topLevel} top-level by design` : ""}`} />
+        <StatCard label="Temporary fallback" value={counts.fallback} icon={Hourglass} tone={counts.fallback > 0 ? "amber" : "emerald"} />
+        <StatCard label="Pending employee review" value={counts.pendingReview} icon={MessageSquareWarning} tone={counts.pendingReview > 0 ? "amber" : "emerald"} />
+        <StatCard label="Inactive manager" value={counts.inactiveManager} icon={UserMinus} tone={counts.inactiveManager > 0 ? "amber" : "emerald"} />
+        <StatCard label="Circular lines" value={counts.circular} icon={Repeat} tone={counts.circular > 0 ? "red" : "emerald"} />
+        <StatCard label={`Over ${data.spanOfControlLimit} reports`} value={counts.overSpan} icon={Users} tone={counts.overSpan > 0 ? "amber" : "emerald"} />
       </StatCardGrid>
       {healthy ? (
         <EmptyState
           className="flex-1 min-h-0"
           title="Every employee has an accountable manager"
-          description="No missing, inactive or circular reporting lines and no manager over the span-of-control limit."
+          description="No missing, temporary, inactive or circular reporting lines, no pending reviews, and no manager over the span-of-control limit."
         />
       ) : (
         <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
           <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
-            <Tabs value={tab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col">
-              <TabsList className="m-3 w-fit">
-                <TabsTrigger value="withoutManager">Without manager ({data.summary.withoutManager})</TabsTrigger>
-                <TabsTrigger value="inactiveManager">Inactive manager ({data.summary.inactiveManager})</TabsTrigger>
-                <TabsTrigger value="circular">Circular ({data.summary.circular})</TabsTrigger>
-                <TabsTrigger value="overSpan">Span of control ({data.summary.overSpan})</TabsTrigger>
-              </TabsList>
-              <TabsContent value="withoutManager" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-                <DataTable
-                  className="flex-1 min-h-0"
-                  data={data.withoutManager}
-                  columns={canEdit ? [...WITHOUT_MANAGER_COLUMNS, WITHOUT_MANAGER_ASSIGN_COLUMN] : WITHOUT_MANAGER_COLUMNS}
-                  getRowKey={(row) => row.employmentId}
-                  emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="Everyone has a manager" description="Every active employee reports to someone." />}
-                  pagination={{ pageSize: 25 }}
-                />
-              </TabsContent>
-              <TabsContent value="inactiveManager" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-                <DataTable
-                  className="flex-1 min-h-0"
-                  data={data.inactiveManager}
-                  columns={canEdit ? [...INACTIVE_MANAGER_COLUMNS, INACTIVE_MANAGER_ASSIGN_COLUMN] : INACTIVE_MANAGER_COLUMNS}
-                  getRowKey={(row, index) => `${row.userId ?? "employee"}-${index}`}
-                  emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="All managers are active" description="No employee reports to an exited, suspended or deactivated manager." />}
-                  pagination={{ pageSize: 25 }}
-                />
-              </TabsContent>
-              <TabsContent value="circular" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-                <DataTable
-                  className="flex-1 min-h-0"
-                  data={circularChainRows(data, memberNames(cycleMembers?.data))}
-                  columns={CIRCULAR_COLUMNS}
-                  getRowKey={(row) => row.key}
-                  emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="No circular reporting lines" description="No chain of managers loops back on itself." />}
-                  pagination={{ pageSize: 25 }}
-                />
-              </TabsContent>
-              <TabsContent value="overSpan" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-                <DataTable
-                  className="flex-1 min-h-0"
-                  data={data.overSpan}
-                  columns={OVER_SPAN_COLUMNS}
-                  getRowKey={(row, index) => `${row.managerUserId ?? "manager"}-${index}`}
-                  emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="Spans of control are within limits" description={`No manager has more than ${data.spanOfControlLimit} direct reports.`} />}
-                  pagination={{ pageSize: 25 }}
-                />
-              </TabsContent>
-            </Tabs>
+            <div className="p-3">
+              <Select value={view} onValueChange={handleViewChange}>
+                <SelectTrigger className="w-full sm:w-72" aria-label="Coverage category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {VIEWS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label} ({counts[option.value]})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <CoverageTable view={view} data={data} canEdit={canEdit} canReview={canReview} memberNameMap={memberNames(cycleMembers?.data)} />
           </CardContent>
         </Card>
       )}

@@ -214,7 +214,7 @@ export interface UpdateProfileInput {
   role?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
   joiningDate?: string;
-  reportingTo?: string | null;
+  /* Managers change only through PUT /hr/reporting-lines/:id (HRM-15). */
 }
 
 export interface CreateAssetInput {

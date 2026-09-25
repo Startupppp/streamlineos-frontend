@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { MemberPicker } from "@/components/members/member-picker";
 import type { MemberOption } from "@/components/members/member-picker-options";
 import { useManagerCandidates } from "@/hooks/api/hr/reporting-lines";
@@ -81,16 +81,15 @@ export function ManagerCandidatePicker({
   const self = useMyManagerCandidates(debounced, { enabled: open && source === "self" });
   const items = (source === "hr" ? hr.data?.items : self.data?.items) ?? [];
 
-  // Refs seen in any result page, so a selection keeps its name after the search moves on.
-  const seen = useRef(new Map<string, ManagerRef>());
-  for (const item of items) seen.current.set(item.userId, item);
-  if (selected) seen.current.set(selected.userId, selected);
-
-  const current = value ? seen.current.get(value) : undefined;
+  // The manager last picked here, so the trigger keeps naming them after the search moves on.
+  const [picked, setPicked] = useState<ManagerRef | null>(null);
+  const current = [selected, picked].find((ref) => ref?.userId === value) ?? null;
   const known = current ? [toOption(current)] : [];
 
   function handleChange(userId: string | null) {
-    onChange(userId, userId ? (seen.current.get(userId) ?? null) : null);
+    const ref = items.find((item) => item.userId === userId) ?? null;
+    setPicked(ref);
+    onChange(userId, ref);
   }
 
   return (

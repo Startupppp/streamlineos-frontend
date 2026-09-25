@@ -49,4 +49,15 @@ describe("circularChainRows — a reporting loop is shown by name, never by user
     const rows = circularChainRows(report({}), new Map());
     for (const member of rows[0]?.members ?? []) expect(member.name).not.toBe(member.userId);
   });
+
+  it("prefers the names the read model sends with the loop", () => {
+    const rows = circularChainRows(
+      report({ circular: [{ userIds: ["u-a", "u-b"], members: [{ userId: "u-a", name: "Asha (server)" }, { userId: "u-b", name: null }] }] }),
+      new Map([["u-a", "Asha (lookup)"], ["u-b", "Bea (lookup)"]]),
+    );
+    expect(rows[0]?.members).toEqual([
+      { userId: "u-a", name: "Asha (server)" },
+      { userId: "u-b", name: "Bea (lookup)" },
+    ]);
+  });
 });

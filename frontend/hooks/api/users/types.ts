@@ -104,7 +104,6 @@ export interface UpdateUserInput {
   twitterUrl?: string;
   githubUrl?: string;
   websiteUrl?: string;
-  reportingTo?: string;
   teamId?: string | null;
   emergencyContact?: EmergencyContact | null;
 }

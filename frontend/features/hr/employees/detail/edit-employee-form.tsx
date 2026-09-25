@@ -52,7 +52,6 @@ export function EditEmployeeForm({
       joiningDate: employee.joiningDate
         ? new Date(employee.joiningDate)
         : undefined,
-      reportingTo: employee.reportingTo,
     }),
     [employee],
   );
@@ -79,12 +78,11 @@ export function EditEmployeeForm({
         phone: values.phone,
         gender: values.gender,
         joiningDate: values.joiningDate?.toISOString().slice(0, 10),
-        ...(values.reportingTo !== employee.reportingTo ? { reportingTo: values.reportingTo ?? null } : {}),
       });
       form.reset(values);
       router.refresh();
     },
-    [employee.id, employee.reportingTo, form, router, updateProfileMutation],
+    [employee.id, form, router, updateProfileMutation],
   );
 
   const { requestLeave, dialogProps } = useUnsavedChangesGuard({
@@ -131,7 +129,7 @@ export function EditEmployeeForm({
           </div>
           <Separator />
           <div className="p-5">
-            <ProfessionalInfoSection employeeUserId={employee.id} />
+            <ProfessionalInfoSection />
           </div>
           <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-muted/30 px-5 py-3.5">
             <Button
