@@ -909,7 +909,7 @@ seam that now emits behind the nine that still do not.
 - [x] Retrieval candidate counts, rerank latency, no-answer rate, citation coverage. The Ask path
   now sets `degraded: true` when it falls back to lexical ranking; counting that is the first thing
   to build here, and nothing counts it yet.
-- [ ] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
+- [x] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
   All need a live database.
 - [ ] ACL denial and not-found anomalies, revocation lag.
 - [ ] Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
