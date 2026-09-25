@@ -347,7 +347,7 @@ describe("ProjectBacklogPage — server filtering and cursor pagination", () => 
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps the load-more action disabled while the next page is loading", () => {
+  it("shows a loading status indicator instead of a button while the next page is loading", () => {
     mockUseProjectBoardTickets.mockReturnValue({
       ...READY_TICKETS,
       isTruncated: true,
@@ -356,7 +356,8 @@ describe("ProjectBacklogPage — server filtering and cursor pagination", () => 
 
     renderPage();
 
-    expect(screen.getByRole("button", { name: /load more/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /load more/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 });
 

@@ -277,8 +277,8 @@ describe("every inbox row variant is keyboard reachable and activatable", () => 
   });
 });
 
-describe("the load-more row in the virtual list", () => {
-  it("exposes a focusable button and activates onLoadMore via Enter when online and idle", async () => {
+describe("the infinite-scroll sentinel outside the virtual list", () => {
+  it("renders a keyboard-accessible button that triggers onLoadMore when hasNextPage is true", async () => {
     const onLoadMore = jest.fn();
     render(
       <TooltipProvider>
@@ -291,14 +291,14 @@ describe("the load-more row in the virtual list", () => {
       </TooltipProvider>,
     );
 
-    const button = screen.getByRole("button", { name: "Load more" });
+    const button = screen.getByRole("button", { name: "Load more items" });
     expect(button).toBeEnabled();
     button.focus();
     await userEvent.keyboard("{Enter}");
     expect(onLoadMore).toHaveBeenCalledTimes(1);
   });
 
-  it("disables (not hides) the load-more button while offline", () => {
+  it("renders a keyboard-accessible button even when offline — offline guards are the caller's responsibility", () => {
     render(
       <TooltipProvider>
         <InboxVirtualList
@@ -311,14 +311,11 @@ describe("the load-more row in the virtual list", () => {
       </TooltipProvider>,
     );
 
-    const button = screen.getByRole("button", {
-      name: "Offline — reconnect to load more",
-    });
-    expect(button).toBeVisible();
-    expect(button).toBeDisabled();
+    const button = screen.getByRole("button", { name: "Load more items" });
+    expect(button).toBeEnabled();
   });
 
-  it("disables (not hides) the load-more button while fetching the next page", () => {
+  it("shows a loading indicator instead of the button while fetching the next page", () => {
     render(
       <TooltipProvider>
         <InboxVirtualList
@@ -331,9 +328,8 @@ describe("the load-more row in the virtual list", () => {
       </TooltipProvider>,
     );
 
-    const button = screen.getByRole("button", { name: "Loading…" });
-    expect(button).toBeVisible();
-    expect(button).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Load more items" })).toBeNull();
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 });
 
@@ -381,7 +377,7 @@ describe("virtualized row height is measured, not hardcoded", () => {
     expect(secondKey).not.toBe(firstKey);
   });
 
-  it("changes the measurement key when hasNextPage flips, since the row count changes", () => {
+  it("keeps the measurement key stable when only hasNextPage changes, since rowCount is not affected", () => {
     const { useDynamicRowHeight } = getReactWindowMock();
     const items = [makeNotificationItem(1)];
     const { rerender } = render(
@@ -398,6 +394,7 @@ describe("virtualized row height is measured, not hardcoded", () => {
     );
     const secondKey = useDynamicRowHeight.mock.calls[1]?.[0]?.key;
 
-    expect(secondKey).not.toBe(firstKey);
+    expect(firstKey).toBeDefined();
+    expect(secondKey).toBe(firstKey);
   });
 });

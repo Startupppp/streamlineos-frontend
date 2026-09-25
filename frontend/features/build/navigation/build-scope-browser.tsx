@@ -369,7 +369,7 @@ export function BuildScopeBrowser({
               hasNextPage={directory.hasMoreSearchResults}
               isFetchingNextPage={directory.isFetchingMoreSearchResults}
               onLoadMore={handleFetchMoreSearchResults}
-              label="Load more search results"
+              label="Load more results"
             />
           </div>
         ) : (

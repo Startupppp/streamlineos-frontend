@@ -1,16 +1,29 @@
+import { type ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { InboxVirtualList, type InboxVirtualListProps } from "./inbox-virtual-list";
 import type { UnifiedInboxItem } from "@/types/inbox";
+
+interface MockListProps {
+  rowCount: number;
+  onRowsRendered?: (visibleRows: { startIndex: number; stopIndex: number }) => void;
+  "data-testid"?: string;
+}
+
+interface ReactWindowMockModule {
+  List: jest.Mock<ReactNode, [MockListProps]>;
+  useDynamicRowHeight: () => number;
+}
+
+function getReactWindowMock(): ReactWindowMockModule {
+  return jest.requireMock<ReactWindowMockModule>("react-window");
+}
 
 jest.mock("react-window", () => ({
   List: jest.fn(
     ({
       rowCount,
       "data-testid": testId,
-    }: {
-      rowCount: number;
-      "data-testid"?: string;
-    }) => (
+    }: MockListProps) => (
       <div data-testid={testId ?? "virtual-list"} data-row-count={String(rowCount)} />
     ),
   ),
@@ -60,6 +73,10 @@ const baseProps: Omit<InboxVirtualListProps, "items"> = {
 };
 
 describe("InboxVirtualList", () => {
+  beforeEach(() => {
+    getReactWindowMock().List.mockClear();
+  });
+
   it("delegates rendering to react-window List rather than mapping all items into the DOM", () => {
     const items = Array.from({ length: 25 }, (_, i) => makeNotificationItem(i + 1));
     render(<InboxVirtualList {...baseProps} items={items} />);
@@ -69,16 +86,72 @@ describe("InboxVirtualList", () => {
     expect(document.querySelectorAll("[data-testid='virtual-list']")).toHaveLength(1);
   });
 
-  it("includes a load-more row in rowCount when hasNextPage is true", () => {
+  it("does not add a load-more row to rowCount when hasNextPage is true", () => {
     const items = Array.from({ length: 10 }, (_, i) => makeNotificationItem(i + 1));
     render(<InboxVirtualList {...baseProps} items={items} hasNextPage />);
     const list = screen.getByTestId("virtual-list");
-    expect(list.getAttribute("data-row-count")).toBe("11");
+    expect(list.getAttribute("data-row-count")).toBe("10");
   });
 
   it("passes rowCount = 0 for an empty list", () => {
     render(<InboxVirtualList {...baseProps} items={[]} />);
     const list = screen.getByTestId("virtual-list");
     expect(list.getAttribute("data-row-count")).toBe("0");
+  });
+
+  it("calls onLoadMore via onRowsRendered when the last row is visible and hasNextPage is true", () => {
+    const onLoadMore = jest.fn();
+    const items = Array.from({ length: 5 }, (_, i) => makeNotificationItem(i + 1));
+    render(<InboxVirtualList {...baseProps} items={items} hasNextPage onLoadMore={onLoadMore} />);
+
+    const { List } = getReactWindowMock();
+    const lastProps = List.mock.calls.at(-1)?.[0];
+    lastProps?.onRowsRendered?.({ startIndex: 0, stopIndex: 4 });
+
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not call onLoadMore via onRowsRendered when hasNextPage is false", () => {
+    const onLoadMore = jest.fn();
+    const items = Array.from({ length: 5 }, (_, i) => makeNotificationItem(i + 1));
+    render(<InboxVirtualList {...baseProps} items={items} hasNextPage={false} onLoadMore={onLoadMore} />);
+
+    const { List } = getReactWindowMock();
+    const lastProps = List.mock.calls.at(-1)?.[0];
+    lastProps?.onRowsRendered?.({ startIndex: 0, stopIndex: 4 });
+
+    expect(onLoadMore).not.toHaveBeenCalled();
+  });
+
+  it("does not call onLoadMore via onRowsRendered when isFetchingNextPage is true", () => {
+    const onLoadMore = jest.fn();
+    const items = Array.from({ length: 5 }, (_, i) => makeNotificationItem(i + 1));
+    render(
+      <InboxVirtualList
+        {...baseProps}
+        items={items}
+        hasNextPage
+        isFetchingNextPage
+        onLoadMore={onLoadMore}
+      />,
+    );
+
+    const { List } = getReactWindowMock();
+    const lastProps = List.mock.calls.at(-1)?.[0];
+    lastProps?.onRowsRendered?.({ startIndex: 0, stopIndex: 4 });
+
+    expect(onLoadMore).not.toHaveBeenCalled();
+  });
+
+  it("does not call onLoadMore via onRowsRendered when the last row is not yet visible", () => {
+    const onLoadMore = jest.fn();
+    const items = Array.from({ length: 10 }, (_, i) => makeNotificationItem(i + 1));
+    render(<InboxVirtualList {...baseProps} items={items} hasNextPage onLoadMore={onLoadMore} />);
+
+    const { List } = getReactWindowMock();
+    const lastProps = List.mock.calls.at(-1)?.[0];
+    lastProps?.onRowsRendered?.({ startIndex: 0, stopIndex: 5 });
+
+    expect(onLoadMore).not.toHaveBeenCalled();
   });
 });
