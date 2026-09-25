@@ -160,6 +160,7 @@ export const DEFAULT_DATA: WizardData = {
   goals: [],
   industry: "",
   companyName: "",
+  fullName: "",
   teamSize: "",
   phone: "",
   installedApps: DEFAULT_APPS,

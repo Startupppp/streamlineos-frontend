@@ -105,7 +105,7 @@ describe("stale bare/unscoped marker does not grant entry", () => {
 
 describe("clearAll — clears draft and step, leaves completion marker", () => {
   it("removes the draft and step for the given scopeId", () => {
-    saveDraft({ goals: ["sales"], industry: "IT", companyName: "Acme", teamSize: "1-10", phone: "", installedApps: [], modules: [], invitees: [] }, USER_A);
+    saveDraft({ goals: ["sales"], industry: "IT", companyName: "Acme", fullName: "Owner A", teamSize: "1-10", phone: "", installedApps: [], modules: [], invitees: [] }, USER_A);
     saveStep(3, USER_A);
     clearAll(USER_A);
     const draft = loadDraft(USER_A);
@@ -120,7 +120,7 @@ describe("clearAll — clears draft and step, leaves completion marker", () => {
   });
 
   it("does not disturb a different user's draft", () => {
-    saveDraft({ goals: ["hr"], industry: "IT", companyName: "Beta", teamSize: "1-10", phone: "", installedApps: [], modules: [], invitees: [] }, USER_B);
+    saveDraft({ goals: ["hr"], industry: "IT", companyName: "Beta", fullName: "Owner B", teamSize: "1-10", phone: "", installedApps: [], modules: [], invitees: [] }, USER_B);
     clearAll(USER_A);
     const draft = loadDraft(USER_B);
     expect(draft.companyName).toBe("Beta");

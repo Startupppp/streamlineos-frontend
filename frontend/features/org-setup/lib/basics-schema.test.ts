@@ -8,6 +8,7 @@ const valid = {
   goals: ["sales"],
   industry: "IT Services",
   companyName: "Acme Corp",
+  fullName: "Joseph Mathew",
   teamSize: "1-10",
   phone: "+919876543210",
 };

@@ -22,6 +22,10 @@ import {
 import type { EmployeeData } from "@/features/hr/employees/detail/edit-employee-form";
 import { ResendInviteButton } from "@/components/hr/resend-invite-button";
 import { CopyInviteLinkButton } from "@/components/hr/copy-invite-link-button";
+import {
+  InviteDeliveryBadge,
+  InviteDeliveryNote,
+} from "@/features/hr/employees/detail/invite-delivery-badge";
 
 interface EmployeeStats {
   attendance?: { daysPresent?: number } | null;
@@ -159,6 +163,7 @@ export function EmployeeHeaderCard({
                 </span>
               )}
               <AvailabilityBadge userId={employee.id} />
+              {!isSelf && <InviteDeliveryBadge delivery={employee.inviteDelivery} />}
             </div>
 
             <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-2.5">
@@ -189,9 +194,14 @@ export function EmployeeHeaderCard({
               // Copy invite link is what keeps onboarding moving when email
               // delivery is unconfigured or silently dropping, which is the
               // state the audited environment was in.
-              <div className="flex flex-wrap items-center gap-2">
-                <ResendInviteButton employeeId={employee.id} employeeName={employeeName} />
-                <CopyInviteLinkButton employeeId={employee.id} employeeName={employeeName} />
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <ResendInviteButton employeeId={employee.id} employeeName={employeeName} />
+                  <CopyInviteLinkButton employeeId={employee.id} employeeName={employeeName} />
+                </div>
+                {/* HRMS-E2E-018. Beside the two buttons, because the whole reason
+                    an administrator reads the status is to decide between them. */}
+                <InviteDeliveryNote delivery={employee.inviteDelivery} />
               </div>
             )}
 

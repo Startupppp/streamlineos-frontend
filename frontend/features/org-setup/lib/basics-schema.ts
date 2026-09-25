@@ -14,9 +14,22 @@ import { IMPLAUSIBLE_PHONE_MESSAGE, isImplausiblePhone } from "@/lib/implausible
  * so the schema has to catch it even where the input's `maxLength` would.
  */
 export const COMPANY_NAME_MAX_LENGTH = 200;
+/** Mirrors `setupSchema.fullName` (`organization/setup/dto/org.schemas.ts`). */
+export const FULL_NAME_MAX_LENGTH = 120;
 export const INDUSTRY_MAX_LENGTH = 100;
 
 export const basicsStepSchema = z.object({
+  // HRMS-E2E-025. The owner showed up throughout the product as the local part
+  // of their sign-up address, because nothing ever asked for their name — this
+  // step took the company's name, industry, size and phone, never the person's.
+  fullName: z
+    .string()
+    .trim()
+    .min(1, "Enter your full name.")
+    .max(
+      FULL_NAME_MAX_LENGTH,
+      `Your name must be ${FULL_NAME_MAX_LENGTH} characters or fewer.`,
+    ),
   goals: z.array(z.string()).min(1, "Select at least one goal."),
   industry: z
     .string()

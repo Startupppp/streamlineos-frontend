@@ -37,6 +37,8 @@ import {
 import { getUserDisplayName } from "@/lib/person-display";
 import { activationProps } from "@/lib/keyboard-activation";
 import { currentStepRouting } from "@/features/hr/workflows/step-routing";
+import { PendingLeaveApprovals } from "@/features/hr/workflows/pending-leave-approvals";
+import { useHrLeaveApprovals } from "@/hooks/api/hr";
 
 const STATUS_CHIP: Record<
   HrWorkflowInstanceStatus,
@@ -240,6 +242,15 @@ export function HrApprovalsPage() {
   const inbox = inboxData?.data ?? [];
   const acted = actedData?.data ?? [];
 
+  // HRMS-E2E-013. The page used to claim "You are all caught up" from the
+  // workflow inbox alone, while pending leave sat in a different table on a
+  // different permission key. The claim now has to hold for both sources.
+  const { data: leaveData } = useHrLeaveApprovals({ status: "PENDING", limit: 50 });
+  const pendingLeaveCount = (leaveData?.pages ?? []).reduce(
+    (total, page) => total + page.data.length,
+    0,
+  );
+
   function handleCloseDetail(): void {
     setSelectedInstanceId(null);
   }
@@ -324,14 +335,19 @@ export function HrApprovalsPage() {
                 onRetry={handleRetryInbox}
               />
             ) : (
-              <InstanceList
-                instances={inbox}
-                isLoading={inboxLoading}
-                onOpen={setSelectedInstanceId}
-                showActions
-                emptyTitle="No pending approvals"
-                emptyDescription="You are all caught up. New approval requests will appear here."
-              />
+              <div className="flex min-h-0 flex-1 flex-col">
+                <PendingLeaveApprovals />
+                {pendingLeaveCount > 0 && inbox.length === 0 && !inboxLoading ? null : (
+                  <InstanceList
+                    instances={inbox}
+                    isLoading={inboxLoading}
+                    onOpen={setSelectedInstanceId}
+                    showActions
+                    emptyTitle="No pending approvals"
+                    emptyDescription="You are all caught up. New approval requests will appear here."
+                  />
+                )}
+              </div>
             )}
           </TabsContent>
 

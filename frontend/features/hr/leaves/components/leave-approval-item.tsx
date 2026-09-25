@@ -13,6 +13,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import type { LeaveRequest } from "./leaves-shared";
 import { priorityConfig } from "./leaves-shared";
 import { LeaveStatusBadge } from "./leave-status-badge";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 
 interface LeaveApprovalItemProps {
   req: LeaveRequest;
@@ -60,16 +61,13 @@ export function LeaveApprovalItem({
           <Avatar className="h-9 w-9 shrink-0">
             <AvatarImage src={resolveImageUrl(req.user?.image)} />
             <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
-              {req.user?.firstName?.[0]}
-              {req.user?.lastName?.[0]}
+              {getUserInitials(req.user)}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-sm font-semibold text-foreground">
-                {req.user?.firstName
-                  ? `${req.user.firstName} ${req.user.lastName}`
-                  : req.user?.email}
+                {getUserDisplayName(req.user)}
               </p>
               <span
                 className={cn(

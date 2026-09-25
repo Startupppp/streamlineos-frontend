@@ -35,6 +35,11 @@ import { CheckCheckIcon, HouseIcon, PlusIcon, DownloadIcon } from "@animateicons
 import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadBlob } from "@/lib/download-blob";
 import { ErrorState } from "@/components/shared";
+import {
+  buildLeaveExportBlob,
+  leaveExportToastMessage,
+  leaveExportViewFor,
+} from "@/features/hr/leaves/leave-export";
 import { LeaveRequestSheet } from "@/features/hr/leaves/leave-request-sheet";
 import { WfhRequestSheet } from "@/features/hr/leaves/wfh-request-sheet";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -148,47 +153,30 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
     (r) => r.status === "APPROVED",
   ).length;
 
+  // HRMS-E2E-022. The export follows the eye: the view is derived from the
+  // active tab, so an admin on Approvals exports the team rows in front of them
+  // rather than their own list. Two silences are gone with it — the button that
+  // was not rendered on the tab holding the requests, and the refusal to write
+  // a workbook for an empty list. An empty result is a result: it gets the
+  // header row, which states what the export would have contained.
+  const exportView = leaveExportViewFor(
+    activeTab,
+    myLeaveRequests,
+    allIncomingLeaveRequests,
+  );
+  const canExportLeaves =
+    activeTab === "my-leaves" || (isAdmin && activeTab === "approvals");
+
   async function handleExportExcel() {
-    // Was: refuse with "No leave requests to export" and produce nothing. An
-    // empty result is a result — a person exporting an empty month wants the
-    // file, to hand on or to fill in — and an error toast for it reads as a
-    // broken button. The workbook is written either way; with no rows it is the
-    // header, which states what the export would have contained.
+    // Every path out of here is a file plus a toast, or a toast. Nothing
+    // returns quietly, and nothing is swallowed.
     try {
-      const ExcelJS = (await import("exceljs")).default;
-      const workbook = new ExcelJS.Workbook();
-      const ws = workbook.addWorksheet("Leave Requests");
-      ws.columns = [
-        { header: "Type", width: 15 },
-        { header: "From", width: 14 },
-        { header: "To", width: 14 },
-        { header: "Priority", width: 10 },
-        { header: "Status", width: 12 },
-        { header: "Reason", width: 30 },
-        { header: "Requested On", width: 14 },
-      ];
-      ws.getRow(1).font = { bold: true };
-      for (const req of myLeaveRequests) {
-        ws.addRow([
-          req.leaveType?.name || "-",
-          req.startDate,
-          req.endDate,
-          req.priority || "Medium",
-          req.status,
-          req.reason || "-",
-          req.createdAt ? format(new Date(req.createdAt), "yyyy-MM-dd") : "-",
-        ]);
-      }
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      downloadBlob(blob, `leave-requests-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-      toast.success(
-        myLeaveRequests.length === 0
-          ? "Exported an empty sheet — no leave requests match this view"
-          : `Exported ${myLeaveRequests.length} leave request${myLeaveRequests.length === 1 ? "" : "s"}`,
+      const blob = await buildLeaveExportBlob(exportView);
+      downloadBlob(
+        blob,
+        `${exportView.filePrefix}-${format(new Date(), "yyyy-MM-dd")}.xlsx`,
       );
+      toast.success(leaveExportToastMessage(exportView));
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -284,7 +272,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                 </TabsList>
 
                 <div className="ml-auto flex shrink-0 items-center gap-2">
-                  {activeTab === "my-leaves" ? (
+                  {canExportLeaves ? (
                     <AnimatedIconButton
                       icon={DownloadIcon}
                       iconSize={14}
@@ -293,7 +281,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                       size="sm"
                       onClick={handleExportExcel}
                       className="h-8 gap-1.5"
-                      aria-label="Export to Excel"
+                      aria-label={`Export ${exportView.noun}s to Excel`}
                     >
                       Export
                     </AnimatedIconButton>

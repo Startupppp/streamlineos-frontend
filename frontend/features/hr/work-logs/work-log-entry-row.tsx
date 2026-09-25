@@ -244,6 +244,7 @@ export function WorkLogEntryRow({
               variant="ghost"
               size="sm"
               disabled={readOnly}
+              aria-label={readOnly ? `No entry for ${dateLabel}` : `Add work log for ${dateLabel}`}
               onClick={() => {
                 if (!readOnly) setExpanded(true);
               }}
@@ -262,7 +263,9 @@ export function WorkLogEntryRow({
                     : "No entry"
                   : isWeekendDay
                     ? "Optional weekend note…"
-                    : "Add today’s work log…"}
+                    : today
+                      ? "Add today’s work log…"
+                      : "Add work log…"}
               </span>
               <div className="flex items-center gap-1.5">
                 {status && (
