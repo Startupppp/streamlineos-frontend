@@ -314,7 +314,7 @@ Rules:
   per-column continuation.
 - [x] **BLD-03-027** column counts accept the identical authorized filter
   contract as board rows.
-- [ ] **BLD-03-028** no UI labels loaded count as total count.
+- [x] **BLD-03-028** no UI labels loaded count as total count.
 - [ ] **BLD-03-029** lists remain responsive at 100, 1,000, 10,000, and
   enterprise-scale records through server paging and row/column virtualization.
 - [ ] **BLD-03-030** pagination has no duplicates or omissions during stable
