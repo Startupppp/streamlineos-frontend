@@ -18,7 +18,10 @@ import {
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
-import { Pencil, AlertCircle, Sparkles } from "lucide-react";
+import { Pencil, Sparkles } from "lucide-react";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { CopyIcon, Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
@@ -50,9 +53,10 @@ interface TemplateCardProps {
   onCopy: (t: EmailTemplate) => void;
   onEdit: (t: EmailTemplate) => void;
   onDelete: (id: number) => void;
+  canManage: boolean;
 }
 
-function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps) {
+function TemplateCard({ template, onCopy, onEdit, onDelete, canManage }: TemplateCardProps) {
   const handleCopy = useCallback(() => onCopy(template), [onCopy, template]);
   const handleEdit = useCallback(() => onEdit(template), [onEdit, template]);
   const handleDelete = useCallback(() => onDelete(template.id), [onDelete, template.id]);
@@ -70,10 +74,14 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
           </span>
           <div className="flex gap-1">
             <AnimatedIconButton icon={CopyIcon} variant="ghost" size="icon" className="h-6 w-6" iconSize={12} onClick={handleCopy} aria-label="Copy template body" />
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit} aria-label="Edit template">
-              <Pencil className="h-3 w-3" />
-            </Button>
-            <AnimatedIconButton icon={Trash2Icon} variant="ghost" size="icon" className="h-6 w-6 text-destructive" iconSize={12} onClick={handleDelete} aria-label="Delete template" />
+            {canManage && (
+              <>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit} aria-label={`Edit ${template.name}`}>
+                  <Pencil className="h-3 w-3" />
+                </Button>
+                <AnimatedIconButton icon={Trash2Icon} variant="ghost" size="icon" className="h-6 w-6 text-destructive" iconSize={12} onClick={handleDelete} aria-label={`Delete ${template.name}`} />
+              </>
+            )}
           </div>
         </div>
         <div>
@@ -86,7 +94,7 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
         </div>
         <div>
           <span className="text-micro font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
-            {`{{${varCount}}} variables`}
+            {`${varCount} variable${varCount === 1 ? "" : "s"}`}
           </span>
         </div>
       </CardContent>
@@ -95,7 +103,9 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
 }
 
 export function EmailTemplatesPageClient() {
-  const { data: templates, isLoading, isError, refetch } = useEmailTemplates();
+  const { data: templates, isLoading, isError, error, refetch } = useEmailTemplates();
+  const pageState = usePageState({ permission: "hr:email-templates:manage", isLoading, isError, error });
+  const canManage = useCan("hr:email-templates:manage");
 
   const create = useCreateEmailTemplate();
   const update = useUpdateEmailTemplate();
@@ -214,27 +224,22 @@ export function EmailTemplatesPageClient() {
     );
   }, [generateAi, name, subject, category]);
 
-  if (isLoading) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
+    // Was a hand-rolled "Something went wrong" that dropped the error (FE-41).
     return (
       <PageWrapper title="Email Templates" subtitle="Manage reusable email templates for HR communications">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper title="Email Templates" subtitle="Manage reusable email templates for HR communications">
-        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-          <AlertCircle className="w-8 text-destructive" />
-          <div>
-            <p className="text-sm font-medium text-foreground">Failed to load email templates</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
-          </div>
-          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
-        </div>
+        <PageState
+          resolution={pageState}
+          onRetry={handleRetry}
+          className="flex-1"
+          loading={
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
+            </div>
+          }
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }
@@ -244,9 +249,11 @@ export function EmailTemplatesPageClient() {
       title="Email Templates"
       subtitle="Manage reusable email templates for HR communications"
       actions={
-        <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" iconSize={14} onClick={handleOpenSheet}>
-          New Template
-        </AnimatedIconButton>
+        canManage ? (
+          <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" iconSize={14} onClick={handleOpenSheet}>
+            New Template
+          </AnimatedIconButton>
+        ) : undefined
       }
     >
       {!templates?.length ? (
@@ -254,7 +261,7 @@ export function EmailTemplatesPageClient() {
           illustration={<EmptyMailIllustration className="h-32 w-32" />}
           title="No email templates yet"
           description="Create your first email template to standardize communications."
-          action={{ label: "Add Template", onClick: handleOpenSheet }}
+          action={canManage ? { label: "New Template", onClick: handleOpenSheet } : undefined}
           actionVariant="outline"
         />
       ) : (
@@ -286,6 +293,7 @@ export function EmailTemplatesPageClient() {
                   onCopy={handleCopy}
                   onEdit={handleOpenEdit}
                   onDelete={handleDeleteTemplate}
+                  canManage={canManage}
                 />
               ))
             )}
