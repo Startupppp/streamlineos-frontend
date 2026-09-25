@@ -65,6 +65,12 @@ export const CARD_GROUPS: CardGroup[] = [
         permission: "hr:policies:view",
       },
       {
+        title: "Reporting Managers",
+        description: "Default manager, fallback order, additional managers and change limits",
+        href: "/hr/settings/reporting-managers",
+        permission: "hr:reporting-lines:manage",
+      },
+      {
         title: "Effective Rule Preview",
         description: "See which rule applies to an employee on a date",
         href: "/hr/settings/preview",

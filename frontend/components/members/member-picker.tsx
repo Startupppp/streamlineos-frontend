@@ -44,6 +44,13 @@ interface MemberPickerBaseProps {
    * search moved on). Used only to label the selection, never listed.
    */
   knownMembers?: MemberOption[];
+  /**
+   * Set by `FormControl` so the field's `<FormLabel>` names the trigger; with an
+   * id the placeholder stops being the accessible name.
+   */
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean | "true" | "false";
   projectId?: number;
   /** Scopes candidates to a module's member-access candidates instead of org/project members. */
   moduleKey?: string;
@@ -102,6 +109,9 @@ export function MemberPicker(props: MemberPickerProps) {
     onSearchChange,
     onOpenChange,
     knownMembers,
+    id,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
     projectId,
     moduleKey,
     excludeAssigned = true,
@@ -167,7 +177,10 @@ export function MemberPicker(props: MemberPickerProps) {
         type="button"
         variant="outline"
         role="combobox"
-        aria-label={placeholder}
+        id={id}
+        aria-label={id ? undefined : placeholder}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
         disabled={disabled}
         className={cn(TRIGGER_CLASS, "text-muted-foreground font-normal")}
       >
@@ -251,7 +264,10 @@ export function MemberPicker(props: MemberPickerProps) {
       type="button"
       variant="outline"
       role="combobox"
-      aria-label={placeholder}
+      id={id}
+      aria-label={id ? undefined : placeholder}
+      aria-describedby={ariaDescribedBy}
+      aria-invalid={ariaInvalid}
       disabled={disabled}
       className={cn(
         TRIGGER_CLASS,

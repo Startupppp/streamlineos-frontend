@@ -85,4 +85,16 @@ describe("ManagerCandidatePicker — accessible manager selection", () => {
     expect(hrCandidates).toHaveBeenLastCalledWith("", undefined, { enabled: false });
     expect(screen.getAllByRole("option")).toHaveLength(1);
   });
+
+  it("takes its accessible name from the field label when FormControl gives it an id", () => {
+    render(
+      <>
+        <label htmlFor="primary-manager">Primary reporting manager</label>
+        <ManagerCandidatePicker id="primary-manager" value={null} onChange={jest.fn()} placeholder="Search for a manager" aria-describedby="hint" />
+        <p id="hint">Assigned automatically by policy if left blank</p>
+      </>,
+    );
+    const trigger = screen.getByRole("combobox", { name: "Primary reporting manager" });
+    expect(trigger).toHaveAccessibleDescription("Assigned automatically by policy if left blank");
+  });
 });

@@ -49,6 +49,10 @@ interface ManagerCandidatePickerProps {
   disabled?: boolean;
   allowUnassigned?: boolean;
   className?: string;
+  /** Injected by `FormControl`; forwarded so the field label names the trigger. */
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean | "true" | "false";
 }
 
 /**
@@ -66,6 +70,9 @@ export function ManagerCandidatePicker({
   disabled,
   allowUnassigned = false,
   className,
+  id,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: ManagerCandidatePickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -99,6 +106,9 @@ export function ManagerCandidatePicker({
       disabled={disabled}
       allowUnassigned={allowUnassigned}
       className={className}
+      id={id}
+      aria-describedby={ariaDescribedBy}
+      aria-invalid={ariaInvalid}
     />
   );
 }

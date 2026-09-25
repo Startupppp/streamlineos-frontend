@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Clock, CalendarCheck, CalendarDays, FileText, Timer, BarChart3, Network, ClipboardList, ClipboardCheck, Map, RefreshCcw, History, Building2, Search, Grid3X3, LayoutGrid, Smartphone, UserCheck } from "lucide-react";
+import { LayoutDashboard, Users, Clock, CalendarCheck, CalendarDays, FileText, Timer, BarChart3, Network, ClipboardList, ClipboardCheck, Map, RefreshCcw, History, Building2, Search, Grid3X3, LayoutGrid, Smartphone, UserCheck, MessageSquareWarning, Shuffle } from "lucide-react";
 import type { NavRoute } from "./sidebar-nav-types";
 
 export const HR_FOUNDATION_ROUTES: NavRoute[] = [
@@ -48,6 +48,18 @@ export const HR_FOUNDATION_ROUTES: NavRoute[] = [
             icon: UserCheck,
             href: "/hr/employees/manager-coverage",
             requiredPermission: "hr:employees:view",
+          },
+          {
+            label: "Reporting requests",
+            icon: MessageSquareWarning,
+            href: "/hr/employees/reporting-requests",
+            requiredPermission: "hr:reporting-lines:review",
+          },
+          {
+            label: "Reporting changes",
+            icon: Shuffle,
+            href: "/hr/employees/reporting-changes",
+            requiredPermission: "hr:reporting-lines:manage",
           },
           {
             label: "Job Architecture",
