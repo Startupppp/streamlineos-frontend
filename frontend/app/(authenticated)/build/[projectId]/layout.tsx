@@ -25,7 +25,7 @@ export default async function ProjectLayout({
 }) {
   const { projectId } = await params;
   const numId = Number(projectId);
-  if (isNaN(numId)) return notFound();
+  if (!Number.isInteger(numId) || numId <= 0) return notFound();
 
   let project: ProjectWithDetails | null = null;
   let hydrated: DehydratedState | null = null;
