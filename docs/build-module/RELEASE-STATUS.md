@@ -156,6 +156,7 @@ Completed:
 - Production `/build/portfolios?q=platform` was rechecked in the real browser after rollout and rendered the filtered empty state without a visible error.
 - Production `/build/managed-products` and `/build/goals` were rechecked in the real browser and rendered their authenticated empty states without visible errors.
 - Local port `1000` browser verification rechecked `/build/inbox?view=drafts` and `/build/command-center`; both rendered their canonical headings and Build navigation without visible runtime errors. Browser logs contained only expected React DevTools and Next.js HMR messages.
+- Production browser verification rechecked `/build/command-center`; it now renders the canonical `Command Center` heading and Build navigation with no console errors, confirming the frontend deployment has caught up for this route.
 
 ## Acceptance criteria
 
