@@ -86,6 +86,22 @@ const nextConfig: NextConfig = {
       destination: "/signin",
       permanent: true,
     },
+    // HRMS-E2E-031. /hr/configuration answered Page Not Found for a member and
+    // a manager. It was never a route: the sidebar item reading "HR
+    // configuration" points at /hr/settings, so the label and the URL disagreed
+    // and anyone who typed what the nav called it hit a bare 404.
+    //
+    // An alias rather than a page, deliberately. A page under app/(authenticated)/hr
+    // would need its own entry in the route-access registry (FE-54) — a gated
+    // surface that renders nothing, standing in for a name that simply had no
+    // address. Redirecting lets /hr/settings answer the way every other gated HR
+    // surface does: access denied for an authenticated user without the
+    // permission, rather than Not Found.
+    {
+      source: "/hr/configuration",
+      destination: "/hr/settings",
+      permanent: false,
+    },
     {
       source: "/build/:projectId(\\d+)",
       has: [{ type: "query", key: "view", value: "workload" }],
