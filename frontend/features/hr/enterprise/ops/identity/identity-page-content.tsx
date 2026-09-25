@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, type MouseEvent } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,6 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/empty-state";
-import { RefreshCw } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -32,7 +31,10 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/lib/person-display";
-import { StateIllustration } from "@/components/illustrations";
+import { PageState } from "@/components/shared/page-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 const STATUS_COLORS: Record<ProvisioningStatus, string> = {
   pending: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
@@ -56,6 +58,7 @@ export function IdentityPageContent() {
   const [showCreate, setShowCreate] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
   const [activeTab, setActiveTab] = useState("provisioning");
+  const [deletingTemplate, setDeletingTemplate] = useState<ProvisioningTemplate | null>(null);
 
   const qc = useQueryClient();
 
@@ -64,12 +67,29 @@ export function IdentityPageContent() {
     isLoading,
     isFetching,
     isError: provisioningError,
+    error: provisioningErrorData,
   } = useAccessProvisioning({ cursor });
-  const { data: templates, isLoading: templatesLoading, isError: templatesError } = useProvisioningTemplates();
+  const {
+    data: templates,
+    isLoading: templatesLoading,
+    isError: templatesError,
+    error: templatesErrorData,
+  } = useProvisioningTemplates();
   const deleteTemplate = useDeleteProvisioningTemplate();
   const { data: membersData } = useOrgMembers(1, 200);
 
-  const pageError = provisioningError || templatesError;
+  const provisioningState = usePageState({
+    permission: "hr:identity:view",
+    isLoading,
+    isError: provisioningError,
+    error: provisioningErrorData,
+  });
+  const templatesState = usePageState({
+    permission: "hr:identity:view",
+    isLoading: templatesLoading,
+    isError: templatesError,
+    error: templatesErrorData,
+  });
 
   function handleRetry() {
     void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrIdentityAll });
@@ -140,13 +160,24 @@ export function IdentityPageContent() {
     },
   ], [resolveMemberName]);
 
-  const handleTemplateDelete = useCallback(
-    (templateId: string) => (event: MouseEvent<HTMLButtonElement>) => {
-      event.stopPropagation();
-      deleteTemplate.mutate(templateId);
-    },
-    [deleteTemplate],
+  const handleConfirmTemplateDelete = useCallback(() => {
+    if (!deletingTemplate) return;
+    deleteTemplate.mutate(deletingTemplate.id, {
+      onSuccess: () => setDeletingTemplate(null),
+    });
+  }, [deleteTemplate, deletingTemplate]);
+
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDeletingTemplate(null);
+  }, []);
+
+  const handleAskDelete = useCallback(
+    (template: ProvisioningTemplate) => () => setDeletingTemplate(template),
+    [],
   );
+
+  const handleOpenTemplate = useCallback(() => setShowTemplate(true), []);
+  const handleOpenCreate = useCallback(() => setShowCreate(true), []);
 
   const templateColumns: DataTableColumn<ProvisioningTemplate>[] = [
     {
@@ -178,7 +209,7 @@ export function IdentityPageContent() {
           variant="ghost"
           size="sm"
           className="text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={handleTemplateDelete(r.id)}
+          onClick={handleAskDelete(r)}
         >
           Delete
         </Button>
@@ -195,29 +226,6 @@ export function IdentityPageContent() {
     if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }, [data?.pagination.nextCursor]);
 
-  if (pageError) {
-    return (
-      <PageWrapper
-        title="Identity Lifecycle"
-        subtitle="Manage system access provisioning for joiners, movers, and leavers"
-      >
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center py-16 gap-4 text-center">
-          <StateIllustration preset="alert" className="h-28 w-28" />
-          <div className="space-y-1">
-            <p className="text-base font-semibold text-foreground">Failed to load identity data</p>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              There was a problem fetching provisioning records. Please try again.
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            <RefreshCw className="mr-1.5 h-4 w-4" />
-            Retry
-          </Button>
-        </div>
-      </PageWrapper>
-    );
-  }
-
   return (
     <>
       <PageWrapper
@@ -226,11 +234,11 @@ export function IdentityPageContent() {
         actions={
           canManage ? (
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => setShowTemplate(true)}>
+              <Button size="sm" variant="outline" onClick={handleOpenTemplate}>
                 <PlusIcon size={16} className="mr-1.5" />
-                Template
+                New template
               </Button>
-              <Button size="sm" onClick={() => setShowCreate(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button size="sm" onClick={handleOpenCreate}>
                 <PlusIcon size={16} className="mr-1.5" />
                 Provision
               </Button>
@@ -246,20 +254,18 @@ export function IdentityPageContent() {
           </TabsList>
 
           <TabsContent value="provisioning" className="mt-0 flex flex-1 min-h-0 flex-col">
-            {isLoading ? (
-              <div className="flex flex-1 min-h-0 flex-col gap-2 animate-pulse">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-12 rounded-lg bg-muted" />
-                ))}
-              </div>
-            ) : (
+            <PageState
+              resolution={provisioningState}
+              loading={<DataTableSkeleton columns={6} className="flex-1" />}
+              onRetry={handleRetry}
+              className="flex-1"
+            >
               <div className="flex min-h-0 flex-1 flex-col gap-3">
                 <DataTable
                   className="flex-1 min-h-0"
                   data={data?.data ?? []}
                   columns={provisioningColumns}
                   getRowKey={(r) => r.id}
-                  isLoading={false}
                   emptyState={
                     <EmptyState
                       illustrationPreset="permissions"
@@ -267,7 +273,7 @@ export function IdentityPageContent() {
                       description="Create a provisioning record to grant or revoke system access for joiners, movers, and leavers."
                       action={
                         canManage
-                          ? { label: "Provision", onClick: () => setShowCreate(true) }
+                          ? { label: "Provision", onClick: handleOpenCreate }
                           : undefined
                       }
                       compact
@@ -284,23 +290,21 @@ export function IdentityPageContent() {
                   />
                 ) : null}
               </div>
-            )}
+            </PageState>
           </TabsContent>
 
           <TabsContent value="templates" className="mt-0 flex flex-1 min-h-0 flex-col">
-            {templatesLoading ? (
-              <div className="flex flex-1 min-h-0 flex-col gap-2 animate-pulse">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-12 rounded-lg bg-muted" />
-                ))}
-              </div>
-            ) : (
+            <PageState
+              resolution={templatesState}
+              loading={<DataTableSkeleton columns={4} rows={3} className="flex-1" />}
+              onRetry={handleRetry}
+              className="flex-1"
+            >
               <DataTable
                 className="flex-1 min-h-0"
                 data={templates ?? []}
                 columns={templateColumns}
                 getRowKey={(r) => r.id}
-                isLoading={false}
                 emptyState={
                   <EmptyState
                     illustrationPreset="automations"
@@ -308,14 +312,14 @@ export function IdentityPageContent() {
                     description="Create a template to auto-generate provisioning tasks for joiners, movers, or leavers."
                     action={
                       canManage
-                        ? { label: "Create template", onClick: () => setShowTemplate(true) }
+                        ? { label: "Create template", onClick: handleOpenTemplate }
                         : undefined
                     }
                     compact
                   />
                 }
               />
-            )}
+            </PageState>
           </TabsContent>
 
           <TabsContent value="exit" className="mt-0 flex flex-1 min-h-0 flex-col">
@@ -326,6 +330,17 @@ export function IdentityPageContent() {
 
       <ProvisioningSheet open={showCreate} onOpenChange={setShowCreate} />
       <TemplateSheet open={showTemplate} onOpenChange={setShowTemplate} />
+      <ConfirmDialog
+        open={deletingTemplate !== null}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete provisioning template?"
+        description={`"${deletingTemplate?.name ?? ""}" will no longer generate provisioning tasks. Existing records are kept.`}
+        confirmLabel="Delete template"
+        destructive
+        isPending={deleteTemplate.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmTemplateDelete}
+      />
     </>
   );
 }

@@ -27,8 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useCreateProvisioning } from "@/hooks/api/hr/enterprise-ops-identity";
@@ -58,7 +56,6 @@ export function ProvisioningSheet({ open, onOpenChange }: ProvisioningSheetProps
   function onSubmit(values: FormValues) {
     create.mutate(values, {
       onSuccess: () => { form.reset(); onOpenChange(false); },
-      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 

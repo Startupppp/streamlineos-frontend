@@ -31,9 +31,7 @@ import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { toast } from "sonner";
 import { useCreateProvisioningTemplate } from "@/hooks/api/hr/enterprise-ops-identity";
-import { getErrorMessage } from "@/lib/get-error-message";
 
 const SYSTEM_ACTIONS = ["grant", "revoke", "review"] as const;
 
@@ -110,7 +108,6 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
           setSystems([]);
           onOpenChange(false);
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
