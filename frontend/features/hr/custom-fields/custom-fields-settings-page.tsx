@@ -71,7 +71,7 @@ export function CustomFieldsSettingsPage() {
         subtitle="Define additional fields for HR entities"
         filters={
           <Select value={entityType} onValueChange={setEntityType}>
-            <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}><SelectValue /></SelectTrigger>
+            <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)} aria-label="Entity type"><SelectValue /></SelectTrigger>
             <SelectContent>
               {ENTITY_TYPES.map((t) => (
                 <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
