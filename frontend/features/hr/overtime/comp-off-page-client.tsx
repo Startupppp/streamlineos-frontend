@@ -7,15 +7,21 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { IllustrationImage } from "@/components/illustrations/illustration-image";
 import Link from "next/link";
 import { useCompOff } from "@/hooks/api/hr/comp-off";
-import { getErrorMessage } from "@/lib/get-error-message";
 
 export function CompOffPageClient() {
   const { data: records, isLoading, isError, error, refetch } = useCompOff();
-  const earnedDays = records?.[0] ? parseFloat(records[0].earnedDays) : 0;
+  // "Available" is what is left: earned minus used. It showed earned alone.
+  const earnedDays = records?.[0]
+    ? parseFloat(records[0].earnedDays) - parseFloat(records[0].usedDays)
+    : 0;
+  // The route admits hr:leaves:view, but useCompOff is gated on
+  // hr:attendance:view: a caller with only the first read "No comp-off balance".
+  const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -24,13 +30,10 @@ export function CompOffPageClient() {
   return (
     <PageWrapper title="Compensatory Off" subtitle="Track earned comp-off from overtime work">
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        {isError ? (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load comp-off balance"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
+        {pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading" ? (
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+            {null}
+          </PageState>
         ) : (
           <>
             {isLoading ? (
@@ -46,7 +49,7 @@ export function CompOffPageClient() {
                   <div>
                     <p className="text-primary-foreground/70 text-sm font-medium">Available Comp-Off Balance</p>
                     <p className="text-5xl font-bold mt-1">{earnedDays.toFixed(1)}</p>
-                    <p className="text-primary-foreground/70 text-sm mt-1">days earned</p>
+                    <p className="text-primary-foreground/70 text-sm mt-1">days available</p>
                   </div>
                   <div className="flex size-[4.5rem] shrink-0 items-center justify-center rounded-2xl bg-white/90 p-2 shadow-sm">
                     <IllustrationImage name="empty-leave" className="size-full" alt="" />
