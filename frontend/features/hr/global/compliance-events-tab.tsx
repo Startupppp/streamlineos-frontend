@@ -88,12 +88,12 @@ export function ComplianceEventsTab() {
 
       {events.length === 0 ? (
         <EmptyState
-          illustration={<CheckCircle2 className="h-10 w-10 text-status-success-ink" aria-hidden />}
-          title="No compliance events found."
+          illustrationPreset="report"
+          title="No compliance deadlines scheduled"
           description={
             filtersActive
               ? undefined
-              : "Generate events to see upcoming compliance deadlines."
+              : "An empty calendar means nothing is being tracked here, not that you are compliant. Generate events from your requirements to see upcoming deadlines."
           }
           filtersActive={filtersActive}
           onClearFilters={handleClearFilters}
