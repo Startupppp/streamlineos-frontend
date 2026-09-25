@@ -85,6 +85,8 @@ export const useAccess = (
 
   return useQuery<AccessResponse, Error>({
     staleTime: 5 * 60_000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: true,
     queryKey: platformCoreQueryKeys.access.me(),
     queryFn: ({ signal }) =>
       apiClient.get("/me/access", undefined, signal, accessContract),

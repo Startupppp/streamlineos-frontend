@@ -19,10 +19,10 @@ function isOutsideAccessNamespace(query: Query): boolean {
 export function useAccessVersionSync(): void {
   const queryClient = useQueryClient();
   const { data } = useAccess({
-    staleTime: Infinity,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    staleTime: 5 * 60_000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: true,
   });
   const version = data?.version;
   const seenVersion = useRef<number | undefined>(undefined);
