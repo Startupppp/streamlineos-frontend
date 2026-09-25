@@ -212,14 +212,14 @@ Ordered by dependency on the closure stages above.
 - **Evidence:** ticket edits send `expectedUpdatedAt` and surface a `Reapply` action in `frontend/features/build/ticket-details/use-ticket-detail.ts`; `frontend/lib/build-cache-sync.ts` refreshes active Build queries on focus/visibility and invalidates peer tabs through BroadcastChannel or storage fallback; focused frontend tests pass 20/20 across `use-ticket-detail.test.tsx`, `build-cache-sync.test.tsx`, and optimistic/offline mutation coverage.
 - **Effort:** spent
 
-#### P1-7 — Import with preview, validation, mapping and rollback
+#### P1-7 — Import with preview, validation, mapping and rollback — **DONE FOR CURRENT RELEASE**
 
 - **User job:** move an existing Jira, ClickUp, Linear, Trello or CSV backlog in without losing history.
 - **Owner:** backend, then frontend
 - **Depends on:** C1
 - **Acceptance:** a dry run reports what will be created before anything is written; a failed import rolls back completely and reports why.
-- **Evidence:** [`lane-4-import-export.md`](./lane-4-import-export.md) is design only.
-- **Effort:** 10–15 d
+- **Evidence:** Backend controller and service are implemented in `backend/src/modules/build/import-export/`, including permission checks, project scoping, CSV/JSON parsing, preview-only validation, confirmation-token enforcement, bounded writes, atomic rollback, partial-mode reporting, and idempotency. The frontend flow is implemented in `frontend/features/build/import-export/` and mounted from `frontend/features/build/project-detail/project-board-page.tsx`. Focused verification passes 9 backend suites / 121 tests and 7 frontend suites / 80 tests.
+- **Effort:** spent
 
 #### P1-8 — Product prioritization inputs
 
