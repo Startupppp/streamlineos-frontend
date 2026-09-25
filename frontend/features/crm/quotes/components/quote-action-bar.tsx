@@ -8,6 +8,7 @@ import {
   Trash2,
   FileCheck2,
   Receipt,
+  PenLine,
   Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ interface QuoteActionBarProps {
   onApprove: () => void;
   onApprovalRejectOpen: () => void;
   onConvertToInvoice: () => void;
+  onCreateSigningEnvelope: () => void;
   onMarkSignedOpen: () => void;
   onDelete: () => void;
   updateStatusPending: boolean;
@@ -54,6 +56,7 @@ export function QuoteActionBar({
   onApprove,
   onApprovalRejectOpen,
   onConvertToInvoice,
+  onCreateSigningEnvelope,
   onMarkSignedOpen,
   onDelete,
   updateStatusPending,
@@ -149,6 +152,12 @@ export function QuoteActionBar({
           <Receipt className="h-3.5 w-3.5 mr-1.5" />
           Convert to Invoice
         </LoadingButton>
+      )}
+      {canMarkSigned && (
+        <Button size="sm" variant="outline" onClick={onCreateSigningEnvelope}>
+          <PenLine className="h-3.5 w-3.5 mr-1.5" />
+          Create Signing Envelope
+        </Button>
       )}
       {canMarkSigned && (
         <Button size="sm" variant="outline" onClick={onMarkSignedOpen}>
