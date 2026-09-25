@@ -29,6 +29,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const createPage = useCreateKbPage();
   const canViewAnalytics = useCan("kb:analytics:view");
   const canViewReviews = useCan("kb:reviews:view");
+  const canManageContent = useCan("kb:pages:manage");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
   const createParamConsumedRef = useRef(false);
   const { isCollapsed: collapsed } = useShellSidebarCollapse();
@@ -79,6 +80,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   const navProps = {
     canViewAnalytics,
     canViewReviews,
+    canManageContent,
   };
 
   const sidebarInner = () => {

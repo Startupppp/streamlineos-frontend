@@ -66,19 +66,19 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 | S08 | Page document — trust header, action model, offline/conflict | 3 | P0 | IN PROGRESS |
 | S09 | History — diff + append-only restore | 3 | P0 | IN PROGRESS |
 | S10 | Reviews — derived overdue, URL filters, bulk decide | 4 | P0/P1 | LANDED — needs final gate sweep |
-| S11 | Trash — cursor, bulk restore/purge, resumable purge ledger | 3 | P0 | LANDED — resumable purge ledger still open |
+| S11 | Trash — cursor, bulk restore/purge, resumable purge ledger | 3 | P0 | **CLOSED — purge ledger shipped by 1193, applied and verified** |
 | S12 | Templates — URL state, preview, saved-template lifecycle | 3 | P1 | LANDED — backend pre-existed; BE-24 cap+pagination fixed |
 | S13 | Import & Export — validation, dry-run, resumable jobs | 3 | P0 | BUILT — controller + suites green; checkbox list not re-audited |
 | S14 | Analytics — permission-safe, minimum cohort, drill-down | 4 | P1 | LANDED — registered in KbWikiModule (BE-01) |
-| S15 | Content Health — `/knowledge/wiki/manage` | 4 | P1 | LANDED — registered in KbWikiModule (BE-01) |
+| S15 | Content Health — `/knowledge/wiki/manage` | 4 | P1 | **BUILT — page shipped, 8 of 10 signals; see tenth pass** |
 | S16 | Ask KB — scope, citations, fallback, budgets | 1/4 | P0/P1 | IN PROGRESS |
 | S17 | Public page — `/wiki/[shareToken]` | 3 | P0 | **VERIFIED — token versioning closed by 1192, applied** |
 | S18 | Project wiki adapters | 2 | P0 | BUILT — adapter suites green; checkbox list not re-audited |
 | S19 | Research Briefs moved under Knowledge | 4 | P1 | LANDED — one controller repo-wide; no duplicate left to remove |
 | S20 | `/ask` removal, redirects, aliases | 6 | P0 | VERIFIED — surface deleted, redirect live, not shadowed |
 | S21 | `kb_articles` cutover + destructive contraction | 6 | P1 | **VERIFIED — measured against production, ninth pass** |
-| S22 | Async scale — queue lanes, admission, SLOs, DR drills | 5 | P0/P1 | NOT STARTED |
-| S23 | Observability — dashboards, alerts, cost budgets, runbooks | 0/5 | P0 | NOT STARTED |
+| S22 | Async scale — queue lanes, admission, SLOs, DR drills | 5 | P0/P1 | **BUILT — 5 of 5; 1194 applied; replica lane deferred, no replica exists** |
+| S23 | Observability — dashboards, alerts, cost budgets, runbooks | 0/5 | P0 | **BUILT — `kb-ask` alert + SLO + runbook; dashboards absent repo-wide** |
 
 ## S14/S15 Analytics + Content Health — built, but the routes did not exist
 
@@ -1934,3 +1934,82 @@ outstanding work that had been completed — because each was written at the mom
 was made and never re-measured after it was carried out. **A document that records an intention
 reads identically to one that records an outcome.** The only thing that separated them here was
 querying the database. Re-measure before acting on any "pending" claim in this pack.
+
+## Tenth pass — 2026-09-25, four slices closed and an index that RLS refused to use
+
+Five migrations are now applied and verified by hash against `drizzle.__drizzle_migrations`:
+**953 ledger rows / 953 journal entries, reconciled.**
+
+| tag | idx | ledger hash | what |
+|---|---|---|---|
+| 1192 | 1076 | `2f78c4d7` | `kb_pages.public_token_revision` (ninth pass) |
+| 1193 | 1077 | `98c48346` | `kb_page_purge_ledger` — S11 resumable multi-store purge |
+| 1194 | 1078 | `d68a0d66` | `ai_jobs.correlation_id` — S22 |
+| 1195 | 1079 | `9fd77ee6` | content digest index — **superseded, see below** |
+| 1196 | 1080 | `b9aa0e2c` | content digest index, leakproof-safe |
+
+### 1193 shipped without its tenant FK and no gate could have caught it
+
+`kb_page_purge_ledger.org_id` was authored with no reference to `organizations` — the only one
+of the twenty `kb_*` tables missing it, where the other nineteen all declare
+`.references(() => organizations.id, { onDelete: "cascade" })`. That is **BE-38**, and it would
+have orphaned ledger rows behind every deleted org.
+
+It was caught by reading the file, not by a gate. `check:tenant-relationships` **refuses to run
+without a target database** and inspects a live catalog, so it can only fail *after* the wrong
+shape is already in production. The FK was added before applying; the constraint now reads
+`convalidated = true`.
+
+`page_id` deliberately carries **no** FK. A cascade there would delete the ledger row when the
+page row is purged, destroying the resumability the ledger exists to provide.
+
+### The duplicate-candidate signal was quadratic, and the obvious fix did not work
+
+`duplicate_candidate` compared `trim(other.content_text) = trim(page.content_text)` in a
+correlated `EXISTS`. The plan is a nested loop with `Materialize` — every page against every
+other page in the org — and `counts()` fires **all eight signals on every page load**.
+Page bodies measure **avg 7.6 KB, max 95 KB**.
+
+At today's 16 live pages it runs in 15.6 ms, so measuring it proves nothing. The plan *shape* is
+the evidence, not the clock.
+
+The first fix (1195) indexed `md5(trim(content_text))`. **Under RLS the planner refused it**,
+demoting the digest to a `Filter` and keeping only `org_id` as an `Index Cond`. The cause is in
+`pg_proc`:
+
+| function | `proleakproof` |
+|---|---|
+| `md5(text)` | **true** |
+| `texteq(text,text)` | **true** |
+| `btrim(text)` | **false** |
+
+A non-leakproof call anywhere in the index expression cannot be evaluated ahead of the RLS
+security qual, so the whole expression is deferred. Dropping `trim` (1196) restores a true
+`Index Cond` on both columns *with RLS active*. Parity held — trim-equality and md5 both return
+2 — and **0 live pages** have `content_text` differing from its trimmed form.
+
+> Generalises beyond trigram indexes: **any non-leakproof function in an index expression
+> silently defeats that index under RLS.** Always read the plan as `streamline_app`, never as
+> the owner — the owner has BYPASSRLS and shows a plan production will never use.
+
+### Seven security specs had never run
+
+`kb-ask-tenant-isolation.spec.ts` and `kb-ask-citation-restriction.spec.ts` passed six arguments
+to a five-argument `KbAskService` constructor, so **they failed to compile and never executed** —
+including the cross-tenant isolation assertions. `AccessService` had moved into
+`KbCitationVisibilityService`; the specs were never updated. Dropping the stale argument makes
+**9 tests run and pass** that previously did not run at all.
+
+This is why `typecheck` alone is not enough: it uses `tsconfig.build.json`, which excludes specs.
+Only **`typecheck:test`** sees this (BE-138). A lane reported "typecheck clean" and was telling
+the truth about the wrong tier.
+
+### Pre-existing, untouched
+
+`check:migration-rollback` fails on **12 HRMS/recruiting migrations (1177–1190)** with no
+rollback file. None are KB. All five KB migrations above ship one.
+
+The journal array is **not in idx order** — entries 717 and 726 sit physically between 339 and
+340. In *idx* order `when` is strictly increasing with 0 violations, which is what BE-59 requires.
+This is the concrete mechanism behind the standing rule never to run a bare `db:migrate`:
+replaying in array order attempts those two out of sequence.

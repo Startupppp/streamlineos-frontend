@@ -13,6 +13,7 @@ import {
   KbMessageSquareIcon,
   KbSearchIcon,
   KbTrash2Icon,
+  KbTriangleAlertIcon,
   KbUploadIcon,
   KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
@@ -37,6 +38,7 @@ import {
   KB_CHAT,
   KB_IMPORT,
   KB_PRIVATE,
+  KB_MANAGE,
   KB_REVIEWS,
   KB_SEARCH,
   KB_SHARED,
@@ -64,6 +66,7 @@ interface WikiSidebarNavProps {
   isCollapsed?: boolean;
   canViewAnalytics: boolean;
   canViewReviews: boolean;
+  canManageContent: boolean;
 }
 
 interface WikiSidebarFooterProps {
@@ -85,9 +88,10 @@ function buildPrimaryItems(): WikiNavItem[] {
 function buildNavGroups({
   canViewAnalytics,
   canViewReviews,
+  canManageContent,
 }: Pick<
   WikiSidebarNavProps,
-  "canViewAnalytics" | "canViewReviews"
+  "canViewAnalytics" | "canViewReviews" | "canManageContent"
 >): WikiNavGroup[] {
   const manageItems: WikiNavItem[] = [
     { label: "Templates", href: KB_TEMPLATES, icon: KbLayoutTemplateIcon },
@@ -101,6 +105,10 @@ function buildNavGroups({
 
   if (canViewAnalytics) {
     manageItems.push({ label: "Analytics", href: KB_ANALYTICS, icon: KbBarChart2Icon });
+  }
+
+  if (canManageContent) {
+    manageItems.push({ label: "Content Health", href: KB_MANAGE, icon: KbTriangleAlertIcon });
   }
 
   return [
@@ -308,6 +316,7 @@ export default function WikiSidebarNav({
   isCollapsed = false,
   canViewAnalytics,
   canViewReviews,
+  canManageContent,
 }: WikiSidebarNavProps) {
   const pathname = usePathname();
   const askKbItem = useMemo(() => buildAskKbItem(), []);
@@ -317,8 +326,9 @@ export default function WikiSidebarNav({
       buildNavGroups({
         canViewAnalytics,
         canViewReviews,
+        canManageContent,
       }),
-    [canViewAnalytics, canViewReviews],
+    [canViewAnalytics, canViewReviews, canManageContent],
   );
   const accordionItems = useMemo(
     () => groups.flatMap((group) => group.items),
