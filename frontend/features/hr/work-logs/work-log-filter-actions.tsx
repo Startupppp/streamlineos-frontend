@@ -183,7 +183,7 @@ export function WorkLogFilterActions({
       />
 
       {canManageEmployees && (
-        <AnimatedIconButton icon={DownloadIcon} iconSize={12} iconClassName="mr-0" variant="outline" onClick={onExport}>
+        <AnimatedIconButton icon={DownloadIcon} iconSize={12} iconClassName="mr-0" variant="outline" onClick={onExport} aria-label="Export work logs">
           <span className="hidden sm:inline">Export</span>
         </AnimatedIconButton>
       )}
