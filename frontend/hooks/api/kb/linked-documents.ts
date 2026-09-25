@@ -34,7 +34,6 @@ export interface LinkedDocumentItem {
 }
 
 export interface LinkedDocumentDetail extends LinkedDocumentItem {
-  /** Publisher-only: null for everyone else. */
   audiences: Array<{ kind: "ALL_EMPLOYEES" | "DEPARTMENT" | "LOCATION"; refId: string | null; label: string | null }> | null;
   newerVersionAvailable: boolean | null;
   unpublishReason: string | null;
@@ -43,9 +42,7 @@ export interface LinkedDocumentDetail extends LinkedDocumentItem {
 export interface LinkedDocumentListParams {
   cursor?: string;
   limit?: number;
-  /** Anything but "active" is for publishers; anyone else is refused with 403. */
   status?: LinkedDocumentStatus | "all";
-  /** Words to find in a document's name, description, category and tags. Two or more characters; the server answers 404 while search is switched off. */
   q?: string;
 }
 
@@ -66,7 +63,6 @@ export function useLinkedDocuments(params?: LinkedDocumentListParams, options?: 
     queryFn: ({ signal }) => apiClient.get<LinkedDocumentList>("/kb/linked-documents", queryParams, signal, listLazy),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
-    // The switch is read separately; a tenant with it off answers 404 here, which the page shows as "not found".
     retry: false,
     throwOnError: readErrorExceptNotFoundReachesBoundary,
     ...options,
@@ -79,18 +75,11 @@ export function useLinkedDocument(linkedDocumentId: number, options?: { enabled?
     queryFn: ({ signal }) => apiClient.get<LinkedDocumentDetail>(`/kb/linked-documents/${linkedDocumentId}`, undefined, signal, detailLazy),
     staleTime: 60_000,
     retry: false,
-    // An entry that was withdrawn, or that this person may not see, answers 404; the page says so instead of falling to the route's error page.
     throwOnError: readErrorExceptNotFoundReachesBoundary,
     ...options,
   });
 }
 
-/**
- * Asks the server to authorise the entry again and sign a 300 second URL. The URL is used once and never stored:
- * `gcTime: 0` drops the finished mutation, and the URL with it, from the MutationCache as soon as nothing observes
- * it. The caller that opened the link should `reset()` right after using it, so the URL does not linger in
- * `mutation.data` for as long as the page stays mounted either.
- */
 export function useOpenLinkedDocument() {
   return useMutation({
     mutationKey: ["kb", "linkedDocuments", "open"],

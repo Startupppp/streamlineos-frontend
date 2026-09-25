@@ -22,14 +22,6 @@ interface KbPageAiActionsProps {
   onInsertSummary?: (text: string) => void;
 }
 
-/**
- * The three generating actions stream. This panel used to hand-roll the menu,
- * the result sheet, the in-flight guard and the error classification that
- * `AiActionsMenu` already owns — including a streaming state it never reached,
- * because every action awaited a whole buffered answer first. `improve` declares
- * a 1024-token ceiling, which a buffered call could not reliably deliver inside
- * the client's own cap on non-streaming requests.
- */
 export function KbPageAiActions({
   pageId,
   currentContent,

@@ -28,7 +28,6 @@ interface CompanyDocumentDetailPageProps {
   linkedDocumentId: number;
 }
 
-/** The heading while there is no entry to name: still loading, failed, refused, or not there. */
 const COMPANY_DOCUMENT_TITLE = "Company document";
 
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
@@ -82,11 +81,6 @@ function PublisherNotes({ detail }: { detail: LinkedDocumentDetail }) {
   );
 }
 
-/**
- * One company document as a reader sees it. The file is never linked directly: "Open file" asks the server to
- * authorise the entry again and to sign a URL that lasts five minutes, so an entry withdrawn a moment ago cannot
- * be opened from a page that was already on screen.
- */
 export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyDocumentDetailPageProps) {
   const canPublish = useCan("hr:documents:publish");
   const { data: linkFlags, isLoading: configLoading, isError: configFailed, error: configError, refetch: refetchConfig } = useHrKbLinkConfig();
@@ -95,8 +89,6 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
   const { data, isLoading, isError, error, refetch } = useLinkedDocument(linkedDocumentId, { enabled: linkOn });
   const { mutateAsync: requestOpen, reset: forgetOpen, isPending: opening } = useOpenLinkedDocument();
 
-  // A disabled query reports isLoading false, so the switch's own loading is added by hand. A 404 is "not found", not a
-  // failure: resolvePageState reads isError before isEmpty, so it has to be taken out of isError to reach the empty state.
   const documentFailed = linkOn && isError;
   const documentMissing = documentFailed && isApiError(error) && error.status === 404;
   const notAvailable = linkOff || documentMissing;
@@ -119,7 +111,6 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
     try {
       const { url } = await requestOpen(linkedDocumentId);
       window.open(url, "_blank", "noopener,noreferrer");
-      // The signed URL is single use: do not keep it in the mutation's result once it has been handed to the browser.
       forgetOpen();
     } catch (failure) {
       setOpenFailure(failure);

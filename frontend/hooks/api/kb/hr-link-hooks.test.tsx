@@ -168,7 +168,6 @@ describe("useOpenLinkedDocument", () => {
       await result.current.mutateAsync(31);
     });
 
-    // While the page that opened the link is still watching, the entry is there: it proves the check below can see it.
     expect(mutationCacheHolds(SIGNED_URL)).toBe(true);
 
     unmount();
