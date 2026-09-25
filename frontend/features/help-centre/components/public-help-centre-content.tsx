@@ -1,38 +1,32 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, FileText, ArrowRight, FolderTree } from "lucide-react";
+import { FileText, ArrowRight, FolderTree } from "lucide-react";
 import type { PublicKbListData } from "@/lib/public-fetch";
+import { PublicOrgHeader } from "./public-org-header";
 
 interface PublicHelpCentreContentProps {
   orgId: string;
   orgName: string;
+  orgLogo: string | null;
   data: PublicKbListData;
 }
 
 export function PublicHelpCentreContent({
   orgId,
   orgName,
+  orgLogo,
   data,
 }: PublicHelpCentreContentProps) {
   const { categories, articles } = data;
 
   return (
     <main className="min-h-dvh bg-background">
-      <section className="gradient-brand text-white">
-        <div className="mx-auto max-w-4xl px-4 py-12 sm:py-16 text-center">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 mb-4">
-            <BookOpen className="h-6 w-6" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            {orgName} Help Center
-          </h1>
-          <p className="text-white/80 text-sm mt-2">
-            Browse articles and find answers below.
-          </p>
-        </div>
-      </section>
+      <PublicOrgHeader orgName={orgName} orgLogo={orgLogo} orgId={orgId} />
 
       <div className="mx-auto max-w-4xl px-4 py-8">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-6">
+          {orgName} Help Center
+        </h1>
         {categories.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {categories.map((category) => (

@@ -354,7 +354,7 @@ The `notifications/` type errors are another session's: those files are byte-ide
 
 Every slice that touches a disclosure or mutation path must satisfy all of these before it is marked `VERIFIED`.
 
-- [ ] Canonical `KnowledgeAuthorization` is the only access decision; no caller rebuilds the predicate.
+- [x] Canonical `KnowledgeAuthorization` is the only access decision; no caller rebuilds the predicate.
 - [x] Route denial is 403/NoPermission; hidden or missing records are an indistinguishable 404.
 - [x] Authorization fails closed; cache unavailability cannot retain revoked access.
 - [x] Tenant scope is explicit on every record, unique key, FK, query, cache key, event, job, blob, and search document.
@@ -749,7 +749,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S17 — Public page
 
-- [ ] Accessible reading typography; brand-light header; last updated; optional helpful feedback
+- [x] Accessible reading typography; brand-light header; last updated; optional helpful feedback
 - [x] Invalid/revoked → 404; no private chrome, sibling tree, comments, Ask scope, or non-public metadata
 - [x] Tokens hashed, revocable, versioned, rate limited, absent from logs
 - [x] Cache headers keyed by token revision; rotation/revocation purges CDN/cache

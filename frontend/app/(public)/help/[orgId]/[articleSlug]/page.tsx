@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { publicGet, type PublicKbArticle } from "@/lib/public-fetch";
-import { publicKbArticleContract } from "@/lib/public-schema";
+import { publicGet, type PublicKbArticle, type PublicOrgInfo } from "@/lib/public-fetch";
+import { publicKbArticleContract, publicOrgNameContract } from "@/lib/public-schema";
 
 import { PublicArticleContent } from "@/features/help-centre/components/public-article-content";
 
@@ -36,11 +36,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicHelpArticlePage({ params }: Props) {
   const { orgId, articleSlug } = await params;
-  const article = await publicGet<PublicKbArticle>(
-    `/public/kb/${articleSlug}`,
-    { org: orgId },
-    publicKbArticleContract,
-  );
+  const [article, org] = await Promise.all([
+    publicGet<PublicKbArticle>(
+      `/public/kb/${articleSlug}`,
+      { org: orgId },
+      publicKbArticleContract,
+    ),
+    publicGet<PublicOrgInfo>(`/public/org/${orgId}`, undefined, publicOrgNameContract),
+  ]);
   if (!article) return notFound();
-  return <PublicArticleContent article={article} orgId={orgId} />;
+  return <PublicArticleContent article={article} orgId={orgId} org={org} />;
 }
