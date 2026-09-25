@@ -1,5 +1,5 @@
 import { ZodError } from "zod";
-import { managedProductRowContract } from "./managed-products-schema";
+import { managedProductInsightsContract, managedProductRowContract } from "./managed-products-schema";
 
 function baseRow(status: string) {
   return {
@@ -37,4 +37,18 @@ it("rejects a status outside managedProductStatusEnum instead of accepting any s
 it("parses a list row that carries status, matching the .returning() response the backend sends", () => {
   const row = managedProductRowContract.parse(baseRow("active"));
   expect(row.status).toBe("active");
+});
+
+it("parses roadmap and feedback outcome aggregates from managed-product insights", () => {
+  const insights = managedProductInsightsContract.parse({
+    linkedProjectCount: 2,
+    projectsByStatus: { active: 1, completed: 1, archived: 0 },
+    submissionsByStatus: { open: 1, in_progress: 0, resolved: 1, archived: 0 },
+    roadmapItemCount: 3,
+    roadmapItemsByStatus: { planned: 1, in_progress: 1, completed: 1, cancelled: 0 },
+    feedbackByStatus: { open: 2, planned: 0, in_progress: 0, completed: 1, declined: 0 },
+    linkedFeedbackVoteCount: 7,
+  });
+  expect(insights.roadmapItemsByStatus.completed).toBe(1);
+  expect(insights.linkedFeedbackVoteCount).toBe(7);
 });
