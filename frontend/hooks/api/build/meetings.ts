@@ -86,6 +86,7 @@ export function useMeeting(projectId: number, meetingId: number) {
     queryFn: ({ signal }) => apiClient.get<MeetingDetail>(`/build/${projectId}/meetings/${meetingId}`, undefined, signal, meetingDetailContract),
     enabled: canView && !!projectId && !!meetingId,
     staleTime: 60_000,
+    throwOnError: false,
   });
 }
 

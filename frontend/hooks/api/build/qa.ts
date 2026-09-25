@@ -170,6 +170,7 @@ export function useTestRunDetail(projectId?: number, runId?: number) {
     queryFn: ({ signal }) => apiClient.get<TestRunDetail>(`/build/${projectId}/test-runs/${runId}`, undefined, signal, testRunDetailContract),
     enabled: canView && !!projectId && !!runId,
     staleTime: 30_000,
+    throwOnError: false,
   });
 }
 
