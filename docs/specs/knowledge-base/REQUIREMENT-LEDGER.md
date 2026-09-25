@@ -2013,3 +2013,23 @@ The journal array is **not in idx order** — entries 717 and 726 sit physically
 340. In *idx* order `when` is strictly increasing with 0 violations, which is what BE-59 requires.
 This is the concrete mechanism behind the standing rule never to run a bare `db:migrate`:
 replaying in array order attempts those two out of sequence.
+
+### Deployed-build verification — 2026-09-25
+
+Vercel reached `success` on `80e89a7d8` for **`streamlineos-frontend`, `streamlineos-frontend1`
+and `streamlineos-frontend-2r6g`**. `streamlineos-frontend-n2z5` is red, but it was already red on
+the parent commit `1b78651e3`, so it is pre-existing and not a regression from this work.
+
+Content Health was then driven on the **deployed** frontend at `https://www.streamlineos.in`
+(`D:/agent-work/prod-build-verify.mjs`, session minted for the operator's own account, navigation
+only). `/knowledge/wiki/manage` renders `h1` = "Content Health" with real production counts —
+Unowned 9, Unverified 9, Empty 2, **Duplicate candidate 2** — at 0 console errors, 0 page errors,
+0 overflow, 0 redirect hops, and "Content Health" present and active in the sidebar MANAGE group.
+The `duplicate_candidate` count is the live read served by migration 1196's leakproof
+`md5(content_text)` index, so the RLS-usable index is confirmed end to end, not just in EXPLAIN.
+
+⚠️ **An unauthenticated probe of this route is vacuous.** Middleware redirects *every* path to
+`/signin?callbackUrl=…`, so a nonexistent route is indistinguishable from a deployed one. The
+control that makes the check real is a bogus sibling route: signed in,
+`/knowledge/wiki/definitely-not-a-real-route` returns a true **404 "Page Not Found"** while
+`/knowledge/wiki/manage` returns 200. Only the signed-in pair proves the route shipped.
