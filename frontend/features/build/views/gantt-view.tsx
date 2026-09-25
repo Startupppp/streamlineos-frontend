@@ -31,10 +31,21 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PmPanel, PM_TOOLBAR } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 interface Ticket {
@@ -87,8 +98,14 @@ function NavIconButton({
   );
 }
 
-export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }: GanttViewProps) {
+export function GanttView({
+  tickets,
+  projectId,
+  onTicketClick,
+  onCreateTicket,
+}: GanttViewProps) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const [weekOffset, setWeekOffset] = useState(0);
 
   const datedTickets = useMemo(
@@ -115,7 +132,8 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
   const dayWidth = viewportWidth < 640 ? 32 : viewportWidth < 1024 ? 36 : 40;
   const rowHeight = 40;
   const headerHeight = 40;
-  const labelWidth = viewportWidth < 640 ? 144 : viewportWidth < 1024 ? 192 : 240;
+  const labelWidth =
+    viewportWidth < 640 ? 144 : viewportWidth < 1024 ? 192 : 240;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollViewportHeight, setScrollViewportHeight] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
@@ -125,7 +143,9 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
     if (!el) return;
     const syncViewportHeight = () => {
       const next = el.clientHeight;
-      setScrollViewportHeight((prev) => (Math.abs(prev - next) < 1 ? prev : next));
+      setScrollViewportHeight((prev) =>
+        Math.abs(prev - next) < 1 ? prev : next,
+      );
     };
     syncViewportHeight();
     const ro = new ResizeObserver(syncViewportHeight);
@@ -154,7 +174,9 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
     const now = new Date();
     now.setDate(now.getDate() - now.getDay());
     now.setHours(0, 0, 0, 0);
-    const diff = Math.round((target.getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    const diff = Math.round(
+      (target.getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000),
+    );
     setWeekOffset(diff);
   }, []);
 
@@ -175,8 +197,8 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
   const handleNextWeek = useCallback(() => setWeekOffset((w) => w + 1), []);
 
   const handleGoToBacklog = useCallback(() => {
-    router.push(`/build/${projectId}/backlog`);
-  }, [router, projectId]);
+    requestLeave(() => router.push(`/build/${projectId}/backlog`));
+  }, [projectId, requestLeave, router]);
 
   const { data: cpData } = useCriticalPath(projectId);
   const { data: milestones } = useProjectMilestones(projectId);
@@ -208,7 +230,15 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
           ),
         ]),
       ),
-    [datedTickets, rowMap, startOfWeek, numDays, dayWidth, labelWidth, rowHeight],
+    [
+      datedTickets,
+      rowMap,
+      startOfWeek,
+      numDays,
+      dayWidth,
+      labelWidth,
+      rowHeight,
+    ],
   );
 
   function handleTimelineScroll(event: UIEvent<HTMLDivElement>) {
@@ -234,7 +264,10 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
     <div className="flex h-full min-h-0 flex-col gap-3">
       <div className={cn(PM_TOOLBAR, "gap-2")}>
         <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-          <Select value={String(displayMonth)} onValueChange={handleMonthChange}>
+          <Select
+            value={String(displayMonth)}
+            onValueChange={handleMonthChange}
+          >
             <SelectTrigger className="w-40 shrink-0">
               <SelectValue />
             </SelectTrigger>
@@ -260,7 +293,11 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
           </Select>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <NavIconButton onClick={handlePrevWeek} ariaLabel="Previous week" direction="left" />
+          <NavIconButton
+            onClick={handlePrevWeek}
+            ariaLabel="Previous week"
+            direction="left"
+          />
           <Button
             variant="outline"
             size="sm"
@@ -269,7 +306,11 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
           >
             Today
           </Button>
-          <NavIconButton onClick={handleNextWeek} ariaLabel="Next week" direction="right" />
+          <NavIconButton
+            onClick={handleNextWeek}
+            ariaLabel="Next week"
+            direction="right"
+          />
         </div>
       </div>
 
@@ -282,7 +323,10 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
               description="Set start or due dates on tickets to plot them on the timeline. You can do this from ticket detail, the backlog table, or inline on the board."
               action={
                 onCreateTicket
-                  ? { label: "Create Ticket with Dates", onClick: onCreateTicket }
+                  ? {
+                      label: "Create Ticket with Dates",
+                      onClick: onCreateTicket,
+                    }
                   : { label: "Go to Backlog", onClick: handleGoToBacklog }
               }
               secondaryAction={
@@ -301,9 +345,24 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
           className="min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]"
         >
           <div className="min-w-max">
-            <svg width={svgWidth} height={svgHeight} className="text-foreground">
-              <rect x={0} y={0} width={labelWidth} height={headerHeight} className="fill-muted/40" />
-              <text x={12} y={26} className="fill-muted-foreground text-xs" fontSize={12}>
+            <svg
+              width={svgWidth}
+              height={svgHeight}
+              className="text-foreground"
+            >
+              <rect
+                x={0}
+                y={0}
+                width={labelWidth}
+                height={headerHeight}
+                className="fill-muted/40"
+              />
+              <text
+                x={12}
+                y={26}
+                className="fill-muted-foreground text-xs"
+                fontSize={12}
+              >
                 Work Item
               </text>
 
@@ -352,7 +411,9 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
                       x={x + dayWidth / 2}
                       y={32}
                       textAnchor="middle"
-                      className={isToday ? "fill-primary" : "fill-muted-foreground"}
+                      className={
+                        isToday ? "fill-primary" : "fill-muted-foreground"
+                      }
                       fontSize={11}
                       fontWeight={isToday ? 600 : 400}
                     >
@@ -401,7 +462,8 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
         </div>
       </PmPanel>
 
-      {(cpData?.criticalPath.length ?? 0) > 0 || (milestones?.length ?? 0) > 0 ? (
+      {(cpData?.criticalPath.length ?? 0) > 0 ||
+      (milestones?.length ?? 0) > 0 ? (
         <div className="flex shrink-0 flex-wrap items-center gap-2 px-0.5">
           {(cpData?.criticalPath.length ?? 0) > 0 ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-status-danger-rule bg-status-danger-surface px-2.5 py-0.5 text-dense text-status-danger-ink">
@@ -413,7 +475,9 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
             </span>
           ) : null}
           {(milestones?.length ?? 0) > 0 ? (
-            <span className={cn(TEXT_ONE_LINE, "text-dense text-muted-foreground")}>
+            <span
+              className={cn(TEXT_ONE_LINE, "text-dense text-muted-foreground")}
+            >
               Diamonds mark project milestones
             </span>
           ) : null}

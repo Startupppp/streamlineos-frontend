@@ -16,6 +16,12 @@ jest.mock("@/hooks/api/build", () => ({
   useCreateCycle: jest.fn(),
   useUpdateCycle: jest.fn(),
   useDeleteCycle: jest.fn(),
+  useProjectBoardTickets: jest.fn(() => ({ data: [] })),
+  useBulkUpdateTickets: jest.fn(() => ({ mutateAsync: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/build/reports", () => ({
+  useVelocityReport: jest.fn(() => ({ data: undefined, isLoading: false, isError: false })),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -94,6 +100,23 @@ jest.mock("./cycle-form-sheet", () => ({
   CycleFormSheet: ({ open, cycle }: { open: boolean; cycle?: { name: string } | null }) => open ? (
     <div data-testid="cycle-form-sheet">{cycle ? `Editing ${cycle.name}` : "Creating cycle"}</div>
   ) : null,
+}));
+
+jest.mock("./cycle-planning-sheet", () => ({
+  CyclePlanningSheet: () => null,
+}));
+
+jest.mock("./cycle-completion-sheet", () => ({
+  CycleCompletionSheet: ({ cycle, onConfirm }: { cycle: { id: number } | null; onConfirm: (cycleId: number | null) => void }) => cycle ? (
+    <div role="dialog">
+      <h2>Complete cycle?</h2>
+      <button type="button" onClick={() => onConfirm(null)}>Complete</button>
+    </div>
+  ) : null,
+}));
+
+jest.mock("./cycle-velocity-panel", () => ({
+  CycleVelocityPanel: () => null,
 }));
 
 jest.mock("@/components/shared/no-permission-state", () => ({

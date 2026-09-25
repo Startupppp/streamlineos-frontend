@@ -30,6 +30,7 @@ import {
   type SubmissionInboxFilterValues,
 } from "./submission-inbox-filters";
 import { SubmissionBulkToolbar } from "./submission-bulk-toolbar";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 const PAGE_SIZE = 25;
 
@@ -45,6 +46,7 @@ export function ProjectSubmissionsInbox({
   projectId,
 }: ProjectSubmissionsInboxProps) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -132,7 +134,7 @@ export function ProjectSubmissionsInbox({
   const rows = useMemo(() => data?.data ?? [], [data]);
 
   function handleRowClick(row: SubmissionRow) {
-    router.push(`/build/${projectId}/feedbucket/${row.id}`);
+    requestLeave(() => router.push(`/build/${projectId}/feedbucket/${row.id}`));
   }
 
   function handleRetry() {

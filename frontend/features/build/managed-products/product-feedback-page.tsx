@@ -14,6 +14,7 @@ import { PageState } from "@/components/shared/page-state";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import {
   type SubmissionRow,
   FILTER_DEFINITIONS,
@@ -54,6 +55,7 @@ function resolveProductFeedbackSubmissionHref(
 
 export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPageProps) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const canOpenSubmissionDetail = useCan("feedbucket:widgets:view");
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
 
@@ -125,8 +127,8 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
   const handleRowClick = useCallback((row: SubmissionRow) => {
     const href = resolveSubmissionHref(row);
     if (href === null) return;
-    router.push(href);
-  }, [resolveSubmissionHref, router]);
+    requestLeave(() => router.push(href));
+  }, [resolveSubmissionHref, requestLeave, router]);
 
   const resolveRowClassName = useCallback((row: SubmissionRow): string => {
     return resolveSubmissionHref(row) === null ? "" : "cursor-pointer";

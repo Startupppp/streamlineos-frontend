@@ -18,6 +18,7 @@ import {
 } from "@/components/pm-chrome";
 import { TriageRow } from "./triage-row";
 import type { Ticket } from "@/types/projects";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 const TRIAGE_STATUS = "TODO";
 const ACCEPT_STATUS = "IN_PROGRESS";
@@ -42,6 +43,7 @@ interface TriagePageProps {
 
 export function TriagePage({ projectId }: TriagePageProps) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const {
     data: ticketPage,
     isLoading: ticketsLoading,
@@ -137,9 +139,9 @@ export function TriagePage({ projectId }: TriagePageProps) {
         project?.key,
         ticket.ticketNumber,
       );
-      router.push(href);
+      requestLeave(() => router.push(href));
     },
-    [router, projectId, project?.key],
+    [router, projectId, project?.key, requestLeave],
   );
 
   const handleRetry = useCallback(() => {

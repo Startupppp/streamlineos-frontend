@@ -20,6 +20,8 @@ interface CycleCardProps {
   canManage: boolean;
   onEdit: (cycle: Cycle) => void;
   onChangeStatus: (cycle: Cycle) => void;
+  onPlan: (cycle: Cycle) => void;
+  onComplete: (cycle: Cycle) => void;
   onDelete: (cycle: Cycle) => void;
 }
 
@@ -29,6 +31,8 @@ export function CycleCard({
   canManage,
   onEdit,
   onChangeStatus,
+  onPlan,
+  onComplete,
   onDelete,
 }: CycleCardProps) {
   const isActive = cycle.status === "active";
@@ -84,10 +88,13 @@ export function CycleCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => onPlan(cycle)}>
+                  <Calendar /> Plan work
+                </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => onEdit(cycle)}>
                   <Pencil /> Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => onChangeStatus(cycle)}>
+                <DropdownMenuItem onSelect={() => cycle.status === "active" ? onComplete(cycle) : onChangeStatus(cycle)}>
                   <StatusIcon /> {statusAction}
                 </DropdownMenuItem>
                 <DropdownMenuItem variant="destructive" onSelect={() => onDelete(cycle)}>

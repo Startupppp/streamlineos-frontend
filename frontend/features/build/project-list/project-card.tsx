@@ -2,7 +2,15 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Calendar, Archive, Trash2, RotateCcw, Ticket, CheckCircle2, Pencil } from "lucide-react";
+import {
+  Calendar,
+  Archive,
+  Trash2,
+  RotateCcw,
+  Ticket,
+  CheckCircle2,
+  Pencil,
+} from "lucide-react";
 import { ChevronRightIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +32,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { TEXT_TWO_LINES, TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import type { ProjectListItem } from "@/types/projects/projects";
 import { ProjectCardDialogs } from "./project-card-dialogs";
 import {
@@ -45,12 +54,16 @@ interface ProjectCardProps {
   project: ProjectListItem;
 }
 
-export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectCardProps) {
+export const ProjectCard = React.memo(function ProjectCard({
+  project,
+}: ProjectCardProps) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
-  const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } = useAnimatedIcon();
+  const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } =
+    useAnimatedIcon();
 
   const canUpdate = useCan("build:update");
   const canManage = useCan("build:manage");
@@ -65,7 +78,8 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
   const statusDot = getColorSafe(statusDotColors, status);
   const avatarTint = getColorSafe(avatarTints, status);
   const dateMeta = resolveDateMeta(project.endDate, project.startDate, status);
-  const progressValue = project.progress.total > 0 ? project.progress.percentage : 0;
+  const progressValue =
+    project.progress.total > 0 ? project.progress.percentage : 0;
   const hasTickets = project.progress.total > 0;
   const openTickets = project.progress.total - project.progress.done;
   const teamMembers = useMemo(() => buildTeamMembers(project), [project]);
@@ -73,8 +87,8 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
   const showActions = canEdit || canDelete;
 
   const handleCardClick = useCallback(() => {
-    router.push(`/build/${project.id}`);
-  }, [router, project.id]);
+    requestLeave(() => router.push(`/build/${project.id}`));
+  }, [requestLeave, router, project.id]);
 
   const handleCardKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -141,11 +155,12 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                 <span className="mb-0.5 block font-mono text-micro font-semibold tracking-wide text-muted-foreground">
                   {project.key}
                 </span>
-                <h3
-                  className="text-label font-semibold leading-tight text-foreground transition-colors group-hover:text-primary min-w-0"
-                >
+                <h3 className="text-label font-semibold leading-tight text-foreground transition-colors group-hover:text-primary min-w-0">
                   {canEdit ? (
-                    <InlineProjectTitle projectId={project.id} currentName={project.name} />
+                    <InlineProjectTitle
+                      projectId={project.id}
+                      currentName={project.name}
+                    />
                   ) : (
                     <TruncatedText text={project.name} />
                   )}
@@ -154,7 +169,10 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
 
               <div className="flex shrink-0 items-center gap-0.5">
                 {canEdit ? (
-                  <InlineProjectStatus projectId={project.id} currentStatus={status} />
+                  <InlineProjectStatus
+                    projectId={project.id}
+                    currentStatus={status}
+                  />
                 ) : (
                   <Badge
                     variant="secondary"
@@ -163,7 +181,10 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                       statusColor,
                     )}
                   >
-                    <span className={cn("h-1 w-1 shrink-0 rounded-full", statusDot)} aria-hidden="true" />
+                    <span
+                      className={cn("h-1 w-1 shrink-0 rounded-full", statusDot)}
+                      aria-hidden="true"
+                    />
                     {displayLabel}
                   </Badge>
                 )}
@@ -182,7 +203,11 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                         <EllipsisIcon ref={ellipsisRef} size={14} />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44" onClick={handleStopPropagation}>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-44"
+                      onClick={handleStopPropagation}
+                    >
                       {canEdit ? (
                         <>
                           <DropdownMenuItem onClick={handleEditClick}>
@@ -207,7 +232,10 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                       {canDelete ? (
                         <>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem variant="destructive" onClick={handleDeleteClick}>
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={handleDeleteClick}
+                          >
                             <Trash2 className="mr-2 h-3.5 w-3.5" />
                             Delete project
                           </DropdownMenuItem>
@@ -226,7 +254,10 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
               />
             ) : project.description ? (
               <p
-                className={cn(TEXT_TWO_LINES, "mt-1 text-micro text-muted-foreground")}
+                className={cn(
+                  TEXT_TWO_LINES,
+                  "mt-1 text-micro text-muted-foreground",
+                )}
                 title={project.description}
               >
                 {project.description}
@@ -240,7 +271,8 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
             <>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-micro font-medium tabular-nums text-muted-foreground">
-                  <span className="text-foreground">{progressValue}%</span> complete
+                  <span className="text-foreground">{progressValue}%</span>{" "}
+                  complete
                 </span>
                 <ChevronRightIcon
                   className="h-3 w-3 shrink-0 text-muted-foreground transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
@@ -259,7 +291,9 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                 <div
                   className={cn(
                     "h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none",
-                    progressValue >= 100 ? "bg-status-success-fill" : "bg-primary",
+                    progressValue >= 100
+                      ? "bg-status-success-fill"
+                      : "bg-primary",
                   )}
                   style={{ width: `${progressValue}%` }}
                 />
@@ -268,8 +302,13 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           ) : (
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 rounded-md border border-dashed border-border/70 bg-muted/30 px-1.5 py-0.5">
-                <Ticket className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" />
-                <span className="text-micro text-muted-foreground">No tickets yet</span>
+                <Ticket
+                  className="h-3 w-3 shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <span className="text-micro text-muted-foreground">
+                  No tickets yet
+                </span>
               </div>
               <ChevronRightIcon
                 className="h-3 w-3 shrink-0 text-muted-foreground transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
@@ -279,7 +318,12 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           )}
 
           <div className="flex items-center justify-between gap-1.5">
-            <div className={cn(TEXT_FLEX_CHILD, "flex flex-1 flex-wrap items-center gap-1")}>
+            <div
+              className={cn(
+                TEXT_FLEX_CHILD,
+                "flex flex-1 flex-wrap items-center gap-1",
+              )}
+            >
               {hasTickets ? (
                 <>
                   <span className="inline-flex items-center gap-0.5 rounded-md bg-status-success-surface px-1 py-0.5 text-micro font-medium text-status-success-ink">

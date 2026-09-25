@@ -1,12 +1,16 @@
-import { useCallback, useEffect, type Dispatch, type SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { useRouter } from "next/navigation";
 import type { ViewType } from "./view-switcher";
 import type { KanbanTicket } from "@/features/build/shared/types";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { currentSearchParams } from "@/lib/current-search-params";
-import {
-  buildListSearchParams,
-} from "../shared/use-build-list-url-state";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { buildListSearchParams } from "../shared/use-build-list-url-state";
 import {
   INITIAL_FILTERS,
   type FilterState as WorkloadFilterState,
@@ -40,6 +44,7 @@ export function useBoardNavigationActions({
   setWorkloadFilters,
 }: UseBoardNavigationActionsOptions) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
 
   const handleClearView = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());
@@ -57,7 +62,7 @@ export function useBoardNavigationActions({
         params.delete("comment");
         params.set("source", "build");
         params.set("projectId", String(projectId));
-        router.push(`/calendar?${params.toString()}`);
+        requestLeave(() => router.push(`/calendar?${params.toString()}`));
         setSelectedIds(new Set());
         return;
       }
@@ -65,21 +70,27 @@ export function useBoardNavigationActions({
         const params = currentSearchParams(searchParams);
         params.delete("view");
         const query = params.toString();
-        router.push(`/build/${projectId}/workload${query ? `?${query}` : ""}`);
+        requestLeave(() =>
+          router.push(
+            `/build/${projectId}/workload${query ? `?${query}` : ""}`,
+          ),
+        );
         setSelectedIds(new Set());
         return;
       }
       const params = currentSearchParams(searchParams);
       params.set("view", view);
       if (pathname === `/build/${projectId}/workload`) {
-        router.push(`/build/${projectId}/issues?${params.toString()}`);
+        requestLeave(() =>
+          router.push(`/build/${projectId}/issues?${params.toString()}`),
+        );
         setSelectedIds(new Set());
         return;
       }
       router.replace(`?${params.toString()}`, { scroll: false });
       setSelectedIds(new Set());
     },
-    [pathname, projectId, router, searchParams, setSelectedIds],
+    [pathname, projectId, requestLeave, router, searchParams, setSelectedIds],
   );
 
   const handleWorkloadFilterChange = useCallback(
@@ -107,9 +118,16 @@ export function useBoardNavigationActions({
         undefined,
         ticketCollectionReturnHref,
       );
-      if (href) router.push(href);
+      if (href) requestLeave(() => router.push(href));
     },
-    [allTickets, projectId, projectKey, router, ticketCollectionReturnHref],
+    [
+      allTickets,
+      projectId,
+      projectKey,
+      requestLeave,
+      router,
+      ticketCollectionReturnHref,
+    ],
   );
 
   useEffect(() => {

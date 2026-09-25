@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
-import { useCycles, useDeleteCycle, useUpdateCycle } from "@/hooks/api/build";
+import { useBulkUpdateTickets, useCycles, useDeleteCycle, useProjectBoardTickets, useUpdateCycle } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -18,6 +18,9 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CycleCard } from "./cycle-card";
 import { CycleFormSheet } from "./cycle-form-sheet";
+import { CycleCompletionSheet } from "./cycle-completion-sheet";
+import { CyclePlanningSheet } from "./cycle-planning-sheet";
+import { CycleVelocityPanel } from "./cycle-velocity-panel";
 import type { Cycle, CycleStatus } from "@/types/projects";
 
 type CyclesPageProps = { projectId: number };
@@ -38,10 +41,15 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Cycle | null>(null);
   const [statusTarget, setStatusTarget] = useState<Cycle | null>(null);
+  const [planningTarget, setPlanningTarget] = useState<Cycle | null>(null);
+  const [completionTarget, setCompletionTarget] = useState<Cycle | null>(null);
+  const [completionMoveTo, setCompletionMoveTo] = useState<"backlog" | "next">("backlog");
   const [deleteTarget, setDeleteTarget] = useState<Cycle | null>(null);
   const canManage = useCan("build:cycles:manage");
   const { error, refetch, isError, isLoading, data: cycles } = useCycles(projectId);
+  const { data: tickets = [] } = useProjectBoardTickets(projectId);
   const updateCycle = useUpdateCycle();
+  const bulkUpdateTickets = useBulkUpdateTickets(projectId);
   const deleteCycle = useDeleteCycle();
   const pageState = usePageState({
     error,
@@ -100,6 +108,31 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
       },
     );
   }, [projectId, statusTarget, updateCycle]);
+
+  const handleConfirmCompletion = useCallback(async (targetCycleId: number | null) => {
+    if (!completionTarget) return;
+    const incompleteTicketIds = tickets
+      .filter((ticket) => ticket.cycleId === completionTarget.id && ticket.status !== "DONE")
+      .map((ticket) => ticket.id);
+    try {
+      if (incompleteTicketIds.length > 0) {
+        await bulkUpdateTickets.mutateAsync({ ticketIds: incompleteTicketIds, cycleId: targetCycleId });
+      }
+      updateCycle.mutate(
+        { projectId, cycleId: completionTarget.id, status: "completed" },
+        {
+          onSuccess: () => {
+            toast.success("Cycle completed");
+            setCompletionTarget(null);
+            setCompletionMoveTo("backlog");
+          },
+          onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
+        },
+      );
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [bulkUpdateTickets, completionTarget, projectId, tickets, updateCycle]);
 
   const handleConfirmDelete = useCallback(() => {
     if (!deleteTarget) return;
@@ -173,6 +206,11 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
       canManage={canManage}
       onEdit={handleEdit}
       onChangeStatus={setStatusTarget}
+      onPlan={setPlanningTarget}
+      onComplete={(cycle) => {
+        setCompletionMoveTo("backlog");
+        setCompletionTarget(cycle);
+      }}
       onDelete={setDeleteTarget}
     />
   );
@@ -232,6 +270,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
               </section>
             </>
           ) : null}
+          <CycleVelocityPanel projectId={projectId} />
         </div>
       ) : (
         <EmptyState
@@ -264,6 +303,25 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
         confirmLabel={statusAction}
         isPending={updateCycle.isPending}
         onConfirm={handleConfirmStatus}
+      />
+
+      <CyclePlanningSheet
+        cycle={planningTarget}
+        tickets={tickets}
+        projectId={projectId}
+        open={planningTarget !== null}
+        onOpenChange={(open) => { if (!open) setPlanningTarget(null); }}
+      />
+
+      <CycleCompletionSheet
+        cycle={completionTarget}
+        nextCycle={upcomingCycles.find((cycle) => cycle.id !== completionTarget?.id)}
+        tickets={tickets}
+        moveTo={completionMoveTo}
+        isPending={bulkUpdateTickets.isPending || updateCycle.isPending}
+        onMoveToChange={setCompletionMoveTo}
+        onCancel={() => setCompletionTarget(null)}
+        onConfirm={handleConfirmCompletion}
       />
 
       <ConfirmDialog

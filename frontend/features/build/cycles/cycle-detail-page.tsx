@@ -7,9 +7,19 @@ import { useCycles, useProjectBoardTickets } from "@/hooks/api/build";
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
 import { ListView } from "@/features/build/views/list-view";
-import { ViewSwitcher, parseViewType, type ViewType } from "@/features/build/views/view-switcher";
-import { DisplayOptionsPanel, DEFAULT_DISPLAY_OPTIONS } from "@/features/build/views/display-options-panel";
-import type { DisplayOptions, KanbanTicket } from "@/features/build/shared/types";
+import {
+  ViewSwitcher,
+  parseViewType,
+  type ViewType,
+} from "@/features/build/views/view-switcher";
+import {
+  DisplayOptionsPanel,
+  DEFAULT_DISPLAY_OPTIONS,
+} from "@/features/build/views/display-options-panel";
+import type {
+  DisplayOptions,
+  KanbanTicket,
+} from "@/features/build/shared/types";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
@@ -23,6 +33,7 @@ import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-tick
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 interface CycleDetailPageProps {
   projectId: string;
@@ -37,10 +48,13 @@ export function CycleDetailPage({
   const cycleId = parseInt(cycleIdStr);
 
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const searchParams = useSearchParams();
   const view = parseViewType(searchParams.get("view"));
 
-  const [displayOptions, setDisplayOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
+  const [displayOptions, setDisplayOptions] = useState<DisplayOptions>(
+    DEFAULT_DISPLAY_OPTIONS,
+  );
 
   const {
     data: projectData,
@@ -99,50 +113,53 @@ export function CycleDetailPage({
   const allTickets = useMemo<KanbanTicket[]>(() => {
     if (!boardTickets) return [];
     return boardTickets.map((t) => ({
-        id: t.id,
-        title: t.title,
-        status: t.status ?? "TODO",
-        type: t.type ?? "TASK",
-        priority: t.priority ?? undefined,
-        points: t.points ?? undefined,
-        timeSpent: t.timeSpent ?? undefined,
-        ticketNumber: t.ticketNumber,
-        rank: t.rank ?? undefined,
-        epicId: t.epicId ?? undefined,
-        assigneeId: t.assigneeId ?? undefined,
-        cycleId: t.cycleId ?? null,
-        dueDate: t.dueDate ?? null,
-        startDate: t.startDate ?? null,
-        sequenceId: t.sequenceId ?? null,
-        assignee: t.assignee
-          ? {
-              id: t.assignee.id,
-              name: t.assignee.name ?? undefined,
-              firstName: t.assignee.firstName ?? undefined,
-              lastName: t.assignee.lastName ?? undefined,
-              email: t.assignee.email ?? undefined,
-              image: t.assignee.image ?? null,
-            }
-          : null,
-        labels: (t.labels || [])
-          .filter((l): l is typeof l & { label: NonNullable<(typeof l)["label"]> } => l.label != null)
-          .map((l) => ({
-            label: {
-              id: l.label.id,
-              name: l.label.name,
-              color: l.label.color,
-            },
-          })),
-        cycle: t.cycle
-          ? {
-              id: t.cycle.id,
-              name: t.cycle.name,
-              status: t.cycle.status,
-              startDate: t.cycle.startDate,
-              endDate: t.cycle.endDate,
-            }
-          : null,
-      }));
+      id: t.id,
+      title: t.title,
+      status: t.status ?? "TODO",
+      type: t.type ?? "TASK",
+      priority: t.priority ?? undefined,
+      points: t.points ?? undefined,
+      timeSpent: t.timeSpent ?? undefined,
+      ticketNumber: t.ticketNumber,
+      rank: t.rank ?? undefined,
+      epicId: t.epicId ?? undefined,
+      assigneeId: t.assigneeId ?? undefined,
+      cycleId: t.cycleId ?? null,
+      dueDate: t.dueDate ?? null,
+      startDate: t.startDate ?? null,
+      sequenceId: t.sequenceId ?? null,
+      assignee: t.assignee
+        ? {
+            id: t.assignee.id,
+            image: t.assignee.image ?? null,
+            name: t.assignee.name ?? undefined,
+            email: t.assignee.email ?? undefined,
+            lastName: t.assignee.lastName ?? undefined,
+            firstName: t.assignee.firstName ?? undefined,
+          }
+        : null,
+      labels: (t.labels || [])
+        .filter(
+          (l): l is typeof l & { label: NonNullable<(typeof l)["label"]> } =>
+            l.label != null,
+        )
+        .map((l) => ({
+          label: {
+            id: l.label.id,
+            name: l.label.name,
+            color: l.label.color,
+          },
+        })),
+      cycle: t.cycle
+        ? {
+            id: t.cycle.id,
+            name: t.cycle.name,
+            status: t.cycle.status,
+            endDate: t.cycle.endDate,
+            startDate: t.cycle.startDate,
+          }
+        : null,
+    }));
   }, [boardTickets]);
 
   const cycleTickets = useMemo(
@@ -152,10 +169,15 @@ export function CycleDetailPage({
 
   const handleTicketSelect = useCallback(
     (id: number) => {
-      const href = buildTicketDetailUrl(projectId, projectData?.key, id, allTickets);
-      if (href) router.push(href);
+      const href = buildTicketDetailUrl(
+        projectId,
+        projectData?.key,
+        id,
+        allTickets,
+      );
+      if (href) requestLeave(() => router.push(href));
     },
-    [router, projectId, projectData?.key, allTickets],
+    [router, projectId, projectData?.key, allTickets, requestLeave],
   );
 
   const handleRetry = useCallback(() => {
@@ -181,7 +203,12 @@ export function CycleDetailPage({
   )
     return (
       <PageWrapper title="Cycle" backHref={`/build/${projectId}/cycles`}>
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -227,7 +254,11 @@ export function CycleDetailPage({
       filters={
         <div className="flex min-h-8 w-full flex-wrap items-center gap-2 sm:gap-3">
           <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
-          <DisplayOptionsPanel viewType={view} options={displayOptions} onChange={setDisplayOptions} />
+          <DisplayOptionsPanel
+            viewType={view}
+            options={displayOptions}
+            onChange={setDisplayOptions}
+          />
           {cycle?.status && (
             <Badge variant="secondary" className="h-6 text-xs capitalize">
               <Calendar className="h-3 w-3 mr-1" />
@@ -264,8 +295,16 @@ export function CycleDetailPage({
                 <ListView
                   tickets={cycleTickets}
                   onTicketClick={handleTicketSelect}
-                  groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
-                  rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
+                  groupBy={
+                    displayOptions.groupBy !== "none"
+                      ? displayOptions.groupBy
+                      : undefined
+                  }
+                  rowBy={
+                    displayOptions.rowBy !== "none"
+                      ? displayOptions.rowBy
+                      : undefined
+                  }
                   projectKey={projectData?.key}
                   projectStatuses={statuses}
                   displayOptions={displayOptions}

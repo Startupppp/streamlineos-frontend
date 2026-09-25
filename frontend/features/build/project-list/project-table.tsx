@@ -6,6 +6,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { PmPanel } from "@/components/pm-chrome";
 import { useCan } from "@/hooks/api/access";
+import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { cn } from "@/lib/utils";
 import {
   getColorSafe,
@@ -75,7 +76,12 @@ function ProjectMobileCard({
         {
           label: "Target",
           value: targetDate ? (
-            <span className={cn("font-mono tabular-nums", dateToneClasses[targetDate.tone])}>
+            <span
+              className={cn(
+                "font-mono tabular-nums",
+                dateToneClasses[targetDate.tone],
+              )}
+            >
               {targetDate.label}
             </span>
           ) : (
@@ -111,10 +117,13 @@ export const ProjectTable = React.memo(function ProjectTable({
   onLoadMore,
 }: ProjectTableProps) {
   const router = useRouter();
+  const requestLeave = useNavigationLeave();
   const canUpdate = useCan("build:update");
   const canManage = useCan("build:manage");
   const canEdit = canUpdate || canManage;
-  const [activeProject, setActiveProject] = useState<ProjectListItem | null>(null);
+  const [activeProject, setActiveProject] = useState<ProjectListItem | null>(
+    null,
+  );
   const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
 
   const handleEdit = useCallback((p: ProjectListItem) => {
@@ -148,9 +157,9 @@ export const ProjectTable = React.memo(function ProjectTable({
 
   const handleRowClick = useCallback(
     (project: ProjectListItem) => {
-      router.push(`/build/${project.id}`);
+      requestLeave(() => router.push(`/build/${project.id}`));
     },
-    [router],
+    [requestLeave, router],
   );
 
   const renderMobileCard = useCallback(
