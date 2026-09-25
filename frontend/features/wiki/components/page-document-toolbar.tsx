@@ -39,6 +39,7 @@ interface PageDocumentToolbarProps {
   page: KbPageDetail;
   pageId: number;
   isEditable: boolean;
+  currentContent?: string;
   onApplyImprovement?: (text: string) => void;
   onInsertSummary?: (text: string) => void;
   onOpenMetaSheet: () => void;
@@ -55,6 +56,7 @@ export function PageDocumentToolbar({
   page,
   pageId,
   isEditable,
+  currentContent,
   onApplyImprovement,
   onInsertSummary,
   onOpenMetaSheet,
@@ -165,6 +167,7 @@ export function PageDocumentToolbar({
     <div className="flex items-center gap-1.5 shrink-0">
       <KbPageAiActions
         pageId={pageId}
+        currentContent={currentContent}
         onApplyImprovement={onApplyImprovement}
         onInsertSummary={onInsertSummary}
       />

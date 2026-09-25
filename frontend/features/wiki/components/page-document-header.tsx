@@ -41,6 +41,7 @@ interface PageDocumentHeaderProps {
   isOffline?: boolean;
   isEditable: boolean;
   onNavigate: (pageId: number) => void;
+  currentContent?: string;
   onApplyImprovement?: (text: string) => void;
   onInsertSummary?: (text: string) => void;
   onOpenCover: () => void;
@@ -55,6 +56,7 @@ export default function PageDocumentHeader({
   isOffline,
   isEditable,
   onNavigate,
+  currentContent,
   onApplyImprovement,
   onInsertSummary,
   onOpenCover,
@@ -156,6 +158,7 @@ export default function PageDocumentHeader({
           page={page}
           pageId={pageId}
           isEditable={isEditable}
+          currentContent={currentContent}
           onApplyImprovement={onApplyImprovement}
           onInsertSummary={onInsertSummary}
           onOpenMetaSheet={handleOpenMetaSheet}

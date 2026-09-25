@@ -1,19 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { Lightbulb, ListTree, MessageSquareText, PenLine } from "lucide-react";
 import {
-  Lightbulb,
-  ListTree,
-  MessageSquareText,
-  PenLine,
-} from "lucide-react";
-import { AiActionsMenu, type AiAction, type AiActionResult } from "@/components/ai";
+  AiActionsMenu,
+  type AiAction,
+  type AiActionResult,
+} from "@/components/ai";
 import { KbDocAskSheet } from "@/components/kb/kb-doc-ask-sheet";
-import { streamKbDocAi, type KbDocAiAction } from "@/hooks/api/kb/doc-ai-stream";
+import {
+  streamKbDocAi,
+  type KbDocAiAction,
+} from "@/hooks/api/kb/doc-ai-stream";
 import { useCan } from "@/hooks/api/access";
+import { KbPageImproveDiffDialog } from "./kb-page-improve-diff-dialog";
 
 interface KbPageAiActionsProps {
   pageId: number;
+  currentContent?: string;
   onApplyImprovement?: (text: string) => void;
   onInsertSummary?: (text: string) => void;
 }
@@ -28,18 +32,29 @@ interface KbPageAiActionsProps {
  */
 export function KbPageAiActions({
   pageId,
+  currentContent,
   onApplyImprovement,
   onInsertSummary,
 }: KbPageAiActionsProps) {
   const canGenerate = useCan("kb:ai:generate");
   const [askOpen, setAskOpen] = useState(false);
+  const [improvePendingText, setImprovePendingText] = useState<string | null>(
+    null,
+  );
 
   function handleApplyImprovement(text: string) {
-    onApplyImprovement?.(text);
+    setImprovePendingText(text);
   }
 
-  function handleInsertSummary(text: string) {
-    onInsertSummary?.(text);
+  function handleConfirmImprovement() {
+    if (improvePendingText !== null) {
+      onApplyImprovement?.(improvePendingText);
+    }
+    setImprovePendingText(null);
+  }
+
+  function handleDiscardImprovement() {
+    setImprovePendingText(null);
   }
 
   async function runAsk(): Promise<AiActionResult> {
@@ -48,7 +63,10 @@ export function KbPageAiActions({
   }
 
   function streamAction(action: KbDocAiAction) {
-    return async (signal?: AbortSignal, onToken?: (chunk: string) => void): Promise<AiActionResult> => {
+    return async (
+      signal?: AbortSignal,
+      onToken?: (chunk: string) => void,
+    ): Promise<AiActionResult> => {
       const outcome = await streamKbDocAi({
         scope: "pages",
         docId: pageId,
@@ -67,7 +85,7 @@ export function KbPageAiActions({
       description: "Key points as concise bullets",
       icon: ListTree,
       run: streamAction("summarize"),
-      onApply: onInsertSummary ? handleInsertSummary : undefined,
+      onApply: onInsertSummary,
       applyLabel: "Insert at top",
     },
     {
@@ -113,6 +131,13 @@ export function KbPageAiActions({
         onOpenChange={setAskOpen}
         title="Ask about this page"
         description="Ask a question — the answer is scoped to this page only."
+      />
+      <KbPageImproveDiffDialog
+        open={improvePendingText !== null}
+        proposedText={improvePendingText ?? ""}
+        currentContent={currentContent}
+        onApply={handleConfirmImprovement}
+        onDiscard={handleDiscardImprovement}
       />
     </>
   );

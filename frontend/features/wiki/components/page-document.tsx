@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -200,6 +207,11 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     applyEditorValue(next, text);
   }
 
+  const currentContentText = useMemo(
+    () => getPlainText(normalizePlateValue(editorDraft ?? page?.content)),
+    [editorDraft, page?.content],
+  );
+
   function handleInsertSummary(text: string) {
     const summary = plainTextToPlateValue(text);
     const body = normalizePlateValue(editorDraft ?? page?.content);
@@ -283,6 +295,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
                 isOffline={isOffline}
                 isEditable={isEditable}
                 onNavigate={handleNavigateToPage}
+                currentContent={currentContentText}
                 onApplyImprovement={handleApplyImprovement}
                 onInsertSummary={handleInsertSummary}
                 onOpenCover={handleOpenCover}
