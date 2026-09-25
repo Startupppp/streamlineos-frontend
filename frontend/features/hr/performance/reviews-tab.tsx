@@ -17,6 +17,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
@@ -70,7 +71,10 @@ export function ReviewsTab() {
   const statusParam: ReviewStatus | undefined = statusFilter === "all" ? undefined : statusFilter;
 
   const { data, isLoading, isFetching, isError, error, refetch } = useHrPerformanceReviews({ status: statusParam, cursor });
-  const pageState = usePageState({ isLoading: false, isError, error });
+  const pageState = usePageState({ permission: "hr:performance:view", isLoading: false, isError, error });
+  const canManage = useCan("hr:performance:manage");
+  // PATCH /hr/performance/reviews/:id is `hr:performance:view` (performance.controller.ts:293).
+  const canUpdate = useCan("hr:performance:view");
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const { data: cycles } = useReviewCycles();
   const createReview = useCreatePerformanceReview();
@@ -253,9 +257,11 @@ export function ReviewsTab() {
             <TabsTrigger value="COMPLETED" className="text-dense">Completed</TabsTrigger>
           </TabsList>
         </Tabs>
-        <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" iconSize={14} onClick={handleOpenSheet}>
-          New Review
-        </AnimatedIconButton>
+        {canManage && (
+          <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" iconSize={14} onClick={handleOpenSheet}>
+            New Review
+          </AnimatedIconButton>
+        )}
       </div>
 
       {reviewsList.length === 0 ? (
@@ -263,16 +269,16 @@ export function ReviewsTab() {
           illustration={<EmptyLeaderboardIllustration className="h-full w-full" />}
           title={statusFilter === "all" ? "No reviews yet" : `No ${statusFilter.toLowerCase().replace("_", " ")} reviews`}
           description={statusFilter === "all" ? "Create your first performance review to start tracking employee growth." : "Try a different filter to see other reviews."}
-          action={statusFilter === "all" ? { label: "New Review", onClick: handleOpenSheet } : undefined}
+          action={statusFilter === "all" && canManage ? { label: "New Review", onClick: handleOpenSheet } : undefined}
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {reviewsList.map((review: PerformanceReviewListItem) => {
             const accentClass =
-              review.status === "COMPLETED" ? "border-l-emerald-500"
-              : review.status === "IN_PROGRESS" ? "border-l-blue-500"
+              review.status === "COMPLETED" ? "border-l-status-success-rule"
+              : review.status === "IN_PROGRESS" ? "border-l-status-info-rule"
               : review.status === "ARCHIVED" ? "border-l-border"
-              : "border-l-amber-400";
+              : "border-l-status-warning-rule";
             const statusBadgeClass =
               review.status === "COMPLETED" ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
               : review.status === "IN_PROGRESS" ? "border-status-info-rule bg-status-info-surface text-status-info-ink"
@@ -289,16 +295,16 @@ export function ReviewsTab() {
                     <div className="flex items-center gap-1 shrink-0">
                       {review.overallRating && (
                         <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-status-warning-surface border border-status-warning-rule">
-                          <Star className="h-3 w-3 fill-amber-500 text-status-warning-ink" />
+                          <Star className="h-3 w-3 fill-status-warning-fill text-status-warning-ink" />
                           <span className="text-micro font-bold text-status-warning-ink">{Number(review.overallRating).toFixed(1)}</span>
                         </div>
                       )}
                       {review.status !== "COMPLETED" && (
                         <>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground transition-colors duration-200" onClick={() => handleOpenEdit(review)} aria-label={`Edit review${review.user?.name ? ` for ${review.user.name}` : ""}`}>
+                          {canUpdate && <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground transition-colors duration-200" onClick={() => handleOpenEdit(review)} aria-label={`Edit review${review.user?.name ? ` for ${review.user.name}` : ""}`}>
                             <Pencil className="h-3 w-3" />
-                          </Button>
-                          <AnimatedIconButton icon={Trash2Icon} variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive transition-colors duration-200" iconSize={12} onClick={() => setDeleteId(review.id)} aria-label={`Delete review${review.user?.name ? ` for ${review.user.name}` : ""}`} />
+                          </Button>}
+                          {canManage && <AnimatedIconButton icon={Trash2Icon} variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive transition-colors duration-200" iconSize={12} onClick={() => setDeleteId(review.id)} aria-label={`Delete review${review.user?.name ? ` for ${review.user.name}` : ""}`} />}
                         </>
                       )}
                     </div>
@@ -316,8 +322,8 @@ export function ReviewsTab() {
                     </div>
                   </div>
                   <p className="text-micro text-muted-foreground font-medium">{review.periodStart} → {review.periodEnd}</p>
-                  {review.status !== "COMPLETED" && (
-                    <Button variant="ghost" size="sm" className="text-xs w-full border border-border/60 hover:bg-status-success-surface hover:text-status-success-ink hover:border-status-success-rule transition-colors duration-200" onClick={() => handleComplete(review.id)}>
+                  {review.status !== "COMPLETED" && canUpdate && (
+                    <Button variant="ghost" size="sm" disabled={updateReview.isPending} className="w-full border border-border/60 hover:bg-status-success-surface hover:text-status-success-ink hover:border-status-success-rule transition-colors duration-200" onClick={() => handleComplete(review.id)}>
                       <CheckCircle2 className="h-3 w-3 mr-1.5" />Mark Complete
                     </Button>
                   )}

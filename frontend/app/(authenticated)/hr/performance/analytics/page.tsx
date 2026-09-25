@@ -10,7 +10,8 @@ import { ExternalLink, BarChart2, CheckCircle, Star, Target } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useReviewCycles, useHrPerformanceReviews } from "@/hooks/api/hr";
 
@@ -89,7 +90,8 @@ const PerformanceAnalyticsStats = memo(function PerformanceAnalyticsStats({
 });
 
 export default function PerformanceAnalyticsPage() {
-  const { data: cycles = [], isLoading, isError, refetch } = useReviewCycles();
+  const { data: cycles = [], isLoading, isError, error, refetch } = useReviewCycles();
+  const pageState = usePageState({ permission: "hr:performance:view", isLoading, isError, error });
   const { data: reviews } = useHrPerformanceReviews();
 
   const handleRetry = useCallback(() => {
@@ -141,21 +143,19 @@ export default function PerformanceAnalyticsPage() {
         </Button>
       }
     >
-      {isLoading ? (
-        <div className="space-y-4">
-          <StatCardGridSkeleton cols={4} count={4} />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-card rounded-lg border border-border p-6 h-72 animate-pulse" />
-            <div className="bg-card rounded-lg border border-border p-6 h-72 animate-pulse" />
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        loading={
+          <div className="space-y-4">
+            <StatCardGridSkeleton cols={4} count={4} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-card rounded-lg border border-border p-6 h-72 animate-pulse" />
+              <div className="bg-card rounded-lg border border-border p-6 h-72 animate-pulse" />
+            </div>
           </div>
-        </div>
-      ) : isError ? (
-        <ErrorState
-          title="Couldn't load performance analytics"
-          description="The review cycles behind this page could not be read. Please try again."
-          onRetry={handleRetry}
-        />
-      ) : (
+        }
+      >
         <div className="space-y-4">
           <PerformanceAnalyticsStats totalCycles={cycles.length} activeCycles={activeCycles} />
 
@@ -183,7 +183,7 @@ export default function PerformanceAnalyticsPage() {
             />
           </motion.div>
         </div>
-      )}
+      </PageState>
     </PageWrapper>
   );
 }

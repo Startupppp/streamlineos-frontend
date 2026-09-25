@@ -21,7 +21,11 @@ import {
 } from "@/hooks/api/hr/succession";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
+import { LoadingState } from "@/components/shared/loading-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
@@ -61,6 +65,8 @@ export function SuccessionTab() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [removeId, setRemoveId] = useState<number | null>(null);
+  const canManage = useCan("hr:succession:manage");
 
   function applyFieldEdit<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -113,6 +119,13 @@ export function SuccessionTab() {
   const { data: membersData } = useOrgMembers(1, 200);
   const create = useCreateSuccessionPlan();
   const remove = useDeleteSuccessionPlan();
+  const pageState = usePageState({
+    permission: "hr:succession:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: plans.length === 0,
+  });
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();
@@ -155,48 +168,56 @@ export function SuccessionTab() {
     }
   }
 
-  async function handleDelete(id: number) {
+  async function handleConfirmRemove() {
+    if (removeId === null) return;
     try {
-      await remove.mutateAsync(id);
-      toast.success("Removed");
+      await remove.mutateAsync(removeId);
+      toast.success("Succession plan removed");
+      setRemoveId(null);
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="h-16 bg-muted rounded animate-pulse" />
-        ))}
-      </div>
-    );
+  function handleRemoveOpenChange(next: boolean) {
+    if (!next) setRemoveId(null);
   }
 
-  if (isError) {
-    return <ErrorState className="flex-1" title="Couldn't load succession plans" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
+  function handleOpenCreate() {
+    setOpen(true);
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   return (
+    <PageState
+      resolution={pageState}
+      onRetry={handleRetry}
+      className="flex-1"
+      loading={<LoadingState variant="list" rows={8} />}
+      empty={
+        <EmptyState
+          illustration={<EmptyPersonIllustration className="h-full w-full" />}
+          title="No succession plans yet"
+          description="Map successors to key roles to ensure leadership continuity."
+          action={canManage ? { label: "Add Plan", onClick: handleOpenCreate } : undefined}
+        />
+      }
+    >
     <div className="flex flex-col flex-1 min-h-0 gap-4">
       <div className="flex items-center justify-between shrink-0">
         <p className="text-sm text-muted-foreground">
           {plans.length} succession plan{plans.length !== 1 ? "s" : ""}
         </p>
-        <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground h-8" onClick={() => setOpen(true)}>
-          Add Plan
-        </Button>
+        {canManage && (
+          <Button size="sm" onClick={handleOpenCreate}>
+            Add Plan
+          </Button>
+        )}
       </div>
 
-      {plans.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyPersonIllustration className="h-full w-full" />}
-          title="No succession plans yet"
-          description="Map successors to key roles to ensure leadership continuity."
-          action={{ label: "Add Plan", onClick: () => setOpen(true) }}
-        />
-      ) : (
         <div className="space-y-2">
           {plans.map((plan) => {
             const readiness = plan.readiness && isSuccessionReadiness(plan.readiness) ? plan.readiness : "ready_now";
@@ -217,14 +238,16 @@ export function SuccessionTab() {
                     <Badge variant="outline" className={`text-xs ${cfg.className}`}>
                       {cfg.label}
                     </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(plan.id)}
-                    >
-                      Remove
-                    </Button>
+                    {canManage && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setRemoveId(plan.id)}
+                      >
+                        Remove
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -237,7 +260,6 @@ export function SuccessionTab() {
             label="Load more succession entries"
           />
         </div>
-      )}
 
       <Dialog open={open} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0">
@@ -305,7 +327,6 @@ export function SuccessionTab() {
               Cancel
             </Button>
             <LoadingButton
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               isPending={create.isPending}
               onClick={handleCreate}
             >
@@ -314,6 +335,18 @@ export function SuccessionTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmSheet
+        open={removeId !== null}
+        onOpenChange={handleRemoveOpenChange}
+        title="Remove succession plan"
+        description="This removes the successor mapping for this role."
+        confirmLabel="Remove"
+        destructive
+        onConfirm={handleConfirmRemove}
+        isPending={remove.isPending}
+      />
     </div>
+    </PageState>
   );
 }

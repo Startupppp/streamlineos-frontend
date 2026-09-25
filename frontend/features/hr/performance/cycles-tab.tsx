@@ -16,7 +16,9 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -78,6 +80,15 @@ export function CyclesTab() {
   const createCycle = useCreateReviewCycle();
   const updateCycle = useUpdateReviewCycle();
   const deleteCycle = useDeleteReviewCycle();
+  const canManage = useCan("hr:performance:manage");
+  const pageState = usePageState({
+    permission: "hr:performance:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !cycles?.length,
+  });
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCycle, setEditCycle] = useState<ReviewCycle | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -201,15 +212,21 @@ export function CyclesTab() {
     }
   }
 
-  if (isLoading) {
-    return <LoadingState variant="list" rows={12} />;
-  }
-
-  if (isError) {
-    return <ErrorState className="flex-1" title="Couldn't load review cycles" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
-  }
-
   return (
+    <PageState
+      resolution={pageState}
+      onRetry={handleRetry}
+      className="flex-1"
+      loading={<LoadingState variant="list" rows={12} />}
+      empty={
+        <EmptyState
+          illustrationPreset="calendar"
+          title="No review cycles yet"
+          description="Create a quarterly or annual cycle to structure your performance reviews."
+          action={canManage ? { label: "Create review cycle", onClick: openCreate } : undefined}
+        />
+      }
+    >
     <div className="flex flex-col flex-1 min-h-0 gap-4">
       <div className="flex items-center justify-between shrink-0 gap-3 flex-wrap">
         <CycleHeaderStats
@@ -217,29 +234,23 @@ export function CyclesTab() {
           active={cycleStats.active}
           completed={cycleStats.completed}
         />
-        <Button size="sm" className="gap-1.5 shrink-0" onClick={openCreate}>
-          <Plus className="h-3.5 w-3.5" />Create review cycle
-        </Button>
+        {canManage && (
+          <Button size="sm" className="gap-1.5 shrink-0" onClick={openCreate}>
+            <Plus className="h-3.5 w-3.5" />Create review cycle
+          </Button>
+        )}
       </div>
 
-      {!cycles?.length ? (
-        <EmptyState
-          illustrationPreset="calendar"
-          title="No review cycles yet"
-          description="Create a quarterly or annual cycle to structure your performance reviews."
-          action={{ label: "Create review cycle", onClick: openCreate }}
-        />
-      ) : (
         <div className="space-y-2">
-          {cycles.map((cycle: ReviewCycle) => {
+          {(cycles ?? []).map((cycle: ReviewCycle) => {
             const progress = getCycleProgress(cycle);
             const accentClass =
               cycle.status === "ACTIVE"
-                ? "border-l-emerald-500"
+                ? "border-l-status-success-rule"
                 : cycle.status === "COMPLETED"
-                ? "border-l-blue-500"
+                ? "border-l-status-info-rule"
                 : cycle.status === "CANCELLED"
-                ? "border-l-rose-400"
+                ? "border-l-status-danger-rule"
                 : "border-l-border";
             const badgeClass =
               cycle.status === "ACTIVE"
@@ -294,6 +305,7 @@ export function CyclesTab() {
                         </div>
                       </div>
                     </div>
+                    {canManage && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-200" aria-label="Cycle actions" />
@@ -307,13 +319,13 @@ export function CyclesTab() {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
-      )}
 
       <HrSheet open={sheetOpen} onOpenChange={handleSheetOpenChange} title={editCycle ? "Edit Review Cycle" : "Create Review Cycle"} onSubmit={cycleForm.handleSubmit(handleCreate)} submitLabel={editCycle ? "Save Changes" : "Create"} isPending={createCycle.isPending || updateCycle.isPending}>
         <Form {...cycleForm}>
@@ -436,5 +448,6 @@ export function CyclesTab() {
         isPending={deleteCycle.isPending}
       />
     </div>
+    </PageState>
   );
 }

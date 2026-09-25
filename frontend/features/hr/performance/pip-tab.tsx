@@ -12,7 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCan } from "@/hooks/api/access";
+import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { toast } from "sonner";
@@ -33,6 +36,16 @@ export function PIPTab() {
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const createPIP = useCreatePIP();
   const updatePIP = useUpdatePIP();
+  const canManage = useCan("hr:performance:manage");
+  const pageState = usePageState({
+    permission: "hr:performance:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !Array.isArray(pips) || pips.length === 0,
+  });
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
+  const [terminateId, setTerminateId] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPip, setEditingPip] = useState<PIP | null>(null);
   const [pipUserId, setPipUserId] = useState("");
@@ -195,6 +208,11 @@ export function PIPTab() {
 
   const handleUpdateStatus = useCallback(
     (id: number, status: string) => {
+      // Terminating a PIP is a lifecycle action: confirm first (FE-83).
+      if (status === "TERMINATED") {
+        setTerminateId(id);
+        return;
+      }
       updatePIP.mutate(
         { pipId: id, status },
         {
@@ -205,6 +223,24 @@ export function PIPTab() {
     },
     [updatePIP],
   );
+
+  const handleConfirmTerminate = useCallback(() => {
+    if (terminateId === null) return;
+    updatePIP.mutate(
+      { pipId: terminateId, status: "TERMINATED" },
+      {
+        onSuccess: () => {
+          toast.success("PIP terminated");
+          setTerminateId(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [terminateId, updatePIP]);
+
+  const handleTerminateOpenChange = useCallback((open: boolean) => {
+    if (!open) setTerminateId(null);
+  }, []);
 
   const addObjective = useCallback(() => {
     setObjectives((prev) => [
@@ -305,34 +341,34 @@ export function PIPTab() {
     existingValue: editingPip ? startDate : undefined,
   });
 
-  if (isLoading) {
-    return <LoadingState variant="list" rows={12} />;
-  }
-
-  if (isError) {
-    return <ErrorState className="flex-1" title="Couldn't load PIPs" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
-  }
-
   return (
+    <PageState
+      resolution={pageState}
+      onRetry={handleRetry}
+      className="flex-1"
+      loading={<LoadingState variant="list" rows={12} />}
+      empty={
+        <EmptyState
+          illustration={<EmptyApprovalIllustration className="h-full w-full" />}
+          title="No PIPs issued yet"
+          description="Performance improvement plans help employees get back on track with clear objectives and timelines."
+          action={canManage ? { label: "New PIP", onClick: handleOpenCreate } : undefined}
+        />
+      }
+    >
     <div className="flex flex-col flex-1 min-h-0 gap-3">
       <div className="flex items-center justify-between shrink-0">
         <p className="text-sm text-muted-foreground">
           {pipsList.length} performance improvement plans
         </p>
-        <Button size="sm" onClick={handleOpenCreate}>
-          <Plus className="h-3.5 w-3.5 mr-1" />
-          New PIP
-        </Button>
+        {canManage && (
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="h-3.5 w-3.5 mr-1" />
+            New PIP
+          </Button>
+        )}
       </div>
 
-      {pipsList.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyApprovalIllustration className="h-full w-full" />}
-          title="No PIPs issued yet"
-          description="Performance improvement plans help employees get back on track with clear objectives and timelines."
-          action={{ label: "New PIP", onClick: handleOpenCreate }}
-        />
-      ) : (
         <div className="space-y-2">
           {pipsList.map((pip) => (
             <PipCard
@@ -340,10 +376,11 @@ export function PIPTab() {
               pip={pip}
               onOpenEdit={handleOpenEdit}
               onUpdateStatus={handleUpdateStatus}
+              canManage={canManage}
+              isUpdating={updatePIP.isPending}
             />
           ))}
         </div>
-      )}
 
       <HrSheet
         open={sheetOpen}
@@ -387,6 +424,18 @@ export function PIPTab() {
           onUpdateObjectiveField={updateObjectiveField}
         />
       </HrSheet>
+
+      <ConfirmSheet
+        open={terminateId !== null}
+        onOpenChange={handleTerminateOpenChange}
+        title="Terminate PIP"
+        description="Terminating ends this improvement plan now. The employee record keeps the plan's history."
+        confirmLabel="Terminate"
+        destructive
+        onConfirm={handleConfirmTerminate}
+        isPending={updatePIP.isPending}
+      />
     </div>
+    </PageState>
   );
 }

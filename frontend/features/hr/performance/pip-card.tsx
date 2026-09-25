@@ -21,9 +21,12 @@ interface PipCardProps {
   pip: PIP;
   onOpenEdit(pip: PIP): void;
   onUpdateStatus(id: number, status: string): void;
+  /** `hr:performance:manage` — PATCH /hr/performance/pip/:id. */
+  canManage: boolean;
+  isUpdating: boolean;
 }
 
-export function PipCard({ pip, onOpenEdit, onUpdateStatus }: PipCardProps) {
+export function PipCard({ pip, onOpenEdit, onUpdateStatus, canManage, isUpdating }: PipCardProps) {
   const handleEdit = useCallback(() => onOpenEdit(pip), [pip, onOpenEdit]);
   const handleComplete = useCallback(
     () => onUpdateStatus(pip.id, "COMPLETED"),
@@ -81,6 +84,7 @@ export function PipCard({ pip, onOpenEdit, onUpdateStatus }: PipCardProps) {
             >
               {pip.status ?? "ACTIVE"}
             </Badge>
+            {canManage && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <AnimatedIconButton
@@ -98,11 +102,11 @@ export function PipCard({ pip, onOpenEdit, onUpdateStatus }: PipCardProps) {
                 </DropdownMenuItem>
                 {isActionable && (
                   <>
-                    <DropdownMenuItem onClick={handleComplete}>
+                    <DropdownMenuItem disabled={isUpdating} onClick={handleComplete}>
                       <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
                       Mark Completed
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleExtend}>
+                    <DropdownMenuItem disabled={isUpdating} onClick={handleExtend}>
                       <Calendar className="h-3.5 w-3.5 mr-1.5" />
                       Extend
                     </DropdownMenuItem>
@@ -114,6 +118,7 @@ export function PipCard({ pip, onOpenEdit, onUpdateStatus }: PipCardProps) {
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
+            )}
           </div>
         </div>
         {pip.reason && (
