@@ -27,8 +27,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { useKbPageVersionsInfinite, useKbPageVersionDetail, useRestoreKbVersion } from "@/hooks/api/kb";
 import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { pageHistoryHref } from "@/lib/knowledge-routes";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -47,15 +47,15 @@ interface PageHistorySheetProps {
 export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHistorySheetProps) {
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const [restoreAlertOpen, setRestoreAlertOpen] = useState(false);
-  const { data: versionsData, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useKbPageVersions(pageId);
+  const { data: versionsData, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useKbPageVersionsInfinite(pageId);
   const allVersions = versionsData?.pages.flatMap((p) => p.data) ?? [];
   const currentVersionNumber = allVersions[0]?.versionNumber ?? null;
   const versions = allVersions;
-  const { data: versionDetail, isLoading: detailLoading } = useKbPageVersion(
+  const { data: versionDetail, isLoading: detailLoading } = useKbPageVersionDetail(
     pageId,
     selectedVersion ?? 0
   );
-  const restoreVersion = useRestoreKbPageVersion();
+  const restoreVersion = useRestoreKbVersion();
 
   const hasContent = Boolean(versionDetail?.content);
 
@@ -161,18 +161,12 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                       </div>
                     </button>
                   ))}
-                  {hasNextPage && (
-                    <LoadingButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleLoadMore}
-                      isPending={isFetchingNextPage}
-                      loadingText="Loading…"
-                      className="w-full text-xs h-8 text-muted-foreground"
-                    >
-                      Load more versions
-                    </LoadingButton>
-                  )}
+                  <InfiniteScrollSentinel
+                    hasNextPage={hasNextPage ?? false}
+                    isFetchingNextPage={isFetchingNextPage}
+                    onLoadMore={handleLoadMore}
+                    label="Load more versions"
+                  />
                 </div>
             </SheetBody>
             <SheetFooter className="border-t px-6 py-3 flex items-center justify-end">

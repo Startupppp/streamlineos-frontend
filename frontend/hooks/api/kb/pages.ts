@@ -22,11 +22,9 @@ import type {
   KbPageListItem,
   KbPageSearchPage,
   KbPageTreeNode,
-  KbPageVersion,
   MoveKbPageInput,
   UpdateKbPageInput,
 } from "./page-types";
-import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 type KbPageTreeLevel = {
   data: KbPageTreeNode[];
@@ -76,16 +74,6 @@ const kbPageBacklinkContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then(
     (m) => m.kbPageBacklinkContract,
   ),
-);
-
-const kbPageVersionListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-pages-schema").then(
-    (m) => m.kbPageVersionListContract,
-  ),
-);
-
-const kbPageVersionContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbPageVersionContract),
 );
 
 const kbPageSoftDeleteContract = lazyContract(() =>
@@ -189,7 +177,10 @@ export function useKbPageTreeInfinite(params: {
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<KbPageTreeLevel>(
         "/kb/pages/tree",
-        { ...params, ...(pageParam ? { cursor: pageParam } : {}) } as Record<string, unknown>,
+        {
+          ...params,
+          ...(pageParam === undefined ? {} : { cursor: pageParam }),
+        } as Record<string, unknown>,
         signal,
         kbPageTreeLevelContract,
       ),
@@ -213,7 +204,7 @@ export function useKbPageChildrenLevel(
         "/kb/pages/tree",
         {
           parentId: nodeId,
-          ...(pageParam ? { cursor: pageParam } : {}),
+          ...(pageParam === undefined ? {} : { cursor: pageParam }),
         } as Record<string, unknown>,
         signal,
         kbPageTreeLevelContract,
@@ -388,60 +379,6 @@ export function useKbPageBacklinks(pageId: number) {
       ),
     staleTime: 60_000,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,
-  });
-}
-
-type CursorPage<T> = {
-  data: T[];
-  pagination: {
-    limit: number;
-    nextCursor: string | null;
-    hasMore: boolean;
-  };
-};
-
-export function useKbPageVersions(pageId: number) {
-  const canView = useCan("kb:pages:view");
-  return useInfiniteQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pageVersions(pageId),
-    queryFn: ({ pageParam, signal }) => {
-      const params: Record<string, unknown> = {};
-      if (pageParam !== undefined) params.cursor = pageParam;
-      return apiClient.get<CursorPage<KbPageVersion>>(
-        `/kb/pages/${pageId}/versions`,
-        params,
-        signal,
-        kbPageVersionListContract,
-      );
-    },
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
-    staleTime: 60_000,
-    enabled: canView && Number.isFinite(pageId) && pageId > 0,
-  });
-}
-
-export function useKbPageVersion(pageId: number, versionNumber: number) {
-  const canView = useCan("kb:pages:view");
-  return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pageVersion(
-      pageId,
-      versionNumber,
-    ),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageVersion>(
-        `/kb/pages/${pageId}/versions/${versionNumber}`,
-        undefined,
-        signal,
-        kbPageVersionContract,
-      ),
-    staleTime: 300_000,
-    enabled:
-      canView &&
-      Number.isFinite(pageId) &&
-      pageId > 0 &&
-      Number.isFinite(versionNumber) &&
-      versionNumber > 0,
   });
 }
 
@@ -774,36 +711,6 @@ export function useSetKbPageVisibility() {
       });
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
-      });
-    },
-  });
-}
-
-export function useRestoreKbPageVersion() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("kb:pages:update", {
-    mutationKey: ["kb", "pages", "restoreVersion"],
-    mutationFn: ({
-      pageId,
-      versionNumber,
-    }: {
-      pageId: number;
-      versionNumber: number;
-    }) =>
-      apiClient.post<KbPage>(
-        `/kb/pages/${pageId}/versions/${versionNumber}/restore`,
-        undefined,
-        undefined,
-        kbPageContract,
-      ),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pageVersions(
-          variables.pageId,
-        ),
       });
     },
   });
