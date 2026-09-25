@@ -14,7 +14,8 @@ complete product definition of done.
 
 The working checkout is ahead of the configured remote on more than one repository;
 this is not deployment evidence. The current local Build evidence includes backend
-commit `a60c8a189` and frontend commits `6ffc21b48`, `cae206a6c`, and `b41041440`.
+commits `121c1727e` and `bb1f175fb`, plus frontend commits `6ffc21b48`,
+`cae206a6c`, and `b41041440`.
 The frontend and backend branches also contain unrelated Knowledge Base work that
 must remain separate. Treat a Build commit as deployed only after the deployment
 identity is read from the running service. Older commit hashes elsewhere in this
@@ -52,7 +53,7 @@ not prove that the current checkout is deployed.
   - `NEEDS-REVIEW=0`
   - `CLOSED=42`
   - `VERIFIED=283`
-- The generated Markdown and JSON census artifacts in the backend `docs/build-module/` match backend `origin/main`.
+- The generated Markdown and JSON census artifacts in the backend `docs/build-module/` match the current local backend Build source; remote deployment parity remains open.
 - The Build backend matrix passed 231 suites and 2,301 tests after refreshing authorization evidence and cursor-pagination expectations. Backend typecheck, build, permission-key validation, route-budget self-test, feature-cycle scan, and migration-discipline checks remain separately tracked.
 - Fresh P1-4 handoff verification passed 4 focused suites and 48 tests across quote lifecycle, quote tenant isolation, signed-envelope completion, and deal-linked project provisioning. The authenticated browser handoff remains open because this environment has no configured E2E tenant/session fixture.
 
