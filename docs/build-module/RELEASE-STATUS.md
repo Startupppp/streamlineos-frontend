@@ -71,7 +71,7 @@ Current release-candidate checks:
 - `check:feature-cycles`: pass across 46 features and 5,700 resolved imports.
 - Focused ESLint: zero errors.
 - `git diff --check`: pass.
-- Latest frontend Build navigation, filtered board-count, malformed-filter normalization, portfolio-search, Command Center title consistency, retry-refresh, and stale-detail recovery fixes are on `origin/main` at `9c9c1f2a0`:
+- Latest frontend Build navigation, filtered board-count, malformed-filter normalization, portfolio-search, Command Center title consistency, retry-refresh, stale-detail recovery, and expected missing-record telemetry fixes are on `origin/main` at `1eb35ebf2`:
   backlog, My Work, draft, and keyboard shortcut navigation now use the shared
   dirty-state guard; focused regressions pass.
 - The Build view switcher now routes Calendar to the unified `/calendar` surface
@@ -88,7 +88,7 @@ Current release-candidate checks:
 The candidate was exercised through a real authenticated browser against the production API.
 
 - The current audit verified the authenticated production ticket route `/build/6/tickets/BQS-2` in the real browser.
-- The authenticated production desktop sweep covered the 65 canonical org/project pages in parallel batches on 2026-09-25. The pre-deployment build had no errors on the 59 routes without missing fixture records; six stale-detail routes reported expected 404s through the route boundary: managed-product child pages, portfolio detail, team detail, meeting detail, and QA test-run detail. The latest frontend fixes are on `origin/main` at `9c9c1f2a0`; production must be rechecked after that deployment before this criterion can be marked complete.
+- The authenticated production desktop sweep covered the 65 canonical org/project pages in parallel batches on 2026-09-25. Managed-product roadmap, portfolio detail, and team detail now render without console errors. Meeting and QA run detail with nonexistent fixture ID `1` render recoverable page states; the currently deployed bundle still reports those expected 404 rejections, so production must be rechecked after `1eb35ebf2` deploys.
 - The mobile matrix remains open.
 - Issues actions no longer clip at 375 px.
 - Ticket properties start closed on mobile, open only on explicit action, and expose a visible close control.
@@ -143,13 +143,13 @@ These failures are measured and are not Build-owned:
 
 Completed:
 
-- Frontend `origin/main` contains `9c9c1f2a0` (Command Center route labeling is consistent with its canonical route and page retry refreshes its server-derived summaries; portfolio search is sent as the server-side `q` parameter; stale detail reads remain recoverable; the prior malformed-filter and board-count fixes remain in the same release line).
+- Frontend `origin/main` contains `1eb35ebf2` (Command Center route labeling is consistent with its canonical route and page retry refreshes its server-derived summaries; portfolio search is sent as the server-side `q` parameter; stale detail reads remain recoverable; expected 404 rejections are excluded from global browser error reporting; the prior malformed-filter and board-count fixes remain in the same release line).
 - Backend `origin/main` contains `b5a2553c1`, including the Build portfolio cursor validation, tenant-scoped goal-owner projection, refreshed authorization census, and migration-discipline baseline fixes.
 - The portfolio list UI renders its loading and empty states locally on port `1000`; authenticated production verification of `/build/portfolios?q=platform` now reaches the server-filtered empty state without a runtime error.
 - Portfolio and managed-product list services now reject malformed cursors with a bounded `400`; the local UI remains stable against the currently deployed older API, which still treats that input as the first page.
 - Goal list and detail responses now resolve owner membership IDs to tenant-scoped user projections in one batch for collections, avoiding the previous always-unassigned response.
 - The production-domain unauthenticated `/build` smoke passed with the expected sign-in redirect and no console errors.
-- The current browser observation passed for `/build/6/tickets/BQS-2`; the desktop matrix has been exercised, but its final pass remains open until the latest frontend deployment is observed on the six corrected stale-detail routes.
+- The current browser observation passed for `/build/6/tickets/BQS-2`; the desktop matrix has been exercised, but its final pass remains open until the latest frontend deployment is observed with the expected-404 telemetry fix.
 - Production `/build/portfolios?q=platform`, `/build/managed-products`, `/build/goals`, and `/build/command-center` were rechecked in the real browser without visible errors.
 - Local port `1000` browser verification rechecked `/build/inbox?view=drafts` and `/build/command-center`; both rendered their canonical headings without visible runtime errors.
 
