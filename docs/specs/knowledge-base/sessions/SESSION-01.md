@@ -60,12 +60,11 @@ Migration: `backend/migrations/1205_kb_page_tree_children_index.sql` + its rollb
       pre-downloaded tree. `move-page-dialog.tsx` uses `useKbPagesSearch()` with a debounced input.
       `import-page.tsx` removes `useKbPagesTree()` entirely; `titleExists` is a no-op (backend
       deduplicates at import time).
-- [ ] Composite index behind the children query, in `1205`, with a tenant-leading key:
+- [x] Composite index behind the children query, in `1205`, with a tenant-leading key:
       `(org_id, parent_page_id, sort_order, id) WHERE deleted_at IS NULL`.
-      Migration file created. EXPLAIN plan NOT yet captured — must run as `streamline_app` with
-      tenant GUC set (per BE-76); command is
-      `ALLOW_PRODUCTION_MIGRATION=1 node D:/agent-work/mig-iam.mjs <path-to-script>`
-      but the plan has not been taken yet. Box left open.
+      Applied to production 2026-09-25 (journal idx 1089) and measured — see
+      **EXPLAIN at cardinality** below. The index is used, the `ORDER BY` is index-satisfied, and
+      the plan is bounded by the LIMIT at 7 buffers.
 - [x] Tenant-isolation spec: sibling org pages never appear at any level or cursor position.
       All 8 tenant-isolation assertions pass (`kb-page-tree-tenant-isolation.spec.ts`).
 - [x] Cursor-stability spec: inserting a page mid-pagination neither duplicates nor skips a row.
@@ -100,6 +99,62 @@ HANDOFF: `backend/migrations/meta/_journal.json` — SESSION-01 created
   edit `_journal.json`). A release session must register it before applying.
 
 ## Evidence
+
+### EXPLAIN at cardinality — measured 2026-09-25, production, as `streamline_app`
+
+Production holds 11 pages for the busiest org, so a plan taken against it proves nothing. Measured
+instead by planting one parent and **50,000 children plus 50,000 grants inside a transaction that
+was then rolled back** — `ANALYZE` runs inside the same transaction so the planner sees the real
+statistics, and the catalog rows roll back with everything else. Verified afterwards: 0 `[e2e]`
+rows anywhere, `kb_page_grants` back to 0, protected ids 4,5,6,7,14,15,16,17 all present.
+
+Connected as `streamline_app` with `rolbypassrls = false` and `app.organization_id` set, per BE-76.
+Measured in buffers, not milliseconds, per BE-77.
+
+**A. Children query without the ACL predicate — is `1205` reachable?**
+```
+Limit  (cost=0.41..34.34 rows=51 width=34) (actual time=0.020..0.065 rows=51.00 loops=1)
+  Buffers: shared hit=7
+  ->  Index Scan using idx_kb_pages_tree_children on kb_pages p
+        Index Cond: ((org_id = '871a…01'::text) AND (parent_page_id = 100041))
+        Filter: ((org_id = app.current_org_id_or_null()) OR (public_token_hash = app.current_public_token_or_null()))
+        Buffers: shared hit=7
+Execution Time: 0.083 ms
+```
+
+**B. Children query exactly as `kb-page-tree.service.ts:91-135` issues it, ACL predicate included**
+```
+Limit  (cost=0.41..465.46 rows=51 width=34) (actual time=0.024..0.075 rows=51.00 loops=1)
+  Buffers: shared hit=7
+  ->  Index Scan using idx_kb_pages_tree_children on kb_pages p
+        Index Cond: ((org_id = '871a…01'::text) AND (parent_page_id = 100041))
+        Filter: (((org_id = app.current_org_id_or_null()) OR (public_token_hash = …))
+                 AND ((visibility = ANY ('{org,public}') AND project_id IS NULL)
+                      OR owner_membership_id = 3 OR created_by_membership_id = 3
+                      OR (ANY (id = (hashed SubPlan 2).col1))))
+        Buffers: shared hit=7
+        SubPlan 2
+          ->  Result  (cost=0.25..1729.75 rows=50000 width=4) (never executed)
+                ->  Seq Scan on kb_page_grants gr  (never executed)
+Execution Time: 0.111 ms
+```
+
+**Reading.** `1205` is used in both plans. The `ORDER BY sort_order, id` is satisfied by the index —
+there is no `Sort` node — so `LIMIT 51` stops the scan after 51 rows and the cost is independent of
+how many children the parent has. 7 buffers at 50,000 children.
+
+The grant subplan reports `never executed`. That is not the subplan being cheap; it is the cheap
+indexed branch (`visibility IN ('org','public') AND project_id IS NULL`) satisfying the first 51
+rows, so the `OR` short-circuits before the grant set is ever needed. Note the planner's own
+estimate for the inner node rises from 33,244 to 455,714 once the ACL predicate is attached — it
+prices the filter as expensive and is right to.
+
+**The latent case this does not cover.** On a tenant whose pages are mostly `private` and reachable
+only through grants, the cheap branch fails for most rows, the hashed SubPlan materializes the whole
+grant set, and the cost becomes a function of tenant grant count rather than the LIMIT window. That
+is the same defect measured on the "shared with me" scope in SESSION-08, and the fix is the same
+`UNION` rewrite recorded there — not another index. `1205` is correct and sufficient for the tree;
+it does not and cannot repair the `OR`.
 
 ### Backend test run (2026-09-25)
 ```
