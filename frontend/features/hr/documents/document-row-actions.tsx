@@ -7,6 +7,7 @@ import {
   FileSignature,
   History,
   Pencil,
+  ShieldCheck,
   Trash2,
 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
@@ -33,12 +34,14 @@ interface DocumentRowActionsProps {
   onDelete: (documentId: number) => Promise<void>;
   onEdit: (doc: Document) => void;
   onSendForSignature: (doc: Document) => void;
+  /** Present only when HR documents in the Knowledge Base are switched on for this tenant. */
+  onClassify?: (doc: Document) => void;
 }
 
 export const DocumentRowActions = forwardRef<
   HTMLDivElement,
   DocumentRowActionsProps
->(function DocumentRowActions({ doc, onDelete, onEdit, onSendForSignature }, ref) {
+>(function DocumentRowActions({ doc, onDelete, onEdit, onSendForSignature, onClassify }, ref) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const canManageDocs = useCan("hr:documents:manage");
@@ -97,6 +100,11 @@ export const DocumentRowActions = forwardRef<
     e.stopPropagation();
   }
 
+  function handleClassify(e: React.MouseEvent) {
+    e.stopPropagation();
+    onClassify?.(doc);
+  }
+
   function handleSendForSignature(e: React.MouseEvent) {
     e.stopPropagation();
     onSendForSignature(doc);
@@ -148,7 +156,7 @@ export const DocumentRowActions = forwardRef<
             aria-label="More options"
           />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuItem disabled={!hasFileUrl} onClick={handleView}>
             <Eye className="mr-2 h-3.5 w-3.5" />
             View file
@@ -161,6 +169,12 @@ export const DocumentRowActions = forwardRef<
             <DropdownMenuItem onClick={handleEdit}>
               <Pencil className="mr-2 h-3.5 w-3.5" />
               Edit details
+            </DropdownMenuItem>
+          ) : null}
+          {canManageDocs && onClassify ? (
+            <DropdownMenuItem onClick={handleClassify}>
+              <ShieldCheck className="mr-2 h-3.5 w-3.5" />
+              Classification and sharing
             </DropdownMenuItem>
           ) : null}
           {canCreateEnvelope ? (

@@ -2,7 +2,7 @@
 
 Reconciled 2026-09-24 against `codex/build-final-completion` and the paired backend worktree.
 
-This is the durable product backlog, not a release-completion claim. The Sprint/Cycle and QA Bug contraction is complete. Canonical Build migrations `1185_roadmap_search_id_probe`, `1186_project_programs_list_indexes`, and `1197_build_cycle_permissions` are verified in production. The production journal still reports unrelated mixed-module backlog entries, so zero pending migrations is not currently true. Current release truth lives in [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+This is the durable product backlog, not a release-completion claim. The Sprint/Cycle and QA Bug contraction is complete. Canonical Build migrations `1185_roadmap_search_id_probe`, `1186_project_programs_list_indexes`, and `1197_build_cycle_permissions` are verified in production. The production journal still reports unrelated mixed-module backlog entries, so zero repository-wide pending migrations is not currently true. Current release truth lives in [RELEASE-STATUS.md](./RELEASE-STATUS.md).
 
 Order remains **dependency order, not wish order**: application code → focused verification → deployment → migration → browser verification. A later stage cannot be inferred complete from an earlier test result.
 
@@ -10,7 +10,9 @@ Effort is engineering days for one experienced engineer with existing repository
 excludes migration observation windows and security review. Every figure is an estimate.
 
 Evidence paths are repository-relative. `backend/` is a separate git repository from the root
-checkout. Backend commit `f139e315f` is in backend `origin/main` and deployed. The frontend release candidate is on `codex/build-final-completion` until the final release push recorded in [RELEASE-STATUS.md](./RELEASE-STATUS.md).
+checkout. The current backend Build fixes are on backend `origin/main` at `2f26c9841`; the
+current frontend fixes are on frontend `origin/main` at `eb34196e3`. Deployment rollout
+identity remains an explicit release check in [RELEASE-STATUS.md](./RELEASE-STATUS.md).
 
 Migration execution rules live in [MIGRATION-RUNBOOK.md](./MIGRATION-RUNBOOK.md).
 
@@ -36,7 +38,7 @@ code. They are kept for audit history and must not be re-opened without new evid
 | QA Bug legacy writer | Deleted `06b398ec8`. No non-test `from(bugs)`, `insert(bugs)`, `update(bugs)` or `delete(bugs)` remains |
 | **A2 — retire the `build.sprints` access path** | Landed on `main` as the coordinator's **freeze**: every `SprintsService` verb throws `GoneException`, `cycles.legacy_sprint_id` was removed from the schema, and `e48e4d139` deleted the `sprints` and `bugs` table declarations outright. A parallel branch in this lane reached the same goal by bridging the endpoints through `cycles` instead; **the freeze is the winner** and the bridge was discarded. Guarded going forward by `backend/src/modules/build/phase-2/sprint-cycle-drop-invariant.spec.ts` |
 | **A5 — the phase-05 rename** | Resolved on `main` in `1baada9ca`: the two `RENAME` statements were split out into `migrations/sql/a-sprint-cycle-06-rename-scope-events.sql`, so the drop no longer requires a same-instant code deploy |
-| Build search migrations `1185` and `1186`, historically `1177` and `1178` | Applied to production Aurora PostgreSQL after snapshot `streamlineos-pre-build-1177-1178-20260924-1` reached `AVAILABLE`; ledger `created_at` values are `1803000010691` and `1803000010701`, exact local SHA-256 hashes match, all 11 expected indexes and both search functions exist, both functions are `SECURITY DEFINER`, executable by `streamline_app`, scoped through `app.current_org_id()`, and the cross-tenant probe returned `0`. Production now has zero pending migrations. |
+| Build search migrations `1185` and `1186`, historically `1177` and `1178` | Applied to production Aurora PostgreSQL after snapshot `streamlineos-pre-build-1177-1178-20260924-1` reached `AVAILABLE`; ledger `created_at` values are `1803000010691` and `1803000010701`, exact local SHA-256 hashes match, all 11 expected indexes and both search functions exist, both functions are `SECURITY DEFINER`, executable by `streamline_app`, scoped through `app.current_org_id()`, and the cross-tenant probe returned `0`. Build-specific migration evidence is complete; unrelated mixed-module journal backlog remains. |
 
 Nine physical route removals are recorded in [`99-kill-list.md`](./99-kill-list.md) and are not
 repeated here.

@@ -89,6 +89,13 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/kb/pages/full-search" },
   },
   {
+    prefix: "/knowledge/wiki/company-documents",
+    permission: "kb:pages:view",
+    reason:
+      "HR documents shared into the Knowledge Base. Matches the backend gate on GET /kb/linked-documents (kb:pages:view); which entries a reader sees is decided by the server from their audience, not by this key.",
+    backendRoute: { method: "get", path: "/kb/linked-documents" },
+  },
+  {
     prefix: "/knowledge/wiki/import",
     product: "administration",
     permission: "kb:pages:import",

@@ -54,4 +54,10 @@ describe("KanbanColumnHeader", () => {
       screen.getByLabelText("42 of 20 tickets, over the work-in-progress limit"),
     ).toHaveTextContent("42/20");
   });
+
+  it("keeps an explicit zero from falling back to the loaded row count", () => {
+    renderHeader({ ticketCount: 15, serverCount: 0, wipLimit: null });
+
+    expect(screen.getByLabelText("0 tickets")).toHaveTextContent("0");
+  });
 });

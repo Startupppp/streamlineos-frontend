@@ -118,6 +118,8 @@ export interface Asset {
   updatedAt: Date | string | null;
 }
 
+export type DocumentClassification = "PERSONAL" | "CONFIDENTIAL" | "RESTRICTED" | "INTERNAL";
+
 export interface Document {
   id: number;
   orgId: string;
@@ -135,6 +137,8 @@ export interface Document {
   parentDocumentId: number | null;
   isPublic: boolean | null;
   isActive: boolean | null;
+  classification: DocumentClassification;
+  effectiveDate: string | null;
   expiryDate: string | null;
   expiryReminderSent: boolean | null;
   tags: string[] | null;

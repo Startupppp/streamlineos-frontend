@@ -244,7 +244,7 @@ export function KanbanBoard({
                         canManage={canManage}
                         existingNames={existingNames}
                         wipLimit={wipLimits?.[col.id]}
-                        serverCount={hasActiveFilters ? undefined : columnCountsData?.[col.id]}
+                        serverCount={columnCountsData ? (columnCountsData[col.id] ?? 0) : undefined}
                         displayOptions={displayOptions}
                         minHeightClass="min-h-[60px]"
                         stretch
@@ -303,7 +303,7 @@ export function KanbanBoard({
                       canManage={canManage}
                       existingNames={existingNames}
                       wipLimit={wipLimits?.[col.id]}
-                      serverCount={hasActiveFilters ? undefined : columnCountsData?.[col.id]}
+                      serverCount={columnCountsData ? (columnCountsData[col.id] ?? 0) : undefined}
                       displayOptions={displayOptions}
                       showHeaderQuickAdd
                       dragHandleProps={

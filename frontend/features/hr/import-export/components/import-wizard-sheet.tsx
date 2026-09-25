@@ -23,6 +23,7 @@ import {
   type HrImportEntity,
   type HrImportJob,
 } from "@/hooks/api/hr/import-export";
+import { ImportResultSummary } from "@/features/hr/import-export/components/import-result-summary";
 
 interface ImportWizardSheetProps {
   open: boolean;
@@ -33,7 +34,8 @@ interface ImportWizardSheetProps {
 }
 
 const STEPS = [1, 2, 3] as const;
-type Step = (typeof STEPS)[number];
+// Step 4 is the result of a commit, after the three the person walks through.
+type Step = (typeof STEPS)[number] | 4;
 
 function splitCsvLine(line: string): string[] {
   const result: string[] = [];
@@ -156,14 +158,19 @@ export function ImportWizardSheet({
     commitJob.mutate(
       { jobId: job.id },
       {
-        onSuccess: () => {
-          toast.success(`${entityLabel} import committed successfully`);
-          handleOpenChange(false);
+        onSuccess: (result) => {
+          setJob(result);
+          setStep(4);
+          if (result.status === "failed" || result.validRows === 0) toast.error(`Nothing was imported. ${result.errorRows} ${result.errorRows === 1 ? "row" : "rows"} failed.`);
+          else if (result.errorRows > 0) toast.warning(`${entityLabel} imported with problems: ${result.validRows} written, ${result.errorRows} failed.`);
+          else toast.success(`${entityLabel} imported: ${result.createdRows} new, ${result.updatedRows} changed, ${result.unchangedRows} already there.`);
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [commitJob, job, entityLabel, handleOpenChange]);
+  }, [commitJob, job, entityLabel]);
+
+  const handleDone = useCallback(() => handleOpenChange(false), [handleOpenChange]);
 
   type PreviewRow = { [key: string]: string | number } & { _rowIdx: number };
 
@@ -224,6 +231,11 @@ export function ImportWizardSheet({
                   </Badge>
                 ))}
               </div>
+              {entity === "document_metadata" ? (
+                <p className="text-xs text-muted-foreground">
+                  The employee email on each row must be the work email of an employee who already exists and has an account. A row that matches nobody fails when you commit, with the reason, and nothing is stored for it.
+                </p>
+              ) : null}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -266,6 +278,8 @@ export function ImportWizardSheet({
               />
             </div>
           )}
+
+          {step === 4 && job && <ImportResultSummary job={job} entityLabel={entityLabel} />}
 
           {step === 3 && job && (
             <div className="space-y-4">
@@ -333,6 +347,11 @@ export function ImportWizardSheet({
                 Validate {parsedRows.length} rows
               </LoadingButton>
             </>
+          )}
+          {step === 4 && (
+            <Button onClick={handleDone}>
+              Done
+            </Button>
           )}
           {step === 3 && job && (
             <>
