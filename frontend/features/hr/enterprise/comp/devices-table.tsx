@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useTimeDevices, useDeleteTimeDevice, type TimeDevice } from "@/hooks/api/hr/enterprise-comp";
@@ -63,6 +64,10 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
       onSuccess: () => { toast.success("Device removed"); setDeletingId(null); },
       onError: (err) => { toast.error(getErrorMessage(err)); setDeletingId(null); },
     });
+  }
+
+  function stopRowClick(e: React.MouseEvent) {
+    e.stopPropagation();
   }
 
   if (isLoading) {
@@ -127,16 +132,26 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
                 <Button variant="ghost" size="icon" className="w-7" aria-label={`Edit ${r.name}`} onClick={(e) => { e.stopPropagation(); onEdit(r); }}>
                   <Edit2 className="h-3.5 w-3.5" />
                 </Button>
-                <LoadingButton
-                  variant="ghost"
-                  size="icon"
-                  className="w-7 text-destructive hover:text-destructive"
-                  aria-label={`Delete ${r.name}`}
+                <ConfirmDialog
+                  trigger={
+                    <LoadingButton
+                      variant="ghost"
+                      size="icon"
+                      className="w-7 text-destructive hover:text-destructive"
+                      aria-label={`Delete ${r.name}`}
+                      isPending={deletingId === r.id}
+                      onClick={stopRowClick}
+                    >
+                      <Trash2Icon size={14} />
+                    </LoadingButton>
+                  }
+                  title={`Delete ${r.name}?`}
+                  description="This permanently deletes the device. It cannot be undone."
+                  confirmLabel="Delete"
+                  destructive
                   isPending={deletingId === r.id}
-                  onClick={(e) => { e.stopPropagation(); handleDelete(r); }}
-                >
-                  <Trash2Icon size={14} />
-                </LoadingButton>
+                  onConfirm={() => handleDelete(r)}
+                />
               </div>
             ) : null,
           },
