@@ -1,7 +1,9 @@
 "use client";
 
+import { AlertTriangle, CheckCircle2, Clock, MessageSquareWarning } from "lucide-react";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import type { ChatMessage } from "@/components/kb/kb-chat-bubble";
+import type { KbAskCitationWithParts } from "@/hooks/api/kb/ask-result-schema";
 
 export type KbHistoryRow =
   | { type: "sep"; id: string; label: string }
@@ -90,3 +92,114 @@ export function EmptyChat({
   );
 }
 
+export function InsufficientEvidenceBanner() {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+    >
+      <MessageSquareWarning className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <div>
+        <p className="font-semibold">No relevant content found</p>
+        <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-300">
+          The knowledge base does not contain anything that answers this question. Consider uploading relevant files or adding a note.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function OverQuotaBanner({ limit }: { limit: string }) {
+  return (
+    <div
+      role="alert"
+      className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+    >
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <div>
+        <p className="font-semibold">AI quota reached</p>
+        <p className="mt-0.5 text-xs">
+          {limit}. Contact your administrator or upgrade your plan to continue.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+interface CitationPassageProps {
+  citation: KbAskCitationWithParts;
+  index: number;
+}
+
+export function CitationPassage({ citation, index }: CitationPassageProps) {
+  if (!citation.passage) return null;
+  return (
+    <blockquote className="mt-1.5 border-l-2 border-accent/40 pl-3 text-xs text-muted-foreground italic">
+      {citation.passage}
+      <span className="not-italic text-dense text-accent ml-1">— source {index + 1}</span>
+    </blockquote>
+  );
+}
+
+interface FreshnessTagProps {
+  updatedAt: string;
+}
+
+export function FreshnessTag({ updatedAt }: FreshnessTagProps) {
+  const date = new Date(updatedAt);
+  if (!Number.isFinite(date.getTime())) return null;
+  const now = Date.now();
+  const ageMs = now - date.getTime();
+  const ageDays = Math.floor(ageMs / 86_400_000);
+  const stale = ageDays > 90;
+  const label = ageDays === 0
+    ? "Updated today"
+    : ageDays === 1
+    ? "Updated yesterday"
+    : ageDays < 30
+    ? `Updated ${ageDays}d ago`
+    : `Updated ${date.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
+  return (
+    <span
+      aria-label={label}
+      className={`inline-flex items-center gap-0.5 text-micro ${stale ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}
+    >
+      <Clock className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
+
+interface VerificationBadgeProps {
+  verified: boolean;
+}
+
+export function VerificationBadge({ verified }: VerificationBadgeProps) {
+  if (!verified) return null;
+  return (
+    <span
+      aria-label="Verified source"
+      className="inline-flex items-center gap-0.5 text-micro text-emerald-600 dark:text-emerald-400"
+    >
+      <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+      Verified
+    </span>
+  );
+}
+
+interface DisagreementBannerProps {
+  summary: string;
+}
+
+export function DisagreementBanner({ summary }: DisagreementBannerProps) {
+  return (
+    <div
+      role="note"
+      className="mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
+    >
+      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span><span className="font-semibold">Sources disagree:</span> {summary}</span>
+    </div>
+  );
+}

@@ -37,6 +37,8 @@ interface PageDocumentHeaderProps {
   page: KbPageDetail;
   pageId: number;
   saveState: "idle" | "pending" | "saving" | "saved";
+  savedAt?: Date | null;
+  isOffline?: boolean;
   isEditable: boolean;
   onNavigate: (pageId: number) => void;
   onApplyImprovement?: (text: string) => void;
@@ -49,6 +51,8 @@ export default function PageDocumentHeader({
   page,
   pageId,
   saveState,
+  savedAt,
+  isOffline,
   isEditable,
   onNavigate,
   onApplyImprovement,
@@ -141,7 +145,13 @@ export default function PageDocumentHeader({
   return (
     <>
       <div className="flex min-w-0 items-center justify-between gap-3">
-        <PageDocumentBreadcrumb page={page} saveState={saveState} projectId={projectId} />
+        <PageDocumentBreadcrumb
+          page={page}
+          saveState={saveState}
+          savedAt={savedAt}
+          isOffline={isOffline}
+          projectId={projectId}
+        />
         <PageDocumentToolbar
           page={page}
           pageId={pageId}

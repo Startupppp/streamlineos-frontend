@@ -114,7 +114,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     toast.error("Failed to save page", { description: getErrorMessage(error) });
   }, []);
 
-  const { saveState, conflict, schedule, discardLocalEdits, keepLocalEdits } = usePageAutosave({
+  const { saveState, conflict, savedAt, isOffline, pendingFields, schedule, discardLocalEdits, keepLocalEdits } = usePageAutosave({
     pageId,
     contentRevision: page?.contentRevision,
     save: handleSavePage,
@@ -279,6 +279,8 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
                 page={page}
                 pageId={pageId}
                 saveState={saveState}
+                savedAt={savedAt}
+                isOffline={isOffline}
                 isEditable={isEditable}
                 onNavigate={handleNavigateToPage}
                 onApplyImprovement={handleApplyImprovement}
@@ -333,6 +335,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
               <PageEditConflict
                 conflict={conflict}
                 isReloading={isReloading}
+                pendingFields={pendingFields}
                 onKeepMine={keepLocalEdits}
                 onDiscardMine={handleDiscardMine}
               />

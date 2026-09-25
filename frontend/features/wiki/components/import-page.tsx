@@ -17,7 +17,7 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { useCan } from "@/hooks/api/access";
-import { useImportKbPages, useKbPagesTree } from "@/hooks/api/kb";
+import { useImportKbPages } from "@/hooks/api/kb";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { KB_IMPORT, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
 import { KbUploadIcon, KbClipboardIcon } from "@/features/wiki/lib/kb-icons";
@@ -34,7 +34,6 @@ function resolveTab(tabParam: string | null): ImportExportTab {
 
 export default function ImportPage() {
   const canImport = useCan("kb:pages:import");
-  const { data: treeNodes = [] } = useKbPagesTree();
   const importMutation = useImportKbPages();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,10 +46,8 @@ export default function ImportPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const existingTitles = new Set(treeNodes.map((n) => n.title.toLowerCase()));
-
-  function titleExists(title: string): boolean {
-    return existingTitles.has(title.toLowerCase());
+  function titleExists(_title: string): boolean {
+    return false;
   }
 
   const handleFilesChange = useCallback(

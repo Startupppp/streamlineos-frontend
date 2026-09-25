@@ -1,9 +1,5 @@
 import { format } from "date-fns";
 
-export function formatCurrency(value: number): string {
-  return formatINRCompact(value);
-}
-
 export function formatCurrencyForBilling(amount: number, currency: string): string {
   return new Intl.NumberFormat("en", {
     style: "currency",

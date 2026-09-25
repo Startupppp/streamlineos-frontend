@@ -47,7 +47,7 @@ import { PageState } from "@/components/shared/page-state";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { Customer360Section } from "@/features/crm/shared/customer-360-section";
 import { Customer360Timeline } from "@/features/crm/shared/customer-360-timeline";
-import { formatCurrency } from "@/lib/format-utils";
+import { formatINRCompact } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 
@@ -228,7 +228,7 @@ export default function CompanyDetailPage({
         <StatCardGrid cols={4}>
           <StatCard
             label="Total Deal Value"
-            value={rollup ? formatCurrency(rollup.totalDealValue) : "—"}
+            value={rollup ? formatINRCompact(rollup.totalDealValue) : "—"}
             icon={DollarSign}
             color="green"
           />

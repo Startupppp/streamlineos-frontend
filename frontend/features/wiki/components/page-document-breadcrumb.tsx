@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
+  KbAlertCircleIcon,
   KbChevronRightIcon,
   KbLoader2Icon,
 } from "@/features/wiki/lib/kb-icons";
@@ -17,12 +18,20 @@ import {
 interface PageDocumentBreadcrumbProps {
   page: KbPageDetail;
   saveState: "idle" | "pending" | "saving" | "saved";
+  savedAt?: Date | null;
+  isOffline?: boolean;
   projectId?: number;
+}
+
+function formatSavedAt(date: Date): string {
+  return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
 export function PageDocumentBreadcrumb({
   page,
   saveState,
+  savedAt,
+  isOffline,
   projectId,
 }: PageDocumentBreadcrumbProps) {
   const ancestors = page.ancestors ?? [];
@@ -30,7 +39,9 @@ export function PageDocumentBreadcrumb({
   const wikiHref = isProjectScoped ? `/build/${projectId}/wiki` : KNOWLEDGE_BASE;
 
   function resolveAncestorHref(id: number): string {
-    return isProjectScoped ? projectPageHref(projectId!, id) : pageHref(id);
+    return isProjectScoped && projectId !== undefined
+      ? projectPageHref(projectId, id)
+      : pageHref(id);
   }
 
   return (
@@ -74,14 +85,22 @@ export function PageDocumentBreadcrumb({
         </span>
       </nav>
 
-      {(saveState === "pending" || saveState === "saving") && (
+      {isOffline && (
+        <span className="flex items-center gap-1 text-xs text-status-warning-ink shrink-0">
+          <KbAlertCircleIcon className="h-3 w-3" />
+          Offline — edits queued
+        </span>
+      )}
+      {!isOffline && (saveState === "pending" || saveState === "saving") && (
         <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
           <KbLoader2Icon className="h-3 w-3 animate-spin" />
           Saving…
         </span>
       )}
-      {saveState === "saved" && (
-        <span className="text-xs text-muted-foreground shrink-0">Saved</span>
+      {!isOffline && saveState === "saved" && (
+        <span className="text-xs text-muted-foreground shrink-0" suppressHydrationWarning>
+          {savedAt ? `Saved at ${formatSavedAt(savedAt)}` : "Saved"}
+        </span>
       )}
 
       {page.status && (

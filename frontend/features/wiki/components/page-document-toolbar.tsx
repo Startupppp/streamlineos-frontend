@@ -3,22 +3,7 @@
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  KbCopyIcon,
-  KbFileDownIcon,
-  KbHistoryIcon,
-  KbImageIcon,
-  KbInfoIcon,
-  KbLink2Icon,
-  KbLockIcon,
-  KbMessageSquareIcon,
-  KbMoreHorizontalIcon,
-  KbMoveRightIcon,
-  KbSaveIcon,
-  KbStarIcon,
-  KbTrash2Icon,
-  KbUnlockIcon,
-} from "@/features/wiki/lib/kb-icons";
+import { KbLink2Icon, KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,7 +15,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Check } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useToggleFavoriteKbPage,
@@ -42,8 +26,13 @@ import { useCan } from "@/hooks/api/access";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { KbPageAiActions } from "./kb-page-ai-actions";
 import PageSharePopover from "./page-share-popover";
-import { exportPageToHtml } from "@/features/wiki/lib/export-page";
+import { exportKbPage } from "@/features/wiki/lib/export-page";
 import { pageHref } from "@/lib/knowledge-routes";
+import {
+  resolveKbPageActions,
+  groupKbPageActions,
+  type KbPageActionId,
+} from "@/features/wiki/lib/page-action-descriptors";
 
 interface PageDocumentToolbarProps {
   page: KbPageDetail;
@@ -78,15 +67,35 @@ export function PageDocumentToolbar({
 }: PageDocumentToolbarProps) {
   const router = useRouter();
   const canCreate = useCan("kb:pages:create");
-  const canManage = useCan("kb:pages:manage");
   const canUpdate = useCan("kb:pages:update");
+  const canManage = useCan("kb:pages:manage");
   const canDelete = useCan("kb:pages:delete");
-  const canTemplates = useCan("kb:templates:manage");
+  const canExport = useCan("kb:pages:export");
+  const canManageTemplates = useCan("kb:templates:manage");
 
   const toggleFavorite = useToggleFavoriteKbPage();
   const duplicatePage = useDuplicateKbPage();
   const lockPage = useLockKbPage();
   const { data: backlinks = [] } = useKbPageBacklinks(pageId);
+
+  const actions = resolveKbPageActions(
+    {
+      isFavorite: page.isFavorite,
+      isLocked: page.isLocked,
+      hasCover: page.coverImage !== null,
+    },
+    {
+      canCreate,
+      canUpdate,
+      canManage,
+      canDelete,
+      canExport,
+      canManageTemplates,
+      isEditable,
+    },
+  );
+
+  const groups = groupKbPageActions(actions);
 
   function handleToggleFavorite() {
     toggleFavorite.mutate(
@@ -116,8 +125,8 @@ export function PageDocumentToolbar({
     );
   }
 
-  function handleExportHtml() {
-    void exportPageToHtml(page.title, page.content).catch((error: unknown) =>
+  function handleExport() {
+    void exportKbPage(pageId, "html").catch((error: unknown) =>
       toast.error(getErrorMessage(error)),
     );
   }
@@ -128,6 +137,27 @@ export function PageDocumentToolbar({
     const id = target.dataset.pageId;
     if (!id) return;
     onNavigate(Number(id));
+  }
+
+  function handleMenuSelect(event: Event) {
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLElement)) return;
+    const id = target.dataset.actionId as KbPageActionId | undefined;
+    if (!id) return;
+    switch (id) {
+      case "comments": onOpenComments(); break;
+      case "history": onOpenHistory(); break;
+      case "info": onOpenMetaSheet(); break;
+      case "favorite": handleToggleFavorite(); break;
+      case "cover": onOpenCover(); break;
+      case "duplicate": handleDuplicate(); break;
+      case "move": onOpenMove(); break;
+      case "lock": handleToggleLock(); break;
+      case "saveTemplate": onOpenSaveAsTemplate(); break;
+      case "export": handleExport(); break;
+      case "delete": onDelete(); break;
+      case "backlinks": break;
+    }
   }
 
   return (
@@ -151,95 +181,53 @@ export function PageDocumentToolbar({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuItem onSelect={onOpenComments}>
-            <KbMessageSquareIcon className="mr-2 h-4 w-4" />
-            Comments
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={onOpenHistory}>
-            <KbHistoryIcon className="mr-2 h-4 w-4" />
-            Version history
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={onOpenMetaSheet}>
-            <KbInfoIcon className="mr-2 h-4 w-4" />
-            Page info
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleToggleFavorite}>
-            <KbStarIcon className="mr-2 h-4 w-4" />
-            {page.isFavorite ? "Remove from favorites" : "Add to favorites"}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          {isEditable && (
-            <DropdownMenuItem onSelect={onOpenCover}>
-              <KbImageIcon className="mr-2 h-4 w-4" />
-              {page.coverImage ? "Change cover" : "Add cover"}
-              {page.coverImage ? (
-                <Check className="ml-auto h-4 w-4 text-foreground" />
-              ) : null}
-            </DropdownMenuItem>
-          )}
-          {canCreate && (
-            <DropdownMenuItem onSelect={handleDuplicate}>
-              <KbCopyIcon className="mr-2 h-4 w-4" />
-              Duplicate
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem onSelect={onOpenMove}>
-            <KbMoveRightIcon className="mr-2 h-4 w-4" />
-            Move
-          </DropdownMenuItem>
-          {canManage && (
-            <DropdownMenuItem onSelect={handleToggleLock}>
-              {page.isLocked ? (
-                <KbUnlockIcon className="mr-2 h-4 w-4" />
-              ) : (
-                <KbLockIcon className="mr-2 h-4 w-4" />
-              )}
-              {page.isLocked ? "Unlock page" : "Lock page"}
-            </DropdownMenuItem>
-          )}
-          {canTemplates && (
-            <DropdownMenuItem onSelect={onOpenSaveAsTemplate}>
-              <KbSaveIcon className="mr-2 h-4 w-4" />
-              Save as template
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem onSelect={handleExportHtml}>
-            <KbFileDownIcon className="mr-2 h-4 w-4" />
-            Export HTML
-          </DropdownMenuItem>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <KbLink2Icon className="mr-2 h-4 w-4" />
-              Backlinks
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="w-56">
-              {backlinks.length === 0 ? (
-                <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                  No pages link here yet.
-                </div>
-              ) : (
-                backlinks.map((bl) => (
+          {groups.map((group, groupIndex) => (
+            <span key={group[0]?.id ?? groupIndex}>
+              {groupIndex > 0 && <DropdownMenuSeparator />}
+              {group.map((action) => {
+                if (action.id === "backlinks") {
+                  return (
+                    <DropdownMenuSub key="backlinks">
+                      <DropdownMenuSubTrigger>
+                        <KbLink2Icon className="mr-2 h-4 w-4" />
+                        {action.label}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-56">
+                        {backlinks.length === 0 ? (
+                          <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                            No pages link here yet.
+                          </div>
+                        ) : (
+                          backlinks.map((bl) => (
+                            <DropdownMenuItem
+                              key={bl.id}
+                              data-page-id={String(bl.id)}
+                              onSelect={handleBacklinkSelect}
+                            >
+                              <span className="mr-2 shrink-0">{bl.icon ?? "📄"}</span>
+                              <TruncatedText text={bl.title || "Untitled"} />
+                            </DropdownMenuItem>
+                          ))
+                        )}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  );
+                }
+                const Icon = action.icon;
+                return (
                   <DropdownMenuItem
-                    key={bl.id}
-                    data-page-id={String(bl.id)}
-                    onSelect={handleBacklinkSelect}
+                    key={action.id}
+                    data-action-id={action.id}
+                    variant={action.destructive ? "destructive" : undefined}
+                    onSelect={handleMenuSelect}
                   >
-                    <span className="mr-2 shrink-0">{bl.icon ?? "📄"}</span>
-                    <TruncatedText text={bl.title || "Untitled"} />
+                    <Icon className="mr-2 h-4 w-4" />
+                    {action.label}
                   </DropdownMenuItem>
-                ))
-              )}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          {canDelete && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onSelect={onDelete}>
-                <KbTrash2Icon className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </>
-          )}
+                );
+              })}
+            </span>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

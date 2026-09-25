@@ -21,6 +21,12 @@ const FORBIDDEN_STORAGE_PATTERNS: RegExp[] = [
   /sessionStorage\.setItem\s*\(\s*['"`]contentText['"`]/,
 ];
 
+const PAGE_BODY_EXPORT_PATTERNS: RegExp[] = [
+  /exportPageToHtml\s*\(/,
+  /slateToHtml\s*\(/,
+  /serializeSlateNode\s*\(/,
+];
+
 describe("Wiki page body must not reach Web Storage", () => {
   const sourceFiles = walk(WIKI_SRC);
 
@@ -52,5 +58,29 @@ describe("Wiki page body must not reach Web Storage", () => {
       }
     }
     expect(violations).toHaveLength(0);
+  });
+
+  it("(c) client-side HTML serialization is no longer the export path — export goes through the API", () => {
+    const violations: string[] = [];
+    for (const file of sourceFiles) {
+      const rel = path.relative(WIKI_SRC, file).replace(/\\/g, "/");
+      if (rel === "lib/export-page.ts") continue;
+      const src = fs.readFileSync(file, "utf-8");
+      for (const pattern of PAGE_BODY_EXPORT_PATTERNS) {
+        if (pattern.test(src)) {
+          violations.push(`${rel}: ${pattern.toString()}`);
+        }
+      }
+    }
+    expect(violations).toHaveLength(0);
+  });
+
+  it("(d) export-page.ts no longer contains the client-side serializer — it calls the backend API", () => {
+    const exportFile = path.join(WIKI_SRC, "lib", "export-page.ts");
+    expect(fs.existsSync(exportFile)).toBe(true);
+    const src = fs.readFileSync(exportFile, "utf-8");
+    expect(src).not.toMatch(/function serializeLeaf/);
+    expect(src).not.toMatch(/function slateToHtml/);
+    expect(src).toMatch(/apiClient\.post/);
   });
 });

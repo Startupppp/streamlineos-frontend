@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useKbPagesTree, useKbPagesFavorites, useCreateKbPage } from "@/hooks/api/kb";
+import { useKbPagesFavorites, useCreateKbPage } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useShellSidebarCollapse } from "@/components/layout/shell-sidebar-collapse-context";
@@ -25,7 +25,6 @@ import { KbStarIcon } from "@/features/wiki/lib/kb-icons";
 export default function WikiShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: treeNodes = [], isLoading: treeLoading } = useKbPagesTree();
   const { data: favorites = [] } = useKbPagesFavorites();
   const createPage = useCreateKbPage();
   const canViewAnalytics = useCan("kb:analytics:view");
@@ -114,10 +113,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
             )}
             {!isCollapsedView && (
               <div className="min-w-0 overflow-hidden pr-2 pl-0">
-                <PageTree
-                  nodes={treeNodes}
-                  isLoading={treeLoading}
-                />
+                <PageTree onCloseMobile={undefined} />
               </div>
             )}
           </div>

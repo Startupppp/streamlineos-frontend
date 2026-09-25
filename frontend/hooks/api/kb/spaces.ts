@@ -15,6 +15,7 @@ import type {
 export type { KbSpaceListItem } from "@/hooks/api/kb/kb-spaces-settings-schema";
 export type { KbSpaceListPage } from "@/hooks/api/kb/kb-spaces-settings-schema";
 export type { KbSpaceArchiveImpact } from "@/hooks/api/kb/kb-spaces-settings-schema";
+export type { KbSpaceMember } from "@/hooks/api/kb/kb-spaces-settings-schema";
 
 export interface KbSpacesListParams {
   q?: string;
@@ -38,6 +39,10 @@ const kbSpaceSuccessContract = lazyContract(() =>
 
 const kbSpaceArchiveImpactContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceArchiveImpactContract),
+);
+
+const kbSpaceMemberListContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceMemberListContract),
 );
 
 export function useKbSpaces(params?: KbSpacesListParams) {
@@ -163,5 +168,24 @@ export function useDeleteKbSpace() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.spaces() });
     },
+  });
+}
+
+export function useKbSpaceMembers(
+  spaceId: number,
+  options?: { enabled?: boolean },
+) {
+  const canManage = useCan("kb:spaces:manage");
+  return useQuery({
+    queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "members"],
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        `/kb/spaces/${spaceId}/members`,
+        undefined,
+        signal,
+        kbSpaceMemberListContract,
+      ),
+    enabled: canManage && Number.isFinite(spaceId) && spaceId > 0 && (options?.enabled ?? true),
+    staleTime: 60_000,
   });
 }

@@ -4,28 +4,43 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useCan } from "@/hooks/api/access";
-import { useCreateKbPage } from "@/hooks/api/kb";
+import { useCreateKbPage, useKbPageTreeInfinite } from "@/hooks/api/kb";
 import { pageHref } from "@/lib/knowledge-routes";
 import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
 import PageTreeItem from "./page-tree-item";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 
 interface PageTreeProps {
-  nodes: KbPageTreeNode[];
-  isLoading: boolean;
   onCloseMobile?: () => void;
+  spaceId?: number;
+  projectId?: number;
 }
 
-export default function PageTree({ nodes, isLoading, onCloseMobile }: PageTreeProps) {
+export default function PageTree({
+  onCloseMobile,
+  spaceId,
+  projectId,
+}: PageTreeProps) {
   const router = useRouter();
   const createPage = useCreateKbPage();
   const canCreate = useCan("kb:pages:create");
 
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useKbPageTreeInfinite({ spaceId, projectId });
+
+  const rootNodes: KbPageTreeNode[] = data?.pages.flatMap((p) => p.data) ?? [];
+
   function handleNewPage() {
     if (!canCreate) return;
     createPage.mutate(
-      {},
+      { spaceId, projectId },
       {
         onSuccess: (page) => {
           router.push(pageHref(page.id));
@@ -52,11 +67,7 @@ export default function PageTree({ nodes, isLoading, onCloseMobile }: PageTreePr
     );
   }
 
-  const rootNodes = nodes
-    .filter((n) => n.parentPageId === null)
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-
-  if (rootNodes.length === 0) {
+  if (rootNodes.length === 0 && !hasNextPage) {
     return (
       <div className="pr-2 pl-0 py-4 flex flex-col items-center gap-2">
         <p className="text-xs text-muted-foreground text-center">No pages yet</p>
@@ -83,11 +94,16 @@ export default function PageTree({ nodes, isLoading, onCloseMobile }: PageTreePr
         <PageTreeItem
           key={node.id}
           node={node}
-          allNodes={nodes}
           depth={0}
           onCloseMobile={onCloseMobile}
         />
       ))}
+      <InfiniteScrollSentinel
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={fetchNextPage}
+        label="Load more pages"
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 } from "@/features/wiki/lib/kb-icons";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   AlertDialog,
@@ -47,7 +48,9 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const [restoreAlertOpen, setRestoreAlertOpen] = useState(false);
   const { data: versionsData, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useKbPageVersions(pageId);
-  const versions = versionsData?.pages.flatMap((p) => p.data) ?? [];
+  const allVersions = versionsData?.pages.flatMap((p) => p.data) ?? [];
+  const currentVersionNumber = allVersions[0]?.versionNumber ?? null;
+  const versions = allVersions;
   const { data: versionDetail, isLoading: detailLoading } = useKbPageVersion(
     pageId,
     selectedVersion ?? 0
@@ -139,7 +142,14 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="text-sm font-medium">Version {v.versionNumber}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-medium">Version {v.versionNumber}</p>
+                            {v.versionNumber === currentVersionNumber && (
+                              <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4 leading-none shrink-0">
+                                Current
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {v.authorName ? `${v.authorName} · ` : ""}{kbTimeAgo(v.createdAt)}
                           </p>

@@ -7,8 +7,9 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
+const mockUseCan = jest.fn(() => true);
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => true,
+  useCan: (key: string) => mockUseCan(key),
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
@@ -27,6 +28,10 @@ jest.mock("./page-share-popover", () => ({
   default: () => <button type="button" aria-label="Share page" />,
 }));
 
+jest.mock("@/features/wiki/lib/export-page", () => ({
+  exportKbPage: jest.fn(() => Promise.resolve()),
+}));
+
 const page = {
   id: 5,
   title: "signos",
@@ -37,102 +42,102 @@ const page = {
 
 function noop() {}
 
+function renderToolbar(overrides: Partial<KbPageDetail> = {}) {
+  return render(
+    <PageDocumentToolbar
+      page={{ ...page, ...overrides }}
+      pageId={5}
+      isEditable
+      onOpenMetaSheet={noop}
+      onOpenComments={noop}
+      onOpenHistory={noop}
+      onOpenMove={noop}
+      onOpenSaveAsTemplate={noop}
+      onOpenCover={noop}
+      onDelete={noop}
+      onNavigate={noop}
+    />,
+  );
+}
+
+beforeEach(() => {
+  mockUseCan.mockReturnValue(true);
+});
+
 describe("PageDocumentToolbar", () => {
   it("renders AI, Share, and More as icon-only controls", () => {
-    render(
-      <PageDocumentToolbar
-        page={page}
-        pageId={5}
-        isEditable
-        onOpenMetaSheet={noop}
-        onOpenComments={noop}
-        onOpenHistory={noop}
-        onOpenMove={noop}
-        onOpenSaveAsTemplate={noop}
-        onOpenCover={noop}
-        onDelete={noop}
-        onNavigate={noop}
-      />,
-    );
+    renderToolbar();
 
     expect(screen.getByRole("button", { name: "AI" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Share page" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "More options" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Page settings" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Add cover" })).toBeNull();
   });
 
-  it("shows cover as set in More when the page has a cover image", () => {
-    render(
-      <PageDocumentToolbar
-        page={{ ...page, coverImage: "gradient:ocean", isFavorite: true }}
-        pageId={5}
-        isEditable
-        onOpenMetaSheet={noop}
-        onOpenComments={noop}
-        onOpenHistory={noop}
-        onOpenMove={noop}
-        onOpenSaveAsTemplate={noop}
-        onOpenCover={noop}
-        onDelete={noop}
-        onNavigate={noop}
-      />,
-    );
+  it("shows the More options trigger", () => {
+    renderToolbar({ coverImage: "gradient:ocean", isFavorite: true });
 
     expect(screen.getByRole("button", { name: "More options" })).toBeInTheDocument();
   });
 
   it("labels favorite as remove when the page is already favorited", async () => {
     const user = userEvent.setup();
-    render(
-      <PageDocumentToolbar
-        page={{ ...page, isFavorite: true }}
-        pageId={5}
-        isEditable
-        onOpenMetaSheet={noop}
-        onOpenComments={noop}
-        onOpenHistory={noop}
-        onOpenMove={noop}
-        onOpenSaveAsTemplate={noop}
-        onOpenCover={noop}
-        onDelete={noop}
-        onNavigate={noop}
-      />,
-    );
+    renderToolbar({ isFavorite: true });
 
     await user.click(screen.getByRole("button", { name: "More options" }));
 
     expect(
       screen.getByRole("menuitem", { name: /remove from favorites/i }),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("menuitemcheckbox", { name: /favorite/i }),
-    ).toBeNull();
   });
 
   it("labels lock as unlock when the page is already locked", async () => {
     const user = userEvent.setup();
-    render(
-      <PageDocumentToolbar
-        page={{ ...page, isLocked: true }}
-        pageId={5}
-        isEditable
-        onOpenMetaSheet={noop}
-        onOpenComments={noop}
-        onOpenHistory={noop}
-        onOpenMove={noop}
-        onOpenSaveAsTemplate={noop}
-        onOpenCover={noop}
-        onDelete={noop}
-        onNavigate={noop}
-      />,
-    );
+    renderToolbar({ isLocked: true });
 
     await user.click(screen.getByRole("button", { name: "More options" }));
 
     expect(
       screen.getByRole("menuitem", { name: /unlock page/i }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("menuitemcheckbox")).toBeNull();
+  });
+
+  it("shows Export HTML when the user has kb:pages:export", async () => {
+    const user = userEvent.setup();
+    mockUseCan.mockImplementation((key: string) => key === "kb:pages:export");
+
+    renderToolbar();
+    await user.click(screen.getByRole("button", { name: "More options" }));
+
+    expect(screen.getByRole("menuitem", { name: /export html/i })).toBeInTheDocument();
+  });
+
+  it("hides Export HTML when the user lacks kb:pages:export", async () => {
+    const user = userEvent.setup();
+    mockUseCan.mockImplementation((key: string) => key !== "kb:pages:export");
+
+    renderToolbar();
+    await user.click(screen.getByRole("button", { name: "More options" }));
+
+    expect(screen.queryByRole("menuitem", { name: /export html/i })).toBeNull();
+  });
+
+  it("hides Move when the user lacks kb:pages:update", async () => {
+    const user = userEvent.setup();
+    mockUseCan.mockImplementation((key: string) => key !== "kb:pages:update");
+
+    renderToolbar();
+    await user.click(screen.getByRole("button", { name: "More options" }));
+
+    expect(screen.queryByRole("menuitem", { name: /^move$/i })).toBeNull();
+  });
+
+  it("shows Move when the user has kb:pages:update", async () => {
+    const user = userEvent.setup();
+    mockUseCan.mockImplementation((key: string) => key === "kb:pages:update");
+
+    renderToolbar();
+    await user.click(screen.getByRole("button", { name: "More options" }));
+
+    expect(screen.getByRole("menuitem", { name: /^move$/i })).toBeInTheDocument();
   });
 });

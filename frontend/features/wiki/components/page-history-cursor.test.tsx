@@ -1,7 +1,7 @@
 "use client";
 
 import { render } from "@testing-library/react";
-import { useKbPageVersions } from "@/hooks/api/kb/pages";
+import { useKbPageVersionsInfinite as useKbPageVersions } from "@/hooks/api/kb/page-versions";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),

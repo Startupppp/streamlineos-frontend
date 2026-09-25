@@ -4,8 +4,8 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useEffect, useRef } from "react";
 import { streamAiResult, type AiResultStreamOptions } from "@/hooks/api/ai-result-stream";
-import { kbAskResultSchema } from "./ask-result-schema";
-import type { KbAskInput, KbAskResponse, KbAiFeedbackInput } from "@/types/kb";
+import { kbAskResultSchema, type KbAskResult } from "./ask-result-schema";
+import type { KbAiFeedbackInput } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
@@ -13,7 +13,13 @@ const kbAiFeedbackContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-ai-schema").then((m) => m.kbAiFeedbackContract),
 );
 
-// Stable question keys prevent duplicate paid dispatch; streaming retries do not replay a completed body.
+export interface KbAskScopedInput {
+  question: string;
+  spaceId?: number;
+  conversationId?: number;
+  sourceIds?: number[];
+}
+
 export function useKbAsk() {
   const operation = useIdempotentOperation();
   const controllerRef = useRef<AbortController | null>(null);
@@ -22,7 +28,7 @@ export function useKbAsk() {
   function resetAttempt() { if (!controllerRef.current) operation.settle(); }
   const mutation = useAuthorizedMutation("kb:ai:generate", {
     mutationKey: ["kb", "ask"],
-    mutationFn: async ({ signal, onToken, ...input }: KbAskInput & AiResultStreamOptions): Promise<KbAskResponse> => {
+    mutationFn: async ({ signal, onToken, ...input }: KbAskScopedInput & AiResultStreamOptions): Promise<KbAskResult> => {
       if (controllerRef.current) throw new Error("An answer is already being generated");
       const controller = new AbortController();
       controllerRef.current = controller;

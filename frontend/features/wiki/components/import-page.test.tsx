@@ -21,7 +21,6 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
-  useKbPagesTree: () => ({ data: [] }),
   useImportKbPages: () => ({ mutate: jest.fn(), isPending: false }),
   useKbImportJobs: () => ({
     data: [],

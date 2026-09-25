@@ -1,11 +1,17 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { Fragment, useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutList, LayoutGrid } from "lucide-react";
 import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
 import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
-import { useKbSpaces, useCreateKbPage } from "@/hooks/api/kb";
+import {
+  useKbSpaces,
+  useCreateKbPage,
+  useDeleteKbPage,
+  useDuplicateKbPage,
+  useToggleFavoriteKbPage,
+} from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -15,13 +21,21 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCursorPager } from "@/components/ui/table-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import {
   pageHref,
@@ -35,6 +49,14 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge, TrustBadge } from "./kb-collection-badges";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import {
+  resolveKbPageActions,
+  groupKbPageActions,
+  type KbPageActionCapabilities,
+  type KbPageActionSubject,
+  type KbPageActionId,
+} from "@/features/wiki/lib/page-action-descriptors";
+import { KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
 
 const SORT_VALUES = ["updated_desc", "created_desc", "title_asc"] as const;
 const VIEW_VALUES = ["list", "card"] as const;
@@ -90,7 +112,164 @@ function buildColumns(
         </span>
       ),
     },
+    {
+      key: "actions",
+      header: "",
+      cell: (row) => (
+        <AllPagesItemMenu page={row} resolveHref={resolveHref} />
+      ),
+    },
   ];
+}
+
+interface AllPagesItemMenuProps {
+  page: KbPageCollectionItem;
+  resolveHref: (id: number) => string;
+}
+
+function AllPagesItemMenu({ page, resolveHref }: AllPagesItemMenuProps) {
+  const router = useRouter();
+  const canCreate = useCan("kb:pages:create");
+  const canUpdate = useCan("kb:pages:update");
+  const canManage = useCan("kb:pages:manage");
+  const canDelete = useCan("kb:pages:delete");
+  const canExport = useCan("kb:pages:export");
+  const canManageTemplates = useCan("kb:templates:manage");
+  const toggleFavorite = useToggleFavoriteKbPage();
+  const duplicatePage = useDuplicateKbPage();
+  const deletePage = useDeleteKbPage();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const capabilities: KbPageActionCapabilities = {
+    canCreate,
+    canUpdate,
+    canManage,
+    canDelete,
+    canExport,
+    canManageTemplates,
+    isEditable: canUpdate,
+  };
+
+  const subject: KbPageActionSubject = {
+    isFavorite: false,
+    isLocked: false,
+    hasCover: page.coverImage !== null,
+  };
+
+  const actions = resolveKbPageActions(subject, capabilities);
+  const groups = groupKbPageActions(actions);
+
+  function handleDeleteOpenChange(open: boolean) {
+    setDeleteOpen(open);
+  }
+
+  function handleDeleteConfirm() {
+    deletePage.mutate(page.id, {
+      onSuccess: () => toast.success("Page deleted"),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+    setDeleteOpen(false);
+  }
+
+  function handleSelect(event: Event) {
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLElement)) return;
+    const actionId = target.dataset.actionId as KbPageActionId | undefined;
+    if (!actionId) return;
+    if (actionId === "favorite") {
+      toggleFavorite.mutate(
+        { pageId: page.id, isFavorite: false },
+        { onError: (err) => toast.error(getErrorMessage(err)) },
+      );
+    } else if (actionId === "duplicate") {
+      duplicatePage.mutate(page.id, {
+        onSuccess: (dup) => {
+          toast.success("Page duplicated");
+          router.push(resolveHref(dup.id));
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
+    } else if (actionId === "delete") {
+      setDeleteOpen(true);
+    } else {
+      router.push(resolveHref(page.id));
+    }
+  }
+
+  return (
+    <>
+      <ConfirmDialog
+        title="Delete page"
+        description="This page will be moved to trash and can be restored for 30 days."
+        confirmLabel="Delete"
+        destructive
+        isPending={deletePage.isPending}
+        open={deleteOpen}
+        onOpenChange={handleDeleteOpenChange}
+        onConfirm={handleDeleteConfirm}
+      />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0"
+            aria-label="Page actions"
+          >
+            <KbMoreHorizontalIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {groups.map((group, groupIndex) => (
+            <Fragment key={group[0]?.group ?? String(groupIndex)}>
+              {groupIndex > 0 ? <DropdownMenuSeparator /> : null}
+              {group.map((action) => (
+                <DropdownMenuItem
+                  key={action.id}
+                  data-action-id={action.id}
+                  variant={action.destructive ? "destructive" : "default"}
+                  onSelect={handleSelect}
+                >
+                  <action.icon className="h-4 w-4" />
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+            </Fragment>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+}
+
+interface AllPagesCardGridProps {
+  row: KbPageCollectionItem;
+  resolveHref: (id: number) => string;
+}
+
+function AllPagesCardGrid({ row, resolveHref }: AllPagesCardGridProps) {
+  return (
+    <WikiPageCard
+      href={resolveHref(row.id)}
+      title={row.title}
+      icon={row.icon}
+      coverImage={row.coverImage}
+      subtitle={kbTimeAgo(row.updatedAt)}
+      menu={<AllPagesItemMenu page={row} resolveHref={resolveHref} />}
+    >
+      <StatusBadge status={row.status} />
+      <TrustBadge trustState={row.trustState} />
+      {row.ownerMembershipId === null ? (
+        <Badge
+          variant="outline"
+          className="text-micro h-4 px-1.5 text-muted-foreground"
+        >
+          Owner missing
+        </Badge>
+      ) : null}
+    </WikiPageCard>
+  );
 }
 
 export interface WikiHomeAllPagesProps {
@@ -205,28 +384,12 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
     );
   }
 
-  function AllPagesCard(row: KbPageCollectionItem) {
-    return (
-      <WikiPageCard
-        href={resolveHref(row.id)}
-        title={row.title}
-        icon={row.icon}
-        coverImage={row.coverImage}
-        subtitle={kbTimeAgo(row.updatedAt)}
-      >
-        <StatusBadge status={row.status} />
-        <TrustBadge trustState={row.trustState} />
-        {row.ownerMembershipId === null ? (
-          <Badge
-            variant="outline"
-            className="text-micro h-4 px-1.5 text-muted-foreground"
-          >
-            Owner missing
-          </Badge>
-        ) : null}
-      </WikiPageCard>
-    );
-  }
+  const renderMobileCard = useCallback(
+    (row: KbPageCollectionItem) => (
+      <AllPagesCardGrid row={row} resolveHref={resolveHref} />
+    ),
+    [resolveHref],
+  );
 
   const emptyNode = filtersActive ? (
     <EmptyState
@@ -341,10 +504,20 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
           rows.length === 0 ? (
             emptyNode
           ) : (
-            <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-              {rows.map((row) => (
-                <AllPagesCard key={row.id} {...row} />
-              ))}
+            <div className="flex flex-col gap-3">
+              <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+                {rows.map((row) => (
+                  <AllPagesCardGrid key={row.id} row={row} resolveHref={resolveHref} />
+                ))}
+              </div>
+              <TablePagination
+                mode="cursor"
+                rowCount={rows.length}
+                hasMore={data?.pagination.hasMore ?? false}
+                hasPrevious={pager.hasPrevious}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
             </div>
           )
         ) : (
@@ -353,7 +526,7 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
             columns={columns}
             getRowKey={(row) => row.id}
             emptyState={emptyNode}
-            mobileCard={AllPagesCard}
+            mobileCard={renderMobileCard}
             pagination={{
               mode: "cursor",
               pageSize: PAGE_LIMIT,

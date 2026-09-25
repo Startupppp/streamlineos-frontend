@@ -24,7 +24,7 @@ import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { cn } from "@/lib/utils";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useWinLossAnalysis } from "@/hooks/api/crm";
-import { formatCurrency } from "@/lib/format-utils";
+import { formatINRCompact } from "@/lib/format-utils";
 
 const REASON_COLORS = [
   "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
@@ -131,7 +131,7 @@ export default function WinLossAnalysisPage() {
             <StatCard label="Won Deals" value={s.won} tone="emerald" icon={Trophy} />
             <StatCard label="Lost Deals" value={s.lost} tone="red" icon={TrendingDown} />
             <StatCard label="Win Rate" value={`${s.winRate}%`} tone="amber" icon={Target} />
-            <StatCard label="Won Value" value={formatCurrency(s.wonValue)} tone="blue" icon={IndianRupee} />
+            <StatCard label="Won Value" value={formatINRCompact(s.wonValue)} tone="blue" icon={IndianRupee} />
           </StatCardGrid>
         </motion.div>
 
@@ -148,13 +148,13 @@ export default function WinLossAnalysisPage() {
                 <div className="text-center">
                   <div className="text-4xl font-bold text-status-success-ink">{s.won}</div>
                   <div className="text-sm text-muted-foreground mt-1">Won</div>
-                  <div className="text-xs text-muted-foreground">{formatCurrency(s.wonValue)}</div>
+                  <div className="text-xs text-muted-foreground">{formatINRCompact(s.wonValue)}</div>
                 </div>
                 <div className="h-16 w-px bg-border" />
                 <div className="text-center">
                   <div className="text-4xl font-bold text-status-danger-ink">{s.lost}</div>
                   <div className="text-sm text-muted-foreground mt-1">Lost</div>
-                  <div className="text-xs text-muted-foreground">{formatCurrency(s.lostValue)}</div>
+                  <div className="text-xs text-muted-foreground">{formatINRCompact(s.lostValue)}</div>
                 </div>
               </div>
               <div>
@@ -176,7 +176,7 @@ export default function WinLossAnalysisPage() {
               <div className="pt-2 border-t">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Total revenue at stake</span>
-                  <span className="font-semibold">{formatCurrency(totalRevenue)}</span>
+                  <span className="font-semibold">{formatINRCompact(totalRevenue)}</span>
                 </div>
                 <div className="flex justify-between text-sm mt-1">
                   <span className="text-muted-foreground">Revenue captured</span>
@@ -218,7 +218,7 @@ export default function WinLossAnalysisPage() {
                             <div className="flex items-center gap-3 text-xs">
                               <span className="font-semibold tabular-nums">{r.count}</span>
                               <span className="text-muted-foreground w-20 text-right font-mono tabular-nums">
-                                {formatCurrency(r.totalValue)}
+                                {formatINRCompact(r.totalValue)}
                               </span>
                             </div>
                           </div>

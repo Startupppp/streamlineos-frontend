@@ -76,6 +76,9 @@ export const kbSpaceMemberContract = z.object({
   userImage: z.string().nullable(),
 });
 
+export const kbSpaceMemberListContract = z.array(kbSpaceMemberContract);
+export type KbSpaceMember = z.infer<typeof kbSpaceMemberContract>;
+
 export const kbSettingsContract = z.object({
   trashRetentionDays: z.number().int(),
   chatHistoryRetentionDays: z.number().int(),

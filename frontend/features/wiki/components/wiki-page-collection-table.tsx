@@ -1,14 +1,20 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Fragment, useState, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutList, LayoutGrid } from "lucide-react";
 import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
 import type {
   KbPageCollectionItem,
   KbPageCollectionParams,
 } from "@/hooks/api/kb/page-collection";
-import { useKbSpaces } from "@/hooks/api/kb";
+import {
+  useKbSpaces,
+  useDeleteKbPage,
+  useDuplicateKbPage,
+  useToggleFavoriteKbPage,
+} from "@/hooks/api/kb";
+import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { DataTable } from "@/components/ui/data-table";
@@ -17,6 +23,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -24,7 +39,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SearchInput } from "@/components/ui/search-input";
-import { useCursorPager } from "@/components/ui/table-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { pageHref } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
@@ -33,7 +47,17 @@ import {
   WIKI_PAGE_CARD_GRID_CLASS,
 } from "@/features/wiki/components/wiki-page-card";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { toast } from "sonner";
 import { TrustBadge, StatusBadge } from "./kb-collection-badges";
+import {
+  resolveKbPageActions,
+  groupKbPageActions,
+  type KbPageActionCapabilities,
+  type KbPageActionSubject,
+  type KbPageActionId,
+} from "@/features/wiki/lib/page-action-descriptors";
+import { KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
 
 const SORT_OPTIONS = [
   { value: "updated_desc", label: "Last updated" },
@@ -53,6 +77,126 @@ const PAGE_LIMIT = 50;
 type SortValue = "updated_desc" | "created_desc" | "title_asc";
 const SORT_VALUES = ["updated_desc", "created_desc", "title_asc"] as const;
 const VIEW_VALUES = ["list", "card"] as const;
+
+interface CollectionItemMenuProps {
+  page: KbPageCollectionItem;
+}
+
+function CollectionItemMenu({ page }: CollectionItemMenuProps) {
+  const router = useRouter();
+  const canCreate = useCan("kb:pages:create");
+  const canUpdate = useCan("kb:pages:update");
+  const canManage = useCan("kb:pages:manage");
+  const canDelete = useCan("kb:pages:delete");
+  const canExport = useCan("kb:pages:export");
+  const canManageTemplates = useCan("kb:templates:manage");
+  const toggleFavorite = useToggleFavoriteKbPage();
+  const duplicatePage = useDuplicateKbPage();
+  const deletePage = useDeleteKbPage();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const capabilities: KbPageActionCapabilities = {
+    canCreate,
+    canUpdate,
+    canManage,
+    canDelete,
+    canExport,
+    canManageTemplates,
+    isEditable: canUpdate,
+  };
+
+  const subject: KbPageActionSubject = {
+    isFavorite: false,
+    isLocked: false,
+    hasCover: page.coverImage !== null,
+  };
+
+  const actions = resolveKbPageActions(subject, capabilities);
+  const groups = groupKbPageActions(actions);
+
+  function handleDeleteOpenChange(open: boolean) {
+    setDeleteOpen(open);
+  }
+
+  function handleDeleteConfirm() {
+    deletePage.mutate(page.id, {
+      onSuccess: () => toast.success("Page deleted"),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+    setDeleteOpen(false);
+  }
+
+  function handleSelect(event: Event) {
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLElement)) return;
+    const actionId = target.dataset.actionId as KbPageActionId | undefined;
+    if (!actionId) return;
+    if (actionId === "favorite") {
+      toggleFavorite.mutate(
+        { pageId: page.id, isFavorite: false },
+        { onError: (err) => toast.error(getErrorMessage(err)) },
+      );
+    } else if (actionId === "duplicate") {
+      duplicatePage.mutate(page.id, {
+        onSuccess: (dup) => {
+          toast.success("Page duplicated");
+          router.push(pageHref(dup.id));
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
+    } else if (actionId === "delete") {
+      setDeleteOpen(true);
+    } else {
+      router.push(pageHref(page.id));
+    }
+  }
+
+  return (
+    <>
+      <ConfirmDialog
+        title="Delete page"
+        description="This page will be moved to trash and can be restored for 30 days."
+        confirmLabel="Delete"
+        destructive
+        isPending={deletePage.isPending}
+        open={deleteOpen}
+        onOpenChange={handleDeleteOpenChange}
+        onConfirm={handleDeleteConfirm}
+      />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0"
+            aria-label="Page actions"
+          >
+            <KbMoreHorizontalIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {groups.map((group, groupIndex) => (
+            <Fragment key={group[0]?.group ?? String(groupIndex)}>
+              {groupIndex > 0 ? <DropdownMenuSeparator /> : null}
+              {group.map((action) => (
+                <DropdownMenuItem
+                  key={action.id}
+                  data-action-id={action.id}
+                  variant={action.destructive ? "destructive" : "default"}
+                  onSelect={handleSelect}
+                >
+                  <action.icon className="h-4 w-4" />
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+            </Fragment>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+}
 
 const BASE_COLUMNS: DataTableColumn<KbPageCollectionItem>[] = [
   {
@@ -86,6 +230,11 @@ const BASE_COLUMNS: DataTableColumn<KbPageCollectionItem>[] = [
       </span>
     ),
   },
+  {
+    key: "actions",
+    header: "",
+    cell: (row) => <CollectionItemMenu page={row} />,
+  },
 ];
 
 export interface WikiPageCollectionTableProps {
@@ -105,6 +254,7 @@ function MobilePageCard(row: KbPageCollectionItem) {
       icon={row.icon}
       coverImage={row.coverImage}
       subtitle={kbTimeAgo(row.updatedAt)}
+      menu={<CollectionItemMenu page={row} />}
     >
       <StatusBadge status={row.status} />
     </WikiPageCard>
@@ -293,6 +443,7 @@ export function WikiPageCollectionTable({
             size="icon"
             className="h-9 w-9"
             aria-label="List view"
+            aria-pressed={view === "list"}
             onClick={handleViewList}
           >
             <LayoutList className="h-4 w-4" />
@@ -303,6 +454,7 @@ export function WikiPageCollectionTable({
             size="icon"
             className="h-9 w-9"
             aria-label="Card view"
+            aria-pressed={view === "card"}
             onClick={handleViewCard}
           >
             <LayoutGrid className="h-4 w-4" />
@@ -319,10 +471,20 @@ export function WikiPageCollectionTable({
           rows.length === 0 ? (
             emptyNode
           ) : (
-            <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-              {rows.map((row) => (
-                <MobilePageCard key={row.id} {...row} />
-              ))}
+            <div className="flex flex-col gap-3">
+              <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+                {rows.map((row) => (
+                  <MobilePageCard key={row.id} {...row} />
+                ))}
+              </div>
+              <TablePagination
+                mode="cursor"
+                rowCount={rows.length}
+                hasMore={data?.pagination.hasMore ?? false}
+                hasPrevious={pager.hasPrevious}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
             </div>
           )
         ) : (

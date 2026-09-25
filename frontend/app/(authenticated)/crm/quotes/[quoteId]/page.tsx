@@ -22,7 +22,11 @@ import {
   useMarkQuoteSigned,
 } from "@/hooks/api/crm/quotes";
 import { useCan } from "@/hooks/api/access";
-import { useQuoteSettings, usePricebooks, useQuoteTemplates } from "@/hooks/api/crm/pricebooks";
+import {
+  useQuoteSettings,
+  usePricebooks,
+  useQuoteTemplates,
+} from "@/hooks/api/crm/pricebooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { QuoteStatusProgress } from "@/features/crm/quotes/components/quote-status-progress";
 import {
@@ -77,11 +81,6 @@ export default function QuoteDetailPage({
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const handleSend = useCallback(() => {
-    /*
-     * The dedicated route, not `PATCH { status: "SENT" }`. Only this one refuses
-     * a quote that is pending discount approval, refuses one with no linked
-     * contact, and emits `quote.sent` for the automation rules.
-     */
     sendQuote.mutate(
       { id: quoteId },
       {
@@ -106,9 +105,16 @@ export default function QuoteDetailPage({
   const handleRejectConfirm = useCallback(() => {
     setRejectDialogOpen(false);
     updateStatus.mutate(
-      { id: quoteId, status: "REJECTED", rejectionReason: rejectReason || undefined },
       {
-        onSuccess: () => { toast.success("Quote rejected"); setRejectReason(""); },
+        id: quoteId,
+        status: "REJECTED",
+        rejectionReason: rejectReason || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Quote rejected");
+          setRejectReason("");
+        },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
@@ -137,14 +143,20 @@ export default function QuoteDetailPage({
     );
   }, [quoteId, approveQuote]);
 
-  const handleApprovalRejectOpen = useCallback(() => setApprovalRejectOpen(true), []);
+  const handleApprovalRejectOpen = useCallback(
+    () => setApprovalRejectOpen(true),
+    [],
+  );
 
   const handleApprovalRejectConfirm = useCallback(() => {
     setApprovalRejectOpen(false);
     rejectQuote.mutate(
       { id: quoteId, reason: approvalRejectReason || undefined },
       {
-        onSuccess: () => { toast.success("Approval rejected"); setApprovalRejectReason(""); },
+        onSuccess: () => {
+          toast.success("Approval rejected");
+          setApprovalRejectReason("");
+        },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );

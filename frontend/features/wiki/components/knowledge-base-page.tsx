@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { motion, useReducedMotion } from "framer-motion";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { BookOpenTextIcon } from "@animateicons/react/lucide";
-import { ChevronUp, Loader2, MessageSquare, Send } from "lucide-react";
+import { ChevronUp, Loader2, MessageSquare, Send, SlidersHorizontal } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { useKbAsk } from "@/hooks/api/kb/ask";
 import { isAiStreamAbort } from "@/hooks/api/ai-text-stream";
+import { isApiError } from "@/lib/api-envelope";
 import {
   useKbConversations,
   useRenameKbConversation,
@@ -39,6 +40,9 @@ import {
 import {
   DaySeparator,
   EmptyChat,
+  InsufficientEvidenceBanner,
+  OverQuotaBanner,
+  DisagreementBanner,
   buildKbHistoryRows,
 } from "@/features/wiki/components/kb-chat-parts";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
@@ -48,7 +52,13 @@ interface Pending {
   question: string;
   answer?: string;
   error?: string;
+  hasContext?: boolean;
+  disagreement?: { summary: string };
+  isQuotaError?: boolean;
+  quotaMessage?: string;
 }
+
+type SourcesSheetState = { kind: "closed" } | { kind: "manage" } | { kind: "scope" };
 
 export default function KnowledgeBasePage() {
   const router = useRouter();
@@ -62,7 +72,9 @@ export default function KnowledgeBasePage() {
   const [conversationsSearch, setConversationsSearch] = useState("");
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
 
-  const [sourcesSheetOpen, setSourcesSheetOpen] = useState(false);
+  const [sourcesSheet, setSourcesSheet] = useState<SourcesSheetState>({ kind: "closed" });
+  const [scopeSourceIds, setScopeSourceIds] = useState<number[]>([]);
+  const [pendingScopeIds, setPendingScopeIds] = useState<number[]>([]);
   const [noteOpen, setNoteOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -188,8 +200,9 @@ export default function KnowledgeBasePage() {
       if (generationRef.current === generation)
         setPending((current) => current ? { ...current, answer: (current.answer ?? "") + token } : current);
     }
+    const scopePayload = scopeSourceIds.length > 0 ? { sourceIds: scopeSourceIds } : {};
     ask.mutate(
-      { question: trimmed, conversationId: activeConversationId ?? undefined, onToken: handleToken },
+      { question: trimmed, conversationId: activeConversationId ?? undefined, onToken: handleToken, ...scopePayload },
       {
         onSuccess: (data) => {
           if (generationRef.current !== generation) return;
@@ -205,12 +218,22 @@ export default function KnowledgeBasePage() {
           });
           if (activeConversationId === null) setConversation(data.conversationId);
           void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
-          setPending(null);
+          if (!data.hasContext) {
+            setPending((prev) => prev ? { ...prev, hasContext: false } : prev);
+          } else if (data.disagreement) {
+            setPending((prev) => prev ? { ...prev, hasContext: true, disagreement: data.disagreement } : prev);
+          } else {
+            setPending(null);
+          }
         },
         onError: (error) => {
           if (generationRef.current !== generation) return;
           if (isAiStreamAbort(error)) {
             setPending((current) => current ? { ...current, error: "Generation stopped. This answer is incomplete." } : current);
+            return;
+          }
+          if (isApiError(error) && error.status === 402) {
+            setPending((current) => current ? { ...current, isQuotaError: true, quotaMessage: error.message } : current);
             return;
           }
           const message = getErrorMessage(error);
@@ -240,6 +263,7 @@ export default function KnowledgeBasePage() {
   function handleRegenerate() {
     if (!pending || ask.isPending) return;
     ask.resetAttempt();
+    setPending(null);
     sendMessage(pending.question);
   }
   function handleSelectConversation(id: number) { generationRef.current += 1; ask.stop(); setPending(null); setConversation(id); setConversationsOpen(false); }
@@ -270,8 +294,20 @@ export default function KnowledgeBasePage() {
       onError: (error) => toast.error("Upload failed", { description: getErrorMessage(error) }),
     });
   }
-  function handleSourcesClick() { setSourcesSheetOpen(true); }
-  function handleAddNoteClick() { setSourcesSheetOpen(false); setNoteOpen(true); }
+  function handleManageSourcesClick() {
+    setSourcesSheet({ kind: "manage" });
+  }
+  function handleScopeClick() {
+    setPendingScopeIds(scopeSourceIds);
+    setSourcesSheet({ kind: "scope" });
+  }
+  function handleSourcesSheetOpenChange(open: boolean) {
+    if (!open) setSourcesSheet({ kind: "closed" });
+  }
+  function handleAddNoteClick() { setSourcesSheet({ kind: "closed" }); setNoteOpen(true); }
+
+  function handleScopeSelectionChange(ids: number[]) { setPendingScopeIds(ids); }
+  function handleScopeConfirm() { setScopeSourceIds(pendingScopeIds); setSourcesSheet({ kind: "closed" }); }
 
   function makeDeleteHandler(id: number) {
     return function handleDeleteSource() {
@@ -282,8 +318,11 @@ export default function KnowledgeBasePage() {
     };
   }
 
+  function handleDismissPending() { setPending(null); }
+
   const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
   const readyCount = sources.filter((s) => s.status === "ready").length;
+  const scopeActive = scopeSourceIds.length > 0;
 
   return (
     <PageWrapper
@@ -297,7 +336,17 @@ export default function KnowledgeBasePage() {
             <MessageSquare className="h-4 w-4" />
             Conversations
           </Button>
-          <LoadingButton variant="outline" size="sm" className="gap-1.5" isPending={uploadSource.isPending} onClick={handleSourcesClick}>
+          <Button
+            variant={scopeActive ? "default" : "outline"}
+            size="sm"
+            className="gap-1.5"
+            onClick={handleScopeClick}
+            aria-label={scopeActive ? `Searching ${scopeSourceIds.length} source${scopeSourceIds.length === 1 ? "" : "s"}` : "Choose sources to search"}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {scopeActive ? `${scopeSourceIds.length} source${scopeSourceIds.length === 1 ? "" : "s"}` : "Scope"}
+          </Button>
+          <LoadingButton variant="outline" size="sm" className="gap-1.5" isPending={uploadSource.isPending} onClick={handleManageSourcesClick}>
             {!uploadSource.isPending && <BookOpenTextIcon size={16} />}
             Sources
           </LoadingButton>
@@ -365,12 +414,27 @@ export default function KnowledgeBasePage() {
                     {pending && (
                       <ChatBubble key="pending-user" message={{ id: "pending-user", role: "user", content: pending.question }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
                     )}
-                    {pending?.error && (
+                    {pending?.isQuotaError && (
+                      <OverQuotaBanner limit={pending.quotaMessage ?? "AI credit limit reached"} />
+                    )}
+                    {pending?.error && !pending.isQuotaError && (
                       <ChatBubble key="pending-error" message={{ id: "pending-error", role: "assistant", content: pending.error, isError: true }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
                     )}
-                    {pending?.error && !ask.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
+                    {pending?.error && !pending.isQuotaError && !ask.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
+                    {pending?.hasContext === false && (
+                      <InsufficientEvidenceBanner />
+                    )}
+                    {pending?.disagreement && (
+                      <DisagreementBanner summary={pending.disagreement.summary} />
+                    )}
                     {pending?.answer && <ChatBubble message={{ id: "pending-answer", role: "assistant", content: pending.answer }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />}
                     {ask.isPending && !pending?.answer && <TypingBubble reduce={Boolean(reduce)} />}
+                    {(pending?.hasContext === false || pending?.disagreement) && !ask.isPending && (
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={handleDismissPending}>Dismiss</Button>
+                        <Button variant="outline" size="sm" onClick={handleRegenerate}>Try again</Button>
+                      </div>
+                    )}
                   </>
                 )}
                 </div>
@@ -386,25 +450,49 @@ export default function KnowledgeBasePage() {
                     </motion.span>
                   </Button>
                 </div>
+                {scopeActive && (
+                  <p className="mt-1.5 text-micro text-muted-foreground">
+                    Searching {scopeSourceIds.length} selected source{scopeSourceIds.length === 1 ? "" : "s"}.{" "}
+                    <button type="button" onClick={handleScopeClick} className="underline hover:text-foreground">Edit</button>
+                    {" · "}
+                    <button type="button" onClick={() => setScopeSourceIds([])} className="underline hover:text-foreground">Clear</button>
+                  </p>
+                )}
               </div>
             </>
           )}
         </div>
       </div>
 
-      <KbSourcesSheet
-        open={sourcesSheetOpen}
-        onOpenChange={setSourcesSheetOpen}
-        sources={sources}
-        isLoading={sourcesQuery.isLoading}
-        readyCount={readyCount}
-        onUploadClick={handleUploadClick}
-        uploadPending={uploadSource.isPending}
-        onAddNoteClick={handleAddNoteClick}
-        makeDeleteHandler={makeDeleteHandler}
-        deletingId={deleteSource.variables}
-        isDeleting={deleteSource.isPending}
-      />
+      {sourcesSheet.kind === "manage" && (
+        <KbSourcesSheet
+          mode="manage"
+          open
+          onOpenChange={handleSourcesSheetOpenChange}
+          sources={sources}
+          isLoading={sourcesQuery.isLoading}
+          readyCount={readyCount}
+          onUploadClick={handleUploadClick}
+          uploadPending={uploadSource.isPending}
+          onAddNoteClick={handleAddNoteClick}
+          makeDeleteHandler={makeDeleteHandler}
+          deletingId={deleteSource.variables}
+          isDeleting={deleteSource.isPending}
+        />
+      )}
+
+      {sourcesSheet.kind === "scope" && (
+        <KbSourcesSheet
+          mode="scope"
+          open
+          onOpenChange={handleSourcesSheetOpenChange}
+          sources={sources}
+          isLoading={sourcesQuery.isLoading}
+          selectedIds={pendingScopeIds}
+          onSelectionChange={handleScopeSelectionChange}
+          onConfirm={handleScopeConfirm}
+        />
+      )}
 
       <KbNoteSheet open={noteOpen} onOpenChange={setNoteOpen} />
     </PageWrapper>

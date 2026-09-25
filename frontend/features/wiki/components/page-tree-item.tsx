@@ -19,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +32,7 @@ import {
   useCreateKbPage,
   useDeleteKbPage,
   useDuplicateKbPage,
+  useKbPageChildrenLevel,
   useToggleFavoriteKbPage,
   useUpdateKbPage,
 } from "@/hooks/api/kb";
@@ -49,14 +51,12 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface PageTreeItemProps {
   node: KbPageTreeNode;
-  allNodes: KbPageTreeNode[];
   depth: number;
   onCloseMobile?: () => void;
 }
 
 const PageTreeItem = memo(function PageTreeItemInner({
   node,
-  allNodes,
   depth,
   onCloseMobile,
 }: PageTreeItemProps) {
@@ -78,28 +78,25 @@ const PageTreeItem = memo(function PageTreeItemInner({
   const toggleFavorite = useToggleFavoriteKbPage();
   const updatePage = useUpdateKbPage();
   const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
-
   const shouldReduceMotion = useReducedMotion();
 
-  const children = allNodes
-    .filter((n) => n.parentPageId === node.id)
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  const {
+    data: childrenData,
+    hasNextPage: childrenHasNextPage,
+    isFetchingNextPage: childrenFetchingNext,
+    fetchNextPage: fetchChildrenNextPage,
+  } = useKbPageChildrenLevel(node.id, expanded);
 
-  const hasActiveDescendant = children.some(
-    (c) =>
-      pathname === pageHref(c.id) ||
-      pathname.startsWith(`${pageHref(c.id)}/`) ||
-      allNodes.some(
-        (n) =>
-          n.parentPageId === c.id &&
-          (pathname === pageHref(n.id) || pathname.startsWith(`${pageHref(n.id)}/`))
-      )
-  );
+  const children: KbPageTreeNode[] = childrenData?.pages.flatMap((p) => p.data) ?? [];
+
+  const hasActiveDescendant = pathname.startsWith(`${nodeHref}/`);
   const [autoExpandedPath, setAutoExpandedPath] = useState<string | null>(null);
   if (hasActiveDescendant && autoExpandedPath !== pathname) {
     setAutoExpandedPath(pathname);
     if (!expanded) setExpanded(true);
   }
+
+  const showChevron = node.hasChildren || children.length > 0;
 
   function handleNavigate() {
     onCloseMobile?.();
@@ -210,8 +207,6 @@ const PageTreeItem = memo(function PageTreeItemInner({
   function handleRenameInputClick(e: React.MouseEvent) {
     e.stopPropagation();
   }
-
-  const showChevron = node.hasChildren || children.length > 0;
 
   return (
     <>
@@ -336,9 +331,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   {canDelete && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem variant="destructive"
-                        onSelect={handleDeleteClick}
-                      >
+                      <DropdownMenuItem variant="destructive" onSelect={handleDeleteClick}>
                         Delete
                       </DropdownMenuItem>
                     </>
@@ -350,7 +343,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
         </div>
 
         <AnimatePresence initial={false}>
-          {expanded && children.length > 0 && (
+          {expanded && (children.length > 0 || childrenHasNextPage) && (
             <motion.div
               className="min-w-0 overflow-hidden"
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
@@ -362,11 +355,16 @@ const PageTreeItem = memo(function PageTreeItemInner({
                 <PageTreeItem
                   key={child.id}
                   node={child}
-                  allNodes={allNodes}
                   depth={depth + 1}
                   onCloseMobile={onCloseMobile}
                 />
               ))}
+              <InfiniteScrollSentinel
+                hasNextPage={childrenHasNextPage}
+                isFetchingNextPage={childrenFetchingNext}
+                onLoadMore={fetchChildrenNextPage}
+                label="Load more child pages"
+              />
             </motion.div>
           )}
         </AnimatePresence>

@@ -22,7 +22,7 @@ import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useLeadSourceReport } from "@/hooks/api/crm/leads";
-import { formatCurrency } from "@/lib/format-utils";
+import { formatINRCompact } from "@/lib/format-utils";
 
 const SOURCE_LABELS: Record<string, string> = {
   referral: "Referral",
@@ -221,7 +221,7 @@ export default function LeadSourceReportPage() {
                               <div className="text-center hidden sm:block">
                                 <div className="font-semibold tabular-nums text-dense">
                                   <IndianRupee className="h-3 w-3 inline mr-0.5 text-primary" />
-                                  {formatCurrency(s.totalValue)}
+                                  {formatINRCompact(s.totalValue)}
                                 </div>
                                 <div className="text-micro text-muted-foreground">value</div>
                               </div>

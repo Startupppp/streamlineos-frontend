@@ -65,10 +65,12 @@ export function QuoteActionBar({
   convertPending,
   deletePending,
 }: QuoteActionBarProps) {
-  const canSend = quote.status === "DRAFT" && quote.approvalStatus !== "pending";
+  const canSend =
+    quote.status === "DRAFT" && quote.approvalStatus !== "pending";
   const canAcceptOrReject = quote.status === "SENT";
   const canDelete = quote.status === "DRAFT";
-  const canConvert = quote.status === "ACCEPTED" && quote.convertedInvoiceId === null;
+  const canConvert =
+    quote.status === "ACCEPTED" && quote.convertedInvoiceId === null;
   const canMarkSigned = quote.status === "ACCEPTED" && quote.signedAt === null;
 
   const handleEditClick = useCallback(() => onEdit(), [onEdit]);
@@ -111,7 +113,9 @@ export function QuoteActionBar({
           variant="outline"
           onClick={onSend}
           isPending={updateStatusPending}
-          title={quote.approvalStatus === "pending" ? "Pending approval" : undefined}
+          title={
+            quote.approvalStatus === "pending" ? "Pending approval" : undefined
+          }
         >
           <Send className="h-3.5 w-3.5 mr-1.5" />
           Send
@@ -181,7 +185,8 @@ export function QuoteActionBar({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete quote?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. The quote will be permanently removed.
+                This action cannot be undone. The quote will be permanently
+                removed.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

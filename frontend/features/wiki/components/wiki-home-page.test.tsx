@@ -13,12 +13,15 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
-  useKbPagesTree: jest.fn(),
+  useKbPageTreeInfinite: jest.fn(),
   useKbProjectPagesTree: jest.fn(),
   useKbPagesRecent: jest.fn(),
   useKbPagesFavorites: jest.fn(),
   useCreateKbPage: jest.fn(),
   useKbSpaces: jest.fn(),
+  useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/kb/page-collection", () => ({
@@ -107,13 +110,13 @@ jest.mock("@/components/ui/data-table", () => ({
 }));
 
 const {
-  useKbPagesTree,
+  useKbPageTreeInfinite,
   useKbPagesRecent,
   useKbPagesFavorites,
   useCreateKbPage,
   useKbSpaces,
 } = jest.requireMock("@/hooks/api/kb") as {
-  useKbPagesTree: jest.Mock;
+  useKbPageTreeInfinite: jest.Mock;
   useKbPagesRecent: jest.Mock;
   useKbPagesFavorites: jest.Mock;
   useCreateKbPage: jest.Mock;
@@ -204,9 +207,9 @@ beforeEach(() => {
 });
 
 describe("WikiHomePage — tree hook never called", () => {
-  it("does not call the page tree hook on mount", () => {
+  it("does not call the infinite tree hook on mount", () => {
     render(<WikiHomePage />);
-    expect(useKbPagesTree).not.toHaveBeenCalled();
+    expect(useKbPageTreeInfinite).not.toHaveBeenCalled();
   });
 
   it("calls the cursor-based collection hook to drive All pages instead", () => {

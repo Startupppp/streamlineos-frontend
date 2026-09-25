@@ -26,7 +26,6 @@ type SavePayload = PageAutosavePatch & {
 
 interface UsePageAutosaveArgs {
   pageId: number;
-  /** Latest revision the server has told us about, for optimistic concurrency. */
   contentRevision: number | undefined;
   save: (payload: SavePayload) => Promise<{ contentRevision: number }>;
   onConflict: (conflict: KbPageEditConflict) => void;
@@ -34,34 +33,6 @@ interface UsePageAutosaveArgs {
   delayMs?: number;
 }
 
-/**
- * The wiki editor's autosave, extracted so the three ways it silently discarded
- * edits can be tested.
- *
- *  (a) MERGE. `handleTitleChange` scheduled `{title}` and `handleEditorChange`
- *      scheduled `{content, contentText}` through ONE timer, and the second call
- *      cleared the first and queued a payload containing only its own fields.
- *      Rename a page and then type in the body inside the debounce window — the
- *      ordinary create-and-write flow — and the rename was never sent, while the
- *      title kept rendering from local draft state so nothing looked wrong until
- *      a reload. Patches now accumulate in one pending object that the single
- *      timer drains.
- *
- *  (b) FLUSH. The unmount cleanup only cleared the timer. Two paragraphs and a
- *      Cmd-W with the state still "pending" and the work was gone. The pending
- *      patch is now flushed on unmount, on `visibilitychange` -> hidden and on
- *      `pagehide` — the two events that actually fire when a tab is closed or
- *      backgrounded.
- *
- *  (c) CONFLICT. A 409 latched a ref that blocked every later autosave, and the
- *      only way out was a toast action; dismiss the toast and the editor kept
- *      accepting keystrokes, reporting "idle", saving nothing. The latch is now
- *      also STATE, so the surface can render a standing banner for as long as it
- *      holds.
- *
- * A failed save also puts its patch back rather than dropping it, so the next
- * keystroke re-sends it merged with whatever came after.
- */
 export function usePageAutosave({
   pageId,
   contentRevision,
@@ -72,27 +43,20 @@ export function usePageAutosave({
 }: UsePageAutosaveArgs) {
   const [saveState, setSaveState] = useState<PageSaveState>("idle");
   const [conflict, setConflict] = useState<KbPageEditConflict | null>(null);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+  const [pendingFields, setPendingFields] = useState<readonly string[]>([]);
 
   const conflictRef = useRef<KbPageEditConflict | null>(null);
   const pendingPatchRef = useRef<PageAutosavePatch | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightRef = useRef(false);
-  /**
-   * Tagged with the page it belongs to. An untagged revision was clobbered by
-   * whichever effect happened to run last on mount, and — worse — could have
-   * been carried from the page just left onto the page just opened, where it
-   * would arrive as a spurious 409.
-   */
+  const offlineRef = useRef(false);
   const revisionRef = useRef<{ pageId: number; value: number } | null>(null);
   const runRef = useRef<((patch: PageAutosavePatch) => void) | null>(null);
   const pageIdRef = useRef(pageId);
   const mountedRef = useRef(true);
 
-  /**
-   * Declared first so its cleanup runs before the flush cleanup below: the
-   * unmount flush still fires its request, it just stops trying to report
-   * progress into a component that is gone.
-   */
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -100,10 +64,6 @@ export function usePageAutosave({
     };
   }, []);
 
-  /**
-   * Latest-value refs, written after commit rather than during render so
-   * `schedule`/`flush` can be stable and the listener effect subscribes once.
-   */
   const handlersRef = useRef({ save, onConflict, onSaveError });
   useEffect(() => {
     handlersRef.current = { save, onConflict, onSaveError };
@@ -139,11 +99,12 @@ export function usePageAutosave({
     (patch: PageAutosavePatch) => {
       const targetPageId = pageIdRef.current;
       const known = revisionRef.current;
-      /**
-       * The server requires the precondition, so a save with no known revision would 400 and
-       * lose the edit. Hold the patch until the page's revision arrives instead of sending it.
-       */
-      if (inFlightRef.current || known === null || known.pageId !== targetPageId) {
+      if (
+        inFlightRef.current ||
+        known === null ||
+        known.pageId !== targetPageId ||
+        offlineRef.current
+      ) {
         pendingPatchRef.current = { ...patch, ...(pendingPatchRef.current ?? {}) };
         setStateIfMounted("pending");
         return;
@@ -160,14 +121,13 @@ export function usePageAutosave({
         inFlightRef.current = false;
         adoptRevision(targetPageId, data.contentRevision);
         setStateIfMounted("saved");
+        if (mountedRef.current) setSavedAt(new Date());
         drainQueued();
       }
 
       function handleFailed(error: unknown) {
         inFlightRef.current = false;
         setStateIfMounted("idle");
-        // Anything typed since this send wins, but the failed fields are not
-        // thrown away — they ride along with the next save.
         pendingPatchRef.current = { ...patch, ...(pendingPatchRef.current ?? {}) };
         if (isApiError(error) && error.status === 409) {
           const parsed = kbPageEditConflictContract.safeParse(error.details);
@@ -192,6 +152,7 @@ export function usePageAutosave({
   const schedule = useCallback(
     (patch: PageAutosavePatch) => {
       pendingPatchRef.current = { ...(pendingPatchRef.current ?? {}), ...patch };
+      setPendingFields(Object.keys(pendingPatchRef.current));
       if (conflictRef.current !== null) {
         clearTimer();
         return;
@@ -202,6 +163,7 @@ export function usePageAutosave({
         timerRef.current = null;
         const queued = pendingPatchRef.current;
         pendingPatchRef.current = null;
+        setPendingFields([]);
         if (queued) run(queued);
       }, delayMs);
     },
@@ -217,10 +179,6 @@ export function usePageAutosave({
     run(queued);
   }, [clearTimer, run]);
 
-  /**
-   * Declared after `flush` so a patch typed before the page's revision arrived — which `run`
-   * holds rather than sending unguarded — is drained the moment that revision lands.
-   */
   useEffect(() => {
     if (contentRevision === undefined) return;
     const known = revisionRef.current;
@@ -242,12 +200,24 @@ export function usePageAutosave({
     };
   }, [flush]);
 
-  /**
-   * Switching pages inside the wiki does not unmount the editor — the parent
-   * just hands down a new `pageId` — so the reset has to flush FIRST. The
-   * cleanup runs while `pageIdRef` still points at the page being left, which is
-   * the page the pending patch was typed on.
-   */
+  useEffect(() => {
+    function handleOffline() {
+      offlineRef.current = true;
+      if (mountedRef.current) setIsOffline(true);
+    }
+    function handleOnline() {
+      offlineRef.current = false;
+      if (mountedRef.current) setIsOffline(false);
+      drainQueued();
+    }
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, [drainQueued]);
+
   useEffect(() => {
     conflictRef.current = null;
     setConflict(null);
@@ -267,14 +237,15 @@ export function usePageAutosave({
 
   const keepLocalEdits = useCallback(() => {
     const detail = conflictRef.current;
-    const revisionAdopted =
-      detail !== null && detail.currentContentRevision !== null;
-    if (revisionAdopted)
-      adoptRevision(pageIdRef.current, detail!.currentContentRevision!);
+    let adopted = false;
+    if (detail !== null && detail.currentContentRevision !== null) {
+      adoptRevision(pageIdRef.current, detail.currentContentRevision);
+      adopted = true;
+    }
     conflictRef.current = null;
     setConflict(null);
-    if (revisionAdopted) flush();
+    if (adopted) flush();
   }, [adoptRevision, flush]);
 
-  return { saveState, conflict, schedule, discardLocalEdits, keepLocalEdits };
+  return { saveState, conflict, savedAt, isOffline, pendingFields, schedule, discardLocalEdits, keepLocalEdits };
 }
