@@ -34,7 +34,7 @@ complete product definition of done.
 
 ## Backend and authorization
 
-- Backend release commit `837b16400` is contained in backend `origin/main`; the health endpoint responds 200 at `https://api.streamlineos.in/health`. The latest analytics, project-bound workflow-read, bounded ticket-detail relation, checklist-item read, malformed ticket-filter, bounded-search validation, filtered column-count, portfolio-search, and malformed collection-cursor fixes are pushed and await the normal deployment rollout.
+- Backend release commit `e8d56b1c9` is contained in backend `origin/main`; the health endpoint responds 200 at `https://api.streamlineos.in/health`. The latest analytics, project-bound workflow-read, bounded ticket-detail relation, checklist-item read, malformed ticket-filter, bounded-search validation, filtered column-count, portfolio-search, malformed collection-cursor, and tenant-scoped goal-owner projection fixes are pushed and await the normal deployment rollout.
 - The current authorization census covers 49 controllers and 325 handlers:
   - `VULNERABLE=0`
   - `NEEDS-REVIEW=0`
@@ -138,6 +138,7 @@ Completed:
 - Backend `origin/main` contains `b709ba20b`, including the Build portfolio `q` schema, tenant-scoped `ilike` predicate, and focused contract coverage.
 - The portfolio list UI renders its loading and empty states locally on port `1000`; authenticated verification of a non-empty server-filtered result remains deployment-dependent until the backend release containing `b5733da7c` is live.
 - Portfolio and managed-product list services now reject malformed cursors with a bounded `400`; the local UI remains stable against the currently deployed older API, which still treats that input as the first page.
+- Goal list and detail responses now resolve owner membership IDs to tenant-scoped user projections in one batch for collections, avoiding the previous always-unassigned response.
 - The production-domain unauthenticated `/build` smoke passed with the expected sign-in redirect and no console errors.
 - The current browser observation passed for `/build/6/tickets/BQS-2`; the full production route matrix remains open.
 
