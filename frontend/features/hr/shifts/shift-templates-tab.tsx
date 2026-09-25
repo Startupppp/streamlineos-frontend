@@ -6,7 +6,8 @@ import { Moon, Edit2 } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,24 +45,26 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
     });
   }
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-40 rounded-2xl" />
-        ))}
-      </div>
-    );
-  }
+  // No route guard; useHrShifts is gated on hr:attendance:view, so a denied
+  // caller must be told so, not "No shift templates yet" (FE-47).
+  const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
-  if (isError) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
-      <ErrorState
+      <PageState
+        resolution={pageState}
         className={CONTENT_FILL_PANEL}
-        title="Couldn't load shift templates"
-        description={getErrorMessage(error)}
         onRetry={handleRetry}
-      />
+        loading={
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-40 rounded-2xl" />
+            ))}
+          </div>
+        }
+      >
+        {null}
+      </PageState>
     );
   }
 
@@ -106,7 +109,6 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-7"
                     onClick={() => onEdit(shift)}
                     aria-label={`Edit ${name}`}
                   >
@@ -117,7 +119,7 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
                     iconSize={14}
                     variant="ghost"
                     size="icon"
-                    className="w-7 text-destructive hover:text-destructive"
+                    className="text-destructive hover:text-destructive"
                     onClick={() => setPendingDelete(shift)}
                     disabled={deleteShift.isPending}
                     aria-label={`Delete ${name}`}

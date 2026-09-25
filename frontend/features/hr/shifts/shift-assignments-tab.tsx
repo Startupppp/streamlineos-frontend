@@ -3,10 +3,10 @@
 import { useCallback, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { useShiftAssignments } from "@/hooks/api/hr/shifts";
+import { useHrShifts, useShiftAssignments } from "@/hooks/api/hr/shifts";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 
@@ -31,6 +31,10 @@ export function ShiftAssignmentsTab() {
     return map;
   }, [membersData]);
 
+  // Show the shift's name, never "Shift #12" (FE-85).
+  const { data: shifts } = useHrShifts();
+  const shiftNameById = new Map((shifts ?? []).map((shift) => [shift.id, shift.name]));
+
   type Assignment = NonNullable<typeof assignments>[number];
 
   const columns: DataTableColumn<Assignment>[] = [
@@ -41,8 +45,8 @@ export function ShiftAssignmentsTab() {
     },
     {
       key: "shiftId",
-      header: "Shift ID",
-      cell: (a) => <span className="text-sm">Shift #{a.shiftId}</span>,
+      header: "Shift",
+      cell: (a) => <span className="text-sm">{shiftNameById.get(a.shiftId) ?? "Unknown shift"}</span>,
     },
     {
       key: "effectiveFrom",
@@ -65,14 +69,15 @@ export function ShiftAssignmentsTab() {
     },
   ];
 
-  if (isError) {
+  // No route guard; the read is gated on hr:attendance:view, so a denied
+  // caller must be told so, not "No assignments yet" (FE-47).
+  const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <ErrorState
-        className="flex-1"
-        title="Couldn't load shift assignments"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
-      />
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        {null}
+      </PageState>
     );
   }
 
@@ -83,6 +88,7 @@ export function ShiftAssignmentsTab() {
       columns={columns}
       getRowKey={(a) => a.id}
       isLoading={isLoading}
+      pagination={{ pageSize: 25 }}
       emptyState={
         <EmptyState
           illustrationPreset="calendar"
