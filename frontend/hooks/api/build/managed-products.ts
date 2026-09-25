@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { UseInfiniteQueryOptions, InfiniteData } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -122,7 +123,10 @@ export function useInfiniteManagedProducts(
   });
 }
 
-export function useManagedProduct(managedProductId: number) {
+export function useManagedProduct(
+  managedProductId: number,
+  options?: Pick<UseQueryOptions<ManagedProduct>, "throwOnError">,
+) {
   const canView = useCan("build:managed-products:view");
   return useQuery<ManagedProduct>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.detail(managedProductId),
@@ -130,6 +134,7 @@ export function useManagedProduct(managedProductId: number) {
       apiClient.get<ManagedProduct>(`/build/managed-products/${managedProductId}`, undefined, signal, managedProductRowContract),
     enabled: canView && !!managedProductId,
     staleTime: 60_000,
+    ...options,
   });
 }
 

@@ -32,7 +32,9 @@ export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
   const { starred } = useBuildScopeStars();
 
   const projectQuery = useProject(scope.projectId ?? 0);
-  const productQuery = useManagedProduct(scope.managedProductId ?? 0);
+  const productQuery = useManagedProduct(scope.managedProductId ?? 0, {
+    throwOnError: false,
+  });
 
   const scopeKey = buildScopeKey(scope);
   const known = useMemo(
