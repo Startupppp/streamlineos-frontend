@@ -2,10 +2,11 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { useCan } from "@/hooks/api/access";
+import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
 import type { Role } from "@/types/organization";
 import type {
   AssignRoleMemberInput,
@@ -194,6 +195,8 @@ export const useRolePermissionGrants = (
 
 export const useSetRolePermissions = () => {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useAuthorizedMutation<{ success: true; version: number }, Error, SetRolePermissionsInput>("settings:rbac:manage", {
     mutationKey: ["roles", "set-permissions"],
     mutationFn: ({ roleId, version, items }) =>
@@ -208,6 +211,7 @@ export const useSetRolePermissions = () => {
       });
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+      if (orgId) signalAccessInvalidation(orgId);
     },
   });
 };
@@ -231,6 +235,8 @@ export const useRoleMembers = (
 
 export const useAssignRoleMember = () => {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useAuthorizedMutation<{ success: boolean }, Error, AssignRoleMemberInput>("settings:rbac:manage", {
     mutationKey: ["roles", "assign-member"],
     mutationFn: ({ roleId, ...body }) =>
@@ -241,12 +247,15 @@ export const useAssignRoleMember = () => {
       });
       queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+      if (orgId) signalAccessInvalidation(orgId);
     },
   });
 };
 
 export const useUnassignRoleMember = () => {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useAuthorizedMutation<{ success: boolean }, Error, UnassignRoleMemberInput>("settings:rbac:manage", {
     mutationKey: ["roles", "unassign-member"],
     mutationFn: ({ roleId, ...body }) =>
@@ -257,6 +266,7 @@ export const useUnassignRoleMember = () => {
       });
       queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
       queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+      if (orgId) signalAccessInvalidation(orgId);
     },
   });
 };

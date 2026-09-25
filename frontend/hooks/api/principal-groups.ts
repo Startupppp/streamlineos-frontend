@@ -2,10 +2,11 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { useCan } from "@/hooks/api/access";
+import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
   principalGroupMembersContract,
@@ -151,6 +152,8 @@ export function useRemoveGroupMember(groupId: string) {
 
 export function useAssignGroupRole(groupId: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useAuthorizedMutation<{ success: true }, Error, { roleId: number }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "assign-role", groupId],
     mutationFn: (data) =>
@@ -161,12 +164,15 @@ export function useAssignGroupRole(groupId: string) {
       });
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.list() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+      if (orgId) signalAccessInvalidation(orgId);
     },
   });
 }
 
 export function useUnassignGroupRole(groupId: string) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useAuthorizedMutation<{ success: true }, Error, { roleId: number }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "unassign-role", groupId],
     mutationFn: ({ roleId }) =>
@@ -180,6 +186,7 @@ export function useUnassignGroupRole(groupId: string) {
       });
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.list() });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+      if (orgId) signalAccessInvalidation(orgId);
     },
   });
 }

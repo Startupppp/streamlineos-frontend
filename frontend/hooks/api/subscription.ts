@@ -5,7 +5,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { useCan } from "@/hooks/api/access";
+import { signalAccessInvalidation, useCan } from "@/hooks/api/access";
+import { signalEntitlementsInvalidation } from "@/hooks/api/entitlements";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -105,7 +106,7 @@ export function useCreateSubscriptionOrder() {
  * reconciliation poll below share this one list so a surface can never be refreshed
  * by one path and left stale by the other.
  */
-export function invalidateSettledPurchase(queryClient: QueryClient): void {
+export function invalidateSettledPurchase(queryClient: QueryClient, orgId?: string): void {
   queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.subscription() });
   queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.summary() });
   queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.entitlements() });
@@ -113,15 +114,20 @@ export function invalidateSettledPurchase(queryClient: QueryClient): void {
   queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.plans() });
   queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
   queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.orgModules() });
+  if (orgId) {
+    signalAccessInvalidation(orgId);
+    signalEntitlementsInvalidation(orgId);
+  }
 }
 
 export function useVerifySubscription() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useAuthorizedMutation<VerifySubscriptionResult, Error, VerifySubscriptionRequest>("billing:subscription:manage", {
     mutationKey: ["billing", "checkout", "confirm"],
     mutationFn: (data) => apiClient.patch("/billing/checkout", data, undefined, verifySubscriptionContract),
     onSuccess: () => {
-      invalidateSettledPurchase(queryClient);
+      invalidateSettledPurchase(queryClient, session?.orgId);
     },
   });
 }

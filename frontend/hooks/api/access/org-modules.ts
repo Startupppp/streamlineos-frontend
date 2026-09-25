@@ -2,9 +2,10 @@
 
 import { useMemo } from "react";
 import {  useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { useAccess, useCan } from "@/hooks/api/access";
+import { signalAccessInvalidation, useAccess, useCan } from "@/hooks/api/access";
 import { ORG_MODULE_NAME, normalizeOrgModuleKey } from "@/lib/org-module-keys";
 import type { AccessResponse } from "@/types/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -68,6 +69,8 @@ export function useOrgModules() {
 
 export function useToggleOrgModule() {
   const qc = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
   return useAuthorizedMutation<
     void,
     Error,
@@ -125,6 +128,7 @@ export function useToggleOrgModule() {
     },
     onSuccess: () => {
       clearBackendTokenCache();
+      if (orgId) signalAccessInvalidation(orgId);
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.access.orgModules() });
