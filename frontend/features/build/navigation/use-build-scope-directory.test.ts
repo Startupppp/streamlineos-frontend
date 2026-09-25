@@ -6,10 +6,14 @@ import { useInfiniteManagedProducts } from "@/hooks/api/build/managed-products";
 import { useInfiniteBuildScopeSearch } from "@/hooks/api/build/scope-directory";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import type { AccessState } from "@/lib/rbac/gate";
-import type { InfiniteData, UseInfiniteQueryResult } from "@tanstack/react-query";
-import { idleInfiniteQueryResult } from "@/test-utils/query-result";
-import type { ProjectListResponse, ManagedProductsPage } from "@/types/projects";
+import type { ManagedProductsPage, ProjectListResponse } from "@/types/projects";
 import type { BuildScopeSearchPage } from "@/hooks/api/build/scope-directory";
+import {
+  makeEmptyInfiniteQuery,
+  makeInfiniteProductsData,
+  makeManagedProductsPage,
+  makeProjectsInfiniteData,
+} from "./use-build-scope-directory.test-fixtures";
 
 jest.mock("@/hooks/api/access");
 jest.mock("@/hooks/api/build/projects");
@@ -22,48 +26,6 @@ const mockUseInfiniteProjects = useInfiniteProjects as jest.MockedFunction<typeo
 const mockUseInfiniteManagedProducts = useInfiniteManagedProducts as jest.MockedFunction<typeof useInfiniteManagedProducts>;
 const mockUseInfiniteBuildScopeSearch = useInfiniteBuildScopeSearch as jest.MockedFunction<typeof useInfiniteBuildScopeSearch>;
 const mockUseDebouncedValue = useDebouncedValue as jest.MockedFunction<typeof useDebouncedValue>;
-
-function makeEmptyInfiniteQuery<TPage, TPageParam>(
-  overrides: Partial<UseInfiniteQueryResult<InfiniteData<TPage, TPageParam>, Error>> = {},
-): UseInfiniteQueryResult<InfiniteData<TPage, TPageParam>, Error> {
-  return {
-    ...idleInfiniteQueryResult<TPage, TPageParam>(),
-    fetchNextPage: jest.fn().mockResolvedValue(undefined),
-    refetch: jest.fn(),
-    ...overrides,
-  };
-}
-
-function makeManagedProductsPage(
-  rows: { id: number; name: string; status: string; key: string }[],
-  hasMore = false,
-  nextCursor: string | null = null,
-) {
-  return {
-    data: rows,
-    pagination: { limit: 100, hasMore, nextCursor },
-  };
-}
-
-function makeInfiniteProductsData(
-  pages: ReturnType<typeof makeManagedProductsPage>[],
-): { pages: ReturnType<typeof makeManagedProductsPage>[]; pageParams: (string | undefined)[] } {
-  return {
-    pages,
-    pageParams: pages.map((_, i) =>
-      i === 0 ? undefined : pages[i - 1]?.pagination.nextCursor ?? undefined,
-    ),
-  };
-}
-
-function makeProjectsInfiniteData(
-  pages: { data: { id: number; name: string; key: string; status: string; managedProductId: number | null }[]; hasMore: boolean; nextCursor: number | null }[],
-): { pages: typeof pages; pageParams: (number | undefined)[] } {
-  return {
-    pages,
-    pageParams: pages.map((_, i) => (i === 0 ? undefined : pages[i - 1]?.nextCursor ?? undefined)),
-  };
-}
 
 function setupGrantedAccessMocks(debounced = "") {
   mockUseCanState.mockReturnValue("granted" as AccessState);
@@ -116,7 +78,7 @@ describe("BLD-X-SB-DIR-001 — unified authorized directory search", () => {
   test("uses the server parent path for a linked project even when its product is not loaded in browse pages", () => {
     setupGrantedAccessMocks("PAY");
     mockUseInfiniteBuildScopeSearch.mockReturnValue(
-      makeEmptyInfiniteQuery({
+      makeEmptyInfiniteQuery<BuildScopeSearchPage, string | undefined>({
         isSuccess: true,
         data: { pages: [{ data: [linkedProject], nextCursor: null }], pageParams: [undefined] },
       }),
@@ -151,7 +113,7 @@ describe("BLD-X-SB-DIR-001 — unified authorized directory search", () => {
   test("does not render an old debounced result while a newer input is waiting", () => {
     setupGrantedAccessMocks("old");
     mockUseInfiniteBuildScopeSearch.mockReturnValue(
-      makeEmptyInfiniteQuery({
+      makeEmptyInfiniteQuery<BuildScopeSearchPage, string | undefined>({
         isSuccess: true,
         data: { pages: [{ data: [linkedProject], nextCursor: null }], pageParams: [undefined] },
       }),
@@ -168,7 +130,7 @@ describe("BSN-02-016 — background refresh indicator does not destroy results",
   test("isRefreshing is true when a display query is fetching but has existing data", () => {
     setupGrantedAccessMocks();
     mockUseInfiniteProjects.mockReturnValue(
-      makeEmptyInfiniteQuery({
+      makeEmptyInfiniteQuery<ProjectListResponse, number | undefined>({
         isFetching: true,
         isLoading: false,
         isFetchingNextPage: false,
@@ -203,7 +165,7 @@ describe("BSN-02-016 — background refresh indicator does not destroy results",
   test("isFetchingNextPage does not set isRefreshing so the global spinner stays quiet while load-more runs", () => {
     setupGrantedAccessMocks();
     mockUseInfiniteProjects.mockReturnValue(
-      makeEmptyInfiniteQuery({
+      makeEmptyInfiniteQuery<ProjectListResponse, number | undefined>({
         isFetching: true,
         isLoading: false,
         isFetchingNextPage: true,
@@ -258,7 +220,7 @@ describe("BSN-02-014 — project continuation: no duplicates, no reorder, cursor
   test("two loaded project pages yield unique ids in page-1-then-page-2 order with no duplicates", () => {
     setupGrantedAccessMocks();
     mockUseInfiniteProjects.mockReturnValue(
-      makeEmptyInfiniteQuery({
+      makeEmptyInfiniteQuery<ProjectListResponse, number | undefined>({
         isSuccess: true,
         data: makeProjectsInfiniteData([
           {
@@ -351,7 +313,7 @@ describe("BSN-02-014 — hierarchy continuation: the product infinite query elim
   test("hasMoreHierarchy is true when the product infinite query reports hasNextPage", () => {
     setupGrantedAccessMocks();
     mockUseInfiniteManagedProducts.mockReturnValue(
-      makeEmptyInfiniteQuery({
+      makeEmptyInfiniteQuery<ManagedProductsPage, string | undefined>({
         hasNextPage: true,
         isSuccess: true,
         data: makeInfiniteProductsData([
@@ -372,7 +334,7 @@ describe("BSN-02-014 — hierarchy continuation: the product infinite query elim
   test("a third page of products is still reachable, so a large org is never silently truncated", () => {
     setupGrantedAccessMocks();
     mockUseInfiniteManagedProducts.mockReturnValue(
-      makeEmptyInfiniteQuery({
+      makeEmptyInfiniteQuery<ManagedProductsPage, string | undefined>({
         hasNextPage: true,
         isSuccess: true,
         data: makeInfiniteProductsData([
@@ -406,7 +368,7 @@ describe("BSN-02-014 — hierarchy continuation: the product infinite query elim
   test("product rows from all loaded infinite pages combine without duplicates in load order", () => {
     setupGrantedAccessMocks();
     mockUseInfiniteManagedProducts.mockReturnValue(
-      makeEmptyInfiniteQuery({
+      makeEmptyInfiniteQuery<ManagedProductsPage, string | undefined>({
         hasNextPage: false,
         isSuccess: true,
         data: makeInfiniteProductsData([
@@ -436,7 +398,7 @@ describe("BSN-02-014 — hierarchy continuation: the product infinite query elim
     setupGrantedAccessMocks();
     const productsFetchNextPage = jest.fn().mockResolvedValue(undefined);
     mockUseInfiniteManagedProducts.mockReturnValue(
-      makeEmptyInfiniteQuery({
+      makeEmptyInfiniteQuery<ManagedProductsPage, string | undefined>({
         hasNextPage: true,
         fetchNextPage: productsFetchNextPage,
       }),

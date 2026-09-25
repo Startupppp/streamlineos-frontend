@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { buildTicketDetailUrl as BuildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
@@ -133,9 +134,11 @@ jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => String(e),
 }));
 
-const mockBuildTicketDetailUrl = jest.fn((): string | null => null);
+const mockBuildTicketDetailUrl = jest.fn<ReturnType<BuildTicketDetailUrl>, Parameters<BuildTicketDetailUrl>>(
+  () => null,
+);
 jest.mock("@/features/build/ticket-details/build-ticket-detail-url", () => ({
-  buildTicketDetailUrl: (...args: unknown[]) => mockBuildTicketDetailUrl(...args),
+  buildTicketDetailUrl: (...args: Parameters<BuildTicketDetailUrl>) => mockBuildTicketDetailUrl(...args),
 }));
 
 import { ProjectBacklogPage } from "./project-backlog-page";

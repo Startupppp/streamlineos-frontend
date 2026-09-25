@@ -14,11 +14,9 @@ import { INITIAL_FILTERS, type FilterState as WorkloadFilterState } from "./work
 import type { KanbanTicket } from "@/features/build/shared/types";
 import { mapBoardTicketToKanban } from "@/features/build/my-tickets/map-board-ticket";
 import { filterHiddenCompletedTickets, getCompletedStatusNames } from "@/features/build/shared/completed-status";
-import {
-  buildTicketCollectionReturnHref,
-  buildTicketDetailUrl,
-} from "@/features/build/ticket-details/build-ticket-detail-url";
+import { buildTicketCollectionReturnHref } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { currentSearchParams } from "@/lib/current-search-params";
+import { useBoardNavigationActions } from "./use-board-navigation-actions";
 import {
   buildListSearchParams,
   parsePriorityParam,
@@ -376,139 +374,29 @@ export function useBoardUrlState(
     displayOptions,
   });
 
-  const handleViewChange = useCallback(
-    (v: ViewType) => {
-      if (v === "calendar") {
-        const p = currentSearchParams(searchParams);
-        p.delete("view");
-        p.delete("viewId");
-        p.delete("ticket");
-        p.delete("comment");
-        p.set("source", "build");
-        p.set("projectId", String(projectId));
-        router.push(`/calendar?${p.toString()}`);
-        setSelectedIds(new Set());
-        return;
-      }
-      if (v === "workload") {
-        const p = currentSearchParams(searchParams);
-        p.delete("view");
-        const qs = p.toString();
-        router.push(`/build/${projectId}/workload${qs ? `?${qs}` : ""}`);
-        setSelectedIds(new Set());
-        return;
-      }
-      const p = currentSearchParams(searchParams);
-      p.set("view", v);
-      if (pathname === `/build/${projectId}/workload`) {
-        router.push(`/build/${projectId}/issues?${p.toString()}`);
-        setSelectedIds(new Set());
-        return;
-      }
-      router.replace(`?${p.toString()}`, { scroll: false });
-      setSelectedIds(new Set());
-    },
-    [calendarHref, router, searchParams, projectId, pathname],
-  );
-
-  const handleWorkloadFilterChange = useCallback(
-    <K extends keyof WorkloadFilterState>(
-      key: K,
-      value: WorkloadFilterState[K],
-    ) => {
-      setWorkloadFilters((prev) => ({ ...prev, [key]: value }));
-    },
-    [],
-  );
-
-  const handleClearWorkloadFilters = useCallback(() => {
-    setWorkloadFilters(INITIAL_FILTERS);
-  }, []);
-
-  const handleTicketSelect = useCallback(
-    (id: number) => {
-      const href = buildTicketDetailUrl(
-        projectId,
-        data?.key,
-        id,
-        allTickets,
-        undefined,
-        ticketCollectionReturnHref,
-      );
-      if (href) router.push(href);
-    },
-    [router, projectId, data?.key, allTickets, ticketCollectionReturnHref],
-  );
-
-  useEffect(() => {
-    if (!selectedTicketId || !data) return;
-    const href = buildTicketDetailUrl(
-      projectId,
-      data.key,
-      selectedTicketId,
-      allTickets,
-      highlightCommentId,
-      ticketCollectionReturnHref,
-    );
-    if (href) router.replace(href);
-  }, [
-    selectedTicketId,
-    data,
-    allTickets,
+  const {
+    handleViewChange,
+    handleWorkloadFilterChange,
+    handleClearWorkloadFilters,
+    handleTicketSelect,
+    handleClearSearch,
+    handleQaFilterChange,
+    handleCreateOpenChange,
+    handleSelectionChange,
+    handleClearSelection,
+  } = useBoardNavigationActions({
     projectId,
+    pathname,
+    searchParams,
+    projectKey: data?.key,
+    projectLoaded: !!data,
+    selectedTicketId,
     highlightCommentId,
+    allTickets,
     ticketCollectionReturnHref,
-    router,
-  ]);
-
-  const handleClearSearch = useCallback(() => {
-    const next = buildListSearchParams(
-      searchParams,
-      {
-        q: null,
-        status: null,
-        priority: null,
-        type: null,
-        assigneeId: null,
-        labels: null,
-        cycle: null,
-        module: null,
-        severity: null,
-        qaState: null,
-      },
-      { resetCursor: true },
-    );
-    router.replace(`?${next.toString()}`, { scroll: false });
-  }, [router, searchParams]);
-
-  const handleQaFilterChange = useCallback(
-    (key: "severity" | "qaState", value: string) => {
-      const next = buildListSearchParams(
-        searchParams,
-        { [key]: value || null },
-        { resetCursor: true },
-      );
-      router.replace(`?${next.toString()}`, { scroll: false });
-    },
-    [router, searchParams],
-  );
-
-  const handleCreateOpenChange = useCallback(
-    (open: boolean) => {
-      if (open) return;
-      const next = currentSearchParams(searchParams);
-      next.delete("create");
-      next.delete("cycleId");
-      router.replace(`?${next.toString()}`, { scroll: false });
-    },
-    [router, searchParams],
-  );
-
-  const handleSelectionChange = useCallback((sel: Set<string | number>) => {
-    setSelectedIds(sel);
-  }, []);
-
-  const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
+    setSelectedIds,
+    setWorkloadFilters,
+  });
 
   return {
     view,

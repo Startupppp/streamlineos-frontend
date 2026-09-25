@@ -1,4 +1,8 @@
-import type { InfiniteData, UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
+import type {
+  InfiniteData,
+  UseInfiniteQueryResult,
+  UseQueryResult,
+} from "@tanstack/react-query";
 
 function baseResult<TData>() {
   return {
@@ -12,13 +16,16 @@ function baseResult<TData>() {
     isRefetching: false,
     isStale: false,
     isEnabled: true,
-    refetch: () => Promise.reject(new Error("refetch is not wired in this test")),
+    refetch: () =>
+      Promise.reject(new Error("refetch is not wired in this test")),
     promise: new Promise<TData>(() => undefined),
   };
 }
 
 /** A settled query a component can read from — every flag consistent with `status: "success"`. */
-export function successQueryResult<TData>(data: TData): UseQueryResult<TData, Error> {
+export function successQueryResult<TData>(
+  data: TData,
+): UseQueryResult<TData, Error> {
   return {
     ...baseResult<TData>(),
     data,
@@ -59,14 +66,6 @@ export function pendingQueryResult<TData>(): UseQueryResult<TData, Error> {
   };
 }
 
-/**
- * A gated read that is not running — `enabled: false`, so it never resolves.
- *
- * Distinct from `pendingQueryResult` and the distinction is the point: a
- * disabled Query v5 read is `isPending: true, isFetching: false`, so `isLoading`
- * is FALSE. That is the state FE-47 is about — indistinguishable from an empty
- * list unless the caller reads the denial separately.
- */
 export function idleQueryResult<TData>(): UseQueryResult<TData, Error> {
   return {
     ...baseResult<TData>(),
@@ -88,7 +87,9 @@ export function idleQueryResult<TData>(): UseQueryResult<TData, Error> {
 }
 
 /** A read that failed, so a spec can assert the error branch rather than an empty one. */
-export function errorQueryResult<TData>(error: Error): UseQueryResult<TData, Error> {
+export function errorQueryResult<TData>(
+  error: Error,
+): UseQueryResult<TData, Error> {
   return {
     ...baseResult<TData>(),
     data: undefined,
@@ -108,13 +109,9 @@ export function errorQueryResult<TData>(error: Error): UseQueryResult<TData, Err
   };
 }
 
-/**
- * The paging half, inlined rather than spread from a helper: these flags are
- * literal `false` in the observer's result types, and a spread widens them to
- * `boolean`, which no member of the union accepts.
- */
 const infinitePaging = {
-  fetchNextPage: () => Promise.reject(new Error("fetchNextPage is not wired in this test")),
+  fetchNextPage: () =>
+    Promise.reject(new Error("fetchNextPage is not wired in this test")),
   fetchPreviousPage: () =>
     Promise.reject(new Error("fetchPreviousPage is not wired in this test")),
   hasPreviousPage: false as const,
@@ -127,7 +124,9 @@ const infinitePaging = {
 /** A settled infinite query holding `pages`, with the page params a real cursor walk produces. */
 export function successInfiniteQueryResult<TPage>(
   pages: TPage[],
-  pageParams: unknown[] = pages.map((_, index) => (index === 0 ? undefined : index)),
+  pageParams: unknown[] = pages.map((_, index) =>
+    index === 0 ? undefined : index,
+  ),
   hasNextPage = false,
 ): UseInfiniteQueryResult<InfiniteData<TPage, unknown>, Error> {
   return {
@@ -152,10 +151,10 @@ export function successInfiniteQueryResult<TPage>(
 }
 
 /** The infinite counterpart of `idleQueryResult` — gated off, never run, no pages. */
-export function idleInfiniteQueryResult<TPage, TPageParam = unknown>(): UseInfiniteQueryResult<
-  InfiniteData<TPage, TPageParam>,
-  Error
-> {
+export function idleInfiniteQueryResult<
+  TPage,
+  TPageParam = unknown,
+>(): UseInfiniteQueryResult<InfiniteData<TPage, TPageParam>, Error> {
   return {
     ...baseResult<InfiniteData<TPage, TPageParam>>(),
     ...infinitePaging,
