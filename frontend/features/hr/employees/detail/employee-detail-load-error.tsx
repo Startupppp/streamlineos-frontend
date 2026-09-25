@@ -22,7 +22,7 @@ export function EmployeeDetailLoadError({
         <Button
           variant="ghost"
           size="sm"
-          className="-ml-2 h-9 shrink-0 gap-1.5 px-2.5 sm:h-8"
+          className="-ml-2 shrink-0 gap-1.5 px-2.5"
           onClick={handleBack}
         >
           <ArrowLeft className="h-3.5 w-3.5" />

@@ -330,7 +330,7 @@ export function EmployeesListPage() {
             />
           )}
           {canOnboard && (
-            <Button size="sm" className="h-8 flex-1 gap-1.5 shadow-sm sm:flex-none" asChild>
+            <Button size="sm" className="flex-1 gap-1.5 shadow-sm sm:flex-none" asChild>
               <Link href="/hr/onboarding">
                 <UserPlus className="h-3.5 w-3.5" />
                 <span className="sm:hidden">Add</span>

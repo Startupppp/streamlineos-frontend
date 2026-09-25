@@ -68,7 +68,7 @@ function MaskedField({ label, value, editMode, fieldName, control, hint }: Maske
               />
             ) : (
               <div className="flex items-center gap-2">
-                <span className="flex-1 h-8 flex items-center px-3 rounded-md border border-border bg-muted/40 text-sm font-mono min-w-0 truncate">
+                <span className="flex-1 h-9 flex items-center px-3 rounded-md border border-border bg-muted/40 text-sm font-mono min-w-0 truncate">
                   {!value ? (
                     <span className="text-muted-foreground text-xs italic">Not set</span>
                   ) : revealed ? (
@@ -81,7 +81,7 @@ function MaskedField({ label, value, editMode, fieldName, control, hint }: Maske
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-8 shrink-0"
+                    className="shrink-0"
                     onClick={handleToggle}
                     type="button"
                     aria-label={revealed ? `Hide ${label}` : `Reveal ${label}`}
@@ -221,11 +221,11 @@ export function EmployeeSensitiveTab({ userId }: Props) {
                 <div className="flex items-center gap-2">
                   {editMode ? (
                     <>
-                      <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={handleCancel}>Cancel</Button>
-                      <LoadingButton type="submit" size="sm" className="text-xs" isPending={updateMutation.isPending}>Save</LoadingButton>
+                      <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={updateMutation.isPending}>Cancel</Button>
+                      <LoadingButton type="submit" size="sm" isPending={updateMutation.isPending}>Save</LoadingButton>
                     </>
                   ) : (
-                    <Button type="button" variant="outline" size="sm" className="text-xs" onClick={handleEnableEdit}>Edit</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={handleEnableEdit}>Edit</Button>
                   )}
                 </div>
               )}

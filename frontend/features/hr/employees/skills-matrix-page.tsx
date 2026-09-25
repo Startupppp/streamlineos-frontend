@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useSkillsMatrix } from "@/hooks/api/hr";
 import { useCan } from "@/hooks/api/access";
@@ -41,7 +41,7 @@ export function SkillsMatrixPage() {
   ]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const { data, isLoading, isFetching, isError, refetch } = useSkillsMatrix({
+  const { data, isLoading, isFetching, isError, error, refetch } = useSkillsMatrix({
     cursor: cursorHistory[page - 1],
     limit: pageSize,
     enabled: canReadEmployees,
@@ -72,43 +72,36 @@ export function SkillsMatrixPage() {
     setPage(1);
   }, []);
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Skills Matrix" subtitle="Cross-reference of employees and their skill levels across the org">
-        <div className="rounded-xl border border-border overflow-hidden">
-          <div className="flex border-b bg-muted/40 px-3 py-2 gap-4">
-            <Skeleton className="h-4 w-32" />
-            {Array.from({ length: 10 }).map((_, columnSkeletonIndex) => (
-              <Skeleton key={columnSkeletonIndex} className="h-4 w-16" />
-            ))}
+  // No server-side requirePermission guards this route; a caller without
+  // hr:employees:view must see the refusal, not "No skills data yet" (FE-47).
+  const pageState = usePageState({
+    permission: "hr:employees:view",
+    isLoading,
+    isError,
+    error,
+  });
+
+  const loadingSkeleton = (
+    <div className="rounded-xl border border-border overflow-hidden">
+      <div className="flex border-b bg-muted/40 px-3 py-2 gap-4">
+        <Skeleton className="h-4 w-32" />
+        {Array.from({ length: 10 }).map((_, columnSkeletonIndex) => (
+          <Skeleton key={columnSkeletonIndex} className="h-4 w-16" />
+        ))}
+      </div>
+      {Array.from({ length: 5 }).map((_, rowSkeletonIndex) => (
+        <div key={rowSkeletonIndex} className="flex items-center border-b last:border-0 px-3 py-2.5 gap-4">
+          <div className="flex items-center gap-2 w-40 shrink-0">
+            <Skeleton className="h-6 w-6 rounded-full" />
+            <Skeleton className="h-4 w-24" />
           </div>
-          {Array.from({ length: 5 }).map((_, rowSkeletonIndex) => (
-            <div key={rowSkeletonIndex} className="flex items-center border-b last:border-0 px-3 py-2.5 gap-4">
-              <div className="flex items-center gap-2 w-40 shrink-0">
-                <Skeleton className="h-6 w-6 rounded-full" />
-                <Skeleton className="h-4 w-24" />
-              </div>
-              {Array.from({ length: 10 }).map((_, cellSkeletonIndex) => (
-                <Skeleton key={cellSkeletonIndex} className="h-5 w-16 rounded" />
-              ))}
-            </div>
+          {Array.from({ length: 10 }).map((_, cellSkeletonIndex) => (
+            <Skeleton key={cellSkeletonIndex} className="h-5 w-16 rounded" />
           ))}
         </div>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper title="Skills Matrix" subtitle="Cross-reference of employees and their skill levels across the org">
-        <ErrorState
-          title="Failed to load skills matrix"
-          description="Something went wrong. Please try again."
-          onRetry={handleRetry}
-        />
-      </PageWrapper>
-    );
-  }
+      ))}
+    </div>
+  );
 
   const employees = data?.employees ?? [];
   const skills = data?.skills ?? [];
@@ -117,6 +110,9 @@ export function SkillsMatrixPage() {
     <PageWrapper
       title="Skills Matrix"
       subtitle="Cross-reference of employees and their skill levels across the org"
+      state={pageState}
+      loading={loadingSkeleton}
+      onRetry={handleRetry}
       actions={
         employees.length > 0 && skills.length > 0 ? (
           <Button size="sm" variant="outline" onClick={toggleCompact}>
