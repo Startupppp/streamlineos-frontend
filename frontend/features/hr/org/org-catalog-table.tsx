@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -221,17 +222,26 @@ export function OrgCatalogTable<T extends CatalogItem>({
     setEditing(item);
     setUpsertOpen(true);
   }, []);
-  const handleDeleteClick = useCallback(
-    async (catalogItemId: number) => {
-      try {
-        await onDelete(catalogItemId);
-        toast.success(`${title} deleted`);
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    [onDelete, title],
-  );
+  // Delete used to fire from the menu with no confirmation (FE-83).
+  const [pendingDelete, setPendingDelete] = useState<T | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const handleDeleteClick = useCallback((item: T) => setPendingDelete(item), []);
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setPendingDelete(null);
+  }, []);
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!pendingDelete) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(pendingDelete.id);
+      toast.success(`Deleted ${title.toLowerCase()} "${pendingDelete.name}"`);
+      setPendingDelete(null);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [onDelete, pendingDelete, title]);
 
   const handleUpsertOpenChange = useCallback((open: boolean) => {
     setUpsertOpen(open);
@@ -326,8 +336,8 @@ export function OrgCatalogTable<T extends CatalogItem>({
                           icon={EllipsisIcon}
                           variant="ghost"
                           size="icon"
-                          className="w-7 shrink-0"
-                          aria-label="Actions"
+                          className="shrink-0"
+                          aria-label={`Actions for ${item.name}`}
                         />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-32">
@@ -339,7 +349,7 @@ export function OrgCatalogTable<T extends CatalogItem>({
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-xs gap-2 cursor-pointer text-destructive focus:text-destructive"
-                          onClick={() => handleDeleteClick(item.id)}
+                          onClick={() => handleDeleteClick(item)}
                         >
                           <Trash2 className="h-3 w-3" /> Delete
                         </DropdownMenuItem>
@@ -352,6 +362,22 @@ export function OrgCatalogTable<T extends CatalogItem>({
           </CardContent>
         </Card>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title={`Delete ${title.toLowerCase()}?`}
+        description={
+          pendingDelete
+            ? `"${pendingDelete.name}" will be deleted from the catalog.`
+            : ""
+        }
+        confirmLabel="Delete"
+        destructive
+        isPending={isDeleting}
+        keepOpenOnConfirm
+        onConfirm={handleDeleteConfirm}
+      />
 
       <UpsertSheet
         open={upsertOpen}
