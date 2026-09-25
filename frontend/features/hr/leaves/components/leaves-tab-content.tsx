@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 
 const LeaveBalanceDonut = dynamic(
@@ -20,10 +20,9 @@ import type { LeaveBalance, LeaveRequest, ApprovedLeave } from "./leaves-shared"
 import { BalanceCard, balanceCardConfig, DEFAULT_CARD_CONFIG, priorityConfig } from "./leaves-shared";
 import { LeaveCalendarWidget } from "./leave-calendar-widget";
 import { RequestActionCell } from "./leave-request-action-cell";
-import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useRevertLeave } from "@/hooks/api/hr";
+import { useCancelLeave } from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/hooks/api/access";
 import { useLeavePolicy } from "@/hooks/api/hr";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -48,7 +47,6 @@ export function LeavesTabContent({
   isLoadingMore = false,
   onLoadMore,
 }: LeavesTabContentProps) {
-  const isAdmin = useCan("hr:employees:manage");
   const { data: policy } = useLeavePolicy();
   const allowedLeaveTypeNames = useMemo(
     () => new Set(policy?.leaveTypes.map((t) => t.name) ?? []),
@@ -57,46 +55,7 @@ export function LeavesTabContent({
 
   const currentYear = new Date().getFullYear();
 
-  const approveMutation = useApproveLeaveDedicated();
-  const rejectMutation = useRejectLeaveDedicated();
-  const revertMutation = useRevertLeave();
   const cancelMutation = useCancelLeave();
-
-  const handleApproveRequest = useCallback(
-    (id: number) => {
-      approveMutation.mutate(
-        { leaveId: id },
-        {
-          onSuccess: () => toast.success("Leave request approved"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [approveMutation],
-  );
-
-  const handleRejectRequest = useCallback(
-    (id: number, reason?: string) => {
-      rejectMutation.mutate(
-        { leaveId: id, reason: reason ?? "" },
-        {
-          onSuccess: () => toast.success("Leave request rejected"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [rejectMutation],
-  );
-
-  const handleRevertRequest = useCallback(
-    (id: number) => {
-      revertMutation.mutate(id, {
-        onSuccess: () => toast.success("Leave request reverted to pending"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      });
-    },
-    [revertMutation],
-  );
 
   const handleCancelRequest = useCallback(
     (id: number) => {
@@ -259,11 +218,7 @@ export function LeavesTabContent({
           <div className="flex justify-end">
             <RequestActionCell
               request={row}
-              isAdmin={isAdmin}
-              isSelf
-              onApprove={handleApproveRequest}
-              onReject={handleRejectRequest}
-              onRevert={handleRevertRequest}
+              isCancelling={cancelMutation.isPending && cancelMutation.variables === row.id}
               onCancel={handleCancelRequest}
             />
           </div>
@@ -271,7 +226,7 @@ export function LeavesTabContent({
         headerClassName: "text-right",
       },
     ],
-    [isAdmin, handleApproveRequest, handleRejectRequest, handleRevertRequest, handleCancelRequest],
+    [cancelMutation.isPending, cancelMutation.variables, handleCancelRequest],
   );
 
   return (
@@ -297,7 +252,9 @@ export function LeavesTabContent({
           >
             {balances
               .filter(
-                (bal) => bal.typeName && allowedLeaveTypeNames.has(bal.typeName),
+                // useLeavePolicy needs hr:leaves:view; a self-service caller
+                // without it gets no policy and must still see their balances.
+                (bal) => bal.typeName && (!policy || allowedLeaveTypeNames.has(bal.typeName)),
               )
               .map((bal, index) => (
                 <li key={`${bal.leaveTypeId}-${index}`}>
@@ -338,17 +295,13 @@ export function LeavesTabContent({
             minWidth="600px"
             className="min-h-0 w-full flex-1"
           />
-          {hasMore && onLoadMore ? (
-            <div className="flex justify-center border-t border-border/70 py-3">
-              <LoadingButton
-                variant="outline"
-                size="sm"
-                isPending={isLoadingMore}
-                onClick={onLoadMore}
-              >
-                Load older requests
-              </LoadingButton>
-            </div>
+          {onLoadMore ? (
+            <InfiniteScrollSentinel
+              hasNextPage={hasMore}
+              isFetchingNextPage={isLoadingMore}
+              onLoadMore={onLoadMore}
+              label="Load older requests"
+            />
           ) : null}
         </div>
       )}

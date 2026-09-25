@@ -13,6 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EntityFormDialog } from "@/components/shared";
 import {
   FormControl,
@@ -45,7 +47,14 @@ interface EditorState {
 const CLOSED_EDITOR: EditorState = { open: false, editing: null };
 
 export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
-  const { data: types, isLoading, isError, refetch } = useLeaveTypesAdmin();
+  const { data: types, isLoading, isError, error, refetch } = useLeaveTypesAdmin();
+  // GET /hr/leaves/types needs hr:leaves:view: a denied caller must not read
+  // "No leave types yet" beside an offer to add the defaults (FE-47).
+  const pageState = usePageState({ permission: "hr:leaves:view", isLoading, isError, error });
+
+  function handleRetry() {
+    void refetch();
+  }
   const seed = useSeedLeaveTypes();
   const create = useCreateLeaveType();
   const update = useUpdateLeaveType();
@@ -158,19 +167,21 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
         )}
       </div>
 
-      {isLoading ? (
-        <div className="space-y-2 p-4">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-9 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : isError ? (
-        <div className="flex items-center justify-between gap-3 p-4">
-          <p className="text-xs text-muted-foreground">Couldn&apos;t load leave types.</p>
-          <Button size="sm" variant="outline" onClick={() => void refetch()}>
-            Retry
-          </Button>
-        </div>
+      {pageState.kind !== "ready" && pageState.kind !== "empty" ? (
+        <PageState
+          resolution={pageState}
+          compact
+          onRetry={handleRetry}
+          loading={
+            <div className="space-y-2 p-4">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-9 w-full rounded-lg" />
+              ))}
+            </div>
+          }
+        >
+          {null}
+        </PageState>
       ) : (types?.length ?? 0) === 0 ? (
         <div className="p-4">
           <p className="text-xs text-muted-foreground">
@@ -198,7 +209,6 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-7"
                     aria-label={`Edit ${type.name}`}
                     onClick={() => handleOpenEdit(type)}
                   >
@@ -206,7 +216,7 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
                   </Button>
                   <TooltipIconButton
                     variant="ghost"
-                    className="w-7 text-destructive"
+                    className="text-destructive"
                     icon={Trash2Icon}
                     iconSize={13}
                     label={`Delete ${type.name}`}

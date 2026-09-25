@@ -110,6 +110,11 @@ jest.mock("next-auth/react", () => ({
   }),
 }));
 
+// Access is resolved by the mocks above; these specs are about the rows.
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => ({ kind: "ready" }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
   useAccess: () => ({ data: { isOrgOwner: false, scopes: {} }, isLoading: false }),

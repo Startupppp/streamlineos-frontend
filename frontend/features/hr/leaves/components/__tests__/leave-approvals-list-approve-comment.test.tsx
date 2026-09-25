@@ -14,6 +14,11 @@ jest.mock("sonner", () => ({
   },
 }));
 
+let mockCanDecide = true;
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => mockCanDecide,
+}));
+
 jest.mock("@/hooks/api/hr", () => ({
   useApproveLeaveDedicated: () => ({
     mutate: mockApproveMutate,
@@ -145,5 +150,24 @@ describe("LeaveApprovalsList — optional manager comment on Approve (decision #
       leaveId: 7,
       reason: "Conflicting deadlines",
     });
+  });
+});
+
+describe("LeaveApprovalsList — decisions need hr:leaves:approve (FE-44)", () => {
+  afterEach(() => {
+    mockCanDecide = true;
+  });
+
+  it("offers Approve and Reject to a caller holding the key", () => {
+    renderList();
+    expect(screen.getByRole("button", { name: /^Approve$/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Reject$/ })).toBeInTheDocument();
+  });
+
+  it("shows only the status to a caller without it", () => {
+    mockCanDecide = false;
+    renderList();
+    expect(screen.queryByRole("button", { name: /^Approve$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Reject$/ })).not.toBeInTheDocument();
   });
 });

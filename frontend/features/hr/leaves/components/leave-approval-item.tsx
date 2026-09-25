@@ -14,6 +14,7 @@ import type { LeaveRequest } from "./leaves-shared";
 import { priorityConfig } from "./leaves-shared";
 import { LeaveStatusBadge } from "./leave-status-badge";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
+import { useCan } from "@/hooks/api/access";
 
 interface LeaveApprovalItemProps {
   req: LeaveRequest;
@@ -34,6 +35,9 @@ export function LeaveApprovalItem({
   const pConfig = priorityConfig[priority] ?? priorityConfig.MEDIUM;
   const lopDays = Number(req.lopDays ?? 0);
   const isSelfRequest = !!currentUserId && req.user?.id === currentUserId;
+  // PUT /hr/leaves/:id/approve|reject require hr:leaves:approve (FE-44). The
+  // Approvals tab is also open to WFH-only deciders, who must not see these.
+  const canDecide = useCan("hr:leaves:approve");
 
   const handleApprove = useCallback(
     () => onProcess(req.id, "APPROVED"),
@@ -109,7 +113,7 @@ export function LeaveApprovalItem({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 ml-3">
-          {isPending ? (
+          {isPending && canDecide ? (
             isSelfRequest ? (
               <span className="text-xs text-muted-foreground italic">
                 Cannot approve own request

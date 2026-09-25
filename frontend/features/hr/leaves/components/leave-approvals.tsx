@@ -13,7 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyApprovalIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
 import { Home, CalendarDays } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -35,13 +37,36 @@ export function LeaveApprovalsContent({
   incomingLeaveRequests,
   allIncomingLeaveRequests,
   currentUserId,
+  isLoading = false,
 }: LeaveApprovalsContentProps) {
   const { staggerContainer, fadeIn } = useMotionVariants();
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  const { data: pendingWfhRequests, isError: wfhError, error: wfhErrorValue, refetch: refetchWfh } = useHrPendingWfhRequests();
+  const { data: pendingWfhRequests, isLoading: wfhLoading, isError: wfhError, error: wfhErrorValue, refetch: refetchWfh } = useHrPendingWfhRequests();
+  // Pending WFH is gated on hr:attendance:manage; a leave approver without it
+  // must be told so, not "No pending WFH requests" (FE-47).
+  const wfhState = usePageState({
+    permission: "hr:attendance:manage",
+    isLoading: wfhLoading,
+    isError: wfhError,
+    error: wfhErrorValue,
+  });
+
+  // The team list is read by the parent (useHrLeaveApprovals, gated on
+  // hr:leaves:view), which also owns its error branch; this card owns the
+  // loading and denied branches so neither reads as "No leave requests".
+  const leaveState = usePageState({
+    permission: "hr:leaves:view",
+    isLoading,
+    isError: false,
+    error: null,
+  });
+
+  function handleRetryWfh() {
+    void refetchWfh();
+  }
   const processWfhRequestMutation = useProcessWfhRequest();
 
   const handleRejectionReasonChange = useCallback(
@@ -123,6 +148,11 @@ export function LeaveApprovalsContent({
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0 overflow-x-auto">
+            <PageState
+              resolution={leaveState}
+              compact
+              loading={<Skeleton className="h-24 w-full rounded-xl" />}
+            >
             <Tabs defaultValue="all" className="space-y-4">
               <TabsList className="bg-transparent border-b rounded-none p-0 gap-0">
                 <TabsTrigger
@@ -198,6 +228,7 @@ export function LeaveApprovalsContent({
                 )}
               </TabsContent>
             </Tabs>
+            </PageState>
           </CardContent>
         </Card>
 
@@ -216,12 +247,15 @@ export function LeaveApprovalsContent({
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            {wfhError ? (
-              <ErrorState
-                title="Couldn't load WFH requests"
-                description={getErrorMessage(wfhErrorValue)}
-                onRetry={refetchWfh}
-              />
+            {wfhState.kind !== "ready" && wfhState.kind !== "empty" ? (
+              <PageState
+                resolution={wfhState}
+                compact
+                onRetry={handleRetryWfh}
+                loading={<Skeleton className="h-16 w-full rounded-xl" />}
+              >
+                {null}
+              </PageState>
             ) : !pendingWfhRequests || pendingWfhRequests.length === 0 ? (
               <EmptyState illustration={<EmptyCalendarIllustration />} title="No pending WFH requests" description="All WFH requests have been processed." />
             ) : (

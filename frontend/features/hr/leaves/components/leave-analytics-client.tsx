@@ -5,11 +5,11 @@ import { TrendingUp, Users, Clock } from "lucide-react";
 
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyLeaveIllustration } from "@/components/illustrations/illustration-image";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useHrAnalytics } from "@/hooks/api/hr/analytics";
-import { getErrorMessage } from "@/lib/get-error-message";
 
 export function LeaveAnalyticsClient() {
   const { data, isLoading, isError, error, refetch } = useHrAnalytics();
@@ -21,14 +21,16 @@ export function LeaveAnalyticsClient() {
 
   function handleRetry() { void refetch(); }
 
-  if (isError) {
+  // The route is guarded by hr:leaves:view but useHrAnalytics needs
+  // hr:analytics:read; a caller with only the first was told "No leave data
+  // available yet" (FE-47).
+  const pageState = usePageState({ permission: "hr:analytics:read", isLoading, isError, error });
+
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
-      <ErrorState
-        className={CONTENT_FILL_PANEL}
-        title="Couldn't load leave analytics"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
-      />
+      <PageState resolution={pageState} loading={null} onRetry={handleRetry} className={CONTENT_FILL_PANEL}>
+        {null}
+      </PageState>
     );
   }
 
