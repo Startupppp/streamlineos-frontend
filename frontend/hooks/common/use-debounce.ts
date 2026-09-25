@@ -13,12 +13,13 @@ export function useFlushableDebouncedValue<T>(
   delay: number = 300,
 ): [T, () => void] {
   const [debouncedValue, setDebouncedValue] = useState(value);
-  // Read by `flush`, which must publish the newest value even when it fires in
-  // the same tick as the keystroke that produced it.
+  // What `flush` publishes. Written where the timer is armed rather than during
+  // render, so it always holds the value of the last committed keystroke — which
+  // is the one a subsequent Enter is answering.
   const latest = useRef(value);
-  latest.current = value;
 
   useEffect(() => {
+    latest.current = value;
     const timer = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);

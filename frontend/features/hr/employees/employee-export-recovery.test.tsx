@@ -2,6 +2,7 @@ import React from "react";
 import { act, render, screen } from "@testing-library/react";
 import { EmployeeExportAction } from "./employee-export-action";
 import { exportJobStorageKey } from "./employee-export-job-storage";
+import { ApiError } from "@/lib/api-envelope";
 import type { HrEmployeeExportJob } from "@/hooks/api/hr/import-export";
 
 /**
@@ -33,7 +34,9 @@ jest.mock("@/hooks/api/hr/import-export", () => ({
   useDownloadHrEmployeeExportJob: () => ({ mutate: downloadMutate, isPending: false }),
   useHrEmployeeExportJob: (exportJobId: string | null) => {
     polled.push(exportJobId);
-    return jobResult;
+    // The real hook is disabled without an id, so a cleared store means no read
+    // and no error — the button goes back to offering a fresh export.
+    return exportJobId === null ? { isError: false } : jobResult;
   },
 }));
 
@@ -111,10 +114,26 @@ it("persists a newly created job so the next visit recovers it", async () => {
 
 it("forgets a stored job the server no longer serves", async () => {
   localStorage.setItem(exportJobStorageKey(SCOPE), "job-gone");
-  jobResult = { isError: true, error: new Error("Export job not found") };
+  jobResult = {
+    isError: true,
+    error: new ApiError("Export job not found", 404, "NOT_FOUND"),
+  };
+
+  render(<EmployeeExportAction filters={{}} />);
+
+  expect(await screen.findByRole("button", { name: "Export" })).toBeEnabled();
+  expect(localStorage.getItem(exportJobStorageKey(SCOPE))).toBeNull();
+});
+
+it("keeps a running job through a transient read failure", async () => {
+  localStorage.setItem(exportJobStorageKey(SCOPE), "job-running");
+  jobResult = {
+    isError: true,
+    error: new ApiError("Service unavailable", 503, "BACKEND_UNREACHABLE"),
+  };
 
   render(<EmployeeExportAction filters={{}} />);
 
   expect(await screen.findByRole("button", { name: "Retry export" })).toBeEnabled();
-  expect(localStorage.getItem(exportJobStorageKey(SCOPE))).toBeNull();
+  expect(localStorage.getItem(exportJobStorageKey(SCOPE))).toBe("job-running");
 });

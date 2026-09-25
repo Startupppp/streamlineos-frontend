@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Download, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,10 @@ import { randomId } from "@/lib/random-id";
 import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import {
   clearExportJobId,
-  loadExportJobId,
   saveExportJobId,
+  useStoredExportJobId,
 } from "@/features/hr/employees/employee-export-job-storage";
+import { isApiError } from "@/lib/api-envelope";
 
 interface EmployeeExportActionProps {
   filters: HrEmployeeExportFilters;
@@ -49,12 +50,12 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
   const scope = useOrgStorageScope();
   /**
    * Ticket 04. Recovery is a read of the stored id and nothing else — it never
-   * POSTs, so returning to the page cannot create a second export. It happens in
-   * the effect below rather than in a lazy initialiser because this button is
-   * server-rendered, where `localStorage` does not exist: seeding state from it
-   * would make the first client render disagree with the server's markup.
+   * POSTs, so returning to the page cannot create a second export. The id is the
+   * only state this button has, and it lives in the store rather than in
+   * `useState`, so a reload, a return to the page and an organisation switch all
+   * resolve to whatever that scope holds.
    */
-  const [exportJobId, setExportJobId] = useState<string | null>(null);
+  const exportJobId = useStoredExportJobId(scope);
   const lastNotice = useRef<string | null>(null);
   const createExport = useCreateHrEmployeeExportJob();
   const downloadExport = useDownloadHrEmployeeExportJob();
@@ -64,19 +65,14 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
     !exportJob.isError &&
     (job?.status === "pending" || job?.status === "running");
 
-  // Runs on mount (recovery after navigation or refresh) and again whenever the
-  // scope changes, which is how switching organisation drops the previous
-  // tenant's job instead of polling an id this tenant's server will refuse.
-  useEffect(() => {
-    setExportJobId(loadExportJobId(scope));
-    lastNotice.current = null;
-  }, [scope]);
-
   useEffect(() => {
     if (!exportJob.error) return;
-    // A stored id the server will not serve any more (purged, expired, or simply
-    // gone) must not nag on every visit.
-    clearExportJobId(scope);
+    // A stored id the server will not serve any more must not nag on every
+    // visit. Only "gone" counts: dropping the id on a transient 5xx would
+    // abandon an export that is still running.
+    if (isApiError(exportJob.error) && [404, 410].includes(exportJob.error.status)) {
+      clearExportJobId(scope);
+    }
     const message = getErrorMessage(exportJob.error);
     if (lastNotice.current === `error:${message}`) return;
     lastNotice.current = `error:${message}`;
@@ -108,7 +104,6 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
         onSuccess: (createdJob) => {
           lastNotice.current = null;
           saveExportJobId(scope, createdJob.id);
-          setExportJobId(createdJob.id);
           toast.success("Employee export queued. You can keep working while it is prepared.");
         },
         onError: (error) => toast.error(getErrorMessage(error)),
@@ -121,7 +116,6 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
     downloadExport.mutate(job.id, {
       onError: (error) => {
         clearExportJobId(scope);
-        setExportJobId(null);
         toast.error(getErrorMessage(error));
       },
     });
