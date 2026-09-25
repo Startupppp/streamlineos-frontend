@@ -38,7 +38,7 @@ const DELEGATIONS_KEY = ["hr", "governance", "delegations"] as const;
 export function useOrgDelegations(params?: {
   scope?: string;
   active?: boolean;
-  page?: number;
+  cursor?: string;
   limit?: number;
 }) {
   const canManageDelegations = useCan("hr:workflows:manage");
@@ -48,7 +48,7 @@ export function useOrgDelegations(params?: {
       const p: Record<string, unknown> = {};
       if (params?.scope) p["scope"] = params.scope;
       if (params?.active !== undefined) p["active"] = params.active;
-      if (params?.page) p["page"] = params.page;
+      if (params?.cursor) p["cursor"] = params.cursor;
       if (params?.limit) p["limit"] = params.limit;
       return apiClient.get(
         "/hr/governance/delegations",
