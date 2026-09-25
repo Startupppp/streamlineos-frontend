@@ -11,7 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { toast } from "sonner";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -60,6 +62,7 @@ export function WorkflowsSettingsPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const { data: editDefinition } = useHrWorkflowDefinition(editId);
   const [simulateTarget, setSimulateTarget] = useState<HrWorkflowDefinition | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<HrWorkflowDefinition | null>(null);
   const [filterObjectType, setFilterObjectType] = useState<HrWorkflowObjectType | "all">("all");
   const [filterStatus, setFilterStatus] = useState<HrWorkflowStatus | "all">("all");
 
@@ -118,14 +121,42 @@ export function WorkflowsSettingsPage() {
     });
   }
 
-  function handleDelete(id: number) {
-    deleteWf.mutate(id, {
-      onSuccess: () => toast.success("Workflow deleted"),
+  function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    deleteWf.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success(`Workflow "${deleteTarget.name}" deleted`);
+        setDeleteTarget(null);
+      },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) setDeleteTarget(null);
+  }
+
+  function handleClearFilters() {
+    setFilterObjectType("all");
+    setFilterStatus("all");
+  }
+
+  function handleSimulateOpenChange(open: boolean) {
+    if (!open) setSimulateTarget(null);
+  }
+
   const definitions = data?.data ?? [];
+  const isFiltered = filterObjectType !== "all" || filterStatus !== "all";
+  // FE-40/47: without hr:workflows:view the list read is disabled, which used to
+  // render "No workflows configured" plus a no-op "Request Access" button.
+  const pageState = usePageState({
+    permission: "hr:workflows:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: definitions.length === 0,
+  });
+  const actionPending = activate.isPending || archive.isPending || duplicate.isPending;
 
   return (
     <PageWrapper
@@ -151,7 +182,7 @@ export function WorkflowsSettingsPage() {
             <SelectContent>
               <SelectItem value="all">All types</SelectItem>
               {HR_WORKFLOW_OBJECT_TYPES.map((t) => (
-                <SelectItem key={t} value={t} className="text-xs">{HR_WORKFLOW_OBJECT_TYPE_LABELS[t]}</SelectItem>
+                <SelectItem key={t} value={t}>{HR_WORKFLOW_OBJECT_TYPE_LABELS[t]}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -177,55 +208,40 @@ export function WorkflowsSettingsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
-        {isLoading && (
+        <PageState
+          resolution={pageState}
+          onRetry={handleRetry}
+          loading={
+            <div className="space-y-2">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 rounded-lg" />
+              ))}
+            </div>
+          }
+          empty={
+            isFiltered ? (
+              <EmptyState
+                illustrationPreset="documents"
+                title="No workflows match these filters"
+                description="Try changing or clearing the filters to see your workflows"
+                action={{ label: "Clear Filters", onClick: handleClearFilters }}
+              />
+            ) : (
+              <EmptyState
+                illustrationPreset="documents"
+                title="No workflows configured"
+                description="Create approval chains to route HR requests through the right approvers. Common workflows include leave approval, expense approval, onboarding approval, and document approval."
+                action={canManage ? { label: "Create Workflow", onClick: handleOpenCreate } : undefined}
+              />
+            )
+          }
+        >
           <div className="space-y-2">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-lg" />
-            ))}
-          </div>
-        )}
-
-        {!isLoading && isError && (
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load workflows"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        )}
-
-        {!isLoading && !isError && definitions.length === 0 && (filterObjectType !== "all" || filterStatus !== "all") && (
-          <EmptyState
-            illustrationPreset="documents"
-            title="No workflows match these filters"
-            description="Try changing or clearing the filters to see your workflows"
-            action={{ label: "Clear Filters", onClick: () => { setFilterObjectType("all"); setFilterStatus("all"); } }}
-          />
-        )}
-
-        {!isLoading && !isError && definitions.length === 0 && filterObjectType === "all" && filterStatus === "all" && (
-          <EmptyState
-            illustrationPreset="documents"
-            title="No workflows configured"
-            description="Create approval chains to route HR requests through the right approvers. Common workflows include leave approval, expense approval, onboarding approval, and document approval."
-            action={
-              canManage
-                ? { label: "Create Workflow", onClick: handleOpenCreate }
-                : { label: "Request Access", onClick: () => {} }
-            }
-          />
-        )}
-
-        {!isLoading && !isError && definitions.length > 0 && (
-          <div className="space-y-2">
-            {definitions.map((def, idx) => {
+            {definitions.map((def) => {
               const statusCfg = STATUS_BADGE[def.status];
               return (
-                <motion.div
+                <div
                   key={def.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, ease: "easeOut", delay: idx * 0.04 }}
                   className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3"
                 >
                   <div className="flex-1 min-w-0">
@@ -264,19 +280,19 @@ export function WorkflowsSettingsPage() {
                           </DropdownMenuItem>
                         )}
                         {canManage && def.status === "draft" && (
-                          <DropdownMenuItem onClick={() => handleActivate(def.id)}>
+                          <DropdownMenuItem disabled={actionPending} onClick={() => handleActivate(def.id)}>
                             <Play className="h-3.5 w-3.5 mr-2" />
                             Activate
                           </DropdownMenuItem>
                         )}
                         {canManage && def.status === "active" && (
-                          <DropdownMenuItem onClick={() => handleArchive(def.id)}>
+                          <DropdownMenuItem disabled={actionPending} onClick={() => handleArchive(def.id)}>
                             <Archive className="h-3.5 w-3.5 mr-2" />
                             Archive
                           </DropdownMenuItem>
                         )}
                         {canManage && (
-                          <DropdownMenuItem onClick={() => handleDuplicate(def.id)}>
+                          <DropdownMenuItem disabled={actionPending} onClick={() => handleDuplicate(def.id)}>
                             <Copy className="h-3.5 w-3.5 mr-2" />
                             Duplicate
                           </DropdownMenuItem>
@@ -286,7 +302,7 @@ export function WorkflowsSettingsPage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
-                              onClick={() => handleDelete(def.id)}
+                              onClick={() => setDeleteTarget(def)}
                             >
                               <Trash2 className="h-3.5 w-3.5 mr-2" />
                               Delete
@@ -296,12 +312,24 @@ export function WorkflowsSettingsPage() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
-                </motion.div>
+                </div>
               );
             })}
           </div>
-        )}
+        </PageState>
       </motion.div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete workflow?"
+        description={`"${deleteTarget?.name ?? ""}" will be permanently deleted. Requests already routed by it keep their history.`}
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteWf.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleConfirmDelete}
+      />
 
       <WorkflowUpsertSheet
         open={sheetOpen && (editId === null || editDefinition !== undefined)}
@@ -313,9 +341,7 @@ export function WorkflowsSettingsPage() {
         workflowId={simulateTarget?.id ?? null}
         workflowName={simulateTarget?.name}
         open={simulateTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) setSimulateTarget(null);
-        }}
+        onOpenChange={handleSimulateOpenChange}
       />
     </PageWrapper>
   );
