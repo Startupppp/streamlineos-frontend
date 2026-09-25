@@ -241,7 +241,18 @@ const FULL_GOAL_DETAIL = {
       targetValue: 80,
     },
   ],
-  links: [],
+  links: [
+    {
+      id: 9,
+      ticketId: 12,
+      projectId: null,
+      createdAt: "2026-09-25T00:00:00.000Z",
+      ticketTitle: "Improve activation",
+      ticketProjectId: 42,
+      projectName: null,
+      projectKey: "BLD",
+    },
+  ],
   updates: [],
 };
 
@@ -289,6 +300,7 @@ it("hides edit, delete and add-link controls when build:goals:manage is denied, 
   expect(screen.queryByText("Delete")).not.toBeInTheDocument();
   expect(screen.queryByText("Link")).not.toBeInTheDocument();
   expect(screen.queryByText("Check in")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Remove link" })).not.toBeInTheDocument();
 });
 
 it("shows edit, delete and add-link controls when build:goals:manage is granted", () => {
