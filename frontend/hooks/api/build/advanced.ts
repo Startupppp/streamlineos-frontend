@@ -105,6 +105,68 @@ export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
   });
 }
 
+export interface UpdateCycleInput {
+  projectId: number;
+  cycleId: number;
+  name?: string;
+  description?: string;
+  status?: "draft" | "active" | "completed";
+  startDate?: string;
+  endDate?: string;
+}
+
+export function useUpdateCycle(options?: Parameters<typeof useMutation>[0]) {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
+    mutationKey: ["projects", "cycles", "update"],
+    mutationFn: ({ projectId, cycleId, ...data }: UpdateCycleInput) =>
+      apiClient.patch<Cycle>(`/build/${projectId}/cycles/${cycleId}`, data, undefined, cycleRowContract),
+    onSuccess: (cycle: Cycle, variables: UpdateCycleInput) => {
+      const queryKey = buildWorkQueryKeys.projects.cycles(variables.projectId);
+      queryClient.setQueryData<Cycle[]>(queryKey, (current) =>
+        current?.map((item) => item.id === cycle.id ? { ...item, ...cycle } : item),
+      );
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.velocity(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.burnup(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.cycleTime(variables.projectId),
+      });
+    },
+  });
+}
+
+export function useDeleteCycle(options?: Parameters<typeof useMutation>[0]) {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation("build:workspace:manage", {
+    ...options,
+    mutationKey: ["projects", "cycles", "delete"],
+    mutationFn: ({ projectId, cycleId }: { projectId: number; cycleId: number }) =>
+      apiClient.delete<void>(`/build/${projectId}/cycles/${cycleId}`, undefined, undefined, noContentLazy),
+    onSuccess: (_: unknown, variables: { projectId: number; cycleId: number }) => {
+      const queryKey = buildWorkQueryKeys.projects.cycles(variables.projectId);
+      queryClient.setQueryData<Cycle[]>(queryKey, (current) =>
+        current?.filter((cycle) => cycle.id !== variables.cycleId),
+      );
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.velocity(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.burnup(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.cycleTime(variables.projectId),
+      });
+    },
+  });
+}
+
 export function useModules(
   projectId: number,
   options?: Omit<UseQueryOptions<Module[]>, "queryKey" | "queryFn" | "enabled">
