@@ -105,6 +105,18 @@ describe("BulkOnboardPreviewTable — bulk-row diagnostics", () => {
   });
 });
 
+describe("BulkOnboardPreviewTable — top-level rows", () => {
+  it("shows a declared top-level row as Top-level, not as having no manager", () => {
+    const founder = flowRow(5, {
+      payload: { ...flowRow(5).payload!, topLevelRole: true, topLevelRoleReason: "Founder" },
+      server: serverRow(1, "READY", { primaryManager: null }),
+    });
+    render(<BulkOnboardPreviewTable rows={[founder]} />);
+    expect(screen.getByText("Top-level role")).toBeInTheDocument();
+    expect(screen.queryByText("No manager")).not.toBeInTheDocument();
+  });
+});
+
 describe("BulkOnboardPanel — commits only Ready and Warning rows after confirmation", () => {
   it("previews on the server, then submits exactly the committable rows", async () => {
     const user = userEvent.setup();
@@ -164,5 +176,43 @@ describe("BulkOnboardPanel — while the reporting policy is still loading", () 
     expect(previewMutateAsync.mock.calls.at(-1)?.[0]).toEqual([
       expect.objectContaining({ email: "ann@example.com", secondaryManagerEmail3: "c@example.com" }),
     ]);
+  });
+});
+
+describe("BulkOnboardPanel — rows keep their file number through preview and result", () => {
+  it("names a row by its place in the file even after a blank line", async () => {
+    const user = userEvent.setup();
+    const csv = [
+      "firstName,lastName,email,designation,department",
+      "Ann,One,ann@example.com,Dev,Engineering",
+      "",
+      "Fay,Founder,fay@example.com,Dev,Engineering",
+    ].join("\n");
+    const file = new File([csv], "people.csv", { type: "text/csv" });
+    Object.defineProperty(file, "text", { value: () => Promise.resolve(csv) });
+    previewMutateAsync.mockResolvedValue({ rows: [serverRow(1, "READY"), serverRow(2, "READY")], counts: { ready: 2, warning: 0, error: 0, skipped: 0 } });
+    commitMutate.mockImplementation((_rows: unknown, handlers: { onSuccess: (result: BulkOnboardResult) => void }) =>
+      handlers.onSuccess({
+        total: 2,
+        created: 1,
+        failed: 1,
+        skipped: 0,
+        results: [
+          { row: 1, email: "ann@example.com", success: true, status: "CREATED", codes: [], primaryManager: null },
+          { row: 2, email: "fay@example.com", success: false, error: "Already a member", status: "FAILED", codes: [], primaryManager: null },
+        ],
+      }),
+    );
+
+    render(<BulkOnboardPanel />);
+    await user.upload(screen.getByLabelText("Choose employee onboard file"), file);
+    const table = await screen.findByRole("region", { name: "Preview rows" });
+    expect(within(table).getByText("fay@example.com").closest("tr")).toHaveTextContent(/^3/);
+
+    await user.click(await screen.findByRole("button", { name: "Create 2 employees" }));
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Create 2 employees" }));
+
+    expect(await screen.findByText("Row 3")).toBeInTheDocument();
+    expect(screen.queryByText("Row 2")).not.toBeInTheDocument();
   });
 });

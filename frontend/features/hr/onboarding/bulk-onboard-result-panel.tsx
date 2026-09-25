@@ -46,8 +46,8 @@ export function BulkOnboardResultPanel({ commit, report, onReset }: BulkOnboardR
   }
 
   return (
-    <Card className="border-border/70 shadow-sm">
-      <CardContent className="py-8">
+    <Card className="min-w-0 border-border/70 shadow-sm">
+      <CardContent className="min-w-0 py-8">
         <div className="mb-6 text-center">
           <div
             className={cn(
@@ -82,10 +82,10 @@ export function BulkOnboardResultPanel({ commit, report, onReset }: BulkOnboardR
             <p className="mb-2 text-xs font-medium text-status-danger-ink">Rows not created</p>
             <ul className="flex flex-col gap-1.5">
               {report.map((row) => (
-                <li key={`${row.row}-${row.email}`} className="flex flex-wrap items-center gap-1.5 text-dense text-muted-foreground">
+                <li key={`${row.row}-${row.email}`} className="flex min-w-0 flex-wrap items-center gap-1.5 break-words text-dense text-muted-foreground">
                   <span className="font-medium text-foreground">Row {row.row}</span>
                   <ReportingRowStatusBadge status={row.status} />
-                  <span>{row.email}</span>
+                  <span className="break-all">{row.email}</span>
                   {row.details ? <span>— {row.details}</span> : null}
                 </li>
               ))}

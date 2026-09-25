@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useBulkOnboardEmployees, useBulkOnboardPreview } from "@/hooks/api/hr/employee-profile";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { BulkOnboardEmployeeRow, BulkOnboardPreviewRow, BulkOnboardResult } from "@/types/hr";
-import { MAX_ROWS } from "./bulk-onboard-columns";
+import { MAX_ROWS, sourceRowOf } from "./bulk-onboard-columns";
 import { parseFile } from "./bulk-onboard-parse";
 import { validateAndMap, type PreviewRow } from "./bulk-onboard-template";
 
@@ -45,7 +45,8 @@ function checkFile(parsed: Array<Record<string, string>>, deptNames: Set<string>
     } else if (preview.email) {
       seenEmails.add(preview.email);
     }
-    return { fileRow: i + 1, preview: { ...preview, _idx: i + 1 }, payload: preview.valid ? payload : null, server: null, dependsOnFileRow: null };
+    const fileRow = sourceRowOf(raw, i + 1);
+    return { fileRow, preview: { ...preview, _idx: fileRow }, payload: preview.valid ? payload : null, server: null, dependsOnFileRow: null };
   });
 }
 

@@ -1,4 +1,4 @@
-import { CONFLICT_KEY, LEGACY_PRIMARY_KEY } from "./bulk-onboard-columns";
+import { CONFLICT_KEY, LEGACY_PRIMARY_KEY, SOURCE_ROW_KEY } from "./bulk-onboard-columns";
 import { parseFile } from "./bulk-onboard-parse";
 
 function csvFile(text: string): File {
@@ -15,13 +15,13 @@ describe("parseFile (CSV)", () => {
     );
 
     expect(rows).toEqual([
-      { firstName: "Priya", email: "priya@example.com", primaryManagerEmail: "boss@example.com", [LEGACY_PRIMARY_KEY]: "Reports To" },
+      { firstName: "Priya", email: "priya@example.com", primaryManagerEmail: "boss@example.com", [LEGACY_PRIMARY_KEY]: "Reports To", [SOURCE_ROW_KEY]: "1" },
     ]);
   });
 
   it("keeps a filled manager column when a legacy duplicate header is blank, and reports no legacy use", async () => {
     const rows = await parseFile(csvFile("email,primaryManagerEmail,reportsTo\na@example.com,boss@example.com,\n"));
-    expect(rows).toEqual([{ email: "a@example.com", primaryManagerEmail: "boss@example.com" }]);
+    expect(rows).toEqual([{ email: "a@example.com", primaryManagerEmail: "boss@example.com", [SOURCE_ROW_KEY]: "1" }]);
   });
 
   it("flags two headers that give the primary manager different values", async () => {
@@ -34,9 +34,12 @@ describe("parseFile (CSV)", () => {
     expect(rows[0]).not.toHaveProperty(CONFLICT_KEY);
   });
 
-  it("skips blank lines", async () => {
-    const rows = await parseFile(csvFile("email\n\na@example.com\n\n"));
-    expect(rows).toEqual([{ email: "a@example.com" }]);
+  it("skips blank lines but keeps every row's own number in the file", async () => {
+    const rows = await parseFile(csvFile("email\n\na@example.com\n  \nb@example.com\n\n"));
+    expect(rows).toEqual([
+      { email: "a@example.com", [SOURCE_ROW_KEY]: "2" },
+      { email: "b@example.com", [SOURCE_ROW_KEY]: "4" },
+    ]);
   });
 });
 
@@ -57,7 +60,7 @@ describe("parseFile (xlsx)", () => {
     Object.defineProperty(file, "arrayBuffer", { value: () => Promise.resolve(buffer) });
 
     expect(await parseFile(file)).toEqual([
-      { firstName: "Priya", joiningDate: "2026-04-01", monthlySalary: "75000", primaryManagerEmail: "boss@example.com", [LEGACY_PRIMARY_KEY]: "Manager Email" },
+      { firstName: "Priya", joiningDate: "2026-04-01", monthlySalary: "75000", primaryManagerEmail: "boss@example.com", [LEGACY_PRIMARY_KEY]: "Manager Email", [SOURCE_ROW_KEY]: "1" },
     ]);
   });
 });

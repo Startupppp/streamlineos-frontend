@@ -3,6 +3,7 @@
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ManagerResolutionCell } from "@/components/hr/reporting-lines/manager-resolution-cell";
 import { ReportingRowStatusBadge } from "@/components/hr/reporting-lines/reporting-status-badge";
+import { ReportingRelationshipBadge } from "@/components/hr/reporting-lines/reporting-relationship-badge";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import type { BulkOnboardFlowRow } from "./use-bulk-onboard-flow";
 
@@ -25,6 +26,8 @@ function EmployeeCell(row: BulkOnboardFlowRow) {
 }
 
 function PrimaryManagerCell(row: BulkOnboardFlowRow) {
+  // A declared top-level row has no manager by design, not "No manager".
+  if (row.payload?.topLevelRole) return <ReportingRelationshipBadge kind="topLevel" />;
   if (!row.server) return <span className="text-xs text-muted-foreground">—</span>;
   return <ManagerResolutionCell primaryManager={row.server.primaryManager} dependsOnRow={row.dependsOnFileRow} />;
 }
@@ -68,7 +71,8 @@ function rowKey(row: BulkOnboardFlowRow) {
 
 export function BulkOnboardPreviewTable({ rows }: BulkOnboardPreviewTableProps) {
   return (
-    <div className="overflow-hidden rounded-lg border">
+    // The table scrolls inside its own region, never the page (375/768/1280).
+    <div role="region" aria-label="Preview rows" tabIndex={0} className="min-w-0 max-w-full overflow-x-auto rounded-lg border">
       <DataTable data={rows} columns={COLUMNS} getRowKey={rowKey} pagination={{ pageSize: 25 }} />
     </div>
   );

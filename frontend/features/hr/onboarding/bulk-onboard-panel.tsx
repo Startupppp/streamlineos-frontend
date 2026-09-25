@@ -72,9 +72,9 @@ export function BulkOnboardPanel() {
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
+    <div className="mx-auto flex w-full min-w-0 max-w-5xl flex-col gap-4">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3 sm:items-center">
+        <div className="min-w-0 flex-1 basis-64">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Users className="h-4 w-4 text-primary" aria-hidden="true" />
             Bulk onboard employees
@@ -89,8 +89,8 @@ export function BulkOnboardPanel() {
         </Button>
       </div>
 
-      <Card className="border-border/70 shadow-sm">
-        <CardContent className="p-3 sm:p-4">
+      <Card className="min-w-0 border-border/70 shadow-sm">
+        <CardContent className="min-w-0 p-3 sm:p-4">
           <p className="mb-2 text-dense font-medium uppercase tracking-wide text-muted-foreground">Required columns</p>
           <div className="flex flex-wrap gap-1.5">
             {BULK_ONBOARD_COLUMNS.filter((c) => c.required).map((c) => (
@@ -99,7 +99,7 @@ export function BulkOnboardPanel() {
               </Badge>
             ))}
           </div>
-          <p className="mt-2 text-dense text-muted-foreground">
+          <p className="mt-2 break-words text-dense text-muted-foreground">
             Reporting: primaryManagerEmail (blank = fallback policy), secondaryManagerEmail1–3, topLevelRoleReason,
             effectiveFrom. Optional: phone, gender, role, employeeId, joiningDate, dateOfBirth, taxId, monthlySalary, bank fields.
             {deptNameList.length > 0 ? <> Departments: <span className="text-foreground">{deptNameList.join(", ")}</span></> : null}
@@ -110,11 +110,11 @@ export function BulkOnboardPanel() {
       {flow.step === "upload" ? <BulkOnboardUploadCard parsing={flow.parsing} onFile={handleFile} /> : null}
 
       {flow.step === "preview" ? (
-        <Card className="border-border/70 shadow-sm">
-          <CardHeader className="pb-2">
-            <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-              <div>
-                <CardTitle className="text-sm">Preview · {flow.fileName}</CardTitle>
+        <Card className="min-w-0 border-border/70 shadow-sm">
+          <CardHeader className="min-w-0 pb-2">
+            <div className="flex min-w-0 flex-wrap items-start justify-between gap-2 sm:items-center">
+              <div className="min-w-0 flex-1 basis-48">
+                <CardTitle className="break-all text-sm">Preview · {flow.fileName}</CardTitle>
                 <CardDescription className="mt-0.5 text-xs" aria-live="polite">
                   {flow.checking
                     ? `Checking ${plural(flow.rows.length, "row")} against your organisation…`
@@ -127,7 +127,7 @@ export function BulkOnboardPanel() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4">
+          <CardContent className="flex min-w-0 flex-col gap-4">
             {flow.checkFailed ? (
               <div role="alert" className="flex flex-wrap items-center gap-2 rounded-lg border border-status-danger-rule bg-status-danger-surface px-3 py-2 text-xs text-status-danger-ink">
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />

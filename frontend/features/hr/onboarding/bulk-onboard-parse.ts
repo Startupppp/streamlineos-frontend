@@ -1,5 +1,15 @@
 import { collectManagerColumns, resolveManagerHeader } from "@/components/hr/reporting-lines/manager-columns";
-import { CONFLICT_KEY, LEGACY_PRIMARY_KEY, normalizeHeader, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
+import { CONFLICT_KEY, LEGACY_PRIMARY_KEY, SOURCE_ROW_KEY, normalizeHeader, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
+
+interface SourceRow {
+  values: Record<string, string>;
+  /** Data-row number in the file, header not counted. */
+  sourceRow: number;
+}
+
+function isBlankRow(values: Record<string, string | undefined>): boolean {
+  return Object.values(values).every((value) => !(value ?? "").trim());
+}
 
 function formatLocalDate(value: Date): string {
   const y = value.getFullYear();
@@ -35,7 +45,7 @@ function excelCellToString(cell: { text?: string; value?: unknown }): string {
 
 function mapRawRows(
   headers: string[],
-  data: Record<string, string>[],
+  data: SourceRow[],
 ): ParsedRow[] {
   const keyMap = new Map<string, ColumnKey>();
   for (const h of headers) {
@@ -43,8 +53,8 @@ function mapRawRows(
     if (mapped) keyMap.set(h, mapped);
   }
 
-  return data.map((row) => {
-    const out: ParsedRow = {};
+  return data.map(({ values: row, sourceRow }) => {
+    const out: ParsedRow = { [SOURCE_ROW_KEY]: String(sourceRow) };
     const conflicts = new Set<string>();
     for (const [header, value] of Object.entries(row)) {
       // Manager columns are read by the shared reader below, like the backend's.
@@ -72,12 +82,16 @@ export async function parseFile(file: File): Promise<ParsedRow[]> {
   if (file.name.endsWith(".csv") || file.type === "text/csv") {
     const Papa = (await import("papaparse")).default;
     const text = await file.text();
+    // Blank lines are kept here and dropped below, so each row keeps its number.
     const result = Papa.parse<Record<string, string>>(text, {
       header: true,
-      skipEmptyLines: true,
+      skipEmptyLines: false,
       transformHeader: (h) => h.trim(),
     });
-    return mapRawRows(result.meta.fields ?? [], result.data);
+    const rows = result.data
+      .map((values, index) => ({ values, sourceRow: index + 1 }))
+      .filter((row) => !isBlankRow(row.values));
+    return mapRawRows(result.meta.fields ?? [], rows);
   }
 
   const ExcelJS = (await import("exceljs")).default;
@@ -93,7 +107,7 @@ export async function parseFile(file: File): Promise<ParsedRow[]> {
     headers[col - 1] = String(cell.text ?? "").trim();
   });
 
-  const dataRows: Record<string, string>[] = [];
+  const dataRows: SourceRow[] = [];
   worksheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) return;
     const entry: Record<string, string> = {};
@@ -104,7 +118,7 @@ export async function parseFile(file: File): Promise<ParsedRow[]> {
       if (val) empty = false;
       entry[header] = val;
     });
-    if (!empty) dataRows.push(entry);
+    if (!empty) dataRows.push({ values: entry, sourceRow: rowNumber - 1 });
   });
 
   return mapRawRows(headers.filter(Boolean), dataRows);

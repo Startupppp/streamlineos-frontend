@@ -196,6 +196,18 @@ export const CONFLICT_KEY = "__conflictingColumns";
  */
 export const LEGACY_PRIMARY_KEY = "__legacyPrimaryHeader";
 
+/**
+ * The row's own data-row number in the uploaded file (header not counted),
+ * carried from the parser because blank rows are dropped: without it every row
+ * after a blank line would be renumbered in the preview, result and report.
+ */
+export const SOURCE_ROW_KEY = "__sourceRow";
+
+export function sourceRowOf(row: ParsedRow, fallback: number): number {
+  const value = Number(row[SOURCE_ROW_KEY]);
+  return Number.isInteger(value) && value > 0 ? value : fallback;
+}
+
 export const MAX_ROWS = 100;
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
