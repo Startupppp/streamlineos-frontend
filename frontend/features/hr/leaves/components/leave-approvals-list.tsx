@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import type { LeaveRequest } from "./leaves-shared";
 import { LeaveApprovalItem } from "./leave-approval-item";
@@ -28,6 +29,9 @@ export function LeaveApprovalsList({
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [approvalComment, setApprovalComment] = useState("");
   const processingId =
     approveMutation.variables?.leaveId ?? rejectMutation.variables?.leaveId ?? null;
   const isPending = approveMutation.isPending || rejectMutation.isPending;
@@ -35,21 +39,52 @@ export function LeaveApprovalsList({
   const handleProcess = useCallback(
     (requestId: number, status: "APPROVED" | "REJECTED") => {
       if (status === "APPROVED") {
-        approveMutation.mutate(
-          { leaveId: requestId },
-          {
-            onSuccess: () => toast.success("Request approved successfully"),
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
+        setApprovingId(requestId);
+        setApprovalComment("");
+        setApproveDialogOpen(true);
       } else {
         setRejectingId(requestId);
         setRejectionReason("");
         setRejectDialogOpen(true);
       }
     },
-    [approveMutation],
+    [],
   );
+
+  const handleApproveConfirm = useCallback(() => {
+    if (approvingId === null) return;
+    const comment = approvalComment.trim();
+    approveMutation.mutate(
+      // PROVISIONAL (decision #8, HRMS-E2E-033): the comment is optional, so an
+      // empty box sends no `comment` key at all rather than an empty string.
+      // Reject's required reason is untouched by this.
+      { leaveId: approvingId, ...(comment ? { comment } : {}) },
+      {
+        onSuccess: () => {
+          toast.success("Request approved successfully");
+          setApproveDialogOpen(false);
+          setApprovingId(null);
+          setApprovalComment("");
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }, [approvingId, approvalComment, approveMutation]);
+
+  const handleApprovalCommentChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setApprovalComment(e.target.value);
+    },
+    [],
+  );
+
+  const handleApproveOpenChange = useCallback((open: boolean) => {
+    setApproveDialogOpen(open);
+    if (!open) {
+      setApprovingId(null);
+      setApprovalComment("");
+    }
+  }, []);
 
   const handleRejectConfirm = useCallback(() => {
     if (rejectingId === null) return;
@@ -99,6 +134,36 @@ export function LeaveApprovalsList({
           </li>
         ))}
       </ul>
+      <ConfirmDialog
+        open={approveDialogOpen}
+        onOpenChange={handleApproveOpenChange}
+        title="Approve Leave Request"
+        description="Add a note for the requester if you want to. It is not required."
+        confirmLabel="Approve"
+        isPending={approveMutation.isPending}
+        keepOpenOnConfirm
+        onConfirm={handleApproveConfirm}
+        content={
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="leave-approval-comment"
+              className="text-xs font-medium text-foreground"
+            >
+              Comment{" "}
+              <span className="text-muted-foreground font-normal">(Optional)</span>
+            </Label>
+            <Textarea
+              id="leave-approval-comment"
+              placeholder="E.g. Approved — enjoy the break."
+              value={approvalComment}
+              onChange={handleApprovalCommentChange}
+              rows={3}
+              maxLength={2000}
+              className="resize-none text-sm"
+            />
+          </div>
+        }
+      />
       <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <SheetContent className="sm:max-w-sm p-0 flex flex-col">
           <SheetHeader className="p-5 pb-4 border-b">
