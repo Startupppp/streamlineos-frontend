@@ -131,4 +131,24 @@ describe("creating a department from the picker selects it, because leaving the 
       ),
     ).toBeInTheDocument();
   });
+
+  it("says the list is denied, not empty, when the caller lacks hr:employees:view (FE-47)", async () => {
+    const queryClient = client();
+    queryClient.setQueryData(queryKeys.access.me(), {
+      ...ACCESS,
+      scopes: {},
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Harness onChange={jest.fn()} />
+      </QueryClientProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("combobox"));
+
+    expect(
+      await screen.findByText("You don't have permission to view departments."),
+    ).toBeInTheDocument();
+    expect(mockedGet).not.toHaveBeenCalled();
+  });
 });
