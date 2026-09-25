@@ -212,6 +212,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
       const result = await importMutation.mutateAsync({
         file,
         autoApprove,
+        categoryMapping,
       });
       setImportResult({
         success: true,
@@ -227,7 +228,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
     } finally {
       setIsImporting(false);
     }
-  }, [file, autoApprove, onSuccess, importMutation]);
+  }, [file, autoApprove, categoryMapping, onSuccess, importMutation]);
 
   const validCount = parsedRows.filter((r) => r.valid).length;
 

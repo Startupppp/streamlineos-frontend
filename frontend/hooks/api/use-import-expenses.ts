@@ -11,6 +11,8 @@ const importExpensesResultC = lazyContract(() =>
 interface ImportVariables {
   file: File;
   autoApprove: boolean;
+  /** The preview's choices for categories the server does not recognise. */
+  categoryMapping?: Record<string, string>;
 }
 
 interface ImportExpensesResult {
@@ -28,12 +30,14 @@ interface ImportExpensesResult {
 async function importExpensesRequest({
   file,
   autoApprove,
+  categoryMapping,
 }: ImportVariables): Promise<ImportExpensesResult> {
   const content = await file.text();
   const result = await apiClient.post<ImportExpensesResult>("/hr/expenses/import", {
     fileName: file.name,
     content,
     autoApprove,
+    ...(categoryMapping && Object.keys(categoryMapping).length > 0 ? { categoryMapping } : {}),
   }, undefined, importExpensesResultC);
   if (!result.success) {
     throw new Error(result.error ?? "Failed to import expenses");
