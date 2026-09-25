@@ -23,3 +23,25 @@ describe("parseFile (CSV)", () => {
     expect(rows).toEqual([{ email: "a@example.com" }]);
   });
 });
+
+describe("parseFile (xlsx)", () => {
+  it("reads rich text, dates and formula results from the Employees sheet", async () => {
+    const ExcelJS = (await import("exceljs")).default;
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Employees");
+    sheet.addRow(["firstName", "joiningDate", "monthlySalary", "Manager Email"]);
+    const row = sheet.addRow([]);
+    row.getCell(1).value = { richText: [{ text: "Pri" }, { text: "ya" }] };
+    row.getCell(2).value = new Date(2026, 3, 1);
+    row.getCell(3).value = { formula: "70000+5000", result: 75000 };
+    row.getCell(4).value = "boss@example.com";
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    const file = new File([], "employees.xlsx");
+    Object.defineProperty(file, "arrayBuffer", { value: () => Promise.resolve(buffer) });
+
+    expect(await parseFile(file)).toEqual([
+      { firstName: "Priya", joiningDate: "2026-04-01", monthlySalary: "75000", reportingManagerEmail: "boss@example.com" },
+    ]);
+  });
+});

@@ -549,10 +549,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/onboarding/bulk-onboard-template.ts": {
-      "as": 4,
-      "nonNull": 0
-    },
     "features/hr/onboarding/onboarding-list-page.tsx": {
       "as": 2,
       "nonNull": 0

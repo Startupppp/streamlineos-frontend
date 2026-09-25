@@ -14,17 +14,16 @@ function excelCellToString(cell: { text?: string; value?: unknown }): string {
     return formatLocalDate(value);
   }
   if (typeof value === "object" && value !== null && "result" in value) {
-    const result = (value as { result?: unknown }).result;
+    const result = value.result;
     if (result instanceof Date) return formatLocalDate(result);
     if (result != null) return String(result).trim();
   }
   if (typeof value === "object" && value !== null && "text" in value) {
-    return String((value as { text: string }).text ?? "").trim();
+    return String(value.text ?? "").trim();
   }
-  if (typeof value === "object" && value !== null && "richText" in value) {
-    const parts = (value as { richText: Array<{ text?: string }> }).richText;
-    return parts
-      .map((p) => p.text ?? "")
+  if (typeof value === "object" && value !== null && "richText" in value && Array.isArray(value.richText)) {
+    return value.richText
+      .map((part: unknown) => (typeof part === "object" && part !== null && "text" in part ? String(part.text ?? "") : ""))
       .join("")
       .trim();
   }

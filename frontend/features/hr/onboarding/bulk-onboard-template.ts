@@ -18,6 +18,10 @@ export interface PreviewRow {
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const GENDER_VALUES = new Set(["MALE", "FEMALE", "OTHER"]);
 
+function isGender(value: string): value is "MALE" | "FEMALE" | "OTHER" {
+  return GENDER_VALUES.has(value);
+}
+
 function cell(row: ParsedRow, key: ColumnKey): string {
   return (row[key] ?? "").trim();
 }
@@ -136,7 +140,7 @@ export function validateAndMap(
     designation,
     ...(departmentName ? { department: departmentName } : {}),
     ...(phone ? { phone } : {}),
-    ...(genderRaw ? { gender: genderRaw as "MALE" | "FEMALE" | "OTHER" } : {}),
+    ...(isGender(genderRaw) ? { gender: genderRaw } : {}),
     ...(roleRaw ? { role: roleRaw } : {}),
     ...(reportingManagerEmail ? { reportingManagerEmail } : {}),
     ...(topLevelRoleReason ? { topLevelRole: true, topLevelRoleReason } : {}),
