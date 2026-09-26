@@ -15,6 +15,7 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/hooks/api/build/change-requests", () => ({
   useChangeRequests: jest.fn(),
   useDeleteChangeRequest: jest.fn(),
+  useUpdateChangeRequest: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -207,12 +208,14 @@ jest.mock("lucide-react", () => ({
 import {
   useChangeRequests,
   useDeleteChangeRequest,
+  useUpdateChangeRequest,
 } from "@/hooks/api/build/change-requests";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 
 const mockUseChangeRequests = useChangeRequests as jest.Mock;
 const mockUseDeleteChangeRequest = useDeleteChangeRequest as jest.Mock;
+const mockUseUpdateChangeRequest = useUpdateChangeRequest as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseOrgMembers = useOrgMembers as jest.Mock;
@@ -244,6 +247,10 @@ beforeEach(() => {
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseChangeRequests.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseDeleteChangeRequest.mockReturnValue({
+    mutate: jest.fn(),
+    isPending: false,
+  });
+  mockUseUpdateChangeRequest.mockReturnValue({
     mutate: jest.fn(),
     isPending: false,
   });

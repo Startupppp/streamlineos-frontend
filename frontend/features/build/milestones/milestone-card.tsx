@@ -3,8 +3,10 @@
 import { memo, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Diamond, Pencil, CalendarCheck2 } from "lucide-react";
-import { Trash2Icon } from "@animateicons/react/lucide";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Diamond, CalendarCheck2 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { ProjectMilestone } from "@/hooks/api/build";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday, differenceInDays } from "date-fns";
@@ -39,33 +41,22 @@ interface MilestoneCardProps {
   milestone: ProjectMilestone;
   onEdit: (milestone: ProjectMilestone) => void;
   onDelete?: (milestone: ProjectMilestone) => void;
-}
-
-function DeleteButton({ onClick, label }: { onClick: () => void; label: string }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button
-      size="icon"
-      variant="ghost"
-      className="w-7 text-destructive hover:text-destructive"
-      onClick={onClick}
-      aria-label={label}
-      {...hoverHandlers}
-    >
-      <Trash2Icon ref={iconRef} size={12} />
-    </Button>
-  );
+  selected?: boolean;
+  onSelect?: (milestone: ProjectMilestone, checked: boolean) => void;
 }
 
 export const MilestoneCard = memo(function MilestoneCard({
   milestone,
   onEdit,
   onDelete,
+  selected,
+  onSelect,
 }: MilestoneCardProps) {
   const cfg = STATUS_CONFIG[milestone.status];
   const dateObj = new Date(milestone.targetDate);
   const daysLeft = differenceInDays(dateObj, new Date());
   const overdue = isPast(dateObj) && !isToday(dateObj) && milestone.status === "PENDING";
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const handleEdit = useCallback(() => onEdit(milestone), [onEdit, milestone]);
   const handleDelete = useCallback(() => onDelete?.(milestone), [onDelete, milestone]);
@@ -91,6 +82,15 @@ export const MilestoneCard = memo(function MilestoneCard({
       )}
     >
       <div className="flex min-w-0 items-start gap-2.5">
+        {onSelect ? (
+          <Checkbox
+            checked={selected ?? false}
+            onCheckedChange={(checked) => onSelect(milestone, checked === true)}
+            aria-label={`Select ${milestone.name}`}
+            className="mt-0.5 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : null}
         <Diamond
           className={cn("mt-0.5 h-4 w-4 shrink-0", overdue ? "text-destructive" : cfg.color)}
           fill="currentColor"
@@ -136,18 +136,17 @@ export const MilestoneCard = memo(function MilestoneCard({
               ) : null}
             </div>
             <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="w-7"
-                onClick={handleEdit}
-                aria-label={`Edit ${milestone.name}`}
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-              {onDelete ? (
-                <DeleteButton onClick={handleDelete} label={`Delete ${milestone.name}`} />
-              ) : null}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="w-7" aria-label={`Actions for ${milestone.name}`} {...hoverHandlers}>
+                    <EllipsisIcon ref={iconRef} size={14} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+                  {onDelete ? <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem> : null}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>

@@ -160,9 +160,15 @@ jest.mock("@/components/ui/loading-button", () => ({
   LoadingButton: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
 }));
 
-jest.mock("@/hooks/common/use-query-param-open", () => ({
-  useQueryParamOpen: () => ({ open: false, onOpenChange: jest.fn(), setOpen: jest.fn() }),
-}));
+jest.mock("@/hooks/common/use-query-param-open", () => {
+  const { useState } = require("react");
+  return {
+    useQueryParamOpen: () => {
+      const [open, setOpen] = useState(false);
+      return { open, onOpenChange: (v: boolean) => setOpen(v), setOpen: () => setOpen(true) };
+    },
+  };
+});
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
@@ -179,7 +185,8 @@ jest.mock("@/features/build/portfolios/portfolio-status-badge", () => ({
 }));
 
 jest.mock("./program-form-sheet", () => ({
-  ProgramFormSheet: () => null,
+  ProgramFormSheet: ({ open }: { open?: boolean }) =>
+    open ? <div data-testid="program-form-sheet" /> : null,
 }));
 
 const { usePrograms } = jest.requireMock("@/hooks/api/build") as {
@@ -188,11 +195,15 @@ const { usePrograms } = jest.requireMock("@/hooks/api/build") as {
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
 };
+const { useCan: mockProgramsUseCan } = jest.requireMock("@/hooks/api/access") as {
+  useCan: jest.Mock;
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockSearchParamsContainer.current = new URLSearchParams();
   usePageState.mockReturnValue({ kind: "ready" });
+  mockProgramsUseCan.mockReturnValue(true);
 });
 
 describe("ProgramsPage — denied state (BSN-FE-D2)", () => {
@@ -314,5 +325,74 @@ describe("ProgramsPage — denied state (BSN-FE-D2)", () => {
       "/build/programs?q=launch&order=asc",
       { scroll: false },
     );
+  });
+});
+
+describe("ProgramsPage — permission gates (BSN-FE-D3)", () => {
+  it("hides New program button when build:programs:manage is denied because a create control must not offer authority the caller may not hold", () => {
+    mockProgramsUseCan.mockReturnValue(false);
+    usePrograms.mockReturnValue({
+      data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<ProgramsPage />);
+
+    expect(screen.queryByText("New program")).not.toBeInTheDocument();
+  });
+
+  it("shows New program button when build:programs:manage is granted", () => {
+    usePrograms.mockReturnValue({
+      data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<ProgramsPage />);
+
+    expect(screen.getAllByText("New program")[0]).toBeInTheDocument();
+  });
+});
+
+describe("ProgramsPage — keyboard shortcuts (BSN-FE-K1)", () => {
+  it("c shortcut opens the create form sheet", () => {
+    usePrograms.mockReturnValue({
+      data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<ProgramsPage />);
+    fireEvent.keyDown(document, { key: "c" });
+
+    expect(screen.getByTestId("program-form-sheet")).toBeInTheDocument();
+  });
+
+  it("e shortcut opens the edit form sheet for the focused row", () => {
+    usePrograms.mockReturnValue({
+      data: {
+        data: [
+          { id: 1, name: "Test Program", status: "active", portfolioId: null, ownerId: null, health: null },
+        ],
+        pagination: { limit: 25, hasMore: false, nextCursor: null },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<ProgramsPage />);
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "e" });
+
+    expect(screen.getByTestId("program-form-sheet")).toBeInTheDocument();
   });
 });

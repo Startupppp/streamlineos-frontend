@@ -177,10 +177,18 @@ export function PortfoliosPage() {
     },
     [displayed, handleEditRow],
   );
+  const handleEditByIndex = useCallback(
+    (index: number) => {
+      const row = displayed[index];
+      if (row && canManage) handleEditRow(row);
+    },
+    [displayed, canManage, handleEditRow],
+  );
   const searchInputRef = useRef<HTMLInputElement>(null);
   useBuildListKeyboard({
     itemCount: displayed.length,
     onOpen: handleOpenByIndex,
+    onEdit: handleEditByIndex,
     onCreate: handleOpenCreate,
     onClearSelection: handleClearSelection,
     searchInputRef,

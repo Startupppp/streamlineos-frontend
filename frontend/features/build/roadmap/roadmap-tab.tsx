@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -33,6 +33,9 @@ interface RoadmapTabProps {
   horizon?: string;
   ownerId?: string;
   sort?: string;
+  onItemsChange?: (items: ScorableRoadmapItem[]) => void;
+  externalEditTarget?: ScorableRoadmapItem | null;
+  onExternalEditClose?: () => void;
 }
 
 function RoadmapBoardSkeleton() {
@@ -60,6 +63,9 @@ export function RoadmapTab({
   horizon,
   ownerId,
   sort,
+  onItemsChange,
+  externalEditTarget,
+  onExternalEditClose,
 }: RoadmapTabProps) {
   const { data, isLoading, isError, error, refetch } = useRoadmapItems({
     ...(search.trim() ? { search: search.trim() } : {}),
@@ -76,6 +82,10 @@ export function RoadmapTab({
   const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(null);
 
   const isEmpty = (data?.data ?? []).length === 0 && !cursor;
+
+  useEffect(() => {
+    onItemsChange?.(data?.data ?? []);
+  }, [data?.data, onItemsChange]);
 
   const resolution = usePageState({
     permission: "build:roadmap:view",
@@ -211,6 +221,12 @@ export function RoadmapTab({
 
       {sheetOpen ? <RoadmapItemSheet onClose={handleCloseSheet} /> : null}
       {editTarget ? <RoadmapItemSheet item={editTarget} onClose={handleCloseEdit} /> : null}
+      {externalEditTarget ? (
+        <RoadmapItemSheet
+          item={externalEditTarget}
+          onClose={onExternalEditClose ?? (() => {})}
+        />
+      ) : null}
 
       <ConfirmDialog
         open={!!deleteTarget}

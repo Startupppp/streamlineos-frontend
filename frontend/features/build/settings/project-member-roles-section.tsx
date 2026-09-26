@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import {
   Select,
@@ -116,13 +117,14 @@ export function ProjectMemberRolesSection({
 }: ProjectMemberRolesSectionProps) {
   const accessState = useCanState("build:view");
   const canManage = useCan("build:manage");
+  const pager = useCursorPager();
   const {
-    data: members,
+    data: page,
     isLoading,
     isError,
     error,
     refetch,
-  } = useProjectMembers(projectId);
+  } = useProjectMembers(projectId, { cursor: pager.cursor });
 
   if (accessState === "denied" || accessState === "loading") return null;
 
@@ -153,21 +155,36 @@ export function ProjectMemberRolesSection({
       />
     );
 
-  if (!members?.length)
+  const members = page?.data ?? [];
+  const pagination = page?.pagination;
+
+  if (!members.length)
     return (
       <p className="text-sm text-muted-foreground py-2">No members yet.</p>
     );
 
   return (
-    <div className="divide-y divide-border">
-      {members.map((member) => (
-        <MemberRoleRow
-          key={member.id}
-          member={member}
-          projectId={projectId}
-          canManage={canManage}
+    <div>
+      <div className="divide-y divide-border">
+        {members.map((member) => (
+          <MemberRoleRow
+            key={member.id}
+            member={member}
+            projectId={projectId}
+            canManage={canManage}
+          />
+        ))}
+      </div>
+      {(pagination?.hasMore || pager.hasPrevious) ? (
+        <TablePagination
+          mode="cursor"
+          rowCount={members.length}
+          hasMore={pagination?.hasMore ?? false}
+          hasPrevious={pager.hasPrevious}
+          onNext={() => pager.goNext(pagination?.nextCursor)}
+          onPrevious={pager.goPrevious}
         />
-      ))}
+      ) : null}
     </div>
   );
 }

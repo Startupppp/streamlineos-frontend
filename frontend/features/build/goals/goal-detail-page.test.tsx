@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { GoalDetailPage } from "./goal-detail-page";
 
 jest.mock("@/hooks/api/goals", () => ({
@@ -56,7 +56,8 @@ jest.mock("@/features/build/goals/goal-detail-skeleton", () => ({
 }));
 
 jest.mock("@/features/build/goals/goal-form-sheet", () => ({
-  GoalFormSheet: () => null,
+  GoalFormSheet: ({ open }: { open?: boolean }) =>
+    open ? <div data-testid="goal-form-sheet" /> : null,
 }));
 
 jest.mock("@/features/build/goals/check-in-dialog", () => ({
@@ -317,4 +318,19 @@ it("shows edit, delete and add-link controls when build:goals:manage is granted"
   expect(screen.getByText("Edit")).toBeInTheDocument();
   expect(screen.getByText("Delete")).toBeInTheDocument();
   expect(screen.getByText("Link")).toBeInTheDocument();
+});
+
+it("e shortcut opens the edit form sheet when build:goals:manage is granted", () => {
+  mockUseGoal.mockReturnValue({
+    data: FULL_GOAL_DETAIL,
+    isLoading: false,
+    isError: false,
+    error: undefined,
+    refetch: jest.fn(),
+  });
+
+  render(<GoalDetailPage goalId={42} />);
+  fireEvent.keyDown(document, { key: "e" });
+
+  expect(screen.getByTestId("goal-form-sheet")).toBeInTheDocument();
 });

@@ -58,11 +58,23 @@ interface PmPanelProps {
   children: ReactNode;
   className?: string;
   solid?: boolean;
+  role?: string;
+  "aria-label"?: string;
 }
 
-export function PmPanel({ children, className, solid = false }: PmPanelProps) {
+export function PmPanel({
+  children,
+  className,
+  solid = false,
+  role,
+  "aria-label": ariaLabel,
+}: PmPanelProps) {
   return (
-    <div className={cn(solid ? PM_PANEL_SOLID : PM_PANEL, "overflow-hidden", className)}>
+    <div
+      role={role}
+      aria-label={ariaLabel}
+      className={cn(solid ? PM_PANEL_SOLID : PM_PANEL, "overflow-hidden", className)}
+    >
       {children}
     </div>
   );

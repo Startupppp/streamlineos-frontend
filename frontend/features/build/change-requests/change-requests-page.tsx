@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Plus } from "lucide-react";
-import { useChangeRequests, useDeleteChangeRequest } from "@/hooks/api/build/change-requests";
+import { Plus, X } from "lucide-react";
+import { useChangeRequests, useDeleteChangeRequest, useUpdateChangeRequest } from "@/hooks/api/build/change-requests";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -15,11 +15,21 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SearchInput } from "@/components/ui/search-input";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import {
   PmPageShell,
   PmSection,
   PM_FILL_PANEL,
+  PM_TOOLBAR,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -73,6 +83,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCr, setEditCr] = useState<ChangeRequest | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangeRequest | null>(null);
+  const [selectedCrIds, setSelectedCrIds] = useState<Set<string | number>>(new Set());
 
   const statusValue = listFilters.value("status");
   const clientVisibleValue = listFilters.value("clientVisible");
@@ -102,6 +113,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteCr = useDeleteChangeRequest(projectId);
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
+  const updateCr = useUpdateChangeRequest(projectId);
 
   const crs = crPage?.data ?? [];
   const pagination = crPage?.pagination;
@@ -151,14 +163,28 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     [crs, handleEdit],
   );
 
-  const handleKeyboardClear = useCallback(() => {}, []);
+  const handleKeyboardClear = useCallback(() => setSelectedCrIds(new Set()), []);
 
   useBuildListKeyboard({
     itemCount: crs.length,
     onOpen: handleKeyboardOpen,
+    onCreate: canCreate ? handleNew : undefined,
+    onEdit: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
     enabled: pageState.kind === "ready",
   });
+
+  const handleBulkStatusChange = useCallback(
+    (newStatus: string) => {
+      const status = CR_STATUSES.find((s) => s === newStatus);
+      if (!status) return;
+      selectedCrIds.forEach((idStr) => {
+        updateCr.mutate({ changeRequestId: Number(idStr), status });
+      });
+      setSelectedCrIds(new Set());
+    },
+    [selectedCrIds, updateCr],
+  );
 
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
@@ -278,6 +304,26 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          {selectedCrIds.size > 0 && (
+            <div className={cn(PM_TOOLBAR, "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2")}>
+              <span className="text-sm font-medium">{selectedCrIds.size} selected</span>
+              <div className="flex items-center gap-2">
+                <Select onValueChange={handleBulkStatusChange}>
+                  <SelectTrigger className="h-8 w-[160px] text-sm">
+                    <SelectValue placeholder="Set status…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CR_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>{CR_STATUS_LABELS[s]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button variant="ghost" size="sm" aria-label="Clear selection" onClick={handleKeyboardClear}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
           <PageState
             resolution={pageState}
             loading={
@@ -305,6 +351,11 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
               data={crs}
               columns={columns}
               getRowKey={(row) => row.id}
+              selection={{
+                selected: selectedCrIds,
+                onChange: setSelectedCrIds,
+                getRowLabel: (row) => `CR-${row.crNumber}: ${row.title}`,
+              }}
               className={PM_FILL_PANEL}
               mobileCard={renderMobileCard}
               pagination={{

@@ -1,6 +1,8 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useManagedProduct,
   useManagedProductInsights,
@@ -17,6 +19,13 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Briefcase, Map, MessageSquare, Target } from "lucide-react";
+import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { cn } from "@/lib/utils";
+
+const OVERVIEW_FILTER_DEFINITIONS = [
+  { param: "q" },
+] as const;
 
 interface ManagedProductOverviewPageProps {
   managedProductId: number;
@@ -32,9 +41,14 @@ function ManagedProductOverviewSkeleton() {
 }
 
 export function ManagedProductOverviewPage({ managedProductId }: ManagedProductOverviewPageProps) {
+  const router = useRouter();
+  const listFilters = useBuildListFilters({ filters: OVERVIEW_FILTER_DEFINITIONS, withSearch: false });
+  const rawQ = listFilters.value("q");
+  const searchValue = rawQ === BUILD_FILTER_ALL ? undefined : rawQ;
+
   const productQuery = useManagedProduct(managedProductId);
   const projectsQuery = useProjects(
-    { managedProductId, limit: 10 },
+    { managedProductId, limit: 10, search: searchValue },
     { enabled: !!managedProductId },
   );
   const insightsQuery = useManagedProductInsights(managedProductId);
@@ -79,6 +93,25 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
   const feedbackTotal = Object.values(
     insightsQuery.data?.feedbackByStatus ?? {},
   ).reduce((a: number, b: number) => a + b, 0);
+
+  const handleOpenFocused = useCallback(
+    (index: number) => {
+      const proj = linkedProjects[index];
+      if (proj) {
+        router.push(`/build/${proj.id}`);
+      }
+    },
+    [linkedProjects, router],
+  );
+
+  const handleClearSelection = useCallback(() => {}, []);
+
+  const { focusedIndex } = useBuildListKeyboard({
+    itemCount: linkedProjects.length,
+    onOpen: handleOpenFocused,
+    onClearSelection: handleClearSelection,
+    enabled: linkedProjects.length > 0,
+  });
 
   return (
     <PageWrapper
@@ -167,10 +200,14 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
                 <h2 className="text-sm font-semibold">Linked projects</h2>
               </CardHeader>
               <CardContent className="space-y-2">
-                {linkedProjects.map((proj) => (
+                {linkedProjects.map((proj, index) => (
                   <div
                     key={proj.id}
-                    className="flex items-center justify-between gap-2 text-sm"
+                    aria-selected={focusedIndex === index}
+                    className={cn(
+                      "flex items-center justify-between gap-2 rounded-md px-1 text-sm transition-colors",
+                      focusedIndex === index && "bg-accent",
+                    )}
                   >
                     <Link
                       href={`/build/${proj.id}`}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -111,6 +111,22 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
   function handleCloseCheckIn() { setCheckInTarget(null); }
   function handleCheckIn(kr: KeyResult) { setCheckInTarget(kr); }
   function handleRetry() { void refetch(); }
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.target instanceof HTMLElement) {
+        const tag = event.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || event.target.isContentEditable) return;
+      }
+      if (event.key === "e" && canManage) {
+        event.preventDefault();
+        setEditOpen(true);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [canManage]);
 
   const pageState = usePageState({ permission: "build:goals:view", isLoading, isError, error });
 

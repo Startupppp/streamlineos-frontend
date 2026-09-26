@@ -2,11 +2,30 @@ import { render, screen } from "@testing-library/react";
 import { ManagedProductOverviewPage } from "./managed-product-overview-page";
 
 const usePageState = jest.fn();
+const mockRouterPush = jest.fn();
+const mockUseSearchParams = jest.fn(() => new URLSearchParams());
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  useRouter: () => ({ replace: jest.fn(), push: mockRouterPush }),
   usePathname: () => "/build/managed-products/42",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: (...args: unknown[]) => mockUseSearchParams(...args),
+}));
+
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  BUILD_FILTER_ALL: "all",
+  useBuildListFilters: jest.fn(() => ({
+    value: jest.fn(() => undefined),
+    setValue: jest.fn(),
+    isActive: jest.fn(() => false),
+    clearAll: jest.fn(),
+  })),
+}));
+
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: jest.fn(() => ({
+    focusedIndex: null,
+    setFocusedIndex: jest.fn(),
+  })),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -305,5 +324,113 @@ describe("ManagedProductOverviewPage", () => {
     expect(usePageState).toHaveBeenCalledWith(
       expect.objectContaining({ error: networkError }),
     );
+  });
+});
+
+describe("ManagedProductOverviewPage — URL-backed search (BSN-OVW-Q)", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
+    (useManagedProduct as jest.Mock).mockReturnValue({
+      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+  });
+
+  it("passes undefined search to useProjects when no q param in URL so all linked projects are shown by default", () => {
+    const { useBuildListFilters } = jest.requireMock("@/features/build/shared/use-build-list-filters");
+    (useBuildListFilters as jest.Mock).mockReturnValue({
+      value: jest.fn(() => undefined),
+      setValue: jest.fn(),
+      isActive: jest.fn(() => false),
+      clearAll: jest.fn(),
+    });
+
+    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    expect(useProjects).toHaveBeenCalledWith(
+      expect.objectContaining({ search: undefined }),
+      expect.anything(),
+    );
+  });
+
+  it("forwards the q URL param as search to useProjects so the linked projects preview is filtered server-side", () => {
+    const { useBuildListFilters } = jest.requireMock("@/features/build/shared/use-build-list-filters");
+    (useBuildListFilters as jest.Mock).mockReturnValue({
+      value: jest.fn((key: string) => (key === "q" ? "checkout" : undefined)),
+      setValue: jest.fn(),
+      isActive: jest.fn(() => false),
+      clearAll: jest.fn(),
+    });
+
+    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    expect(useProjects).toHaveBeenCalledWith(
+      expect.objectContaining({ search: "checkout" }),
+      expect.anything(),
+    );
+  });
+});
+
+describe("ManagedProductOverviewPage — keyboard navigation (BSN-OVW-KB)", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
+    (useManagedProduct as jest.Mock).mockReturnValue({
+      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
+    (useProjects as jest.Mock).mockReturnValue({
+      data: {
+        data: [
+          { id: 10, name: "Checkout Service", key: "CS-1", status: "ACTIVE" },
+          { id: 11, name: "Auth Module", key: "AM-1", status: "ACTIVE" },
+        ],
+        hasMore: false,
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+  });
+
+  it("wires useBuildListKeyboard with linked project count so j/k/Enter navigate the preview rows", () => {
+    const { useBuildListKeyboard } = jest.requireMock("@/features/build/shared/use-build-list-keyboard");
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    expect(useBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ itemCount: 2 }),
+    );
+  });
+
+  it("marks the keyboard-focused row with aria-selected so screen readers can announce position in the list", () => {
+    const { useBuildListKeyboard } = jest.requireMock("@/features/build/shared/use-build-list-keyboard");
+    (useBuildListKeyboard as jest.Mock).mockReturnValue({
+      focusedIndex: 0,
+      setFocusedIndex: jest.fn(),
+    });
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    const rows = screen.getAllByRole("generic", { hidden: true }).filter(
+      (el) => el.getAttribute("aria-selected") !== null,
+    );
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows[0]).toHaveAttribute("aria-selected", "true");
   });
 });

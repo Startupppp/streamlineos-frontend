@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
@@ -14,10 +14,14 @@ import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { PmPageShell, PmPanel, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { ViewCard, type ViewItem } from "@/features/build/views/saved-views/view-card";
 import { CreateViewSheet } from "@/features/build/views/saved-views/create-view-sheet";
 import { RenameViewDialog } from "@/features/build/views/saved-views/rename-view-dialog";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 
 interface ProjectSettingsViewsPageProps {
   projectId: number;
@@ -28,18 +32,29 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
   const router = useRouter();
   const currentUserId = session?.user?.id;
   const canManage = useCan("build:workspace:manage");
-  const { data: views, isLoading, isError, error, refetch } = useViews(projectId);
+  const listFilters = useBuildListFilters({ withSearch: true });
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const pager = useCursorPager();
+  const { data: viewPage, isLoading, isError, error, refetch } = useViews(projectId, { cursor: pager.cursor });
   const updateView = useUpdateView();
   const deleteView = useDeleteView();
   const [createOpen, setCreateOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<ViewItem | null>(null);
+
+  const pagedViews = viewPage?.data ?? [];
+  const pagination = viewPage?.pagination;
+
+  const { debouncedSearch } = listFilters;
+  const filteredViews = debouncedSearch
+    ? pagedViews.filter((v) => v.name.toLowerCase().includes(debouncedSearch.toLowerCase()))
+    : pagedViews;
 
   const pageState = usePageState({
     permission: "build:view",
     isLoading,
     isError,
     error,
-    isEmpty: !isLoading && !isError && (views?.length ?? 0) === 0,
+    isEmpty: !isLoading && !isError && filteredViews.length === 0 && !pager.hasPrevious,
   });
 
   const handleNavigate = useCallback(
@@ -80,20 +95,62 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
     [deleteView, projectId],
   );
 
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleRefetch = useCallback(() => void refetch(), [refetch]);
+
+  const handleKeyboardOpen = useCallback(
+    (index: number) => {
+      const view = filteredViews[index];
+      if (view) handleNavigate(view);
+    },
+    [filteredViews, handleNavigate],
+  );
+
+  const handleKeyboardEdit = useCallback(
+    (index: number) => {
+      setRenameTarget(filteredViews[index] ?? null);
+    },
+    [filteredViews],
+  );
+
+  const handleKeyboardClear = useCallback(() => setRenameTarget(null), []);
+
+  useBuildListKeyboard({
+    itemCount: filteredViews.length,
+    onOpen: handleKeyboardOpen,
+    onCreate: canManage ? handleOpenCreate : undefined,
+    onEdit: handleKeyboardEdit,
+    onClearSelection: handleKeyboardClear,
+    searchInputRef,
+    enabled: pageState.kind === "ready",
+  });
+
   const emptyState = (
     <EmptyState
       className={PM_FILL_PANEL}
       illustrationPreset="projects"
       title="No saved views yet"
       description="Save a filtered issue layout so the team can return to the same working context."
-      action={canManage ? { label: "Create view", onClick: () => setCreateOpen(true) } : undefined}
+      action={canManage ? { label: "Create view", onClick: handleOpenCreate } : undefined}
     />
   );
+
   return (
     <PageWrapper
       title="Saved Views"
       subtitle="Manage shared filters and layouts for project issue lists"
-      actions={canManage ? <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="mr-1.5 h-4 w-4" />Create view</Button> : undefined}
+      actions={canManage ? <Button size="sm" onClick={handleOpenCreate}><Plus className="mr-1.5 h-4 w-4" />Create view</Button> : undefined}
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search views…",
+            inputRef: searchInputRef,
+          }}
+          onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
+        />
+      }
     >
       <PmPageShell>
         <PageState
@@ -105,12 +162,12 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
             </div>
           }
           empty={emptyState}
-          onRetry={() => void refetch()}
+          onRetry={handleRefetch}
           className="flex-1"
         >
           <PmSection index={0} className="flex-1">
             <PmPanel className="flex min-h-0 flex-col p-2" solid>
-              {(views ?? []).map((view) => (
+              {filteredViews.map((view) => (
                 <ViewCard
                   key={view.id}
                   view={view}
@@ -126,13 +183,23 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
             </PmPanel>
           </PmSection>
         </PageState>
+        {(pagination?.hasMore || pager.hasPrevious) ? (
+          <TablePagination
+            mode="cursor"
+            rowCount={pagedViews.length}
+            hasMore={pagination?.hasMore ?? false}
+            hasPrevious={pager.hasPrevious}
+            onNext={() => pager.goNext(pagination?.nextCursor)}
+            onPrevious={pager.goPrevious}
+          />
+        ) : null}
       </PmPageShell>
       {canManage ? (
         <CreateViewSheet
           projectId={projectId}
           open={createOpen}
           onOpenChange={setCreateOpen}
-          onCreated={() => void refetch()}
+          onCreated={handleRefetch}
         />
       ) : null}
       {canManage ? (

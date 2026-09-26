@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ChangeRequestsPage } from "./change-requests-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -11,6 +11,7 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/hooks/api/build/change-requests", () => ({
   useChangeRequests: jest.fn(),
   useDeleteChangeRequest: jest.fn(),
+  useUpdateChangeRequest: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -87,8 +88,18 @@ jest.mock("@/features/build/shared/build-header-actions", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: ({ pagination }: { pagination?: { hasMore?: boolean } }) => (
-    <div data-testid="data-table" data-has-more={String(Boolean(pagination?.hasMore))} />
+  DataTable: ({
+    pagination,
+    selection,
+  }: {
+    pagination?: { hasMore?: boolean };
+    selection?: { onChange: (s: Set<string | number>) => void };
+  }) => (
+    <div
+      data-testid="data-table"
+      data-has-more={String(Boolean(pagination?.hasMore))}
+      onClick={() => selection?.onChange(new Set(["7"]))}
+    />
   ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
@@ -176,15 +187,18 @@ jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PM_FILL_PANEL: "",
+  PM_TOOLBAR: "",
 }));
 
 jest.mock("lucide-react", () => ({
   Lock: () => <span />,
   ShieldOff: () => <span />,
   Zap: () => <span />,
+  Plus: () => <span />,
+  X: () => <span />,
 }));
 
-import { useChangeRequests, useDeleteChangeRequest } from "@/hooks/api/build/change-requests";
+import { useChangeRequests, useDeleteChangeRequest, useUpdateChangeRequest } from "@/hooks/api/build/change-requests";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
@@ -193,6 +207,7 @@ const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
 
 const mockUseChangeRequests = useChangeRequests as jest.Mock;
 const mockUseDeleteChangeRequest = useDeleteChangeRequest as jest.Mock;
+const mockUseUpdateChangeRequest = useUpdateChangeRequest as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseOrgMembers = useOrgMembers as jest.Mock;
@@ -222,6 +237,7 @@ beforeEach(() => {
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseChangeRequests.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseDeleteChangeRequest.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseUpdateChangeRequest.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseOrgMembers.mockReturnValue(baseQueryResult({ data: { data: [] } }));
   mockUseBuildListKeyboard.mockClear();
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
@@ -402,5 +418,97 @@ describe("ChangeRequestsPage — keyboard shortcut wiring", () => {
       mockUseBuildListKeyboard.mock.calls.length - 1
     ][0] as { onOpen: (index: number) => void };
     expect(() => onOpen(0)).not.toThrow();
+  });
+
+  it("passes onCreate when the user has build:changerequests:create permission so the c key opens the new CR sheet", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseChangeRequests.mockReturnValue(
+      baseQueryResult({
+        data: { data: [crRow], pagination: { hasMore: false, nextCursor: null, limit: 25 } },
+      }),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    const { onCreate } = mockUseBuildListKeyboard.mock.calls[
+      mockUseBuildListKeyboard.mock.calls.length - 1
+    ][0] as { onCreate: unknown };
+    expect(onCreate).toBeDefined();
+  });
+
+  it("omits onCreate when the user lacks create permission so the c key does not fire", () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseChangeRequests.mockReturnValue(
+      baseQueryResult({
+        data: { data: [crRow], pagination: { hasMore: false, nextCursor: null, limit: 25 } },
+      }),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    const { onCreate } = mockUseBuildListKeyboard.mock.calls[
+      mockUseBuildListKeyboard.mock.calls.length - 1
+    ][0] as { onCreate: unknown };
+    expect(onCreate).toBeUndefined();
+  });
+
+  it("passes onEdit so the e key opens the focused row in the edit sheet", () => {
+    mockUseChangeRequests.mockReturnValue(
+      baseQueryResult({
+        data: { data: [crRow], pagination: { hasMore: false, nextCursor: null, limit: 25 } },
+      }),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    const { onEdit } = mockUseBuildListKeyboard.mock.calls[
+      mockUseBuildListKeyboard.mock.calls.length - 1
+    ][0] as { onEdit: unknown };
+    expect(onEdit).toBeDefined();
+  });
+});
+
+describe("ChangeRequestsPage — bulk status action", () => {
+  const crRow = {
+    id: 7,
+    orgId: "org-1",
+    projectId: 1,
+    crNumber: 7,
+    title: "bulk target",
+    description: null,
+    impact: null,
+    estimateMinutes: null,
+    budgetImpactCents: null,
+    timelineImpactDays: null,
+    status: "submitted" as const,
+    requestedById: null,
+    approvalOwnerId: null,
+    approvalOwnerMembershipId: null,
+    decisionComment: null,
+    decidedAt: null,
+    releaseId: null,
+    clientVisible: false,
+    createdBy: null,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+    deletedAt: null,
+  };
+
+  it("shows the bulk action bar with the selected count after a row is selected", () => {
+    mockUseChangeRequests.mockReturnValue(
+      baseQueryResult({
+        data: { data: [crRow], pagination: { hasMore: false, nextCursor: null, limit: 25 } },
+      }),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("data-table"));
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+  });
+
+  it("hides the bulk action bar after the clear button is clicked", () => {
+    mockUseChangeRequests.mockReturnValue(
+      baseQueryResult({
+        data: { data: [crRow], pagination: { hasMore: false, nextCursor: null, limit: 25 } },
+      }),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    fireEvent.click(screen.getByTestId("data-table"));
+    fireEvent.click(screen.getByLabelText("Clear selection"));
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
   });
 });

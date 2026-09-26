@@ -118,9 +118,15 @@ jest.mock("@/components/ui/loading-button", () => ({
   LoadingButton: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
 }));
 
-jest.mock("@/hooks/common/use-query-param-open", () => ({
-  useQueryParamOpen: () => ({ open: false, onOpenChange: jest.fn(), setOpen: jest.fn() }),
-}));
+jest.mock("@/hooks/common/use-query-param-open", () => {
+  const { useState } = require("react");
+  return {
+    useQueryParamOpen: () => {
+      const [open, setOpen] = useState(false);
+      return { open, onOpenChange: (v: boolean) => setOpen(v), setOpen: () => setOpen(true) };
+    },
+  };
+});
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
@@ -138,7 +144,8 @@ jest.mock("./portfolio-status-badge", () => ({
 }));
 
 jest.mock("./portfolio-form-sheet", () => ({
-  PortfolioFormSheet: () => null,
+  PortfolioFormSheet: ({ open }: { open?: boolean }) =>
+    open ? <div data-testid="portfolio-form-sheet" /> : null,
 }));
 
 const { usePortfolios, usePortfolio, useProjects } = jest.requireMock("@/hooks/api/build") as {
@@ -149,10 +156,14 @@ const { usePortfolios, usePortfolio, useProjects } = jest.requireMock("@/hooks/a
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
 };
+const { useCan: mockPortfoliosUseCan } = jest.requireMock("@/hooks/api/access") as {
+  useCan: jest.Mock;
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
   usePageState.mockReturnValue({ kind: "ready" });
+  mockPortfoliosUseCan.mockReturnValue(true);
 });
 
 describe("PortfoliosPage — denied state (BSN-FE-D1)", () => {
@@ -207,6 +218,75 @@ describe("PortfoliosPage — denied state (BSN-FE-D1)", () => {
 
     expect(screen.getByTestId("data-table")).toBeInTheDocument();
     expect(screen.queryByTestId("denied-state")).not.toBeInTheDocument();
+  });
+});
+
+describe("PortfoliosPage — permission gates (BSN-FE-D5)", () => {
+  it("hides New portfolio button when build:portfolios:manage is denied because a create control must not offer authority the caller may not hold", () => {
+    mockPortfoliosUseCan.mockReturnValue(false);
+    usePortfolios.mockReturnValue({
+      data: { data: [], pagination: { nextCursor: null, hasMore: false } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<PortfoliosPage />);
+
+    expect(screen.queryByText("New portfolio")).not.toBeInTheDocument();
+  });
+
+  it("shows New portfolio button when build:portfolios:manage is granted", () => {
+    usePortfolios.mockReturnValue({
+      data: { data: [], pagination: { nextCursor: null, hasMore: false } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<PortfoliosPage />);
+
+    expect(screen.getAllByText("New portfolio")[0]).toBeInTheDocument();
+  });
+});
+
+describe("PortfoliosPage — keyboard shortcuts (BSN-FE-K2)", () => {
+  it("c shortcut opens the create form sheet", () => {
+    usePortfolios.mockReturnValue({
+      data: { data: [], pagination: { nextCursor: null, hasMore: false } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<PortfoliosPage />);
+    fireEvent.keyDown(document, { key: "c" });
+
+    expect(screen.getByTestId("portfolio-form-sheet")).toBeInTheDocument();
+  });
+
+  it("e shortcut opens the edit form sheet for the focused row", () => {
+    usePortfolios.mockReturnValue({
+      data: {
+        data: [
+          { id: 1, name: "Test Portfolio", status: "active", health: "on_track", ownerId: null, projectCount: 0, strategicGoal: null },
+        ],
+        pagination: { nextCursor: null, hasMore: false },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<PortfoliosPage />);
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "e" });
+
+    expect(screen.getByTestId("portfolio-form-sheet")).toBeInTheDocument();
   });
 });
 

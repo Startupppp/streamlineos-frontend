@@ -1,17 +1,26 @@
 "use client";
 
 import type { RefObject } from "react";
+import { useCallback } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { CalendarDays, ListChecks, Users } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { GoalLevel, GoalListItem } from "@/hooks/api/goals";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
@@ -43,7 +52,46 @@ export const GOAL_FILTER_DEFINITIONS = [
 
 export const GOAL_LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
 
-export function GoalCard({ goal }: { goal: GoalListItem }) {
+interface GoalCardActionsProps {
+  goal: GoalListItem;
+  onEdit?: (goal: GoalListItem) => void;
+  onDelete?: (goal: GoalListItem) => void;
+}
+
+function GoalCardActions({ goal, onEdit, onDelete }: GoalCardActionsProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const handleEdit = useCallback(() => onEdit?.(goal), [goal, onEdit]);
+  const handleDelete = useCallback(() => onDelete?.(goal), [goal, onDelete]);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Goal actions"
+          className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+          {...hoverHandlers}
+        >
+          <EllipsisIcon ref={iconRef} size={14} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {onEdit ? <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem> : null}
+        {onDelete ? (
+          <DropdownMenuItem variant="destructive" onClick={handleDelete}>Delete</DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+interface GoalCardProps {
+  goal: GoalListItem;
+  onEdit?: (goal: GoalListItem) => void;
+  onDelete?: (goal: GoalListItem) => void;
+}
+
+export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
   const cfg = STATUS_CONFIG[goal.status];
   const ownerName = goal.owner?.name ?? goal.owner?.email ?? null;
   const shouldReduceMotion = useReducedMotion();
@@ -53,7 +101,7 @@ export function GoalCard({ goal }: { goal: GoalListItem }) {
       variants={shouldReduceMotion ? listItemReduced : listItem}
       transition={pmSnappy}
     >
-      <Link href={`/build/goals/${goal.id}`} className="group block">
+      <div className="group relative">
         <div
           className={cn(
             PM_PANEL,
@@ -61,15 +109,22 @@ export function GoalCard({ goal }: { goal: GoalListItem }) {
           )}
         >
           <div className="flex min-w-0 items-start justify-between gap-2">
-            <p
-              className={cn(TEXT_TWO_LINES, "text-sm font-medium leading-snug")}
-              title={goal.title}
-            >
-              {goal.title}
-            </p>
-            <Badge variant={cfg.variant} className="shrink-0 text-micro">
-              {cfg.label}
-            </Badge>
+            <Link href={`/build/goals/${goal.id}`} className="min-w-0 flex-1">
+              <p
+                className={cn(TEXT_TWO_LINES, "text-sm font-medium leading-snug")}
+                title={goal.title}
+              >
+                {goal.title}
+              </p>
+            </Link>
+            <div className="flex shrink-0 items-center gap-1">
+              <Badge variant={cfg.variant} className="shrink-0 text-micro">
+                {cfg.label}
+              </Badge>
+              {onEdit || onDelete ? (
+                <GoalCardActions goal={goal} onEdit={onEdit} onDelete={onDelete} />
+              ) : null}
+            </div>
           </div>
 
           <div className="flex flex-col gap-1">
@@ -102,7 +157,7 @@ export function GoalCard({ goal }: { goal: GoalListItem }) {
             </div>
           ) : null}
         </div>
-      </Link>
+      </div>
     </motion.div>
   );
 }

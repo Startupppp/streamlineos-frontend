@@ -2,10 +2,12 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
+import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Plus,
   Target,
@@ -17,13 +19,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
+  useGoal,
   useGoalsPage,
   useGoalStats,
+  useDeleteGoal,
   type GoalListItem,
   type GoalLevel,
 } from "@/hooks/api/goals";
 import { useCan } from "@/hooks/api/access";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   LEVEL_LABEL,
   STATUS_OPTIONS,
@@ -76,6 +81,11 @@ export function GoalsPage() {
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
 
+  const [editGoalId, setEditGoalId] = useState<number | null>(null);
+  const [deleteGoalId, setDeleteGoalId] = useState<number | null>(null);
+  const { data: editGoalDetail } = useGoal(editGoalId ?? 0);
+  const deleteGoalMutation = useDeleteGoal();
+
   const [page, setPage] = useState(1);
   const prevResetKey = useRef(listFilters.resetKey);
   if (prevResetKey.current !== listFilters.resetKey) {
@@ -125,16 +135,53 @@ export function GoalsPage() {
 
   const hasGoals = (goals?.length ?? 0) > 0;
 
+  const flatGoals = useMemo(() => {
+    const result: GoalListItem[] = [];
+    for (const level of GOAL_LEVEL_ORDER) {
+      for (const g of grouped.get(level) ?? []) result.push(g);
+    }
+    return result;
+  }, [grouped]);
+
   const handleOpenCreate = useCallback(() => { openCreate(); }, [openCreate]);
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const handleEditGoalByIndex = useCallback(
+    (index: number) => {
+      const goal = flatGoals[index];
+      if (goal && canManage) setEditGoalId(goal.id);
+    },
+    [flatGoals, canManage],
+  );
+
+  const handleEditGoalCard = useCallback(
+    (goal: GoalListItem) => { if (canManage) setEditGoalId(goal.id); },
+    [canManage],
+  );
+
+  const handleDeleteGoalCard = useCallback(
+    (goal: GoalListItem) => { if (canManage) setDeleteGoalId(goal.id); },
+    [canManage],
+  );
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteGoalId) return;
+    deleteGoalMutation.mutate(deleteGoalId, {
+      onSuccess: () => {
+        toast.success("Goal deleted");
+        setDeleteGoalId(null);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [deleteGoalMutation, deleteGoalId]);
+
   const searchInputRef = useRef<HTMLInputElement>(null);
   const handleClearSelection = useCallback(() => {}, []);
-  const handleOpenFocused = useCallback(() => {}, []);
   useBuildListKeyboard({
-    itemCount: goals?.length ?? 0,
-    onOpen: handleOpenFocused,
+    itemCount: flatGoals.length,
+    onOpen: handleEditGoalByIndex,
+    onEdit: handleEditGoalByIndex,
     onCreate: handleOpenCreate,
     onClearSelection: handleClearSelection,
     searchInputRef,
@@ -264,7 +311,12 @@ export function GoalsPage() {
                       </div>
                       <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {levelGoals.map((goal) => (
-                          <GoalCard key={goal.id} goal={goal} />
+                          <GoalCard
+                            key={goal.id}
+                            goal={goal}
+                            onEdit={canManage ? handleEditGoalCard : undefined}
+                            onDelete={canManage ? handleDeleteGoalCard : undefined}
+                          />
                         ))}
                       </PmStaggerList>
                     </div>
@@ -284,6 +336,23 @@ export function GoalsPage() {
         </PmPageShell>
 
         <GoalFormSheet open={createOpen} onOpenChange={setCreateOpen} />
+        {editGoalId !== null && editGoalDetail !== undefined ? (
+          <GoalFormSheet
+            open
+            onOpenChange={(open) => { if (!open) setEditGoalId(null); }}
+            goal={editGoalDetail}
+          />
+        ) : null}
+        <ConfirmDialog
+          open={deleteGoalId !== null}
+          onOpenChange={(open) => { if (!open) setDeleteGoalId(null); }}
+          title="Delete goal?"
+          description="This action cannot be undone. All key results and updates will be removed."
+          confirmLabel="Delete"
+          destructive
+          isPending={deleteGoalMutation.isPending}
+          onConfirm={handleDeleteConfirm}
+        />
       </PageWrapper>
     </RequireModule>
   );

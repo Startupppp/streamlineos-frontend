@@ -43,8 +43,10 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   }),
 }));
 
+const mockUseBuildListKeyboard = jest.fn();
+
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
-  useBuildListKeyboard: () => ({ focusedIndex: null, setFocusedIndex: jest.fn() }),
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
 }));
 
 jest.mock("@/features/build/shared/build-list-toolbar", () => ({
@@ -76,6 +78,25 @@ jest.mock("@/components/shared/page-state", () => ({
 
 beforeEach(() => {
   mockAccessState = "denied";
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+});
+
+describe("ProjectSettingsAgentsPage — keyboard shortcuts (Requirement C3)", () => {
+  it("wires useBuildListKeyboard with onClearSelection so Esc clears the search filter", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onClearSelection: expect.any(Function) }),
+    );
+  });
+
+  it("passes searchInputRef to useBuildListKeyboard so the / key focuses the search input", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ searchInputRef: expect.anything() }),
+    );
+  });
 });
 
 describe("ProjectSettingsAgentsPage — access control (BLD-X-FE-SETTINGS-AGENTS-001)", () => {

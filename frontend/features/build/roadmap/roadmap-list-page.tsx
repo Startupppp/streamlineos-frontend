@@ -20,6 +20,7 @@ import {
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { SearchInput } from "@/components/ui/search-input";
 import { RoadmapTab } from "@/features/build/roadmap/roadmap-tab";
+import type { ScorableRoadmapItem } from "@/features/build/roadmap/roadmap-item-card";
 import { FeedbackTab } from "@/features/build/roadmap/feedback-tab";
 import { ChangelogTab } from "@/features/build/roadmap/changelog-tab";
 import { RoadmapPublicationActions } from "@/features/build/roadmap/roadmap-publication-actions";
@@ -46,6 +47,10 @@ export function RoadmapListPage() {
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
   const [roadmapCreateOpen, setRoadmapCreateOpen] = useState(false);
   const [changelogCreateOpen, setChangelogCreateOpen] = useState(false);
+  const [roadmapItems, setRoadmapItems] = useState<ScorableRoadmapItem[]>([]);
+  const [externalEditTarget, setExternalEditTarget] = useState<ScorableRoadmapItem | null>(null);
+  const roadmapItemsRef = useRef<ScorableRoadmapItem[]>([]);
+  roadmapItemsRef.current = roadmapItems;
 
   const tabValue = listFilters.value("tab");
   const activeTab: RoadmapTabValue =
@@ -76,11 +81,25 @@ export function RoadmapListPage() {
   const horizonValue = listFilters.value("horizon");
   const sortValue = listFilters.value("sort");
 
+  const handleRoadmapEditByIndex = useCallback((index: number) => {
+    const item = roadmapItemsRef.current[index];
+    if (item) setExternalEditTarget(item);
+  }, []);
+
+  const handleExternalEditClose = useCallback(() => {
+    setExternalEditTarget(null);
+  }, []);
+
+  const handleRoadmapItemsChange = useCallback((items: ScorableRoadmapItem[]) => {
+    setRoadmapItems(items);
+  }, []);
+
   const searchInputRef = useRef<HTMLInputElement>(null);
   const handleClearSelection = useCallback(() => {}, []);
   useBuildListKeyboard({
-    itemCount: 0,
-    onOpen: handleClearSelection,
+    itemCount: roadmapItems.length,
+    onOpen: handleRoadmapEditByIndex,
+    onEdit: handleRoadmapEditByIndex,
     onCreate: handleOpenRoadmapCreate,
     onClearSelection: handleClearSelection,
     enabled: activeTab === "roadmap",
@@ -166,6 +185,9 @@ export function RoadmapListPage() {
                   horizon={horizonValue !== "all" ? horizonValue : undefined}
                   ownerId={ownerIdValue !== "all" ? ownerIdValue : undefined}
                   sort={sortValue !== "all" ? sortValue : undefined}
+                  onItemsChange={handleRoadmapItemsChange}
+                  externalEditTarget={externalEditTarget}
+                  onExternalEditClose={handleExternalEditClose}
                 />
               </TabsContent>
               <TabsContent

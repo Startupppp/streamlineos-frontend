@@ -18,7 +18,10 @@ jest.mock("@/hooks/api/use-page-state", () => ({
 }));
 
 jest.mock("@/hooks/api/build/project-members", () => ({
-  useProjectMembers: () => ({ data: [], isLoading: false }),
+  useProjectMembers: () => ({
+    data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+    isLoading: false,
+  }),
 }));
 
 jest.mock("@/features/build/settings/project-member-roles-section", () => ({
@@ -49,8 +52,10 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   }),
 }));
 
+const mockUseBuildListKeyboard = jest.fn();
+
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
-  useBuildListKeyboard: () => ({ focusedIndex: null, setFocusedIndex: jest.fn() }),
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
 }));
 
 jest.mock("@/features/build/shared/build-list-toolbar", () => ({
@@ -84,6 +89,7 @@ jest.mock("@/components/shared/page-state", () => ({
 
 beforeEach(() => {
   mockAccessState = "denied";
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });
 
 describe("ProjectSettingsAccessPage — access control (BLD-X-FE-SETTINGS-ACCESS-001)", () => {
@@ -105,5 +111,23 @@ describe("ProjectSettingsAccessPage — access control (BLD-X-FE-SETTINGS-ACCESS
     render(<ProjectSettingsAccessPage projectId={1} />);
     expect(screen.queryByText(/member roles/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/teams/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsAccessPage — keyboard shortcuts (Requirement C3)", () => {
+  it("wires useBuildListKeyboard with onClearSelection so Esc clears the search filter", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAccessPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onClearSelection: expect.any(Function) }),
+    );
+  });
+
+  it("passes searchInputRef to useBuildListKeyboard so the / key focuses the search input", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAccessPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ searchInputRef: expect.anything() }),
+    );
   });
 });

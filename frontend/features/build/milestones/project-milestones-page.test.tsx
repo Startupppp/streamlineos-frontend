@@ -14,6 +14,7 @@ jest.mock("@/hooks/common/use-debounce", () => ({
 jest.mock("@/hooks/api/build", () => ({
   useProjectMilestones: jest.fn(),
   useDeleteMilestone: jest.fn(),
+  useUpdateMilestone: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -83,6 +84,17 @@ jest.mock("@/components/pm-chrome", () => ({
   PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmStaggerList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PM_FILL_PANEL: "pm-fill-panel",
+  PM_TOOLBAR: "",
+}));
+
+jest.mock("@/components/ui/select", () => ({
+  Select: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectTrigger: ({ children }: { children: React.ReactNode }) => (
+    <button type="button">{children}</button>
+  ),
+  SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
 }));
 
 jest.mock("./milestone-upsert-sheet", () => ({
@@ -90,16 +102,17 @@ jest.mock("./milestone-upsert-sheet", () => ({
 }));
 
 jest.mock("./milestone-card", () => ({
-  MilestoneCard: ({ milestone }: { milestone: { name: string } }) => (
-    <div data-testid="milestone-card">{milestone.name}</div>
+  MilestoneCard: ({ milestone, onSelect }: { milestone: { id: number; name: string }; onSelect?: (m: { id: number; name: string }, checked: boolean) => void }) => (
+    <div data-testid="milestone-card" onClick={() => onSelect?.(milestone, true)}>{milestone.name}</div>
   ),
 }));
 
-import { useProjectMilestones, useDeleteMilestone } from "@/hooks/api/build";
+import { useProjectMilestones, useDeleteMilestone, useUpdateMilestone } from "@/hooks/api/build";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseProjectMilestones = useProjectMilestones as jest.Mock;
 const mockUseDeleteMilestone = useDeleteMilestone as jest.Mock;
+const mockUseUpdateMilestone = useUpdateMilestone as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 
@@ -132,6 +145,7 @@ beforeEach(() => {
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseProjectMilestones.mockReturnValue(baseQueryResult({ data: cursorPage([]) }));
   mockUseDeleteMilestone.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseUpdateMilestone.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
 it("renders NoPermissionState when build:view is denied instead of empty milestone list", () => {
@@ -181,4 +195,39 @@ it("keyboard c shortcut opens create sheet when build:manage granted", () => {
   render(<ProjectMilestonesPage projectId="1" />);
   fireEvent.keyDown(document, { key: "c" });
   expect(screen.getByTestId("milestone-upsert-sheet")).toBeInTheDocument();
+});
+
+const milestoneRow = {
+  id: 1,
+  projectId: 1,
+  orgId: "org-1",
+  name: "Beta Launch",
+  targetDate: "2026-12-01",
+  status: "PENDING" as const,
+  description: null,
+  createdBy: null,
+  clientVisible: false,
+  deletedAt: null,
+  createdAt: "2026-09-01T00:00:00Z",
+  updatedAt: "2026-09-01T00:00:00Z",
+};
+
+it("shows bulk action bar with count after milestone is selected", () => {
+  mockUseProjectMilestones.mockReturnValue(
+    baseQueryResult({ data: cursorPage([milestoneRow]) }),
+  );
+  render(<ProjectMilestonesPage projectId="1" />);
+  expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("milestone-card"));
+  expect(screen.getByText("1 selected")).toBeInTheDocument();
+});
+
+it("hides bulk action bar after clear button is clicked", () => {
+  mockUseProjectMilestones.mockReturnValue(
+    baseQueryResult({ data: cursorPage([milestoneRow]) }),
+  );
+  render(<ProjectMilestonesPage projectId="1" />);
+  fireEvent.click(screen.getByTestId("milestone-card"));
+  fireEvent.click(screen.getByLabelText("Clear selection"));
+  expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
 });

@@ -847,4 +847,66 @@ All named elements present and tested:
 - `managed-products-a11y.test.tsx` 16/16 jsdom tests pass — all gallery mocks stable
 - Playwright spec references gallery routes under `/design-system/managed-products/` — no backend reads required at that path (`notFound()` in production; only shown in non-prod `NODE_ENV !== "production"` check, which is the gallery guard pattern)
 
-**Lane 3 is done. No work in flight.**
+---
+
+## Round 7 (Current session)
+
+### Evidence
+
+S1 C3 and S9 C3 were both ticked in the immediately preceding session (see session summary). Summary table in Round 6 showed them still blocked — that is now resolved.
+
+**Files written/edited this round:**
+
+| File | Change | Tests |
+|---|---|---|
+| `backend/src/modules/build/managed-products/dto/managed-products.schemas.ts` | Added `managedProductInsightsQuerySchema` with `range: z.enum(["7d","30d","90d"]).optional()` and exported `ProductInsightsQuery` type | — |
+| `backend/src/modules/build/managed-products/managed-products.service.ts` | Added `gte` to drizzle-orm imports; imported `ProductInsightsQuery`; added `computeRangeStart` private method (7d/30d/90d Date calculation); updated `getProductInsights` signature to accept `query: ProductInsightsQuery = {}`; added `rangeStart ? gte(table.createdAt, rangeStart) : undefined` condition to all 4 parallel queries (projects, submissions, roadmap items, feedback posts) | 3 new tests |
+| `backend/src/modules/build/managed-products/managed-products.controller.ts` | Added `managedProductInsightsQuerySchema`/`ProductInsightsQuery` imports; added `query: managedProductInsightsQuerySchema` to `@Validate` decorator on `getProductInsights`; added `@Query() query: ProductInsightsQuery` parameter; passes `query` to service | — |
+| `backend/src/modules/build/managed-products/managed-products.service.spec.ts` | Added describe block `"getProductInsights — range filter (BSN-INS-RANGE)"` with 3 tests: (1) created_at gte condition present in projects query when range=7d, (2) no created_at >= condition when no range, (3) rangeStart is approximately 7d ago | Pending run |
+| `frontend/lib/query-keys/build-work.ts` | Updated `insights` key factory to accept optional `filters?: QueryKeyParams`, appending filters to the key when present | — |
+| `frontend/hooks/api/build/managed-products.ts` | Added `ManagedProductInsightsParams` interface with `range?: "7d" \| "30d" \| "90d"`; updated `useManagedProductInsights` to accept optional `params` arg; builds `queryParams` from params.range; passes params in both `queryKey` and `queryFn` API call | — |
+| `frontend/features/build/managed-products/product-insights-page.tsx` | Added `useCallback`/`useMemo` imports; added `BuildListToolbar`/`BuildFilterSelect`/`useBuildListFilters` imports; added `RANGE_OPTIONS`/`INSIGHTS_FILTER_DEFINITIONS` consts; wired `useBuildListFilters({ withSearch: false })`; derives `typedRange` from URL; passes `{ range: typedRange }` to `useManagedProductInsights`; added `filters=` prop to `PageWrapper` with Range `BuildFilterSelect` chip | 5 new frontend tests |
+| `frontend/features/build/managed-products/product-insights-page.test.tsx` | Extended with describe block `"BSN-INS-RANGE"`: 5 tests — undefined range by default, range=7d from URL, range=30d, range=90d, unknown range rejected as undefined | Pending run |
+| `frontend/features/build/overview/managed-product-overview-page.tsx` | Added `useRouter`, `useBuildListFilters`, `useBuildListKeyboard`, `BUILD_FILTER_ALL`, `cn` imports; added `OVERVIEW_FILTER_DEFINITIONS = [{ param: "q" }]`; wired `useBuildListFilters({ withSearch: false })` to read `q` from URL; `searchValue` derived from `rawQ === BUILD_FILTER_ALL ? undefined : rawQ`; passes `search: searchValue` to `useProjects`; added `handleOpenFocused` (router.push to `/build/${proj.id}`), `handleClearSelection` (no-op); wired `useBuildListKeyboard` with `itemCount`, `onOpen`, `enabled = linkedProjects.length > 0`; applied `aria-selected` + `bg-accent` on focused row | 4 new tests |
+| `frontend/features/build/overview/managed-product-overview-page.test.tsx` | Added mocks for `useBuildListFilters` and `useBuildListKeyboard`; added describe block `"BSN-OVW-Q"` (2 tests: undefined search default, q forwarded as search); added describe block `"BSN-OVW-KB"` (2 tests: itemCount wired, focused row gets aria-selected=true) | Pending run |
+
+### S5 C3 gap update
+
+`range` URL param is now implemented and URL-backed. `teamId` requires a `teamId` column on `projects` table (migration needed — no such column). `ownerId` for insights has no clear mapping: `projects.managerMembershipId` is the project owner column (integer membership ID), but the spec param `ownerId` is a string UUID; and filtering projects inside the insights endpoint by manager membership would require a sub-join through `organizationMembers`. Both `teamId` and `ownerId` remain blocked. S5 C3 remains blocked but `range` is done.
+
+### S2 C3 gap update
+
+The orchestrator ruling "no list rows reasoning is wrong" is acted on. The linked projects preview section in the overview page now has:
+- `q` URL param backed via `useBuildListFilters({ withSearch: false })` → passed as `search` to `useProjects`
+- `useBuildListKeyboard` wired with `itemCount = linkedProjects.length`, `onOpen` navigates via `router.push`
+- Focused row highlighted via `aria-selected` + `bg-accent`
+
+Remaining S2 C3 blockers: `ownerId` param has no overview-level mapping (it's a filter on the full Projects list, not the overview); `sort` and `cursor` are not applicable to a 10-row preview section; `status` stat card was added in Round 2. The orchestrator's primary concern ("no list rows") is now resolved. C3 verdict depends on whether `q` + keyboard nav satisfies the criterion for this page type.
+
+### Updated C3 gap table
+
+| Spec | C3 status | Remaining blocker |
+|---|---|---|
+| S1 managed-products list | **TICKED** (current session) | All URL params, bulk endpoint, selection, keyboard, states, permissions done |
+| S2 product overview | PARTIAL | `q` URL-backed + `j/k/Enter` keyboard nav added (this round); `ownerId`/`sort`/`cursor` n/a for stat-card+preview page type |
+| S3 product feedback | **TICKED** (Round 6) | All resolved |
+| S4 product goals | BLOCKED | `scope`/`health`/`due` rejected by `listGoalsQuerySchema .strict()` (R-6 filed) |
+| S5 product insights | BLOCKED | `range` ✓ (this round); `teamId` needs projects migration; `ownerId` has no clean membership mapping |
+| S6 product projects | BLOCKED | Contested territory — `ProjectsPage` internal state cannot be verified or extended by Lane 3 |
+| S7 product roadmap | BLOCKED | `horizon` blocked by `.strict()` on `roadmapListQuerySchema` (R-5 filed); `ownerId` not in roadmap schema |
+| S8 feedbucket inbox | **TICKED** (Round 5) | All resolved |
+| S9 feedbucket detail | **TICKED** (current session) | DashboardGate removed, usePageState + error wired, Esc handler, 3 tests |
+
+### Summary table
+
+| Criterion | S1 | S2 | S3 | S4 | S5 | S6 | S7 | S8 | S9 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 Route + census | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 2 User job | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 3 Core + bulk + shortcuts | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ |
+| 4 Bounded lists | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 5 Contract tests | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ |
+| 6 A11y (jsdom part) | ✓ | ✗ | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ |
+| 7 Browser evidence | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+
+**Ticked: 41 / 63** (Round 6 final was 39; +2 from S1 C3 and S9 C3 ticked this session; S5 range adds implementation but does not tick C3)

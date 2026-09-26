@@ -1,11 +1,13 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { GoalsPage } from "./goals-page";
 
 jest.mock("@/hooks/api/goals", () => ({
+  useGoal: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, error: undefined })),
   useGoals: jest.fn(),
   useGoalsPage: jest.fn(),
   useGoalStats: jest.fn(),
+  useDeleteGoal: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -21,13 +23,15 @@ jest.mock("@/hooks/common/use-debounce", () => ({
   useDebouncedValue: (v: string) => v,
 }));
 
-jest.mock("@/hooks/common/use-query-param-open", () => ({
-  useQueryParamOpen: () => ({
-    open: false,
-    onOpenChange: jest.fn(),
-    setOpen: jest.fn(),
-  }),
-}));
+jest.mock("@/hooks/common/use-query-param-open", () => {
+  const { useState } = require("react");
+  return {
+    useQueryParamOpen: () => {
+      const [open, setOpen] = useState(false);
+      return { open, onOpenChange: (v: boolean) => setOpen(v), setOpen: () => setOpen(true) };
+    },
+  };
+});
 
 jest.mock("@/components/auth/require-module", () => ({
   RequireModule: ({ children }: { children: React.ReactNode }) => (
@@ -94,11 +98,33 @@ jest.mock("@/components/pm-chrome", () => ({
 }));
 
 jest.mock("@/features/build/goals/goal-form-sheet", () => ({
-  GoalFormSheet: () => null,
+  GoalFormSheet: ({ open }: { open?: boolean }) =>
+    open ? <div data-testid="goal-form-sheet" /> : null,
+}));
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: () => null,
+}));
+
+jest.mock("sonner", () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
+}));
+
+jest.mock("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 jest.mock("@/features/build/goals/constants", () => ({
-  STATUS_CONFIG: {},
+  STATUS_CONFIG: {
+    not_started: { variant: "outline", label: "Not started" },
+    on_track: { variant: "outline", label: "On track" },
+    at_risk: { variant: "outline", label: "At risk" },
+    off_track: { variant: "outline", label: "Off track" },
+    completed: { variant: "outline", label: "Completed" },
+  },
   LEVEL_LABEL: { company: "Company", team: "Team", individual: "Individual" },
   STATUS_OPTIONS: [],
   LEVEL_OPTIONS: [],
@@ -138,6 +164,7 @@ jest.mock("@animateicons/react/lucide", () => ({
   PlusIcon: ({
     ...props
   }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
+  EllipsisIcon: () => null,
 }));
 
 jest.mock("@/lib/motion-presets", () => ({
@@ -243,4 +270,34 @@ it("shows the New Goal control when build:goals:manage is granted", () => {
   render(<GoalsPage />);
 
   expect(screen.getAllByText("New Goal")[0]).toBeInTheDocument();
+});
+
+describe("GoalsPage — keyboard shortcuts (BSN-FE-K4)", () => {
+  it("c shortcut opens the create form sheet", () => {
+    render(<GoalsPage />);
+    fireEvent.keyDown(document, { key: "c" });
+
+    expect(screen.getByTestId("goal-form-sheet")).toBeInTheDocument();
+  });
+
+  it("e shortcut opens the edit form sheet for the focused goal", () => {
+    const { useGoal: mockUseGoal } = jest.requireMock("@/hooks/api/goals") as { useGoal: jest.Mock };
+    mockUseGoal.mockReturnValue({
+      data: { id: 1, title: "Test", status: "not_started", level: "company", progress: 0, description: null, owner: null, dueDate: null, startDate: null, project: null, keyResults: [], links: [], updates: [] },
+      isLoading: false, isError: false, error: undefined,
+    });
+    mockUseGoalsPage.mockReturnValue({
+      data: {
+        items: [{ id: 1, title: "Test Goal", status: "not_started", level: "company", progress: 0, keyResultCount: 0, owner: null, dueDate: null }],
+        page: 1, pageSize: 24, total: 1, totalPages: 1,
+      },
+      isLoading: false, isError: false, error: undefined, refetch: jest.fn(),
+    });
+
+    render(<GoalsPage />);
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "e" });
+
+    expect(screen.getByTestId("goal-form-sheet")).toBeInTheDocument();
+  });
 });
