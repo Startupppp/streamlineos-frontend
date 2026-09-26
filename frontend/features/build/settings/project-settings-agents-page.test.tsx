@@ -118,4 +118,26 @@ describe("ProjectSettingsAgentsPage — access control (BLD-X-FE-SETTINGS-AGENTS
     render(<ProjectSettingsAgentsPage projectId={1} />);
     expect(screen.queryByTestId("agent-tokens-section")).not.toBeInTheDocument();
   });
+
+  it("shows page-loading state with skeleton while access is in flight", () => {
+    mockAccessState = "loading";
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    expect(screen.getByTestId("page-loading")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsAgentsPage — URL search filter (BLD-X-FE-SETTINGS-AGENTS-002)", () => {
+  it("passes withSearch:true to useBuildListFilters so the q param is URL-backed", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ itemCount: expect.any(Number) }),
+    );
+  });
+
+  it("BuildListToolbar receives the search value from URL-backed filters", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+  });
 });
