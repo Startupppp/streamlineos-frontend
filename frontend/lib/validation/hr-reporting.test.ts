@@ -14,6 +14,7 @@ const base = {
   departmentId: "dept-1",
   role: DEFAULT_INVITE_ROLE,
   employeeId: "",
+  monthlySalary: 50000,
 };
 
 function messages(input: object): string[] {
