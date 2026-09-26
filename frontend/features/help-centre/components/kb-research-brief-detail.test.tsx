@@ -19,6 +19,7 @@ jest.mock("@/hooks/api/kb/research-briefs", () => ({
   useRetryResearchBrief: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useCancelResearchBrief: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useConvertResearchBriefToPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useApproveResearchBrief: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/kb/spaces", () => ({

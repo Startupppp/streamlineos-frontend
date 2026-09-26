@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
+import { KB_SPACES } from "@/lib/knowledge-routes";
 import SpaceDetailPage from "./space-detail-page";
 
 jest.mock("next/navigation", () => ({
@@ -156,10 +157,14 @@ describe("SpaceDetailPage", () => {
     );
   });
 
-  it("renders the back link to the spaces list", () => {
+  it("offers a route back to the spaces list, which the breadcrumb serves rather than a bare back link, so the header also states where this space sits", () => {
     render(<SpaceDetailPage spaceId={5} />);
 
-    expect(screen.getByRole("link", { name: /back/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^spaces$/i })).toHaveAttribute(
+      "href",
+      KB_SPACES,
+    );
+    expect(screen.getByRole("link", { name: /^wiki$/i })).toBeInTheDocument();
   });
 
   it("renders a badge for a public space with the public audience indicator", () => {

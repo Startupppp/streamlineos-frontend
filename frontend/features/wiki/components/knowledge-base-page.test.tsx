@@ -11,6 +11,10 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/knowledge/chat",
 }));
 
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: null }),
+}));
+
 jest.mock("@/hooks/api/kb/ask", () => ({
   useKbAsk: () => ({
     mutate: mockAskMutate,
