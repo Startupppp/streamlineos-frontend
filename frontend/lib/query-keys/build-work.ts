@@ -299,7 +299,9 @@ export const buildWorkQueryKeys = {
     orgCustomStates: () =>
       [...base, "projects", "org-custom-states"] as const,
     columnCounts: (projectId: number, filters?: QueryKeyParams) =>
-      [...base, "projects", "column-counts", projectId, filters ?? {}] as const,
+      filters === undefined
+        ? ([...base, "projects", "column-counts", projectId] as const)
+        : ([...base, "projects", "column-counts", projectId, filters] as const),
     importExport: {
       all: [...base, "projects", "import-export"] as const,
       preview: (projectId: number) =>
