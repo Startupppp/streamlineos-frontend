@@ -4,7 +4,7 @@
 
 This is the contract half of the sequence. It is a breaking change for any caller not yet echoing the token, which is why ticket 11 lands first.
 
-**Blocked by:** 11 — Return the concurrency token everywhere, and have clients echo it.
+**Blocked by:** 36 — Every ticket write maintains the concurrency token, and no write touches a deleted row. 11 — Return the concurrency token everywhere, and have clients echo it.
 
 **Status:** ready-for-agent
 

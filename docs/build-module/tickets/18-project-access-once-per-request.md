@@ -4,7 +4,9 @@
 
 Each sequential hop holds a pooled connection, and the request-wide tenant transaction caps concurrency at the pool size, so this overhead saturates the pool before any ticket data is read.
 
-**Blocked by:** None — can start immediately.
+The duplicate sequence is worse than this ticket assumed: there are **eight** independent constructions of project reachability across six files, and they do not check the same branches. Ticket 42 consolidates them, which is what gives this ticket one seam to cache behind instead of eight.
+
+**Blocked by:** 42 — The remaining reachability copies go, and the answers stop disagreeing.
 
 **Status:** ready-for-agent
 

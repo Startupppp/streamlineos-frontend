@@ -4,7 +4,7 @@
 
 Reuse the shape ticket 12 establishes rather than inventing a second mechanism.
 
-**Blocked by:** 11 — Return the concurrency token everywhere, and have clients echo it. 12 — Require the concurrency token on ticket update.
+**Blocked by:** 36 — Every ticket write maintains the concurrency token, and no write touches a deleted row. 11 — Return the concurrency token everywhere, and have clients echo it. 12 — Require the concurrency token on ticket update.
 
 **Status:** ready-for-agent
 

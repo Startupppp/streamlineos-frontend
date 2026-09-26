@@ -4,7 +4,9 @@
 
 Context worth knowing, because the module's own notes record the opposite: ticket update **already implements a correct compare-and-swap** — it guards the write on the row's current version and increments it, returning 409 through a dedicated conflict exception, with a passing spec. The recorded cross-cutting gap claiming no optimistic concurrency exists anywhere reached that conclusion by searching for `If-Match` and `ETag` headers, and this codebase carries the token in the request body, so that search could not have found it. Treat the mechanism as present and correct, not missing.
 
-**Blocked by:** None — can start immediately.
+One thing the note above does not cover, found later: the compare-and-swap is correct but **only five of the eleven ticket writers move the token**, so the check it performs can be defeated by any of the other six. Until ticket 36 lands, this mechanism is decorative and echoing the token buys nothing.
+
+**Blocked by:** 36 — Every ticket write maintains the concurrency token, and no write touches a deleted row.
 
 **Status:** ready-for-agent
 
