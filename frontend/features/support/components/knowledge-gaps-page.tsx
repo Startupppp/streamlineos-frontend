@@ -68,9 +68,9 @@ export function KnowledgeGapsPage() {
     );
   }
 
-  function handleDismiss(gapId: number) {
+  function handleDismiss(gapId: number, reason?: string) {
     dismissMutation.mutate(
-      { gapId },
+      { gapId, reason },
       { onError: (err) => toast.error(getErrorMessage(err)) },
     );
   }

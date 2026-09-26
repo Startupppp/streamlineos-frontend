@@ -76,15 +76,16 @@ export function useDismissGap() {
   return useAuthorizedMutation<
     DraftedKnowledgeGap,
     Error,
-    { gapId: number },
+    { gapId: number; reason?: string },
     { snapshots: Array<[readonly unknown[], ListKnowledgeGapsResponse]> }
   >("support:knowledge-gaps:manage", {
     mutationKey: ["support", "knowledge-gaps", "dismiss"],
-    mutationFn: ({ gapId }) =>
+    mutationFn: ({ gapId, reason }) =>
       apiClient.patch<DraftedKnowledgeGap>(`/support/knowledge-gaps/${gapId}`, {
         action: "dismiss",
+        ...(reason !== undefined && reason !== "" ? { reason } : {}),
       }, undefined, dismissGapResponseC),
-    onMutate: async ({ gapId }) => {
+    onMutate: async ({ gapId, reason }) => {
       await queryClient.cancelQueries({ queryKey: knowledgeGapsKeys.all });
       const snapshots: Array<[readonly unknown[], ListKnowledgeGapsResponse]> = [];
       queryClient
@@ -97,7 +98,16 @@ export function useDismissGap() {
           queryClient.setQueryData<ListKnowledgeGapsResponse>(key, {
             ...data,
             gaps: data.gaps.map((g) =>
-              g.id === gapId ? { ...g, status: "DISMISSED" as const } : g,
+              g.id === gapId
+                ? {
+                    ...g,
+                    status: "DISMISSED" as const,
+                    dismissalReason:
+                      reason !== undefined && reason !== ""
+                        ? reason
+                        : g.dismissalReason,
+                  }
+                : g,
             ),
           });
         });

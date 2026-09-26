@@ -13,6 +13,7 @@ export interface DraftedKnowledgeGap {
   sampleTicketIds: number[];
   status: KnowledgeGapStatus;
   proposedArticleId: number | null;
+  dismissalReason: string | null;
   draftedBy: string | null;
   reviewedBy: string | null;
   evidence: KnowledgeGapEvidence | null;

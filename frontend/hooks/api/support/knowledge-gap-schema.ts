@@ -8,6 +8,7 @@ const supportKnowledgeGapRowContract = z.object({
   sampleTicketIds: z.array(z.number()),
   status: z.enum(["OPEN", "DRAFTED", "ROUTED", "PUBLISHED", "DISMISSED"]),
   proposedArticleId: z.number().nullable(),
+  dismissalReason: z.string().nullable(),
   draftedBy: z.string().nullable(),
   reviewedBy: z.string().nullable(),
   evidence: z
