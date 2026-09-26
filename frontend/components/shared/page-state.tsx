@@ -6,6 +6,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 import { ErrorState } from "./error-state";
+import { SessionExpiredState } from "./session-expired-state";
 import { DeniedView, FeatureLockedView, QuotaExceededView } from "./page-state-views";
 
 export interface PageStateProps {
@@ -63,6 +64,8 @@ export function PageState({
           compact={compact}
         />
       );
+    case "session-expired":
+      return <SessionExpiredState className={className} compact={compact} />;
     case "error":
       return (
         <ErrorState

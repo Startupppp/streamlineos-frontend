@@ -117,3 +117,32 @@ describe("resolvePageState — the branch order below denial", () => {
     expect(resolvePageState({ ...granted, isEmpty: false })).toEqual({ kind: "ready" });
   });
 });
+
+describe("a 401 is the session ending, not a page that failed to load", () => {
+  it("resolves session-expired rather than the generic error that reads as a bug", () => {
+    expect(
+      resolvePageState({
+        isLoading: false,
+        isError: true,
+        error: new ApiError("Unauthorized", 401, "UNAUTHORIZED"),
+      }),
+    ).toEqual({ kind: "session-expired" });
+  });
+
+  it("outranks loading, because a gated page whose access call 401d waits on a skeleton forever", () => {
+    expect(
+      resolvePageState({
+        access: "loading",
+        isLoading: true,
+        isError: true,
+        error: new ApiError("Unauthorized", 401, "UNAUTHORIZED"),
+      }),
+    ).toEqual({ kind: "session-expired" });
+  });
+
+  it("leaves 403 as a denial, so an in-tenant permission miss is not mistaken for a dead session", () => {
+    expect(pageStateFromError(new ApiError("Forbidden", 403, "FORBIDDEN"))).toMatchObject({
+      kind: "denied",
+    });
+  });
+});

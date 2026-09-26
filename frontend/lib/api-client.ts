@@ -169,12 +169,46 @@ function readTokenExpiry(token: string): number | null {
 }
 
 let tokenGeneration = 0;
+let sessionEnded = false;
+let refreshAfterUnauthorizedPromise: Promise<string | null> | null = null;
 
-export function clearBackendTokenCache(): void {
+function resetTokenState(): void {
   cachedToken = null;
   fetchingTokenPromise = null;
   tokenUnavailableUntil = 0;
   tokenGeneration += 1;
+}
+
+export function clearBackendTokenCache(): void {
+  resetTokenState();
+  sessionEnded = false;
+}
+
+async function refreshAfterUnauthorized(
+  staleToken: string | null,
+  options?: { asRealUser?: boolean },
+): Promise<string | null> {
+  if (cachedToken !== null && cachedToken.value !== staleToken)
+    return cachedToken.value;
+  if (refreshAfterUnauthorizedPromise) return refreshAfterUnauthorizedPromise;
+  refreshAfterUnauthorizedPromise = (async () => {
+    try {
+      resetTokenState();
+      return await getBackendToken(options);
+    } finally {
+      refreshAfterUnauthorizedPromise = null;
+    }
+  })();
+  return refreshAfterUnauthorizedPromise;
+}
+
+function endSession(): void {
+  if (sessionEnded) return;
+  sessionEnded = true;
+  clearRegisteredQueryCache();
+  void import("next-auth/react").then(({ signOut }) => {
+    void signOut({ callbackUrl: "/signin" });
+  });
 }
 
 export function clearImpersonation(): void {
@@ -293,16 +327,16 @@ export async function authedFetch(
   const tokenOptions =
     options?.asRealUser === true ? { asRealUser: true } : undefined;
 
+  let sentToken: string | null = null;
   if (!isPublic) {
-    const token = await getBackendToken(tokenOptions);
-    if (token) headers.set("Authorization", `Bearer ${token}`);
+    sentToken = await getBackendToken(tokenOptions);
+    if (sentToken) headers.set("Authorization", `Bearer ${sentToken}`);
   }
 
   let res = await fetchOrThrowTransportError(url, requestInit, headers, combinedSignal, path);
 
   if (!isPublic && res.status === 401) {
-    clearBackendTokenCache();
-    const token = await getBackendToken(tokenOptions);
+    const token = await refreshAfterUnauthorized(sentToken, tokenOptions);
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
       res = await fetchOrThrowTransportError(url, requestInit, headers, combinedSignal, path);
@@ -312,10 +346,7 @@ export async function authedFetch(
       typeof window !== "undefined" &&
       !autoSignOutSuppressed
     ) {
-      clearRegisteredQueryCache();
-      void import("next-auth/react").then(({ signOut }) => {
-        void signOut({ callbackUrl: "/signin" });
-      });
+      endSession();
     }
   }
   if (!isPublic) await redirectForOrganizationAccessError(res);

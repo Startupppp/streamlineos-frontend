@@ -35,6 +35,7 @@ export type PageStateResolution =
       upgradePath: string;
     }
   | { kind: "feature-locked"; feature: string; requiredPlan: string; upgradePath: string }
+  | { kind: "session-expired" }
   | { kind: "error"; error: unknown };
 
 export interface PageStateInput {
@@ -65,8 +66,13 @@ export function fromModuleDenial(
   return { kind: "module-disabled", moduleKey };
 }
 
+export function isSessionExpiredError(error: unknown): boolean {
+  return isApiError(error) && error.status === 401;
+}
+
 export function pageStateFromError(error: unknown): PageStateResolution | null {
   if (!isApiError(error)) return null;
+  if (error.status === 401) return { kind: "session-expired" };
   if (error.status === 404) return { kind: "empty" };
   if (error.status === 403)
     return { kind: "denied", permission: null, message: getErrorMessage(error) };
@@ -94,6 +100,9 @@ export function pageStateFromError(error: unknown): PageStateResolution | null {
 }
 
 export function resolvePageState(input: PageStateInput): PageStateResolution {
+  if (input.isError && isSessionExpiredError(input.error))
+    return { kind: "session-expired" };
+
   if (input.access === "loading") return { kind: "loading" };
   if (input.module?.status === "loading") return { kind: "loading" };
 
