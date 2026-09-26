@@ -10,7 +10,7 @@ import { setPortalToken } from "@/lib/portal-api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
-function StatusLayout({ children }: { children: React.ReactNode }) {
+export function StatusLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-dvh bg-background">
       <PortalHeader />
@@ -21,7 +21,7 @@ function StatusLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function LoadingView() {
+export function LoadingView() {
   return (
     <StatusLayout>
       <div className="flex flex-col items-center gap-4">
@@ -46,7 +46,7 @@ interface ErrorViewProps {
   message: string;
 }
 
-function ErrorView({ title, message }: ErrorViewProps) {
+export function ErrorView({ title, message }: ErrorViewProps) {
   return (
     <StatusLayout>
       <div className="flex flex-col items-center gap-4">
@@ -73,7 +73,7 @@ function ErrorView({ title, message }: ErrorViewProps) {
   );
 }
 
-function MissingTokenView({ reason }: { reason: string | null }) {
+export function MissingTokenView({ reason }: { reason: string | null }) {
   const title =
     reason === "expired"
       ? "Session expired"

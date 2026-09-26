@@ -87,3 +87,48 @@ describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
     expect(screen.getByRole("button", { name: /next page/i })).toBeInTheDocument();
   });
 });
+
+describe("ProductGoalsPage — health/due/scope URL params forwarded (BSN-FILTER-GOALS-02)", () => {
+  beforeEach(() => {
+    useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
+  });
+
+  it("forwards health URL param to useGoalsPage so health-filtered queries run server-side", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("health=at_risk"));
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ health: "at_risk" });
+  });
+
+  it("omits health from useGoalsPage params when the URL param is absent", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("health");
+  });
+
+  it("forwards due URL param to useGoalsPage so due-date-filtered queries run server-side", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("due=overdue"));
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ due: "overdue" });
+  });
+
+  it("omits due from useGoalsPage params when the URL param is absent", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("due");
+  });
+
+  it("forwards scope URL param to useGoalsPage so scope-filtered queries run server-side", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("scope=product"));
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ scope: "product" });
+  });
+
+  it("omits scope from useGoalsPage params when the URL param is absent", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("scope");
+  });
+});

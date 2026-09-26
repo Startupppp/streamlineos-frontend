@@ -27,6 +27,37 @@ beforeEach(() => {
   requestLeave.mockImplementation((action: () => void) => action());
 });
 
+describe("c+p and c+t shortcuts fire the correct create callback", () => {
+  it("c then p calls onCreateProject", () => {
+    renderHook(() =>
+      useKeyboardShortcuts(mockOnCreateProject, mockOnCreateIssue),
+    );
+    act(() => press("c"));
+    act(() => press("p"));
+    expect(mockOnCreateProject).toHaveBeenCalledTimes(1);
+  });
+
+  it("c then t calls onCreateIssue", () => {
+    renderHook(() =>
+      useKeyboardShortcuts(mockOnCreateProject, mockOnCreateIssue),
+    );
+    act(() => press("c"));
+    act(() => press("t"));
+    expect(mockOnCreateIssue).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("g+p shortcut navigates to the projects list", () => {
+  it("g then p navigates to /build", () => {
+    renderHook(() =>
+      useKeyboardShortcuts(mockOnCreateProject, mockOnCreateIssue),
+    );
+    act(() => press("g"));
+    act(() => press("p"));
+    expect(mockPush).toHaveBeenCalledWith("/build");
+  });
+});
+
 describe("modifier guard — command-center shortcuts do not fire on Cmd/Ctrl/Alt combos", () => {
   it("does not navigate when Cmd+g is pressed", () => {
     renderHook(() =>

@@ -388,4 +388,116 @@ test.describe("Build list responsive contract", () => {
       );
     });
   });
+
+  test.describe("keyboard — tab order at 1280 px", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+    });
+
+    test("action buttons then toolbar controls are reached in visual DOM order", async ({ page }) => {
+      const scope = frame(page, "four-actions-three-filters");
+      const importBtn = scope.getByRole("button", { name: "Import", exact: true });
+      await importBtn.focus();
+      await expect(importBtn).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.getByRole("button", { name: "Export", exact: true })).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.getByRole("button", { name: "New project", exact: true })).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.getByRole("button", { name: "More actions", exact: true })).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.locator("[data-slot=search-input] input")).toBeFocused();
+    });
+
+    test("filter select triggers are reachable in order after search", async ({ page }) => {
+      const scope = frame(page, "four-actions-three-filters");
+      await scope.locator("[data-slot=search-input] input").focus();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.locator("[data-filter-id=status] [data-slot=select-trigger]")).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.locator("[data-filter-id=health] [data-slot=select-trigger]")).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.locator("[data-filter-id=lead] [data-slot=select-trigger]")).toBeFocused();
+    });
+
+    test("opening the overflow dropdown and pressing Escape returns focus to its trigger", async ({ page }) => {
+      const scope = frame(page, "four-actions-three-filters");
+      const trigger = scope.getByRole("button", { name: "More actions", exact: true });
+      await trigger.click();
+      const menu = page.getByRole("menu");
+      await expect(menu).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(menu).toBeHidden();
+      await expect(trigger).toBeFocused();
+    });
+  });
+
+  test.describe("screen reader — roles and accessible names", () => {
+    test.describe("768 x 1024", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 768, height: 1024 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+      });
+
+      test("the ready table exposes role table with all six column headers named", async ({ page }) => {
+        const scope = frame(page, "two-actions-two-filters");
+        await expect(scope.getByRole("table").first()).toBeVisible();
+        for (const header of ["Key", "Name", "Status", "Owner", "Progress", "Target"]) {
+          await expect(
+            scope.getByRole("columnheader", { name: header, exact: true }),
+          ).toBeVisible();
+        }
+      });
+
+      test("the table container is a labelled region that can receive keyboard focus", async ({ page }) => {
+        const scope = frame(page, "two-actions-two-filters");
+        const region = scope.getByRole("region", { name: "Table", exact: true });
+        await expect(region).toBeVisible();
+        await expect(region).toHaveAttribute("tabindex", "0");
+      });
+
+      test("the search input carries its accessible label", async ({ page }) => {
+        const scope = frame(page, "two-actions-two-filters");
+        await expect(
+          scope.getByRole("searchbox", { name: "Search projects", exact: true }),
+        ).toBeVisible();
+      });
+
+      test("each filter select trigger is named by its visual label", async ({ page }) => {
+        const scope = frame(page, "four-actions-three-filters");
+        for (const label of ["Status", "Health", "Lead"]) {
+          await expect(
+            scope.getByRole("combobox", { name: label, exact: true }),
+          ).toBeVisible();
+        }
+      });
+    });
+
+    test.describe("375 x 812", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 812 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+      });
+
+      test("the true-empty status landmark contains its heading", async ({ page }) => {
+        const scope = frame(page, "empty-true");
+        const status = scope.getByRole("status");
+        await expect(status).toBeVisible();
+        await expect(
+          status.getByRole("heading", { name: "No projects yet", exact: true }),
+        ).toBeVisible();
+      });
+    });
+  });
 });

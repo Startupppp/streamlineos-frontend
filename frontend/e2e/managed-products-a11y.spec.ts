@@ -30,6 +30,27 @@ const CASES = [
   "denied",
 ] as const;
 
+const SUB_PAGE_LOADING_CASES = [
+  "feedback-loading",
+  "goals-loading",
+  "roadmap-loading",
+  "overview-loading",
+  "insights-loading",
+  "projects-loading",
+  "feedbucket-loading",
+  "submission-loading",
+] as const;
+
+const SUB_PAGE_EMPTY_CASES = [
+  "feedback-empty",
+  "goals-empty",
+  "roadmap-empty",
+  "overview-empty",
+  "projects-empty",
+  "feedbucket-empty",
+  "submission-empty",
+] as const;
+
 function frame(page: Page, caseId: string): Locator {
   return page.locator(`[data-case-frame="${caseId}"]`);
 }
@@ -478,6 +499,237 @@ test.describe("Managed Products responsive contract", () => {
       await page.keyboard.press("Escape");
       await expect(page.getByRole("menu")).toBeHidden();
       await expect(actionsBtn).toBeFocused();
+    });
+  });
+
+  test.describe("sub-page surfaces — 375 px mobile width — no horizontal overflow", () => {
+    test.use({ viewport: { width: 375, height: 812 } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Managed Products surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("no sub-page loading skeleton overflows at 375 px", async ({ page }) => {
+      const failures: string[] = [];
+      for (const caseId of SUB_PAGE_LOADING_CASES) {
+        const overflow = await horizontalOverflowOf(frame(page, caseId));
+        if (overflow > 1) failures.push(`${caseId}: ${overflow}px`);
+      }
+      expect(failures).toEqual([]);
+    });
+
+    test("no sub-page empty state overflows at 375 px", async ({ page }) => {
+      const failures: string[] = [];
+      for (const caseId of SUB_PAGE_EMPTY_CASES) {
+        const overflow = await horizontalOverflowOf(frame(page, caseId));
+        if (overflow > 1) failures.push(`${caseId}: ${overflow}px`);
+      }
+      expect(failures).toEqual([]);
+    });
+  });
+
+  test.describe("sub-page surfaces — screen-reader roles and accessible names", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Managed Products surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("overview-empty exposes a status region naming the not-found state", async ({ page }) => {
+      const scope = frame(page, "overview-empty");
+      await expect(scope.getByRole("status")).toBeVisible();
+      await expect(scope.getByText(/product not found/i)).toBeVisible();
+    });
+
+    test("projects-empty exposes a status region naming the empty state", async ({ page }) => {
+      const scope = frame(page, "projects-empty");
+      await expect(scope.getByRole("status")).toBeVisible();
+      await expect(scope.getByText(/no linked projects yet/i)).toBeVisible();
+    });
+
+    test("feedbucket-empty exposes a status region naming the empty state", async ({ page }) => {
+      const scope = frame(page, "feedbucket-empty");
+      await expect(scope.getByRole("status")).toBeVisible();
+      await expect(scope.getByText(/no feedback widget/i)).toBeVisible();
+    });
+
+    test("submission-empty exposes a status region naming the not-found state", async ({ page }) => {
+      const scope = frame(page, "submission-empty");
+      await expect(scope.getByRole("status")).toBeVisible();
+      await expect(scope.getByText(/submission not found/i)).toBeVisible();
+    });
+
+    test("new sub-page loading skeletons carry aria-hidden on every shimmer element", async ({
+      page,
+    }) => {
+      for (const caseId of [
+        "overview-loading",
+        "insights-loading",
+        "projects-loading",
+        "feedbucket-loading",
+        "submission-loading",
+      ] as const) {
+        const shimmers = frame(page, caseId).locator(".skeleton-shimmer");
+        const count = await shimmers.count();
+        expect(count, `${caseId} should contain shimmer elements`).toBeGreaterThan(0);
+        for (let i = 0; i < count; i++) {
+          await expect(shimmers.nth(i)).toHaveAttribute("aria-hidden", "true");
+        }
+      }
+    });
+  });
+
+  test.describe("sub-page loading skeletons — reduced motion (paired)", () => {
+    test.describe("with reduce requested", () => {
+      test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+      });
+
+      test("all sub-page loading skeletons compute animation-name none on their shimmer", async ({
+        page,
+      }) => {
+        for (const caseId of SUB_PAGE_LOADING_CASES) {
+          const shimmer = frame(page, caseId)
+            .locator(".skeleton-shimmer.animate-pulse:visible")
+            .first();
+          await expect(shimmer).toBeVisible();
+          const animName = await shimmer.evaluate(
+            (node: HTMLElement) => getComputedStyle(node).animationName,
+          );
+          expect(animName, `${caseId} shimmer should have animation-name none`).toBe("none");
+        }
+      });
+    });
+
+    test.describe("with no preference", () => {
+      test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+      });
+
+      test("all sub-page loading skeletons do animate, proving the reduce assertion is not vacuous", async ({
+        page,
+      }) => {
+        for (const caseId of SUB_PAGE_LOADING_CASES) {
+          const shimmer = frame(page, caseId)
+            .locator(".skeleton-shimmer.animate-pulse:visible")
+            .first();
+          await expect(shimmer).toBeVisible();
+          const animName = await shimmer.evaluate(
+            (node: HTMLElement) => getComputedStyle(node).animationName,
+          );
+          expect(animName, `${caseId} shimmer should animate without reduce`).not.toBe("none");
+        }
+      });
+    });
+  });
+
+  test.describe("sub-page surfaces — high-density desktop 1920×1080 @ deviceScaleFactor 2", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Managed Products surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("no sub-page loading skeleton overflows at scale 2", async ({ page }) => {
+      const failures: string[] = [];
+      for (const caseId of SUB_PAGE_LOADING_CASES) {
+        const overflow = await horizontalOverflowOf(frame(page, caseId));
+        if (overflow > 1) failures.push(`${caseId}: ${overflow}px`);
+      }
+      expect(failures).toEqual([]);
+    });
+
+    test("no sub-page empty state overflows at scale 2", async ({ page }) => {
+      const failures: string[] = [];
+      for (const caseId of SUB_PAGE_EMPTY_CASES) {
+        const overflow = await horizontalOverflowOf(frame(page, caseId));
+        if (overflow > 1) failures.push(`${caseId}: ${overflow}px`);
+      }
+      expect(failures).toEqual([]);
+    });
+  });
+
+  test.describe("sub-page surfaces — keyboard focus reachability", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Managed Products surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("feedback-empty — Clear filters button is keyboard-reachable", async ({ page }) => {
+      const scope = frame(page, "feedback-empty");
+      const btn = scope.getByRole("button", { name: "Clear filters", exact: true });
+      await btn.focus();
+      await expect(btn).toBeFocused();
+    });
+
+    test("goals-empty — New goal button is keyboard-reachable", async ({ page }) => {
+      const scope = frame(page, "goals-empty");
+      const btn = scope.getByRole("button", { name: "New goal", exact: true });
+      await btn.focus();
+      await expect(btn).toBeFocused();
+    });
+
+    test("roadmap-empty — Add item button is keyboard-reachable", async ({ page }) => {
+      const scope = frame(page, "roadmap-empty");
+      const btn = scope.getByRole("button", { name: "Add item", exact: true });
+      await btn.focus();
+      await expect(btn).toBeFocused();
+    });
+
+    test("overview-empty — Back link is keyboard-reachable", async ({ page }) => {
+      const scope = frame(page, "overview-empty");
+      const backLink = scope.getByRole("link", { name: "Back", exact: true });
+      await backLink.focus();
+      await expect(backLink).toBeFocused();
+    });
+
+    test("insights-loading — Range filter trigger is keyboard-reachable", async ({ page }) => {
+      const scope = frame(page, "insights-loading");
+      const rangeTrigger = scope.locator(
+        "[data-filter-id=range] [data-slot=select-trigger]",
+      );
+      await rangeTrigger.focus();
+      await expect(rangeTrigger).toBeFocused();
+    });
+
+    test("projects-empty — Link project button is keyboard-reachable", async ({ page }) => {
+      const scope = frame(page, "projects-empty");
+      const btn = scope.getByRole("button", { name: "Link project", exact: true });
+      await btn.focus();
+      await expect(btn).toBeFocused();
+    });
+
+    test("feedbucket-empty — Create feedback widget button is keyboard-reachable", async ({
+      page,
+    }) => {
+      const scope = frame(page, "feedbucket-empty");
+      const btn = scope.getByRole("button", { name: "Create feedback widget", exact: true });
+      await btn.focus();
+      await expect(btn).toBeFocused();
+    });
+
+    test("submission-empty — Back link is keyboard-reachable", async ({ page }) => {
+      const scope = frame(page, "submission-empty");
+      const backLink = scope.getByRole("link", { name: "Back", exact: true });
+      await backLink.focus();
+      await expect(backLink).toBeFocused();
     });
   });
 });

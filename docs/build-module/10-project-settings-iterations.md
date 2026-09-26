@@ -100,8 +100,8 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
 - [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
-- [ ] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
-  BLOCKED — settings form only, no list surface: `project-settings-iterations-page.tsx` now renders a `defaultDurationWeeks` Select and `namingPrefix` Input backed by `GET /build/:projectId/settings/iterations`. No collection is rendered, so there is nothing to bound or virtualize.
+- [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
+  SATISFIED BY ABSENCE — page is a singleton settings form. `project-settings-iterations-page.tsx` renders a `defaultDurationWeeks` Select (4 static `as const` options, no server fetch) and a `namingPrefix` Input. The backend `getSettings` uses `.limit(1)` on the `projects` table (`projects-settings-iterations.service.ts:29`). No growable collection exists to bound or virtualise. Test: `project-settings-iterations-page.test.tsx` — "has no data table or paginated list — singleton settings form satisfies box 4 by absence of a growable collection" (8/8 pass).
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.

@@ -140,6 +140,70 @@ CSS, not a per-page defect, and it is filed rather than patched because it chang
 pass counts above describe specs that no longer exist in that form. C6 stays unticked on all 83 pages
 until a fresh serial drain, and the rule holds unchanged: do not tick C6 because a spec is green.
 
+### Update 2026-09-26, later — the fresh drain ran. 261 passed, 5 failed, 0 skipped
+
+Serial, one spec at a time, real browser. Raw output kept outside the repo at
+`D:/agent-work/drain-2026-09-26/` so a peer `git add -A` cannot commit it.
+
+| Spec | Result |
+|---|---|
+| build-list-responsive | 36 passed |
+| content-intake-a11y | 27 passed |
+| execution-core-a11y | 16 passed |
+| governance-qa-a11y | **3 failed**, 31 passed |
+| managed-products-a11y | 45 passed |
+| org-work-a11y | 17 passed |
+| planning-surfaces-a11y | 41 passed |
+| portals-a11y | 20 passed |
+| settings-a11y | **1 failed**, 15 passed |
+| teams-team-a11y | **1 failed**, 13 passed |
+
+**Zero skipped, which had to be checked before reading anything else.** The config omits
+`BACKEND_JWT_SECRET` and `INTERNAL_API_SECRET` from `E2E_ENV`, and authenticated specs call
+`hasBackendSecrets()` and **skip with a message rather than fail** — so a skip read as a pass would
+have produced false ticks. All eleven design-system routes live under `app/(public)/design-system/`,
+need no auth, and cannot skip for that reason. Confirmed in the output.
+
+**The five failures are real, not flakes.** `retries: 0` locally, so each ran once and lost once.
+
+- `governance-qa:231/243/255` — one root cause, three symptoms. The `risks-with-selection` case has
+  no working selection state: Space leaves the select-all checkbox `unchecked`, and the
+  `role="region"` named "Bulk actions" is **element(s) not found** for both the reveal test and the
+  Escape test. Note the reveal test's negative half (`not.toBeVisible()` before selecting) *passed* —
+  because the element does not exist at all. That is the vacuous-control trap in the wild: only the
+  positive half had teeth, and it is the half that failed.
+- `settings:137` — Tab from the search input does not reach the first view card name button;
+  "Received: **inactive**", so the element exists and focus went elsewhere. The sibling test for
+  intra-card order (Rename → Delete) passed, so it is the *entry* into the card that is wrong.
+- `teams-team:74` — `locator.focus` timed out at 90 s, which means the locator never resolved, not
+  that focus landed elsewhere. The combobox is almost certainly not in the DOM. This is the describe
+  rewritten earlier the same day after it was found to press no keys; the rewrite mounts the real
+  `MemberRoleSelect`/`RemoveMemberButton`, and those render only when `canManage`.
+
+### The finding that matters more than the five failures
+
+**A green spec is not evidence for the pages in its lane, and now there are numbers.** Counting
+describes rather than reading lane reports:
+
+| Spec | Pages in its lane | Tests | Keyboard | Screen-reader |
+|---|---|---|---|---|
+| build-list-responsive | — | 36 | **absent** | **absent** |
+| org-work-a11y | 9 | 17 | templates only | — |
+| execution-core-a11y | 10 | 16 | ticket detail only | **absent** |
+| settings-a11y | 15 | 16 | saved views only | views case only |
+
+`build-list-responsive` is the largest green spec in the suite and asks **three** of C6's five
+questions — it has no keyboard describe and no ARIA describe at all. `org-work-a11y`'s top-level
+describe is named "Templates surfaces"; it covers templates, not the other eight LANE-1 pages.
+
+So the earlier update's "all ten carry a paired assertion / a high-density describe / keyboard in
+nine" was true **per spec** and says nothing **per page**. A lane's gallery mounting one surface
+cannot close C6 on the other eight pages that share its spec.
+
+C6 therefore stays unticked on all 83 pages, now for a measured reason rather than an unverified one.
+The unit of evidence is a (page × check) pair, not a spec exit code. Ten agents hold one gallery each
+and are writing that matrix; tick from the matrix plus a green re-drain, never from either alone.
+
 Two traps already paid for on this criterion, both of which made a spec prove less than it read:
 `getByRole(..., { name })` is a case-insensitive **substring** match, so `{ name: "ID" }` also matched
 "Decided" and needed `exact: true` at all 22 call sites; and a `getByText` for a stat label matched

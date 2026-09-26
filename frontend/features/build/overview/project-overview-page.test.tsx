@@ -207,4 +207,27 @@ describe("ProjectOverviewPage", () => {
     expect(screen.getByText(/project not found/i)).toBeInTheDocument();
     expect(screen.queryByText("Open issues")).not.toBeInTheDocument();
   });
+
+  it("renders the next-milestone card name and section heading when a pending milestone exists, so the upcoming commitment is visible without navigating to /milestones", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectMilestones } = jest.requireMock("@/hooks/api/build/milestones");
+    (useProjectMilestones as jest.Mock).mockReturnValue({
+      data: {
+        data: [
+          { id: 1, name: "Beta Release", targetDate: "2026-12-01", status: "PENDING" },
+          { id: 2, name: "GA Launch", targetDate: "2027-03-01", status: "PENDING" },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByText("Next milestone")).toBeInTheDocument();
+    expect(screen.getByText("Beta Release")).toBeInTheDocument();
+    expect(screen.queryByText("GA Launch")).not.toBeInTheDocument();
+  });
 });

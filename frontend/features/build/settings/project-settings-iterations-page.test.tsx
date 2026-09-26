@@ -176,3 +176,11 @@ it("disables form fields while the mutation is pending", () => {
   expect((screen.getByTestId("duration-select") as HTMLSelectElement).disabled).toBe(true);
   expect((screen.getByLabelText("Naming prefix") as HTMLInputElement).disabled).toBe(true);
 });
+
+it("has no data table or paginated list — singleton settings form satisfies box 4 by absence of a growable collection", () => {
+  render(<ProjectSettingsIterationsPage projectId={1} />);
+  expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  expect(screen.queryByRole("grid")).not.toBeInTheDocument();
+  expect(screen.getByTestId("duration-select")).toBeInTheDocument();
+  expect(screen.getByLabelText("Naming prefix")).toBeInTheDocument();
+});

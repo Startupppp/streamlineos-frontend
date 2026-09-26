@@ -19,6 +19,7 @@ export interface UseBuildListKeyboardOptions {
   onEdit?: (index: number) => void;
   onCreate?: () => void;
   onClearSelection: () => void;
+  onShortcutHelp?: () => void;
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
   enabled?: boolean;
 }
@@ -34,6 +35,7 @@ export function useBuildListKeyboard({
   onEdit,
   onCreate,
   onClearSelection,
+  onShortcutHelp,
   searchInputRef,
   enabled = true,
 }: UseBuildListKeyboardOptions): UseBuildListKeyboardReturn {
@@ -43,6 +45,7 @@ export function useBuildListKeyboard({
   const onEditRef = useRef(onEdit);
   const onCreateRef = useRef(onCreate);
   const onClearRef = useRef(onClearSelection);
+  const onShortcutHelpRef = useRef(onShortcutHelp);
 
   useEffect(() => {
     onOpenRef.current = onOpen;
@@ -59,6 +62,10 @@ export function useBuildListKeyboard({
   useEffect(() => {
     onClearRef.current = onClearSelection;
   }, [onClearSelection]);
+
+  useEffect(() => {
+    onShortcutHelpRef.current = onShortcutHelp;
+  }, [onShortcutHelp]);
 
   useEffect(() => {
     if (focusedIndex !== null && focusedIndex >= itemCount) {
@@ -122,6 +129,13 @@ export function useBuildListKeyboard({
           if (onCreateRef.current) {
             e.preventDefault();
             onCreateRef.current();
+          }
+          break;
+        }
+        case "?": {
+          if (onShortcutHelpRef.current) {
+            e.preventDefault();
+            onShortcutHelpRef.current();
           }
           break;
         }

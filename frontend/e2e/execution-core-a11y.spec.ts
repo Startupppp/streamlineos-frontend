@@ -18,7 +18,7 @@ test.describe("Execution core — responsive and a11y contract", () => {
         });
         await page.goto(GALLERY);
         await expect(
-          page.getByRole("heading", { name: "Execution core surfaces" }),
+          page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
         ).toBeVisible();
       });
 
@@ -39,7 +39,7 @@ test.describe("Execution core — responsive and a11y contract", () => {
     test.beforeEach(async ({ page }) => {
       await page.goto(GALLERY);
       await expect(
-        page.getByRole("heading", { name: "Execution core surfaces" }),
+        page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
       ).toBeVisible();
     });
 
@@ -94,7 +94,7 @@ test.describe("Execution core — responsive and a11y contract", () => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto(GALLERY);
       await expect(
-        page.getByRole("heading", { name: "Execution core surfaces" }),
+        page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
       ).toBeVisible();
     });
 
@@ -137,7 +137,7 @@ test.describe("Execution core — responsive and a11y contract", () => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
       await expect(
-        page.getByRole("heading", { name: "Execution core surfaces" }),
+        page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
       ).toBeVisible();
     });
 
@@ -192,7 +192,7 @@ test.describe("Execution core — responsive and a11y contract", () => {
       await page.setViewportSize({ width: 768, height: 1024 });
       await page.goto(GALLERY);
       await expect(
-        page.getByRole("heading", { name: "Execution core surfaces" }),
+        page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
       ).toBeVisible();
     });
 
@@ -200,12 +200,12 @@ test.describe("Execution core — responsive and a11y contract", () => {
       "ticket action buttons are keyboard reachable via Tab",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="ticket-detail-two-panel"]');
-        const editButton = scope.getByRole("button", { name: "Edit ticket" });
+        const editButton = scope.getByRole("button", { name: "Edit ticket", exact: true });
         await editButton.focus();
         await expect(editButton).toBeFocused();
 
         await page.keyboard.press("Tab");
-        const archiveButton = scope.getByRole("button", { name: "Archive ticket" });
+        const archiveButton = scope.getByRole("button", { name: "Archive ticket", exact: true });
         await expect(archiveButton).toBeFocused();
       },
     );
@@ -241,7 +241,7 @@ test.describe("Execution core — responsive and a11y contract", () => {
         await page.setViewportSize({ width: 1280, height: 800 });
         await page.goto(GALLERY);
         await expect(
-          page.getByRole("heading", { name: "Execution core surfaces" }),
+          page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
         ).toBeVisible();
 
         const scope = page.locator('[data-case-frame="kanban-board-loading"]');
@@ -261,7 +261,7 @@ test.describe("Execution core — responsive and a11y contract", () => {
         await page.setViewportSize({ width: 1280, height: 800 });
         await page.goto(GALLERY);
         await expect(
-          page.getByRole("heading", { name: "Execution core surfaces" }),
+          page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
         ).toBeVisible();
 
         const scope = page.locator('[data-case-frame="kanban-board-loading"]');
@@ -271,6 +271,299 @@ test.describe("Execution core — responsive and a11y contract", () => {
           (el) => getComputedStyle(el).animationName,
         );
         expect(animationName).toBe("none");
+      },
+    );
+  });
+
+  test.describe("375 px mobile — per-case-frame layout", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
+      ).toBeVisible();
+    });
+
+    test(
+      "non-kanban case frames have no horizontal overflow at 375 px",
+      async ({ page }) => {
+        const FRAMES = [
+          "ticket-detail-two-panel",
+          "triage-rows",
+          "cycle-cards",
+          "module-cards",
+          "epic-card",
+        ] as const;
+        for (const frameId of FRAMES) {
+          const frame = page.locator(`[data-case-frame="${frameId}"]`);
+          await expect(frame).toBeVisible();
+          const overflow = await frame.evaluate(
+            (el: HTMLElement) => el.scrollWidth - el.clientWidth,
+          );
+          expect(overflow).toBeLessThanOrEqual(1);
+        }
+      },
+    );
+  });
+
+  test.describe("screen-reader — ARIA roles and accessible names", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
+      ).toBeVisible();
+    });
+
+    test(
+      "kanban scroll container has region role with accessible name",
+      async ({ page }) => {
+        const container = page.locator('[data-testid="kanban-scroll-container"]');
+        await expect(container).toHaveRole("region");
+        const label = await container.getAttribute("aria-label");
+        expect(label).toBeTruthy();
+        expect(label?.toLowerCase()).toContain("kanban");
+      },
+    );
+
+    test(
+      "kanban columns each have region role with accessible name",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="kanban-board-overflow"]');
+        const columns = scope.locator('[role="region"]:not([data-testid="kanban-scroll-container"])');
+        const count = await columns.count();
+        expect(count).toBeGreaterThan(0);
+        for (let i = 0; i < count; i += 1) {
+          const label = await columns.nth(i).getAttribute("aria-label");
+          expect(label).toBeTruthy();
+        }
+      },
+    );
+
+    test(
+      "ticket detail aside has accessible name describing its region",
+      async ({ page }) => {
+        const aside = page.locator('[data-case-frame="ticket-detail-two-panel"] aside');
+        await expect(aside).toBeVisible();
+        const label = await aside.getAttribute("aria-label");
+        expect(label).toBe("Ticket metadata");
+      },
+    );
+
+    test(
+      "ticket action buttons have non-empty accessible names",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="ticket-detail-two-panel"]');
+        const editButton = scope.getByRole("button", { name: "Edit ticket", exact: true });
+        const archiveButton = scope.getByRole("button", { name: "Archive ticket", exact: true });
+        await expect(editButton).toBeVisible();
+        await expect(archiveButton).toBeVisible();
+      },
+    );
+
+    test(
+      "triage rows have accessible accept and decline buttons",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="triage-rows"]');
+        const acceptButtons = scope.getByRole("button", { name: /Accept/i });
+        const declineButtons = scope.getByRole("button", { name: /Decline/i });
+        const acceptCount = await acceptButtons.count();
+        const declineCount = await declineButtons.count();
+        expect(acceptCount).toBeGreaterThan(0);
+        expect(declineCount).toBeGreaterThan(0);
+      },
+    );
+
+    test(
+      "cycle cards have accessible action buttons with names scoped to their cycle",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="cycle-cards"]');
+        const actionButton = scope.getByRole("button", { name: /Actions for Sprint 43/i });
+        await expect(actionButton).toBeVisible();
+      },
+    );
+
+    test(
+      "module cards are focusable links with accessible text",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="module-cards"]');
+        const links = scope.getByRole("link");
+        const count = await links.count();
+        expect(count).toBeGreaterThan(0);
+      },
+    );
+
+    test(
+      "epic card header has button role and aria-expanded attribute",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="epic-card"]');
+        const header = scope.locator('[role="button"][aria-expanded]');
+        await expect(header).toBeVisible();
+        const expanded = await header.getAttribute("aria-expanded");
+        expect(expanded).not.toBeNull();
+      },
+    );
+
+    test(
+      "epic card progress bar has progressbar role with value attributes",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="epic-card"]');
+        const progressBar = scope.locator('[role="progressbar"]');
+        await expect(progressBar).toBeVisible();
+        const valueNow = await progressBar.getAttribute("aria-valuenow");
+        const valueMin = await progressBar.getAttribute("aria-valuemin");
+        const valueMax = await progressBar.getAttribute("aria-valuemax");
+        expect(valueMin).toBe("0");
+        expect(valueMax).toBe("100");
+        expect(valueNow).not.toBeNull();
+      },
+    );
+  });
+
+  test.describe("triage rows — keyboard reachability", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
+      ).toBeVisible();
+    });
+
+    test(
+      "first triage row open button is keyboard focusable",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="triage-rows"]');
+        const openButton = scope.locator('button[aria-label^="Open ticket"]').first();
+        await openButton.focus();
+        await expect(openButton).toBeFocused();
+      },
+    );
+
+    test(
+      "triage accept button is keyboard reachable via Tab from the open button",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="triage-rows"]');
+        const openButton = scope.locator('button[aria-label^="Open ticket"]').first();
+        await openButton.focus();
+        await page.keyboard.press("Tab");
+        const acceptButton = scope.getByRole("button", { name: /Accept/i }).first();
+        await expect(acceptButton).toBeFocused();
+      },
+    );
+  });
+
+  test.describe("cycle card — keyboard reachability", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
+      ).toBeVisible();
+    });
+
+    test(
+      "cycle card action button is keyboard focusable",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="cycle-cards"]');
+        const actionButton = scope.getByRole("button", { name: /Actions for Sprint 43/i });
+        await actionButton.focus();
+        await expect(actionButton).toBeFocused();
+      },
+    );
+  });
+
+  test.describe("module card — keyboard reachability", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
+      ).toBeVisible();
+    });
+
+    test(
+      "module cards are keyboard focusable as links",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="module-cards"]');
+        const firstLink = scope.getByRole("link").first();
+        await firstLink.focus();
+        await expect(firstLink).toBeFocused();
+      },
+    );
+  });
+
+  test.describe("epic card — keyboard expand", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
+      ).toBeVisible();
+    });
+
+    test(
+      "epic card header is keyboard focusable",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="epic-card"]');
+        const header = scope.locator('[role="button"][aria-expanded]');
+        await header.focus();
+        await expect(header).toBeFocused();
+      },
+    );
+
+    test(
+      "pressing Enter on the epic card header toggles aria-expanded",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="epic-card"]');
+        const header = scope.locator('[role="button"][aria-expanded]');
+        await header.focus();
+        await expect(header).toBeFocused();
+        const before = await header.getAttribute("aria-expanded");
+        await page.keyboard.press("Enter");
+        const after = await header.getAttribute("aria-expanded");
+        expect(after).not.toBe(before);
+      },
+    );
+  });
+
+  test.describe("module card — reduced-motion transition suppression", () => {
+    test(
+      "module card article has CSS transition with no-preference",
+      async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: "no-preference" });
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(
+          page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
+        ).toBeVisible();
+
+        const scope = page.locator('[data-case-frame="module-cards"]');
+        const article = scope.locator("article").first();
+        await expect(article).toBeVisible();
+        const transitionProperty = await article.evaluate(
+          (el) => getComputedStyle(el).transitionProperty,
+        );
+        expect(transitionProperty).not.toBe("none");
+      },
+    );
+
+    test(
+      "module card article transition is suppressed under prefers-reduced-motion: reduce",
+      async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: "reduce" });
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(
+          page.getByRole("heading", { name: "Execution core surfaces", exact: true }),
+        ).toBeVisible();
+
+        const scope = page.locator('[data-case-frame="module-cards"]');
+        const article = scope.locator("article").first();
+        await expect(article).toBeVisible();
+        const transitionProperty = await article.evaluate(
+          (el) => getComputedStyle(el).transitionProperty,
+        );
+        expect(transitionProperty).toBe("none");
       },
     );
   });

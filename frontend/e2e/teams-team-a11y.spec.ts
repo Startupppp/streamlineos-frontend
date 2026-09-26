@@ -77,34 +77,69 @@ test.describe("Team detail surfaces — responsive and a11y contract", () => {
         const scope = page.locator('[data-case-frame="team-members-keyboard"]');
         const rows = scope.locator('[role="listitem"]');
 
-        const aliceSelect = rows.nth(0).getByRole("combobox", { name: "Lead", exact: true });
+        const aliceSelect = rows
+          .nth(0)
+          .getByRole("combobox", { name: "Role for Alice Chen", exact: true });
         await aliceSelect.focus();
         await expect(aliceSelect).toBeFocused();
 
         await page.keyboard.press("Tab");
         await expect(
-          rows.nth(0).getByRole("button", { name: "Remove member", exact: true }),
+          rows.nth(0).getByRole("button", { name: "Remove Alice Chen", exact: true }),
         ).toBeFocused();
 
         await page.keyboard.press("Tab");
         await expect(
-          rows.nth(1).getByRole("combobox", { name: "Member", exact: true }),
+          rows.nth(1).getByRole("combobox", { name: "Role for Bob Smith", exact: true }),
         ).toBeFocused();
 
         await page.keyboard.press("Tab");
         await expect(
-          rows.nth(1).getByRole("button", { name: "Remove member", exact: true }),
+          rows.nth(1).getByRole("button", { name: "Remove Bob Smith", exact: true }),
         ).toBeFocused();
 
         await page.keyboard.press("Tab");
         await expect(
-          rows.nth(2).getByRole("combobox", { name: "Member", exact: true }),
+          rows.nth(2).getByRole("combobox", { name: "Role for Carol Davis", exact: true }),
         ).toBeFocused();
 
         await page.keyboard.press("Tab");
         await expect(
-          rows.nth(2).getByRole("button", { name: "Remove member", exact: true }),
+          rows.nth(2).getByRole("button", { name: "Remove Carol Davis", exact: true }),
         ).toBeFocused();
+      },
+    );
+
+    test(
+      "each row control names the person it acts on, so three identically-worded controls are distinguishable by screen reader",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="team-members-keyboard"]');
+
+        for (const person of ["Alice Chen", "Bob Smith", "Carol Davis"]) {
+          await expect(
+            scope.getByRole("combobox", { name: `Role for ${person}`, exact: true }),
+          ).toHaveCount(1);
+          await expect(
+            scope.getByRole("button", { name: `Remove ${person}`, exact: true }),
+          ).toHaveCount(1);
+        }
+
+        await expect(scope.getByRole("button", { name: "Remove member", exact: true })).toHaveCount(
+          0,
+        );
+      },
+    );
+
+    test(
+      "the role combobox is named for its purpose rather than its current value, so its name does not change when the role changes",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="team-members-keyboard"]');
+
+        await expect(scope.getByRole("combobox", { name: "Lead", exact: true })).toHaveCount(0);
+        await expect(scope.getByRole("combobox", { name: "Member", exact: true })).toHaveCount(0);
+        await expect(
+          scope.getByRole("combobox", { name: "Role for Alice Chen", exact: true }),
+        ).toHaveCount(1);
       },
     );
   });

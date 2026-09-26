@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectSettingsFieldsPage } from "./project-settings-fields-page";
 
@@ -59,6 +59,11 @@ jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
 
 jest.mock("@/features/build/shared/build-list-toolbar", () => ({
   BuildListToolbar: () => null,
+}));
+
+jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
@@ -189,5 +194,29 @@ describe("ProjectSettingsFieldsPage — keyboard shortcuts (extended)", () => {
     expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
       expect.objectContaining({ itemCount: 0 }),
     );
+  });
+
+  it("passes onShortcutHelp to useBuildListKeyboard so the ? key can open the help overlay", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
+    );
+  });
+
+  it("ShortcutHelpDialog is not shown on initial render — paired with the open test below", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("calling the onShortcutHelp callback opens the ShortcutHelpDialog", async () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    const capturedOptions = mockUseBuildListKeyboard.mock.calls[0][0] as { onShortcutHelp: () => void };
+    await act(async () => {
+      capturedOptions.onShortcutHelp();
+    });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
   });
 });

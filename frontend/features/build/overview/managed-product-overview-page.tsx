@@ -31,7 +31,7 @@ interface ManagedProductOverviewPageProps {
   managedProductId: number;
 }
 
-function ManagedProductOverviewSkeleton() {
+export function ManagedProductOverviewSkeleton() {
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-6">
       <StatCardGridSkeleton cols={2} count={1} />

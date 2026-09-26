@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useProjectCustomFields } from "@/hooks/api/build/custom-fields";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -13,6 +13,7 @@ import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import type { CustomFieldItem } from "@/features/build/settings/custom-fields-settings";
 
 interface ProjectSettingsFieldsPageProps {
@@ -24,6 +25,7 @@ export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPa
   const searchInputRef = useRef<HTMLInputElement>(null);
   const createFieldRef = useRef<(() => void) | null>(null);
   const editFieldRef = useRef<((field: CustomFieldItem) => void) | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const { data: customFields } = useProjectCustomFields(projectId);
 
   const filteredCount = listFilters.debouncedSearch
@@ -35,6 +37,8 @@ export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPa
   const handleKeyboardClear = useCallback(() => {
     listFilters.clearAll();
   }, [listFilters]);
+
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   const handleKeyboardCreate = useCallback(() => {
     createFieldRef.current?.();
@@ -60,6 +64,7 @@ export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPa
     onCreate: handleKeyboardCreate,
     onEdit: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
+    onShortcutHelp: handleShortcutHelp,
     searchInputRef,
   });
 
@@ -118,6 +123,8 @@ export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPa
           </PmSection>
         </PageState>
       </PmPageShell>
+
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
     </PageWrapper>
   );
 }

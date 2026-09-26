@@ -205,6 +205,54 @@ describe("useBuildListKeyboard — modifier keys suppress shortcuts", () => {
   });
 });
 
+describe("useBuildListKeyboard — ? opens shortcut help overlay when the callback is provided", () => {
+  const mockShortcutHelp = jest.fn();
+
+  beforeEach(() => {
+    mockShortcutHelp.mockClear();
+  });
+
+  it("? calls onShortcutHelp when the callback is provided", () => {
+    renderHook(() =>
+      useBuildListKeyboard({
+        itemCount: 3,
+        onOpen: mockOpen,
+        onClearSelection: mockClear,
+        onShortcutHelp: mockShortcutHelp,
+      }),
+    );
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "?" });
+    });
+    expect(mockShortcutHelp).toHaveBeenCalledTimes(1);
+  });
+
+  it("? is a no-op when onShortcutHelp is not provided so omitting it does not throw", () => {
+    setup();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "?" });
+    });
+  });
+
+  it("? does not fire while typing in a text input so the user can type question marks freely", () => {
+    renderHook(() =>
+      useBuildListKeyboard({
+        itemCount: 3,
+        onOpen: mockOpen,
+        onClearSelection: mockClear,
+        onShortcutHelp: mockShortcutHelp,
+      }),
+    );
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    act(() => {
+      fireEvent.keyDown(input, { key: "?" });
+    });
+    expect(mockShortcutHelp).not.toHaveBeenCalled();
+    input.remove();
+  });
+});
+
 describe("useBuildListKeyboard — c creates and e edits, so no page needs its own keydown listener", () => {
   const mockCreate = jest.fn();
   const mockEdit = jest.fn();

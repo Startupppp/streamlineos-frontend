@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import type { ProjectTeamMember } from "@/types/projects";
 import { TeamHomePage } from "./team-home-page";
@@ -521,5 +521,83 @@ describe("TeamHomePage — empty member list (BLD-X-FE-TEAMS-DETAIL-009)", () =>
     mockUsePageState.mockReturnValue({ kind: "ready" });
     render(<TeamHomePage teamId={1} />);
     expect(screen.getByText("No members yet")).toBeInTheDocument();
+  });
+});
+
+describe("TeamHomePage — overlay lifecycle (BLD-X-FE-TEAMS-DETAIL-010)", () => {
+  beforeEach(() => {
+    mockUseCan.mockReturnValue(true);
+    mockTeamResult = { ...mockTeamResult, data: { ...BASE_TEAM } };
+    mockMembersResult = {
+      data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+      isLoading: false,
+    };
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+  });
+
+  it("opens the team edit sheet when Edit Team is clicked and closes it when not open", () => {
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.queryByTestId("team-form-sheet")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Edit Team"));
+    expect(screen.getByTestId("team-form-sheet")).toBeInTheDocument();
+  });
+
+  it("opens the delete confirm dialog when Delete Team is clicked and does not show it before click", () => {
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Delete Team"));
+    expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
+  });
+});
+
+describe("TeamHomePage — remove member button visibility (BLD-X-FE-TEAMS-DETAIL-011)", () => {
+  beforeEach(() => {
+    mockTeamResult = { ...mockTeamResult, data: { ...BASE_TEAM } };
+    mockMembersResult = {
+      data: { data: [MEMBER_A], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+      isLoading: false,
+    };
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+  });
+
+  it("shows the remove member button when the viewer has build:teams:manage", () => {
+    mockUseCan.mockReturnValue(true);
+    render(<TeamHomePage teamId={1} />);
+    expect(
+      screen.getByRole("button", { name: "Remove alice@example.com", exact: true }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides the remove member button when the viewer lacks build:teams:manage", () => {
+    mockUseCan.mockReturnValue(false);
+    render(<TeamHomePage teamId={1} />);
+    expect(
+      screen.queryByRole("button", { name: "Remove alice@example.com", exact: true }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("names the remove button for the person it removes, so three rows are not three identical buttons", () => {
+    mockUseCan.mockReturnValue(true);
+    mockMembersResult = {
+      data: {
+        data: [MEMBER_A, MEMBER_B],
+        pagination: { limit: 25, hasMore: false, nextCursor: null },
+      },
+      isLoading: false,
+    };
+    render(<TeamHomePage teamId={1} />);
+    expect(
+      screen.getByRole("button", { name: `Remove ${MEMBER_A.email}`, exact: true }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: `Remove ${MEMBER_B.email}`, exact: true }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove member", exact: true })).toBeNull();
+  });
+
+  it("hides the role badge and shows role select when the viewer has build:teams:manage", () => {
+    mockUseCan.mockReturnValue(true);
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.queryByText("lead")).not.toBeInTheDocument();
   });
 });

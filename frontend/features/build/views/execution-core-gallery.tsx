@@ -3,7 +3,12 @@
 import { useCallback, useState } from "react";
 import { KanbanTicketCard } from "./kanban-ticket-card";
 import { SidebarSelectFields } from "@/features/build/ticket-details/sidebar-select-fields";
+import { TriageRow } from "@/features/build/triage/triage-row";
+import { CycleCard } from "@/features/build/cycles/cycle-card";
+import { ModuleCard } from "@/features/build/modules/module-card";
+import { EpicCard } from "@/features/build/epics/epic-card";
 import type { KanbanTicket } from "@/features/build/shared/types";
+import type { Ticket, Cycle, Module } from "@/types/projects";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const STUB_STATUSES = [
@@ -78,6 +83,95 @@ const COLUMNS = [
   { status: "DONE", tickets: [STUB_TICKET_C] },
   { status: "CANCELLED", tickets: [{ ...STUB_TICKET, id: 48, title: "Migrate legacy sort params", ticketNumber: 48, sequenceId: "PROJ-48", status: "CANCELLED", priority: "LOW" }] },
 ] as const;
+
+const STUB_FULL_TICKET: Ticket = {
+  id: 101,
+  orgId: "org-1",
+  title: "Add rate-limit error state to onboarding wizard",
+  type: "STORY",
+  status: "IN_PROGRESS",
+  priority: "HIGH",
+  projectId: 1,
+  ticketNumber: 101,
+  epicId: 1,
+  reporterId: null,
+  points: 5,
+  storyPoints: null,
+  link: null,
+  rank: "1000",
+  parentTicketId: null,
+  originalEstimate: null,
+  timeSpent: null,
+  moduleId: null,
+  cycleId: null,
+  sequenceId: "PROJ-101",
+  estimate: null,
+  createdAt: "2026-09-01",
+  updatedAt: "2026-09-20",
+};
+
+const STUB_TRIAGE_TICKET_B: Ticket = {
+  ...STUB_FULL_TICKET,
+  id: 102,
+  title: "Expose cursor-based pagination for /api/tickets",
+  ticketNumber: 102,
+  sequenceId: "PROJ-102",
+  priority: "LOW",
+  status: "TODO",
+};
+
+const STUB_CYCLE_ACTIVE: Cycle = {
+  id: 1,
+  projectId: 1,
+  orgId: "org-1",
+  name: "Sprint 42",
+  description: null,
+  status: "active",
+  startDate: "2026-09-01",
+  endDate: "2026-09-30",
+  createdBy: "user-1",
+  createdAt: "2026-09-01",
+  updatedAt: "2026-09-01",
+  totalItems: 8,
+  completedItems: 5,
+  progress: 62,
+};
+
+const STUB_CYCLE_PLANNED: Cycle = {
+  ...STUB_CYCLE_ACTIVE,
+  id: 2,
+  name: "Sprint 43",
+  status: "draft",
+  startDate: "2026-10-01",
+  endDate: "2026-10-31",
+  completedItems: 0,
+  progress: 0,
+};
+
+const STUB_MODULE_A: Module = {
+  id: 1,
+  projectId: 1,
+  orgId: "org-1",
+  name: "Core Platform",
+  description: "Foundation services and authentication",
+  status: "in-progress",
+  leadId: null,
+  startDate: "2026-01-01",
+  endDate: "2026-12-31",
+  createdBy: "user-1",
+  createdAt: "2026-01-01",
+  updatedAt: "2026-09-01",
+  progress: 65,
+};
+
+const STUB_MODULE_B: Module = {
+  ...STUB_MODULE_A,
+  id: 2,
+  name: "Billing Module",
+  description: "Payment flows and subscription management",
+  status: "planned",
+  progress: 0,
+};
 
 const NOOP = () => undefined;
 
@@ -221,6 +315,94 @@ function KanbanLoadingCase() {
   );
 }
 
+function TriageCase() {
+  return (
+    <GalleryCase id="triage-rows" title="Triage — accept / decline rows">
+      <div className="space-y-2 p-4">
+        <TriageRow
+          ticket={STUB_FULL_TICKET}
+          projectKey="PROJ"
+          isAccepting={false}
+          isDeclining={false}
+          onAccept={NOOP}
+          onDecline={NOOP}
+          onOpen={NOOP}
+          isSelected={false}
+        />
+        <TriageRow
+          ticket={STUB_TRIAGE_TICKET_B}
+          projectKey="PROJ"
+          isAccepting={false}
+          isDeclining={false}
+          onAccept={NOOP}
+          onDecline={NOOP}
+          onOpen={NOOP}
+          isSelected={false}
+        />
+      </div>
+    </GalleryCase>
+  );
+}
+
+function CycleCase() {
+  return (
+    <GalleryCase id="cycle-cards" title="Cycles — cycle cards">
+      <div className="space-y-3 p-4">
+        <CycleCard
+          cycle={STUB_CYCLE_ACTIVE}
+          projectId={1}
+          canManage={false}
+          onEdit={NOOP}
+          onChangeStatus={NOOP}
+          onPlan={NOOP}
+          onComplete={NOOP}
+          onDelete={NOOP}
+        />
+        <CycleCard
+          cycle={STUB_CYCLE_PLANNED}
+          projectId={1}
+          canManage={true}
+          onEdit={NOOP}
+          onChangeStatus={NOOP}
+          onPlan={NOOP}
+          onComplete={NOOP}
+          onDelete={NOOP}
+        />
+      </div>
+    </GalleryCase>
+  );
+}
+
+function ModuleCase() {
+  return (
+    <GalleryCase id="module-cards" title="Modules — module cards">
+      <div className="grid grid-cols-2 gap-3 p-4">
+        <ModuleCard module={STUB_MODULE_A} projectId={1} index={0} />
+        <ModuleCard module={STUB_MODULE_B} projectId={1} index={1} />
+      </div>
+    </GalleryCase>
+  );
+}
+
+function EpicCase() {
+  return (
+    <GalleryCase id="epic-card" title="Epics — epic card">
+      <div className="p-4">
+        <EpicCard
+          epic={{ id: 1, title: "Platform Foundation Epic", status: "IN_PROGRESS", priority: "HIGH", description: "Foundation services, auth, and core data models." }}
+          stories={[STUB_FULL_TICKET]}
+          projectId={1}
+          projectKey="PROJ"
+          unlinkedStories={[]}
+          onDeleteEpic={NOOP}
+          onLinkStory={NOOP}
+          onCreateStory={NOOP}
+        />
+      </div>
+    </GalleryCase>
+  );
+}
+
 export function ExecutionCoreGallery() {
   return (
     <div className="flex flex-col gap-8 p-4">
@@ -237,6 +419,10 @@ export function ExecutionCoreGallery() {
       <KanbanOverflowCase />
       <TicketDetailCase />
       <KanbanLoadingCase />
+      <TriageCase />
+      <CycleCase />
+      <ModuleCase />
+      <EpicCase />
     </div>
   );
 }

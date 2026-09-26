@@ -223,6 +223,12 @@ it("retries both server-derived summary queries with the page retry action", () 
   expect(refetchOverdueIssues).toHaveBeenCalledTimes(1);
 });
 
+it("renders both MyIssuesPanel and ProjectsPanel when projects and issues data are empty, confirming the page-level empty state is delegated to the panels themselves", () => {
+  render(<CommandCenterPage />);
+  expect(screen.getByTestId("my-issues-panel")).toBeInTheDocument();
+  expect(screen.getByTestId("projects-panel")).toBeInTheDocument();
+});
+
 it("renders the Access Restricted state when the user lacks build:view and does not render the ready panels", () => {
   mockUseAccess.mockReturnValue({
     data: { isOrgOwner: false, scopes: {}, modules: {} },

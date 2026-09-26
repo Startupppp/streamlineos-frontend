@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { AutomationsPage } from "./automations-page";
 import type { ProjectAutomation } from "@/hooks/api/build/automations";
@@ -55,11 +55,15 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   BUILD_FILTER_ALL: "all",
 }));
 
+const mockUseBuildListKeyboard = jest.fn();
+
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
-  useBuildListKeyboard: () => ({
-    focusedIndex: null,
-    setFocusedIndex: jest.fn(),
-  }),
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+}));
+
+jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -141,6 +145,7 @@ beforeEach(() => {
   mockAutomations = [];
   mockIsLoading = false;
   mockIsError = false;
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });
 
 describe("AutomationsPage — build:manage controls (BLD-X-FE-SETTINGS-001)", () => {
@@ -273,5 +278,34 @@ describe("AutomationsPage — populated state (BLD-X-FE-SETTINGS-005)", () => {
     mockAutomations = [SAMPLE_AUTOMATION];
     render(<AutomationsPage projectId={1} />);
     expect(screen.getByText("Auto-assign bugs")).toBeInTheDocument();
+  });
+});
+
+describe("AutomationsPage — keyboard shortcut help (BLD-X-FE-SETTINGS-006)", () => {
+  it("passes onShortcutHelp to useBuildListKeyboard so the ? key can open the help overlay", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
+    );
+  });
+
+  it("ShortcutHelpDialog is not shown on initial render before the ? callback fires — paired with the open test below", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("calling the onShortcutHelp callback from the keyboard hook opens the ShortcutHelpDialog", async () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    const capturedOptions = mockUseBuildListKeyboard.mock.calls[0][0] as { onShortcutHelp: () => void };
+    await act(async () => {
+      capturedOptions.onShortcutHelp();
+    });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
   });
 });

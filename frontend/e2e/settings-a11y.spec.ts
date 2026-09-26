@@ -15,6 +15,19 @@ const CASES = [
   "settings-views-empty",
   "settings-views-denied",
   "settings-credentials-token-list",
+  "settings-project-loading",
+  "settings-project-access-loading",
+  "settings-project-agents-loading",
+  "settings-project-automations-loading",
+  "settings-project-fields-loading",
+  "settings-project-integrations-loading",
+  "settings-project-webhooks-loading",
+  "settings-project-iterations-loading",
+  "settings-project-portal-loading",
+  "settings-project-retention-loading",
+  "settings-project-workflow-loading",
+  "settings-org-access-loading",
+  "settings-org-integrations-loading",
 ] as const;
 
 function frame(page: Page, caseId: string): Locator {
@@ -70,6 +83,20 @@ test.describe("Settings responsive contract", () => {
       await expect(
         page.getByRole("heading", { name: "Settings surfaces" }),
       ).toBeVisible();
+    });
+
+    test("the credentials token row code element shows the token prefix and the Revoke button has an accessible name", async ({ page }) => {
+      const scope = frame(page, "settings-credentials-token-list");
+      await expect(scope.locator("code").filter({ hasText: /slat_Fa9c/ })).toBeVisible();
+      const revokeButton = scope.getByRole("button", { name: "Revoke", exact: true });
+      await expect(revokeButton).toBeVisible();
+    });
+
+    test("loading skeleton cases mark each skeleton element aria-hidden so screen readers skip the in-progress state", async ({ page }) => {
+      const scope = frame(page, "settings-views-loading");
+      const firstSkeleton = scope.locator(".skeleton-shimmer").first();
+      await expect(firstSkeleton).toBeVisible();
+      await expect(firstSkeleton).toHaveAttribute("aria-hidden", "true");
     });
 
     test("the views-ready case has a search input with an accessible label", async ({ page }) => {
@@ -134,16 +161,55 @@ test.describe("Settings responsive contract", () => {
       ).toBeVisible();
     });
 
-    test("Tab from the search input moves focus to the first view card name button", async ({
+    test("Tab from the search input reaches the scroll region, then the first view card name button", async ({
       page,
     }) => {
       const scope = frame(page, "settings-views-ready");
       const searchInput = scope.locator("[data-slot=search-input] input:visible");
       await searchInput.focus();
       await expect(searchInput).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.locator('[role="region"][tabindex="0"]')).toBeFocused();
+
       await page.keyboard.press("Tab");
       const nameButton = scope.locator("button").filter({ hasText: "Engineering backlog" });
       await expect(nameButton).toBeFocused();
+    });
+
+    test("the scroll region stop shows a focus ring, so the keyboard user can see where the extra stop went", async ({
+      page,
+    }) => {
+      const scope = frame(page, "settings-views-ready");
+      const region = scope.locator('[role="region"][tabindex="0"]');
+      await region.focus();
+      await expect(region).toBeFocused();
+      const outlineWidth = await region.evaluate(
+        (el: HTMLElement) => getComputedStyle(el).outlineWidth,
+      );
+      const boxShadow = await region.evaluate(
+        (el: HTMLElement) => getComputedStyle(el).boxShadow,
+      );
+      expect(`${outlineWidth} ${boxShadow}`).not.toBe("0px none");
+    });
+
+    test("the scroll region carries an accessible name, so landing on it tells a screen-reader user what it is", async ({
+      page,
+    }) => {
+      const scope = frame(page, "settings-views-ready");
+      const region = scope.locator('[role="region"][tabindex="0"]');
+      const named = await region.evaluate(
+        (el: HTMLElement) =>
+          el.getAttribute("aria-label") !== null || el.getAttribute("aria-labelledby") !== null,
+      );
+      expect(named).toBe(true);
+    });
+
+    test("the Revoke button in the credentials token list is keyboard-focusable", async ({ page }) => {
+      const scope = frame(page, "settings-credentials-token-list");
+      const revokeButton = scope.getByRole("button", { name: "Revoke", exact: true });
+      await revokeButton.focus();
+      await expect(revokeButton).toBeFocused();
     });
 
     test("Tab from the Rename saved view button reaches the Delete saved view button in the same card", async ({

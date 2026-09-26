@@ -2,6 +2,23 @@ import { render, screen } from "@testing-library/react";
 import { ProjectsGitIntegrationSettings } from "./git-integration-settings";
 import type { CreatedGitConnection } from "@/hooks/api/git-integration";
 
+const mockRouterReplace = jest.fn();
+let mockSearchParamsValue = new URLSearchParams();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockRouterReplace }),
+  usePathname: () => "/build/settings/integrations",
+  useSearchParams: () => mockSearchParamsValue,
+}));
+
+const mockUseBuildListKeyboard = jest.fn(() => ({
+  focusedIndex: null,
+  setFocusedIndex: jest.fn(),
+}));
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+}));
+
 const BASE_CONNECTION = {
   id: 1,
   provider: "github" as const,
@@ -54,7 +71,7 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 }));
 
 jest.mock("@/components/auth/require-module", () => ({
-  RequireModule: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  RequireModule: jest.fn(({ children }: { children: React.ReactNode }) => <>{children}</>),
 }));
 
 jest.mock("@/features/build/settings/git-connection-row", () => ({
@@ -80,6 +97,9 @@ beforeEach(() => {
   mockData = undefined;
   mockIsLoading = false;
   mockIsError = false;
+  mockRouterReplace.mockClear();
+  mockUseBuildListKeyboard.mockClear();
+  mockSearchParamsValue = new URLSearchParams();
 });
 
 describe("ProjectsGitIntegrationSettings — loading state (BLD-X-FE-SETTINGS-INT-010)", () => {
@@ -146,5 +166,106 @@ describe("ProjectsGitIntegrationSettings — CreatedSecretDialog (BLD-X-FE-SETTI
   it("CREATED_CONNECTION contract rejects a list row payload used in place of a create response — the envelopes are distinct", () => {
     const { gitConnectionCreateContract } = require("@/hooks/api/git-integration-schema");
     expect(() => gitConnectionCreateContract.parse(BASE_CONNECTION)).toThrow();
+  });
+});
+
+describe("ProjectsGitIntegrationSettings — section URL param (BLD-X-FE-SETTINGS-INT-015)", () => {
+  it("defaults to the connections tab when no section param is set", () => {
+    mockData = [];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.getByRole("tab", { name: /connections/i })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+  });
+
+  it("selects the agent tab when section=agent and a footer is provided", () => {
+    mockData = [];
+    mockSearchParamsValue = new URLSearchParams("section=agent");
+    render(
+      <ProjectsGitIntegrationSettings footer={<div data-testid="agent-content" />} />,
+    );
+    expect(screen.getByRole("tab", { name: /agent access/i })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+  });
+
+  it("falls back to connections when section=agent but no footer is provided", () => {
+    mockData = [];
+    mockSearchParamsValue = new URLSearchParams("section=agent");
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.getByRole("tab", { name: /connections/i })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+  });
+
+  it("calls router.replace with section=agent when the agent tab is clicked", () => {
+    mockData = [];
+    render(
+      <ProjectsGitIntegrationSettings footer={<div data-testid="agent-content" />} />,
+    );
+    const agentTab = screen.getByRole("tab", { name: /agent access/i });
+    agentTab.click();
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      expect.stringContaining("section=agent"),
+      expect.any(Object),
+    );
+  });
+
+  it("calls router.replace without a section param when switching back to connections", () => {
+    mockData = [];
+    mockSearchParamsValue = new URLSearchParams("section=agent");
+    render(
+      <ProjectsGitIntegrationSettings footer={<div data-testid="agent-content" />} />,
+    );
+    const connectionsTab = screen.getByRole("tab", { name: /connections/i });
+    connectionsTab.click();
+    const callArg = mockRouterReplace.mock.calls[0]?.[0] as string;
+    expect(callArg).not.toContain("section=");
+  });
+});
+
+describe("ProjectsGitIntegrationSettings — keyboard shortcut wiring (BLD-X-FE-SETTINGS-INT-016)", () => {
+  it("wires useBuildListKeyboard with onCreate pointing to the add-connection dialog opener", () => {
+    mockData = [BASE_CONNECTION];
+    render(<ProjectsGitIntegrationSettings />);
+    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(typeof lastCallArgs?.onCreate).toBe("function");
+    expect(lastCallArgs?.itemCount).toBe(1);
+  });
+
+  it("enables keyboard shortcuts only when the connections list is not loading or errored", () => {
+    mockData = [BASE_CONNECTION];
+    render(<ProjectsGitIntegrationSettings />);
+    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(lastCallArgs?.enabled).toBe(true);
+  });
+
+  it("disables keyboard shortcuts while loading", () => {
+    mockIsLoading = true;
+    render(<ProjectsGitIntegrationSettings />);
+    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(lastCallArgs?.enabled).toBe(false);
+  });
+});
+
+describe("ProjectsGitIntegrationSettings — RequireModule denial (BLD-X-FE-SETTINGS-INT-017)", () => {
+  it("hides the connection list when the build module is disabled — RequireModule gates the entire surface", () => {
+    const { RequireModule } = jest.requireMock(
+      "@/components/auth/require-module",
+    ) as { RequireModule: jest.Mock };
+    RequireModule.mockImplementationOnce(() => null);
+
+    mockData = [BASE_CONNECTION];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.queryByTestId("connection-row")).not.toBeInTheDocument();
+  });
+
+  it("shows connection rows when the build module is enabled — confirming the denial test is paired with a positive", () => {
+    mockData = [BASE_CONNECTION];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.getByTestId("connection-row")).toBeInTheDocument();
   });
 });

@@ -47,6 +47,7 @@ import { formSchema, type FormValues } from "./automation-schema";
 import { AutomationCard } from "./automation-card";
 import { NewAutomationButton } from "./new-automation-button";
 import { AutomationSheet } from "./automation-sheet";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 
 const TRIGGER_FILTER_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All triggers" },
@@ -65,6 +66,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
   const canManage = useCan("build:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingAutomation, setEditingAutomation] = useState<ProjectAutomation | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const listFilters = useBuildListFilters({
@@ -203,6 +205,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
   }, [appendAction]);
 
   const handleClearFilters = useCallback(() => listFilters.clearAll(), [listFilters]);
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   const handleKeyboardOpen = useCallback(
     (index: number) => {
@@ -228,6 +231,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
     onEdit: handleKeyboardEdit,
     onCreate: canManage ? handleOpenNew : undefined,
     onClearSelection: handleKeyboardClear,
+    onShortcutHelp: handleShortcutHelp,
     searchInputRef,
     enabled: !sheetOpen,
   });
@@ -372,6 +376,8 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
         createIsPending={createAutomation.isPending}
         updateIsPending={updateAutomation.isPending}
       />
+
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
     </PageWrapper>
   );
 }

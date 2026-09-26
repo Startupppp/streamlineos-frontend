@@ -2,10 +2,12 @@
 
 import type { ReactNode } from "react";
 import { useState, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Bot, ExternalLink, GitBranch } from "lucide-react";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -88,6 +90,9 @@ function AddConnectionButton({ onClick }: { onClick: () => void }) {
 }
 
 export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const {
     data: connections,
     isLoading,
@@ -176,13 +181,35 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
     void refetch();
   }, [refetch]);
 
-  const [activeTab, setActiveTab] = useState<IntegrationsTab>("connections");
+  const rawSection = searchParams.get("section");
+  const activeTab: IntegrationsTab =
+    rawSection === "agent" && footer != null ? "agent" : "connections";
 
-  const handleTabChange = useCallback((value: string) => {
-    if (value === "connections" || value === "agent") {
-      setActiveTab(value);
-    }
-  }, []);
+  const handleTabChange = useCallback(
+    (value: string) => {
+      if (value !== "connections" && value !== "agent") return;
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === "connections") {
+        params.delete("section");
+      } else {
+        params.set("section", value);
+      }
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [router, pathname, searchParams],
+  );
+
+  const connectionsList = connections?.data ?? [];
+  const handleOpenConnection = useCallback((_index: number) => {}, []);
+  const handleClearConnectionSelection = useCallback(() => setDeleteId(null), []);
+  useBuildListKeyboard({
+    itemCount: connectionsList.length,
+    onOpen: handleOpenConnection,
+    onCreate: handleOpenDialog,
+    onClearSelection: handleClearConnectionSelection,
+    enabled: !isLoading && !isError,
+  });
 
   return (
     <RequireModule module="build">
@@ -237,7 +264,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                   description="There was a problem loading your Git connections."
                   onRetry={handleRetry}
                 />
-              ) : !connections || connections.data.length === 0 ? (
+              ) : connectionsList.length === 0 ? (
                 <EmptyState
                   className={PM_FILL_PANEL}
                   illustration={<EmptyDevicesIllustration />}
@@ -247,7 +274,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                 />
               ) : (
                 <PmStaggerList className="space-y-3">
-                  {connections.data.map((connection) => (
+                  {connectionsList.map((connection) => (
                     <ConnectionRow
                       key={connection.id}
                       connection={connection}

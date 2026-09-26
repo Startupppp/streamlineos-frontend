@@ -76,6 +76,8 @@ jest.mock("@/hooks/api/goals", () => ({
   useGoals: jest.fn(),
   useGoalsPage: jest.fn(),
   useGoalStats: jest.fn(() => ({ data: undefined })),
+  useGoal: jest.fn(() => ({ data: undefined })),
+  useDeleteGoal: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/build/roadmap", () => ({
@@ -248,9 +250,11 @@ jest.mock("@animateicons/react/lucide", () => ({
   EllipsisIcon: () => <span data-testid="ellipsis-icon" />,
 }));
 
-export const { useGoals, useGoalsPage } = jest.requireMock("@/hooks/api/goals") as {
+export const { useGoals, useGoalsPage, useGoal, useDeleteGoal } = jest.requireMock("@/hooks/api/goals") as {
   useGoals: jest.Mock;
   useGoalsPage: jest.Mock;
+  useGoal: jest.Mock;
+  useDeleteGoal: jest.Mock;
 };
 export const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;

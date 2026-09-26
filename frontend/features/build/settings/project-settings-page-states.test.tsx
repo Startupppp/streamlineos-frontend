@@ -95,14 +95,17 @@ jest.mock("@/components/shared/page-state", () => ({
     resolution,
     children,
     loading,
+    empty,
   }: {
     resolution: PageStateResolution;
     children: React.ReactNode;
     loading?: React.ReactNode;
+    empty?: React.ReactNode;
   }) => {
     if (resolution.kind === "loading") return <div data-testid="page-loading">{loading}</div>;
     if (resolution.kind === "denied") return <div data-testid="page-denied" />;
     if (resolution.kind === "error") return <div data-testid="page-error" />;
+    if (resolution.kind === "empty") return <div data-testid="page-empty">{empty}</div>;
     return <div data-testid="page-ready">{children}</div>;
   },
 }));
@@ -195,6 +198,28 @@ describe("project settings page — page-level state transitions", () => {
     });
 
     test("error state does not render the project name input", async () => {
+      await renderPage();
+      expect(screen.queryByPlaceholderText("Enter project name")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("empty state", () => {
+    beforeEach(() => {
+      mockPageStateResolution = { kind: "empty" };
+    });
+
+    test("renders the empty view instead of the project fields when the project is not found", async () => {
+      await renderPage();
+      expect(screen.getByTestId("page-empty")).toBeInTheDocument();
+      expect(screen.queryByTestId("page-ready")).not.toBeInTheDocument();
+    });
+
+    test("empty state shows the project not found heading so the user knows the project does not exist", async () => {
+      await renderPage();
+      expect(screen.getByText("Project not found")).toBeInTheDocument();
+    });
+
+    test("empty state does not render the project name input so no existence is leaked", async () => {
       await renderPage();
       expect(screen.queryByPlaceholderText("Enter project name")).not.toBeInTheDocument();
     });

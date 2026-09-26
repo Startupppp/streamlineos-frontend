@@ -21,6 +21,10 @@ import {
 import { FEEDBACK_SKELETON_HEADERS } from "./product-feedback-columns";
 import { GoalsSkeleton } from "./product-goals-page";
 import { RoadmapSkeleton } from "./product-roadmap-page";
+import { Skeleton } from "@/components/ui/skeleton";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { ManagedProductOverviewSkeleton } from "@/features/build/overview/managed-product-overview-page";
+import { GridSkeleton } from "@/features/build/project-list/projects-page-skeletons";
 
 const GALLERY_ROWS: ManagedProduct[] = Array.from({ length: 14 }, (_, i) => ({
   id: i + 1,
@@ -70,6 +74,15 @@ const TWO_ACTIONS: BuildHeaderAction[] = [
   { id: "archive", label: "Archive", icon: Archive },
   ...ONE_ACTION,
 ];
+
+const RANGE_OPTIONS = [
+  { label: "All time", value: "all" },
+  { label: "Last 7 days", value: "7d" },
+  { label: "Last 30 days", value: "30d" },
+  { label: "Last 90 days", value: "90d" },
+];
+
+const STUB_CHANGE = () => undefined;
 
 function GalleryCase({
   id,
@@ -326,6 +339,7 @@ export function ManagedProductsGallery() {
           illustrationPreset="projects"
           title="No feedback submissions"
           description="Submissions from widgets linked to this product will appear here."
+          action={{ label: "Clear filters" }}
         />
       </GalleryCase>
 
@@ -341,6 +355,7 @@ export function ManagedProductsGallery() {
           illustrationPreset="projects"
           title="No goals yet"
           description="Create goals linked to this product."
+          action={{ label: "New goal" }}
         />
       </GalleryCase>
 
@@ -356,7 +371,120 @@ export function ManagedProductsGallery() {
           illustrationPreset="projects"
           title="No roadmap items yet"
           description="Add items to plan what this product is working toward."
+          action={{ label: "Add item" }}
         />
+      </GalleryCase>
+
+      <GalleryCase id="overview-loading" title="Product overview — loading">
+        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto p-4">
+          <ManagedProductOverviewSkeleton />
+        </div>
+      </GalleryCase>
+
+      <GalleryCase id="overview-empty" title="Product overview — not found">
+        <PageWrapper title="Payments Platform" backHref="/build/managed-products">
+          <EmptyState
+            className={PM_FILL_PANEL}
+            illustrationPreset="projects"
+            title="Product not found"
+            description="This product may have been deleted or moved."
+          />
+        </PageWrapper>
+      </GalleryCase>
+
+      <GalleryCase id="insights-loading" title="Insights — loading">
+        <PageWrapper
+          title="Insights"
+          subtitle="Aggregated activity for this product"
+          filters={
+            <BuildListToolbar
+              filters={[
+                {
+                  id: "range",
+                  label: "Range",
+                  active: false,
+                  control: (
+                    <BuildFilterSelect
+                      label="Range"
+                      value="all"
+                      onValueChange={STUB_CHANGE}
+                      options={RANGE_OPTIONS}
+                    />
+                  ),
+                },
+              ]}
+              onClearAll={STUB_CHANGE}
+            />
+          }
+        >
+          <PmPageShell>
+            <PmSection index={0} className="shrink-0">
+              <div className="space-y-6">
+                <div>
+                  <p className="mb-3 text-sm font-semibold text-foreground">Projects</p>
+                  <StatCardGridSkeleton cols={3} />
+                </div>
+                <div>
+                  <p className="mb-3 text-sm font-semibold text-foreground">Feedback submissions</p>
+                  <StatCardGridSkeleton cols={4} />
+                </div>
+              </div>
+            </PmSection>
+          </PmPageShell>
+        </PageWrapper>
+      </GalleryCase>
+
+      <GalleryCase id="projects-loading" title="Linked projects — loading">
+        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto p-4">
+          <GridSkeleton />
+        </div>
+      </GalleryCase>
+
+      <GalleryCase id="projects-empty" title="Linked projects — empty">
+        <EmptyState
+          className={PM_FILL_PANEL}
+          illustrationPreset="projects"
+          title="No linked projects yet"
+          description="Link projects to this product to track delivery."
+          action={{ label: "Link project" }}
+        />
+      </GalleryCase>
+
+      <GalleryCase id="feedbucket-loading" title="Feedbucket — loading">
+        <PmPageShell>
+          <div className="flex flex-1 min-h-0 flex-col gap-3">
+            <Skeleton className="h-48 w-full rounded-xl" />
+          </div>
+        </PmPageShell>
+      </GalleryCase>
+
+      <GalleryCase id="feedbucket-empty" title="Feedbucket — no widget">
+        <EmptyState
+          className={PM_FILL_PANEL}
+          illustrationPreset="projects"
+          title="No feedback widget"
+          description="Create a widget to embed on your product and start collecting feedback."
+          action={{ label: "Create feedback widget" }}
+        />
+      </GalleryCase>
+
+      <GalleryCase id="submission-loading" title="Submission detail — loading">
+        <div className="flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto p-4">
+          <Skeleton className="h-64 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-32 w-full rounded-xl" />
+        </div>
+      </GalleryCase>
+
+      <GalleryCase id="submission-empty" title="Submission detail — not found">
+        <PageWrapper title="Submission" backHref="/build/1/feedbucket">
+          <EmptyState
+            className={PM_FILL_PANEL}
+            illustrationPreset="projects"
+            title="Submission not found"
+            description="This feedback submission was deleted, or the link is out of date."
+          />
+        </PageWrapper>
       </GalleryCase>
     </div>
   );

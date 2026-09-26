@@ -188,7 +188,12 @@ export function useBoardNavigationActions({
 
   const handleCreateOpenChange = useCallback(
     (open: boolean) => {
-      if (open) return;
+      if (open) {
+        const next = currentSearchParams(searchParams);
+        next.set("create", "1");
+        router.replace(`?${next.toString()}`, { scroll: false });
+        return;
+      }
       const next = currentSearchParams(searchParams);
       next.delete("create");
       next.delete("cycleId");

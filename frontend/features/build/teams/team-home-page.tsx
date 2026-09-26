@@ -111,7 +111,7 @@ export function RemoveMemberButton({
       className="w-7 shrink-0"
       onClick={handleClick}
       disabled={isPending}
-      aria-label="Remove member"
+      aria-label={`Remove ${getUserDisplayName(member)}`}
       {...hoverHandlers}
     >
       <XIcon ref={iconRef} size={14} />
@@ -129,6 +129,7 @@ export function MemberRoleSelect({
   onRoleChange: (memberUserId: string, role: "member" | "lead") => void;
 }) {
   const role = (member.role === "lead" ? "lead" : "member") as "member" | "lead";
+  const roleLabel = `Role for ${getUserDisplayName(member)}`;
 
   function handleValueChange(value: string) {
     onRoleChange(member.userId, value as "member" | "lead");
@@ -136,7 +137,7 @@ export function MemberRoleSelect({
 
   return (
     <Select value={role} onValueChange={handleValueChange} disabled={isPending}>
-      <SelectTrigger className="w-24 shrink-0 border-input bg-card">
+      <SelectTrigger className="w-24 shrink-0 border-input bg-card" aria-label={roleLabel}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

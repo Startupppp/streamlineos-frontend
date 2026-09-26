@@ -97,8 +97,20 @@ jest.mock("@/features/build/shared/project-load-fallback", () => ({
   ProjectLoadFallback: () => <div data-testid="project-load-fallback" />,
 }));
 
+interface CapturedBoardContentProps {
+  onBulkStatus?: (v: string) => void;
+  onBulkPriority?: (v: string) => void;
+  onBulkAssignee?: (v: string) => void;
+  onBulkCycle?: (v: string) => void;
+}
+
+let capturedBoardContentProps: CapturedBoardContentProps = {};
+
 jest.mock("@/features/build/views/project-board-content", () => ({
-  ProjectBoardContent: () => <div data-testid="project-board-content" />,
+  ProjectBoardContent: (props: CapturedBoardContentProps) => {
+    capturedBoardContentProps = props;
+    return <div data-testid="project-board-content" />;
+  },
 }));
 
 jest.mock("@/features/build/views/project-views-toolbar", () => ({
@@ -199,6 +211,7 @@ const READY_PROJECT = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  capturedBoardContentProps = {};
   mockUse.mockReturnValue({ projectId: "1" });
   mockUseProject.mockReturnValue(READY_PROJECT);
   mockUseBoardUrlState.mockReturnValue({ ...BOARD_URL_STATE_DEFAULT });
@@ -287,7 +300,7 @@ describe("ProjectBoardPage — 403 routing", () => {
 });
 
 describe("ProjectBoardPage — bulk actions", () => {
-  it("calls bulkUpdate with the selected ticket ids and the new status when handleBulkStatus fires", () => {
+  it("calls bulkMutate with the selected ticket ids and the new status when onBulkStatus fires on the board content, so a status change covers every selected row", () => {
     const bulkMutate = jest.fn();
     mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
     mockUseBoardUrlState.mockReturnValue({
@@ -295,11 +308,14 @@ describe("ProjectBoardPage — bulk actions", () => {
       selectedIds: new Set([1, 2]),
     });
     renderPage();
-    const boardContent = screen.getByTestId("project-board-content");
-    expect(boardContent).toBeDefined();
+    capturedBoardContentProps.onBulkStatus?.("DONE");
+    expect(bulkMutate).toHaveBeenCalledWith(
+      { ticketIds: [1, 2], status: "DONE" },
+      expect.any(Object),
+    );
   });
 
-  it("does not call bulkUpdate when no tickets are selected and handleBulkStatus fires, to prevent empty bulk mutations", () => {
+  it("does not call bulkMutate when no tickets are selected and onBulkStatus fires, to prevent empty bulk mutations", () => {
     const bulkMutate = jest.fn();
     mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
     mockUseBoardUrlState.mockReturnValue({
@@ -307,7 +323,38 @@ describe("ProjectBoardPage — bulk actions", () => {
       selectedIds: new Set<number>(),
     });
     renderPage();
+    capturedBoardContentProps.onBulkStatus?.("DONE");
     expect(bulkMutate).not.toHaveBeenCalled();
+  });
+
+  it("calls bulkMutate with the selected ticket ids and the new priority when onBulkPriority fires with a valid priority value", () => {
+    const bulkMutate = jest.fn();
+    mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      selectedIds: new Set([3]),
+    });
+    renderPage();
+    capturedBoardContentProps.onBulkPriority?.("HIGH");
+    expect(bulkMutate).toHaveBeenCalledWith(
+      { ticketIds: [3], priority: "HIGH" },
+      expect.any(Object),
+    );
+  });
+
+  it("calls bulkMutate with the selected ticket ids and the assigneeId when onBulkAssignee fires", () => {
+    const bulkMutate = jest.fn();
+    mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      selectedIds: new Set([5, 6]),
+    });
+    renderPage();
+    capturedBoardContentProps.onBulkAssignee?.("user-abc");
+    expect(bulkMutate).toHaveBeenCalledWith(
+      { ticketIds: [5, 6], assigneeId: "user-abc" },
+      expect.any(Object),
+    );
   });
 });
 
@@ -349,6 +396,13 @@ describe("ProjectBoardPage — keyboard navigation", () => {
     renderPage();
     expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
       expect.objectContaining({ enabled: true }),
+    );
+  });
+
+  it("passes an onCreate handler to useBuildListKeyboard so the c keyboard shortcut opens the create-ticket dialog without a separate keydown listener", () => {
+    renderPage();
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onCreate: expect.any(Function) }),
     );
   });
 });

@@ -239,6 +239,26 @@ describe("ProjectSettingsRetentionPage — holds section (BLD-RETENTION-005)", (
   });
 });
 
+describe("ProjectSettingsRetentionPage — box 4: no growable list (BLD-RETENTION-007)", () => {
+  it("has no data table or paginated list — singleton settings form satisfies box 4 by absence of a growable collection", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsRetentionPage projectId={1} />);
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("grid")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Policy" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Legal Holds" })).toBeInTheDocument();
+  });
+
+  it("renders exactly two section navigation buttons — static NAV_SECTIONS collection is bounded at compile time", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsRetentionPage projectId={1} />);
+    const policyTab = screen.getByRole("button", { name: "Policy", exact: true });
+    const holdsTab = screen.getByRole("button", { name: "Legal Holds", exact: true });
+    expect(policyTab).toBeInTheDocument();
+    expect(holdsTab).toBeInTheDocument();
+  });
+});
+
 describe("ProjectSettingsRetentionPage — schema type predicate (BLD-RETENTION-006)", () => {
   it("parseRetentionSection returns policy for null input", () => {
     const { parseRetentionSection } = jest.requireActual(

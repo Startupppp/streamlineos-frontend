@@ -20,6 +20,8 @@ const CASES = [
   "portal-detail-ready",
   "portal-detail-empty",
   "portal-invite-accept",
+  "portal-invite-accept-error",
+  "portal-invite-accept-missing-token",
 ] as const;
 
 async function shimmerAnimationName(page: Page): Promise<string> {
@@ -121,6 +123,36 @@ test.describe("Portal surfaces responsive contract", () => {
       await backLink.focus();
       await expect(backLink).toBeFocused();
       await expect(backLink).toHaveAttribute("href", "/client-portal");
+    });
+
+    test("invite-accept loading state header Need help link is keyboard-reachable", async ({ page }) => {
+      const needHelpLink = frame(page, "portal-invite-accept").locator("header").getByRole("link", {
+        name: "Need help?",
+        exact: true,
+      });
+      await needHelpLink.focus();
+      await expect(needHelpLink).toBeFocused();
+      await expect(needHelpLink).toHaveAttribute("href", /mailto:/);
+    });
+
+    test("invite-accept error Contact support link is keyboard-reachable", async ({ page }) => {
+      const contactLink = frame(page, "portal-invite-accept-error").locator("main").getByRole("link", {
+        name: "Contact support",
+        exact: true,
+      });
+      await contactLink.focus();
+      await expect(contactLink).toBeFocused();
+      await expect(contactLink).toHaveAttribute("href", /mailto:/);
+    });
+
+    test("invite-accept missing-token Contact support link is keyboard-reachable", async ({ page }) => {
+      const contactLink = frame(page, "portal-invite-accept-missing-token").locator("main").getByRole("link", {
+        name: "Contact support",
+        exact: true,
+      });
+      await contactLink.focus();
+      await expect(contactLink).toBeFocused();
+      await expect(contactLink).toHaveAttribute("href", /mailto:/);
     });
   });
 
@@ -240,6 +272,27 @@ test.describe("Portal surfaces responsive contract", () => {
         name: "Project not found",
       });
       await expect(heading).toBeVisible();
+    });
+
+    test("portal invite-accept loading has a main landmark from the real StatusLayout", async ({ page }) => {
+      const main = frame(page, "portal-invite-accept").locator("main");
+      await expect(main).toBeVisible();
+    });
+
+    test("portal invite-accept error has a main landmark and a visible error heading", async ({ page }) => {
+      const main = frame(page, "portal-invite-accept-error").locator("main");
+      await expect(main).toBeVisible();
+      const heading = frame(page, "portal-invite-accept-error").getByRole("heading", {
+        name: "Could not accept invitation",
+        exact: true,
+      });
+      await expect(heading).toBeVisible();
+    });
+
+    test("portal project card renders an accessible link to the project detail", async ({ page }) => {
+      const link = frame(page, "portal-project-card").getByRole("link");
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute("href", /\/client-portal\/101/);
     });
   });
 });

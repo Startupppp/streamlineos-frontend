@@ -47,6 +47,8 @@ jest.mock("@/components/shared/page-state", () => ({
 jest.mock("@/hooks/api/goals", () => ({
   useGoalsPage: jest.fn(),
   useGoalStats: jest.fn(() => ({ data: undefined })),
+  useGoal: jest.fn(() => ({ data: undefined })),
+  useDeleteGoal: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/common/use-query-param-open", () => ({
@@ -118,8 +120,32 @@ jest.mock("@/features/build/goals/goal-form-sheet", () => ({
 }));
 
 jest.mock("@/features/build/goals/goals-list-shared", () => ({
-  GoalCard: ({ goal }: { goal: { title: string } }) => (
-    <div data-testid="goal-card">{goal.title}</div>
+  GoalCard: ({
+    goal,
+    onEdit,
+    onDelete,
+  }: {
+    goal: { id: number; title: string };
+    onEdit?: (goal: { id: number; title: string }) => void;
+    onDelete?: (goal: { id: number; title: string }) => void;
+  }) => (
+    <div
+      data-testid="goal-card"
+      data-has-edit={onEdit ? "true" : "false"}
+      data-has-delete={onDelete ? "true" : "false"}
+    >
+      {goal.title}
+      {onEdit ? (
+        <button type="button" data-testid="goal-card-edit" onClick={() => onEdit(goal)}>
+          Edit
+        </button>
+      ) : null}
+      {onDelete ? (
+        <button type="button" data-testid="goal-card-delete" onClick={() => onDelete(goal)}>
+          Delete
+        </button>
+      ) : null}
+    </div>
   ),
   GoalsListToolbar: () => <div data-testid="goals-list-toolbar" />,
   GOAL_FILTER_DEFINITIONS: [
@@ -131,6 +157,33 @@ jest.mock("@/features/build/goals/goals-list-shared", () => ({
     { param: "scope" },
   ],
   GOAL_LEVEL_ORDER: ["company", "team", "individual"],
+}));
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: ({
+    open,
+    onConfirm,
+  }: {
+    open: boolean;
+    onConfirm: () => void;
+    onOpenChange: (open: boolean) => void;
+    title?: string;
+    description?: string;
+    confirmLabel?: string;
+    destructive?: boolean;
+    isPending?: boolean;
+  }) =>
+    open ? (
+      <div data-testid="confirm-dialog">
+        <button type="button" data-testid="confirm-dialog-confirm" onClick={onConfirm}>
+          Confirm
+        </button>
+      </div>
+    ) : null,
+}));
+
+jest.mock("@/lib/get-error-message", () => ({
+  getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : "An error occurred"),
 }));
 
 jest.mock("@/features/build/goals/constants", () => ({
@@ -147,11 +200,16 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
-const { useGoalsPage } = jest.requireMock("@/hooks/api/goals") as {
+const { useGoalsPage, useDeleteGoal, useGoal } = jest.requireMock("@/hooks/api/goals") as {
   useGoalsPage: jest.Mock;
+  useDeleteGoal: jest.Mock;
+  useGoal: jest.Mock;
 };
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
+};
+const { useCan } = jest.requireMock("@/hooks/api/access") as {
+  useCan: jest.Mock;
 };
 
 const EMPTY_RESULT = {
@@ -162,10 +220,35 @@ const EMPTY_RESULT = {
   refetch: jest.fn(),
 };
 
+const GOAL_WITH_ACTIONS = {
+  id: 1,
+  title: "Grow revenue 20%",
+  level: "company",
+  status: "on_track",
+  progress: 40,
+  keyResultCount: 2,
+  owner: null,
+};
+
+const RESULT_WITH_ONE_GOAL = {
+  data: {
+    items: [GOAL_WITH_ACTIONS],
+    page: 1,
+    pageSize: 20,
+    total: 1,
+  },
+  isLoading: false,
+  isError: false,
+  error: null,
+  refetch: jest.fn(),
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
+  useCan.mockReturnValue(true);
   usePageState.mockReturnValue({ kind: "ready" });
   useGoalsPage.mockReturnValue(EMPTY_RESULT);
+  useDeleteGoal.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
 describe("ProductGoalsPage — c shortcut (C3 BSN-KB-GOALS-01)", () => {
@@ -226,5 +309,98 @@ describe("ProductGoalsPage — URL params forwarded to hook (C3 BSN-FILTER-GOALS
     expect(useGoalsPage).toHaveBeenCalledWith(
       expect.objectContaining({ page: 1, limit: 20 }),
     );
+  });
+});
+
+describe("ProductGoalsPage — edit action (C3 BSN-ACTIONS-GOALS-EDIT)", () => {
+  it("passes onEdit to GoalCard when canManage is true so the edit action is reachable", () => {
+    useCan.mockReturnValue(true);
+    useGoalsPage.mockReturnValue(RESULT_WITH_ONE_GOAL);
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByTestId("goal-card")).toHaveAttribute("data-has-edit", "true");
+  });
+
+  it("does not pass onEdit to GoalCard when canManage is false so the action is hidden for non-managers", () => {
+    useCan.mockReturnValue(false);
+    useGoalsPage.mockReturnValue(RESULT_WITH_ONE_GOAL);
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByTestId("goal-card")).toHaveAttribute("data-has-edit", "false");
+  });
+});
+
+describe("ProductGoalsPage — delete action and confirm overlay (C3 BSN-ACTIONS-GOALS-DELETE)", () => {
+  it("passes onDelete to GoalCard when canManage is true so the delete action is reachable", () => {
+    useCan.mockReturnValue(true);
+    useGoalsPage.mockReturnValue(RESULT_WITH_ONE_GOAL);
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByTestId("goal-card")).toHaveAttribute("data-has-delete", "true");
+  });
+
+  it("does not pass onDelete to GoalCard when canManage is false so the action is hidden for non-managers", () => {
+    useCan.mockReturnValue(false);
+    useGoalsPage.mockReturnValue(RESULT_WITH_ONE_GOAL);
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByTestId("goal-card")).toHaveAttribute("data-has-delete", "false");
+  });
+
+  it("clicking delete on a goal card opens the confirm dialog so destructive intent is confirmed", () => {
+    useCan.mockReturnValue(true);
+    useGoalsPage.mockReturnValue(RESULT_WITH_ONE_GOAL);
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("goal-card-delete"));
+    expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
+  });
+
+  it("confirming the delete dialog calls useDeleteGoal.mutate with the correct goal id", () => {
+    const mockMutate = jest.fn();
+    useDeleteGoal.mockReturnValue({ mutate: mockMutate, isPending: false });
+    useCan.mockReturnValue(true);
+    useGoalsPage.mockReturnValue(RESULT_WITH_ONE_GOAL);
+    render(<ProductGoalsPage managedProductId={7} />);
+    fireEvent.click(screen.getByTestId("goal-card-delete"));
+    fireEvent.click(screen.getByTestId("confirm-dialog-confirm"));
+    expect(mockMutate).toHaveBeenCalledWith(
+      GOAL_WITH_ACTIONS.id,
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+  });
+});
+
+describe("ProductGoalsPage — keyboard shortcuts e and Esc (C3 BSN-KB-GOALS-02)", () => {
+  it("e key with a focused goal opens the edit sheet for that goal", () => {
+    const goalDetail = {
+      id: 1,
+      title: "Grow revenue 20%",
+      description: null,
+      level: "company",
+      status: "on_track",
+      progress: 40,
+      startDate: null,
+      dueDate: null,
+      owner: null,
+      keyResults: [],
+      links: [],
+      version: 1,
+      createdAt: "2025-01-01T00:00:00Z",
+      updatedAt: "2025-01-01T00:00:00Z",
+    };
+    useGoal.mockReturnValue({ data: goalDetail });
+    useCan.mockReturnValue(true);
+    useGoalsPage.mockReturnValue(RESULT_WITH_ONE_GOAL);
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.queryByTestId("goal-form-sheet")).not.toBeInTheDocument();
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "e" });
+    expect(screen.getByTestId("goal-form-sheet")).toBeInTheDocument();
+  });
+
+  it("e key does nothing when canManage is false so read-only users cannot trigger the edit sheet", () => {
+    useCan.mockReturnValue(false);
+    useGoalsPage.mockReturnValue(RESULT_WITH_ONE_GOAL);
+    render(<ProductGoalsPage managedProductId={7} />);
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "e" });
+    expect(screen.queryByTestId("goal-form-sheet")).not.toBeInTheDocument();
   });
 });

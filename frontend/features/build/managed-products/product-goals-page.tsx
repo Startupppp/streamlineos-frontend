@@ -2,8 +2,10 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Plus, Target, TrendingUp, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { Badge } from "@/components/ui/badge";
@@ -11,12 +13,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
+  useGoal,
   useGoalsPage,
   useGoalStats,
+  useDeleteGoal,
   type GoalListItem,
   type GoalLevel,
 } from "@/hooks/api/goals";
+import { useCan } from "@/hooks/api/access";
 import { GoalFormSheet } from "@/features/build/goals/goal-form-sheet";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   LEVEL_LABEL,
   STATUS_OPTIONS,
@@ -66,15 +72,25 @@ export function GoalsSkeleton() {
 }
 
 export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
+  const canManage = useCan("build:goals:manage");
   const listFilters = useBuildListFilters({ filters: GOAL_FILTER_DEFINITIONS });
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
+  const [editGoalId, setEditGoalId] = useState<number | null>(null);
+  const [deleteGoalId, setDeleteGoalId] = useState<number | null>(null);
+
+  const { data: editGoalDetail } = useGoal(editGoalId ?? 0);
+  const deleteGoalMutation = useDeleteGoal();
+
   const levelValue = listFilters.value("level");
   const statusValue = listFilters.value("status");
 
   const ownerIdValue = listFilters.value("ownerId");
+  const healthValue = listFilters.value("health");
+  const dueValue = listFilters.value("due");
+  const scopeValue = listFilters.value("scope");
 
   const typedLevel = useMemo(
     () => LEVEL_OPTIONS.find((o) => o.value === levelValue)?.value,
@@ -105,8 +121,11 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
       ...(listFilters.debouncedSearch.trim()
         ? { search: listFilters.debouncedSearch.trim() }
         : {}),
+      ...(healthValue && healthValue !== BUILD_FILTER_ALL ? { health: healthValue } : {}),
+      ...(dueValue && dueValue !== BUILD_FILTER_ALL ? { due: dueValue } : {}),
+      ...(scopeValue && scopeValue !== BUILD_FILTER_ALL ? { scope: scopeValue } : {}),
     }),
-    [managedProductId, page, typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch],
+    [managedProductId, page, typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch, healthValue, dueValue, scopeValue],
   );
 
   const { data: goalsPage, isLoading, isError, error, refetch } = useGoalsPage(params);
@@ -120,6 +139,14 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     for (const goal of goals) map.get(goal.level)?.push(goal);
     return map;
   }, [goals]);
+
+  const flatGoals = useMemo(() => {
+    const result: GoalListItem[] = [];
+    for (const level of GOAL_LEVEL_ORDER) {
+      for (const g of grouped.get(level) ?? []) result.push(g);
+    }
+    return result;
+  }, [grouped]);
 
   const resolution = usePageState({
     permission: "build:goals:view",
@@ -137,9 +164,47 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const handleEditGoalByIndex = useCallback(
+    (index: number) => {
+      const goal = flatGoals[index];
+      if (goal && canManage) setEditGoalId(goal.id);
+    },
+    [flatGoals, canManage],
+  );
+
+  const handleEditGoalCard = useCallback(
+    (goal: GoalListItem) => { if (canManage) setEditGoalId(goal.id); },
+    [canManage],
+  );
+
+  const handleDeleteGoalCard = useCallback(
+    (goal: GoalListItem) => { if (canManage) setDeleteGoalId(goal.id); },
+    [canManage],
+  );
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteGoalId) return;
+    deleteGoalMutation.mutate(deleteGoalId, {
+      onSuccess: () => {
+        toast.success("Goal deleted");
+        setDeleteGoalId(null);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [deleteGoalMutation, deleteGoalId]);
+
+  const handleEditSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) setEditGoalId(null);
+  }, []);
+
+  const handleDeleteDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteGoalId(null);
+  }, []);
+
   useBuildListKeyboard({
-    itemCount: goals.length,
-    onOpen: () => undefined,
+    itemCount: flatGoals.length,
+    onOpen: canManage ? handleEditGoalByIndex : () => undefined,
+    onEdit: canManage ? handleEditGoalByIndex : undefined,
     onCreate: handleOpenCreate,
     onClearSelection: () => undefined,
     searchInputRef,
@@ -238,7 +303,12 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
                       </div>
                       <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {levelGoals.map((goal) => (
-                          <GoalCard key={goal.id} goal={goal} />
+                          <GoalCard
+                            key={goal.id}
+                            goal={goal}
+                            onEdit={canManage ? handleEditGoalCard : undefined}
+                            onDelete={canManage ? handleDeleteGoalCard : undefined}
+                          />
                         ))}
                       </PmStaggerList>
                     </div>
@@ -258,6 +328,23 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
       </PmPageShell>
 
       <GoalFormSheet open={createOpen} onOpenChange={setCreateOpen} />
+      {editGoalId !== null && editGoalDetail !== undefined ? (
+        <GoalFormSheet
+          open
+          onOpenChange={handleEditSheetOpenChange}
+          goal={editGoalDetail}
+        />
+      ) : null}
+      <ConfirmDialog
+        open={deleteGoalId !== null}
+        onOpenChange={handleDeleteDialogOpenChange}
+        title="Delete goal?"
+        description="This action cannot be undone. All key results and updates will be removed."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteGoalMutation.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
     </PageWrapper>
   );
 }

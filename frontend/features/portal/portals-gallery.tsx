@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import {
   PortalProjectDetailLoading,
   PortalProjectDetailError,
@@ -9,6 +8,11 @@ import {
   PortalProjectDetailShell,
 } from "@/features/portal/components/portal-project-detail";
 import { PortalProjectCard } from "@/features/portal/components/portal-project-card";
+import {
+  LoadingView as InviteLoadingView,
+  ErrorView as InviteErrorView,
+  MissingTokenView,
+} from "@/app/(portal)/accept-invitation/page";
 import type {
   PortalProject,
   PortalProjectOverview,
@@ -148,24 +152,26 @@ export function PortalsGallery() {
         <h2 className="text-sm font-semibold text-foreground">Invitation acceptance</h2>
         <GallerySection
           caseId="portal-invite-accept"
-          label="portal-invite-accept — verifying (token stored in data-invite-token, not in rendered text)"
+          label="portal-invite-accept — loading (real StatusLayout+PortalHeader; token in data-attr, not in text)"
         >
-          <div
-            className="flex flex-col items-center justify-center gap-4 px-4 py-12 bg-background"
-            data-invite-token={FAKE_INVITE_TOKEN}
-          >
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/5">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
-            <div className="text-center">
-              <h1 className="text-base font-semibold text-foreground">
-                Verifying your invitation…
-              </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                This will only take a moment.
-              </p>
-            </div>
+          <div data-invite-token={FAKE_INVITE_TOKEN}>
+            <InviteLoadingView />
           </div>
+        </GallerySection>
+        <GallerySection
+          caseId="portal-invite-accept-error"
+          label="portal-invite-accept — error (real ErrorView with contact-support link)"
+        >
+          <InviteErrorView
+            title="Could not accept invitation"
+            message="There was a problem verifying this invitation. Please try again or contact support."
+          />
+        </GallerySection>
+        <GallerySection
+          caseId="portal-invite-accept-missing-token"
+          label="portal-invite-accept — expired session (real MissingTokenView)"
+        >
+          <MissingTokenView reason="expired" />
         </GallerySection>
       </div>
     </div>

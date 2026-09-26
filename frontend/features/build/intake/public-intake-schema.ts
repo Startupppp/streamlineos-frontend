@@ -23,7 +23,6 @@ export type IntakeFormOutput = z.output<typeof intakeFormSchema>;
  * declared fields were undefined.
  */
 export const intakeSubmitResponseContract = z.object({
-  id: z.number(),
   message: z.string(),
 });
 

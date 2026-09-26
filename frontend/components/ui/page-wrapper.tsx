@@ -273,7 +273,7 @@ export function PageWrapper({
           aria-labelledby={title != null ? headingId : undefined}
           aria-label={title == null ? "Page content" : undefined}
           tabIndex={0}
-          className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide outline-none"
+          className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         >
           <div
             className={cn(

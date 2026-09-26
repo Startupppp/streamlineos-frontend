@@ -79,6 +79,144 @@ export function SettingsGallery() {
           </PageWrapper>
         </GalleryCase>
 
+        <GalleryCase id="settings-project-loading" title="Project settings — loading skeleton">
+          <PageWrapper title="Project settings">
+            <div className="space-y-4 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-16 w-3/4" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-project-access-loading" title="Access — loading skeleton">
+          <PageWrapper title="Access">
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-project-agents-loading" title="Agents — loading skeleton">
+          <PageWrapper title="Agents">
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-project-automations-loading" title="Automations — loading skeleton">
+          <PageWrapper title="Automations">
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-project-fields-loading" title="Fields — loading skeleton">
+          <PageWrapper title="Fields">
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-project-integrations-loading" title="Integrations — loading skeleton">
+          <PageWrapper title="Integrations">
+            <div className="space-y-4 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-project-webhooks-loading" title="Webhooks — loading skeleton">
+          <PageWrapper title="Webhooks">
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-project-iterations-loading" title="Iterations — loading skeleton">
+          <PageWrapper title="Iterations">
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-project-portal-loading" title="Portal — loading skeleton">
+          <PageWrapper title="Portal">
+            <div className="space-y-4 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-project-retention-loading" title="Retention — loading skeleton">
+          <PageWrapper title="Retention">
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-project-workflow-loading" title="Workflow — loading skeleton">
+          <PageWrapper title="Workflow">
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-org-access-loading" title="Org access settings — loading skeleton">
+          <PageWrapper title="Access">
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-org-integrations-loading" title="Org integrations settings — loading skeleton">
+          <PageWrapper title="Integrations">
+            <div className="space-y-4 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          </PageWrapper>
+        </GalleryCase>
+
         <GalleryCase id="settings-credentials-token-list" title="Credentials — token list (secret-redaction stub)">
           <PageWrapper title="Credentials">
             <PmPageShell>

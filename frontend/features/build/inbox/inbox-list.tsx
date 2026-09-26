@@ -93,6 +93,7 @@ export function InboxList({
   React.useEffect(() => { setPagesShown(1); setSelectedIds(new Set()); }, [section, q, type]);
 
   const pageState = usePageState({
+    permission: "build:view",
     isLoading: isPending,
     isError,
     error,

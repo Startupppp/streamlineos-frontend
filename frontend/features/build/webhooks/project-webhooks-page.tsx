@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,6 +53,7 @@ import {
   type WebhookFormValues,
 } from "@/features/build/webhooks/webhook-schema";
 import { setListMembership } from "@/lib/toggle-in-list";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
 function subscribeToEvent(
   onChange: (events: string[]) => void,
@@ -163,6 +164,17 @@ export function ProjectWebhooksPage({
   }, [form]);
 
   const handleShowForm = useCallback(() => setSheetOpen(true), []);
+
+  const webhookList = webhooks ?? [];
+  const handleOpenWebhook = useCallback((_index: number) => {}, []);
+  const handleClearWebhookSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: webhookList.length,
+    onOpen: handleOpenWebhook,
+    onCreate: canManage ? handleShowForm : undefined,
+    onClearSelection: handleClearWebhookSelection,
+    enabled: pageState.kind === "ready",
+  });
 
   return (
     <PageWrapper

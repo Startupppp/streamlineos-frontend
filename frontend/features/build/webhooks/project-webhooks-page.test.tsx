@@ -3,6 +3,14 @@ import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectWebhooksPage } from "./project-webhooks-page";
 import type { ProjectWebhook } from "@/hooks/api/build/webhooks";
 
+const mockUseBuildListKeyboard = jest.fn(() => ({
+  focusedIndex: null,
+  setFocusedIndex: jest.fn(),
+}));
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+}));
+
 let mockAccessState: AccessState = "denied";
 let mockWebhooks: ProjectWebhook[] = [];
 let mockIsLoading = false;
@@ -81,6 +89,7 @@ beforeEach(() => {
   mockWebhooks = [];
   mockIsLoading = false;
   mockIsError = false;
+  mockUseBuildListKeyboard.mockClear();
 });
 
 const SAMPLE_WEBHOOK: ProjectWebhook = {
@@ -210,5 +219,39 @@ describe("Webhook list contract — secret redaction (BLD-X-FE-SETTINGS-WH-015)"
     ];
     expect(() => projectWebhookListContract.parse(raw)).not.toThrow();
     expect(projectWebhookListContract.parse(raw)[1].isActive).toBe(false);
+  });
+});
+
+describe("ProjectWebhooksPage — keyboard shortcut wiring (BLD-X-FE-SETTINGS-WH-030)", () => {
+  it("wires useBuildListKeyboard with onCreate pointing to the Add Webhook action when the viewer can manage", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    const lastArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(typeof lastArgs?.onCreate).toBe("function");
+    expect(lastArgs?.itemCount).toBe(1);
+  });
+
+  it("does not wire onCreate when the viewer cannot manage — the c shortcut must fail closed", () => {
+    mockAccessState = "denied";
+    render(<ProjectWebhooksPage projectId="1" />);
+    const lastArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(lastArgs?.onCreate).toBeUndefined();
+  });
+
+  it("enables keyboard shortcuts only when the page is in the ready state", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    const lastArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(lastArgs?.enabled).toBe(true);
+  });
+
+  it("disables keyboard shortcuts while loading", () => {
+    mockAccessState = "granted";
+    mockIsLoading = true;
+    render(<ProjectWebhooksPage projectId="1" />);
+    const lastArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(lastArgs?.enabled).toBe(false);
   });
 });

@@ -32,6 +32,29 @@ const CASES = [
   "releases-empty-filtered",
   "releases-error",
   "releases-denied",
+  "goals-ready",
+  "goals-loading",
+  "goals-empty-true",
+  "goals-empty-filtered",
+  "goals-error",
+  "goals-denied",
+  "goal-detail-skeleton",
+  "goal-detail-ready",
+  "portfolios-ready",
+  "portfolios-loading",
+  "portfolios-empty-true",
+  "portfolios-error",
+  "portfolios-denied",
+  "portfolio-detail-ready",
+  "programs-ready",
+  "programs-loading",
+  "programs-empty-true",
+  "programs-error",
+  "programs-denied",
+  "roadmap-ready",
+  "roadmap-empty-true",
+  "roadmap-error",
+  "roadmap-denied",
 ] as const;
 
 function frame(page: Page, caseId: string): Locator {
@@ -315,6 +338,116 @@ test.describe("Planning surfaces responsive contract", () => {
     });
   });
 
+  test.describe("screen-reader — roles and accessible names on all eight planning pages", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(page.getByRole("heading", { name: "Planning surfaces" })).toBeVisible();
+    });
+
+    test("milestones-ready exposes a labelled milestone list and four stat cards", async ({ page }) => {
+      const scope = frame(page, "milestones-ready");
+      await expect(scope.getByRole("list", { name: "Project milestones", exact: true })).toBeVisible();
+      const stats = scope.locator('[data-slot="stat-card-grid"]');
+      for (const label of ["This page", "Achieved", "Pending", "Overdue"]) {
+        await expect(stats.getByText(label, { exact: true })).toBeVisible();
+      }
+    });
+
+    test("releases-ready exposes a table with labelled column headers", async ({ page }) => {
+      const scope = frame(page, "releases-ready");
+      for (const header of ["Name", "Status", "Release Date", "Tickets"]) {
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
+      }
+    });
+
+    test("goals-ready exposes GoalCard items and stat cards", async ({ page }) => {
+      const scope = frame(page, "goals-ready");
+      await expect(scope.getByText("Grow ARR to $5M")).toBeVisible();
+      await expect(scope.getByText("Launch EU region")).toBeVisible();
+      const stats = scope.locator('[data-slot="stat-card-grid"]');
+      for (const label of ["Total Goals", "On Track", "At Risk", "Avg Progress"]) {
+        await expect(stats.getByText(label, { exact: true })).toBeVisible();
+      }
+    });
+
+    test("goal-detail-ready exposes a labelled key results list and Check in button for each result", async ({ page }) => {
+      const scope = frame(page, "goal-detail-ready");
+      await expect(scope.getByRole("list", { name: "Key results", exact: true })).toBeVisible();
+      await expect(scope.getByText("Reach $5M ARR by Q4 2027")).toBeVisible();
+      const checkInButtons = scope.getByRole("button", { name: "Check in", exact: true });
+      await expect(checkInButtons.first()).toBeVisible();
+    });
+
+    test("portfolios-ready exposes a table with labelled column headers", async ({ page }) => {
+      const scope = frame(page, "portfolios-ready");
+      for (const header of ["Name", "Status", "Health"]) {
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
+      }
+    });
+
+    test("portfolio-detail-ready exposes a labelled linked projects list", async ({ page }) => {
+      const scope = frame(page, "portfolio-detail-ready");
+      await expect(scope.getByRole("list", { name: "Linked projects", exact: true })).toBeVisible();
+    });
+
+    test("programs-ready exposes a table with labelled column headers", async ({ page }) => {
+      const scope = frame(page, "programs-ready");
+      for (const header of ["Name", "Status", "Health"]) {
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
+      }
+    });
+
+    test("roadmap-ready exposes a labelled roadmap items list", async ({ page }) => {
+      const scope = frame(page, "roadmap-ready");
+      await expect(scope.getByRole("list", { name: "Roadmap items", exact: true })).toBeVisible();
+      await expect(scope.getByText("Self-serve billing portal")).toBeVisible();
+    });
+  });
+
+  test.describe("reduced motion — goals and portfolios skeleton shimmers also stop", () => {
+    test.describe("with reduce requested", () => {
+      test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+      test("goals-loading skeleton computes animation-name none on the visible shimmer", async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        const shimmer = frame(page, "goals-loading")
+          .locator(".skeleton-shimmer.animate-pulse:visible")
+          .first();
+        await expect(shimmer).toBeVisible();
+        const animName = await shimmer.evaluate((node: HTMLElement) => getComputedStyle(node).animationName);
+        expect(animName).toBe("none");
+      });
+
+      test("portfolios-loading skeleton computes animation-name none on the visible shimmer", async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        const shimmer = frame(page, "portfolios-loading")
+          .locator(".skeleton-shimmer.animate-pulse:visible")
+          .first();
+        await expect(shimmer).toBeVisible();
+        const animName = await shimmer.evaluate((node: HTMLElement) => getComputedStyle(node).animationName);
+        expect(animName).toBe("none");
+      });
+    });
+
+    test.describe("with no preference", () => {
+      test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+      test("goals-loading skeleton does animate, proving the reduce assertion is not vacuous", async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        const shimmer = frame(page, "goals-loading")
+          .locator(".skeleton-shimmer.animate-pulse:visible")
+          .first();
+        await expect(shimmer).toBeVisible();
+        const animName = await shimmer.evaluate((node: HTMLElement) => getComputedStyle(node).animationName);
+        expect(animName).not.toBe("none");
+      });
+    });
+  });
+
   test.describe("keyboard", () => {
     test.describe("at 1280 × 800 — tab order follows visual order through milestones toolbar", () => {
       test.beforeEach(async ({ page }) => {
@@ -374,6 +507,102 @@ test.describe("Planning surfaces responsive contract", () => {
         await page.keyboard.press("Escape");
         await expect(page.getByRole("dialog")).not.toBeVisible();
         await expect(trigger).toBeFocused();
+      });
+    });
+
+    test.describe("at 1280 × 800 — goals toolbar tab order follows visual order", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Planning surfaces" })).toBeVisible();
+      });
+
+      test("Tab from New Goal reaches search then level filter then status filter", async ({ page }) => {
+        const scope = frame(page, "goals-ready");
+        const newGoal = scope
+          .locator('[data-slot="build-header-actions"]')
+          .getByRole("button", { name: "New Goal", exact: true });
+        await newGoal.focus();
+        await expect(newGoal).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(scope.locator('[data-slot="search-input"] input[type="search"]')).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(
+          scope.locator('[data-filter-id="level"]').getByRole("combobox", { name: "Level", exact: true }),
+        ).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(
+          scope.locator('[data-filter-id="status"]').getByRole("combobox", { name: "Status", exact: true }),
+        ).toBeFocused();
+      });
+    });
+
+    test.describe("at 1280 × 800 — portfolios toolbar tab order follows visual order", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Planning surfaces" })).toBeVisible();
+      });
+
+      test("Tab from New portfolio reaches search then status filter then health filter", async ({ page }) => {
+        const scope = frame(page, "portfolios-ready");
+        const newPortfolio = scope
+          .locator('[data-slot="build-header-actions"]')
+          .getByRole("button", { name: "New portfolio", exact: true });
+        await newPortfolio.focus();
+        await expect(newPortfolio).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(scope.locator('[data-slot="search-input"] input[type="search"]')).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(
+          scope.locator('[data-filter-id="status"]').getByRole("combobox", { name: "Status", exact: true }),
+        ).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(
+          scope.locator('[data-filter-id="health"]').getByRole("combobox", { name: "Health", exact: true }),
+        ).toBeFocused();
+      });
+    });
+
+    test.describe("at 1280 × 800 — programs toolbar tab order follows visual order", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Planning surfaces" })).toBeVisible();
+      });
+
+      test("Tab from New program reaches search then status filter", async ({ page }) => {
+        const scope = frame(page, "programs-ready");
+        const newProgram = scope
+          .locator('[data-slot="build-header-actions"]')
+          .getByRole("button", { name: "New program", exact: true });
+        await newProgram.focus();
+        await expect(newProgram).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(scope.locator('[data-slot="search-input"] input[type="search"]')).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(
+          scope.locator('[data-filter-id="status"]').getByRole("combobox", { name: "Status", exact: true }),
+        ).toBeFocused();
+      });
+    });
+
+    test.describe("at 1280 × 800 — roadmap toolbar tab order follows visual order", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Planning surfaces" })).toBeVisible();
+      });
+
+      test("Tab from New Item reaches search input", async ({ page }) => {
+        const scope = frame(page, "roadmap-ready");
+        const newItem = scope
+          .locator('[data-slot="build-header-actions"]')
+          .getByRole("button", { name: "New Item", exact: true });
+        await newItem.focus();
+        await expect(newItem).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(scope.locator('[data-slot="search-input"] input[type="search"]')).toBeFocused();
       });
     });
   });

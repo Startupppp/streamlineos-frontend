@@ -120,10 +120,16 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     [filteredTickets, handleTicketSelect],
   );
 
+  const handleKeyboardCreate = useCallback(
+    () => handleCreateOpenChange(true),
+    [handleCreateOpenChange],
+  );
+
   const { focusedIndex } = useBuildListKeyboard({
     itemCount: filteredTickets.length,
     onOpen: handleOpenFocusedTicket,
     onClearSelection: handleClearSelection,
+    onCreate: handleKeyboardCreate,
     enabled: view === "list",
   });
 

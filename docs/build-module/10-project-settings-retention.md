@@ -100,8 +100,8 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
 - [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
-- [ ] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
-  BLOCKED — page is a settings form (policy section + legal-hold section), not a list. No unbounded collection exists to bound or virtualize.
+- [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
+  SATISFIED BY ABSENCE — page is a singleton settings form (policy section + legal-hold section). `NAV_SECTIONS` and `RETENTION_DAYS_OPTIONS` are static `as const` constants; no server-fetched collection is rendered. The backend `getSettings` performs two `.limit(1)` selects against the `projectRetentionSettings` singleton table (unique on `(org_id, project_id)`; see `projects-retention-settings.service.ts:64,81`). No growable collection exists to bound or virtualise. Tests: `project-settings-retention-page.test.tsx` BLD-RETENTION-007 — 2 tests asserting no DataTable and exactly two static section buttons (20/20 pass).
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.

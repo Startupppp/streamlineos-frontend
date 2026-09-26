@@ -69,6 +69,9 @@ interface GoalsParams {
   search?: string;
   page?: number;
   limit?: number;
+  health?: string;
+  due?: string;
+  scope?: string;
 }
 
 export interface KeyResultInput {

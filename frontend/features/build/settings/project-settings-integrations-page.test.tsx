@@ -3,6 +3,7 @@ import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectSettingsIntegrationsPage } from "./project-settings-integrations-page";
 
 let mockAccessState: AccessState = "denied";
+let mockIsError = false;
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (_permission: string) => mockAccessState === "granted",
@@ -11,9 +12,10 @@ jest.mock("@/hooks/api/access", () => ({
 
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: () => {
-    if (mockAccessState === "denied") return "denied";
-    if (mockAccessState === "loading") return "loading";
-    return "ready";
+    if (mockAccessState === "denied") return { kind: "denied", permission: "build:update" };
+    if (mockAccessState === "loading") return { kind: "loading" };
+    if (mockIsError) return { kind: "error", error: new Error("fetch failed") };
+    return { kind: "ready" };
   },
 }));
 
@@ -38,18 +40,20 @@ jest.mock("@/components/shared/page-state", () => ({
     children,
     loading,
   }: {
-    resolution: string;
+    resolution: { kind: string };
     children: React.ReactNode;
     loading?: React.ReactNode;
   }) => {
-    if (resolution === "denied") return <div data-testid="no-permission" />;
-    if (resolution === "loading") return <div data-testid="page-loading">{loading}</div>;
+    if (resolution.kind === "denied") return <div data-testid="no-permission" />;
+    if (resolution.kind === "loading") return <div data-testid="page-loading">{loading}</div>;
+    if (resolution.kind === "error") return <div data-testid="page-error" />;
     return <div>{children}</div>;
   },
 }));
 
 beforeEach(() => {
   mockAccessState = "denied";
+  mockIsError = false;
 });
 
 describe("ProjectSettingsIntegrationsPage — access control (BLD-X-FE-SETTINGS-INT-001)", () => {
@@ -70,5 +74,22 @@ describe("ProjectSettingsIntegrationsPage — access control (BLD-X-FE-SETTINGS-
     mockAccessState = "loading";
     render(<ProjectSettingsIntegrationsPage projectId={1} />);
     expect(screen.queryByTestId("git-integration-settings")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsIntegrationsPage — error state (BLD-X-FE-SETTINGS-INT-002)", () => {
+  it("renders error state when the page fetch fails — not an empty settings panel", () => {
+    mockAccessState = "granted";
+    mockIsError = true;
+    render(<ProjectSettingsIntegrationsPage projectId={1} />);
+    expect(screen.getByTestId("page-error")).toBeInTheDocument();
+    expect(screen.queryByTestId("git-integration-settings")).not.toBeInTheDocument();
+  });
+
+  it("the git integration settings panel is visible when the page load succeeds — confirming the error test has a positive control", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsIntegrationsPage projectId={1} />);
+    expect(screen.getByTestId("git-integration-settings")).toBeInTheDocument();
+    expect(screen.queryByTestId("page-error")).not.toBeInTheDocument();
   });
 });
