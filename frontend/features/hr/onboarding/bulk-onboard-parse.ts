@@ -1,0 +1,125 @@
+import { collectManagerColumns, resolveManagerHeader } from "@/components/hr/reporting-lines/manager-columns";
+import { CONFLICT_KEY, LEGACY_PRIMARY_KEY, SOURCE_ROW_KEY, normalizeHeader, type ColumnKey, type ParsedRow } from "./bulk-onboard-columns";
+
+interface SourceRow {
+  values: Record<string, string>;
+  /** Data-row number in the file, header not counted. */
+  sourceRow: number;
+}
+
+function isBlankRow(values: Record<string, string | undefined>): boolean {
+  return Object.values(values).every((value) => !(value ?? "").trim());
+}
+
+function formatLocalDate(value: Date): string {
+  const y = value.getFullYear();
+  const m = String(value.getMonth() + 1).padStart(2, "0");
+  const d = String(value.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function excelCellToString(cell: { text?: string; value?: unknown }): string {
+  const value = cell.value;
+  if (value == null || value === "") return "";
+  if (value instanceof Date) {
+    return formatLocalDate(value);
+  }
+  if (typeof value === "object" && value !== null && "result" in value) {
+    const result = value.result;
+    if (result instanceof Date) return formatLocalDate(result);
+    if (result != null) return String(result).trim();
+  }
+  if (typeof value === "object" && value !== null && "text" in value) {
+    return String(value.text ?? "").trim();
+  }
+  if (typeof value === "object" && value !== null && "richText" in value && Array.isArray(value.richText)) {
+    return value.richText
+      .map((part: unknown) => (typeof part === "object" && part !== null && "text" in part ? String(part.text ?? "") : ""))
+      .join("")
+      .trim();
+  }
+  const text = cell.text;
+  if (text != null && String(text).trim() !== "") return String(text).trim();
+  return String(value).trim();
+}
+
+function mapRawRows(
+  headers: string[],
+  data: SourceRow[],
+): ParsedRow[] {
+  const keyMap = new Map<string, ColumnKey>();
+  for (const h of headers) {
+    const mapped = normalizeHeader(h);
+    if (mapped) keyMap.set(h, mapped);
+  }
+
+  return data.map(({ values: row, sourceRow }) => {
+    const out: ParsedRow = { [SOURCE_ROW_KEY]: String(sourceRow) };
+    const conflicts = new Set<string>();
+    for (const [header, value] of Object.entries(row)) {
+      // Manager columns are read by the shared reader below, like the backend's.
+      if (resolveManagerHeader(header)) continue;
+      const key = keyMap.get(header) ?? normalizeHeader(header);
+      if (!key) continue;
+      const next = (value ?? "").trim();
+      const previous = (out[key] ?? "").trim();
+      // Two headers for one column (canonical + legacy alias): a blank never
+      // erases a value, and two different values are refused, not guessed.
+      if (previous && next && previous.toLowerCase() !== next.toLowerCase()) conflicts.add(key);
+      if (!previous || next) out[key] = value ?? "";
+      if (previous && !next) out[key] = previous;
+    }
+    const managers = collectManagerColumns(row);
+    Object.assign(out, managers.values);
+    for (const column of managers.conflicts) conflicts.add(column);
+    if (managers.legacyPrimaryHeader) out[LEGACY_PRIMARY_KEY] = managers.legacyPrimaryHeader;
+    if (conflicts.size > 0) out[CONFLICT_KEY] = [...conflicts].join(",");
+    return out;
+  });
+}
+
+export async function parseFile(file: File): Promise<ParsedRow[]> {
+  if (file.name.endsWith(".csv") || file.type === "text/csv") {
+    const Papa = (await import("papaparse")).default;
+    const text = await file.text();
+    // Blank lines are kept here and dropped below, so each row keeps its number.
+    const result = Papa.parse<Record<string, string>>(text, {
+      header: true,
+      skipEmptyLines: false,
+      transformHeader: (h) => h.trim(),
+    });
+    const rows = result.data
+      .map((values, index) => ({ values, sourceRow: index + 1 }))
+      .filter((row) => !isBlankRow(row.values));
+    return mapRawRows(result.meta.fields ?? [], rows);
+  }
+
+  const ExcelJS = (await import("exceljs")).default;
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(await file.arrayBuffer());
+  const worksheet =
+    workbook.getWorksheet("Employees") ?? workbook.worksheets[0];
+  if (!worksheet) throw new Error("No worksheet found in file");
+
+  const firstRow = worksheet.getRow(1);
+  const headers: string[] = [];
+  firstRow.eachCell({ includeEmpty: false }, (cell, col) => {
+    headers[col - 1] = String(cell.text ?? "").trim();
+  });
+
+  const dataRows: SourceRow[] = [];
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return;
+    const entry: Record<string, string> = {};
+    let empty = true;
+    headers.forEach((header, idx) => {
+      if (!header) return;
+      const val = excelCellToString(row.getCell(idx + 1));
+      if (val) empty = false;
+      entry[header] = val;
+    });
+    if (!empty) dataRows.push({ values: entry, sourceRow: rowNumber - 1 });
+  });
+
+  return mapRawRows(headers.filter(Boolean), dataRows);
+}

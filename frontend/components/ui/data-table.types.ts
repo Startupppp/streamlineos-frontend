@@ -105,6 +105,12 @@ export interface DataTableProps<T> {
   footer?: ReactNode;
   minWidth?: string;
   className?: string;
+  /**
+   * Names the table's scroll area and makes it a single keyboard stop, so a
+   * keyboard user can scroll a table wider than its container. Leave unset to
+   * keep the default (the inner table container is the labelled region).
+   */
+  scrollRegionLabel?: string;
   rowClassName?: (row: T, index: number) => string;
   search?: {
     value: string;
@@ -118,6 +124,8 @@ export interface DataTableProps<T> {
    * below the `sm` breakpoint to avoid horizontal page overflow at 375/390px.
    */
   mobileCard?: (row: T, index: number) => ReactNode;
+  /** Breakpoint at which `mobileCard` gives way to the table. Defaults to `sm`. */
+  mobileCardBreakpoint?: "sm" | "xl";
 }
 
 export type { ClientPagination, ServerPagination, CursorPagination };

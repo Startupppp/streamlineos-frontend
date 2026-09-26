@@ -54,7 +54,7 @@ function NewEmployeeSection() {
       <TabsContent value="single" className="mt-0">
         <OnboardingWizard />
       </TabsContent>
-      <TabsContent value="bulk" className="mt-0">
+      <TabsContent value="bulk" className="mt-0 min-w-0">
         <BulkOnboardPanel />
       </TabsContent>
     </Tabs>

@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { DataTableColumn, DataTableProps } from "./data-table.types";
 import { createRowActivationKeyHandler, propagationShield } from "@/lib/keyboard-activation";
-import { readSortKey, selectionRowLabel } from "./data-table-row";
+import { MOBILE_CARD_BREAKPOINT, readSortKey, selectionRowLabel } from "./data-table-row";
 
 export type { DataTableColumn, DataTableProps };
 
@@ -56,11 +56,13 @@ export function DataTable<T>({
   footer,
   minWidth,
   className,
+  scrollRegionLabel,
   rowClassName,
   search,
   toolbar,
   sortState,
   mobileCard,
+  mobileCardBreakpoint = "sm",
 }: DataTableProps<T>) {
   const isOnline = useOnlineStatus();
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -333,7 +335,9 @@ export function DataTable<T>({
           ) : null}
         </div>
       )}
-      <div className="flex-1 min-h-0 overflow-auto overscroll-x-contain flex flex-col [-webkit-overflow-scrolling:touch]">
+      <div role={scrollRegionLabel ? "region" : undefined} aria-label={scrollRegionLabel} tabIndex={scrollRegionLabel ? 0 : undefined}
+        className="flex-1 min-h-0 overflow-auto overscroll-x-contain flex flex-col [-webkit-overflow-scrolling:touch] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
         {isLoading ? (
           <div aria-busy={isOnline}>
             <span role="status" className="sr-only">
@@ -346,7 +350,7 @@ export function DataTable<T>({
               </p>
             )}
             {mobileCard ? (
-              <div className="flex flex-col gap-2 p-1 sm:hidden">
+              <div className={cn("flex flex-col gap-2 p-1", MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].cards)}>
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} className="h-20 w-full rounded-lg" />
                 ))}
@@ -356,10 +360,10 @@ export function DataTable<T>({
               style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
               className={cn(
                 (!minWidth || minWidth === "content") && "min-w-max",
-                mobileCard && "hidden sm:block",
+                mobileCard && MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].table,
               )}
             >
-              <Table containerClassName="overflow-visible">
+              <Table containerClassName="overflow-visible" containerFocusable={!scrollRegionLabel}>
                 <DataTableHeader table={table} announceSort={false} rowIndex={1} />
                 <TableBody>
                   {Array.from({ length: 12 }).map((_, i) => (
@@ -387,7 +391,7 @@ export function DataTable<T>({
         ) : (
           <>
           {mobileCard ? (
-            <div className="flex flex-col gap-2 p-1 sm:hidden">
+            <div className={cn("flex flex-col gap-2 p-1", MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].cards)}>
               {rows.map((row, index) => (
                 <div
                   key={row.id}
@@ -417,11 +421,11 @@ export function DataTable<T>({
             style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
             className={cn(
               (!minWidth || minWidth === "content") && "min-w-max",
-              mobileCard && "hidden sm:block",
+              mobileCard && MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].table,
             )}
           >
             <Table
-              containerClassName="overflow-visible"
+              containerClassName="overflow-visible" containerFocusable={!scrollRegionLabel}
               aria-rowcount={ariaRowCount}
             >
               <DataTableHeader table={table} announceSort rowIndex={1} />

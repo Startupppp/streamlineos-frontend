@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, type KeyboardEvent } from "react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm, type FieldPath, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +23,8 @@ import {
 } from "@/components/hr/check-employee-email";
 import { describeUnsentInvite } from "@/components/hr/invite-delivery";
 import { buildOnboardEmployeePayload } from "@/components/hr/onboarding-payload";
+import { describeOnboardingSuccess } from "@/components/hr/onboarding-result";
+import { preventImplicitSubmit } from "@/components/hr/onboarding-enter-guard";
 import { StepPersonalInfo } from "./_onboarding/step-personal-info";
 import { StepEmployment } from "./_onboarding/step-employment";
 import { StepSkillsPay } from "./_onboarding/step-skills-pay";
@@ -43,7 +45,7 @@ const STEPS = [
 // the fields that step marks required (V-135).
 export const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
   1: ["firstName", "lastName", "email", "phone", "gender", "dateOfBirth"],
-  2: ["designation", "departmentId", "reportingManagerUserId", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
+  2: ["designation", "departmentId", "reportingManagerUserId", "secondaryManagers", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
   3: ["taxId", "monthlySalary"],
   4: [],
 };
@@ -74,7 +76,8 @@ export function OnboardingWizard() {
       firstName: "", lastName: "", email: "", phone: "",
       whatsappSameAsPhone: true, whatsappNumber: "", gender: "MALE",
       designation: "", departmentId: undefined,
-      reportingManagerUserId: undefined, topLevelRole: false, topLevelRoleReason: undefined,
+      reportingManagerUserId: undefined, reportingManagerRef: null, secondaryManagers: [],
+      topLevelRole: false, topLevelRoleReason: undefined,
       role: DEFAULT_INVITE_ROLE, employeeId: "", attachToExistingMember: false, joiningDate: new Date(),
       dateOfBirth: undefined,
       taxId: "", monthlySalary: undefined,
@@ -124,6 +127,10 @@ export function OnboardingWizard() {
     setCurrentStep((prev) => Math.min(STEPS.length, prev + 1));
   }, [currentStep, form]);
 
+  function handleFormKeyDown(event: KeyboardEvent<HTMLFormElement>) {
+    preventImplicitSubmit(event, currentStep === STEPS.length);
+  }
+
   const handlePrev = useCallback(() => {
     setCurrentStep((prev) => Math.max(1, prev - 1));
   }, []);
@@ -136,7 +143,7 @@ export function OnboardingWizard() {
         buildOnboardEmployeePayload(data),
         {
           onSuccess: (result) => {
-            toast.success("Employee created successfully");
+            toast.success(describeOnboardingSuccess(result.primaryManager));
             const unsentInvite = describeUnsentInvite(result.invite);
             if (unsentInvite)
               toast.warning(unsentInvite, {
@@ -193,11 +200,7 @@ export function OnboardingWizard() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && currentStep < STEPS.length) {
-              e.preventDefault();
-            }
-          }}
+          onKeyDown={handleFormKeyDown}
           className="flex flex-col flex-1 min-h-0"
         >
           <div className="min-h-0 flex-1">

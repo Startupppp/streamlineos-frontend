@@ -234,3 +234,21 @@ describe("DataTable — row activation still works", () => {
     expect(screen.getByTestId("detail-sheet")).toHaveTextContent("Ada Lovelace");
   });
 });
+
+describe("DataTable — scroll region", () => {
+  const columns: DataTableColumn<HarnessRow>[] = [{ key: "name", header: "Name", cell: (row) => row.name }];
+
+  it("keeps the inner table container as the default labelled region", () => {
+    render(<DataTable data={ROWS} columns={columns} getRowKey={(row) => row.id} />);
+    expect(screen.getByRole("region", { name: "Table" })).toHaveAttribute("tabindex", "0");
+  });
+
+  it("makes the scrolling element the only labelled keyboard stop when scrollRegionLabel is set", () => {
+    render(<DataTable data={ROWS} columns={columns} getRowKey={(row) => row.id} scrollRegionLabel="People" />);
+    const regions = screen.getAllByRole("region");
+    expect(regions).toHaveLength(1);
+    expect(regions[0]).toHaveAccessibleName("People");
+    expect(regions[0]).toHaveAttribute("tabindex", "0");
+    expect(regions[0]).toHaveClass("overflow-auto");
+  });
+});

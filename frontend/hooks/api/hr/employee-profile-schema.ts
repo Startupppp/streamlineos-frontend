@@ -19,10 +19,47 @@ export const inviteLinkContract = z.object({
 
 export type InviteLink = z.infer<typeof inviteLinkContract>;
 
+const managerResolutionContract = z.enum(["SELECTED", "IN_FILE", "FALLBACK_CONFIGURED", "FALLBACK_UPLOADER"]);
+
+/** Addendum 2: kept unwrapped (it carries `success`). `resolution` only with hr:employees:view. */
 export const onboardEmployeeResponseContract = z.object({
   success: z.boolean(),
   userId: z.string(),
   invite: inviteDeliveryContract,
+  primaryManager: z
+    .object({ userId: z.string(), name: z.string(), resolution: managerResolutionContract.optional() })
+    .nullable()
+    .optional(),
+});
+
+const onboardingPrimaryManagerContract = z.object({
+  userId: z.string().nullable(),
+  name: z.string(),
+  email: z.string(),
+  resolution: managerResolutionContract,
+});
+
+const bulkOnboardRowStatusContract = z.enum(["READY", "WARNING", "ERROR", "SKIPPED"]);
+
+export const bulkOnboardPreviewContract = z.object({
+  rows: z.array(
+    z.object({
+      row: z.number().int(),
+      email: z.string(),
+      status: bulkOnboardRowStatusContract,
+      codes: z.array(z.string()),
+      messages: z.array(z.string()),
+      primaryManager: onboardingPrimaryManagerContract.nullable(),
+      secondaryManagers: z.array(z.object({ name: z.string(), email: z.string() })),
+      dependsOnRow: z.number().int().nullable(),
+    }),
+  ),
+  counts: z.object({
+    ready: z.number().int(),
+    warning: z.number().int(),
+    error: z.number().int(),
+    skipped: z.number().int(),
+  }),
 });
 
 export const resendEmployeeInviteResponseContract = z.object({
@@ -30,16 +67,24 @@ export const resendEmployeeInviteResponseContract = z.object({
   invite: inviteDeliveryContract,
 });
 
+/**
+ * Addendum 2 names the commit statuses CREATED | FAILED | SKIPPED; the DTO reuses
+ * the preview's READY | WARNING | ERROR | SKIPPED. Both are accepted.
+ */
 export const bulkOnboardResultContract = z.object({
   total: z.number().int(),
   created: z.number().int(),
   failed: z.number().int(),
+  skipped: z.number().int(),
   results: z.array(z.object({
     row: z.number().int(),
     email: z.string(),
     success: z.boolean(),
     userId: z.string().optional(),
     error: z.string().optional(),
+    status: z.enum(["READY", "WARNING", "ERROR", "SKIPPED", "CREATED", "FAILED"]),
+    codes: z.array(z.string()),
+    primaryManager: onboardingPrimaryManagerContract.nullable(),
   })),
 });
 

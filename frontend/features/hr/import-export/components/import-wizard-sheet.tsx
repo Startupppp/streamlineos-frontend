@@ -11,12 +11,8 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useCreateImportJob,
   useCommitImportJob,
@@ -24,6 +20,8 @@ import {
   type HrImportJob,
 } from "@/hooks/api/hr/import-export";
 import { ImportResultSummary } from "@/features/hr/import-export/components/import-result-summary";
+import { parseCsv } from "./import-csv";
+import { ImportPreviewStep, ImportUploadStep, ImportValidateStep, ImportWizardStepIndicator } from "./import-wizard-steps";
 
 interface ImportWizardSheetProps {
   open: boolean;
@@ -33,49 +31,8 @@ interface ImportWizardSheetProps {
   columns: string[];
 }
 
-const STEPS = [1, 2, 3] as const;
-// Step 4 is the result of a commit, after the three the person walks through.
-type Step = (typeof STEPS)[number] | 4;
-
-function splitCsvLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (ch === "," && !inQuotes) {
-      result.push(current);
-      current = "";
-    } else {
-      current += ch;
-    }
-  }
-  result.push(current);
-  return result;
-}
-
-function parseCsv(raw: string): Record<string, string>[] {
-  const lines = raw.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length < 2) return [];
-  const headers = splitCsvLine(lines[0]).map((h) => h.trim());
-  const rows: Record<string, string>[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cells = splitCsvLine(lines[i]);
-    const row: Record<string, string> = {};
-    headers.forEach((h, idx) => {
-      row[h] = cells[idx]?.trim() ?? "";
-    });
-    rows.push(row);
-  }
-  return rows;
-}
+// Steps 1-3 are upload, preview and validate; 4 is the result of a commit.
+type Step = 1 | 2 | 3 | 4;
 
 export function ImportWizardSheet({
   open,
@@ -141,7 +98,7 @@ export function ImportWizardSheet({
       {
         entity,
         fileName,
-        rows: parsedRows as Record<string, unknown>[],
+        rows: parsedRows,
       },
       {
         onSuccess: (result) => {
@@ -175,160 +132,29 @@ export function ImportWizardSheet({
   const handleBackToUpload = useCallback(() => setStep(1), []);
   const handleBackToPreview = useCallback(() => setStep(2), []);
 
-  type PreviewRow = { [key: string]: string | number } & { _rowIdx: number };
-
-  const previewHeaders = parsedRows.length > 0 ? Object.keys(parsedRows[0]) : [];
-  const previewRows: PreviewRow[] = parsedRows.slice(0, 5).map((row, i) => ({ ...row, _rowIdx: i }));
-
-  const previewColumns: DataTableColumn<PreviewRow>[] =
-    previewHeaders.map((h) => ({
-      key: h,
-      header: h,
-      cell: (row) => String(row[h] ?? ""),
-    }));
-
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
           <SheetTitle>Import {entityLabel}</SheetTitle>
-          <div className="flex items-center gap-2 mt-1">
-            {STEPS.map((s) => (
-              <div key={s} className="flex items-center gap-1.5">
-                <div
-                  className={cn(
-                    "h-5 w-5 rounded-full text-micro font-semibold flex items-center justify-center",
-                    step === s
-                      ? "bg-primary text-primary-foreground"
-                      : step > s
-                        ? "bg-status-success-fill text-white"
-                        : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {s}
-                </div>
-                <span
-                  className={cn(
-                    "text-xs",
-                    step === s ? "text-foreground font-medium" : "text-muted-foreground",
-                  )}
-                >
-                  {s === 1 ? "Upload" : s === 2 ? "Preview" : "Validate"}
-                </span>
-                {s < 3 && <div className="h-px w-4 bg-border" />}
-              </div>
-            ))}
-          </div>
+          <ImportWizardStepIndicator step={step} />
         </SheetHeader>
 
         <SheetBody className="space-y-4 px-6 py-4">
-          {step === 1 && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Upload a CSV file with the following columns:
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {columns.map((col) => (
-                  <Badge key={col} variant="secondary" className="font-mono text-xs">
-                    {col}
-                  </Badge>
-                ))}
-              </div>
-              {entity === "document_metadata" ? (
-                <p className="text-xs text-muted-foreground">
-                  The employee email on each row must be the work email of an employee who already exists and has an account. A row that matches nobody fails when you commit, with the reason, and nothing is stored for it.
-                </p>
-              ) : null}
-              <button
-                type="button"
-                onClick={handleChooseFile}
-                className="w-full rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring p-8 flex flex-col items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-              >
-                <Upload className="h-6 w-6" />
-                <span className="font-medium">Click to choose a CSV file</span>
-                <span className="text-xs">.csv files only</span>
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,text/csv"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              {parseError && (
-                <p className="text-sm text-destructive flex items-center gap-1.5">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  {parseError}
-                </p>
-              )}
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{fileName}</span>
-                <Badge variant="secondary">{parsedRows.length} rows</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Showing first 5 rows. Verify the data looks correct before validating.
-              </p>
-              <DataTable
-                data={previewRows}
-                columns={previewColumns}
-                getRowKey={(row) => row._rowIdx}
-                className="max-h-64 overflow-auto"
-              />
-            </div>
-          )}
-
-          {step === 4 && job && <ImportResultSummary job={job} entityLabel={entityLabel} />}
-
-          {step === 3 && job && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-status-success-rule bg-status-success-surface p-3">
-                  <div className="flex items-center gap-1.5 text-status-success-ink mb-0.5">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span className="text-xs font-medium">Valid rows</span>
-                  </div>
-                  <p className="text-2xl font-semibold text-status-success-ink">{job.validRows}</p>
-                </div>
-                <div className="rounded-lg border border-status-danger-rule bg-status-danger-surface p-3">
-                  <div className="flex items-center gap-1.5 text-status-danger-ink mb-0.5">
-                    <AlertCircle className="h-4 w-4" />
-                    <span className="text-xs font-medium">Error rows</span>
-                  </div>
-                  <p className="text-2xl font-semibold text-status-danger-ink">{job.errorRows}</p>
-                </div>
-              </div>
-
-              {job.errors && job.errors.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Errors (first {Math.min(job.errors.length, 5)} of {job.errors.length})
-                  </p>
-                  {job.errors.slice(0, 5).map((err, idx) => (
-                    <div
-                      key={idx}
-                      className="rounded-md border border-status-danger-rule bg-status-danger-surface px-3 py-2 text-xs text-status-danger-ink"
-                    >
-                      <span className="font-medium">Row {err.row}</span>
-                      {err.field && <span className="text-status-danger-ink"> · {err.field}</span>}
-                      {" — "}
-                      {err.message}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {job.validRows === 0 && (
-                <p className="text-sm text-destructive">
-                  No valid rows to commit. Fix the errors and try again.
-                </p>
-              )}
-            </div>
-          )}
+          {step === 1 ? (
+            <ImportUploadStep entity={entity} columns={columns} parseError={parseError} onChooseFile={handleChooseFile} />
+          ) : null}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleFileChange}
+            aria-label={`Choose a CSV file of ${entityLabel}`}
+          />
+          {step === 2 ? <ImportPreviewStep fileName={fileName} rows={parsedRows} /> : null}
+          {step === 3 && job ? <ImportValidateStep job={job} /> : null}
+          {step === 4 && job ? <ImportResultSummary job={job} entityLabel={entityLabel} /> : null}
         </SheetBody>
 
         <SheetFooter className="flex shrink-0 gap-2 border-t border-border bg-muted/30 px-6 py-4">

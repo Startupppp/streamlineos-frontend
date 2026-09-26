@@ -31,6 +31,7 @@ const SETTINGS_OVERVIEW_PERMISSIONS: PermissionKey[] = [
   "hr:forms:view",
   "hr:custom-fields:manage",
   "hr:automations:view",
+  "hr:reporting-lines:override",
 ];
 
 const TABS: {
@@ -41,6 +42,7 @@ const TABS: {
 }[] = [
   { label: "Overview", href: "/hr/settings", permission: SETTINGS_OVERVIEW_PERMISSIONS },
   { label: "Policies", href: "/hr/settings/policies", permission: "hr:policies:view" },
+  { label: "Reporting managers", href: "/hr/settings/reporting-managers", permission: "hr:reporting-lines:manage" },
   { label: "Workflows", href: "/hr/settings/workflows", permission: "hr:workflows:view", advanced: true },
   { label: "Automations", href: "/hr/settings/automations", permission: "hr:automations:view", advanced: true },
   { label: "Templates", href: "/hr/settings/templates", permission: "hr:templates:view" },
