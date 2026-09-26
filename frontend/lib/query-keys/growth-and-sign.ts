@@ -197,12 +197,6 @@ export const growthAndSignQueryKeys = {
     report: () => [...base, "crm", "data-quality", "report"] as const,
   },
 
-  aiSummaries: {
-    all: [...base, "aiSummaries"] as const,
-    latest: (entityType: string, entityId: string) =>
-      [...base, "aiSummaries", entityType, entityId] as const,
-  },
-
   meetingsAi: {
     all: [...base, "ai", "meetings"] as const,
   },
