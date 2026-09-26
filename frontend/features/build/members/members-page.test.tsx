@@ -162,3 +162,53 @@ describe("MembersPage — access is three-valued, not a boolean", () => {
     expect(screen.queryByTestId("empty-state")).toBeNull();
   });
 });
+
+describe("MembersPage — error state (BLD-X-FE-ACCESS-010)", () => {
+  it("renders error state when the members fetch fails — not an empty or loading state", () => {
+    mockUseAccess.mockReturnValue(ACCESS_GRANTED);
+    mockUseCan.mockReturnValue(true);
+    mockUseBuildMembers.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("fetch failed"),
+      refetch: jest.fn(),
+    });
+
+    render(<MembersPage />);
+
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
+  });
+
+  it("shows the data table when members load — confirming the error test is paired with a positive", () => {
+    mockUseAccess.mockReturnValue(ACCESS_GRANTED);
+    mockUseCan.mockReturnValue(true);
+    mockUseBuildMembers.mockReturnValue({
+      data: {
+        data: [
+          {
+            id: "m1",
+            userId: "u1",
+            role: "MEMBER",
+            email: "test@example.com",
+            firstName: "Test",
+            lastName: "User",
+            image: null,
+          },
+        ],
+        pagination: { hasMore: false, nextCursor: null },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<MembersPage />);
+
+    expect(screen.getByTestId("data-table")).toBeInTheDocument();
+    expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  });
+});

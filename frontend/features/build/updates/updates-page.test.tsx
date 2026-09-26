@@ -37,9 +37,10 @@ jest.mock("next/link", () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: React.ReactNode; title?: string }) => (
+  PageWrapper: ({ children, title, actions }: { children: React.ReactNode; title?: string; actions?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {actions ? <div data-testid="page-actions">{actions}</div> : null}
       {children}
     </div>
   ),
@@ -198,6 +199,51 @@ it("renders the plan upgrade link the backend sent with a 402 MODULE_NOT_ENABLED
   render(<UpdatesPage projectId={1} />);
   expect(screen.queryByText("Retry")).not.toBeInTheDocument();
   expect(screen.getByRole("link", { name: /view plans/i })).toHaveAttribute("href", "/settings/billing");
+});
+
+describe("update cards — core fields and action visibility", () => {
+  const UPDATE_WITH_FIELDS = {
+    id: 1,
+    orgId: "org-1",
+    projectId: 1,
+    authorMembershipId: 7,
+    body: "Field test body.",
+    status: "published",
+    audience: "client",
+    createdAt: new Date(0).toISOString(),
+    updatedAt: new Date(0).toISOString(),
+    deletedAt: null,
+  };
+
+  it("renders the status badge text from the update row so a published update shows its publication state", () => {
+    mockUseProjectUpdates.mockReturnValue(baseQueryResult({ data: [UPDATE_WITH_FIELDS] }));
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("published")).toBeInTheDocument();
+  });
+
+  it("renders the audience badge text from the update row so client-audience updates are visually labelled", () => {
+    mockUseProjectUpdates.mockReturnValue(baseQueryResult({ data: [UPDATE_WITH_FIELDS] }));
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("client")).toBeInTheDocument();
+  });
+
+  it("shows the Post Update button when canManage is true so creating updates is reachable — pairs the hides-when-false test", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectUpdates.mockReturnValue(baseQueryResult({ data: [] }));
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByRole("button", { name: /post update/i })).toBeInTheDocument();
+  });
+
+  it("shows the Delete button on a card when canManage is true — pairs the hides-when-false test", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({
+        data: [UPDATE_WITH_FIELDS],
+      }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
+  });
 });
 
 describe("URL-backed filter state — authorId, from, to wired to useProjectUpdates", () => {

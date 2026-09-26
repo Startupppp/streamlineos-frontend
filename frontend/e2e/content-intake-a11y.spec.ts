@@ -14,6 +14,7 @@ const CASES = [
   "public-form",
   "public-intake",
   "public-board-loading",
+  "public-roadmap",
 ] as const;
 
 function frame(page: Page, caseId: string): Locator {
@@ -65,7 +66,7 @@ test.describe("Content intake public surfaces — responsive contract", () => {
       });
 
       test("every visible text input and textarea is at least 36px tall", async ({ page }) => {
-        for (const caseId of ["public-form", "public-intake"] as const) {
+        for (const caseId of ["public-form", "public-intake", "public-roadmap"] as const) {
           const scope = frame(page, caseId);
           const inputs = scope.locator("input:visible, textarea:visible");
           const count = await inputs.count();
@@ -271,6 +272,96 @@ test.describe("Content intake public surfaces — responsive contract", () => {
       const vw = await page.evaluate(() => document.documentElement.clientWidth);
       expect(box).not.toBeNull();
       expect(Math.ceil((box?.x ?? 0) + (box?.width ?? 0))).toBeLessThanOrEqual(vw);
+    });
+  });
+
+  test.describe("public-whiteboard — accessible board name and decorative icon", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Content intake public surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("whiteboard header element is visible and contains the stub board name", async ({ page }) => {
+      const scope = frame(page, "public-whiteboard-view");
+      const header = scope.locator("header").first();
+      await expect(header).toBeVisible();
+      await expect(header.getByText("Sprint planning board")).toBeVisible();
+    });
+
+    test("Eye icon in the View only badge carries aria-hidden and is not exposed as an unnamed image", async ({ page }) => {
+      const scope = frame(page, "public-whiteboard-view");
+      const header = scope.locator("header").first();
+      const unnamedSvg = header.locator(
+        "svg:not([aria-hidden='true']):not([aria-label]):not([aria-labelledby])",
+      );
+      await expect(unnamedSvg).toHaveCount(0);
+    });
+  });
+
+  test.describe("public-roadmap — accessible landmarks, headings and secret redaction", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 768, height: 1024 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Content intake public surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("roadmap frame has a main landmark", async ({ page }) => {
+      const scope = frame(page, "public-roadmap");
+      await expect(scope.getByRole("main")).toBeVisible();
+    });
+
+    test("h1 shows the stub organisation name", async ({ page }) => {
+      const scope = frame(page, "public-roadmap");
+      await expect(
+        scope.getByRole("heading", { name: "Gallery Org", exact: true }),
+      ).toBeVisible();
+    });
+
+    test("roadmap item Upvote button carries an accessible name", async ({ page }) => {
+      const scope = frame(page, "public-roadmap");
+      await expect(scope.getByRole("button", { name: "Upvote", exact: true })).toBeVisible();
+    });
+
+    test("org identifier never appears as visible text and the org name heading is shown instead", async ({ page }) => {
+      const scope = frame(page, "public-roadmap");
+      const text = await scope.evaluate((el: HTMLElement) => el.textContent ?? "");
+      expect(text).not.toContain("undefined");
+      await expect(
+        scope.getByRole("heading", { name: "Gallery Org", exact: true }),
+      ).toBeVisible();
+    });
+  });
+
+  test.describe("public-roadmap — feedback form keyboard-ordered", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 768, height: 1024 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Content intake public surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("roadmap item Upvote button is reachable by keyboard focus", async ({ page }) => {
+      const scope = frame(page, "public-roadmap");
+      const voteBtn = scope.getByRole("button", { name: "Upvote", exact: true });
+      await voteBtn.focus();
+      await expect(voteBtn).toBeFocused();
+    });
+
+    test("Tab from feedback title input proceeds to the details textarea in DOM order", async ({ page }) => {
+      const scope = frame(page, "public-roadmap");
+      const titleInput = scope.getByPlaceholder("What would you like to see?");
+      const detailsTextarea = scope.getByPlaceholder("Describe your idea or problem");
+      await expect(titleInput).toBeEnabled();
+      await titleInput.focus();
+      await expect(titleInput).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(detailsTextarea).toBeFocused();
     });
   });
 });

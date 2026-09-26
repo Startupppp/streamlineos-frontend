@@ -47,7 +47,7 @@ Deep-linkable query parameters: `source`, `status`, `ownerId`, `age`, `q`, `sort
 ## Bulk, keyboard, and context actions
 
 - Child collections support selection only when a real repeated operation exists; the primary record itself is never selected.
-- Keyboard: `/` search, `c` create in current scope, `j/k` move, `Enter` open, `e` edit, `Esc` close/clear, `?` shortcut help. Shortcuts do not fire inside text inputs/editors.
+- Keyboard: `Tab` follows visual order and `Esc` closes overlays or clears selection, on every page. Where the page has the target: `/` focuses search, `c` creates in current scope, `j/k` moves through the list, `Enter` opens the focused row, `e` edits it, `?` opens shortcut help. A shortcut whose target does not exist on this page is not required — see CCG-4. Shortcuts do not fire inside text inputs/editors.
 - Context menu: open, copy link/key, edit, move/link, and archive/delete where authorized. It mirrors visible commands and never hides the only path to an action.
 
 ## States

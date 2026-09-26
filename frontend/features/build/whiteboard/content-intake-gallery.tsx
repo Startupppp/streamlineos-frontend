@@ -8,12 +8,34 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { PublicBoardView } from "@/features/build/whiteboard/public-board-view";
 import { PublicFormView } from "@/features/build/forms/public-form-view";
 import { PublicIntakeView } from "@/features/build/intake/public-intake-view";
+import PublicRoadmapPage from "@/app/(public)/roadmap/[orgId]/page";
 
 const VIEW_TOKEN = "gallery-view-stub";
 const EDIT_TOKEN = "gallery-edit-stub";
 const FORM_TOKEN = "gallery-form-stub";
 const INTAKE_PROJECT_ID = "gallery-intake-stub";
 const BOARD_LOADING_TOKEN = "gallery-board-loading-stub";
+
+const STUB_ROADMAP_BOARD = {
+  orgName: "Gallery Org",
+  roadmap: {
+    planned: [
+      {
+        id: 1,
+        title: "Dark mode support",
+        description: null,
+        status: "planned" as const,
+        category: null,
+        targetQuarter: "Q4 2026",
+        votes: 24,
+      },
+    ],
+    in_progress: [],
+    completed: [],
+  },
+  feedback: [],
+  changelog: [],
+};
 
 const STUB_VIEW_BOARD = {
   name: "Sprint planning board",
@@ -116,6 +138,11 @@ function useGalleryQueryClient() {
     client.setQueryData(
       buildWorkQueryKeys.projects.publicForms.projectIntakeForm(INTAKE_PROJECT_ID),
       null,
+    );
+
+    client.setQueryData(
+      ["streamlineos", "roadmap", "publicBoard", undefined] as const,
+      STUB_ROADMAP_BOARD,
     );
 
     return client;
@@ -221,6 +248,14 @@ export function ContentIntakeGallery() {
           height="h-64"
         >
           <PublicBoardLoadingFrame />
+        </CaseFrame>
+
+        <CaseFrame
+          id="public-roadmap"
+          title="Public roadmap"
+          height="h-[48rem]"
+        >
+          <PublicRoadmapPage />
         </CaseFrame>
       </div>
     </QueryClientProvider>

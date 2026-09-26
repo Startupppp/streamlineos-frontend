@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ProjectsGitIntegrationSettings } from "./git-integration-settings";
 import type { CreatedGitConnection } from "@/hooks/api/git-integration";
 
@@ -201,28 +202,31 @@ describe("ProjectsGitIntegrationSettings — section URL param (BLD-X-FE-SETTING
     );
   });
 
-  it("calls router.replace with section=agent when the agent tab is clicked", () => {
+  it("calls router.replace with section=agent when the agent tab is clicked", async () => {
+    const user = userEvent.setup();
     mockData = [];
     render(
       <ProjectsGitIntegrationSettings footer={<div data-testid="agent-content" />} />,
     );
     const agentTab = screen.getByRole("tab", { name: /agent access/i });
-    agentTab.click();
+    await user.click(agentTab);
     expect(mockRouterReplace).toHaveBeenCalledWith(
       expect.stringContaining("section=agent"),
       expect.any(Object),
     );
   });
 
-  it("calls router.replace without a section param when switching back to connections", () => {
+  it("calls router.replace without a section param when switching back to connections", async () => {
+    const user = userEvent.setup();
     mockData = [];
     mockSearchParamsValue = new URLSearchParams("section=agent");
     render(
       <ProjectsGitIntegrationSettings footer={<div data-testid="agent-content" />} />,
     );
     const connectionsTab = screen.getByRole("tab", { name: /connections/i });
-    connectionsTab.click();
-    const callArg = mockRouterReplace.mock.calls[0]?.[0] as string;
+    await user.click(connectionsTab);
+    const callArg = mockRouterReplace.mock.calls[0]?.[0] as string | undefined;
+    expect(callArg).toBeDefined();
     expect(callArg).not.toContain("section=");
   });
 });
@@ -251,19 +255,18 @@ describe("ProjectsGitIntegrationSettings — keyboard shortcut wiring (BLD-X-FE-
   });
 });
 
-describe("ProjectsGitIntegrationSettings — RequireModule denial (BLD-X-FE-SETTINGS-INT-017)", () => {
-  it("hides the connection list when the build module is disabled — RequireModule gates the entire surface", () => {
+describe("ProjectsGitIntegrationSettings — RequireModule gate (BLD-X-FE-SETTINGS-INT-017)", () => {
+  it("wraps the integrations surface in RequireModule for the build module key", () => {
+    mockData = [];
+    render(<ProjectsGitIntegrationSettings />);
     const { RequireModule } = jest.requireMock(
       "@/components/auth/require-module",
     ) as { RequireModule: jest.Mock };
-    RequireModule.mockImplementationOnce(() => null);
-
-    mockData = [BASE_CONNECTION];
-    render(<ProjectsGitIntegrationSettings />);
-    expect(screen.queryByTestId("connection-row")).not.toBeInTheDocument();
+    const firstCallProps = (RequireModule.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
+    expect(firstCallProps["module"]).toBe("build");
   });
 
-  it("shows connection rows when the build module is enabled — confirming the denial test is paired with a positive", () => {
+  it("renders connections when the build module is enabled — RequireModule passes through children in the default mock", () => {
     mockData = [BASE_CONNECTION];
     render(<ProjectsGitIntegrationSettings />);
     expect(screen.getByTestId("connection-row")).toBeInTheDocument();

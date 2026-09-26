@@ -106,13 +106,33 @@ export function DataTable<T>({
     if (selection) {
       defs.push({
         id: "__select__",
-        header: ({ table }) => (
-          <Checkbox
-            checked={table.getIsAllPageRowsSelected()}
-            onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
-            aria-label="Select all rows on this page"
-          />
-        ),
+        header: ({ table }) => {
+          const pageRowIds = table.getRowModel().rows.map((r) => r.id);
+          const allSelected =
+            pageRowIds.length > 0 &&
+            pageRowIds.every((id) => selection.selected.has(id));
+          function handleSelectAllChange(v: boolean | "indeterminate") {
+            if (v) {
+              selection.onChange(
+                new Set<string | number>([
+                  ...selection.selected,
+                  ...pageRowIds,
+                ]),
+              );
+            } else {
+              const next = new Set<string | number>(selection.selected);
+              for (const id of pageRowIds) next.delete(id);
+              selection.onChange(next);
+            }
+          }
+          return (
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={handleSelectAllChange}
+              aria-label="Select all rows on this page"
+            />
+          );
+        },
         cell: ({ row }) =>
           row.getCanSelect() ? (
             <Checkbox

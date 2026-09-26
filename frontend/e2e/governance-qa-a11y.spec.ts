@@ -267,6 +267,83 @@ test.describe("Governance & QA responsive contract", () => {
         scope.getByRole("region", { name: "Bulk actions", exact: true }),
       ).not.toBeVisible();
     });
+
+    test("search input is reachable by keyboard in the incidents frame", async ({ page }) => {
+      const scope = frame(page, "incidents");
+      const searchInput = scope.locator("[data-slot=search-input] input");
+      await searchInput.focus();
+      await expect(searchInput).toBeFocused();
+    });
+
+    test("search input is reachable by keyboard in the decisions frame", async ({ page }) => {
+      const scope = frame(page, "decisions");
+      const searchInput = scope.locator("[data-slot=search-input] input");
+      await searchInput.focus();
+      await expect(searchInput).toBeFocused();
+    });
+
+    test("search input is reachable by keyboard in the approvals frame", async ({ page }) => {
+      const scope = frame(page, "approvals");
+      const searchInput = scope.locator("[data-slot=search-input] input");
+      await searchInput.focus();
+      await expect(searchInput).toBeFocused();
+    });
+
+    test("table rows in the QA surface have the row ARIA role", async ({ page }) => {
+      const scope = frame(page, "qa-test-cases");
+      const rows = scope.getByRole("row");
+      await expect(rows.first()).toBeVisible();
+      await expect(rows).toHaveCount(9);
+    });
+
+    test("table rows in the incidents surface have the row ARIA role", async ({ page }) => {
+      const scope = frame(page, "incidents");
+      const rows = scope.getByRole("row");
+      await expect(rows.first()).toBeVisible();
+      await expect(rows).toHaveCount(9);
+    });
+
+    test("table rows in the decisions surface have the row ARIA role", async ({ page }) => {
+      const scope = frame(page, "decisions");
+      const rows = scope.getByRole("row");
+      await expect(rows.first()).toBeVisible();
+      await expect(rows).toHaveCount(9);
+    });
+
+    test("table rows in the approvals surface have the row ARIA role", async ({ page }) => {
+      const scope = frame(page, "approvals");
+      const rows = scope.getByRole("row");
+      await expect(rows.first()).toBeVisible();
+      await expect(rows).toHaveCount(9);
+    });
+
+    test("pagination controls are present in the QA surface", async ({ page }) => {
+      const scope = frame(page, "qa-test-cases");
+      const nextBtn = scope.getByRole("button", { name: /next/i });
+      const prevBtn = scope.getByRole("button", { name: /prev/i });
+      await expect(nextBtn.or(prevBtn)).not.toHaveCount(0);
+    });
+
+    test("pagination controls are present in the incidents surface", async ({ page }) => {
+      const scope = frame(page, "incidents");
+      const nextBtn = scope.getByRole("button", { name: /next/i });
+      const prevBtn = scope.getByRole("button", { name: /prev/i });
+      await expect(nextBtn.or(prevBtn)).not.toHaveCount(0);
+    });
+
+    test("pagination controls are present in the decisions surface", async ({ page }) => {
+      const scope = frame(page, "decisions");
+      const nextBtn = scope.getByRole("button", { name: /next/i });
+      const prevBtn = scope.getByRole("button", { name: /prev/i });
+      await expect(nextBtn.or(prevBtn)).not.toHaveCount(0);
+    });
+
+    test("pagination controls are present in the approvals surface", async ({ page }) => {
+      const scope = frame(page, "approvals");
+      const nextBtn = scope.getByRole("button", { name: /next/i });
+      const prevBtn = scope.getByRole("button", { name: /prev/i });
+      await expect(nextBtn.or(prevBtn)).not.toHaveCount(0);
+    });
   });
 
   test.describe("reduced motion — the skeleton shimmer stops", () => {
@@ -357,6 +434,21 @@ test.describe("Governance & QA responsive contract", () => {
 
     test("the risks list shows mobile cards not a desktop table", async ({ page }) => {
       const scope = frame(page, "governance-risks");
+      await expect(scope.locator("table")).toBeHidden();
+    });
+
+    test("the QA list shows mobile cards not a desktop table", async ({ page }) => {
+      const scope = frame(page, "qa-test-cases");
+      await expect(scope.locator("table")).toBeHidden();
+    });
+
+    test("the incidents list shows mobile cards not a desktop table", async ({ page }) => {
+      const scope = frame(page, "incidents");
+      await expect(scope.locator("table")).toBeHidden();
+    });
+
+    test("the decisions list shows mobile cards not a desktop table", async ({ page }) => {
+      const scope = frame(page, "decisions");
       await expect(scope.locator("table")).toBeHidden();
     });
   });

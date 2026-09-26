@@ -209,3 +209,90 @@ Two traps already paid for on this criterion, both of which made a spec prove le
 "Decided" and needed `exact: true` at all 22 call sites; and a `getByText` for a stat label matched
 the identically-worded status badge beside it, which needs scoping to `[data-slot="stat-card-grid"]`
 rather than `.first()`.
+
+---
+
+## CCG-4 — C3's keyboard clause is templated, and on most pages it names shortcuts with no target
+
+**Blocks:** C3 on the pages where the named shortcuts have nothing to act on.
+
+**Measured 2026-09-26.** Two variants of the keyboard line exist across the 83 specs, and the count
+is the finding:
+
+| Variant | Pages |
+|---|---|
+| ``` `/` search, `c` create in current scope, `j/k` move, `Enter` open, `e` edit, `Esc` close/clear, `?` shortcut help ``` | **74** |
+| ``` `Tab` follows visual order, `Enter` activates the focused primary action, `Esc` closes overlays, and `/` focuses search only when search exists ``` | **9** |
+
+The 74 are byte-identical to each other. They are stated as absolutes on pages that have no list to
+move through, no search box to focus and nothing to create — `10-project-settings-retention.md` is a
+per-project singleton form and carries the same seven shortcuts as `10-inbox.md`.
+
+The 9 are the public/portal pages, and they carry the clause the 74 are missing: **"only when search
+exists"**. The same document already knows how to write this conditionally.
+
+The spec is internally inconsistent in the same way one line higher up. The bulk-actions line *is*
+conditional on all 74 — "only where a real repeated operation exists", "Child collections support
+selection only when a real repeated operation exists" — so the authors applied a reachability
+condition to bulk actions and not to keyboard.
+
+**Why this blocks C3 rather than merely annoying:** C3 reads "Every core field, action, overlay, query
+parameter, bulk action, shortcut, state, and permission above is implemented and tested." Read
+literally, a read-only notification inbox must implement `c` create and `e` edit, and a retention
+settings form must implement `j/k` move. Implementing them means inventing a target, which is worse
+than leaving them out — it puts a keystroke on a page that does something arbitrary. Four lanes
+independently reported the same blocker this session, on `10-inbox.md`, `10-command-center.md`,
+`10-project.md`, `10-project-issues.md` and `10-project-workload.md`.
+
+**What is genuinely implemented**, so this is not a story about missing work: `use-build-list-keyboard.ts`
+handles `/`, `c`, `j/k`, `Enter`, `e`, `Esc` and `?`, and `features/build/shared/shortcut-help-dialog.tsx`
+is a reusable `?` surface. The hook is wired where the page has targets. The gap is between the spec's
+absolute phrasing and the pages where a target cannot exist.
+
+**Recommended resolution — not yet applied, it needs the product owner.** Import the conditional
+phrasing the 9 public pages already use into the other 74, so a shortcut is required exactly where its
+target exists and `Tab` order plus `Esc` are required everywhere. That is not a scope reduction: it
+adopts the stricter, better-specified variant already present in this document, and it keeps every
+shortcut demanded on every page that has a list, a search box or a create action.
+
+Until that is decided, do **not** tick C3 on a page whose only outstanding items are targetless
+shortcuts, and do **not** invent a target to close the box. Record which items are targetless in the
+page's lane status doc so the decision can be applied mechanically afterwards.
+
+### Decision applied 2026-09-26 — the conditional phrasing is now in all 74 specs
+
+The product owner chose to adopt the conditional variant. All 74 keyboard lines were rewritten to:
+
+> `Tab` follows visual order and `Esc` closes overlays or clears selection, on every page. Where the
+> page has the target: `/` focuses search, `c` creates in current scope, `j/k` moves through the list,
+> `Enter` opens the focused row, `e` edits it, `?` opens shortcut help. A shortcut whose target does
+> not exist on this page is not required — see CCG-4.
+
+`Tab` order and `Esc` are now unconditional on every page, which the old absolute list did not
+actually require. So this is stricter in one respect and narrower in six.
+
+**What this does not excuse.** "No target" means the page has no list, no search input and no create
+action — not that wiring one would be effort. A page with a `DataTable` has a list; a page with
+`SearchInput` has a search box. Check the component, not the lane report.
+
+---
+
+## CCG-5 is NOT a gap — "Offline state" is already implemented, and two lanes reported otherwise
+
+**Do not file an offline cross-cutting gap.** Two lanes this session reported the `Offline` state as
+"PWA-level infrastructure not implemented anywhere in the build module", and one of them rested a C3
+verdict on it. **Both were wrong.**
+
+`hooks/common/use-online-status.ts:22` exports `useOnlineStatus(): boolean`. It is consumed by at
+least eight build pages — `all-work-page.tsx:29,64`, `approvals-inbox-page.tsx`, `inbox-list.tsx`,
+`my-work-content.tsx`, `teams-list-page.tsx`, `build-templates-page.tsx`, `project-board-content.tsx` —
+and two suites exist for it specifically: `my-work/my-work-page-offline.test.tsx` and
+`inbox/inbox-offline-and-chat-gap.test.tsx`. `all-work-page.tsx:278` renders `title="You are offline"`.
+
+So the offline state has a working pattern in this repo and roughly a lane's worth of precedent. A
+page missing it has ordinary unfinished work, not a blocked dependency, and C3 stays open there until
+the hook is wired and tested.
+
+This entry exists because "it is not implemented anywhere" is the most expensive kind of wrong
+report: it converts a twenty-minute task into a permanent exemption. Verify an absence claim by
+grepping for the hook before repeating it.
