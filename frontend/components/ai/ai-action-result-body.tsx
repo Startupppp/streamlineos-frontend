@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiDraftCard } from "./ai-draft-card";
+import { AiAdvisoryNotice } from "./ai-advisory-notice";
 import { AiDraftText } from "./ai-draft-text";
 import { AiQuotaEmptyState } from "./ai-quota-empty-state";
 import { AiPermissionDenied } from "./ai-permission-denied";
@@ -21,6 +22,12 @@ import type { AiUsageMeta } from "./ai-usage-chip";
 
 export interface AiActionResult {
   text: string;
+  /**
+   * A caveat the reader must see beside the output — "this is an estimate, a
+   * human decides". Kept out of `text` so it renders as its own notice with the
+   * product's warning icon rather than as a glyph inside the draft (ticket 03).
+   */
+  advisory?: string;
   citations?: Citation[];
   confidence?: number;
   aiUsage?: AiUsageMeta | null;
@@ -172,11 +179,14 @@ export function AiActionResultBody({
 
   if (contentOnly) {
     const citations = state.result.citations;
-    if (!citations?.length) return <AiDraftText text={state.result.text} />;
+    const advisory = state.result.advisory;
+    if (!citations?.length && !advisory)
+      return <AiDraftText text={state.result.text} />;
     return (
       <div className="space-y-3">
         <AiDraftText text={state.result.text} />
-        <AiCitationChips citations={citations} />
+        {advisory ? <AiAdvisoryNotice advisory={advisory} /> : null}
+        {citations?.length ? <AiCitationChips citations={citations} /> : null}
       </div>
     );
   }
@@ -192,6 +202,9 @@ export function AiActionResultBody({
       className={compact ? "shadow-none" : undefined}
     >
       <AiDraftText text={state.result.text} />
+      {state.result.advisory ? (
+        <AiAdvisoryNotice advisory={state.result.advisory} className="mt-3" />
+      ) : null}
     </AiDraftCard>
   );
 }

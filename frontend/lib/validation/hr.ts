@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { USER_INVITE_ROLE_VALUES } from "@/lib/constants/user-invite-roles";
+import { normalizeNamePart } from "@/lib/person-display";
 
 function hasLetterOrDigit(value: string): boolean {
   return /[\p{L}\p{N}]/u.test(value);
@@ -96,18 +97,23 @@ function requireMonthlySalary(
 }
 
 export const onboardEmployeeInputSchema = z.object({
+  // Ticket 07: whitespace is normalised on the way in, so the review step and
+  // the payload show what will be stored. Letters, case and punctuation are
+  // never touched — "QA", "van der Berg" and "O'Brien" are legal names.
   firstName: z
     .string()
     .trim()
     .min(1, "First name is required")
     .max(80, "First name must be at most 80 characters")
-    .refine(hasLetterOrDigit, "First name must contain a letter or number"),
+    .refine(hasLetterOrDigit, "First name must contain a letter or number")
+    .transform(normalizeNamePart),
   lastName: z
     .string()
     .trim()
     .min(1, "Last name is required")
     .max(80, "Last name must be at most 80 characters")
-    .refine(hasLetterOrDigit, "Last name must contain a letter or number"),
+    .refine(hasLetterOrDigit, "Last name must contain a letter or number")
+    .transform(normalizeNamePart),
   email: z
     .string()
     .trim()

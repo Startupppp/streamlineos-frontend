@@ -10,7 +10,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
-import { optionalSignalRead } from "@/lib/query-error-policy";
+import { INLINE_READ_ERROR, optionalSignalRead } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
@@ -219,6 +219,10 @@ export function useEmployeeTimeline(
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor,
     enabled: hrEnabled && !!employmentId && canView,
     staleTime: 2 * 60_000,
+    // Ticket 02. The timeline tab draws its own error and retry through
+    // `usePageState`; on the provider default it never gets the chance, because
+    // the failure replaces the whole profile route first.
+    ...INLINE_READ_ERROR,
   });
 }
 

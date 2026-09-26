@@ -8,7 +8,7 @@ import {
   useInfiniteHrEmployees,
   useHrDepartments,
 } from "@/hooks/api/hr";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useFlushableDebouncedValue } from "@/hooks/common/use-debounce";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -37,6 +37,7 @@ import {
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { resolveImageUrl, cn } from "@/lib/utils";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { EmployeeListItem } from "@/types/hr";
 import { HrPanel, HrStatusBadge } from "@/features/hr/shared/hr-ui";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -64,16 +65,14 @@ function buildEmployeeListColumns(
       key: "employee",
       header: "Employee",
       cell: (emp) => {
-        const displayName =
-          emp.firstName && emp.lastName
-            ? `${emp.firstName} ${emp.lastName}`
-            : (emp.name ?? "—");
+        // Ticket 07: the same helper the card and the profile header use.
+        const displayName = getUserDisplayName(emp);
         return (
           <div className="flex items-center gap-3">
             <Avatar className="w-9 h-9 shrink-0 ring-2 ring-background shadow-sm">
               <AvatarImage src={resolveImageUrl(emp.image)} alt="" />
               <AvatarFallback className="bg-status-info-surface text-status-info-ink text-xs font-bold">
-                {displayName[0]?.toUpperCase()}
+                {getUserInitials(emp)}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
@@ -160,7 +159,10 @@ export function EmployeesListPage() {
     () => VIEW_MODES.find((candidate) => candidate === searchParams.get("view")) ?? "grid",
   );
 
-  const debouncedSearch = useDebouncedValue(search, 300);
+  // FE-87. One request per settled query, not per keystroke — and Enter flushes
+  // the pending value so an impatient search is immediate without a second
+  // source of truth for `q`.
+  const [debouncedSearch, flushSearch] = useFlushableDebouncedValue(search, 300);
   const { data: departments } = useHrDepartments();
   const deptList = departments as Department[] | undefined;
 
@@ -349,6 +351,7 @@ export function EmployeesListPage() {
           departments={deptList}
           hasFilters={hasFilters}
           onSearchChange={updateSearch}
+          onSearchSubmit={flushSearch}
           onDepartmentIdChange={handleDepartmentFilterChange}
           onStatusChange={handleStatusFilterChange}
           onClear={clearFilters}
