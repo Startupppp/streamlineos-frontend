@@ -143,3 +143,37 @@ The gallery covers the shared chrome for all pages listed above. What it cannot 
 - **Row keyboard navigation (j/k/Enter)** — same reason: hook wired at call site, not in gallery.
 
 C6 remains unticked on all 83 pages until a fresh serial drain confirms the new tests pass.
+
+---
+
+## Drain 2026-09-26 (second) — 44 passed, 0 failed, 0 skipped, EXIT=0
+
+The spec grew from 36 tests to 44 and now carries all six C6 check families. The two that were
+missing when this lane was first measured are present and passing:
+
+| Check | Describe | Line |
+|---|---|---|
+| keyboard | `keyboard — tab order at 1280 px` | 392 |
+| screen reader | `screen reader — roles and accessible names` | 444 |
+| reduced motion | paired `with reduce requested` / `with no preference` | 330 / 343 |
+| 375 px | `375 x 812` | 109 |
+| high density | `high-density desktop — 1920 × 1080 at scale 2` | 357 |
+
+The keyboard tests are not focus-only. They press `Tab` and assert `toBeFocused()` at each stop
+(Import → Export → New project → More actions → search input, then the three filter triggers in
+order), name every control with `exact: true`, and scope to `data-case-frame` / `data-filter-id`
+rather than `.first()`. The Escape test asserts the menu visible, then hidden, then focus returned
+to the trigger — so no half of it can pass while the surface is absent.
+
+Zero skips was verified before the pass count was read. The gallery lives under
+`app/(public)/design-system/`, so it cannot skip for missing `BACKEND_JWT_SECRET`.
+
+### This still ticks no page's C6 box
+
+The finding above in this same document stands: the gallery mounts the shared chrome, so its
+evidence covers the shared parts for any page composed from them. The page-specific portion — each
+page's own columns, filter ids, empty-state copy and permission gate — is not exercised here.
+
+**No C6 acceptance box was ticked from this run.** What closed is the cross-cutting gap that
+`build-list-responsive` was the largest green spec in the set while having neither a keyboard nor a
+screen-reader describe at all. It now has both, with real output behind them.

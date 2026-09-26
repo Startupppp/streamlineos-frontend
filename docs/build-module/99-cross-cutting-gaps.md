@@ -431,3 +431,59 @@ migration per table with its rollback.
 
 Until then this entry is the record. It does not block any acceptance box in the Build module — no box
 asserts RLS posture — which is precisely why it needed writing down somewhere that is not a box.
+
+## CCG-3 addendum — the second drain was stopped by host memory, and 9 of 10 specs are unmeasured
+
+Run 2026-09-26, serial, one worker per spec, output under `D:/agent-work/drain-2026-09-26b/`.
+
+| Spec | Result | Usable as evidence |
+|---|---|---|
+| `build-list-responsive` | 44 passed, 0 failed, 0 skipped, EXIT=0 | **yes** |
+| `content-intake-a11y` | aborted at test 1 of 51 | **no** |
+| `execution-core-a11y` | started, killed mid-run | no |
+| the remaining 7 | never started | no |
+
+### The content-intake failures are not defects
+
+The summary line reads `2 failed`, and that number must not be read as two broken tests. The first
+test failed inside `beforeEach` on `page.goto`:
+
+```
+Error: page.goto: net::ERR_ABORTED; maybe frame was detached?
+  - navigating to "http://localhost:3000/design-system/content-intake", waiting until "load"
+```
+
+and the run then ended with:
+
+```
+Error: worker process exited unexpectedly (code=3221225794, signal=null)
+```
+
+`3221225794` is `0xC0000142`, `STATUS_DLL_INIT_FAILED` — the Windows signature for a process that
+cannot initialise because the machine is out of committable memory, not a signal from the page under
+test. The browser never loaded the gallery, so nothing about content-intake was measured. The whole
+drain was then reaped by the harness for critical host memory pressure.
+
+This is the same class of trap as reading a skip as a pass: a non-zero exit with a plausible-looking
+failure count, where the cause is the host and the subject was never exercised. **A drain summary
+must be read together with the worker exit code**, and any run whose worker died is discarded rather
+than recorded.
+
+### Consequence for the 75 C6 boxes
+
+They stay open. One spec produced valid output, and that spec is the cross-cutting chrome gallery
+whose own lane document already establishes it cannot close a per-page box — the page-specific
+columns, filter ids, empty-state copy and permission gate are not exercised by it. So the drain
+produced real progress on the CCG-3 finding itself (`build-list-responsive` no longer lacks keyboard
+and screen-reader coverage; see `lanes/status/C6-build-list.md`) and **zero** ticks.
+
+### Before re-running
+
+1. The host needs memory. Nine concurrent `next dev` servers is already the reason this drain is
+   serial; the reap happened anyway, with ~59 node processes alive from concurrent sessions.
+2. Re-run all ten, not the eight that did not start. `content-intake-a11y` and
+   `execution-core-a11y` have no usable result, and a partial drain stitched from two hosts states
+   is not one measurement.
+3. Verify zero skips before reading any pass count, per the original CCG-3 method.
+4. Tick a C6 box only where the per-page matrix says the check genuinely runs against that page's
+   own surface.
