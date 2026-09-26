@@ -1,6 +1,10 @@
 "use client";
 
-import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -17,13 +21,12 @@ import {
   type VendorReturnReason,
   type VendorReturnStatus,
 } from "./returns-common";
-import {
-  vendorReturnContract,
-  vendorReturnPageContract,
-} from "./restored-surfaces-schema";
-
-const vendorReturnPageResponse = lazyContract<PaginatedResponse<VendorReturnSummary>>(() => Promise.resolve(vendorReturnPageContract as unknown as import("zod").ZodType<PaginatedResponse<VendorReturnSummary>>));
-const vendorReturnResponse = lazyContract<VendorReturnSummary>(() => Promise.resolve(vendorReturnContract as unknown as import("zod").ZodType<VendorReturnSummary>));
+const vendorReturnPageResponse = lazyContract(() =>
+  import("./restored-surfaces-schema").then((m) => m.vendorReturnPageContract),
+);
+const vendorReturnResponse = lazyContract(() =>
+  import("./restored-surfaces-schema").then((m) => m.vendorReturnContract),
+);
 
 export interface VendorReturnLine {
   id: number;
@@ -40,11 +43,7 @@ export interface VendorReturnSummary {
   id: number;
   returnNumber: string;
   vendorId: number;
-  /**
-   * Nested, because that is what the endpoint returns. The flat `vendorName`
-   * this used to declare existed on no response the API has ever sent, so the
-   * Vendor column rendered a dash for every row.
-   */
+
   vendor: { id: number; name: string } | null;
   poId: number | null;
   grnId: number | null;
@@ -77,7 +76,9 @@ export interface CreateVendorReturnInput {
 
 function invalidateVendorReturn(qc: QueryClient, returnId: number): void {
   void qc.invalidateQueries({ queryKey: queryKeys.returns.vendorList });
-  void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendorReturn(returnId) });
+  void qc.invalidateQueries({
+    queryKey: queryKeys.inventory.vendorReturn(returnId),
+  });
 }
 
 export function useVendorReturns(
@@ -130,10 +131,19 @@ export function useVendorReturn(returnId: number | null) {
 
 export function useCreateVendorReturn() {
   const qc = useQueryClient();
-  return useIdempotentMutation<VendorReturnSummary, Error, CreateVendorReturnInput>({
+  return useIdempotentMutation<
+    VendorReturnSummary,
+    Error,
+    CreateVendorReturnInput
+  >({
     mutationKey: ["inventory", "vendorReturns", "create"],
     mutationFn: (data, idempotencyKey) =>
-      apiClient.post<VendorReturnSummary>("/inventory/vendor-returns", data, { headers: { "Idempotency-Key": idempotencyKey } }, vendorReturnResponse),
+      apiClient.post<VendorReturnSummary>(
+        "/inventory/vendor-returns",
+        data,
+        { headers: { "Idempotency-Key": idempotencyKey } },
+        vendorReturnResponse,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.returns.vendorList });
     },
@@ -168,7 +178,9 @@ export function usePostVendorReturn() {
       ),
     onSuccess: (_, variables) => {
       invalidateVendorReturn(qc, variables.returnId);
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.inventory.stockLevels(),
+      });
     },
   });
 }

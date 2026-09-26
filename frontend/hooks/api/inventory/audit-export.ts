@@ -6,15 +6,15 @@ import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { lazyContract } from "@/lib/api-envelope";
-import {
-  auditExportJobContract,
-  auditExportPageContract,
-  auditExportVerificationContract,
-} from "./restored-surfaces-schema";
-
-const auditExportPageResponse = lazyContract<{ items: AuditExportJob[]; total: number; page: number; totalPages: number }>(() => Promise.resolve(auditExportPageContract as unknown as import("zod").ZodType<{ items: AuditExportJob[]; total: number; page: number; totalPages: number }>));
-const auditExportJobResponse = lazyContract<AuditExportJob>(() => Promise.resolve(auditExportJobContract as unknown as import("zod").ZodType<AuditExportJob>));
-const auditExportVerificationResponse = lazyContract<AuditExportVerification>(() => Promise.resolve(auditExportVerificationContract as unknown as import("zod").ZodType<AuditExportVerification>));
+const auditExportPageResponse = lazyContract(() =>
+  import("./restored-surfaces-schema").then((m) => m.auditExportPageContract),
+);
+const auditExportJobResponse = lazyContract(() =>
+  import("./restored-surfaces-schema").then((m) => m.auditExportJobContract),
+);
+const auditExportVerificationResponse = lazyContract(() =>
+  import("./restored-surfaces-schema").then((m) => m.auditExportVerificationContract),
+);
 
 /**
  * A checksummed evidence bundle of the inventory ledger.

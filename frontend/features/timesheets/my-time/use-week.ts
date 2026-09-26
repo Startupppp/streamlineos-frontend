@@ -18,8 +18,16 @@ export type WeekStartDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const DEFAULT_WEEK_START: WeekStartDay = 1;
 
 function asWeekStartDay(value: number): WeekStartDay | null {
-  if (!Number.isInteger(value) || value < 0 || value > 6) return null;
-  return value as WeekStartDay;
+  switch (value) {
+    case 0: return 0;
+    case 1: return 1;
+    case 2: return 2;
+    case 3: return 3;
+    case 4: return 4;
+    case 5: return 5;
+    case 6: return 6;
+    default: return null;
+  }
 }
 
 export function resolveWeekStart(

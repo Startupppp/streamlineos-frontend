@@ -39,9 +39,27 @@ interface WeekGridCellsInput {
   voidEntry: ReturnType<typeof useVoidTimesheetEntry>;
 }
 
+function isGridRow(value: unknown): value is GridRow {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "rowKey" in value &&
+    typeof value.rowKey === "string" &&
+    "projectId" in value &&
+    (value.projectId === null || typeof value.projectId === "number") &&
+    "ticketId" in value &&
+    (value.ticketId === null || typeof value.ticketId === "number") &&
+    "projectName" in value &&
+    typeof value.projectName === "string" &&
+    "ticketLabel" in value &&
+    (value.ticketLabel === null || typeof value.ticketLabel === "string")
+  );
+}
+
 function rowFromDataset(dataset: DOMStringMap): GridRow | null {
   try {
-    return JSON.parse(dataset.row ?? "{}") as GridRow;
+    const parsed: unknown = JSON.parse(dataset.row ?? "{}");
+    return isGridRow(parsed) ? parsed : null;
   } catch {
     return null;
   }

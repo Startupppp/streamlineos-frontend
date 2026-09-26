@@ -45,16 +45,22 @@ export interface UnsupportedSource {
   why: string;
 }
 
+function hasUnsupportedReason(
+  s: InboxSourceStatus,
+): s is InboxSourceStatus & { reason: string } {
+  return s.reason !== null && s.reason.startsWith(UNSUPPORTED_REASON_PREFIX);
+}
+
 export function unsupportedSourcesFor(
   sources: InboxSourceStatus[],
 ): UnsupportedSource[] {
   return sources
-    .filter(
-      (s) => !s.included && s.reason?.startsWith(UNSUPPORTED_REASON_PREFIX),
+    .filter((s): s is InboxSourceStatus & { reason: string } =>
+      !s.included && hasUnsupportedReason(s),
     )
     .map((s) => ({
       source: s,
-      why: s.reason!.slice(UNSUPPORTED_REASON_PREFIX.length),
+      why: s.reason.slice(UNSUPPORTED_REASON_PREFIX.length),
     }));
 }
 

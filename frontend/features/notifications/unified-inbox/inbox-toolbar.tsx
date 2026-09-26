@@ -27,7 +27,7 @@ import {
   type InboxFilterState,
   type InboxGrouping,
 } from "./inbox-view-params";
-import { GROUPING_OPTIONS } from "./inbox-grouping";
+import { GROUPING_OPTIONS, parseGrouping } from "./inbox-grouping";
 import { INBOX_SOURCE_LABELS } from "./inbox-sources";
 import { InboxSavedViewsPanel } from "./inbox-saved-views-panel";
 
@@ -135,7 +135,7 @@ export function InboxToolbar({
   );
 
   const handleGroupValueChange = useCallback(
-    (value: string) => onGroupChange(value as InboxGrouping),
+    (value: string) => onGroupChange(parseGrouping(value)),
     [onGroupChange],
   );
 

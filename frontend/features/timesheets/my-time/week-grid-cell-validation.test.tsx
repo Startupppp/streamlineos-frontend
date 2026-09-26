@@ -13,9 +13,9 @@ const ROW: GridRow = {
   rowKey: "project-4",
   projectId: 4,
   ticketId: null,
-  projectLabel: "StreamlineOS",
+  projectName: "StreamlineOS",
   ticketLabel: null,
-} as unknown as GridRow;
+};
 
 const DAYS = ["2026-09-14", "2026-09-15"];
 

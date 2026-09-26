@@ -20,8 +20,11 @@ interface EventRowProps {
 }
 
 function EventRow({ item, isPending, onToggleMute }: EventRowProps) {
-  const pref = item.userPreference as { muted?: boolean } | null;
-  const isMuted = pref?.muted === true;
+  const isMuted =
+    item.userPreference !== null &&
+    typeof item.userPreference === "object" &&
+    "muted" in item.userPreference &&
+    item.userPreference.muted === true;
 
   const handleChange = useCallback(
     (checked: boolean) => {
@@ -46,10 +49,15 @@ function EventRow({ item, isPending, onToggleMute }: EventRowProps) {
             </Badge>
           )}
         </div>
-        <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{item.description}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+          {item.description}
+        </p>
       </div>
       {item.mandatory ? (
-        <BellOff className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" aria-label="Cannot mute this notification" />
+        <BellOff
+          className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5"
+          aria-label="Cannot mute this notification"
+        />
       ) : (
         <Switch
           checked={!isMuted}
@@ -79,15 +87,14 @@ export function PreferenceEventsSection() {
 
   const configurableEvents = catalog?.filter((e) => e.userConfigurable) ?? [];
 
-  const byCategory = configurableEvents.reduce<Record<string, PreferenceEventCatalogItem[]>>(
-    (acc, item) => {
-      const key = item.category;
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(item);
-      return acc;
-    },
-    {},
-  );
+  const byCategory = configurableEvents.reduce<
+    Record<string, PreferenceEventCatalogItem[]>
+  >((acc, item) => {
+    const key = item.category;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
 
   if (isLoading) {
     return (
@@ -97,7 +104,10 @@ export function PreferenceEventsSection() {
         </h2>
         <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-between px-3 py-2.5 bg-card gap-3">
+            <div
+              key={i}
+              className="flex items-center justify-between px-3 py-2.5 bg-card gap-3"
+            >
               <div className="space-y-1.5 flex-1">
                 <Skeleton className="h-4 w-36" />
                 <Skeleton className="h-3 w-56" />
@@ -119,7 +129,10 @@ export function PreferenceEventsSection() {
       </h2>
       <div className="flex flex-col gap-3">
         {Object.entries(byCategory).map(([category, events]) => (
-          <div key={category} className="rounded-lg border border-border overflow-hidden divide-y divide-border">
+          <div
+            key={category}
+            className="rounded-lg border border-border overflow-hidden divide-y divide-border"
+          >
             <div className="px-3 py-2 bg-muted/40 border-b border-border">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 {category.toLowerCase().replace(/_/g, " ")}

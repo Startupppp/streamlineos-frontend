@@ -937,10 +937,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/timesheets/my-time/week-grid.tsx": {
-      "as": 2,
-      "nonNull": 0
-    },
     "features/timesheets/payroll/payroll-export-dialog.tsx": {
       "as": 1,
       "nonNull": 0

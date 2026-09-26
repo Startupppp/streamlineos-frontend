@@ -18,16 +18,14 @@ export const GROUPING_OPTIONS: ReadonlyArray<{
   { value: "thread", label: "Mail thread" },
 ];
 
-const VALID_GROUPINGS: ReadonlySet<string> = new Set<InboxGrouping>([
-  "none",
-  "kind",
-  "module",
-  "thread",
-]);
-
 export function parseGrouping(raw: string | null): InboxGrouping {
-  if (raw !== null && VALID_GROUPINGS.has(raw)) return raw as InboxGrouping;
-  return "none";
+  switch (raw) {
+    case "none": return "none";
+    case "kind": return "kind";
+    case "module": return "module";
+    case "thread": return "thread";
+    default: return "none";
+  }
 }
 
 const KIND_LABELS: Record<string, string> = {

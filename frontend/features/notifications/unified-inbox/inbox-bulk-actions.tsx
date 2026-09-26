@@ -5,7 +5,7 @@ import { Archive, CheckCheck, Clock, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import type { UnifiedInboxItem } from "@/types/inbox";
+import type { NotificationInboxItem, UnifiedInboxItem } from "@/types/inbox";
 import type { InboxActions } from "./use-inbox-actions";
 
 export interface BulkActionsBarProps {
@@ -21,9 +21,10 @@ function getNotificationIds(
 ): number[] {
   return items
     .filter(
-      (item) => selectedKeys.has(item.dedupKey) && item.kind === "notification",
+      (item): item is NotificationInboxItem =>
+        selectedKeys.has(item.dedupKey) && item.kind === "notification",
     )
-    .map((item) => item.id as number);
+    .map((item) => item.id);
 }
 
 function actionLabel(

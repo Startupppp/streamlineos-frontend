@@ -7,19 +7,22 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { lazyContract } from "@/lib/api-envelope";
-import {
-  anomalyContract,
-  anomalyPageContract,
-  demandRiskContract,
-  feedbackContract,
-  feedbackSummaryContract,
-} from "./restored-surfaces-schema";
 
-const anomalyPageResponse = lazyContract<InvAnomalyPage>(() => Promise.resolve(anomalyPageContract as unknown as import("zod").ZodType<InvAnomalyPage>));
-const anomalyResponse = lazyContract<InvAnomalyRow>(() => Promise.resolve(anomalyContract as unknown as import("zod").ZodType<InvAnomalyRow>));
-const demandRiskResponse = lazyContract<InvDemandRiskResult>(() => Promise.resolve(demandRiskContract as unknown as import("zod").ZodType<InvDemandRiskResult>));
-const feedbackResponse = lazyContract<{ id: number; verdict: InvAiVerdict; surface: string; createdAt: string }>(() => Promise.resolve(feedbackContract as unknown as import("zod").ZodType<{ id: number; verdict: InvAiVerdict; surface: string; createdAt: string }>));
-const feedbackSummaryResponse = lazyContract<InvAiFeedbackSummary>(() => Promise.resolve(feedbackSummaryContract as unknown as import("zod").ZodType<InvAiFeedbackSummary>));
+const anomalyPageResponse = lazyContract(() =>
+  import("./restored-surfaces-schema").then((m) => m.anomalyPageContract),
+);
+const anomalyResponse = lazyContract(() =>
+  import("./restored-surfaces-schema").then((m) => m.anomalyContract),
+);
+const demandRiskResponse = lazyContract(() =>
+  import("./restored-surfaces-schema").then((m) => m.demandRiskContract),
+);
+const feedbackResponse = lazyContract(() =>
+  import("./restored-surfaces-schema").then((m) => m.feedbackContract),
+);
+const feedbackSummaryResponse = lazyContract(() =>
+  import("./restored-surfaces-schema").then((m) => m.feedbackSummaryContract),
+);
 
 /* ------------------------------------------------------------------ *
  * F3 — the anomaly queue

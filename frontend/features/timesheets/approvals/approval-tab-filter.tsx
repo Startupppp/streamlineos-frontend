@@ -9,6 +9,10 @@ import {
   type ApprovalTab,
 } from "./approvals-tab-panel";
 
+function isApprovalTab(value: string | undefined): value is ApprovalTab {
+  return value === "SUBMITTED" || value === "APPROVED" || value === "REJECTED";
+}
+
 interface ApprovalTabFilterProps {
   value: ApprovalTab;
   onChange: (tab: ApprovalTab) => void;
@@ -41,8 +45,8 @@ export function ApprovalTabFilter({ value, onChange }: ApprovalTabFilterProps) {
 
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
-      const tab = event.currentTarget.dataset.tab as ApprovalTab | undefined;
-      if (tab) onChange(tab);
+      const tab = event.currentTarget.dataset.tab;
+      if (isApprovalTab(tab)) onChange(tab);
     },
     [onChange],
   );
