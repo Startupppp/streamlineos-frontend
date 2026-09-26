@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { Plus, Archive } from "lucide-react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -21,10 +22,16 @@ import {
 import { FEEDBACK_SKELETON_HEADERS } from "./product-feedback-columns";
 import { GoalsSkeleton } from "./product-goals-page";
 import { RoadmapSkeleton } from "./product-roadmap-page";
+import { ProductInsightsPage } from "./product-insights-page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { ManagedProductOverviewSkeleton } from "@/features/build/overview/managed-product-overview-page";
 import { GridSkeleton } from "@/features/build/project-list/projects-page-skeletons";
+import { createAppQueryClient } from "@/components/providers/query-provider";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import type { ManagedProductInsights } from "@/hooks/api/build/managed-products-schema";
+import type { AccessResponse } from "@/hooks/api/access-schema";
 
 const GALLERY_ROWS: ManagedProduct[] = Array.from({ length: 14 }, (_, i) => ({
   id: i + 1,
@@ -83,6 +90,43 @@ const RANGE_OPTIONS = [
 ];
 
 const STUB_CHANGE = () => undefined;
+
+const STUB_INSIGHTS_ID = 1;
+
+const STUB_ACCESS: AccessResponse = {
+  membershipId: null,
+  scopes: { "build:managed-products:view": "all" },
+  isOrgOwner: false,
+  canManageOrganizationMembership: false,
+  modules: {},
+};
+
+const STUB_INSIGHTS_DATA: ManagedProductInsights = {
+  linkedProjectCount: 42,
+  projectsByStatus: { active: 27, completed: 8, archived: 7 },
+  submissionsByStatus: { open: 17, in_progress: 5, resolved: 14, archived: 6 },
+  roadmapItemCount: 9,
+  roadmapItemsByStatus: { planned: 4, in_progress: 3, completed: 1, cancelled: 1 },
+  feedbackByStatus: { open: 11, planned: 3, in_progress: 4, completed: 6, declined: 2 },
+  linkedFeedbackVoteCount: 38,
+};
+
+function InsightsReadyFrame() {
+  const [queryClient] = useState(() => {
+    const client = createAppQueryClient("insights-ready-gallery");
+    client.setQueryData(platformCoreQueryKeys.access.me(), STUB_ACCESS);
+    client.setQueryData(
+      buildWorkQueryKeys.projects.managedProducts.insights(STUB_INSIGHTS_ID),
+      STUB_INSIGHTS_DATA,
+    );
+    return client;
+  });
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ProductInsightsPage managedProductId={STUB_INSIGHTS_ID} />
+    </QueryClientProvider>
+  );
+}
 
 function GalleryCase({
   id,
@@ -432,6 +476,10 @@ export function ManagedProductsGallery() {
             </PmSection>
           </PmPageShell>
         </PageWrapper>
+      </GalleryCase>
+
+      <GalleryCase id="insights-ready" title="Insights — ready (stub data)">
+        <InsightsReadyFrame />
       </GalleryCase>
 
       <GalleryCase id="projects-loading" title="Linked projects — loading">

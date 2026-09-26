@@ -148,6 +148,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseCan.mockReturnValue(true);
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+  mockUseOnlineStatus.mockReturnValue(true);
   mockUseBuildMembers.mockReturnValue({
     data: { data: [], pagination: { hasMore: false, nextCursor: null } },
     isLoading: false,
@@ -228,5 +230,66 @@ describe("MembersPage — error state (BLD-X-FE-ACCESS-010)", () => {
 
     expect(screen.getByTestId("data-table")).toBeInTheDocument();
     expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  });
+});
+
+describe("MembersPage — keyboard shortcut wiring (BLD-X-FE-ACCESS-011)", () => {
+  it("passes onShortcutHelp to useBuildListKeyboard so the ? key can open the help overlay", () => {
+    render(<MembersPage />);
+    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(typeof lastCallArgs?.onShortcutHelp).toBe("function");
+  });
+
+  it("passes onCreate to useBuildListKeyboard so the c key opens the add member dialog", () => {
+    render(<MembersPage />);
+    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(typeof lastCallArgs?.onCreate).toBe("function");
+  });
+
+  it("ShortcutHelpDialog is not shown on initial render — paired with the open test below", () => {
+    render(<MembersPage />);
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("the onShortcutHelp callback passed to the keyboard hook opens the help dialog", async () => {
+    render(<MembersPage />);
+    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0] as {
+      onShortcutHelp: () => void;
+    };
+    expect(typeof lastCallArgs.onShortcutHelp).toBe("function");
+    await act(async () => { lastCallArgs.onShortcutHelp(); });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
+  });
+});
+
+describe("MembersPage — offline state (BLD-X-FE-ACCESS-012)", () => {
+  it("shows the offline empty state when useOnlineStatus returns false and the list is empty", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    mockUseBuildMembers.mockReturnValue({
+      data: { data: [], pagination: { hasMore: false, nextCursor: null } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<MembersPage />);
+
+    expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
+  });
+
+  it("does not show the offline state when online and the list is empty — confirming the offline test is paired with a positive", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    mockUseBuildMembers.mockReturnValue({
+      data: { data: [], pagination: { hasMore: false, nextCursor: null } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<MembersPage />);
+
+    expect(screen.queryByText(/you are offline/i)).toBeNull();
   });
 });

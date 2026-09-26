@@ -3,7 +3,7 @@
 import { use, useState, useCallback, useMemo } from "react";
 import { format, addDays } from "date-fns";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useProject, useCycles } from "@/hooks/api";
+import { useProject } from "@/hooks/api";
 import { useProjectBoardTickets } from "@/hooks/api/build";
 import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -65,8 +65,6 @@ export function WorkloadBoardPage({ params }: PageProps) {
     refetch: refetchProject,
   } = useProject(projectId);
 
-  const { data: cycles } = useCycles(projectId);
-
   const { data: boardTickets, isLoading: ticketsLoading } =
     useProjectBoardTickets(projectId, boardFilters);
 
@@ -97,13 +95,7 @@ export function WorkloadBoardPage({ params }: PageProps) {
     });
   }, [data?.members]);
 
-  const statuses = useMemo(
-    () =>
-      data && "statuses" in data
-        ? (data.statuses as Array<{ name: string; color: string | null; type?: string | null }>)
-        : undefined,
-    [data],
-  );
+  const statuses = data?.statuses;
 
   const createParamOpen = searchParams.get("create") === "1";
 
@@ -126,7 +118,7 @@ export function WorkloadBoardPage({ params }: PageProps) {
     ) => {
       if (key === "assigneeId") {
         const next = new URLSearchParams(searchParams.toString());
-        const strValue = value as string;
+        const strValue = String(value);
         if (strValue && strValue !== "all") {
           next.set("memberId", strValue);
         } else {

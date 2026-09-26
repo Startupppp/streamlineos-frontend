@@ -33,55 +33,91 @@ gallery cases at all.
 state, and the test was not scoped to a check describe; the same gallery case was not included in
 the 375 px, high-density, or reduced-motion loops.
 
-### After this session
+### After first session
 
 | Page | 375 px | Screen-reader | Reduced motion | High-density | Keyboard |
 |------|--------|---------------|----------------|--------------|----------|
-| managed-products (list) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| managed-products-product (overview) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| managed-products-product-feedback | ✓ | ✓ | ✓ | ✓ | ✓ |
-| managed-products-product-goals | ✓ | ✓ | ✓ | ✓ | ✓ |
-| managed-products-product-insights | ✓ | shimmer✓ | ✓ | ✓ | ✓ |
-| managed-products-product-projects | ✓ | ✓ | ✓ | ✓ | ✓ |
-| managed-products-product-roadmap | ✓ | ✓ | ✓ | ✓ | ✓ |
-| project-feedbucket | ✓ | ✓ | ✓ | ✓ | ✓ |
-| project-feedbucket-submission | ✓ | ✓ | ✓ | ✓ | ✓ |
+| managed-products (list) | ✓ | ✓ | ✓ | ✓ | tab order ✓ |
+| managed-products-product (overview) | ✓ | ✓ | ✓ | ✓ | focusable |
+| managed-products-product-feedback | ✓ | ✓ | ✓ | ✓ | focusable |
+| managed-products-product-goals | ✓ | ✓ | ✓ | ✓ | focusable |
+| managed-products-product-insights | ✓ | shimmer✓ | ✓ | ✓ | focusable |
+| managed-products-product-projects | ✓ | ✓ | ✓ | ✓ | focusable |
+| managed-products-product-roadmap | ✓ | ✓ | ✓ | ✓ | focusable |
+| project-feedbucket | ✓ | ✓ | ✓ | ✓ | focusable |
+| project-feedbucket-submission | ✓ | ✓ | ✓ | ✓ | focusable |
+
+### After second session (F-15)
+
+| Page | 375 px | Screen-reader | Reduced motion | High-density | Keyboard |
+|------|--------|---------------|----------------|--------------|----------|
+| managed-products (list) | ✓ | ✓ | ✓ | ✓ | tab order ✓ |
+| managed-products-product (overview) | ✓ | ✓ | ✓ | ✓ | focusable |
+| managed-products-product-feedback | ✓ | ✓ | ✓ | ✓ | focusable |
+| managed-products-product-goals | ✓ | ✓ | ✓ | ✓ | focusable |
+| managed-products-product-insights | ✓ | ✓ | ✓ | ✓ | focusable (loading) + tab order ✓ (ready) |
+| managed-products-product-projects | ✓ | ✓ | ✓ | ✓ | focusable |
+| managed-products-product-roadmap | ✓ | ✓ | ✓ | ✓ | focusable |
+| project-feedbucket | ✓ | ✓ | ✓ | ✓ | focusable |
+| project-feedbucket-submission | ✓ | ✓ | ✓ | ✓ | focusable |
+
+**Keyboard column legend:**
+- **tab order ✓** — test presses Tab and asserts `toBeFocused()` at each stop, proving order
+  matches visual order.
+- **focusable** — test calls `locator.focus()` + `toBeFocused()`. Proves the element is in the
+  accessibility tree and is programmatically focusable; does not prove Tab order relative to
+  surrounding elements.
+- **focusable (loading) + tab order ✓ (ready)** — two gallery cases exist for this page. The
+  loading case uses `.focus()`; the ready-state case (cache-seeded) presses Tab and asserts the
+  Range filter is the first stop and that Tab exits the section thereafter.
 
 ### Notes on the matrix entries
 
-**Screen-reader "shimmer✓" (insights):** `ProductInsightsPage` has no distinct empty state
-(the page shows `0` in all stat cards when the product has no data). The gallery case
-`insights-loading` uses `StatCardGridSkeleton` with the same heading structure as the real
-component. The screen-reader assertion proves each shimmer element carries `aria-hidden="true"`,
-keeping the accessibility tree clean during loading. There is no role/accessible-name assertion for
-a ready state; the stat cards' label/value pairs are the only semantic content in the ready state
-and cannot be tested without a ready-state gallery case that requires stubbing the hook response.
-This entry reads as "AT-clean during loading" not as "ready-state roles verified."
+**Screen-reader (insights) — now ✓:** The `insights-ready` gallery case mounts
+`ProductInsightsPage` directly with stub data seeded into a TanStack Query client created via
+`createAppQueryClient("insights-ready-gallery")`. The access response
+(`platformCoreQueryKeys.access.me()`) is pre-seeded with `isOrgOwner: false` and
+`"build:managed-products:view": "all"` in `scopes`, which satisfies `grantsPermission` and
+unblocks `usePageState` into `{ kind: "ready" }`. The insights response
+(`buildWorkQueryKeys.projects.managedProducts.insights(1)`) is pre-seeded with specific non-zero
+values, so the ready branch renders three `StatCardGrid` sections with real `StatCard` components.
+Two new spec tests assert: (1) three h2 section headings are present in the accessibility tree;
+(2) stat card labels ("Linked projects", "Open", "Feedback votes") and their numeric values (42,
+17, 38) are visible within the correct `[data-slot="stat-card-grid"]` scope, preventing collision
+with any page-level text that shares the same string.
 
 **Keyboard evidence per page:**
-- feedback: `EmptyState` "Clear filters" button focusable via `btn.focus()` + `toBeFocused()`
-- goals: `EmptyState` "New goal" button
-- roadmap: `EmptyState` "Add item" button
-- overview: `PageWrapper` Back link (`aria-label="Back"`) rendered via `backHref`
-- insights: Range filter `[data-slot=select-trigger]` in the insights-loading toolbar
-- projects: `EmptyState` "Link project" button
-- feedbucket: `EmptyState` "Create feedback widget" button
-- submission: `PageWrapper` Back link rendered via `backHref`
+- list: Tab from search → Status → Sort (Tab-order ✓); Tab from name link → Actions button
+  → second name link (Tab-order ✓); Enter opens menu, Escape closes and restores focus
+- overview: `PageWrapper` Back link (`aria-label="Back"`) is keyboard-focusable via `.focus()`
+- feedback: `EmptyState` "Clear filters" button is keyboard-focusable via `.focus()`
+- goals: `EmptyState` "New goal" button is keyboard-focusable via `.focus()`
+- insights-loading: Range filter `[data-slot=select-trigger]` is keyboard-focusable via `.focus()`
+- insights-ready: Range filter is the first Tab stop; Tab exits the page section (Tab-order ✓)
+- projects: `EmptyState` "Link project" button is keyboard-focusable via `.focus()`
+- roadmap: `EmptyState` "Add item" button is keyboard-focusable via `.focus()`
+- feedbucket: `EmptyState` "Create feedback widget" button is keyboard-focusable via `.focus()`
+- submission: `PageWrapper` Back link is keyboard-focusable via `.focus()`
 
-The keyboard tests use `locator.focus()` + `toBeFocused()`, not Tab-press navigation through the
-full page. This proves the element is focusable and in the accessibility tree; it does not prove
-Tab order relative to surrounding elements. Tab-order evidence for sub-pages requires a full
-interactive ready-state gallery case (see remaining gaps below).
+**Why seven sub-pages remain "focusable" rather than "tab order ✓":** Tab-order evidence requires
+a ready-state gallery case with interactive toolbar elements. The seven sub-pages (overview,
+feedback, goals, projects, roadmap, feedbucket, submission) have empty-state or loading-state cases
+only — neither a populated DataTable nor a ready-state toolbar. Seeding those pages' hooks would
+require mounting components whose ready states involve complex data structures (ticket rows, goal
+cards, roadmap items) that differ from the insights case. A future session can add those cases
+following the same pattern used for `insights-ready`.
 
 ---
 
 ## What was changed
 
-### `features/build/overview/managed-product-overview-page.tsx`
+### Session 1
+
+#### `features/build/overview/managed-product-overview-page.tsx`
 
 Added `export` to `ManagedProductOverviewSkeleton`. No other change.
 
-### `features/build/managed-products/managed-products-gallery.tsx`
+#### `features/build/managed-products/managed-products-gallery.tsx` (session 1)
 
 New imports: `Skeleton`, `StatCardGridSkeleton`, `ManagedProductOverviewSkeleton`, `GridSkeleton`.
 
@@ -93,62 +129,86 @@ target that matches what the real page would show:
 - `goals-empty` → `action={{ label: "New goal" }}`
 - `roadmap-empty` → `action={{ label: "Add item" }}`
 
-Nine new gallery cases added:
+Nine new gallery cases added (all skeleton or empty-state cases; see session 2 for the ready
+state):
 
-| Case ID | Real components used | Basis for "real component" claim |
-|---------|---------------------|----------------------------------|
-| `overview-loading` | `ManagedProductOverviewSkeleton` (`StatCardGridSkeleton` + `Skeleton`) | exported from the real overview page file |
-| `overview-empty` | `PageWrapper` + `EmptyState` | matches the real `ManagedProductOverviewPage` `empty` prop + `backHref` from the real route |
-| `insights-loading` | `PageWrapper` + `BuildListToolbar` + `BuildFilterSelect` + `StatCardGridSkeleton` | same toolbar structure and heading text as `ProductInsightsPage`'s loading state |
-| `projects-loading` | `GridSkeleton` | exported from `projects-page-skeletons.tsx`, used by `ProjectsPage` for its loading state |
-| `projects-empty` | `EmptyState` | matches an empty-page state; `ProjectsPage` uses `EmptyState` for the empty branch |
-| `feedbucket-loading` | `PmPageShell` + `Skeleton` | matches the `loading` prop of `ProjectFeedbucketPage`'s `PageWrapper` exactly |
-| `feedbucket-empty` | `EmptyState` | matches the real feedbucket empty branch (`EmptyState` title "No feedback widget") |
-| `submission-loading` | `Skeleton` × 3 | matches the `loading` prop of `FeedbucketSubmissionDetail`'s `PageState` exactly |
-| `submission-empty` | `PageWrapper` + `EmptyState` | matches the `empty` prop of `FeedbucketSubmissionDetail`'s `PageState` + `backHref` |
+| Case ID | Real components used |
+|---------|---------------------|
+| `overview-loading` | `ManagedProductOverviewSkeleton` |
+| `overview-empty` | `PageWrapper` + `EmptyState` |
+| `insights-loading` | `PageWrapper` + `BuildListToolbar` + `BuildFilterSelect` + `StatCardGridSkeleton` |
+| `projects-loading` | `GridSkeleton` |
+| `projects-empty` | `EmptyState` |
+| `feedbucket-loading` | `PmPageShell` + `Skeleton` |
+| `feedbucket-empty` | `EmptyState` |
+| `submission-loading` | `Skeleton` × 3 |
+| `submission-empty` | `PageWrapper` + `EmptyState` |
 
-### `e2e/managed-products-a11y.spec.ts`
+#### `e2e/managed-products-a11y.spec.ts` (session 1)
 
-Added two new typed arrays: `SUB_PAGE_LOADING_CASES` (8 items) and `SUB_PAGE_EMPTY_CASES`
-(7 items).
+Added `SUB_PAGE_LOADING_CASES` (8 items) and `SUB_PAGE_EMPTY_CASES` (7 items). Added five new
+describe blocks covering 375 px, screen-reader, reduced-motion (paired), high-density, and
+keyboard (`.focus()` only). Total tests added: approximately 19.
 
-Added five new describe blocks, each targeting a distinct C6 check for the sub-pages:
+---
 
-1. **"sub-page surfaces — 375 px mobile width — no horizontal overflow"** — 2 tests; iterates
-   `SUB_PAGE_LOADING_CASES` and `SUB_PAGE_EMPTY_CASES`; uses `test.use({ viewport: ... })` not
-   `page.setViewportSize()` (consistent with the high-density block's approach).
+### Session 2 (F-15)
 
-2. **"sub-page surfaces — screen-reader roles and accessible names"** — 5 tests; 4 `role="status"`
-   assertions on new empty cases + 1 `aria-hidden` assertion on all new loading cases.
+#### `features/build/managed-products/managed-products-gallery.tsx` (session 2)
 
-3. **"sub-page loading skeletons — reduced motion (paired)"** — 2 tests (reduce + no-preference);
-   iterates all 8 `SUB_PAGE_LOADING_CASES`; each case checked for `animation-name: none` / not-none
-   on the first `.skeleton-shimmer.animate-pulse:visible` element. Paired to prevent vacuous passing.
+New imports: `QueryClientProvider`, `createAppQueryClient`, `buildWorkQueryKeys`,
+`platformCoreQueryKeys`, `ProductInsightsPage`, `ManagedProductInsights`, `AccessResponse`.
 
-4. **"sub-page surfaces — high-density desktop 1920×1080 @ deviceScaleFactor 2"** — 2 tests;
-   iterates `SUB_PAGE_LOADING_CASES` and `SUB_PAGE_EMPTY_CASES`.
+New constants: `STUB_INSIGHTS_ID` (1), `STUB_ACCESS` (grants `build:managed-products:view`),
+`STUB_INSIGHTS_DATA` (non-zero values across all three stat sections).
 
-5. **"sub-page surfaces — keyboard focus reachability"** — 8 tests; one per sub-page; each calls
-   `focus()` and asserts `toBeFocused()` on the interactive element described in the "keyboard
-   evidence per page" note above.
+New component: `InsightsReadyFrame` — creates a `QueryClientProvider` backed by a dedicated
+`createAppQueryClient("insights-ready-gallery")` instance, pre-seeds the access key and insights
+key via `setQueryData`, then mounts `ProductInsightsPage` with `managedProductId={1}`. Because the
+scope segment lives in the key hash (not the array), the seed and the hook's `useQuery` call hash
+identically. The access seed (with `"build:managed-products:view": "all"` in `scopes`) satisfies
+`grantsPermission`, unblocking `usePageState` into `{ kind: "ready" }` and `canView = true`.
+Since `staleTime: 2 * 60_000` and the seed was written moments before mount, no network request
+fires.
 
-Total tests added: approximately 19 (across the five describes).
+New gallery case: `insights-ready` — wraps `InsightsReadyFrame`.
+
+#### `e2e/managed-products-a11y.spec.ts` (session 2)
+
+Eight keyboard tests renamed: "keyboard-reachable" → "keyboard-focusable" across all eight
+sub-page keyboard tests, clarifying that they use `locator.focus()` not Tab press.
+
+Three new tests in the 375 px describe: overflow assertion for `insights-ready`.
+
+Three new tests in the high-density describe: overflow assertion for `insights-ready`.
+
+Two new tests in the screen-reader describe:
+1. `insights-ready — section headings 'Projects', 'Feedback submissions' and 'Roadmap outcomes' are
+   present in the accessibility tree` — asserts three `role="heading" level=2` elements with
+   `exact: true`.
+2. `insights-ready — stat card labels and numeric values are readable within each grid, scoped to
+   avoid page-level text collisions` — asserts labels and stub values within
+   `[data-slot="stat-card-grid"]` scope; three grids × (label + value), using stub values that are
+   numerically unique (42, 17, 38) to prevent false passes from unrelated occurrences.
+
+One new test in the keyboard describe:
+- `insights-ready — Tab order: Range filter is the first Tab stop in the toolbar; Tab moves past it
+  leaving no focusable element in the section` — focuses the range select trigger, presses Tab,
+  asserts the trigger is no longer focused and that `scope.locator(":focus")` has count 0 (no
+  other interactive element in the stat-card body receives focus).
+
+Total tests added in session 2: approximately 7.
 
 ---
 
 ## Remaining gaps
 
-**Screen-reader — insights ready state.** `insights-loading` proves skeleton elements are
-aria-hidden. A positive assertion (stat card roles, accessible names, heading hierarchy) requires
-a ready-state case that stubs `useManagedProductInsights`. This would need either a mock provider
-in the gallery (currently none exists) or extracting a pure-presentational sub-component from
-`ProductInsightsPage`. Neither is possible without modifying `features/build/managed-products/**`
-source (owned by a sibling agent).
-
-**Keyboard — Tab order for sub-page toolbars.** Each sub-page keyboard test uses `.focus()` rather
-than Tab-press navigation. Tab order relative to search input, filter controls, and table rows
-(i.e. the same evidence the main list page provides) would require a fully-mounted ready state for
-each sub-page. The same constraint as above applies.
+**Keyboard — Tab order for seven sub-page toolbars.** Overview, feedback, goals, projects,
+roadmap, feedbucket, and submission-detail keyboard tests all use `locator.focus()` rather than
+Tab-press navigation. Each of those sub-pages has loading or empty gallery cases only; a
+Tab-order test requires a ready-state gallery case with interactive elements. Mounting a ready
+state for each requires seeding more complex data (ticket rows, goal cards, roadmap items) beyond
+what was attempted here. The insights page is now the sole sub-page with Tab-order evidence.
 
 **Browser verification.** This report describes source changes, not drain output. C6 is not ticked
 until a fresh serial drain confirms EXIT=0 for the expanded spec.

@@ -529,6 +529,11 @@ test.describe("Managed Products responsive contract", () => {
       }
       expect(failures).toEqual([]);
     });
+
+    test("insights-ready case does not overflow at 375 px", async ({ page }) => {
+      const overflow = await horizontalOverflowOf(frame(page, "insights-ready"));
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
   });
 
   test.describe("sub-page surfaces — screen-reader roles and accessible names", () => {
@@ -581,6 +586,31 @@ test.describe("Managed Products responsive contract", () => {
           await expect(shimmers.nth(i)).toHaveAttribute("aria-hidden", "true");
         }
       }
+    });
+
+    test("insights-ready — section headings 'Projects', 'Feedback submissions' and 'Roadmap outcomes' are present in the accessibility tree", async ({
+      page,
+    }) => {
+      const scope = frame(page, "insights-ready");
+      await expect(scope.getByRole("heading", { name: "Projects", level: 2, exact: true })).toBeVisible();
+      await expect(scope.getByRole("heading", { name: "Feedback submissions", level: 2, exact: true })).toBeVisible();
+      await expect(scope.getByRole("heading", { name: "Roadmap outcomes", level: 2, exact: true })).toBeVisible();
+    });
+
+    test("insights-ready — stat card labels and numeric values are readable within each grid, scoped to avoid page-level text collisions", async ({
+      page,
+    }) => {
+      const scope = frame(page, "insights-ready");
+      const grids = scope.locator('[data-slot="stat-card-grid"]');
+      const projectsGrid = grids.first();
+      await expect(projectsGrid.getByText("Linked projects", { exact: true })).toBeVisible();
+      await expect(projectsGrid.getByText("42", { exact: true })).toBeVisible();
+      const feedbackGrid = grids.nth(1);
+      await expect(feedbackGrid.getByText("Open", { exact: true })).toBeVisible();
+      await expect(feedbackGrid.getByText("17", { exact: true })).toBeVisible();
+      const roadmapGrid = grids.nth(2);
+      await expect(roadmapGrid.getByText("Feedback votes", { exact: true })).toBeVisible();
+      await expect(roadmapGrid.getByText("38", { exact: true })).toBeVisible();
     });
   });
 
@@ -661,6 +691,11 @@ test.describe("Managed Products responsive contract", () => {
       }
       expect(failures).toEqual([]);
     });
+
+    test("insights-ready case does not overflow at scale 2", async ({ page }) => {
+      const overflow = await horizontalOverflowOf(frame(page, "insights-ready"));
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
   });
 
   test.describe("sub-page surfaces — keyboard focus reachability", () => {
@@ -672,35 +707,35 @@ test.describe("Managed Products responsive contract", () => {
       ).toBeVisible();
     });
 
-    test("feedback-empty — Clear filters button is keyboard-reachable", async ({ page }) => {
+    test("feedback-empty — Clear filters button is keyboard-focusable", async ({ page }) => {
       const scope = frame(page, "feedback-empty");
       const btn = scope.getByRole("button", { name: "Clear filters", exact: true });
       await btn.focus();
       await expect(btn).toBeFocused();
     });
 
-    test("goals-empty — New goal button is keyboard-reachable", async ({ page }) => {
+    test("goals-empty — New goal button is keyboard-focusable", async ({ page }) => {
       const scope = frame(page, "goals-empty");
       const btn = scope.getByRole("button", { name: "New goal", exact: true });
       await btn.focus();
       await expect(btn).toBeFocused();
     });
 
-    test("roadmap-empty — Add item button is keyboard-reachable", async ({ page }) => {
+    test("roadmap-empty — Add item button is keyboard-focusable", async ({ page }) => {
       const scope = frame(page, "roadmap-empty");
       const btn = scope.getByRole("button", { name: "Add item", exact: true });
       await btn.focus();
       await expect(btn).toBeFocused();
     });
 
-    test("overview-empty — Back link is keyboard-reachable", async ({ page }) => {
+    test("overview-empty — Back link is keyboard-focusable", async ({ page }) => {
       const scope = frame(page, "overview-empty");
       const backLink = scope.getByRole("link", { name: "Back", exact: true });
       await backLink.focus();
       await expect(backLink).toBeFocused();
     });
 
-    test("insights-loading — Range filter trigger is keyboard-reachable", async ({ page }) => {
+    test("insights-loading — Range filter trigger is keyboard-focusable", async ({ page }) => {
       const scope = frame(page, "insights-loading");
       const rangeTrigger = scope.locator(
         "[data-filter-id=range] [data-slot=select-trigger]",
@@ -709,14 +744,14 @@ test.describe("Managed Products responsive contract", () => {
       await expect(rangeTrigger).toBeFocused();
     });
 
-    test("projects-empty — Link project button is keyboard-reachable", async ({ page }) => {
+    test("projects-empty — Link project button is keyboard-focusable", async ({ page }) => {
       const scope = frame(page, "projects-empty");
       const btn = scope.getByRole("button", { name: "Link project", exact: true });
       await btn.focus();
       await expect(btn).toBeFocused();
     });
 
-    test("feedbucket-empty — Create feedback widget button is keyboard-reachable", async ({
+    test("feedbucket-empty — Create feedback widget button is keyboard-focusable", async ({
       page,
     }) => {
       const scope = frame(page, "feedbucket-empty");
@@ -725,11 +760,26 @@ test.describe("Managed Products responsive contract", () => {
       await expect(btn).toBeFocused();
     });
 
-    test("submission-empty — Back link is keyboard-reachable", async ({ page }) => {
+    test("submission-empty — Back link is keyboard-focusable", async ({ page }) => {
       const scope = frame(page, "submission-empty");
       const backLink = scope.getByRole("link", { name: "Back", exact: true });
       await backLink.focus();
       await expect(backLink).toBeFocused();
+    });
+
+    test("insights-ready — Tab order: Range filter is the first Tab stop in the toolbar; Tab moves past it leaving no focusable element in the section", async ({
+      page,
+    }) => {
+      const scope = frame(page, "insights-ready");
+      const rangeTrigger = scope.locator(
+        "[data-filter-id=range] [data-slot=select-trigger]",
+      );
+      await rangeTrigger.focus();
+      await expect(rangeTrigger).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(rangeTrigger).not.toBeFocused();
+      const focusedInFrame = scope.locator(":focus");
+      await expect(focusedInFrame).toHaveCount(0);
     });
   });
 });

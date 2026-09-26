@@ -1,5 +1,5 @@
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
-import { ProjectBoardPage } from "@/features/build/project-detail/project-board-page";
+import { WorkloadBoardPage } from "@/features/build/workload/workload-board-page";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -7,5 +7,5 @@ interface PageProps {
 
 export default async function ProjectWorkloadRoute({ params }: PageProps) {
   await enforceRouteAccess("/build/[projectId]/workload");
-  return <ProjectBoardPage params={params} defaultView="workload" />;
+  return <WorkloadBoardPage params={params} />;
 }

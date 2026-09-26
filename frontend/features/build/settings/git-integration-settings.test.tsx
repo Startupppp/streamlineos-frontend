@@ -103,6 +103,33 @@ jest.mock("@/components/pm-chrome", () => ({
   PM_PANEL: "",
 }));
 
+const mockListFiltersState = {
+  search: "",
+  debouncedSearch: "",
+  setSearch: jest.fn(),
+  clearAll: jest.fn(),
+  isFiltered: false,
+  activeCount: 0,
+  resetKey: "",
+  cursor: null,
+  setCursor: jest.fn(),
+  value: jest.fn(() => "all"),
+  isActive: jest.fn(() => false),
+  setValue: jest.fn(),
+  isPending: false,
+};
+
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: () => mockListFiltersState,
+  BUILD_SEARCH_DEBOUNCE_MS: 300,
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: ({ search }: { search?: { value: string } }) => (
+    <div data-testid="build-list-toolbar" data-search={search?.value ?? ""} />
+  ),
+}));
+
 beforeEach(() => {
   mockData = undefined;
   mockIsLoading = false;
@@ -110,6 +137,10 @@ beforeEach(() => {
   mockRouterReplace.mockClear();
   mockUseBuildListKeyboard.mockClear();
   mockSearchParamsValue = new URLSearchParams();
+  mockListFiltersState.search = "";
+  mockListFiltersState.debouncedSearch = "";
+  mockListFiltersState.isFiltered = false;
+  mockListFiltersState.activeCount = 0;
   (
     jest.requireMock("@/hooks/common/use-online-status") as {
       useOnlineStatus: jest.Mock;
@@ -346,5 +377,67 @@ describe("ProjectsGitIntegrationSettings — offline state (BLD-X-FE-SETTINGS-IN
     render(<ProjectsGitIntegrationSettings />);
     expect(screen.queryByText("You are offline")).not.toBeInTheDocument();
     expect(screen.getByText(/no repositories connected/i)).toBeInTheDocument();
+  });
+});
+
+describe("ProjectsGitIntegrationSettings — search URL param (BLD-X-FE-SETTINGS-INT-020)", () => {
+  it("renders the search toolbar for the connections tab", () => {
+    mockData = [];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.getByTestId("build-list-toolbar")).toBeInTheDocument();
+  });
+
+  it("filters connections to those whose repoUrl matches debouncedSearch", () => {
+    mockListFiltersState.debouncedSearch = "acme/repo";
+    mockData = [
+      BASE_CONNECTION,
+      { ...BASE_CONNECTION, id: 2, repoUrl: "https://github.com/other/unrelated", repoName: "other/unrelated" },
+    ];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.getAllByTestId("connection-row")).toHaveLength(1);
+    expect(screen.getByTestId("connection-row")).toHaveAttribute(
+      "data-url",
+      BASE_CONNECTION.repoUrl,
+    );
+  });
+
+  it("shows all connections when debouncedSearch is empty", () => {
+    mockListFiltersState.debouncedSearch = "";
+    mockData = [
+      BASE_CONNECTION,
+      { ...BASE_CONNECTION, id: 2, repoUrl: "https://github.com/other/repo2", repoName: "other/repo2" },
+    ];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.getAllByTestId("connection-row")).toHaveLength(2);
+  });
+
+  it("filters by repoName when it matches the search query", () => {
+    mockListFiltersState.debouncedSearch = "my-display";
+    mockData = [
+      { ...BASE_CONNECTION, repoName: "my-display-name" },
+      { ...BASE_CONNECTION, id: 2, repoUrl: "https://github.com/other/repo", repoName: "other/repo" },
+    ];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.getAllByTestId("connection-row")).toHaveLength(1);
+  });
+
+  it("shows a filtered empty state when search produces no results — paired with the show-all test confirming the filter works", () => {
+    mockListFiltersState.debouncedSearch = "zzz-no-match";
+    mockListFiltersState.isFiltered = true;
+    mockData = [BASE_CONNECTION];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.queryByTestId("connection-row")).not.toBeInTheDocument();
+    expect(screen.getByText(/no results match your filters/i)).toBeInTheDocument();
+  });
+
+  it("passes itemCount equal to the filtered count to useBuildListKeyboard", () => {
+    mockListFiltersState.debouncedSearch = "acme/repo";
+    mockData = [
+      BASE_CONNECTION,
+      { ...BASE_CONNECTION, id: 2, repoUrl: "https://github.com/other/unrelated", repoName: "other/unrelated" },
+    ];
+    render(<ProjectsGitIntegrationSettings />);
+    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(lastCallArgs?.itemCount).toBe(1);
   });
 });
