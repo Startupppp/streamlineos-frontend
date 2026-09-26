@@ -1,5 +1,26 @@
 import { z } from "zod";
 
+export const KB_PAGE_STATUSES = [
+  "draft",
+  "in_review",
+  "published",
+  "archived",
+] as const;
+
+export const KB_PAGE_TRUST_STATES = [
+  "unverified",
+  "verified",
+  "verification_expired",
+] as const;
+
+export const KNOWLEDGE_GAP_STATUSES = [
+  "OPEN",
+  "DRAFTED",
+  "ROUTED",
+  "PUBLISHED",
+  "DISMISSED",
+] as const;
+
 export const kbAnalyticsOverviewContract = z.object({
   totalCount: z.number().int(),
   publishedCount: z.number().int(),
@@ -31,8 +52,8 @@ export const kbAnalyticsPagesContract = z.object({
     z.object({
       id: z.number().int(),
       title: z.string(),
-      status: z.string(),
-      trustState: z.string(),
+      status: z.enum(KB_PAGE_STATUSES),
+      trustState: z.enum(KB_PAGE_TRUST_STATES),
       updatedAt: z.string(),
       uniqueViewers: z.number().int(),
       commentCount: z.number().int(),
@@ -66,7 +87,7 @@ export const kbAnalyticsGapRelatedPagesContract = z.object({
     z.object({
       id: z.number().int(),
       title: z.string(),
-      status: z.string(),
+      status: z.enum(KB_PAGE_STATUSES),
       updatedAt: z.string(),
     }),
   ),
@@ -105,7 +126,7 @@ export const kbAnalyticsReviewSlaContract = z.object({
 export const kbAnalyticsGapActionContract = z.object({
   id: z.number().int(),
   clusterKey: z.string(),
-  status: z.string(),
+  status: z.enum(KNOWLEDGE_GAP_STATUSES),
   proposedArticleId: z.number().int().nullable(),
   draftedBy: z.string().nullable(),
   updatedAt: z.string(),
