@@ -18,14 +18,21 @@ const CASES = [
   "settings-project-loading",
   "settings-project-access-loading",
   "settings-project-agents-loading",
+  "settings-project-agents-ready",
   "settings-project-automations-loading",
+  "settings-project-automations-ready",
   "settings-project-fields-loading",
+  "settings-project-fields-ready",
   "settings-project-integrations-loading",
+  "settings-project-integrations-ready",
   "settings-project-webhooks-loading",
   "settings-project-iterations-loading",
+  "settings-project-iterations-ready",
   "settings-project-portal-loading",
   "settings-project-retention-loading",
+  "settings-project-retention-ready",
   "settings-project-workflow-loading",
+  "settings-project-workflow-ready",
   "settings-org-access-loading",
   "settings-org-integrations-loading",
 ] as const;
@@ -295,6 +302,292 @@ test.describe("Settings responsive contract", () => {
       await expect(
         page.locator(`[aria-label*="${fullTokenNeverRendered}"]`),
       ).toHaveCount(0);
+    });
+  });
+
+  test.describe("iterations settings — ready state", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Settings surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the Iterations heading is announced by assistive technology", async ({ page }) => {
+      const scope = frame(page, "settings-project-iterations-ready");
+      await expect(
+        scope.getByRole("heading", { name: "Iterations", exact: true }),
+      ).toBeVisible();
+    });
+
+    test("the cycle-length Select trigger carries an accessible label so screen-reader users know its purpose", async ({ page }) => {
+      const scope = frame(page, "settings-project-iterations-ready");
+      const trigger = scope.getByRole("combobox").first();
+      const labelled = await trigger.evaluate((el: HTMLElement) => {
+        if (el.getAttribute("aria-label")) return true;
+        if (el.getAttribute("aria-labelledby")) return true;
+        return el.id
+          ? document.querySelector(`label[for="${el.id}"]`) !== null
+          : false;
+      });
+      expect(labelled).toBe(true);
+    });
+
+    test("the cycle-length Select trigger is keyboard-focusable", async ({ page }) => {
+      const scope = frame(page, "settings-project-iterations-ready");
+      const trigger = scope.getByRole("combobox").first();
+      await trigger.focus();
+      await expect(trigger).toBeFocused();
+    });
+  });
+
+  test.describe("retention settings — ready state", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Settings surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the Retention heading is announced by assistive technology", async ({ page }) => {
+      const scope = frame(page, "settings-project-retention-ready");
+      await expect(
+        scope.getByRole("heading", { name: "Retention", exact: true }),
+      ).toBeVisible();
+    });
+
+    test("the Inherit org policy Switch carries an accessible label", async ({ page }) => {
+      const scope = frame(page, "settings-project-retention-ready");
+      const switchEl = scope.getByRole("switch").first();
+      const labelled = await switchEl.evaluate((el: HTMLElement) => {
+        if (el.getAttribute("aria-label")) return true;
+        if (el.getAttribute("aria-labelledby")) return true;
+        return el.id
+          ? document.querySelector(`label[for="${el.id}"]`) !== null
+          : false;
+      });
+      expect(labelled).toBe(true);
+    });
+
+    test("the first retention-period Select trigger is keyboard-focusable", async ({ page }) => {
+      const scope = frame(page, "settings-project-retention-ready");
+      const trigger = scope.getByRole("combobox").first();
+      await trigger.focus();
+      await expect(trigger).toBeFocused();
+    });
+
+    test("Esc closes the apply-legal-hold dialog and returns focus to its trigger", async ({ page }) => {
+      const scope = frame(page, "settings-project-retention-ready");
+      const applyButton = scope.getByRole("button", { name: "Apply legal hold", exact: true });
+      await applyButton.focus();
+      await page.keyboard.press("Enter");
+      await expect(page.getByRole("alertdialog")).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("alertdialog")).toBeHidden();
+      await expect(applyButton).toBeFocused();
+    });
+  });
+
+  test.describe("fields settings — ready state", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Settings surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the Fields heading is announced by assistive technology", async ({ page }) => {
+      const scope = frame(page, "settings-project-fields-ready");
+      await expect(
+        scope.getByRole("heading", { name: "Fields", exact: true }),
+      ).toBeVisible();
+    });
+
+    test("the search input in the fields page has an accessible label", async ({ page }) => {
+      const scope = frame(page, "settings-project-fields-ready");
+      const searchInput = scope.locator("[data-slot=search-input] input:visible");
+      await expect(searchInput).toBeVisible();
+      const labelled = await searchInput.evaluate((el: HTMLElement) => {
+        if (el.getAttribute("aria-label")) return true;
+        if (el.getAttribute("aria-labelledby")) return true;
+        return el.id
+          ? document.querySelector(`label[for="${el.id}"]`) !== null
+          : false;
+      });
+      expect(labelled).toBe(true);
+    });
+
+    test("the search input in the fields page is keyboard-focusable", async ({ page }) => {
+      const scope = frame(page, "settings-project-fields-ready");
+      const searchInput = scope.locator("[data-slot=search-input] input:visible");
+      await searchInput.focus();
+      await expect(searchInput).toBeFocused();
+    });
+  });
+
+  test.describe("agents settings — ready state", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Settings surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the Agents heading is announced by assistive technology", async ({ page }) => {
+      const scope = frame(page, "settings-project-agents-ready");
+      await expect(
+        scope.getByRole("heading", { name: "Agents", exact: true }),
+      ).toBeVisible();
+    });
+
+    test("the search input in the agents page has an accessible label", async ({ page }) => {
+      const scope = frame(page, "settings-project-agents-ready");
+      const searchInput = scope.locator("[data-slot=search-input] input:visible");
+      await expect(searchInput).toBeVisible();
+      const labelled = await searchInput.evaluate((el: HTMLElement) => {
+        if (el.getAttribute("aria-label")) return true;
+        if (el.getAttribute("aria-labelledby")) return true;
+        return el.id
+          ? document.querySelector(`label[for="${el.id}"]`) !== null
+          : false;
+      });
+      expect(labelled).toBe(true);
+    });
+
+    test("the search input in the agents page is keyboard-focusable", async ({ page }) => {
+      const scope = frame(page, "settings-project-agents-ready");
+      const searchInput = scope.locator("[data-slot=search-input] input:visible");
+      await searchInput.focus();
+      await expect(searchInput).toBeFocused();
+    });
+
+    test("the stub token prefix is visible in the agents ready case", async ({ page }) => {
+      const scope = frame(page, "settings-project-agents-ready");
+      await expect(scope.locator("code").filter({ hasText: /slat_bot1/ })).toBeVisible();
+    });
+
+    test("a full token value that was never passed to the gallery is absent from the agents case, proving the masked assertion is not vacuous", async ({
+      page,
+    }) => {
+      const fullTokenNeverRendered = "slat_bot1_neverRenderThisFullValue";
+      const scope = frame(page, "settings-project-agents-ready");
+      await expect(scope.getByText(fullTokenNeverRendered, { exact: false })).toHaveCount(0);
+    });
+  });
+
+  test.describe("integrations settings — ready state", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Settings surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the Integrations heading is announced by assistive technology", async ({ page }) => {
+      const scope = frame(page, "settings-project-integrations-ready");
+      await expect(
+        scope.getByRole("heading", { name: "Integrations", exact: true }),
+      ).toBeVisible();
+    });
+
+    test("the first button in the integrations page is keyboard-focusable", async ({ page }) => {
+      const scope = frame(page, "settings-project-integrations-ready");
+      const firstButton = scope.getByRole("button").first();
+      await firstButton.focus();
+      await expect(firstButton).toBeFocused();
+    });
+  });
+
+  test.describe("automations settings — ready state", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Settings surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the Automations heading is announced by assistive technology", async ({ page }) => {
+      const scope = frame(page, "settings-project-automations-ready");
+      await expect(
+        scope.getByRole("heading", { name: "Automations", exact: true }),
+      ).toBeVisible();
+    });
+
+    test("the seeded automation name is visible so screen-reader users can identify the row", async ({ page }) => {
+      const scope = frame(page, "settings-project-automations-ready");
+      await expect(
+        scope.getByText("Auto-assign on ticket create", { exact: true }),
+      ).toBeVisible();
+    });
+
+    test("the search input in the automations page is keyboard-focusable", async ({ page }) => {
+      const scope = frame(page, "settings-project-automations-ready");
+      const searchInput = scope.locator("[data-slot=search-input] input:visible");
+      await searchInput.focus();
+      await expect(searchInput).toBeFocused();
+    });
+
+    test("Esc closes the new-automation sheet and returns focus to its trigger", async ({ page }) => {
+      const scope = frame(page, "settings-project-automations-ready");
+      const newButton = scope.getByRole("button", { name: "New Automation", exact: true });
+      await newButton.focus();
+      await page.keyboard.press("Enter");
+      await expect(page.getByRole("dialog")).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("dialog")).toBeHidden();
+      await expect(newButton).toBeFocused();
+    });
+  });
+
+  test.describe("workflow settings — ready state", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Settings surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the Workflow heading is announced by assistive technology", async ({ page }) => {
+      const scope = frame(page, "settings-project-workflow-ready");
+      await expect(
+        scope.getByRole("heading", { name: "Workflow", exact: true }),
+      ).toBeVisible();
+    });
+
+    test("the seeded status name is visible so screen-reader users can identify the row", async ({ page }) => {
+      const scope = frame(page, "settings-project-workflow-ready");
+      await expect(scope.getByText("In Progress", { exact: true })).toBeVisible();
+    });
+
+    test("the delete-status trigger button is keyboard-focusable", async ({ page }) => {
+      const scope = frame(page, "settings-project-workflow-ready");
+      const deleteButton = scope.getByRole("button", {
+        name: "Delete status In Progress",
+        exact: true,
+      });
+      await deleteButton.focus();
+      await expect(deleteButton).toBeFocused();
+    });
+
+    test("Esc closes the delete-status dialog and returns focus to its trigger", async ({ page }) => {
+      const scope = frame(page, "settings-project-workflow-ready");
+      const deleteButton = scope.getByRole("button", {
+        name: "Delete status In Progress",
+        exact: true,
+      });
+      await deleteButton.focus();
+      await page.keyboard.press("Enter");
+      await expect(page.getByRole("alertdialog")).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("alertdialog")).toBeHidden();
+      await expect(deleteButton).toBeFocused();
     });
   });
 });

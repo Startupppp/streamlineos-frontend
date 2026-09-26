@@ -67,6 +67,7 @@ const BASE_TEAM = {
   icon: null,
   color: null,
   isPrivate: false,
+  capacity: null as number | null,
   members: [] as ProjectTeamMember[],
 };
 
@@ -90,9 +91,11 @@ let mockMembersResult = {
   isLoading: false,
 };
 
+const mockUseTeamMembers = jest.fn();
+
 jest.mock("@/hooks/api/build/teams", () => ({
   useProjectTeam: () => mockTeamResult,
-  useTeamMembers: () => mockMembersResult,
+  useTeamMembers: (...args: unknown[]) => mockUseTeamMembers(...args),
   useUpdateProjectTeam: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteProjectTeam: () => ({ mutate: jest.fn(), isPending: false }),
   useAddProjectTeamMember: () => ({ mutate: jest.fn(), isPending: false }),
@@ -298,6 +301,7 @@ beforeEach(() => {
     data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
     isLoading: false,
   };
+  mockUseTeamMembers.mockImplementation(() => mockMembersResult);
   mockUsePageState.mockReturnValue({ kind: "ready" });
   mockUseBuildListKeyboard.mockReset();
 });
@@ -699,7 +703,7 @@ describe("TeamHomePage — shortcut help dialog (BLD-X-FE-TEAMS-DETAIL-013)", ()
   });
 });
 
-describe("TeamHomePage — URL filter params q, leadId, memberId (BLD-X-FE-TEAMS-DETAIL-014)", () => {
+describe("TeamHomePage — URL filter params q, leadId, memberId forwarded server-side (BLD-X-FE-TEAMS-DETAIL-014)", () => {
   beforeEach(() => {
     mockTeamResult = { ...mockTeamResult, data: { ...BASE_TEAM } };
     mockMembersResult = {
@@ -709,6 +713,7 @@ describe("TeamHomePage — URL filter params q, leadId, memberId (BLD-X-FE-TEAMS
       },
       isLoading: false,
     };
+    mockUseTeamMembers.mockImplementation(() => mockMembersResult);
     mockUsePageState.mockReturnValue({ kind: "ready" });
   });
 
@@ -723,7 +728,7 @@ describe("TeamHomePage — URL filter params q, leadId, memberId (BLD-X-FE-TEAMS
     expect(paramNames).toContain("memberId");
   });
 
-  it("q search filters displayed members by email — param reaches the rendered list and is not dropped", () => {
+  it("q search term is forwarded to useTeamMembers — reaches the server query, not filtered client-side", () => {
     mockUseBuildListFilters.mockReturnValue({
       ...DEFAULT_FILTERS_STATE,
       search: "alice",
@@ -732,29 +737,67 @@ describe("TeamHomePage — URL filter params q, leadId, memberId (BLD-X-FE-TEAMS
       resetKey: "q=alice",
     });
     render(<TeamHomePage teamId={1} />);
-    expect(screen.getAllByText("alice@example.com").length).toBeGreaterThanOrEqual(1);
-    expect(screen.queryAllByText("bob@example.com")).toHaveLength(0);
+    const [, , , filters] = mockUseTeamMembers.mock.calls[mockUseTeamMembers.mock.calls.length - 1] as [unknown, unknown, unknown, { q?: string }];
+    expect(filters).toEqual(expect.objectContaining({ q: "alice" }));
   });
 
-  it("leadId filter shows only the matching member — param reaches the rendered list and is not dropped", () => {
+  it("q search is absent from useTeamMembers call when search is empty — paired with forwarding test above", () => {
+    render(<TeamHomePage teamId={1} />);
+    const [, , , filters] = mockUseTeamMembers.mock.calls[mockUseTeamMembers.mock.calls.length - 1] as [unknown, unknown, unknown, { q?: string }];
+    expect(filters?.q).toBeUndefined();
+  });
+
+  it("leadId filter is forwarded to useTeamMembers — reaches the server query, not filtered client-side", () => {
     mockUseBuildListFilters.mockReturnValue({
       ...DEFAULT_FILTERS_STATE,
       value: jest.fn((param: string) => (param === "leadId" ? MEMBER_A.userId : "all")),
       resetKey: `leadId=${MEMBER_A.userId}`,
     });
     render(<TeamHomePage teamId={1} />);
-    expect(screen.getAllByText("alice@example.com").length).toBeGreaterThanOrEqual(1);
-    expect(screen.queryAllByText("bob@example.com")).toHaveLength(0);
+    const [, , , filters] = mockUseTeamMembers.mock.calls[mockUseTeamMembers.mock.calls.length - 1] as [unknown, unknown, unknown, { leadId?: string }];
+    expect(filters).toEqual(expect.objectContaining({ leadId: MEMBER_A.userId }));
   });
 
-  it("memberId filter shows only the matching member — param reaches the rendered list and is not dropped", () => {
+  it("memberId filter is forwarded to useTeamMembers — reaches the server query, not filtered client-side", () => {
     mockUseBuildListFilters.mockReturnValue({
       ...DEFAULT_FILTERS_STATE,
       value: jest.fn((param: string) => (param === "memberId" ? MEMBER_B.userId : "all")),
       resetKey: `memberId=${MEMBER_B.userId}`,
     });
     render(<TeamHomePage teamId={1} />);
-    expect(screen.queryAllByText("alice@example.com")).toHaveLength(0);
-    expect(screen.getAllByText("bob@example.com").length).toBeGreaterThanOrEqual(1);
+    const [, , , filters] = mockUseTeamMembers.mock.calls[mockUseTeamMembers.mock.calls.length - 1] as [unknown, unknown, unknown, { memberId?: string }];
+    expect(filters).toEqual(expect.objectContaining({ memberId: MEMBER_B.userId }));
+  });
+
+  it("no filter params forwarded when all filters are at their default state — paired with each forwarding test", () => {
+    render(<TeamHomePage teamId={1} />);
+    const [, , , filters] = mockUseTeamMembers.mock.calls[mockUseTeamMembers.mock.calls.length - 1] as [unknown, unknown, unknown, { q?: string; leadId?: string; memberId?: string }];
+    expect(filters?.q).toBeUndefined();
+    expect(filters?.leadId).toBeUndefined();
+    expect(filters?.memberId).toBeUndefined();
+  });
+});
+
+describe("TeamHomePage — capacity display (BLD-X-FE-TEAMS-DETAIL-015)", () => {
+  beforeEach(() => {
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    mockMembersResult = {
+      data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+      isLoading: false,
+    };
+    mockUseTeamMembers.mockImplementation(() => mockMembersResult);
+  });
+
+  it("renders capacity value when team has a capacity set — paired with null test below", () => {
+    mockTeamResult = { ...mockTeamResult, data: { ...BASE_TEAM, capacity: 10 } };
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.getByTestId("team-capacity")).toBeInTheDocument();
+    expect(screen.getByText("Capacity 10")).toBeInTheDocument();
+  });
+
+  it("does not render capacity element when capacity is null — paired with set test above", () => {
+    mockTeamResult = { ...mockTeamResult, data: { ...BASE_TEAM, capacity: null } };
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.queryByTestId("team-capacity")).not.toBeInTheDocument();
   });
 });

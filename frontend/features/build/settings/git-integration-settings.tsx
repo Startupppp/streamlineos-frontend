@@ -106,7 +106,9 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
     isLoading,
     isError,
     refetch,
-  } = useGitConnections();
+  } = useGitConnections({
+    search: listFilters.debouncedSearch.trim() || undefined,
+  });
   const createConnection = useCreateGitConnection();
   const updateConnection = useUpdateGitConnection();
   const deleteConnection = useDeleteGitConnection();
@@ -209,16 +211,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
     [router, pathname, searchParams],
   );
 
-  const connectionsList = connections?.data ?? [];
-  const filteredConnections = listFilters.debouncedSearch
-    ? connectionsList.filter((c) => {
-        const q = listFilters.debouncedSearch.toLowerCase();
-        return (
-          c.repoUrl.toLowerCase().includes(q) ||
-          (c.repoName !== null && c.repoName.toLowerCase().includes(q))
-        );
-      })
-    : connectionsList;
+  const filteredConnections = connections?.data ?? [];
 
   const handleOpenConnection = useCallback((_index: number) => {}, []);
   const handleClearConnectionSelection = useCallback(() => setDeleteId(null), []);

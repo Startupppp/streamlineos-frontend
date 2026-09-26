@@ -9,12 +9,23 @@ import { PublicBoardView } from "@/features/build/whiteboard/public-board-view";
 import { PublicFormView } from "@/features/build/forms/public-form-view";
 import { PublicIntakeView } from "@/features/build/intake/public-intake-view";
 import PublicRoadmapPage from "@/app/(public)/roadmap/[orgId]/page";
+import { FilesPage } from "@/features/build/files/files-page";
+import { FormsListPage } from "@/features/build/forms/forms-list-page";
+import { FormDetailPage } from "@/features/build/forms/form-detail-page";
+import { IntakePage } from "@/features/build/intake/intake-page";
+import { MeetingsListPage } from "@/features/build/meetings/meetings-list-page";
+import { MeetingDetailPage } from "@/features/build/meetings/meeting-detail-page";
+import { WhiteboardPage } from "@/features/build/whiteboard/whiteboard-page";
 
 const VIEW_TOKEN = "gallery-view-stub";
 const EDIT_TOKEN = "gallery-edit-stub";
 const FORM_TOKEN = "gallery-form-stub";
 const INTAKE_PROJECT_ID = "gallery-intake-stub";
 const BOARD_LOADING_TOKEN = "gallery-board-loading-stub";
+
+const GALLERY_PROJECT_ID = 1;
+const GALLERY_FORM_ID = 1;
+const GALLERY_MEETING_ID = 1;
 
 const STUB_ROADMAP_BOARD = {
   orgName: "Gallery Org",
@@ -256,6 +267,62 @@ export function ContentIntakeGallery() {
           height="h-[48rem]"
         >
           <PublicRoadmapPage />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-files"
+          title="Authenticated files page (loading)"
+          height="h-64"
+        >
+          <FilesPage projectId={GALLERY_PROJECT_ID} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-forms"
+          title="Authenticated forms list (loading)"
+          height="h-64"
+        >
+          <FormsListPage projectId={GALLERY_PROJECT_ID} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-form-detail"
+          title="Authenticated form detail (loading)"
+          height="h-64"
+        >
+          <FormDetailPage projectId={GALLERY_PROJECT_ID} formId={GALLERY_FORM_ID} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-intake"
+          title="Authenticated intake page (loading)"
+          height="h-64"
+        >
+          <IntakePage projectId={GALLERY_PROJECT_ID} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-meetings"
+          title="Authenticated meetings list (loading)"
+          height="h-64"
+        >
+          <MeetingsListPage projectId={GALLERY_PROJECT_ID} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-meeting-detail"
+          title="Authenticated meeting detail (loading)"
+          height="h-64"
+        >
+          <MeetingDetailPage projectId={GALLERY_PROJECT_ID} meetingId={GALLERY_MEETING_ID} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="project-whiteboard"
+          title="Authenticated whiteboard page (loading)"
+          height="h-64"
+        >
+          <WhiteboardPage projectId={GALLERY_PROJECT_ID} initialBoardId={null} />
         </CaseFrame>
       </div>
     </QueryClientProvider>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
   PortalProjectDetailLoading,
@@ -127,27 +127,26 @@ const STUB_CR_PAGE = {
   pagination: { limit: 25, hasMore: false, nextCursor: null },
 };
 
-const STUB_VISIBILITY_SUMMARY = {
-  tickets: {
-    data: [
-      { id: 1, ticketNumber: 42, title: "Audit navigation flow", type: "task", clientVisible: true },
-      { id: 2, ticketNumber: 43, title: "Token refresh for idle sessions", type: "bug", clientVisible: false },
-    ],
-    pagination: { limit: 20, hasMore: false, nextCursor: null },
-  },
-  milestones: {
-    data: [
-      { id: 1, name: "Discovery complete", clientVisible: true },
-      { id: 2, name: "Beta launch", clientVisible: false },
-    ],
-    pagination: { limit: 20, hasMore: false, nextCursor: null },
-  },
+const STUB_TICKETS_PAGE = {
+  data: [
+    { id: 1, ticketNumber: 42, title: "Audit navigation flow", type: "task", clientVisible: true },
+    { id: 2, ticketNumber: 43, title: "Token refresh for idle sessions", type: "bug", clientVisible: false },
+  ],
+  pagination: { limit: 20, hasMore: false, nextCursor: null },
+};
+
+const STUB_MILESTONES_PAGE = {
+  data: [
+    { id: 1, name: "Discovery complete", clientVisible: true },
+    { id: 2, name: "Beta launch", clientVisible: false },
+  ],
+  pagination: { limit: 20, hasMore: false, nextCursor: null },
 };
 
 const STUB_UPDATE_PAGE = {
   data: [
-    { id: 1, orgId: "gallery-org", projectId: 101, authorMembershipId: 1, body: "Week 24 update: discovery phase complete, handoff meeting scheduled for Monday.", status: "published" as const, audience: "internal" as const, createdAt: "2026-06-10T09:00:00Z", updatedAt: "2026-06-10T09:00:00Z", deletedAt: null },
-    { id: 2, orgId: "gallery-org", projectId: 101, authorMembershipId: 1, body: "Beta testing underway, collecting feedback from client stakeholders.", status: "published" as const, audience: "client" as const, createdAt: "2026-06-17T09:00:00Z", updatedAt: "2026-06-17T09:00:00Z", deletedAt: null },
+    { id: 1, orgId: "gallery-org", projectId: 101, authorMembershipId: 1, authorName: "Jordan A.", body: "Week 24 update: discovery phase complete, handoff meeting scheduled for Monday.", wins: null, risks: null, next: null, citations: null, status: "published" as const, audience: "internal" as const, createdAt: "2026-06-10T09:00:00Z", updatedAt: "2026-06-10T09:00:00Z", deletedAt: null },
+    { id: 2, orgId: "gallery-org", projectId: 101, authorMembershipId: 1, authorName: "Sam O.", body: "Beta testing underway, collecting feedback from client stakeholders.", wins: null, risks: null, next: null, citations: null, status: "published" as const, audience: "client" as const, createdAt: "2026-06-17T09:00:00Z", updatedAt: "2026-06-17T09:00:00Z", deletedAt: null },
   ],
   pagination: { limit: 20, hasMore: false, nextCursor: null },
 };
@@ -173,7 +172,7 @@ function useInternalGalleryQueryClient() {
     qc.setQueryData(buildWorkQueryKeys.projects.clientPortal.changeRequests(INTERNAL_PROJECT_ID), STUB_PORTAL_CRS);
 
     qc.setQueryData(
-      buildWorkQueryKeys.projects.changeRequests.list(INTERNAL_PROJECT_ID, { limit: 25 }),
+      buildWorkQueryKeys.projects.changeRequests.list(INTERNAL_PROJECT_ID),
       STUB_CR_PAGE,
     );
 
@@ -184,12 +183,12 @@ function useInternalGalleryQueryClient() {
 
     qc.setQueryData(
       [...buildWorkQueryKeys.projects.clientPortal.visibility(INTERNAL_PROJECT_ID), "tickets-infinite"],
-      { pages: [STUB_VISIBILITY_SUMMARY], pageParams: [undefined] },
+      { pages: [STUB_TICKETS_PAGE], pageParams: [undefined] },
     );
 
     qc.setQueryData(
       [...buildWorkQueryKeys.projects.clientPortal.visibility(INTERNAL_PROJECT_ID), "milestones-infinite"],
-      { pages: [STUB_VISIBILITY_SUMMARY], pageParams: [undefined] },
+      { pages: [STUB_MILESTONES_PAGE], pageParams: [undefined] },
     );
 
     qc.setQueryData(
@@ -215,7 +214,7 @@ function GallerySection({
 }: {
   caseId: string;
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <section className="space-y-2">

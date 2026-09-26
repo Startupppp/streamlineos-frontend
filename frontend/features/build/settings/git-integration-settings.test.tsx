@@ -59,13 +59,11 @@ let mockData: typeof BASE_CONNECTION[] | undefined = undefined;
 let mockIsLoading = false;
 let mockIsError = false;
 
+const mockUseGitConnections = jest.fn();
+
 jest.mock("@/hooks/api/git-integration", () => ({
-  useGitConnections: () => ({
-    data: mockData !== undefined ? { data: mockData, pagination: { limit: 20, hasMore: false, nextCursor: null } } : undefined,
-    isLoading: mockIsLoading,
-    isError: mockIsError,
-    refetch: jest.fn(),
-  }),
+  useGitConnections: (params?: { search?: string; cursor?: string }) =>
+    mockUseGitConnections(params),
   useCreateGitConnection: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateGitConnection: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteGitConnection: () => ({ mutate: jest.fn(), isPending: false }),
@@ -136,6 +134,16 @@ beforeEach(() => {
   mockIsError = false;
   mockRouterReplace.mockClear();
   mockUseBuildListKeyboard.mockClear();
+  mockUseGitConnections.mockClear();
+  mockUseGitConnections.mockImplementation(() => ({
+    data:
+      mockData !== undefined
+        ? { data: mockData, pagination: { limit: 20, hasMore: false, nextCursor: null } }
+        : undefined,
+    isLoading: mockIsLoading,
+    isError: mockIsError,
+    refetch: jest.fn(),
+  }));
   mockSearchParamsValue = new URLSearchParams();
   mockListFiltersState.search = "";
   mockListFiltersState.debouncedSearch = "";
@@ -387,57 +395,52 @@ describe("ProjectsGitIntegrationSettings — search URL param (BLD-X-FE-SETTINGS
     expect(screen.getByTestId("build-list-toolbar")).toBeInTheDocument();
   });
 
-  it("filters connections to those whose repoUrl matches debouncedSearch", () => {
-    mockListFiltersState.debouncedSearch = "acme/repo";
+  it("passes debouncedSearch as the search param to useGitConnections when non-empty — reaches the server query, not just a client filter", () => {
+    mockListFiltersState.debouncedSearch = "acme";
+    mockData = [];
+    render(<ProjectsGitIntegrationSettings />);
+    const lastCallArgs = mockUseGitConnections.mock.calls.at(-1)?.[0] as
+      | { search?: string }
+      | undefined;
+    expect(lastCallArgs?.search).toBe("acme");
+  });
+
+  it("passes undefined as the search param to useGitConnections when debouncedSearch is empty — paired negative for the non-empty test above", () => {
+    mockListFiltersState.debouncedSearch = "";
+    mockData = [];
+    render(<ProjectsGitIntegrationSettings />);
+    const lastCallArgs = mockUseGitConnections.mock.calls.at(-1)?.[0] as
+      | { search?: string }
+      | undefined;
+    expect(lastCallArgs?.search).toBeUndefined();
+  });
+
+  it("renders all rows returned by the hook without client-side filtering — server is authoritative for search results", () => {
+    mockListFiltersState.debouncedSearch = "acme";
     mockData = [
       BASE_CONNECTION,
       { ...BASE_CONNECTION, id: 2, repoUrl: "https://github.com/other/unrelated", repoName: "other/unrelated" },
-    ];
-    render(<ProjectsGitIntegrationSettings />);
-    expect(screen.getAllByTestId("connection-row")).toHaveLength(1);
-    expect(screen.getByTestId("connection-row")).toHaveAttribute(
-      "data-url",
-      BASE_CONNECTION.repoUrl,
-    );
-  });
-
-  it("shows all connections when debouncedSearch is empty", () => {
-    mockListFiltersState.debouncedSearch = "";
-    mockData = [
-      BASE_CONNECTION,
-      { ...BASE_CONNECTION, id: 2, repoUrl: "https://github.com/other/repo2", repoName: "other/repo2" },
     ];
     render(<ProjectsGitIntegrationSettings />);
     expect(screen.getAllByTestId("connection-row")).toHaveLength(2);
   });
 
-  it("filters by repoName when it matches the search query", () => {
-    mockListFiltersState.debouncedSearch = "my-display";
-    mockData = [
-      { ...BASE_CONNECTION, repoName: "my-display-name" },
-      { ...BASE_CONNECTION, id: 2, repoUrl: "https://github.com/other/repo", repoName: "other/repo" },
-    ];
-    render(<ProjectsGitIntegrationSettings />);
-    expect(screen.getAllByTestId("connection-row")).toHaveLength(1);
-  });
-
-  it("shows a filtered empty state when search produces no results — paired with the show-all test confirming the filter works", () => {
+  it("shows a filtered empty state when the server returns no connections and filters are active — paired with the populated test confirming rendering works", () => {
     mockListFiltersState.debouncedSearch = "zzz-no-match";
     mockListFiltersState.isFiltered = true;
-    mockData = [BASE_CONNECTION];
+    mockData = [];
     render(<ProjectsGitIntegrationSettings />);
     expect(screen.queryByTestId("connection-row")).not.toBeInTheDocument();
     expect(screen.getByText(/no results match your filters/i)).toBeInTheDocument();
   });
 
-  it("passes itemCount equal to the filtered count to useBuildListKeyboard", () => {
-    mockListFiltersState.debouncedSearch = "acme/repo";
+  it("passes itemCount equal to the count returned by the hook to useBuildListKeyboard", () => {
     mockData = [
       BASE_CONNECTION,
-      { ...BASE_CONNECTION, id: 2, repoUrl: "https://github.com/other/unrelated", repoName: "other/unrelated" },
+      { ...BASE_CONNECTION, id: 2, repoUrl: "https://github.com/other/repo2", repoName: "other/repo2" },
     ];
     render(<ProjectsGitIntegrationSettings />);
     const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
-    expect(lastCallArgs?.itemCount).toBe(1);
+    expect(lastCallArgs?.itemCount).toBe(2);
   });
 });

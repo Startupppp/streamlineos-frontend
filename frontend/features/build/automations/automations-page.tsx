@@ -37,7 +37,9 @@ import {
   useUpdateAutomation,
   useDeleteAutomation,
   TRIGGER_EVENTS,
+  ACTION_TYPES,
   type ProjectAutomation,
+  type AutomationActionType,
 } from "@/hooks/api/build/automations";
 import {
   useBuildListFilters,
@@ -55,8 +57,14 @@ const TRIGGER_FILTER_OPTIONS = [
   ...TRIGGER_EVENTS.map((t) => ({ value: t.value, label: t.label })),
 ];
 
+const ACTION_FILTER_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All actions" },
+  ...ACTION_TYPES.map((a) => ({ value: a.value, label: a.label })),
+];
+
 const FILTER_DEFINITIONS = [
   { param: "trigger", options: TRIGGER_EVENTS.map((t) => t.value) },
+  { param: "action", options: ACTION_TYPES.map((a) => a.value) },
 ] as const;
 
 interface AutomationsPageProps {
@@ -67,7 +75,8 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
   const canManage = useCan("build:manage");
   const isOnline = useOnlineStatus();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingAutomation, setEditingAutomation] = useState<ProjectAutomation | null>(null);
+  const [editingAutomation, setEditingAutomation] =
+    useState<ProjectAutomation | null>(null);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -76,13 +85,32 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
     withSearch: true,
   });
 
-  const { data: automations = [], isLoading, isError, error, refetch } = useAutomations(projectId);
+  const serverAction = listFilters.value("action");
+  const serverFilters = {
+    action:
+      serverAction !== BUILD_FILTER_ALL
+        ? (serverAction as AutomationActionType)
+        : undefined,
+  };
+
+  const {
+    data: automations = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useAutomations(projectId, serverFilters);
 
   const filteredAutomations = automations.filter((automation) => {
     const q = listFilters.debouncedSearch.toLowerCase();
-    if (q.length > 0 && !automation.name.toLowerCase().includes(q)) return false;
+    if (q.length > 0 && !automation.name.toLowerCase().includes(q))
+      return false;
     const triggerFilter = listFilters.value("trigger");
-    if (triggerFilter !== BUILD_FILTER_ALL && automation.triggerEvent !== triggerFilter) return false;
+    if (
+      triggerFilter !== BUILD_FILTER_ALL &&
+      automation.triggerEvent !== triggerFilter
+    )
+      return false;
     return true;
   });
 
@@ -206,7 +234,10 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
     appendAction({ type: "set_status", value: "" });
   }, [appendAction]);
 
-  const handleClearFilters = useCallback(() => listFilters.clearAll(), [listFilters]);
+  const handleClearFilters = useCallback(
+    () => listFilters.clearAll(),
+    [listFilters],
+  );
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   const handleKeyboardOpen = useCallback(
@@ -243,6 +274,11 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
     [listFilters],
   );
 
+  const handleActionFilterChange = useCallback(
+    (v: string) => listFilters.setValue("action", v),
+    [listFilters],
+  );
+
   const isFiltered = listFilters.isFiltered;
 
   const loadingContent = (
@@ -262,24 +298,24 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
           !isOnline
             ? "You are offline"
             : isFiltered
-            ? "No automations match your filters"
-            : "No automations yet"
+              ? "No automations match your filters"
+              : "No automations yet"
         }
         description={
           !isOnline
             ? "Reconnect to see your automations."
             : isFiltered
-            ? "Try adjusting your search or filter to find what you're looking for."
-            : "Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
+              ? "Try adjusting your search or filter to find what you're looking for."
+              : "Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
         }
         action={
           !isOnline
             ? undefined
             : isFiltered
-            ? { label: "Clear filters", onClick: handleClearFilters }
-            : canManage
-            ? { label: "Create Automation", onClick: handleOpenNew }
-            : undefined
+              ? { label: "Clear filters", onClick: handleClearFilters }
+              : canManage
+                ? { label: "Create Automation", onClick: handleOpenNew }
+                : undefined
         }
       />
     </PmSection>
@@ -289,7 +325,9 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
     <PageWrapper
       title="Automations"
       subtitle="Automate repetitive actions with if-then rules"
-      actions={canManage ? <NewAutomationButton onClick={handleOpenNew} /> : undefined}
+      actions={
+        canManage ? <NewAutomationButton onClick={handleOpenNew} /> : undefined
+      }
     >
       <PmPageShell>
         <PageState
@@ -312,12 +350,41 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
                 value={listFilters.value("trigger")}
                 onValueChange={handleTriggerFilterChange}
               >
-                <SelectTrigger className="h-8 w-44 text-sm" aria-label="Filter by trigger">
+                <SelectTrigger
+                  className="h-8 w-44 text-sm"
+                  aria-label="Filter by trigger"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {TRIGGER_FILTER_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-sm">
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-sm"
+                    >
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={listFilters.value("action")}
+                onValueChange={handleActionFilterChange}
+              >
+                <SelectTrigger
+                  className="h-8 w-40 text-sm"
+                  aria-label="Filter by action"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ACTION_FILTER_OPTIONS.map((opt) => (
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-sm"
+                    >
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -344,7 +411,11 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
           </PmSection>
 
           <PmSection index={2} className="flex min-h-0 flex-1 flex-col">
-            <PmStaggerList className="space-y-2.5" role="list" aria-label="Automations">
+            <PmStaggerList
+              className="space-y-2.5"
+              role="list"
+              aria-label="Automations"
+            >
               <AnimatePresence initial={false}>
                 {filteredAutomations.map((auto, idx) => (
                   <div
@@ -389,7 +460,10 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
         updateIsPending={updateAutomation.isPending}
       />
 
-      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
+      />
     </PageWrapper>
   );
 }

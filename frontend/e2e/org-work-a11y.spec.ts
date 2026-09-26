@@ -77,7 +77,7 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
     });
   }
 
-  test.describe("templates — keyboard reachability at 1280 px", () => {
+  test.describe("templates — keyboard tab order at 1280 px", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
@@ -93,27 +93,10 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
     );
 
     test(
-      "all three template cards have the listitem role and are keyboard focusable via Tab",
+      "all three template cards have the listitem role",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="templates-grid-keyboard"]');
-        const cards = scope.locator('[role="listitem"]');
-        const count = await cards.count();
-        expect(count).toBe(3);
-        for (let i = 0; i < count; i += 1) {
-          const inner = cards.nth(i).locator("button").first();
-          await inner.focus();
-          await expect(inner).toBeFocused();
-        }
-      },
-    );
-
-    test(
-      "Use Template button inside a card is keyboard reachable and labelled",
-      async ({ page }) => {
-        const scope = page.locator('[data-case-frame="templates-grid-keyboard"]');
-        const useButton = scope.getByRole("button", { name: "Use Template", exact: true }).first();
-        await useButton.focus();
-        await expect(useButton).toBeFocused();
+        await expect(scope.locator('[role="listitem"]')).toHaveCount(3);
       },
     );
 
@@ -125,9 +108,37 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
         await expect(deleteButton).toBeVisible();
       },
     );
+
+    test(
+      "Tab visits Use Template then Delete in card-reading order across all three cards",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="templates-grid-keyboard"]');
+        const cards = scope.locator('[role="listitem"]');
+
+        const useBtn0 = cards.nth(0).getByRole("button", { name: "Use Template", exact: true });
+        const delBtn0 = cards.nth(0).getByRole("button", { name: "Delete Sprint Planning template", exact: true });
+        const useBtn1 = cards.nth(1).getByRole("button", { name: "Use Template", exact: true });
+        const delBtn1 = cards.nth(1).getByRole("button", { name: "Delete Bug Bash template", exact: true });
+        const useBtn2 = cards.nth(2).getByRole("button", { name: "Use Template", exact: true });
+        const delBtn2 = cards.nth(2).getByRole("button", { name: "Delete Feature Launch template", exact: true });
+
+        await useBtn0.focus();
+        await expect(useBtn0).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(delBtn0).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(useBtn1).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(delBtn1).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(useBtn2).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(delBtn2).toBeFocused();
+      },
+    );
   });
 
-  test.describe("all-work — keyboard reachability at 1280 px", () => {
+  test.describe("all-work — view-switcher is keyboard-focusable at 1280 px", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
@@ -135,7 +146,7 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
     });
 
     test(
-      "view-switcher Select trigger is keyboard focusable and carries an accessible label",
+      "view-switcher Select trigger is keyboard-focusable",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="all-work-keyboard"]');
         const trigger = scope.getByRole("combobox", { name: "Select view", exact: true });
@@ -143,9 +154,23 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
         await expect(trigger).toBeFocused();
       },
     );
+
+    test(
+      "Esc closes the view-switcher overlay and returns focus to the trigger",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="all-work-keyboard"]');
+        const trigger = scope.getByRole("combobox", { name: "Select view", exact: true });
+        await trigger.focus();
+        await page.keyboard.press("Enter");
+        await expect(page.getByRole("listbox")).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(page.getByRole("listbox")).not.toBeVisible();
+        await expect(trigger).toBeFocused();
+      },
+    );
   });
 
-  test.describe("approvals — keyboard reachability at 1280 px", () => {
+  test.describe("approvals — keyboard tab order at 1280 px", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
@@ -156,24 +181,28 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
       "approval list has listitem role for each row",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="approvals-keyboard"]');
-        const items = scope.locator('[role="listitem"]');
-        const count = await items.count();
-        expect(count).toBe(3);
+        await expect(scope.locator('[role="listitem"]')).toHaveCount(3);
       },
     );
 
     test(
-      "Decide button inside each approval row is keyboard focusable",
+      "Tab visits each Decide button in row order",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="approvals-keyboard"]');
-        const decideButton = scope.getByRole("button", { name: "Decide", exact: true }).first();
-        await decideButton.focus();
-        await expect(decideButton).toBeFocused();
+        const decides = scope.getByRole("button", { name: "Decide", exact: true });
+        await expect(decides).toHaveCount(3);
+
+        await decides.nth(0).focus();
+        await expect(decides.nth(0)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(decides.nth(1)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(decides.nth(2)).toBeFocused();
       },
     );
   });
 
-  test.describe("command-center — keyboard reachability at 1280 px", () => {
+  test.describe("command-center — keyboard tab order at 1280 px", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
@@ -181,20 +210,23 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
     });
 
     test(
-      "each issue row is a keyboard-focusable link with a non-empty accessible name",
+      "Tab visits each work-item link in row order",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="command-center-keyboard"]');
         const links = scope.getByRole("link");
-        const count = await links.count();
-        expect(count).toBeGreaterThanOrEqual(3);
-        const first = links.first();
-        await first.focus();
-        await expect(first).toBeFocused();
+        await expect(links).toHaveCount(3);
+
+        await links.nth(0).focus();
+        await expect(links.nth(0)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(links.nth(1)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(links.nth(2)).toBeFocused();
       },
     );
   });
 
-  test.describe("inbox — keyboard reachability at 1280 px", () => {
+  test.describe("inbox — keyboard tab order at 1280 px", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
@@ -202,20 +234,23 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
     });
 
     test(
-      "each notification item is a keyboard-focusable button with aria-pressed",
+      "Tab visits each notification button in row order",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="inbox-keyboard"]');
         const buttons = scope.locator('button[aria-pressed]');
-        const count = await buttons.count();
-        expect(count).toBe(3);
-        const first = buttons.first();
-        await first.focus();
-        await expect(first).toBeFocused();
+        await expect(buttons).toHaveCount(3);
+
+        await buttons.nth(0).focus();
+        await expect(buttons.nth(0)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(buttons.nth(1)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(buttons.nth(2)).toBeFocused();
       },
     );
   });
 
-  test.describe("my-work — keyboard reachability at 1280 px", () => {
+  test.describe("my-work — keyboard tab order at 1280 px", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
@@ -223,20 +258,23 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
     });
 
     test(
-      "each work-item row is a keyboard-focusable link",
+      "Tab visits each work-item link in row order",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="my-work-keyboard"]');
         const links = scope.getByRole("link");
-        const count = await links.count();
-        expect(count).toBe(3);
-        const first = links.first();
-        await first.focus();
-        await expect(first).toBeFocused();
+        await expect(links).toHaveCount(3);
+
+        await links.nth(0).focus();
+        await expect(links.nth(0)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(links.nth(1)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(links.nth(2)).toBeFocused();
       },
     );
   });
 
-  test.describe("org-projects — keyboard reachability at 1280 px", () => {
+  test.describe("org-projects — keyboard tab order at 1280 px", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
@@ -248,9 +286,8 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="org-projects-keyboard"]');
         const cards = scope.locator('[role="listitem"]');
-        const count = await cards.count();
-        expect(count).toBe(3);
-        for (let i = 0; i < count; i += 1) {
+        await expect(cards).toHaveCount(3);
+        for (let i = 0; i < 3; i += 1) {
           const name = await cards.nth(i).getAttribute("aria-label");
           expect(name).toBeTruthy();
         }
@@ -258,17 +295,22 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
     );
 
     test(
-      "project cards are keyboard focusable via their tabIndex",
+      "Tab visits each project card in grid order",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="org-projects-keyboard"]');
-        const card = scope.locator('[role="listitem"]').first();
-        await card.focus();
-        await expect(card).toBeFocused();
+        const cards = scope.locator('[role="listitem"]');
+
+        await cards.nth(0).focus();
+        await expect(cards.nth(0)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(cards.nth(1)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(cards.nth(2)).toBeFocused();
       },
     );
   });
 
-  test.describe("teams — keyboard reachability at 1280 px", () => {
+  test.describe("teams — keyboard tab order and Esc at 1280 px", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
@@ -279,22 +321,44 @@ test.describe("Org-work pages — responsive and a11y contract", () => {
       "each team row has role=listitem",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="teams-keyboard"]');
-        const items = scope.locator('[role="listitem"]');
-        const count = await items.count();
-        expect(count).toBe(3);
+        await expect(scope.locator('[role="listitem"]')).toHaveCount(3);
       },
     );
 
     test(
-      "each team row actions button is keyboard focusable and carries a team-scoped aria-label",
+      "Tab visits each team row actions button in row order — two per row, six total",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="teams-keyboard"]');
-        const actionsButtons = scope.locator('button[aria-label*="Actions for"]');
-        const count = await actionsButtons.count();
-        expect(count).toBe(3);
-        const first = actionsButtons.first();
-        await first.focus();
-        await expect(first).toBeFocused();
+        const buttons = scope.locator('button[aria-label*="Actions for"]');
+        await expect(buttons).toHaveCount(6);
+
+        await buttons.nth(0).focus();
+        await expect(buttons.nth(0)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(buttons.nth(1)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(buttons.nth(2)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(buttons.nth(3)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(buttons.nth(4)).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(buttons.nth(5)).toBeFocused();
+      },
+    );
+
+    test(
+      "Esc closes the team actions dropdown and returns focus to its trigger",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="teams-keyboard"]');
+        const trigger = scope.locator('button[aria-label="Actions for Engineering"]').nth(0);
+        await trigger.focus();
+        await expect(trigger).toBeFocused();
+        await page.keyboard.press("Enter");
+        await expect(page.getByRole("menuitem", { name: "Edit", exact: true })).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(page.getByRole("menuitem", { name: "Edit", exact: true })).not.toBeVisible();
+        await expect(trigger).toBeFocused();
       },
     );
   });

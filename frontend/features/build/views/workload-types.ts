@@ -24,6 +24,7 @@ export interface FilterState {
   type: string;
   status: string;
   assigneeId: string;
+  teamId: string;
   showUnassigned: boolean;
 }
 
@@ -34,6 +35,7 @@ export const INITIAL_FILTERS: FilterState = {
   type: "all",
   status: "all",
   assigneeId: "all",
+  teamId: "all",
   showUnassigned: true,
 };
 
@@ -44,6 +46,7 @@ export function hasActiveWorkloadFilters(filters: FilterState): boolean {
     filters.type !== "all" ||
     filters.status !== "all" ||
     filters.assigneeId !== "all" ||
+    filters.teamId !== "all" ||
     filters.statCard !== "all"
   );
 }

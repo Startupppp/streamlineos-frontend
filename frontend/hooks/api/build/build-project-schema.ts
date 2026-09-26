@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
+import { cursorPageContract, idCursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 const ticketLabelSchema = z.object({
   id: z.number(),
@@ -232,6 +232,9 @@ const projectWebhookSchema = z.object({
   events: z.array(z.string()),
   isActive: z.boolean(),
   createdAt: z.string(),
+  lastDeliveryAt: z.string().nullable(),
+  lastDeliveryStatus: z.enum(['success', 'failed', 'pending']).nullable(),
+  failureRate: z.number().nullable(),
 });
 
 const webhookDeliverySchema = z.object({
@@ -270,6 +273,13 @@ const AUTOMATION_TRIGGER_EVENT_VALUES = [
   "sprint.completed",
 ] as const;
 
+const automationCreatedByUserSchema = z.object({
+  name: z.string().nullable(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string().nullable(),
+});
+
 const projectAutomationListItemSchema = z.object({
   id: z.number(),
   projectId: z.number(),
@@ -278,7 +288,12 @@ const projectAutomationListItemSchema = z.object({
   triggerEvent: z.enum(AUTOMATION_TRIGGER_EVENT_VALUES),
   conditions: z.array(projectAutomationConditionSchema),
   actions: z.array(projectAutomationActionSchema),
+  createdBy: z.string().nullable(),
+  createdByUser: automationCreatedByUserSchema.nullable(),
+  lastRunAt: z.string().nullable(),
+  lastFailureAt: z.string().nullable(),
   createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 const projectAutomationRowSchema = z.object({
@@ -338,7 +353,8 @@ export const ticketFieldValueListContract = z.array(ticketFieldValueSchema);
 export const ticketFieldValueCreateContract = z.object({ success: z.literal(true) });
 export const projectReleaseListContract = cursorPageContract(projectReleaseListItemSchema);
 export const projectReleaseRowContract = projectReleaseRowSchema;
-export const projectWebhookListContract = z.array(projectWebhookSchema);
+export const projectWebhookPageContract = idCursorPageContract(projectWebhookSchema);
+export const projectWebhookListContract = projectWebhookPageContract;
 export const projectWebhookRowContract = projectWebhookSchema;
 export const webhookDeliveryListContract = z.array(webhookDeliverySchema);
 export const webhookTestResultContract = webhookTestResultSchema;

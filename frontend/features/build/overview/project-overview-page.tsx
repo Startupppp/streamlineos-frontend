@@ -7,6 +7,7 @@ import { useCycles, useProjectAnalytics, type ProjectAnalyticsParams } from "@/h
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { useProjectMilestones } from "@/hooks/api/build/milestones";
 import { useReleases } from "@/hooks/api/build/releases";
+import { useProjectActivity } from "@/hooks/api/build/project-activity";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -21,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { formatShortDate } from "@/lib/date-utils";
 import { EmptyState } from "@/components/ui/empty-state";
-import { AlertTriangle, LayoutGrid, Target, TrendingUp, Zap } from "lucide-react";
+import { AlertTriangle, Activity, LayoutGrid, Target, TrendingUp, Zap } from "lucide-react";
 
 function isAnalyticsRange(v: string | null): v is "7d" | "30d" | "90d" {
   return v === "7d" || v === "30d" || v === "90d";
@@ -67,6 +68,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
   const columnCountsQuery = useTicketColumnCounts(projectId);
   const milestonesQuery = useProjectMilestones(projectId);
   const releasesQuery = useReleases(projectId);
+  const activityQuery = useProjectActivity(projectId);
 
   const isLoading =
     projectQuery.isLoading ||
@@ -82,7 +84,8 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
     cyclesQuery.isError ||
     columnCountsQuery.isError ||
     milestonesQuery.isError ||
-    releasesQuery.isError;
+    releasesQuery.isError ||
+    activityQuery.isError;
 
   const error =
     projectQuery.error ??
@@ -90,7 +93,8 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
     cyclesQuery.error ??
     columnCountsQuery.error ??
     milestonesQuery.error ??
-    releasesQuery.error;
+    releasesQuery.error ??
+    activityQuery.error;
 
   const resolution = usePageState({
     permission: "build:view",
@@ -131,6 +135,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
     void columnCountsQuery.refetch();
     void milestonesQuery.refetch();
     void releasesQuery.refetch();
+    void activityQuery.refetch();
   }
 
   return (
@@ -286,6 +291,39 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
               </Card>
             )}
           </div>
+
+          {activityQuery.data && activityQuery.data.data.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <h2 className="text-sm font-semibold flex items-center gap-2">
+                  <Activity className="h-4 w-4" aria-hidden="true" />
+                  Recent activity
+                </h2>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {activityQuery.data.data.map((item) => (
+                  <div key={item.id} className="flex flex-col gap-0.5 text-sm">
+                    <div className="flex items-baseline gap-1 flex-wrap">
+                      <span className="font-medium">
+                        {item.user?.name ?? "System"}
+                      </span>
+                      <span className="text-muted-foreground">{item.label}</span>
+                      <span className="text-muted-foreground">on</span>
+                      <span className="font-medium truncate max-w-[200px]">
+                        {item.projectKey}-{item.ticketNumber}
+                      </span>
+                      <span className="truncate max-w-[200px] text-muted-foreground">
+                        {item.ticketTitle}
+                      </span>
+                    </div>
+                    <span className="text-micro text-muted-foreground">
+                      {formatShortDate(item.createdAt)}
+                    </span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           <div className="flex items-center gap-3 text-sm">
             <Link

@@ -6,6 +6,9 @@ export interface ProjectWebhook {
   isActive: boolean;
   secret?: string;
   createdAt: string;
+  lastDeliveryAt?: string | null;
+  lastDeliveryStatus?: "success" | "failed" | "pending" | null;
+  failureRate?: number | null;
 }
 
 export interface WebhookDelivery {

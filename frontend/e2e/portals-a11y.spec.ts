@@ -22,6 +22,12 @@ const CASES = [
   "portal-invite-accept",
   "portal-invite-accept-error",
   "portal-invite-accept-missing-token",
+  "internal-portal-list",
+  "internal-portal-dashboard",
+  "internal-change-requests",
+  "internal-client-visibility",
+  "internal-updates",
+  "internal-client-access",
 ] as const;
 
 async function shimmerAnimationName(page: Page): Promise<string> {
@@ -153,6 +159,58 @@ test.describe("Portal surfaces responsive contract", () => {
       await contactLink.focus();
       await expect(contactLink).toBeFocused();
       await expect(contactLink).toHaveAttribute("href", /mailto:/);
+    });
+
+    test("internal-portal-list first project card link is keyboard-reachable and points to portal detail", async ({ page }) => {
+      const projectLink = frame(page, "internal-portal-list").locator('a[href="/portal/101"]');
+      await projectLink.focus();
+      await expect(projectLink).toBeFocused();
+      await expect(projectLink).toHaveAttribute("href", "/portal/101");
+    });
+
+    test("internal-portal-dashboard Submit Request button is keyboard-reachable", async ({ page }) => {
+      const button = frame(page, "internal-portal-dashboard").getByRole("button", {
+        name: "Submit Request",
+        exact: true,
+      });
+      await button.focus();
+      await expect(button).toBeFocused();
+    });
+
+    test("internal-change-requests New Change Request button is keyboard-reachable", async ({ page }) => {
+      const button = frame(page, "internal-change-requests").getByRole("button", {
+        name: "New Change Request",
+        exact: true,
+      });
+      await button.focus();
+      await expect(button).toBeFocused();
+    });
+
+    test("internal-client-visibility first ticket visibility switch is keyboard-reachable", async ({ page }) => {
+      const toggle = frame(page, "internal-client-visibility").getByRole("switch", {
+        name: "Toggle client visibility for ticket #42",
+        exact: true,
+      });
+      await toggle.focus();
+      await expect(toggle).toBeFocused();
+    });
+
+    test("internal-updates Post Update button is keyboard-reachable", async ({ page }) => {
+      const button = frame(page, "internal-updates").getByRole("button", {
+        name: "Post Update",
+        exact: true,
+      });
+      await button.focus();
+      await expect(button).toBeFocused();
+    });
+
+    test("internal-client-access Grant Access button is keyboard-reachable", async ({ page }) => {
+      const button = frame(page, "internal-client-access").getByRole("button", {
+        name: "Grant Access",
+        exact: true,
+      });
+      await button.focus();
+      await expect(button).toBeFocused();
     });
   });
 
@@ -293,6 +351,60 @@ test.describe("Portal surfaces responsive contract", () => {
       const link = frame(page, "portal-project-card").getByRole("link");
       await expect(link).toBeVisible();
       await expect(link).toHaveAttribute("href", /\/client-portal\/101/);
+    });
+
+    test("internal-portal-list renders an h1 heading for the Client Portal page", async ({ page }) => {
+      const h1 = frame(page, "internal-portal-list").getByRole("heading", {
+        level: 1,
+        name: "Client Portal",
+        exact: true,
+      });
+      await expect(h1).toBeVisible();
+    });
+
+    test("internal-portal-dashboard renders an h1 heading with the seeded project name", async ({ page }) => {
+      const h1 = frame(page, "internal-portal-dashboard").getByRole("heading", {
+        level: 1,
+        name: "Northbridge Redesign",
+        exact: true,
+      });
+      await expect(h1).toBeVisible();
+    });
+
+    test("internal-change-requests renders an h1 heading for the Change Requests page", async ({ page }) => {
+      const h1 = frame(page, "internal-change-requests").getByRole("heading", {
+        level: 1,
+        name: "Change Requests",
+        exact: true,
+      });
+      await expect(h1).toBeVisible();
+    });
+
+    test("internal-client-visibility renders an h1 heading for the Client Portal management page", async ({ page }) => {
+      const h1 = frame(page, "internal-client-visibility").getByRole("heading", {
+        level: 1,
+        name: "Client Portal",
+        exact: true,
+      });
+      await expect(h1).toBeVisible();
+    });
+
+    test("internal-updates renders an h1 heading for the Updates page", async ({ page }) => {
+      const h1 = frame(page, "internal-updates").getByRole("heading", {
+        level: 1,
+        name: "Updates",
+        exact: true,
+      });
+      await expect(h1).toBeVisible();
+    });
+
+    test("internal-client-access renders an h1 heading for the Client Access settings page", async ({ page }) => {
+      const h1 = frame(page, "internal-client-access").getByRole("heading", {
+        level: 1,
+        name: "Client Access",
+        exact: true,
+      });
+      await expect(h1).toBeVisible();
     });
   });
 });

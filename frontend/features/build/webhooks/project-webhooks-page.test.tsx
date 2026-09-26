@@ -20,6 +20,12 @@ jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
     open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn() }),
+  usePathname: () => "/build/1/settings/integrations/webhooks",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 let mockAccessState: AccessState = "denied";
 let mockWebhooks: ProjectWebhook[] = [];
 let mockIsLoading = false;
@@ -51,6 +57,7 @@ jest.mock("@/hooks/api/build/webhooks", () => ({
   }),
   useCreateWebhook: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteWebhook: () => ({ mutate: jest.fn(), isPending: false }),
+  useUpdateWebhook: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock("@/components/shared/dirty-state-context", () => ({
@@ -113,6 +120,9 @@ const SAMPLE_WEBHOOK: ProjectWebhook = {
   events: ["ticket.created"],
   isActive: true,
   createdAt: "2026-01-01T00:00:00.000Z",
+  lastDeliveryAt: null,
+  lastDeliveryStatus: null,
+  failureRate: null,
 };
 
 describe("ProjectWebhooksPage — build:manage access control (BLD-X-FE-SETTINGS-WH-010)", () => {
@@ -204,35 +214,47 @@ describe("ProjectWebhooksPage — populated state (BLD-X-FE-SETTINGS-WH-014)", (
 
 describe("Webhook list contract — secret redaction (BLD-X-FE-SETTINGS-WH-015)", () => {
   it("projectWebhookSchema strips the secret field — it is never present in the list response", async () => {
-    const { projectWebhookListContract } = await import(
+    const { projectWebhookPageContract } = await import(
       "@/hooks/api/build/build-project-schema"
     );
-    const rawWithSecret = [
-      {
-        id: 1,
-        orgId: "org-abc",
-        projectId: 5,
-        url: "https://example.com/hook",
-        events: ["ticket.created"],
-        isActive: true,
-        createdAt: "2026-01-01T00:00:00.000Z",
-        secret: "should-be-stripped-xxxx",
-      },
-    ];
-    const parsed = projectWebhookListContract.parse(rawWithSecret);
-    expect((parsed[0] as Record<string, unknown>)["secret"]).toBeUndefined();
+    const rawWithSecret = {
+      data: [
+        {
+          id: 1,
+          orgId: "org-abc",
+          projectId: 5,
+          url: "https://example.com/hook",
+          events: ["ticket.created"],
+          isActive: true,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          lastDeliveryAt: null,
+          lastDeliveryStatus: null,
+          failureRate: null,
+          secret: "should-be-stripped-xxxx",
+        },
+      ],
+      hasMore: false,
+      nextCursor: null,
+    };
+    const parsed = projectWebhookPageContract.parse(rawWithSecret);
+    expect(parsed.data.length).toBeGreaterThan(0);
+    expect((parsed.data[0] as Record<string, unknown>)["secret"]).toBeUndefined();
   });
 
-  it("projectWebhookListContract accepts a webhook with isActive true and false", async () => {
-    const { projectWebhookListContract } = await import(
+  it("projectWebhookPageContract accepts a webhook with isActive true and false", async () => {
+    const { projectWebhookPageContract } = await import(
       "@/hooks/api/build/build-project-schema"
     );
-    const raw = [
-      { id: 1, orgId: "o", projectId: 1, url: "https://a.com", events: [], isActive: true, createdAt: "2026-01-01T00:00:00Z" },
-      { id: 2, orgId: "o", projectId: 1, url: "https://b.com", events: [], isActive: false, createdAt: "2026-01-01T00:00:00Z" },
-    ];
-    expect(() => projectWebhookListContract.parse(raw)).not.toThrow();
-    expect(projectWebhookListContract.parse(raw)[1].isActive).toBe(false);
+    const raw = {
+      data: [
+        { id: 1, orgId: "o", projectId: 1, url: "https://a.com", events: [], isActive: true, createdAt: "2026-01-01T00:00:00Z", lastDeliveryAt: null, lastDeliveryStatus: null, failureRate: null },
+        { id: 2, orgId: "o", projectId: 1, url: "https://b.com", events: [], isActive: false, createdAt: "2026-01-01T00:00:00Z", lastDeliveryAt: null, lastDeliveryStatus: null, failureRate: null },
+      ],
+      hasMore: false,
+      nextCursor: null,
+    };
+    expect(() => projectWebhookPageContract.parse(raw)).not.toThrow();
+    expect(projectWebhookPageContract.parse(raw).data[1].isActive).toBe(false);
   });
 });
 
@@ -334,5 +356,33 @@ describe("ProjectWebhooksPage — offline state (BLD-X-FE-SETTINGS-WH-032)", () 
     render(<ProjectWebhooksPage projectId="1" />);
     expect(screen.queryByText("You are offline")).not.toBeInTheDocument();
     expect(screen.getByText("No webhooks configured")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectWebhooksPage — URL-backed filters (BLD-X-FE-SETTINGS-WH-033)", () => {
+  it("renders the state filter control — allowing the operator to view only active or inactive webhooks", () => {
+    mockAccessState = "granted";
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByRole("combobox", { name: /filter by state/i })).toBeInTheDocument();
+  });
+
+  it("renders the event filter control — paired with the state filter so the toolbar renders even with no webhooks", () => {
+    mockAccessState = "granted";
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByRole("combobox", { name: /filter by event/i })).toBeInTheDocument();
+  });
+
+  it("renders the URL search input — so the operator can search webhooks by URL prefix", () => {
+    mockAccessState = "granted";
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByRole("textbox", { name: /search webhooks/i })).toBeInTheDocument();
+  });
+
+  it("renders all three filter controls on the same toolbar — all must be present before any filtering logic runs", () => {
+    mockAccessState = "granted";
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByRole("combobox", { name: /filter by state/i })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /filter by event/i })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /search webhooks/i })).toBeInTheDocument();
   });
 });

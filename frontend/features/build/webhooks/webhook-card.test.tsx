@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { WebhookCard } from "@/features/build/settings/webhook-card";
 import type { ProjectWebhook } from "@/hooks/api/build/webhooks";
@@ -26,6 +26,9 @@ const BASE_WEBHOOK: ProjectWebhook = {
   events: ["ticket.created", "ticket.updated"],
   isActive: true,
   createdAt: "2026-06-01T00:00:00.000Z",
+  lastDeliveryAt: null,
+  lastDeliveryStatus: null,
+  failureRate: null,
 };
 
 beforeEach(() => {
@@ -117,5 +120,129 @@ describe("WebhookCard — mutation controls (BLD-X-FE-SETTINGS-WH-023)", () => {
     expect(
       screen.queryByRole("button", { name: /delete webhook/i }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("WebhookCard — enable / disable toggle (BLD-X-FE-SETTINGS-WH-024)", () => {
+  it("renders the toggle switch when canManage is true and onToggle is provided — active webhook shows switch", () => {
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        onToggle={jest.fn()}
+        canManage
+      />,
+    );
+    expect(
+      screen.getByRole("switch", { name: /disable webhook/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("calls onToggle with false when the switch is unchecked — disabling a webhook sends the right payload", () => {
+    const onToggle = jest.fn();
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        onToggle={onToggle}
+        canManage
+      />,
+    );
+    fireEvent.click(screen.getByRole("switch", { name: /disable webhook/i }));
+    expect(onToggle).toHaveBeenCalledWith(7, false);
+  });
+
+  it("calls onToggle with true when the switch is checked on an inactive webhook — enabling sends the right payload", () => {
+    const onToggle = jest.fn();
+    render(
+      <WebhookCard
+        webhook={{ ...BASE_WEBHOOK, isActive: false }}
+        projectId={3}
+        onDelete={jest.fn()}
+        onToggle={onToggle}
+        canManage
+      />,
+    );
+    fireEvent.click(screen.getByRole("switch", { name: /enable webhook/i }));
+    expect(onToggle).toHaveBeenCalledWith(7, true);
+  });
+
+  it("hides the toggle switch when canManage is false — mutation control fails closed", () => {
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        onToggle={jest.fn()}
+        canManage={false}
+      />,
+    );
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+  });
+
+  it("hides the toggle switch when onToggle is not provided even if canManage is true — caller opts in", () => {
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+  });
+});
+
+describe("WebhookCard — last delivery on card face (BLD-X-FE-SETTINGS-WH-025)", () => {
+  it("shows the last delivery date when lastDeliveryAt is set — so the operator can see when the most recent event was sent", () => {
+    render(
+      <WebhookCard
+        webhook={{ ...BASE_WEBHOOK, lastDeliveryAt: "2026-09-01T10:00:00.000Z", lastDeliveryStatus: "success" }}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    expect(screen.getByText(/sep/i)).toBeInTheDocument();
+  });
+
+  it("does not render a last-delivery indicator when lastDeliveryAt is null — new webhooks have no delivery yet", () => {
+    const { container } = render(
+      <WebhookCard
+        webhook={{ ...BASE_WEBHOOK, lastDeliveryAt: null }}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    expect(container.querySelector(".mt-1.flex.items-center.gap-2")).not.toBeInTheDocument();
+  });
+});
+
+describe("WebhookCard — failure rate on card face (BLD-X-FE-SETTINGS-WH-026)", () => {
+  it("shows a failure rate percentage when failureRate is set and nonzero — paired with the absent test below", () => {
+    render(
+      <WebhookCard
+        webhook={{ ...BASE_WEBHOOK, lastDeliveryAt: "2026-09-01T10:00:00.000Z", lastDeliveryStatus: "failed", failureRate: 0.5 }}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    expect(screen.getByText("50% failure")).toBeInTheDocument();
+  });
+
+  it("does not show a failure rate when failureRate is null — a webhook with no deliveries shows no rate", () => {
+    render(
+      <WebhookCard
+        webhook={{ ...BASE_WEBHOOK, lastDeliveryAt: null, failureRate: null }}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    expect(screen.queryByText(/failure/i)).not.toBeInTheDocument();
   });
 });

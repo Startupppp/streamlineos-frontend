@@ -56,6 +56,8 @@ interface BulkActionBarProps {
   onBulkCycle: (value: string) => void;
   onBulkLabel?: (value: string) => void;
   onBulkParent?: (parentTicketId: number | null) => void;
+  onBulkArchive?: () => void;
+  onBulkExport?: () => void;
   onClear: () => void;
 }
 
@@ -163,6 +165,8 @@ export const BulkActionBar = memo(function BulkActionBar({
   onBulkCycle,
   onBulkLabel,
   onBulkParent,
+  onBulkArchive,
+  onBulkExport,
   onClear,
 }: BulkActionBarProps) {
   const canUpdate = useCan("build:tickets:update");
@@ -259,6 +263,26 @@ export const BulkActionBar = memo(function BulkActionBar({
             excludeIds={resolvedExcludeIds}
             onPick={onBulkParent}
           />
+        ) : null}
+        {onBulkArchive !== undefined ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="shrink-0 px-1.5 text-xs text-destructive hover:text-destructive"
+            onClick={onBulkArchive}
+          >
+            Archive
+          </Button>
+        ) : null}
+        {onBulkExport !== undefined ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="shrink-0 px-1.5 text-xs"
+            onClick={onBulkExport}
+          >
+            Export
+          </Button>
         ) : null}
         <Button
           variant="ghost"

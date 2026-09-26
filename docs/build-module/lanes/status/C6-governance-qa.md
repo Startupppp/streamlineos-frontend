@@ -134,3 +134,103 @@ iterates over all 13 CASES including QA, incidents, decisions, approvals. The
   `BuildListToolbar` + `DataTable` pattern).
 - **C6 box:** remains unticked. A fresh serial drain confirming EXIT=0 is required
   before ticking.
+
+---
+
+## F-12 session (2026-09-26) — four new cases + approvals mobile gap
+
+### Surface analysis
+
+**budget** — `ProjectBudgetPage` uses `StatCardGrid` + `DataTable` for member breakdown
+but does NOT use `BuildHeaderActions` or `BuildListToolbar`. Needs its own gallery case.
+
+**incidents-incident** — `IncidentDetailPage` is a pure detail page with no `BuildHeaderActions`,
+`BuildListToolbar`, or `DataTable`. Key gallery-mountable surface: `IncidentSlaPanel` (purely
+prop-driven). `IncidentTimeline`, `IncidentFollowUps`, `IncidentDecisions` all make API calls
+and are excluded from the gallery.
+
+**qa-runs-run** — `RunExecutionPage` uses `BuildListToolbar` (with a status filter) and
+`DataTable` with `buildResultColumns` + `ResultRow` as the mobile card. Does NOT use
+`BuildHeaderActions`. Needs its own gallery case.
+
+**reports** — `ReportsTabs` is entirely chart-based (`ReportsAgileTab`, `ReportsOverviewTab`
+both use Recharts + API hooks). The gallery mounts only the `Tabs/TabsList/TabsTrigger`
+navigation shell with static h3 headings. The real Recharts charts are not mounted.
+
+**Recharts / reduced-motion note:** The reports page uses Recharts SVG animations which do
+NOT respond to `prefers-reduced-motion: reduce` via the shared `skeleton-shimmer` CSS rule.
+This parallels FE-108 (`.animate-spin` has no media-query override). The gallery static
+placeholders emit no animation, so the chart animation gap cannot be tested via gallery — it
+requires a live-browser capture with the real `ReportsAgileTab` mounted. Logged as a
+C6 finding; the reports reduced-motion row is marked `gap` in the matrix below.
+
+### Approvals mobile gap
+
+Root cause confirmed: the gallery's `ApprovalsTable` passed no `mobileCard` prop to `DataTable`,
+so the table was never hidden at 375px (`hidden sm:block` only applies when a `mobileCard` is
+provided). Fix: `renderMobileCard` added to `ApprovalsTable`, passing `BuildMobileCard` with
+title, `ApprovalStatusBadge`, requester, and meta (Type, Due).
+
+### New gallery cases added
+
+| Case ID | Component | Mobile card |
+|---|---|---|
+| `budget-overview` | `BudgetOverview` | `BuildMobileCard` (hours + cost) |
+| `incident-detail` | `IncidentDetailCase` | n/a (detail page, no list) |
+| `qa-run-execution` | `QaRunExecutionCase` | `ResultRow` |
+| `reports-tabs` | `ReportsTabsCase` | n/a (tab navigation + static headings) |
+
+### New spec tests added (governance-qa-a11y.spec.ts)
+
+**ARIA / screen-reader:**
+- Budget member table has column headers Member, Hours, Cost
+- Incident detail case exposes severity badge text "critical", status "Investigating", and "SLA Status" heading
+- QA run result table has column headers TC#, Title, Priority, Status
+- Reports case exposes a tablist with "Agile Reports" and "Overview" tab triggers
+- Reports agile tab has named h3 headings for Velocity and Burnup chart sections
+
+**Keyboard:**
+- Update Budget button in budget case is keyboard reachable
+- Edit button in incident detail case is keyboard reachable
+- Search input in qa-run-execution case is keyboard reachable
+- Agile Reports tab trigger in reports case is keyboard focusable
+
+**375px mobile:**
+- approvals list shows mobile cards not a desktop table (closes the gap noted in previous session)
+- budget member breakdown shows mobile cards not a desktop table
+- qa run execution list shows mobile cards not a desktop table
+
+**High-density / reduced-motion:** All 17 CASES now pass through the overflow loop at
+1920×1080 scale 2. Reduced-motion paired assertion remains on `loading-governance` (skeleton
+shimmer), covering all list pages. Reports charts have no coverage (see Recharts note above).
+
+---
+
+## Updated per-page × per-check matrix
+
+Legend: `✓` = covered · `gap` = known gap with explanation · `–` = no gallery case
+
+| Page | 375 px mobile | Screen-reader | Reduced motion | Keyboard | High-density |
+|---|---|---|---|---|---|
+| risks (governance-risks) | ✓ | ✓ | ✓ (paired) | ✓ | ✓ |
+| QA test-cases (qa-test-cases) | ✓ | ✓ | ✓ (shared) | ✓ | ✓ |
+| incidents (incidents) | ✓ | ✓ | ✓ (shared) | ✓ | ✓ |
+| decisions (decisions) | ✓ | ✓ | ✓ (shared) | ✓ | ✓ |
+| approvals (approvals) | ✓ | ✓ | ✓ (shared) | ✓ | ✓ |
+| budget (budget-overview) | ✓ | ✓ | ✓ (shared) | ✓ | ✓ |
+| incidents-incident (incident-detail) | – | ✓ | ✓ (shared) | ✓ | ✓ |
+| qa-runs-run (qa-run-execution) | ✓ | ✓ | ✓ (shared) | ✓ | ✓ |
+| reports (reports-tabs) | – | ✓ | gap (Recharts, see note) | ✓ | ✓ |
+
+**Notes on remaining gaps:**
+
+- **incidents-incident 375px mobile:** The detail page has no list/table — there is no
+  mobile-card vs table layout to assert. The row is marked `–` (not applicable).
+- **reports 375px mobile:** The tab navigation and static heading gallery case has no table
+  or list component, so there is nothing to assert about table visibility. Marked `–`.
+- **reports reduced motion:** Recharts SVG animations do not use `skeleton-shimmer
+  animate-pulse` and are not covered by the shared CSS rule. This gap requires a
+  live browser capture with the real chart components mounted and `prefers-reduced-motion`
+  set. Registered as a finding parallel to FE-108.
+- **C6 box:** remains unticked. A fresh serial drain confirming EXIT=0 is required
+  before ticking.

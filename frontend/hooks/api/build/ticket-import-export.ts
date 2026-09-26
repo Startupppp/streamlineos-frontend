@@ -34,6 +34,7 @@ export interface CommitTicketImportVariables {
 export interface ExportTicketsVariables {
   format: ImportFormat;
   limit?: number;
+  ticketIds?: number[];
 }
 
 function useCommitKey(): (confirmationToken: string) => string {
@@ -99,6 +100,7 @@ export function useExportTickets(projectId: number) {
           projectId,
           format: variables.format,
           ...(variables.limit === undefined ? {} : { limit: variables.limit }),
+          ...(variables.ticketIds !== undefined ? { ticketIds: variables.ticketIds } : {}),
         }),
     },
   );

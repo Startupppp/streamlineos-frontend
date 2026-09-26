@@ -8,8 +8,15 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-const projectWebhookListContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectWebhookListContract),
+export interface WebhookListFilters {
+  state?: "active" | "inactive";
+  event?: string;
+  q?: string;
+  cursor?: number;
+}
+
+const projectWebhookPageContract = lazyContract(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) => m.projectWebhookPageContract),
 );
 const webhookDeliveryListContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.webhookDeliveryListContract),
@@ -25,11 +32,20 @@ const noContentContract = lazyContract(() =>
 );
 export type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 
-export function useWebhooks(projectId: number) {
+export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
   const canManage = useCan("build:manage");
-  return useQuery<ProjectWebhook[]>({
-    queryKey: buildWorkQueryKeys.projects.webhooks(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectWebhook[]>(`/build/${projectId}/webhooks`, undefined, signal, projectWebhookListContract),
+  const hasFilters = filters !== undefined && Object.values(filters).some((v) => v !== undefined);
+  const activeFilters = hasFilters ? filters : undefined;
+  return useQuery<{ data: ProjectWebhook[]; hasMore: boolean; nextCursor: number | null }, Error, ProjectWebhook[]>({
+    queryKey: buildWorkQueryKeys.projects.webhooks(projectId, activeFilters as Record<string, unknown> | undefined),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ data: ProjectWebhook[]; hasMore: boolean; nextCursor: number | null }>(
+        `/build/${projectId}/webhooks`,
+        activeFilters,
+        signal,
+        projectWebhookPageContract,
+      ),
+    select: (page) => page.data,
     enabled: canManage && !!projectId,
     staleTime: 30_000,
   });
@@ -51,6 +67,16 @@ export function useCreateWebhook(projectId: number) {
     mutationKey: ["projects", projectId, "webhooks", "create"],
     mutationFn: (data: { url: string; events: string[]; secret?: string }) =>
       apiClient.post<ProjectWebhook>(`/build/${projectId}/webhooks`, data, undefined, projectWebhookRowContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.webhooks(projectId) }),
+  });
+}
+
+export function useUpdateWebhook(projectId: number) {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:manage", {
+    mutationKey: ["projects", projectId, "webhooks", "update"],
+    mutationFn: ({ webhookId, isActive }: { webhookId: number; isActive: boolean }) =>
+      apiClient.patch<ProjectWebhook>(`/build/${projectId}/webhooks/${webhookId}`, { isActive }, undefined, projectWebhookRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.webhooks(projectId) }),
   });
 }

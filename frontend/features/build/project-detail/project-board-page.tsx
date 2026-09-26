@@ -6,6 +6,9 @@ import { format, addDays } from "date-fns";
 import { Clock3 } from "lucide-react";
 import { useProject, useCycles, useBulkUpdateTickets } from "@/hooks/api";
 import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
+import { useOrgLabels } from "@/hooks/api/build/labels";
+import { useExportTickets } from "@/hooks/api/build/ticket-import-export";
+import { downloadTextFile } from "@/features/build/import-export/download-text-file";
 import type { BulkUpdateTicketsInput } from "@/hooks/api";
 import { useBoardUrlState } from "@/features/build/views/use-board-url-state";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
@@ -27,6 +30,7 @@ import { notFound } from "next/navigation";
 import type { ViewType } from "@/features/build/views/view-switcher";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -45,6 +49,9 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
   } = useProject(projectId);
   const { data: cycles } = useCycles(projectId);
   const bulkUpdate = useBulkUpdateTickets(projectId);
+  const { data: orgLabels } = useOrgLabels();
+  const exportMutation = useExportTickets(projectId);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
 
   const {
     view,
@@ -161,7 +168,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       update: Partial<
         Pick<
           BulkUpdateTicketsInput,
-          "assigneeId" | "status" | "cycleId" | "priority" | "parentTicketId"
+          "assigneeId" | "status" | "cycleId" | "priority" | "parentTicketId" | "labelIds" | "archive"
         >
       >,
     ) => {
@@ -173,6 +180,12 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         { ticketIds: [...selectedIds].map(Number), ...update },
         {
           onSuccess: (d) => {
+            if (d.blocked && d.blocked.length > 0) {
+              toast.error(
+                `${d.blocked.length} ticket${d.blocked.length !== 1 ? "s" : ""} could not be archived — ${d.blocked.length !== 1 ? "they have" : "it has"} active sub-tasks not in the selection. Nothing was changed.`,
+              );
+              return;
+            }
             toast.success(
               `${d.updated} ticket${d.updated !== 1 ? "s" : ""} updated`,
             );
@@ -210,6 +223,46 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     (parentTicketId: number | null) => handleBulkUpdate({ parentTicketId }),
     [handleBulkUpdate],
   );
+
+  const handleBulkLabel = useCallback(
+    (labelId: string) => handleBulkUpdate({ labelIds: [Number(labelId)] }),
+    [handleBulkUpdate],
+  );
+
+  const handleBulkArchiveRequest = useCallback(
+    () => setArchiveConfirmOpen(true),
+    [],
+  );
+
+  const handleBulkArchiveConfirm = useCallback(
+    () => {
+      handleBulkUpdate({ archive: true });
+      setArchiveConfirmOpen(false);
+    },
+    [handleBulkUpdate],
+  );
+
+  const handleArchiveDialogChange = useCallback(
+    (open: boolean) => setArchiveConfirmOpen(open),
+    [],
+  );
+
+  const handleBulkExport = useCallback(() => {
+    if (selectedIds.size === 0) {
+      toast.error("No tickets selected");
+      return;
+    }
+    exportMutation.mutate(
+      { format: "csv", ticketIds: [...selectedIds].map(Number) },
+      {
+        onSuccess: (result) => {
+          downloadTextFile(result.filename, result.contentType, result.content);
+          toast.success(`Exported ${result.rowCount} ticket${result.rowCount !== 1 ? "s" : ""}`);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [selectedIds, exportMutation]);
 
   const resolution = usePageState({
     permission: "build:view",
@@ -347,6 +400,10 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         onBulkAssignee={handleBulkAssignee}
         onBulkCycle={handleBulkCycle}
         onBulkParent={handleBulkParent}
+        onBulkLabel={handleBulkLabel}
+        onBulkArchive={handleBulkArchiveRequest}
+        onBulkExport={handleBulkExport}
+        labels={orgLabels}
         onClearSelection={handleClearSelection}
         onSelectionChange={handleSelectionChange}
         isTruncated={isTruncated}
@@ -369,6 +426,16 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         activeLayout={view}
       />
       <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
+      <ConfirmDialog
+        open={archiveConfirmOpen}
+        onOpenChange={handleArchiveDialogChange}
+        title="Archive selected tickets?"
+        description={`Archive ${selectedIds.size} ticket${selectedIds.size !== 1 ? "s" : ""}? Tickets with active sub-tasks not in your selection cannot be archived and nothing will change.`}
+        confirmLabel={`Archive ${selectedIds.size} ticket${selectedIds.size !== 1 ? "s" : ""}`}
+        destructive
+        isPending={bulkUpdate.isPending}
+        onConfirm={handleBulkArchiveConfirm}
+      />
     </PageWrapper>
   );
 }

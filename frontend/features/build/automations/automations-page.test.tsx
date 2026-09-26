@@ -6,6 +6,7 @@ import type { ProjectAutomation } from "@/hooks/api/build/automations";
 let mockAccessState: AccessState = "denied";
 let mockDebouncedSearch = "";
 let mockTriggerFilter = "all";
+let mockActionFilter = "all";
 let mockIsFiltered = false;
 let mockAutomations: ProjectAutomation[] = [];
 let mockIsLoading = false;
@@ -37,6 +38,7 @@ jest.mock("@/hooks/api/build/automations", () => ({
   ],
   ACTION_TYPES: [
     { value: "set_status", label: "Set Status" },
+    { value: "set_assignee", label: "Assign To" },
   ],
 }));
 
@@ -47,7 +49,11 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
     cursor: null,
     setSearch: jest.fn(),
     setCursor: jest.fn(),
-    value: (param: string) => (param === "trigger" ? mockTriggerFilter : "all"),
+    value: (param: string) => {
+      if (param === "trigger") return mockTriggerFilter;
+      if (param === "action") return mockActionFilter;
+      return "all";
+    },
     isActive: () => false,
     setValue: jest.fn(),
     clearAll: jest.fn(),
@@ -138,13 +144,19 @@ const SAMPLE_AUTOMATION: ProjectAutomation = {
   triggerEvent: "ticket.created",
   conditions: [],
   actions: [{ type: "set_assignee", value: "user-abc" }],
+  createdBy: "user-abc",
+  createdByUser: { name: "Ada Lovelace", firstName: "Ada", lastName: "Lovelace", email: "ada@example.test" },
+  lastRunAt: null,
+  lastFailureAt: null,
   createdAt: "2024-01-01T00:00:00.000Z",
+  updatedAt: "2024-01-01T00:00:00.000Z",
 };
 
 beforeEach(() => {
   mockAccessState = "denied";
   mockDebouncedSearch = "";
   mockTriggerFilter = "all";
+  mockActionFilter = "all";
   mockIsFiltered = false;
   mockAutomations = [];
   mockIsLoading = false;
@@ -309,6 +321,66 @@ describe("AutomationsPage — keyboard shortcut help (BLD-X-FE-SETTINGS-006)", (
     const capturedOptions = mockUseBuildListKeyboard.mock.calls[0][0] as { onShortcutHelp: () => void };
     expect(typeof capturedOptions.onShortcutHelp).toBe("function");
     await act(async () => { capturedOptions.onShortcutHelp(); });
+  });
+});
+
+describe("AutomationsPage — action filter (BLD-X-FE-SETTINGS-007)", () => {
+  it("renders the action filter dropdown in the filter bar (BLD-X-FE-SETTINGS-007a)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByLabelText(/filter by action/i)).toBeInTheDocument();
+  });
+
+  it("action filter dropdown is absent while access is denied — no filter controls render when denied (BLD-X-FE-SETTINGS-007b)", () => {
+    mockAccessState = "denied";
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByLabelText(/filter by action/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("AutomationsPage — owner and run timestamps (BLD-X-FE-SETTINGS-008)", () => {
+  it("displays automation owner name resolved from createdByUser — raw UUID must not appear (BLD-X-FE-SETTINGS-008a)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [SAMPLE_AUTOMATION];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText("by Ada Lovelace")).toBeInTheDocument();
+    expect(screen.queryByText("user-abc")).not.toBeInTheDocument();
+  });
+
+  it("does not show owner line when createdByUser is null (BLD-X-FE-SETTINGS-008b)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [{ ...SAMPLE_AUTOMATION, createdByUser: null }];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByText(/by /i)).not.toBeInTheDocument();
+  });
+
+  it("displays last run date when lastRunAt is set (BLD-X-FE-SETTINGS-008c)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [{ ...SAMPLE_AUTOMATION, lastRunAt: "2024-06-15T12:00:00.000Z" }];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText(/ran /i)).toBeInTheDocument();
+  });
+
+  it("does not show last run when lastRunAt is null (BLD-X-FE-SETTINGS-008d)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [{ ...SAMPLE_AUTOMATION, lastRunAt: null }];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByText(/ran /i)).not.toBeInTheDocument();
+  });
+
+  it("displays failure date with destructive tone when lastFailureAt is set (BLD-X-FE-SETTINGS-008e)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [{ ...SAMPLE_AUTOMATION, lastFailureAt: "2024-06-15T12:00:00.000Z" }];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText(/failed /i)).toBeInTheDocument();
+  });
+
+  it("does not show failure date when lastFailureAt is null (BLD-X-FE-SETTINGS-008f)", () => {
+    mockAccessState = "granted";
+    mockAutomations = [{ ...SAMPLE_AUTOMATION, lastFailureAt: null }];
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByText(/failed /i)).not.toBeInTheDocument();
   });
 });
 

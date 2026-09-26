@@ -343,21 +343,13 @@ export interface UpdateIntakeRequestInput {
   linkedWorkItemId?: number;
 }
 
-/**
- * Mirrors `listProjectsSchema` in the backend's `build/core/dto`, which is
- * `.strict()` — a field this type carries and that schema does not is not
- * ignored, it is a 400 on every request. `page` used to sit here and
- * `projects-page.tsx` sent it, which is what made `/build` render
- * "Failed to load projects" at every width. `GET /build` is keyset:
- * it orders by descending id and takes `afterId`, so there is no page number
- * to send and no total to receive.
- */
 export interface ProjectFilters {
   afterId?: number;
   limit?: number;
   search?: string;
   status?: "ALL" | ProjectStatusValue;
   managedProductId?: number;
+  managerId?: string;
 }
 
 /** What `GET /build` actually answers. */

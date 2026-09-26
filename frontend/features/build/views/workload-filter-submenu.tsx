@@ -13,6 +13,7 @@ import {
   type WorkloadMember,
   type StatusOption,
   type CycleOption,
+  type TeamOption,
   TICKET_TYPES,
   PRIORITIES,
   formatEnumLabel,
@@ -24,12 +25,14 @@ interface WorkloadSubmenuProps {
   cycles: CycleOption[];
   projectStatuses: StatusOption[] | undefined;
   members: WorkloadMember[];
+  teams: TeamOption[];
   filters: FilterState;
   onSelectCycle: (value: string) => void;
   onSelectPriority: (value: string) => void;
   onSelectType: (value: string) => void;
   onSelectStatus: (value: string) => void;
   onSelectAssignee: (value: string) => void;
+  onSelectTeam: (value: string) => void;
 }
 
 export function WorkloadSubmenu({
@@ -37,12 +40,14 @@ export function WorkloadSubmenu({
   cycles,
   projectStatuses,
   members,
+  teams,
   filters,
   onSelectCycle,
   onSelectPriority,
   onSelectType,
   onSelectStatus,
   onSelectAssignee,
+  onSelectTeam,
 }: WorkloadSubmenuProps) {
   return (
     <>
@@ -121,6 +126,22 @@ export function WorkloadSubmenu({
                 active={filters.assigneeId === m.id}
                 label={getUserDisplayName(m)}
                 leading={<FilterAssigneeLeading assigneeId={m.id} member={m} />}
+                onClick={handleClick}
+              />
+            );
+          })
+        : null}
+      {hoveredCategory === "team"
+        ? teams.map((t) => {
+            const id = String(t.id);
+            function handleClick() {
+              onSelectTeam(id);
+            }
+            return (
+              <OptionRow
+                key={t.id}
+                active={filters.teamId === id}
+                label={t.name}
                 onClick={handleClick}
               />
             );

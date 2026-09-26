@@ -17,6 +17,7 @@ import { useCycles } from "@/hooks/api/build/advanced";
 import { WorkloadFilterMenu } from "./workload-filter-menu";
 import type { FilterState } from "./workload-types";
 import { hasActiveWorkloadFilters } from "./workload-types";
+import type { TeamOption } from "./workload-filter-types";
 
 interface WorkloadMember {
   id: string;
@@ -30,6 +31,7 @@ interface WorkloadFilterBarProps {
   projectId: number;
   filters: FilterState;
   members: WorkloadMember[];
+  teams: TeamOption[];
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
   onFilterChange: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
   onClearFilters: () => void;
@@ -44,6 +46,7 @@ function countBarFilters(filters: FilterState): number {
   if (filters.type !== "all") count += 1;
   if (filters.status !== "all") count += 1;
   if (filters.assigneeId !== "all") count += 1;
+  if (filters.teamId !== "all") count += 1;
   return count;
 }
 
@@ -55,6 +58,7 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
   projectId,
   filters,
   members,
+  teams,
   projectStatuses,
   onFilterChange,
   onClearFilters,
@@ -67,12 +71,19 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
 
   const cycleMap = useMemo(() => new Map(cycles.map((c) => [String(c.id), c])), [cycles]);
   const memberMap = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
+  const teamMap = useMemo(() => new Map(teams.map((t) => [String(t.id), t])), [teams]);
 
   const assigneeChipLabel = useMemo(() => {
     if (filters.assigneeId === "all") return "";
     const member = memberMap.get(filters.assigneeId);
     return member ? getUserDisplayName(member) : filters.assigneeId;
   }, [filters.assigneeId, memberMap]);
+
+  const teamChipLabel = useMemo(() => {
+    if (filters.teamId === "all") return "";
+    const team = teamMap.get(filters.teamId);
+    return team ? team.name : filters.teamId;
+  }, [filters.teamId, teamMap]);
 
   const handleClearCycle = useCallback(() => {
     onFilterChange("cycleId", "all");
@@ -94,6 +105,10 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
     onFilterChange("assigneeId", "all");
   }, [onFilterChange]);
 
+  const handleClearTeam = useCallback(() => {
+    onFilterChange("teamId", "all");
+  }, [onFilterChange]);
+
   const { iconRef: clearIconRef, hoverHandlers: clearHoverHandlers } = useAnimatedIcon();
   const { iconRef: infoIconRef, hoverHandlers: infoHoverHandlers } = useAnimatedIcon();
 
@@ -111,6 +126,7 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
           <WorkloadFilterMenu
             filters={filters}
             members={members}
+            teams={teams}
             cycles={cycles}
             projectStatuses={projectStatuses}
             activeFilterCount={activeFilterCount}
@@ -165,6 +181,9 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
             ) : null}
             {filters.assigneeId !== "all" ? (
               <FilterChip label={assigneeChipLabel} onRemove={handleClearAssignee} />
+            ) : null}
+            {filters.teamId !== "all" ? (
+              <FilterChip label={teamChipLabel} onRemove={handleClearTeam} />
             ) : null}
           </div>
 

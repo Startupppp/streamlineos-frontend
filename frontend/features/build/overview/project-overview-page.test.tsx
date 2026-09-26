@@ -70,6 +70,16 @@ jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: jest.fn(() => true),
 }));
 
+jest.mock("@/hooks/api/build/project-activity", () => ({
+  useProjectActivity: jest.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: undefined,
+    refetch: jest.fn(),
+  })),
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockSearchParams = new URLSearchParams();
@@ -468,5 +478,123 @@ describe("ProjectOverviewPage", () => {
       const tabIndex = parseInt(el.getAttribute("tabindex") ?? "0", 10);
       expect(tabIndex).toBeLessThanOrEqual(0);
     });
+  });
+
+  it("renders the Recent activity section with actor name and ticket key when activity exists", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectActivity } = jest.requireMock(
+      "@/hooks/api/build/project-activity",
+    );
+    (useProjectActivity as jest.Mock).mockReturnValue({
+      data: {
+        data: [
+          {
+            id: 500,
+            action: "status_changed",
+            label: "changed status",
+            fromValue: "TODO",
+            toValue: "IN_PROGRESS",
+            createdAt: "2026-09-01T10:00:00Z",
+            ticketId: 42,
+            ticketTitle: "Fix authentication bug",
+            ticketNumber: 7,
+            projectKey: "APP",
+            user: { id: "user-1", name: "Alice Smith", image: null },
+          },
+        ],
+        pagination: { limit: 20, hasMore: false, nextCursor: null },
+      },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByText("Recent activity")).toBeInTheDocument();
+    expect(screen.getByText("Alice Smith")).toBeInTheDocument();
+    expect(screen.getByText("changed status")).toBeInTheDocument();
+    expect(screen.getByText("APP-7")).toBeInTheDocument();
+  });
+
+  it("does not render the Recent activity section when there are no activity items so an empty card is not shown", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectActivity } = jest.requireMock(
+      "@/hooks/api/build/project-activity",
+    );
+    (useProjectActivity as jest.Mock).mockReturnValue({
+      data: {
+        data: [],
+        pagination: { limit: 20, hasMore: false, nextCursor: null },
+      },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.queryByText("Recent activity")).not.toBeInTheDocument();
+  });
+
+  it("shows System as the actor name for activity events with no user so automated actions do not render a blank name", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectActivity } = jest.requireMock(
+      "@/hooks/api/build/project-activity",
+    );
+    (useProjectActivity as jest.Mock).mockReturnValue({
+      data: {
+        data: [
+          {
+            id: 501,
+            action: "created",
+            label: "created this ticket",
+            fromValue: null,
+            toValue: null,
+            createdAt: "2026-09-01T08:00:00Z",
+            ticketId: 43,
+            ticketTitle: "Initial setup",
+            ticketNumber: 1,
+            projectKey: "APP",
+            user: null,
+          },
+        ],
+        pagination: { limit: 20, hasMore: false, nextCursor: null },
+      },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByText("System")).toBeInTheDocument();
+  });
+
+  it("includes the activity query error in the page error so a failed activity load does not silently degrade to no feed", () => {
+    const activityError = new Error("ACTIVITY_UNAVAILABLE");
+    const { useProjectActivity } = jest.requireMock(
+      "@/hooks/api/build/project-activity",
+    );
+    (useProjectActivity as jest.Mock).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: activityError,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "error", error: activityError });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ error: activityError }),
+    );
   });
 });

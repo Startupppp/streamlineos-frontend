@@ -86,7 +86,6 @@ export function useBoardUrlState(
   const dueDateTo = searchParams.get("dueDateTo") ?? "";
   const filterSeverity = searchParams.get("severity") ?? "";
   const filterQaState = searchParams.get("qaState") ?? "";
-  const groupParam = searchParams.get("group") ?? "";
   const sortOrderBy = parseOrderBy(searchParams.get("orderBy"));
   const sortOrderDir = parseOrderDir(searchParams.get("orderDir"));
   const createParamOpen = searchParams.get("create") === "1";
@@ -442,7 +441,6 @@ export function useBoardUrlState(
     filterModule,
     filterSeverity,
     filterQaState,
-    groupParam,
     sortOrderBy,
     sortOrderDir,
     selectedTicketId,

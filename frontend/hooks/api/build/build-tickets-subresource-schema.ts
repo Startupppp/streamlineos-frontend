@@ -125,6 +125,15 @@ export const attachmentCreateResultContract = z.object({
 export const bulkUpdateResultContract = z.object({
   updated: z.number().int(),
   ticketIds: z.array(z.number().int()),
+  blocked: z
+    .array(
+      z.object({
+        ticketId: z.number().int(),
+        reason: z.string(),
+        dependencyCount: z.number().int(),
+      }),
+    )
+    .optional(),
 });
 
 export const rankTicketResultContract = z.object({
@@ -246,4 +255,33 @@ export const allWorkPageContract = z.object({
   nextCursor: z.string().nullable(),
   hasMore: z.boolean(),
   total: z.number().int().optional(),
+});
+
+export const projectActivityPageContract = z.object({
+  data: z.array(
+    z.object({
+      id: z.number().int(),
+      action: z.string(),
+      label: z.string(),
+      fromValue: z.string().nullable(),
+      toValue: z.string().nullable(),
+      createdAt: z.string(),
+      ticketId: z.number().int(),
+      ticketTitle: z.string(),
+      ticketNumber: z.number().int(),
+      projectKey: z.string(),
+      user: z
+        .object({
+          id: z.string().nullable(),
+          name: z.string().nullable(),
+          image: z.string().nullable(),
+        })
+        .nullable(),
+    }),
+  ),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
 });

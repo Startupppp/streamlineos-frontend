@@ -8,6 +8,7 @@ export const teamRowContract = z.object({
   icon: z.string().nullable(),
   color: z.string().nullable(),
   isPrivate: z.boolean(),
+  capacity: z.number().int().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),

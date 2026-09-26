@@ -64,6 +64,22 @@ jest.mock("./command-center-projects-panel", () => ({
   ProjectsPanel: () => <div data-testid="projects-panel" />,
 }));
 
+jest.mock("./command-center-approvals-panel", () => ({
+  ApprovalsPanel: () => <div data-testid="approvals-panel" />,
+}));
+
+jest.mock("./command-center-agent-runs-panel", () => ({
+  AgentRunsPanel: () => <div data-testid="agent-runs-panel" />,
+}));
+
+jest.mock("./command-center-risks-panel", () => ({
+  RisksPanel: () => <div data-testid="risks-panel" />,
+}));
+
+jest.mock("./command-center-releases-panel", () => ({
+  ReleasesPanel: () => <div data-testid="releases-panel" />,
+}));
+
 jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -318,4 +334,40 @@ it("ignores an invalid scope URL param and falls back to the default mine scope"
     expect.objectContaining({ scope: "mine" }),
     expect.anything(),
   );
+});
+
+it("passes the owner URL param as managerId to useProjects so the project list is filtered by manager", () => {
+  mockSearchParams = new URLSearchParams("owner=user-abc");
+  render(<CommandCenterPage />);
+  expect(mockUseProjects).toHaveBeenCalledWith(
+    expect.objectContaining({ managerId: "user-abc" }),
+  );
+});
+
+it("passes no managerId to useProjects when the owner param is absent — paired with the owner-present test above", () => {
+  render(<CommandCenterPage />);
+  expect(mockUseProjects).toHaveBeenCalledWith(
+    expect.objectContaining({ managerId: undefined }),
+  );
+});
+
+it("renders ApprovalsPanel, AgentRunsPanel, RisksPanel and ReleasesPanel alongside the existing panels in the ready state", () => {
+  render(<CommandCenterPage />);
+  expect(screen.getByTestId("approvals-panel")).toBeInTheDocument();
+  expect(screen.getByTestId("agent-runs-panel")).toBeInTheDocument();
+  expect(screen.getByTestId("risks-panel")).toBeInTheDocument();
+  expect(screen.getByTestId("releases-panel")).toBeInTheDocument();
+});
+
+it("does not render the four new panels when the user lacks build:view — paired with the ready-state render test above", () => {
+  mockUseAccess.mockReturnValue({
+    data: { isOrgOwner: false, scopes: {}, modules: {} },
+    isLoading: false,
+  });
+  mockUseCan.mockReturnValue(false);
+  render(<CommandCenterPage />);
+  expect(screen.queryByTestId("approvals-panel")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("agent-runs-panel")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("risks-panel")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("releases-panel")).not.toBeInTheDocument();
 });

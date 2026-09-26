@@ -68,6 +68,10 @@ interface ProjectBoardContentProps {
   onBulkAssignee: (v: string) => void;
   onBulkCycle: (v: string) => void;
   onBulkParent: (parentTicketId: number | null) => void;
+  onBulkLabel?: (labelId: string) => void;
+  onBulkArchive?: () => void;
+  onBulkExport?: () => void;
+  labels?: { id: number; name: string; color?: string | null }[];
   onClearSelection: () => void;
   onSelectionChange: (sel: Set<string | number>) => void;
   isTruncated: boolean;
@@ -106,6 +110,10 @@ export function ProjectBoardContent({
   onBulkAssignee,
   onBulkCycle,
   onBulkParent,
+  onBulkLabel,
+  onBulkArchive,
+  onBulkExport,
+  labels,
   onClearSelection,
   onSelectionChange,
   isTruncated,
@@ -236,6 +244,7 @@ export function ProjectBoardContent({
                 members={members}
                 cycles={cycles}
                 statuses={statuses}
+                labels={labels}
                 projectId={projectId}
                 excludeIds={selectedIds}
                 onBulkStatus={onBulkStatus}
@@ -243,6 +252,9 @@ export function ProjectBoardContent({
                 onBulkAssignee={onBulkAssignee}
                 onBulkCycle={onBulkCycle}
                 onBulkParent={onBulkParent}
+                onBulkLabel={onBulkLabel}
+                onBulkArchive={onBulkArchive}
+                onBulkExport={onBulkExport}
                 onClear={onClearSelection}
               />
             )}
@@ -285,6 +297,7 @@ export function ProjectBoardContent({
                     members={members}
                     cycles={cycles}
                     statuses={statuses}
+                    labels={labels}
                     projectId={projectId}
                     excludeIds={selectedIds}
                     onBulkStatus={onBulkStatus}
@@ -292,6 +305,9 @@ export function ProjectBoardContent({
                     onBulkAssignee={onBulkAssignee}
                     onBulkCycle={onBulkCycle}
                     onBulkParent={onBulkParent}
+                    onBulkLabel={onBulkLabel}
+                    onBulkArchive={onBulkArchive}
+                    onBulkExport={onBulkExport}
                     onClear={onClearSelection}
                   />
                 )}

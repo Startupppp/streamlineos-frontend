@@ -4,19 +4,23 @@ import { buildWorkQueryKeys as queryKeys } from "@/lib/query-keys/build-work";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
-import type { ProjectAutomation } from "@/types/projects";
+import type { ProjectAutomation, AutomationActionType } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const projectAutomationListContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectAutomationListContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectAutomationListContract,
+  ),
 );
 const projectAutomationRowContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectAutomationRowContract),
+  import("@/hooks/api/build/build-project-schema").then(
+    (m) => m.projectAutomationRowContract,
+  ),
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
-export type { ProjectAutomation } from "@/types/projects";
+export type { ProjectAutomation, AutomationActionType } from "@/types/projects";
 
 export const TRIGGER_EVENTS = [
   { value: "ticket.created", label: "Ticket Created" },
@@ -35,11 +39,32 @@ export const ACTION_TYPES = [
   { value: "add_comment", label: "Add Comment" },
 ] as const;
 
-export function useAutomations(projectId: number) {
+export interface AutomationsFilters {
+  action?: AutomationActionType;
+  ownerId?: string;
+}
+
+export function useAutomations(
+  projectId: number,
+  filters?: AutomationsFilters,
+) {
   const canView = useCan("build:view");
+  const params = new URLSearchParams();
+  if (filters?.action) params.set("action", filters.action);
+  if (filters?.ownerId) params.set("ownerId", filters.ownerId);
+  const queryString = params.toString();
+  const url = queryString
+    ? `/build/${projectId}/automations?${queryString}`
+    : `/build/${projectId}/automations`;
   return useQuery<ProjectAutomation[]>({
-    queryKey: queryKeys.projects.automations(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectAutomation[]>(`/build/${projectId}/automations`, undefined, signal, projectAutomationListContract),
+    queryKey: [...queryKeys.projects.automations(projectId), filters ?? {}],
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectAutomation[]>(
+        url,
+        undefined,
+        signal,
+        projectAutomationListContract,
+      ),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -49,9 +74,19 @@ export function useCreateAutomation(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "create"],
-    mutationFn: (data: Omit<ProjectAutomation, "id" | "projectId" | "createdAt">) =>
-      apiClient.post<ProjectAutomation>(`/build/${projectId}/automations`, data, undefined, projectAutomationRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.automations(projectId) }),
+    mutationFn: (
+      data: Omit<ProjectAutomation, "id" | "projectId" | "createdAt">,
+    ) =>
+      apiClient.post<ProjectAutomation>(
+        `/build/${projectId}/automations`,
+        data,
+        undefined,
+        projectAutomationRowContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: queryKeys.projects.automations(projectId),
+      }),
   });
 }
 
@@ -59,9 +94,20 @@ export function useUpdateAutomation(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "update"],
-    mutationFn: ({ automationId, ...data }: Partial<ProjectAutomation> & { automationId: number }) =>
-      apiClient.patch<ProjectAutomation>(`/build/${projectId}/automations/${automationId}`, data, undefined, projectAutomationRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.automations(projectId) }),
+    mutationFn: ({
+      automationId,
+      ...data
+    }: Partial<ProjectAutomation> & { automationId: number }) =>
+      apiClient.patch<ProjectAutomation>(
+        `/build/${projectId}/automations/${automationId}`,
+        data,
+        undefined,
+        projectAutomationRowContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: queryKeys.projects.automations(projectId),
+      }),
   });
 }
 
@@ -70,7 +116,15 @@ export function useDeleteAutomation(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "delete"],
     mutationFn: (automationId: number) =>
-      apiClient.delete<void>(`/build/${projectId}/automations/${automationId}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.automations(projectId) }),
+      apiClient.delete<void>(
+        `/build/${projectId}/automations/${automationId}`,
+        undefined,
+        undefined,
+        noContentContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: queryKeys.projects.automations(projectId),
+      }),
   });
 }

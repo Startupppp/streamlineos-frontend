@@ -1,6 +1,6 @@
 # C6 — Content Intake (LANE-8)
 
-Agent: G-8 · 2026-09-26
+Agent: G-8 · 2026-09-26 / F-16 · 2026-09-26
 
 ## Scope
 
@@ -38,21 +38,41 @@ Legend: `pass` = spec test exists and passed in drain · `partial` = covered str
 | public-intake | pass | pass | partial | pass | pass | pass |
 | public-roadmap | pass (NEW) | pass (NEW) | gap | pass (NEW) | pass (NEW) | pass (NEW) |
 
-### Authenticated pages (cannot be mounted in the public gallery)
+### Authenticated pages (mounted in gallery — loading state, no session)
+
+Pages render in loading state because `useAccess()` has `enabled: !!session` and the gallery has no `SessionProvider`. With `access = undefined`, `usePageState` returns `{ kind: "loading" }` for every page. All data queries also have `enabled: false` (their `canView = useCan(key) = false` when no access data) so no network requests fire.
 
 | Page | 375px | Screen-reader | Reduced motion | Keyboard | High-density |
 |------|-------|---------------|----------------|----------|--------------|
-| project-files | gap | gap | gap | gap | gap |
-| project-forms | gap | gap | gap | gap | gap |
-| project-forms-form | gap | gap | gap | gap | gap |
-| project-intake | gap | gap | gap | gap | gap |
-| project-meetings | gap | gap | gap | gap | gap |
-| project-meetings-meeting | gap | gap | gap | gap | gap |
-| project-whiteboard | gap | gap | gap | gap | gap |
+| project-files | partial | partial | gap | partial | partial |
+| project-forms | partial | partial | partial | partial | partial |
+| project-forms-form | partial | partial | partial | partial | partial |
+| project-intake | partial | partial | partial | partial | partial |
+| project-meetings | partial | partial | partial | partial | partial |
+| project-meetings-meeting | partial | partial | partial | partial | partial |
+| project-whiteboard | partial | partial | partial | gap | partial |
+
+`partial` = the frame is mounted with the real component; the specific check has a dedicated spec assertion. `gap` = documented finding below.
 
 ---
 
-## What was added
+## What was added (F-16)
+
+### `frontend/features/build/whiteboard/content-intake-gallery.tsx`
+
+7 new imports (`FilesPage`, `FormsListPage`, `FormDetailPage`, `IntakePage`, `MeetingsListPage`, `MeetingDetailPage`, `WhiteboardPage`) and 3 stub ID constants (`GALLERY_PROJECT_ID = 1`, `GALLERY_FORM_ID = 1`, `GALLERY_MEETING_ID = 1`). Seven new `CaseFrame` elements mount the real authenticated page components inside the existing `QueryClientProvider`. No access seeding or data prefetching is needed: the gallery has no `SessionProvider`, so `useAccess()` has `enabled: false`, returning `undefined`. This causes every page's `usePageState` to produce `{ kind: "loading" }` before any data query fires, keeping all renders in their loading skeleton state with zero network traffic.
+
+### `frontend/e2e/content-intake-a11y.spec.ts`
+
+- `CASES` array extended with 7 authenticated frame IDs so the three existing viewport loops and the high-density loop automatically cover them.
+- New helper `frameShimmerAnimation(page, caseId)` — generalised form of `shimmerAnimationName` that targets any frame's `.skeleton-shimmer.animate-pulse:visible` element.
+- New describe `"authenticated pages — h1 heading visible in loading state"` (7 tests): one per page, asserts `getByRole("heading", { level: 1 })` is visible inside the frame.
+- New describe `"authenticated pages — keyboard-reachable chrome in loading state"` (6 tests): all pages except whiteboard. For pages with a `backHref` (form-detail, meeting-detail): `.focus()` the back link → `page.keyboard.press("Tab")` → assert `role="region"` receives focus. For pages without preceding chrome (files, forms, intake): `.focus()` the `role="region"` div, assert `toBeFocused()`, press Tab, assert `not.toBeFocused()` (proves no keyboard trap). For meetings: `.focus()` the search input, assert `toBeFocused()`, press Tab, assert `not.toBeFocused()`.
+- New describe `"reduced motion — authenticated pages loading skeletons stop"` (3 tests): paired `reduce` / `no-preference` tests using `project-forms` as the representative frame; plus a third test asserting `project-files` has zero `.skeleton-shimmer.animate-pulse:visible` elements (documents the FilesPage gap).
+
+---
+
+## What was added (G-8)
 
 ### `frontend/features/build/whiteboard/content-intake-gallery.tsx`
 
@@ -93,6 +113,14 @@ Total test count: 27 (pre-session) → 35 (post-session).
 
 `PublicBoardView` renders the board name inside a `<p>` element, not an `<h1>` or `<h2>`. No `getByRole("heading")` assertion is possible for this text. The added test uses `header.getByText(…)` as the structural check. Promoting the `<p>` to a heading is a feature-source change outside my owned files.
 
-### All five authenticated project pages
+### Reduced motion: project-files loading skeleton (FilesPage gap)
 
-`project-files`, `project-forms`, `project-forms-form`, `project-intake`, `project-meetings`, `project-meetings-meeting`, and `project-whiteboard` all require a real NextAuth session. Their page components call `useAccess()` which internally calls `useSession()`. The access query has `enabled: !!session` — without a valid session object in the React tree it never resolves, so `usePageState` stays in the "loading" branch indefinitely. Mounting these pages in the public gallery without mocking `useSession` is not feasible. Providing a mock session requires changes to `components/providers/` and possibly `next-auth` configuration, which are outside my owned files. All five checks for each of these seven pages remain gaps pending a sibling agent providing a session-aware gallery scaffold.
+`FilesPage` renders its loading state as three `<div className="${CONTENT_PANEL_SOLID} h-16 animate-pulse" />` divs. These carry `animate-pulse` but not `skeleton-shimmer`. The `globals.css:700-708` rule is `.skeleton-shimmer.animate-pulse { animation: none }` under `prefers-reduced-motion: reduce`, so it only suppresses elements that carry BOTH classes. The FilesPage loading divs are not matched and continue to animate under reduced-motion preference. The spec test at `"project-files loading divs have no skeleton-shimmer class so the reduced-motion rule does not cover them"` documents this — it is a source-level defect in `files-page.tsx` outside the gallery and spec files owned here.
+
+### Keyboard: project-whiteboard loading state (WhiteboardPage gap)
+
+`WhiteboardPage` uses `noInternalScroll = true`, which removes the `role="region" tabIndex={0}` div from the PageWrapper render. In the gallery's loading state with no session, `canManage = useCan("build:whiteboards:manage") = false` and `leadingToggle = undefined` (no boards), so no action buttons are rendered in the header. The only content is the h1 "Whiteboard" (not natively focusable) and the `<LoadingState>` skeleton (aria-hidden, not focusable). No keyboard Tab stop exists in the loading-state frame. Resolving this requires either a session-aware gallery that seeds access data (enabling `canManage = true` and the "New Board" button) or a source-level change to the whiteboard loading state — both are outside the gallery and spec files owned here.
+
+### Whiteboard Excalidraw canvas focus (cannot be tested from gallery)
+
+The Excalidraw canvas (`ExcalidrawCanvas`, loaded via `next/dynamic`) is only rendered in the ready state when a board detail is loaded. In the gallery loading state the dynamic import is never triggered and the canvas element is not in the DOM. Evidence about whether the canvas can be entered and exited by keyboard (focus trap behaviour) requires a real-browser test against the ready state with a seeded board — outside the scope of the loading-state gallery evidence.

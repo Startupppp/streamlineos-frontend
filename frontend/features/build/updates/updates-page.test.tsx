@@ -117,6 +117,27 @@ function baseQueryResult(overrides = {}) {
   };
 }
 
+function makeUpdateRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 1,
+    orgId: "org-1",
+    projectId: 1,
+    authorMembershipId: 7,
+    authorName: "Alice Smith",
+    body: "Sprint 3 is on track.",
+    wins: null,
+    risks: null,
+    next: null,
+    citations: null,
+    status: "published",
+    audience: "internal",
+    createdAt: new Date(0).toISOString(),
+    updatedAt: new Date(0).toISOString(),
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
@@ -149,20 +170,7 @@ it("renders error state and retry on query failure", () => {
 it("renders update cards when data is populated", () => {
   mockUseProjectUpdates.mockReturnValue(
     baseQueryResult({
-      data: [
-        {
-          id: 1,
-          orgId: "org-1",
-          projectId: 1,
-          authorMembershipId: 7,
-          body: "Sprint 3 is on track.",
-          status: "published",
-          audience: "internal",
-          createdAt: new Date(0).toISOString(),
-          updatedAt: new Date(0).toISOString(),
-          deletedAt: null,
-        },
-      ],
+      data: [makeUpdateRow({ body: "Sprint 3 is on track." })],
     }),
   );
   render(<UpdatesPage projectId={1} />);
@@ -173,20 +181,7 @@ it("hides delete button when canManage is false", () => {
   mockUseCan.mockImplementation((key: string) => key === "build:updates:view");
   mockUseProjectUpdates.mockReturnValue(
     baseQueryResult({
-      data: [
-        {
-          id: 1,
-          orgId: "org-1",
-          projectId: 1,
-          authorMembershipId: 7,
-          body: "An update body.",
-          status: "draft",
-          audience: "internal",
-          createdAt: new Date(0).toISOString(),
-          updatedAt: new Date(0).toISOString(),
-          deletedAt: null,
-        },
-      ],
+      data: [makeUpdateRow({ body: "An update body.", status: "draft" })],
     }),
   );
   render(<UpdatesPage projectId={1} />);
@@ -220,18 +215,12 @@ it("renders the plan upgrade link the backend sent with a 402 MODULE_NOT_ENABLED
 });
 
 describe("update cards — core fields and action visibility", () => {
-  const UPDATE_WITH_FIELDS = {
-    id: 1,
-    orgId: "org-1",
-    projectId: 1,
-    authorMembershipId: 7,
+  const UPDATE_WITH_FIELDS = makeUpdateRow({
     body: "Field test body.",
     status: "published",
     audience: "client",
-    createdAt: new Date(0).toISOString(),
-    updatedAt: new Date(0).toISOString(),
-    deletedAt: null,
-  };
+    authorName: "Alice Smith",
+  });
 
   it("renders the status badge text from the update row so a published update shows its publication state", () => {
     mockUseProjectUpdates.mockReturnValue(baseQueryResult({ data: [UPDATE_WITH_FIELDS] }));
@@ -261,6 +250,100 @@ describe("update cards — core fields and action visibility", () => {
     );
     render(<UpdatesPage projectId={1} />);
     expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
+  });
+});
+
+describe("update cards — author display name", () => {
+  it("renders the authorName so a reader sees who posted the update rather than a raw membership id", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ authorName: "Priya Sharma" })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("Priya Sharma")).toBeInTheDocument();
+  });
+
+  it("does not render the raw authorMembershipId so no UUID or integer is visible on the card", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ authorMembershipId: 9999, authorName: "Priya Sharma" })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText("9999")).not.toBeInTheDocument();
+  });
+});
+
+describe("update cards — wins field", () => {
+  it("renders the wins section when the update has wins text so readers see what went well", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ wins: "Shipped the new onboarding flow." })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("Shipped the new onboarding flow.")).toBeInTheDocument();
+    expect(screen.getByText("Wins")).toBeInTheDocument();
+  });
+
+  it("does not render the Wins section when wins is null so the card is not cluttered with empty headings", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ wins: null })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText("Wins")).not.toBeInTheDocument();
+  });
+});
+
+describe("update cards — risks field", () => {
+  it("renders the risks section when the update has risks text so blockers are visible to stakeholders", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ risks: "API rate limits not yet resolved." })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("API rate limits not yet resolved.")).toBeInTheDocument();
+    expect(screen.getByText("Risks")).toBeInTheDocument();
+  });
+
+  it("does not render the Risks section when risks is null", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ risks: null })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText("Risks")).not.toBeInTheDocument();
+  });
+});
+
+describe("update cards — next field", () => {
+  it("renders the next section when the update has next text so readers know what is planned", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ next: "Deploy to staging by Friday." })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("Deploy to staging by Friday.")).toBeInTheDocument();
+    expect(screen.getByText("Next")).toBeInTheDocument();
+  });
+
+  it("does not render the Next section when next is null", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ next: null })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText("Next")).not.toBeInTheDocument();
+  });
+});
+
+describe("update cards — citations field", () => {
+  it("renders the citations section when the update has citations text so evidence links are surfaced", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ citations: "https://jira.example.com/SPRINT-42" })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText("https://jira.example.com/SPRINT-42")).toBeInTheDocument();
+    expect(screen.getByText("Citations")).toBeInTheDocument();
+  });
+
+  it("does not render the Citations section when citations is null", () => {
+    mockUseProjectUpdates.mockReturnValue(
+      baseQueryResult({ data: [makeUpdateRow({ citations: null })] }),
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText("Citations")).not.toBeInTheDocument();
   });
 });
 
@@ -346,19 +429,7 @@ describe("offline state — CCG-5", () => {
 
 describe("keyboard navigation — CCG-4", () => {
   it("calls useBuildListKeyboard with itemCount matching the number of loaded updates so j/k moves through the actual list", () => {
-    const UPDATE_ROW = {
-      id: 1,
-      orgId: "org-1",
-      projectId: 1,
-      authorMembershipId: 7,
-      body: "KB nav test.",
-      status: "published" as const,
-      audience: "internal" as const,
-      createdAt: new Date(0).toISOString(),
-      updatedAt: new Date(0).toISOString(),
-      deletedAt: null,
-    };
-    mockUseProjectUpdates.mockReturnValue(baseQueryResult({ data: [UPDATE_ROW] }));
+    mockUseProjectUpdates.mockReturnValue(baseQueryResult({ data: [makeUpdateRow()] }));
     render(<UpdatesPage projectId={1} />);
     expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
       expect.objectContaining({ itemCount: 1 }),

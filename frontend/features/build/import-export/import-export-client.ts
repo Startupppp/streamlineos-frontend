@@ -32,6 +32,7 @@ export interface ExportTicketsInput {
   projectId: number;
   format: ImportFormat;
   limit?: number;
+  ticketIds?: number[];
   signal?: AbortSignal;
 }
 
@@ -66,11 +67,13 @@ export function commitTicketImport(
 }
 
 export function exportTickets(input: ExportTicketsInput): Promise<TicketExport> {
+  const params: Record<string, unknown> = { format: input.format };
+  if (input.limit !== undefined) params.limit = input.limit;
+  if (input.ticketIds !== undefined && input.ticketIds.length > 0)
+    params.ticketIds = input.ticketIds.join(",");
   return apiClient.get<TicketExport>(
     `/build/${input.projectId}/import-export/tickets/export`,
-    input.limit === undefined
-      ? { format: input.format }
-      : { format: input.format, limit: input.limit },
+    params,
     input.signal,
     ticketExportSchema,
   );

@@ -15,6 +15,13 @@ const CASES = [
   "public-intake",
   "public-board-loading",
   "public-roadmap",
+  "project-files",
+  "project-forms",
+  "project-form-detail",
+  "project-intake",
+  "project-meetings",
+  "project-meeting-detail",
+  "project-whiteboard",
 ] as const;
 
 function frame(page: Page, caseId: string): Locator {
@@ -29,6 +36,16 @@ async function horizontalOverflowOf(locator: Locator): Promise<number> {
 
 async function shimmerAnimationName(page: Page): Promise<string> {
   const shimmer = frame(page, "public-board-loading")
+    .locator(".skeleton-shimmer.animate-pulse:visible")
+    .first();
+  await expect(shimmer).toBeVisible();
+  return shimmer.evaluate(
+    (node: HTMLElement) => getComputedStyle(node).animationName,
+  );
+}
+
+async function frameShimmerAnimation(page: Page, caseId: string): Promise<string> {
+  const shimmer = frame(page, caseId)
     .locator(".skeleton-shimmer.animate-pulse:visible")
     .first();
   await expect(shimmer).toBeVisible();
@@ -362,6 +379,126 @@ test.describe("Content intake public surfaces — responsive contract", () => {
       await expect(titleInput).toBeFocused();
       await page.keyboard.press("Tab");
       await expect(detailsTextarea).toBeFocused();
+    });
+  });
+
+  test.describe("authenticated pages — h1 heading visible in loading state", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 768, height: 1024 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Content intake public surfaces" }),
+      ).toBeVisible();
+    });
+
+    const headingCases = [
+      { id: "project-files", heading: "Files" },
+      { id: "project-forms", heading: "Forms" },
+      { id: "project-form-detail", heading: "Form" },
+      { id: "project-intake", heading: "Intake" },
+      { id: "project-meetings", heading: "Meetings" },
+      { id: "project-meeting-detail", heading: "Meeting" },
+      { id: "project-whiteboard", heading: "Whiteboard" },
+    ] as const;
+
+    for (const { id, heading } of headingCases) {
+      test(`${id} frame renders its h1 in the loading state`, async ({ page }) => {
+        const scope = frame(page, id);
+        await expect(scope.getByRole("heading", { name: heading, level: 1 })).toBeVisible();
+      });
+    }
+  });
+
+  test.describe("authenticated pages — keyboard-reachable chrome in loading state", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 768, height: 1024 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Content intake public surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("project-files content region accepts keyboard focus and Tab does not trap it", async ({ page }) => {
+      const region = frame(page, "project-files").getByRole("region");
+      await region.focus();
+      await expect(region).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(region).not.toBeFocused();
+    });
+
+    test("project-forms content region accepts keyboard focus and Tab does not trap it", async ({ page }) => {
+      const region = frame(page, "project-forms").getByRole("region");
+      await region.focus();
+      await expect(region).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(region).not.toBeFocused();
+    });
+
+    test("Tab from the project-form-detail back link moves focus to the content region", async ({ page }) => {
+      const backLink = frame(page, "project-form-detail").getByRole("link", { name: "Back" });
+      await backLink.focus();
+      await page.keyboard.press("Tab");
+      const region = frame(page, "project-form-detail").getByRole("region");
+      await expect(region).toBeFocused();
+    });
+
+    test("project-intake content region accepts keyboard focus and Tab does not trap it", async ({ page }) => {
+      const region = frame(page, "project-intake").getByRole("region");
+      await region.focus();
+      await expect(region).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(region).not.toBeFocused();
+    });
+
+    test("project-meetings search input accepts keyboard focus and Tab moves forward", async ({ page }) => {
+      const search = frame(page, "project-meetings").getByRole("searchbox");
+      await search.focus();
+      await expect(search).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(search).not.toBeFocused();
+    });
+
+    test("Tab from the project-meeting-detail back link moves focus to the content region", async ({ page }) => {
+      const backLink = frame(page, "project-meeting-detail").getByRole("link", { name: "Back" });
+      await backLink.focus();
+      await page.keyboard.press("Tab");
+      const region = frame(page, "project-meeting-detail").getByRole("region");
+      await expect(region).toBeFocused();
+    });
+  });
+
+  test.describe("reduced motion — authenticated pages loading skeletons stop", () => {
+    test.describe("with reduce requested", () => {
+      test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+      test("authenticated page skeleton shimmer computes animation-name none under prefers-reduced-motion", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        expect(await frameShimmerAnimation(page, "project-forms")).toBe("none");
+      });
+
+      test("project-files loading divs have no skeleton-shimmer class so the reduced-motion rule does not cover them", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        const filesShimmers = frame(page, "project-files").locator(".skeleton-shimmer.animate-pulse:visible");
+        await expect(filesShimmers).toHaveCount(0);
+      });
+    });
+
+    test.describe("with no preference", () => {
+      test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+      test("the same skeleton does animate when no motion preference is set, proving the reduce assertion is not vacuous", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        expect(await frameShimmerAnimation(page, "project-forms")).not.toBe("none");
+      });
     });
   });
 });

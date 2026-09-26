@@ -211,7 +211,7 @@ test.describe("Execution core — responsive and a11y contract", () => {
     );
 
     test(
-      "ticket sidebar select triggers are keyboard reachable",
+      "ticket sidebar select triggers are keyboard-focusable",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="ticket-detail-two-panel"]');
         const firstTrigger = scope.locator('[data-slot="select-trigger"]').first();
@@ -229,6 +229,20 @@ test.describe("Execution core — responsive and a11y contract", () => {
         await expect(firstTrigger).toBeFocused();
         await page.keyboard.press("Space");
         await expect(page.getByRole("listbox")).toBeVisible();
+      },
+    );
+
+    test(
+      "Esc closes the open select dropdown and returns focus to its trigger",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="ticket-detail-two-panel"]');
+        const firstTrigger = scope.locator('[data-slot="select-trigger"]').first();
+        await firstTrigger.focus();
+        await page.keyboard.press("Space");
+        await expect(page.getByRole("listbox")).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(page.getByRole("listbox")).not.toBeVisible();
+        await expect(firstTrigger).toBeFocused();
       },
     );
   });
@@ -452,7 +466,7 @@ test.describe("Execution core — responsive and a11y contract", () => {
     );
   });
 
-  test.describe("cycle card — keyboard reachability", () => {
+  test.describe("cycle card — keyboard focus", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
@@ -462,7 +476,7 @@ test.describe("Execution core — responsive and a11y contract", () => {
     });
 
     test(
-      "cycle card action button is keyboard focusable",
+      "cycle card action button is keyboard-focusable",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="cycle-cards"]');
         const actionButton = scope.getByRole("button", { name: /Actions for Sprint 43/i });
@@ -470,9 +484,23 @@ test.describe("Execution core — responsive and a11y contract", () => {
         await expect(actionButton).toBeFocused();
       },
     );
+
+    test(
+      "Esc closes the cycle action dropdown and returns focus to its trigger",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="cycle-cards"]');
+        const actionButton = scope.getByRole("button", { name: /Actions for Sprint 43/i });
+        await actionButton.focus();
+        await page.keyboard.press("Enter");
+        await expect(page.getByRole("menu")).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(page.getByRole("menu")).not.toBeVisible();
+        await expect(actionButton).toBeFocused();
+      },
+    );
   });
 
-  test.describe("module card — keyboard reachability", () => {
+  test.describe("module card — keyboard focus", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(GALLERY);
@@ -482,7 +510,7 @@ test.describe("Execution core — responsive and a11y contract", () => {
     });
 
     test(
-      "module cards are keyboard focusable as links",
+      "module cards are keyboard-focusable as links",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="module-cards"]');
         const firstLink = scope.getByRole("link").first();

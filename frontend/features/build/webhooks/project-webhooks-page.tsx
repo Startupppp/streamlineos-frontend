@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -37,6 +45,7 @@ import {
   useWebhooks,
   useCreateWebhook,
   useDeleteWebhook,
+  useUpdateWebhook,
   type ProjectWebhook,
 } from "@/hooks/api/build/webhooks";
 import { cn } from "@/lib/utils";
@@ -102,13 +111,72 @@ export function ProjectWebhooksPage({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const stateParam = searchParams.get("state") as "active" | "inactive" | null;
+  const eventParam = searchParams.get("event") ?? undefined;
+  const qParam = searchParams.get("q") ?? undefined;
+
+  const [qInput, setQInput] = useState(qParam ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+
+  const filters =
+    stateParam || eventParam || qParam
+      ? { state: stateParam ?? undefined, event: eventParam, q: qParam }
+      : undefined;
+
+  const updateUrl = useCallback(
+    (next: Record<string, string | undefined>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(next)) {
+        if (value) {
+          params.set(key, value);
+        } else {
+          params.delete(key);
+        }
+      }
+      params.delete("cursor");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [router, pathname, searchParams],
+  );
+
+  const handleStateChange = useCallback(
+    (value: string) => {
+      updateUrl({ state: value === "all" ? undefined : value });
+    },
+    [updateUrl],
+  );
+
+  const handleEventChange = useCallback(
+    (value: string) => {
+      updateUrl({ event: value === "all" ? undefined : value });
+    },
+    [updateUrl],
+  );
+
+  const handleQChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setQInput(value);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        updateUrl({ q: value || undefined });
+      }, 300);
+    },
+    [updateUrl],
+  );
+
   const {
     data: webhooks,
     isLoading,
     isError,
     error,
     refetch,
-  } = useWebhooks(projectId);
+  } = useWebhooks(projectId, filters);
 
   const pageState = usePageState({
     permission: "build:manage",
@@ -120,6 +188,7 @@ export function ProjectWebhooksPage({
 
   const createWebhook = useCreateWebhook(projectId);
   const deleteWebhook = useDeleteWebhook(projectId);
+  const updateWebhook = useUpdateWebhook(projectId);
 
   const form = useForm<WebhookFormValues>({
     resolver: zodResolver(webhookSchema),
@@ -158,6 +227,20 @@ export function ProjectWebhooksPage({
     [deleteWebhook],
   );
 
+  const handleToggle = useCallback(
+    (webhookId: number, isActive: boolean) => {
+      updateWebhook.mutate(
+        { webhookId, isActive },
+        {
+          onSuccess: () =>
+            toast.success(isActive ? "Webhook enabled" : "Webhook disabled"),
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [updateWebhook],
+  );
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -182,6 +265,8 @@ export function ProjectWebhooksPage({
     enabled: pageState.kind === "ready",
   });
 
+  const hasActiveFilters = !!(stateParam || eventParam || qParam);
+
   return (
     <PageWrapper
       title="Webhooks"
@@ -192,6 +277,38 @@ export function ProjectWebhooksPage({
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <Input
+              placeholder="Search by URL…"
+              value={qInput}
+              onChange={handleQChange}
+              className="h-8 text-sm w-48 shrink-0"
+              aria-label="Search webhooks"
+            />
+            <Select value={stateParam ?? "all"} onValueChange={handleStateChange}>
+              <SelectTrigger className="h-8 text-sm w-36 shrink-0" aria-label="Filter by state">
+                <SelectValue placeholder="All states" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All states</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={eventParam ?? "all"} onValueChange={handleEventChange}>
+              <SelectTrigger className="h-8 text-sm w-44 shrink-0" aria-label="Filter by event">
+                <SelectValue placeholder="All events" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All events</SelectItem>
+                {WEBHOOK_EVENTS.map((ev) => (
+                  <SelectItem key={ev.value} value={ev.value}>
+                    {ev.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <PageState
             resolution={pageState}
             loading={
@@ -208,6 +325,13 @@ export function ProjectWebhooksPage({
                   illustrationPreset="automations"
                   title="You are offline"
                   description="Webhooks cannot be configured while offline."
+                />
+              ) : hasActiveFilters ? (
+                <EmptyState
+                  className={PM_FILL_PANEL}
+                  illustrationPreset="automations"
+                  title="No webhooks match"
+                  description="Try adjusting the filters above."
                 />
               ) : (
                 <EmptyState
@@ -238,6 +362,7 @@ export function ProjectWebhooksPage({
                       webhook={wh}
                       projectId={projectId}
                       onDelete={handleDelete}
+                      onToggle={canManage ? handleToggle : undefined}
                       canManage={canManage}
                     />
                   </div>

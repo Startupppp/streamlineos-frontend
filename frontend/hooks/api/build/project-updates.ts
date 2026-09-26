@@ -28,7 +28,12 @@ export interface ProjectUpdateRow {
   orgId: string;
   projectId: number;
   authorMembershipId: number;
+  authorName: string;
   body: string;
+  wins: string | null;
+  risks: string | null;
+  next: string | null;
+  citations: string | null;
   status: "draft" | "published";
   audience: "internal" | "client";
   createdAt: string;
@@ -43,6 +48,10 @@ export interface ProjectUpdatePage {
 
 export interface CreateProjectUpdateInput {
   body: string;
+  wins?: string | null;
+  risks?: string | null;
+  next?: string | null;
+  citations?: string | null;
 }
 
 export interface ProjectUpdatesFilters {

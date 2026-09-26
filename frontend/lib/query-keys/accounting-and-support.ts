@@ -36,7 +36,10 @@ export const accountingAndSupportQueryKeys = {
 
   gitIntegration: {
     all: [...base, "gitIntegration"] as const,
-    connections: () => [...base, "gitIntegration", "connections"] as const,
+    connections: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "gitIntegration", "connections"] as const)
+        : ([...base, "gitIntegration", "connections", params] as const),
     ticketLinks: (ticketId: number) =>
       [...base, "gitIntegration", "ticketLinks", ticketId] as const,
   },

@@ -43,6 +43,10 @@ import {
 } from "./command-center-constants";
 import { MyIssuesPanel } from "./command-center-my-issues-panel";
 import { ProjectsPanel } from "./command-center-projects-panel";
+import { ApprovalsPanel } from "./command-center-approvals-panel";
+import { AgentRunsPanel } from "./command-center-agent-runs-panel";
+import { RisksPanel } from "./command-center-risks-panel";
+import { ReleasesPanel } from "./command-center-releases-panel";
 
 const COMMAND_CENTER_SCOPE_VALUES = ["all", "mine", "created", "subscribed"] as const;
 type CommandCenterScope = (typeof COMMAND_CENTER_SCOPE_VALUES)[number];
@@ -94,6 +98,7 @@ export function CommandCenterPage() {
   const rawUrlScope = searchParams.get("scope");
   const urlScope: CommandCenterScope | null =
     rawUrlScope !== null && isCommandCenterScope(rawUrlScope) ? rawUrlScope : null;
+  const urlOwner = searchParams.get("owner") ?? undefined;
   const overdueDueDateTo = format(subDays(new Date(), 1), "yyyy-MM-dd");
 
   const {
@@ -102,7 +107,7 @@ export function CommandCenterPage() {
     isError: projectsError,
     error: projectsRawError,
     refetch: refetchProjects,
-  } = useProjects({ status: "ACTIVE" });
+  } = useProjects({ status: "ACTIVE", managerId: urlOwner });
 
   const myIssuesFilters = useMemo(
     () =>
@@ -310,6 +315,10 @@ export function CommandCenterPage() {
                 onCreateProject={handleOpenWizard}
                 onCreateForProject={handleCreateForProject}
               />
+              <ApprovalsPanel />
+              <AgentRunsPanel />
+              <RisksPanel />
+              <ReleasesPanel />
             </div>
 
             <motion.p

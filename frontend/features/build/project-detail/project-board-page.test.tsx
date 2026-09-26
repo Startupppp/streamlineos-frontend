@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 
 const mockNotFound = jest.fn();
 const mockUse = jest.fn();
@@ -44,6 +44,21 @@ jest.mock("@/hooks/api", () => ({
 const mockUseWorkloadCapacity = jest.fn(() => ({}));
 jest.mock("@/hooks/api/build/workload-capacity", () => ({
   useWorkloadCapacity: (...args: unknown[]) => mockUseWorkloadCapacity(...args),
+}));
+
+const mockUseOrgLabels = jest.fn(() => ({ data: [] }));
+jest.mock("@/hooks/api/build/labels", () => ({
+  useOrgLabels: (...args: unknown[]) => mockUseOrgLabels(...args),
+}));
+
+const mockExportMutate = jest.fn();
+const mockUseExportTickets = jest.fn(() => ({ mutate: mockExportMutate, isPending: false }));
+jest.mock("@/hooks/api/build/ticket-import-export", () => ({
+  useExportTickets: (...args: unknown[]) => mockUseExportTickets(...args),
+}));
+
+jest.mock("@/features/build/import-export/download-text-file", () => ({
+  downloadTextFile: jest.fn(),
 }));
 
 const mockUseBoardUrlState = jest.fn();
@@ -102,6 +117,10 @@ interface CapturedBoardContentProps {
   onBulkPriority?: (v: string) => void;
   onBulkAssignee?: (v: string) => void;
   onBulkCycle?: (v: string) => void;
+  onBulkLabel?: (v: string) => void;
+  onBulkArchive?: () => void;
+  onBulkExport?: () => void;
+  labels?: { id: number; name: string; color?: string | null }[];
 }
 
 let capturedBoardContentProps: CapturedBoardContentProps = {};
@@ -131,6 +150,23 @@ jest.mock("@/features/build/import-export/components/ticket-import-export-dialog
 
 jest.mock("@/features/build/views/save-view-dialog", () => ({
   SaveViewDialog: () => null,
+}));
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: ({
+    open,
+    onConfirm,
+    title,
+  }: {
+    open: boolean;
+    onConfirm: () => void;
+    title: string;
+  }) =>
+    open ? (
+      <div data-testid="confirm-dialog" data-title={title}>
+        <button type="button" data-testid="confirm-dialog-confirm" onClick={onConfirm} />
+      </div>
+    ) : null,
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -353,6 +389,73 @@ describe("ProjectBoardPage — bulk actions", () => {
     capturedBoardContentProps.onBulkAssignee?.("user-abc");
     expect(bulkMutate).toHaveBeenCalledWith(
       { ticketIds: [5, 6], assigneeId: "user-abc" },
+      expect.any(Object),
+    );
+  });
+
+  it("calls bulkMutate with labelIds when onBulkLabel fires, so a label can be applied to all selected tickets in one shot", () => {
+    const bulkMutate = jest.fn();
+    mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      selectedIds: new Set([7, 8]),
+    });
+    renderPage();
+    capturedBoardContentProps.onBulkLabel?.("42");
+    expect(bulkMutate).toHaveBeenCalledWith(
+      { ticketIds: [7, 8], labelIds: [42] },
+      expect.any(Object),
+    );
+  });
+
+  it("passes orgLabels to ProjectBoardContent so the label selector is populated with available labels", () => {
+    const fakeLabels = [{ id: 1, name: "Bug", color: "#ff0000", orgId: "org1", createdAt: "" }];
+    mockUseOrgLabels.mockReturnValue({ data: fakeLabels });
+    mockUseBoardUrlState.mockReturnValue({ ...BOARD_URL_STATE_DEFAULT, selectedIds: new Set([1]) });
+    renderPage();
+    expect(capturedBoardContentProps.labels).toEqual(fakeLabels);
+  });
+});
+
+describe("ProjectBoardPage — bulk export", () => {
+  it("calls exportMutation.mutate with the selected ticket ids and csv format when onBulkExport fires, so only the selected rows are exported", () => {
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      selectedIds: new Set([20, 21]),
+    });
+    renderPage();
+    capturedBoardContentProps.onBulkExport?.();
+    expect(mockExportMutate).toHaveBeenCalledWith(
+      { format: "csv", ticketIds: expect.arrayContaining([20, 21]) },
+      expect.any(Object),
+    );
+  });
+});
+
+describe("ProjectBoardPage — bulk archive", () => {
+  it("opens the archive confirm dialog when onBulkArchive fires on the board content, so the user is asked to confirm before any tickets are archived", () => {
+    mockUseBulkUpdateTickets.mockReturnValue({ mutate: jest.fn(), isPending: false });
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      selectedIds: new Set([10, 11]),
+    });
+    renderPage();
+    act(() => { capturedBoardContentProps.onBulkArchive?.(); });
+    expect(screen.getByTestId("confirm-dialog")).toBeDefined();
+  });
+
+  it("calls bulkMutate with archive:true when the archive confirm dialog is confirmed, so the soft-delete is only applied after explicit confirmation", () => {
+    const bulkMutate = jest.fn();
+    mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      selectedIds: new Set([10, 11]),
+    });
+    renderPage();
+    act(() => { capturedBoardContentProps.onBulkArchive?.(); });
+    fireEvent.click(screen.getByTestId("confirm-dialog-confirm"));
+    expect(bulkMutate).toHaveBeenCalledWith(
+      { ticketIds: [10, 11], archive: true },
       expect.any(Object),
     );
   });

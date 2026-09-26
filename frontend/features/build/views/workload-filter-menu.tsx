@@ -14,6 +14,7 @@ import {
   Layers,
   User,
   RefreshCw,
+  Users,
 } from "lucide-react";
 
 import {
@@ -29,6 +30,7 @@ export type { WorkloadFilterMenuProps };
 export function WorkloadFilterMenu({
   filters,
   members,
+  teams,
   cycles,
   projectStatuses,
   activeFilterCount,
@@ -83,9 +85,16 @@ export function WorkloadFilterMenu({
         visible: true,
         activeCount: filters.assigneeId !== "all" ? 1 : 0,
       },
+      {
+        key: "team",
+        label: "Team",
+        icon: <Users className="h-3.5 w-3.5" />,
+        visible: teams.length > 0,
+        activeCount: filters.teamId !== "all" ? 1 : 0,
+      },
     ];
     return items.filter((c) => c.visible);
-  }, [cycles.length, projectStatuses, filters]);
+  }, [cycles.length, projectStatuses, teams.length, filters]);
 
   const handleOpenChange = useCallback((next: boolean) => {
     setOpen(next);
@@ -176,6 +185,13 @@ export function WorkloadFilterMenu({
     [selectSingle, filters.assigneeId],
   );
 
+  const handleSelectTeam = useCallback(
+    (value: string) => {
+      selectSingle("teamId", filters.teamId, value);
+    },
+    [selectSingle, filters.teamId],
+  );
+
   const handleSubmenuKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape" || e.key === "ArrowLeft") {
@@ -261,12 +277,14 @@ export function WorkloadFilterMenu({
                 cycles={cycles}
                 projectStatuses={projectStatuses}
                 members={members}
+                teams={teams}
                 filters={filters}
                 onSelectCycle={handleSelectCycle}
                 onSelectPriority={handleSelectPriority}
                 onSelectType={handleSelectType}
                 onSelectStatus={handleSelectStatus}
                 onSelectAssignee={handleSelectAssignee}
+                onSelectTeam={handleSelectTeam}
               />
             </div>
           ) : null}

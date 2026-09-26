@@ -16,18 +16,22 @@ export function useWorkloadCapacity(
   projectId: number,
   start: string,
   end: string,
+  teamId?: number,
   options?: { enabled?: boolean },
 ): Map<string, MemberCapacityData> {
   const canView = useCan("build:tickets:view");
   const { data } = useQuery({
-    queryKey: buildWorkQueryKeys.projects.workloadCapacity(projectId, start, end),
-    queryFn: ({ signal }) =>
-      apiClient.get(
+    queryKey: buildWorkQueryKeys.projects.workloadCapacity(projectId, start, end, teamId),
+    queryFn: ({ signal }) => {
+      const query: Record<string, string> = { start, end };
+      if (teamId !== undefined) query["teamId"] = String(teamId);
+      return apiClient.get(
         `/build/${projectId}/workload/capacity`,
-        { start, end },
+        query,
         signal,
         workloadCapacityContract,
-      ),
+      );
+    },
     enabled: canView && options?.enabled !== false,
     staleTime: 60_000,
   });

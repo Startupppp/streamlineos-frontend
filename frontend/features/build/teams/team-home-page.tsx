@@ -196,29 +196,17 @@ export function TeamHomePage({ teamId }: Props) {
     if (role) setAddMemberRole(role);
   }
 
-  const { data, isLoading, isError, error, refetch } = useProjectTeam(teamId);
-  const membersResult = useTeamMembers(teamId, memberPager.cursor);
-  const pageMembers = useMemo(() => membersResult.data?.data ?? [], [membersResult.data]);
-
   const debouncedSearch = listFilters.debouncedSearch;
   const leadIdFilter = listFilters.value("leadId");
   const memberIdFilter = listFilters.value("memberId");
 
-  const filteredMembers = useMemo(() => {
-    if (!debouncedSearch && leadIdFilter === BUILD_FILTER_ALL && memberIdFilter === BUILD_FILTER_ALL) {
-      return pageMembers;
-    }
-    return pageMembers.filter((member) => {
-      const q = debouncedSearch.trim().toLowerCase();
-      if (q) {
-        const displayName = getUserDisplayName(member).toLowerCase();
-        if (!displayName.includes(q) && !member.email.toLowerCase().includes(q)) return false;
-      }
-      if (leadIdFilter !== BUILD_FILTER_ALL && member.userId !== leadIdFilter) return false;
-      if (memberIdFilter !== BUILD_FILTER_ALL && member.userId !== memberIdFilter) return false;
-      return true;
-    });
-  }, [pageMembers, debouncedSearch, leadIdFilter, memberIdFilter]);
+  const { data, isLoading, isError, error, refetch } = useProjectTeam(teamId);
+  const membersResult = useTeamMembers(teamId, memberPager.cursor, 50, {
+    q: debouncedSearch || undefined,
+    leadId: leadIdFilter !== BUILD_FILTER_ALL ? leadIdFilter : undefined,
+    memberId: memberIdFilter !== BUILD_FILTER_ALL ? memberIdFilter : undefined,
+  });
+  const pageMembers = useMemo(() => membersResult.data?.data ?? [], [membersResult.data]);
 
   const updateTeam = useUpdateProjectTeam();
   const deleteTeam = useDeleteProjectTeam();
@@ -234,7 +222,7 @@ export function TeamHomePage({ teamId }: Props) {
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   useBuildListKeyboard({
-    itemCount: filteredMembers.length,
+    itemCount: pageMembers.length,
     onOpen: handleKeyboardOpen,
     onClearSelection: memberPager.reset,
     onShortcutHelp: handleShortcutHelp,
@@ -393,6 +381,11 @@ export function TeamHomePage({ teamId }: Props) {
             <span className="text-sm text-muted-foreground">
               {pageMembers.length}{membersResult.data?.pagination.hasMore ? "+" : ""} member{pageMembers.length !== 1 ? "s" : ""}
             </span>
+            {data.capacity !== null && data.capacity !== undefined ? (
+              <span className="text-sm text-muted-foreground" data-testid="team-capacity">
+                Capacity {data.capacity}
+              </span>
+            ) : null}
           </PmPanel>
         </PmSection>
 
@@ -437,7 +430,7 @@ export function TeamHomePage({ teamId }: Props) {
             </div>
           </div>
 
-          {filteredMembers.length === 0 && !membersResult.isLoading ? (
+          {pageMembers.length === 0 && !membersResult.isLoading ? (
             <PmPanel className="flex items-center justify-center p-4">
               <EmptyState
                 illustrationPreset="projects"
@@ -448,7 +441,7 @@ export function TeamHomePage({ teamId }: Props) {
             </PmPanel>
           ) : (
             <PmPanel role="list" aria-label="Team members">
-              {filteredMembers.map((member) => {
+              {pageMembers.map((member) => {
                 const displayName = getUserDisplayName({
                   firstName: member.firstName,
                   lastName: member.lastName,

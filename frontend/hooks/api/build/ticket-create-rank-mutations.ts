@@ -260,6 +260,20 @@ export interface BulkUpdateTicketsInput {
   cycleId?: number | null;
   priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   parentTicketId?: number | null;
+  labelIds?: number[];
+  archive?: boolean;
+}
+
+export interface BulkUpdateBlockedTicket {
+  ticketId: number;
+  reason: string;
+  dependencyCount: number;
+}
+
+export interface BulkUpdateTicketsResult {
+  updated: number;
+  ticketIds: number[];
+  blocked?: BulkUpdateBlockedTicket[];
 }
 
 interface BulkUpdateTicketsContext {
@@ -287,20 +301,29 @@ function toTicketUpdateInput(
 export function useBulkUpdateTickets(projectId: number) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<
-    { updated: number; ticketIds: number[] },
+    BulkUpdateTicketsResult,
     Error,
     BulkUpdateTicketsInput,
     BulkUpdateTicketsContext
   >("build:tickets:update", {
     mutationKey: ["projects", "tickets", "bulk-update"],
     mutationFn: (data: BulkUpdateTicketsInput) =>
-      apiClient.post<{ updated: number; ticketIds: number[] }>(
+      apiClient.post<BulkUpdateTicketsResult>(
         `/build/${projectId}/tickets/bulk`,
         data,
         undefined,
         bulkUpdateResultLazy,
       ),
     onMutate: async (variables) => {
+      if (variables.archive || variables.labelIds !== undefined) {
+        return {
+          previousDetail: undefined,
+          optimisticDetail: undefined,
+          previousTickets: new Map(),
+          optimisticTickets: new Map(),
+          listSnapshots: new Map(),
+        };
+      }
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);
       const ticketKeys = variables.ticketIds.map((ticketId) =>
         buildWorkQueryKeys.projects.ticket(projectId, ticketId),

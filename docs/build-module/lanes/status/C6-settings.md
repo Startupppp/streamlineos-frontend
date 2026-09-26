@@ -141,7 +141,7 @@ the correct CSS — neither is currently tested. This is a one-test gap.
 
 ---
 
-## Summary of changes made
+## Summary of changes made (prior session)
 
 | File | Change |
 |------|--------|
@@ -154,3 +154,73 @@ the correct CSS — neither is currently tested. This is a one-test gap.
 from the Tab sequence; the first Tab after the search input now reaches the "Engineering backlog"
 name button because it is the next element with a natural tab stop (`<button type="button">`) in DOM
 order.
+
+---
+
+## G-13 session — ready-state gallery cases and per-page screen-reader/keyboard/Esc coverage
+
+### Technique
+
+Seven of the 13 skeleton-only pages were unblocked by seeding TanStack Query's cache before render:
+1. Create a fresh `QueryClient` via `createAppQueryClient` inside `useState`
+2. Call `client.setQueryData(key, stubValue)` for every key the page reads at load time
+3. Wrap the page component in `QueryClientProvider` with that client
+4. Seed `platformCoreQueryKeys.access.me()` with `{ isOrgOwner: true, scopes: {}, ... }` — this
+   makes every `useCan` call return `true` without enumerating individual permission keys
+5. For pages with hardcoded `isLoading: false` (fields, agents, integrations), no data key needs
+   seeding beyond the access key
+
+**Automations key trap:** `useAutomations(projectId, { action: undefined })` appends `filters ?? {}`
+to its base key. `JSON.stringify({ action: undefined })` === `"{}"`, so the seeded key must use
+`[...buildWorkQueryKeys.projects.automations(1), {}]` — seeding the bare automation base key would
+miss the runtime key and leave the query in loading state.
+
+### Pages not mounted (and why)
+
+| Page | Reason |
+|------|--------|
+| `project-settings` (main form) | `useProject(projectId)` requires `buildWorkQueryKeys.projects.detail(n)` seeded with a full `ProjectDetail` shape; not done in this session |
+| `project-settings-access` | `useProjectMembers`, `useTeamRoster`, cursor-paginated roster; mountable but not done |
+| `project-settings-integrations-webhooks` | peer sessions own `features/build/settings/webhooks/**`; read-only to avoid conflicts |
+| `project-settings-portal` | not analysed; could be mounted in a subsequent session |
+| `settings-access` (org-level) | `BuildAccessShell`, `MembersPage`, `ModuleAccessPage` are Server Components; cannot be mounted in a client gallery |
+| `settings-integrations` (org-level) | org-level integrations use server-side data fetching; cannot be mounted in a client gallery |
+
+### Updated per-page × per-check matrix (after G-13)
+
+`ready✓` = explicit test assertion on a real mounted component.
+
+| Page | 375 px | Screen-reader | Reduced motion | Keyboard | HiDPI | Esc |
+|------|--------|---------------|----------------|----------|-------|-----|
+| project-settings | loading✓ | ✗ | loading✓ | ✗ | loading✓ | ✗ |
+| project-settings-access | loading✓ | ✗ | loading✓ | ✗ | loading✓ | ✗ |
+| project-settings-agents | ready✓ | ready✓ | loading✓ | ready✓ | ready✓ | ✗ |
+| project-settings-agents-credentials | ✓ | ✓ | ✗ | ✓ | ✓ | ✗ |
+| project-settings-automations | ready✓ | ready✓ | loading✓ | ready✓ | ready✓ | ready✓ |
+| project-settings-fields | ready✓ | ready✓ | loading✓ | ready✓ | ready✓ | ✗ |
+| project-settings-integrations | ready✓ | ready✓ | loading✓ | ready✓ | ready✓ | ✗ |
+| project-settings-integrations-webhooks | loading✓ | ✗ | loading✓ | ✗ | loading✓ | ✗ |
+| project-settings-iterations | ready✓ | ready✓ | loading✓ | ready✓ | ready✓ | ✗ |
+| project-settings-portal | loading✓ | ✗ | loading✓ | ✗ | loading✓ | ✗ |
+| project-settings-retention | ready✓ | ready✓ | loading✓ | ready✓ | ready✓ | ready✓ |
+| project-settings-views | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ |
+| project-settings-workflow | ready✓ | ready✓ | loading✓ | ready✓ | ready✓ | ready✓ |
+| settings-access | loading✓ | ✗ | loading✓ | ✗ | loading✓ | ✗ |
+| settings-integrations | loading✓ | ✗ | loading✓ | ✗ | loading✓ | ✗ |
+
+### Remaining gaps after G-13
+
+- **Screen-reader / Keyboard / Esc** on 6 pages still skeleton-only: `project-settings`,
+  `project-settings-access`, `project-settings-integrations-webhooks`,
+  `project-settings-portal`, `settings-access`, `settings-integrations`
+- **Esc** on fields, agents, integrations, iterations — no easy overlay trigger on those pages in
+  the ready state (no button that opens a sheet or dialog without complex interaction)
+- **Reduced motion** on the credentials token-list case — `TokenRow` has no skeleton elements
+
+### Summary of G-13 changes
+
+| File | Change |
+|------|--------|
+| `features/build/settings/settings-gallery.tsx` | 7 ready-state frame components; 7 new `GalleryCase` entries |
+| `e2e/settings-a11y.spec.ts` | CASES array expanded (+7); 7 new `test.describe` blocks (SR + KB + Esc where applicable) |
+| `docs/build-module/lanes/status/C6-settings.md` | Updated matrix and G-13 session notes |

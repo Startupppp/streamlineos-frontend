@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import type {
   Risk, Decision,
   CreateRiskInput, UpdateRiskInput,
@@ -45,6 +45,25 @@ interface ListFilters {
   impact?: string;
   ownerId?: string;
   cursor?: number;
+}
+
+interface OrgRiskFilters {
+  status?: string;
+  cursor?: number;
+}
+
+export function useOrgRisks(filters?: OrgRiskFilters) {
+  const canState = useCanState("build:risks:view");
+  const params: Record<string, string> = {};
+  if (filters?.status) params["status"] = filters.status;
+  if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
+
+  return useQuery<IdCursorPage<Risk>>({
+    queryKey: buildWorkQueryKeys.projects.risks.orgList(Object.keys(params).length > 0 ? params : undefined),
+    queryFn: ({ signal }) => apiClient.get<IdCursorPage<Risk>>("/build/risks", params, signal, riskPageContract),
+    enabled: canState !== "denied",
+    staleTime: 60_000,
+  });
 }
 
 export function useProjectRisks(projectId: number, filters?: ListFilters) {

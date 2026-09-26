@@ -39,6 +39,12 @@ jest.mock("@/hooks/api/build/workload-capacity", () => ({
     mockUseWorkloadCapacity(...args),
 }));
 
+const mockUseProjectTeams = jest.fn(() => ({ data: undefined }));
+
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: (...args: unknown[]) => mockUseProjectTeams(...args),
+}));
+
 const mockUsePageState = jest.fn();
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -61,12 +67,14 @@ jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
 let capturedFilterBarProps: {
   onFilterChange?: (key: string, value: unknown) => void;
   onClearFilters?: () => void;
+  filters?: Record<string, unknown>;
 } = {};
 
 jest.mock("@/features/build/views/workload-filter-bar", () => ({
   WorkloadFilterBar: (props: {
     onFilterChange: (key: string, value: unknown) => void;
     onClearFilters: () => void;
+    filters: Record<string, unknown>;
   }) => {
     capturedFilterBarProps = props;
     return <div data-testid="workload-filter-bar" />;
@@ -182,6 +190,7 @@ beforeEach(() => {
   mockUse.mockReturnValue({ projectId: "1" });
   mockUseProject.mockReturnValue(READY_PROJECT);
   mockUseProjectBoardTickets.mockReturnValue(TICKETS_RESULT);
+  mockUseProjectTeams.mockReturnValue({ data: undefined });
   mockUsePageState.mockReturnValue({ kind: "ready" });
   mockUseOnlineStatus.mockReturnValue(true);
 });
@@ -200,6 +209,7 @@ describe("WorkloadBoardPage — URL param forwarding to useWorkloadCapacity", ()
       1,
       "2026-01-01",
       "2026-01-14",
+      undefined,
     );
   });
 
@@ -212,6 +222,27 @@ describe("WorkloadBoardPage — URL param forwarding to useWorkloadCapacity", ()
     expect(typeof end).toBe("string");
     expect(start.length).toBe(10);
     expect(end.length).toBe(10);
+  });
+
+  it("passes teamId as a number to useWorkloadCapacity when the teamId URL param is present so the capacity endpoint can filter by team", () => {
+    mockSearchParams = new URLSearchParams("teamId=5");
+    renderPage();
+    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
+      1,
+      expect.any(String),
+      expect.any(String),
+      5,
+    );
+  });
+
+  it("passes undefined teamId to useWorkloadCapacity when teamId is absent from the URL so unfiltered capacity is returned", () => {
+    renderPage();
+    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
+      1,
+      expect.any(String),
+      expect.any(String),
+      undefined,
+    );
   });
 });
 
@@ -260,6 +291,46 @@ describe("WorkloadBoardPage — filter change writes memberId to URL", () => {
     });
     const callArg: string = mockReplace.mock.calls[0][0];
     expect(callArg).not.toContain("memberId=");
+  });
+});
+
+describe("WorkloadBoardPage — URL param forwarding: teamId writes to URL", () => {
+  it("calls router.replace with teamId in the URL when the teamId filter changes to a non-all value, so capacity is filtered to that team", () => {
+    renderPage();
+    capturedFilterBarProps.onFilterChange?.("teamId", "7");
+    expect(mockReplace).toHaveBeenCalledWith(
+      expect.stringContaining("teamId=7"),
+      expect.anything(),
+    );
+  });
+
+  it("removes teamId from the URL when the teamId filter is cleared to all, so the URL stays clean when no team filter is active", () => {
+    mockSearchParams = new URLSearchParams("teamId=7");
+    renderPage();
+    capturedFilterBarProps.onFilterChange?.("teamId", "all");
+    const callArg: string = mockReplace.mock.calls[0][0];
+    expect(callArg).not.toContain("teamId=");
+  });
+
+  it("removes teamId from the URL when onClearFilters fires", () => {
+    mockSearchParams = new URLSearchParams("teamId=7");
+    renderPage();
+    act(() => {
+      capturedFilterBarProps.onClearFilters?.();
+    });
+    const callArg: string = mockReplace.mock.calls[0][0];
+    expect(callArg).not.toContain("teamId=");
+  });
+
+  it("derives teamId for workloadFilters from URL so a page reload re-applies the filter without a separate state sync", () => {
+    mockSearchParams = new URLSearchParams("teamId=9");
+    renderPage();
+    expect(capturedFilterBarProps.filters?.["teamId"]).toBe("9");
+  });
+
+  it("shows no teamId filter when teamId is absent from the URL — filters.teamId defaults to all", () => {
+    renderPage();
+    expect(capturedFilterBarProps.filters?.["teamId"]).toBe("all");
   });
 });
 

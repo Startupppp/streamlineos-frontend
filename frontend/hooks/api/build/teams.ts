@@ -82,10 +82,18 @@ export function useProjectTeam(teamId: number) {
   });
 }
 
-export function useTeamMembers(teamId: number, cursor?: string, pageSize = 50) {
+export function useTeamMembers(
+  teamId: number,
+  cursor?: string,
+  pageSize = 50,
+  filters?: { q?: string; leadId?: string; memberId?: string },
+) {
   const query: Record<string, string> = {};
   if (cursor) query["cursor"] = cursor;
   if (pageSize !== 50) query["pageSize"] = String(pageSize);
+  if (filters?.q) query["q"] = filters.q;
+  if (filters?.leadId) query["leadId"] = filters.leadId;
+  if (filters?.memberId) query["memberId"] = filters.memberId;
   const params = Object.keys(query).length ? query : undefined;
   return useGatedQuery<import("@/hooks/api/build/teams-schema").TeamMemberPage>("build:teams:view", {
     queryKey: buildWorkQueryKeys.projects.teams.members(teamId, params),

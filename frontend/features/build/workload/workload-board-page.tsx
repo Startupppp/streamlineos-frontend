@@ -6,6 +6,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api";
 import { useProjectBoardTickets } from "@/hooks/api/build";
 import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
+import { useProjectTeams } from "@/hooks/api/build/teams";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
@@ -43,6 +44,8 @@ export function WorkloadBoardPage({ params }: PageProps) {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const memberId = searchParams.get("memberId");
+  const teamIdStr = searchParams.get("teamId");
+  const teamIdParam = teamIdStr !== null ? parseInt(teamIdStr) : undefined;
 
   const capacityWindow = useMemo(() => {
     const today = new Date();
@@ -72,6 +75,13 @@ export function WorkloadBoardPage({ params }: PageProps) {
     projectId,
     capacityWindow.start,
     capacityWindow.end,
+    teamIdParam,
+  );
+
+  const { data: teamsPage } = useProjectTeams();
+  const teams = useMemo(
+    () => (teamsPage?.data ?? []).map((t) => ({ id: t.id, name: t.name })),
+    [teamsPage],
   );
 
   const allTickets = useMemo(
@@ -104,11 +114,12 @@ export function WorkloadBoardPage({ params }: PageProps) {
   const [localFilters, setLocalFilters] = useState<WorkloadFilterState>({
     ...INITIAL_FILTERS,
     assigneeId: memberId ?? "all",
+    teamId: teamIdStr ?? "all",
   });
 
   const workloadFilters = useMemo<WorkloadFilterState>(
-    () => ({ ...localFilters, assigneeId: memberId ?? "all" }),
-    [localFilters, memberId],
+    () => ({ ...localFilters, assigneeId: memberId ?? "all", teamId: teamIdStr ?? "all" }),
+    [localFilters, memberId, teamIdStr],
   );
 
   const handleWorkloadFilterChange = useCallback(
@@ -128,6 +139,18 @@ export function WorkloadBoardPage({ params }: PageProps) {
         router.replace(query ? `${pathname}?${query}` : pathname, {
           scroll: false,
         });
+      } else if (key === "teamId") {
+        const next = new URLSearchParams(searchParams.toString());
+        const strValue = String(value);
+        if (strValue && strValue !== "all") {
+          next.set("teamId", strValue);
+        } else {
+          next.delete("teamId");
+        }
+        const query = next.toString();
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
       } else {
         setLocalFilters((prev) => ({ ...prev, [key]: value }));
       }
@@ -139,6 +162,7 @@ export function WorkloadBoardPage({ params }: PageProps) {
     setLocalFilters(INITIAL_FILTERS);
     const next = new URLSearchParams(searchParams.toString());
     next.delete("memberId");
+    next.delete("teamId");
     const query = next.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, {
       scroll: false,
@@ -294,6 +318,7 @@ export function WorkloadBoardPage({ params }: PageProps) {
           projectId={projectId}
           filters={workloadFilters}
           members={members}
+          teams={teams}
           projectStatuses={statuses}
           onFilterChange={handleWorkloadFilterChange}
           onClearFilters={handleClearWorkloadFilters}

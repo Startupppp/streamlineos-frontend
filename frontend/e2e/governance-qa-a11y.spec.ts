@@ -28,6 +28,10 @@ const CASES = [
   "loading-approvals",
   "empty-governance",
   "error-governance",
+  "budget-overview",
+  "incident-detail",
+  "qa-run-execution",
+  "reports-tabs",
 ] as const;
 
 function frame(page: Page, caseId: string): Locator {
@@ -189,6 +193,42 @@ test.describe("Governance & QA responsive contract", () => {
         scope.getByRole("button", { name: "New Risk" }),
       ).toBeVisible();
     });
+
+    test("the budget member breakdown table has column headers Member Hours Cost", async ({ page }) => {
+      const scope = frame(page, "budget-overview");
+      await expect(scope.getByRole("table")).toBeVisible();
+      for (const header of ["Member", "Hours", "Cost"] as const) {
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
+      }
+    });
+
+    test("the incident detail case exposes severity badge text and SLA Status heading", async ({ page }) => {
+      const scope = frame(page, "incident-detail");
+      await expect(scope.getByText("critical")).toBeVisible();
+      await expect(scope.getByText("Investigating")).toBeVisible();
+      await expect(scope.getByText("SLA Status")).toBeVisible();
+    });
+
+    test("the qa run result table has column headers TC# Title Priority Status", async ({ page }) => {
+      const scope = frame(page, "qa-run-execution");
+      await expect(scope.getByRole("table")).toBeVisible();
+      for (const header of ["TC#", "Title", "Priority", "Status"] as const) {
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
+      }
+    });
+
+    test("the reports case exposes a tablist with named tab triggers", async ({ page }) => {
+      const scope = frame(page, "reports-tabs");
+      await expect(scope.getByRole("tablist")).toBeVisible();
+      await expect(scope.getByRole("tab", { name: "Agile Reports", exact: true })).toBeVisible();
+      await expect(scope.getByRole("tab", { name: "Overview", exact: true })).toBeVisible();
+    });
+
+    test("the reports agile tab has named headings for each chart section", async ({ page }) => {
+      const scope = frame(page, "reports-tabs");
+      await expect(scope.getByRole("heading", { name: /Velocity/i })).toBeVisible();
+      await expect(scope.getByRole("heading", { name: /Burnup/i })).toBeVisible();
+    });
   });
 
   test.describe("keyboard reachability — 1280x800", () => {
@@ -344,6 +384,34 @@ test.describe("Governance & QA responsive contract", () => {
       const prevBtn = scope.getByRole("button", { name: /prev/i });
       await expect(nextBtn.or(prevBtn)).not.toHaveCount(0);
     });
+
+    test("the Update Budget button in the budget case is keyboard reachable", async ({ page }) => {
+      const scope = frame(page, "budget-overview");
+      const btn = scope.getByRole("button", { name: "Update Budget", exact: true });
+      await btn.focus();
+      await expect(btn).toBeFocused();
+    });
+
+    test("the Edit button in the incident detail case is keyboard reachable", async ({ page }) => {
+      const scope = frame(page, "incident-detail");
+      const btn = scope.getByRole("button", { name: "Edit", exact: true });
+      await btn.focus();
+      await expect(btn).toBeFocused();
+    });
+
+    test("the search input is reachable by keyboard in the qa run execution case", async ({ page }) => {
+      const scope = frame(page, "qa-run-execution");
+      const searchInput = scope.locator("[data-slot=search-input] input");
+      await searchInput.focus();
+      await expect(searchInput).toBeFocused();
+    });
+
+    test("the Agile Reports tab trigger in the reports case is keyboard focusable", async ({ page }) => {
+      const scope = frame(page, "reports-tabs");
+      const tab = scope.getByRole("tab", { name: "Agile Reports", exact: true });
+      await tab.focus();
+      await expect(tab).toBeFocused();
+    });
   });
 
   test.describe("reduced motion — the skeleton shimmer stops", () => {
@@ -449,6 +517,21 @@ test.describe("Governance & QA responsive contract", () => {
 
     test("the decisions list shows mobile cards not a desktop table", async ({ page }) => {
       const scope = frame(page, "decisions");
+      await expect(scope.locator("table")).toBeHidden();
+    });
+
+    test("the approvals list shows mobile cards not a desktop table", async ({ page }) => {
+      const scope = frame(page, "approvals");
+      await expect(scope.locator("table")).toBeHidden();
+    });
+
+    test("the budget member breakdown shows mobile cards not a desktop table", async ({ page }) => {
+      const scope = frame(page, "budget-overview");
+      await expect(scope.locator("table")).toBeHidden();
+    });
+
+    test("the qa run execution list shows mobile cards not a desktop table", async ({ page }) => {
+      const scope = frame(page, "qa-run-execution");
       await expect(scope.locator("table")).toBeHidden();
     });
   });

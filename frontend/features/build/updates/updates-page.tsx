@@ -29,17 +29,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
 import type { ProjectUpdateRow } from "@/hooks/api/build/project-updates";
 import { createUpdateSchema, type CreateUpdateInput } from "./updates-schema";
+import { UpdateFormFields } from "./update-form-fields";
 
 function NewUpdateButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -68,15 +60,40 @@ function UpdateCard({
   return (
     <Card className={cn(CONTENT_PANEL_SOLID, focused && "ring-2 ring-primary")}>
       <CardContent className="p-4 space-y-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize bg-muted text-muted-foreground">
             {update.status}
           </span>
           <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize bg-muted text-muted-foreground">
             {update.audience}
           </span>
+          <span className="text-dense font-medium text-muted-foreground">{update.authorName}</span>
         </div>
         <p className="text-sm text-foreground whitespace-pre-wrap">{update.body}</p>
+        {update.wins ? (
+          <div className="space-y-0.5">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Wins</p>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{update.wins}</p>
+          </div>
+        ) : null}
+        {update.risks ? (
+          <div className="space-y-0.5">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Risks</p>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{update.risks}</p>
+          </div>
+        ) : null}
+        {update.next ? (
+          <div className="space-y-0.5">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Next</p>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{update.next}</p>
+          </div>
+        ) : null}
+        {update.citations ? (
+          <div className="space-y-0.5">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Citations</p>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{update.citations}</p>
+          </div>
+        ) : null}
         <div className="flex items-center justify-between pt-1">
           <span className="text-dense font-medium text-muted-foreground tabular-nums">{date}</span>
           {canManage ? (
@@ -245,27 +262,7 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
         isSubmitting={createUpdate.isPending}
         submitLabel="Post"
       >
-        {(form) => (
-          <Form {...form}>
-            <FormField
-              control={form.control}
-              name="body"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Update</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="What's the latest on this project?"
-                      rows={5}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </Form>
-        )}
+        {(form) => <UpdateFormFields form={form} isOpen={dialogOpen} />}
       </EntityFormDialog>
 
       <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={handleShortcutHelpOpenChange} />

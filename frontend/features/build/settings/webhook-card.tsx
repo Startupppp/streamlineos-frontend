@@ -13,6 +13,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -67,10 +68,49 @@ function DeliveryRow({ delivery }: { delivery: WebhookDelivery }) {
   );
 }
 
+function LastDeliveryMeta({
+  lastDeliveryAt,
+  lastDeliveryStatus,
+  failureRate,
+}: {
+  lastDeliveryAt?: string | null;
+  lastDeliveryStatus?: "success" | "failed" | "pending" | null;
+  failureRate?: number | null;
+}) {
+  if (!lastDeliveryAt) return null;
+  const statusColor =
+    lastDeliveryStatus === "success"
+      ? "bg-status-success-fill"
+      : lastDeliveryStatus === "failed"
+        ? "bg-status-danger-fill"
+        : "bg-status-warning-fill";
+  const failurePct =
+    failureRate !== null && failureRate !== undefined
+      ? `${Math.round(failureRate * 100)}% failure`
+      : null;
+  return (
+    <div className="flex items-center gap-2 mt-1">
+      <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", statusColor)} aria-hidden />
+      <span className="text-micro text-muted-foreground">
+        {new Date(lastDeliveryAt).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        })}
+      </span>
+      {failurePct && (
+        <span className="text-micro text-status-danger-ink-strong font-mono">
+          {failurePct}
+        </span>
+      )}
+    </div>
+  );
+}
+
 interface WebhookCardProps {
   webhook: ProjectWebhook;
   projectId: number;
   onDelete: (id: number) => void;
+  onToggle?: (id: number, isActive: boolean) => void;
   canManage?: boolean;
 }
 
@@ -78,6 +118,7 @@ export function WebhookCard({
   webhook,
   projectId,
   onDelete,
+  onToggle,
   canManage = false,
 }: WebhookCardProps) {
   const accessState = useCanState("build:manage");
@@ -117,6 +158,13 @@ export function WebhookCard({
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [sendTest, webhook.id]);
+
+  const handleActiveToggle = useCallback(
+    (checked: boolean) => {
+      onToggle?.(webhook.id, checked);
+    },
+    [onToggle, webhook.id],
+  );
 
   if (accessState === "denied" || accessState === "loading") return null;
 
@@ -173,7 +221,20 @@ export function WebhookCard({
               })}
             </span>
           </div>
+          <LastDeliveryMeta
+            lastDeliveryAt={webhook.lastDeliveryAt}
+            lastDeliveryStatus={webhook.lastDeliveryStatus}
+            failureRate={webhook.failureRate}
+          />
         </div>
+        {canManage && onToggle && (
+          <Switch
+            checked={webhook.isActive}
+            onCheckedChange={handleActiveToggle}
+            aria-label={webhook.isActive ? "Disable webhook" : "Enable webhook"}
+            className="shrink-0"
+          />
+        )}
         <button
           type="button"
           onClick={handleSendTest}

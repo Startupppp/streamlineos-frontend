@@ -6,6 +6,13 @@ export type AutomationTriggerEvent =
   | "sprint.started"
   | "sprint.completed";
 
+export type AutomationActionType =
+  | "set_status"
+  | "set_assignee"
+  | "set_priority"
+  | "add_label"
+  | "add_comment";
+
 export interface AutomationCondition {
   field: string;
   operator: "equals" | "not_equals" | "contains" | "is_empty" | "is_not_empty";
@@ -13,8 +20,15 @@ export interface AutomationCondition {
 }
 
 export interface AutomationAction {
-  type: "set_status" | "set_assignee" | "set_priority" | "add_label" | "add_comment";
+  type: AutomationActionType;
   value: string;
+}
+
+export interface AutomationCreatedByUser {
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
 }
 
 export interface ProjectAutomation {
@@ -25,5 +39,10 @@ export interface ProjectAutomation {
   triggerEvent: AutomationTriggerEvent;
   conditions: AutomationCondition[];
   actions: AutomationAction[];
+  createdBy: string | null;
+  createdByUser: AutomationCreatedByUser | null;
+  lastRunAt: string | null;
+  lastFailureAt: string | null;
   createdAt: string;
+  updatedAt: string;
 }
