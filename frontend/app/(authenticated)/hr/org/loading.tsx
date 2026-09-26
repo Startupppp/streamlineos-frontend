@@ -13,7 +13,7 @@ export default function OrgHubLoading() {
           <Skeleton key={skeletonIndex} className="h-7 w-24 rounded-md" />
         ))}
       </div>
-      <DataTableSkeleton rows={10} columns={3} />
+      <DataTableSkeleton rows={10} headers={["Name", "Code", "Actions"]} />
     </PageWrapper>
   );
 }

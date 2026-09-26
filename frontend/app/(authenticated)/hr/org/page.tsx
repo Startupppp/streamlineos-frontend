@@ -17,7 +17,7 @@ export default async function OrgHubPage() {
       title="Job Architecture"
       subtitle="Manage the job roles and levels used by HR records."
     >
-      <Suspense fallback={<DataTableSkeleton rows={10} columns={3} />}>
+      <Suspense fallback={<DataTableSkeleton rows={10} headers={["Name", "Code", "Actions"]} />}>
         <OrgHubClient />
       </Suspense>
     </PageWrapper>
