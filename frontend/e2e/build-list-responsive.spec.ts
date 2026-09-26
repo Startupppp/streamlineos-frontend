@@ -1,5 +1,14 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
+async function shimmerAnimationName(page: Page): Promise<string> {
+  const shimmer = page
+    .locator('[data-case-frame="loading"]')
+    .locator(".skeleton-shimmer.animate-pulse:visible")
+    .first();
+  await expect(shimmer).toBeVisible();
+  return shimmer.evaluate((node: HTMLElement) => getComputedStyle(node).animationName);
+}
+
 const GALLERY = "/design-system/build-list";
 const EVIDENCE_DIR = "test-results/build-list-evidence";
 
@@ -314,6 +323,69 @@ test.describe("Build list responsive contract", () => {
       );
       expect(await visible.count()).toBeLessThanOrEqual(4);
       await expect(scope.getByRole("button", { name: "More actions" })).toBeVisible();
+    });
+  });
+
+  test.describe("reduced motion — loading skeleton shimmer stops", () => {
+    test.describe("with reduce requested", () => {
+      test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+      test("DataTableSkeleton computes animation-name none on the visible shimmer", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+        expect(await shimmerAnimationName(page)).toBe("none");
+      });
+    });
+
+    test.describe("with no preference", () => {
+      test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+      test("the same skeleton does animate, proving the reduce assertion is not vacuous", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+        expect(await shimmerAnimationName(page)).not.toBe("none");
+      });
+    });
+  });
+
+  test.describe("high-density desktop — 1920 × 1080 at scale 2", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(page.getByRole("heading", { name: "Build list surfaces" })).toBeVisible();
+    });
+
+    test("the page itself never scrolls sideways", async ({ page }) => {
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
+
+    test("no list surface overflows its own width", async ({ page }) => {
+      for (const caseId of CASES) {
+        const scope = frame(page, caseId);
+        const overflow = await horizontalOverflowOf(scope);
+        expect(overflow).toBeLessThanOrEqual(1);
+      }
+    });
+
+    test("header actions do not clip past the right edge of the frame", async ({ page }) => {
+      const scope = frame(page, "four-actions-three-filters");
+      const frameBox = await scope.boundingBox();
+      const actionsBox = await scope
+        .locator("[data-slot=build-header-actions]")
+        .boundingBox();
+      expect((actionsBox?.x ?? 0) + (actionsBox?.width ?? 0)).toBeLessThanOrEqual(
+        (frameBox?.x ?? 0) + (frameBox?.width ?? 0) + 1,
+      );
     });
   });
 });

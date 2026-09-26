@@ -14,6 +14,7 @@ const CASES = [
   "settings-views-loading",
   "settings-views-empty",
   "settings-views-denied",
+  "settings-credentials-token-list",
 ] as const;
 
 function frame(page: Page, caseId: string): Locator {
@@ -121,6 +122,113 @@ test.describe("Settings responsive contract", () => {
         );
         expect(animName).not.toBe("none");
       });
+    });
+  });
+
+  test.describe("keyboard navigation", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Settings surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("Tab from the search input moves focus to the first view card name button", async ({
+      page,
+    }) => {
+      const scope = frame(page, "settings-views-ready");
+      const searchInput = scope.locator("[data-slot=search-input] input:visible");
+      await searchInput.focus();
+      await expect(searchInput).toBeFocused();
+      await page.keyboard.press("Tab");
+      const nameButton = scope.locator("button").filter({ hasText: "Engineering backlog" });
+      await expect(nameButton).toBeFocused();
+    });
+
+    test("Tab from the Rename saved view button reaches the Delete saved view button in the same card", async ({
+      page,
+    }) => {
+      const scope = frame(page, "settings-views-ready");
+      const renameButton = scope
+        .getByRole("button", { name: "Rename saved view", exact: true })
+        .first();
+      await renameButton.focus();
+      await expect(renameButton).toBeFocused();
+      await page.keyboard.press("Tab");
+      const deleteButton = scope
+        .getByRole("button", { name: "Delete saved view", exact: true })
+        .first();
+      await expect(deleteButton).toBeFocused();
+    });
+  });
+
+  test.describe("high-density desktop — 1920 × 1080 at scale 2", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Settings surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the page itself never scrolls sideways", async ({ page }) => {
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
+
+    test("no settings surface overflows its own width", async ({ page }) => {
+      for (const caseId of CASES) {
+        const scope = frame(page, caseId);
+        const overflow = await horizontalOverflowOf(scope);
+        expect(overflow).toBeLessThanOrEqual(1);
+      }
+    });
+
+    test("the search input in the ready case does not clip past the right edge of its frame", async ({
+      page,
+    }) => {
+      const scope = frame(page, "settings-views-ready");
+      const frameBox = await scope.boundingBox();
+      const searchInput = scope.locator("[data-slot=search-input] input:visible");
+      const inputBox = await searchInput.boundingBox();
+      expect((inputBox?.x ?? 0) + (inputBox?.width ?? 0)).toBeLessThanOrEqual(
+        (frameBox?.x ?? 0) + (frameBox?.width ?? 0) + 1,
+      );
+    });
+  });
+
+  test.describe("secret redaction — token list shows only the prefix, never the full value", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Settings surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the stub token prefix is visible in the credentials case", async ({ page }) => {
+      const scope = frame(page, "settings-credentials-token-list");
+      const maskedCode = scope.locator("code").filter({ hasText: /slat_Fa9c/ });
+      await expect(maskedCode).toBeVisible();
+    });
+
+    test("the full token value that was never passed to the gallery is absent from all DOM text, proving the masked assertion is not vacuous", async ({
+      page,
+    }) => {
+      const fullTokenNeverRendered = "slat_Fa9c_neverRenderThisValue";
+      await expect(
+        page.getByText(fullTokenNeverRendered, { exact: false }),
+      ).toHaveCount(0);
+      await expect(
+        page.locator(`[title*="${fullTokenNeverRendered}"]`),
+      ).toHaveCount(0);
+      await expect(
+        page.locator(`[aria-label*="${fullTokenNeverRendered}"]`),
+      ).toHaveCount(0);
     });
   });
 });

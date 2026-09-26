@@ -612,3 +612,84 @@ Total: 52 tests across 5 suites — all PASS.
 | C7 — production browser | 0 | 0 | 10 |
 
 **49 ticked / 4 open / 17 blocked** out of 70 after Round 6.
+
+---
+
+## C6 coverage round
+
+### Describes added
+
+**A. `"high-density desktop — 1920×1080 @ scale 2"`** (new describe in `frontend/e2e/execution-core-a11y.spec.ts`)
+
+Closes: high-density desktop check in C6.
+
+Uses `test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 })` at describe level — the only correct way to set `deviceScaleFactor` (house fact 1: `setViewportSize` cannot change it).
+
+Three tests:
+1. `"the page itself never scrolls sideways at scale-2 1920 px"` — `document.documentElement.scrollWidth - clientWidth ≤ 1`.
+2. `"each case frame contains its content without horizontal overflow at scale-2 1920 px"` — iterates `[data-case-frame]` locators (gallery source `execution-core-gallery.tsx:99`); each frame's `scrollWidth - clientWidth ≤ 1`. At 1920 CSS px the three frames (kanban-board-overflow, ticket-detail-two-panel, kanban-board-loading) all fit: kanban content width ≈ 5 × 256 + 4 × 12 + 2 × 16 = 1360 px, case-frame width ≈ 1920 − 32 = 1888 px.
+3. `"kanban scroll container is the designated overflow boundary and the page does not scroll at scale-2 1920 px"` — asserts `getComputedStyle(el).overflowX === "auto"` on `[data-testid="kanban-scroll-container"]` (gallery source line 112) and page overflow ≤ 1.
+
+Selectors verified against gallery source:
+- `[data-case-frame]` — `GalleryCase` renders `<div data-case-frame={id}>` at gallery line 99.
+- `[data-testid="kanban-scroll-container"]` — `KanbanOverflowCase` at gallery line 112.
+- heading `"Execution core surfaces"` — `<h1>` at gallery line 228.
+
+**B. Keyboard test added to `"ticket detail — focus management"`**
+
+Closes: keyboard check — strengthens the existing focus-only select-trigger test with a key-press + resulting-state assertion.
+
+New test: `"first sidebar select opens with Space key, proving keyboard interaction is live"`.
+
+Sequence:
+1. `scope.locator('[data-slot="select-trigger"]').first()` → focus → `toBeFocused()`
+2. `page.keyboard.press("Space")`
+3. `expect(page.getByRole("listbox")).toBeVisible()`
+
+This test would fail if the `Select` component's keyboard handler were removed. The listbox opens outside the case-frame via a Radix `Portal` so it is scoped at page level.
+
+Selector verified against gallery source:
+- `[data-case-frame="ticket-detail-two-panel"]` — `TicketDetailCase` renders `<GalleryCase id="ticket-detail-two-panel">` at gallery line 154.
+- `[data-slot="select-trigger"]` — `SidebarSelectFields` renders `<SelectTrigger ...>` (shadcn/ui wraps to `data-slot="select-trigger"`) at `sidebar-select-fields.tsx:125,163,180,214,233,252`.
+
+### C — Reduced motion pair status
+
+The existing two tests in `"reduced motion — skeleton animation"` ARE genuinely paired on the same locator:
+- Locator: `[data-case-frame="kanban-board-loading"] > [data-testid="gallery-loading-skeleton"]` (gallery line 214)
+- `no-preference` test: asserts `animationName ≠ "none"` (Tailwind `animate-pulse` animation is active)
+- `reduce` test: asserts `animationName === "none"` (`globals.css:704-706`: `.skeleton-shimmer.animate-pulse { animation: none }`)
+
+The `Skeleton` component (`components/ui/skeleton.tsx:11`) renders with both `skeleton-shimmer` AND `animate-pulse` classes — the CSS rule fires on the element directly, not only its `::after`. The `page.emulateMedia({ reducedMotion: "..." })` is called before `page.goto()` in both tests so the CSS media query is active when the page loads. No changes needed.
+
+### D — Secret redaction
+
+Gallery pages checked: `frontend/features/build/views/execution-core-gallery.tsx`, `frontend/app/(public)/design-system/execution-core/page.tsx`.
+
+Grep for `api.?key|token|secret|webhook|invite.*token|signed.*url|auth.*token` across these files: no token-shaped values found. The only match was stub ticket title text (`"Implement token-refresh flow for idle sessions"`) — this is display prose, not a credential. The gallery page calls `notFound()` in production (`page.tsx:11`). No secret-redaction test written; an assertion of absence would prove nothing on this surface.
+
+### Request 5 — sharpened
+
+`docs/build-module/lanes/requests/LANE-4.md` Request 5 has been updated to:
+- Correct the false claim that the frontend hook "builds a query string" — `useProjectAnalytics` (`hooks/api/build/advanced.ts:411`) passes `undefined` as the query-params argument; no filter params reach the server at all today.
+- Name both frontend call sites: `features/build/overview/project-overview-page.tsx:41` and `features/build/reports/reports-overview-tab.tsx:38` (both call `useProjectAnalytics(projectId)` with no filter args).
+- Add Change 4 (frontend hook update) and the end-to-end verification test requirement.
+
+### C4 cycles list — what remains (do NOT re-tick without this work)
+
+`/build/[projectId]/cycles` C4 was un-ticked in Round 6. The underlying implementation is `useCycles` (`hooks/api/build/sprints.ts`) via `useQuery` (not `useInfiniteQuery`) returning a flat `Cycle[]` array. `cycleListContract = z.array(cycleListItemSchema)` has no cursor envelope.
+
+C4 cannot be ticked until:
+1. Backend: `GET /build/:projectId/cycles` gains a `limit`/cursor parameter and returns a cursor-paginated envelope.
+2. Frontend: `cycleListContract` is updated to the cursor-envelope schema.
+3. Frontend: `useCycles` switches from `useQuery` to `useInfiniteQuery`.
+
+Until these three are done, C4 for cycles list is BLOCKED — the flat array response has no server-side bound and no virtualization.
+
+### C3 — what remains open
+
+Pages where C3 is still OPEN or BLOCKED:
+- **Overview** — `capacityWindow` analytics params (`range`, `teamId`, `ownerId`) need backend schema (Request 5). Dashboard surface, no list, no bulk.
+- **Issues** — `project-board-page.tsx` uses `useCanState` + null returns (FE-40 violation); no dedicated test file. Request 3 filed.
+- **Workload** — same file as Issues; `capacityWindow` is hardcoded at lines 100–106; `WorkloadFilterState` is React state not URL. Request 4 filed.
+
+C6 tick count unchanged — orchestrator runs the spec and ticks from real output.

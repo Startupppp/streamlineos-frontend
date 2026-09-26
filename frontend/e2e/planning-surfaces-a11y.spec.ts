@@ -267,4 +267,114 @@ test.describe("Planning surfaces responsive contract", () => {
       });
     });
   });
+
+  test.describe("high-density desktop — 1920 × 1080 at deviceScaleFactor 2", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Planning surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the page does not scroll sideways at 1920 × 1080 deviceScaleFactor 2", async ({
+      page,
+    }) => {
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
+
+    test("no planning surface overflows its own width at 1920 × 1080 deviceScaleFactor 2", async ({
+      page,
+    }, testInfo) => {
+      const overflows: Record<string, number> = {};
+      for (const caseId of CASES) {
+        const scope = frame(page, caseId);
+        overflows[caseId] = await horizontalOverflowOf(scope);
+        const shot = `${EVIDENCE_DIR}/${caseId}__1920x1080-2x.png`;
+        await scope.screenshot({ path: shot });
+        await testInfo.attach(`${caseId}__1920x1080-2x`, {
+          path: shot,
+          contentType: "image/png",
+        });
+      }
+      const spilling = Object.entries(overflows).filter(([, px]) => px > 1);
+      expect(spilling).toEqual([]);
+    });
+
+    test("release names are not clipped at 1920 × 1080 deviceScaleFactor 2", async ({ page }) => {
+      const scope = frame(page, "releases-ready");
+      await expect(scope.locator("table").first()).toBeVisible();
+      const firstCell = scope.locator("table tbody tr:first-child td:first-child");
+      await expect(firstCell).toBeVisible();
+      const box = await firstCell.boundingBox();
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(1920);
+    });
+  });
+
+  test.describe("keyboard", () => {
+    test.describe("at 1280 × 800 — tab order follows visual order through milestones toolbar", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(
+          page.getByRole("heading", { name: "Planning surfaces" }),
+        ).toBeVisible();
+      });
+
+      test("Tab from header action reaches search then status filter then date-range filter", async ({
+        page,
+      }) => {
+        const scope = frame(page, "milestones-ready");
+        const newMilestone = scope
+          .locator('[data-slot="build-header-actions"]')
+          .getByRole("button", { name: "New Milestone", exact: true });
+        await newMilestone.focus();
+        await expect(newMilestone).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(
+          scope.locator('[data-slot="search-input"] input[type="search"]'),
+        ).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(
+          scope
+            .locator('[data-filter-id="status"]')
+            .getByRole("combobox", { name: "Status", exact: true }),
+        ).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(
+          scope.locator('[data-filter-id="date-range"]').getByRole("button"),
+        ).toBeFocused();
+      });
+    });
+
+    test.describe("at 375 × 812 — filters drawer opens and closes with keyboard", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 812 });
+        await page.goto(GALLERY);
+      });
+
+      test("Filters drawer opens on Enter, drawer body receives focus, Escape closes and trigger regains focus", async ({
+        page,
+      }) => {
+        const scope = frame(page, "milestones-ready");
+        const trigger = scope.getByRole("button", { name: /^Filters/ });
+        await trigger.focus();
+        await expect(trigger).toBeFocused();
+        await page.keyboard.press("Enter");
+        await expect(
+          page.locator('[data-slot="drawer-content"]'),
+        ).toBeVisible();
+        await expect(
+          page.locator('[data-slot="drawer-content"]:focus-within'),
+        ).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(page.getByRole("dialog")).not.toBeVisible();
+        await expect(trigger).toBeFocused();
+      });
+    });
+  });
 });

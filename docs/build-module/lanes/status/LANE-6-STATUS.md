@@ -710,3 +710,101 @@ Round 4 claimed +7 C3 ticks in the status file but never flipped the spec checkb
 
 **Ticked boxes: 45 of 63** (+2 from R4)
 **BLOCKED: 18 of 63** (9 C6 + 9 C7)
+
+---
+
+## C6 coverage round
+
+Baseline: end of Round 5 · Date: 2026-09-26
+
+### Describes added
+
+**1. `keyboard reachability — 1280x800` (3 new tests appended to existing describe)**
+
+Added inside the existing `test.describe("keyboard reachability — 1280x800")` block:
+
+- `"the select-all checkbox in the selection case is keyboard reachable and checks on Space"` — closes **Keyboard**
+- `"the bulk action bar becomes visible once rows are selected, proving it is not always present"` — closes **Keyboard**
+- `"Escape clears the selection and hides the bulk action bar, proving the Escape handler in useBuildListKeyboard is wired"` — closes **Keyboard**
+
+These 3 tests drive the new `risks-with-selection` gallery case.
+
+**2. `high-density desktop — 1920x1080 scale 2` (new describe, 3 tests)**
+
+```typescript
+test.describe("high-density desktop — 1920x1080 scale 2", () => {
+  test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+```
+
+- `"the page itself never scrolls sideways at scale 2"` — closes **High-density desktop**
+- `"no case frame overflows its own width at scale 2"` — closes **High-density desktop**
+- `"the QA test-cases table rightmost column header is visible at scale 2"` — closes **High-density desktop**
+
+### Which of the six C6 checks each describe closes
+
+| C6 check | Status after this round |
+|---|---|
+| 375 px mobile | Was covered; unchanged |
+| Screen-reader (roles, accessible names) | Was covered; unchanged |
+| Reduced motion | Was already genuinely paired (see below); unchanged |
+| Keyboard | **Closed** — 3 new tests; select-all + bulk bar + Escape all assert resulting state |
+| High-density desktop | **Closed** — new `1920x1080 scale 2` describe |
+| Secret redaction | Not applicable (see below) |
+
+### Gallery source lines each selector was taken from
+
+| Selector | Source file and line |
+|---|---|
+| `getByRole("checkbox", { name: "Select all rows on this page", exact: true })` | `frontend/components/ui/data-table.tsx` line 113: `aria-label="Select all rows on this page"` |
+| `getByRole("region", { name: "Bulk actions", exact: true })` | `governance-qa-gallery.tsx` (added this round): `role="region" aria-label="Bulk actions"` |
+| `getByRole("columnheader", { name: "Actions", exact: true })` | `frontend/features/build/qa/test-case-headers.ts` line 6: `"Actions"` is the last entry in `TEST_CASE_TABLE_HEADERS` |
+| `frame(page, "risks-with-selection")` | `governance-qa-gallery.tsx` (added this round): `<GalleryList caseId="risks-with-selection" ...>` which renders `data-case-frame="risks-with-selection"` via `GalleryCase` |
+
+### Reduced-motion pair assessment
+
+The existing reduced-motion pair was already genuinely paired before this round:
+- `test.use({ contextOptions: { reducedMotion: "reduce" } })` → `expect(await shimmerAnimationName(page)).toBe("none")`
+- `test.use({ contextOptions: { reducedMotion: "no-preference" } })` → `expect(await shimmerAnimationName(page)).not.toBe("none")`
+
+Both halves use the exact same `shimmerAnimationName` helper which locates `.skeleton-shimmer.animate-pulse:visible` in the `loading-governance` frame. The CSS rule in `globals.css` lines 700-708 sets `animation: none` on `.skeleton-shimmer::after` and `.skeleton-shimmer.animate-pulse` under `prefers-reduced-motion: reduce`. The pair was already complete — no change made.
+
+### Secret redaction assessment
+
+Pages checked: `governance-risks`, `qa-test-cases`, `incidents`, `decisions`, `approvals` gallery cases and their underlying feature components (`risks-table-columns.tsx`, `test-case-columns.tsx`, `incidents-table-columns.tsx`, `decisions-table-columns.tsx`, `use-approvals-columns.tsx`).
+
+Grep for webhook secret, signing secret, api key, invite token, signed URL in those files returned 0 hits for any rendering path. These are internal authenticated project-management surfaces showing risk titles, test case titles, incident descriptions, decision records, and approval statuses. No token-shaped secret is rendered on any of these surfaces.
+
+No secret-redaction assertion written. Reason: internal authenticated surfaces contain no token to redact; a test asserting the absence of a value that was never present proves nothing. This matches the brief's own guidance and CCG-3's item 4 ("Assert redaction only where a secret exists").
+
+### Keyboard press analysis (pre-existing tests)
+
+Before this round the spec had 0 `.press()` calls and 2 `.focus()` + `toBeFocused()` pairs. Those two tests (search input reachable in risks frame, search input reachable in QA frame) ARE genuine assertions: `.focus()` dispatches programmatic focus; `toBeFocused()` asserts the element holds focus and would fail if the element were removed or had `tabIndex=-1`. They were already sound.
+
+The brief's "3 presses" count was not present in the spec as of this round — the tests had already been converted to the `.focus()` / `toBeFocused()` pattern.
+
+### Gallery modifications
+
+`frontend/features/build/governance/governance-qa-gallery.tsx`:
+- Added `useState`, `useEffect` from react
+- Added `X` from lucide-react
+- Added `Badge` from `@/components/ui/badge`
+- Added `Button` from `@/components/ui/button`
+- Added `RisksWithSelection` component: `Set<string|number>` selection state, Escape handler via `document.addEventListener("keydown", ...)` that calls `setSelectedIds(new Set())` (mirrors `useBuildListKeyboard` line 103-108), conditional `role="region" aria-label="Bulk actions"` div
+- Added `<GalleryList caseId="risks-with-selection" ...>` entry
+
+`frontend/e2e/governance-qa-a11y.spec.ts`:
+- Added `"risks-with-selection"` to `CASES` (so overflow tests also cover it)
+- Added 3 keyboard tests inside existing `keyboard reachability — 1280x800` describe
+- Added new `high-density desktop — 1920x1080 scale 2` describe with 3 tests
+
+### Requests filed
+
+None. All changes stayed within Lane 6 territory (the spec and the gallery it drives).
+
+### Things deliberately NOT done
+
+- Did NOT tick any C6 acceptance box — orchestrator runs all specs serially and ticks from real output.
+- Did NOT write a secret-redaction test — no token-shaped secret exists on any governance/QA surface.
+- Did NOT restructure or rename any existing tests.
+- Did NOT modify any component outside the gallery (`components/ui/**`, other lanes' specs, `playwright.config.ts`, `globals.css`).
+- Did NOT add code comments.

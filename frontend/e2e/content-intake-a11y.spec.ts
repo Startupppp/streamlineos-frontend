@@ -13,6 +13,7 @@ const CASES = [
   "public-whiteboard-edit",
   "public-form",
   "public-intake",
+  "public-board-loading",
 ] as const;
 
 function frame(page: Page, caseId: string): Locator {
@@ -22,6 +23,16 @@ function frame(page: Page, caseId: string): Locator {
 async function horizontalOverflowOf(locator: Locator): Promise<number> {
   return locator.evaluate(
     (node: HTMLElement) => node.scrollWidth - node.clientWidth,
+  );
+}
+
+async function shimmerAnimationName(page: Page): Promise<string> {
+  const shimmer = frame(page, "public-board-loading")
+    .locator(".skeleton-shimmer.animate-pulse:visible")
+    .first();
+  await expect(shimmer).toBeVisible();
+  return shimmer.evaluate(
+    (node: HTMLElement) => getComputedStyle(node).animationName,
   );
 }
 
@@ -98,13 +109,18 @@ test.describe("Content intake public surfaces — responsive contract", () => {
       await expect(scope.getByText("View only")).toHaveCount(0);
     });
 
-    test("the share token never appears as visible text in whiteboard frames", async ({ page }) => {
-      for (const caseId of ["public-whiteboard-view", "public-whiteboard-edit"] as const) {
-        const scope = frame(page, caseId);
-        const text = await scope.evaluate((el: HTMLElement) => el.textContent ?? "");
-        expect(text).not.toContain("gallery-view-stub");
-        expect(text).not.toContain("gallery-edit-stub");
-      }
+    test("the share token never appears as visible text in whiteboard frames and the board name is shown instead", async ({ page }) => {
+      const viewScope = frame(page, "public-whiteboard-view");
+      const viewText = await viewScope.evaluate((el: HTMLElement) => el.textContent ?? "");
+      expect(viewText).not.toContain("gallery-view-stub");
+      expect(viewText).not.toContain("gallery-edit-stub");
+      await expect(viewScope.getByText("Sprint planning board")).toBeVisible();
+
+      const editScope = frame(page, "public-whiteboard-edit");
+      const editText = await editScope.evaluate((el: HTMLElement) => el.textContent ?? "");
+      expect(editText).not.toContain("gallery-view-stub");
+      expect(editText).not.toContain("gallery-edit-stub");
+      await expect(editScope.getByText("Architecture overview")).toBeVisible();
     });
   });
 
@@ -145,10 +161,11 @@ test.describe("Content intake public surfaces — responsive contract", () => {
       await expect(messageInput).toBeFocused();
     });
 
-    test("form token never appears as visible text in the form frame", async ({ page }) => {
+    test("form token never appears as visible text in the form frame and the form heading is shown instead", async ({ page }) => {
       const scope = frame(page, "public-form");
       const text = await scope.evaluate((el: HTMLElement) => el.textContent ?? "");
       expect(text).not.toContain("gallery-form-stub");
+      await expect(scope.getByRole("heading", { name: "Feedback form", exact: true })).toBeVisible();
     });
   });
 
@@ -187,10 +204,73 @@ test.describe("Content intake public surfaces — responsive contract", () => {
       await expect(priorityTrigger).toBeFocused();
     });
 
-    test("project id never appears as visible text in the intake frame", async ({ page }) => {
+    test("project id never appears as visible text in the intake frame and the intake heading is shown instead", async ({ page }) => {
       const scope = frame(page, "public-intake");
       const text = await scope.evaluate((el: HTMLElement) => el.textContent ?? "");
       expect(text).not.toContain("gallery-intake-stub");
+      await expect(scope.getByRole("heading", { name: "Submit a request", exact: true })).toBeVisible();
+    });
+  });
+
+  test.describe("reduced motion — public board loading skeleton stops", () => {
+    test.describe("with reduce requested", () => {
+      test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+      test("public board loading skeleton computes animation-name none on the visible shimmer", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        expect(await shimmerAnimationName(page)).toBe("none");
+      });
+    });
+
+    test.describe("with no preference", () => {
+      test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+      test("the same skeleton does animate, proving the reduce assertion is not vacuous", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        expect(await shimmerAnimationName(page)).not.toBe("none");
+      });
+    });
+  });
+
+  test.describe("high-density desktop — 1920×1080 scale 2", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Content intake public surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the gallery page itself never scrolls sideways at scale 2", async ({ page }) => {
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
+
+    test("no case frame overflows its own width at scale 2", async ({ page }) => {
+      const overflows: Record<string, number> = {};
+      for (const caseId of CASES) {
+        const scope = frame(page, caseId);
+        overflows[caseId] = await horizontalOverflowOf(scope);
+      }
+      const spilling = Object.entries(overflows).filter(([, px]) => px > 1);
+      expect(spilling).toEqual([]);
+    });
+
+    test("gallery heading right edge is within the viewport at scale 2", async ({ page }) => {
+      const heading = page.getByRole("heading", { name: "Content intake public surfaces", exact: true });
+      const box = await heading.boundingBox();
+      const vw = await page.evaluate(() => document.documentElement.clientWidth);
+      expect(box).not.toBeNull();
+      expect(Math.ceil((box?.x ?? 0) + (box?.width ?? 0))).toBeLessThanOrEqual(vw);
     });
   });
 });

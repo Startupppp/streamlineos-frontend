@@ -3,6 +3,8 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 const GALLERY = "/design-system/portals";
 const EVIDENCE_DIR = "test-results/portals-evidence";
 
+const FAKE_INVITE_TOKEN = "FAKE-INV-0000-PORTALS-TEST-ONLY-DO-NOT-USE";
+
 const VIEWPORTS = [
   { name: "375x812", width: 375, height: 812 },
   { name: "768x1024", width: 768, height: 1024 },
@@ -17,7 +19,19 @@ const CASES = [
   "portal-detail-not-found",
   "portal-detail-ready",
   "portal-detail-empty",
+  "portal-invite-accept",
 ] as const;
+
+async function shimmerAnimationName(page: Page): Promise<string> {
+  const shimmer = page
+    .locator('[data-case-frame="portal-detail-loading"]')
+    .locator(".skeleton-shimmer.animate-pulse:visible")
+    .first();
+  await expect(shimmer).toBeVisible();
+  return shimmer.evaluate(
+    (node: HTMLElement) => getComputedStyle(node).animationName,
+  );
+}
 
 function frame(page: Page, caseId: string): Locator {
   return page.locator(`[data-case-frame="${caseId}"]`);
@@ -85,10 +99,61 @@ test.describe("Portal surfaces responsive contract", () => {
       await retryButton.focus();
       await expect(retryButton).toBeFocused();
     });
+
+    test("Request change button in portal-detail-ready opens the dialog when activated by keyboard", async ({ page }) => {
+      const requestButton = frame(page, "portal-detail-ready").getByRole("button", {
+        name: "Request change",
+        exact: true,
+      });
+      await requestButton.focus();
+      await expect(requestButton).toBeFocused();
+      await requestButton.press("Enter");
+      await expect(
+        page.getByRole("dialog", { name: "Submit a change request", exact: true }),
+      ).toBeVisible();
+    });
+
+    test("Back to projects link in portal-detail-not-found is keyboard-reachable and leads to the portal root", async ({ page }) => {
+      const backLink = frame(page, "portal-detail-not-found").getByRole("link", {
+        name: "Back to projects",
+        exact: true,
+      });
+      await backLink.focus();
+      await expect(backLink).toBeFocused();
+      await expect(backLink).toHaveAttribute("href", "/client-portal");
+    });
   });
 
-  test.describe("reduced motion", () => {
-    test.use({ contextOptions: { reducedMotion: "reduce" } });
+  test.describe("reduced motion — loading skeleton shimmer stops", () => {
+    test.describe("with reduce requested", () => {
+      test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+      test("portal-detail-loading skeleton computes animation-name none under reduced motion", async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(
+          page.getByRole("heading", { name: "Portal surfaces" }),
+        ).toBeVisible();
+        expect(await shimmerAnimationName(page)).toBe("none");
+      });
+    });
+
+    test.describe("with no preference", () => {
+      test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+      test("the same skeleton does animate, proving the reduce assertion is not vacuous", async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(
+          page.getByRole("heading", { name: "Portal surfaces" }),
+        ).toBeVisible();
+        expect(await shimmerAnimationName(page)).not.toBe("none");
+      });
+    });
+  });
+
+  test.describe("high-density desktop 1920×1080 @2×", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
 
     test.beforeEach(async ({ page }) => {
       await page.goto(GALLERY);
@@ -97,13 +162,58 @@ test.describe("Portal surfaces responsive contract", () => {
       ).toBeVisible();
     });
 
-    test("no animated spinner is visible at rest under reduced motion", async ({ page }) => {
-      const spinners = page.locator(".animate-spin");
-      const count = await spinners.count();
-      for (let i = 0; i < count; i += 1) {
-        const visible = await spinners.nth(i).isVisible();
-        expect(visible).toBe(false);
+    test("the page itself does not scroll sideways at 2× density", async ({ page }) => {
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
+
+    test("no portal case frame overflows horizontally at 2× density", async ({ page }) => {
+      const overflows: Record<string, number> = {};
+      for (const caseId of CASES) {
+        overflows[caseId] = await horizontalOverflowOf(frame(page, caseId));
       }
+      const spilling = Object.entries(overflows).filter(([, px]) => px > 1);
+      expect(spilling).toEqual([]);
+    });
+  });
+
+  test.describe("secret redaction — invite token never appears in DOM", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Portal surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("fake invite token is held in the gallery data attribute but not rendered as visible text", async ({ page }) => {
+      const tokenHolder = frame(page, "portal-invite-accept").locator("[data-invite-token]");
+      await expect(tokenHolder).toHaveAttribute("data-invite-token", FAKE_INVITE_TOKEN);
+      const frameText = await frame(page, "portal-invite-accept").evaluate(
+        (node: HTMLElement) => node.innerText,
+      );
+      expect(frameText).not.toContain(FAKE_INVITE_TOKEN);
+    });
+
+    test("invitation acceptance loading heading is visible, proving the case rendered and not just absent", async ({ page }) => {
+      const heading = frame(page, "portal-invite-accept").getByRole("heading", {
+        name: "Verifying your invitation…",
+        exact: true,
+      });
+      await expect(heading).toBeVisible();
+    });
+
+    test("fake invite token does not appear in any rendered attribute other than the test hook", async ({ page }) => {
+      const leaksIntoAttribute = await page.evaluate((token) => {
+        const allElements = Array.from(document.querySelectorAll("*"));
+        return allElements.some((el) =>
+          Array.from(el.attributes).some(
+            (attr) => attr.name !== "data-invite-token" && attr.value.includes(token),
+          ),
+        );
+      }, FAKE_INVITE_TOKEN);
+      expect(leaksIntoAttribute).toBe(false);
     });
   });
 

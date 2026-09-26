@@ -13,6 +13,7 @@ const VIEW_TOKEN = "gallery-view-stub";
 const EDIT_TOKEN = "gallery-edit-stub";
 const FORM_TOKEN = "gallery-form-stub";
 const INTAKE_PROJECT_ID = "gallery-intake-stub";
+const BOARD_LOADING_TOKEN = "gallery-board-loading-stub";
 
 const STUB_VIEW_BOARD = {
   name: "Sprint planning board",
@@ -122,6 +123,27 @@ function useGalleryQueryClient() {
   return queryClient;
 }
 
+function useBoardLoadingQueryClient() {
+  const [client] = useState(() => {
+    const c = createAppQueryClient("content-intake-gallery-board-loading");
+    void c.prefetchQuery({
+      queryKey: accountingAndSupportQueryKeys.whiteboards.publicLink(BOARD_LOADING_TOKEN),
+      queryFn: (): Promise<unknown> => new Promise(() => {}),
+    });
+    return c;
+  });
+  return client;
+}
+
+function PublicBoardLoadingFrame() {
+  const loadingClient = useBoardLoadingQueryClient();
+  return (
+    <QueryClientProvider client={loadingClient}>
+      <PublicBoardView shareToken={BOARD_LOADING_TOKEN} />
+    </QueryClientProvider>
+  );
+}
+
 function CaseFrame({
   id,
   title,
@@ -191,6 +213,14 @@ export function ContentIntakeGallery() {
           title="Public intake"
         >
           <PublicIntakeView projectId={INTAKE_PROJECT_ID} />
+        </CaseFrame>
+
+        <CaseFrame
+          id="public-board-loading"
+          title="Public whiteboard — loading skeleton"
+          height="h-64"
+        >
+          <PublicBoardLoadingFrame />
         </CaseFrame>
       </div>
     </QueryClientProvider>

@@ -20,6 +20,7 @@ const CASES = [
   "incidents",
   "decisions",
   "approvals",
+  "risks-with-selection",
   "loading-governance",
   "loading-qa",
   "loading-incidents",
@@ -226,6 +227,46 @@ test.describe("Governance & QA responsive contract", () => {
       const prevBtn = scope.getByRole("button", { name: /prev/i });
       await expect(nextBtn.or(prevBtn)).not.toHaveCount(0);
     });
+
+    test("the select-all checkbox in the selection case is keyboard reachable and checks on Space", async ({ page }) => {
+      const scope = frame(page, "risks-with-selection");
+      const checkbox = scope.getByRole("checkbox", {
+        name: "Select all rows on this page",
+        exact: true,
+      });
+      await checkbox.focus();
+      await expect(checkbox).toBeFocused();
+      await checkbox.press("Space");
+      await expect(checkbox).toBeChecked();
+    });
+
+    test("the bulk action bar becomes visible once rows are selected, proving it is not always present", async ({ page }) => {
+      const scope = frame(page, "risks-with-selection");
+      const checkbox = scope.getByRole("checkbox", {
+        name: "Select all rows on this page",
+        exact: true,
+      });
+      const bulkBar = scope.getByRole("region", { name: "Bulk actions", exact: true });
+      await expect(bulkBar).not.toBeVisible();
+      await checkbox.press("Space");
+      await expect(bulkBar).toBeVisible();
+    });
+
+    test("Escape clears the selection and hides the bulk action bar, proving the Escape handler in useBuildListKeyboard is wired", async ({ page }) => {
+      const scope = frame(page, "risks-with-selection");
+      const checkbox = scope.getByRole("checkbox", {
+        name: "Select all rows on this page",
+        exact: true,
+      });
+      await checkbox.press("Space");
+      await expect(
+        scope.getByRole("region", { name: "Bulk actions", exact: true }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(
+        scope.getByRole("region", { name: "Bulk actions", exact: true }),
+      ).not.toBeVisible();
+    });
   });
 
   test.describe("reduced motion — the skeleton shimmer stops", () => {
@@ -259,6 +300,41 @@ test.describe("Governance & QA responsive contract", () => {
         await page.goto(GALLERY);
         expect(await shimmerAnimationName(page)).not.toBe("none");
       });
+    });
+  });
+
+  test.describe("high-density desktop — 1920x1080 scale 2", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Governance & QA surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the page itself never scrolls sideways at scale 2", async ({ page }) => {
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
+
+    test("no case frame overflows its own width at scale 2", async ({ page }) => {
+      const overflows: Record<string, number> = {};
+      for (const caseId of CASES) {
+        const scope = frame(page, caseId);
+        overflows[caseId] = await horizontalOverflowOf(scope);
+      }
+      const spilling = Object.entries(overflows).filter(([, px]) => px > 1);
+      expect(spilling).toEqual([]);
+    });
+
+    test("the QA test-cases table rightmost column header is visible at scale 2", async ({ page }) => {
+      const scope = frame(page, "qa-test-cases");
+      await expect(
+        scope.getByRole("columnheader", { name: "Actions", exact: true }),
+      ).toBeVisible();
     });
   });
 

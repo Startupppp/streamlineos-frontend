@@ -19,20 +19,24 @@ applied. Do not re-file this.
 
 ---
 
-## Request 5: Analytics endpoint — add query schema to stop silent filter drop
+## Request 5: Analytics endpoint — add query schema and thread filters end to end
 
-**File:** `backend/src/modules/build/core/projects-reports.controller.ts`
-**Affected:** `GET /build/:projectId/analytics` — currently line 72–83
+**Backend file:** `backend/src/modules/build/core/projects-reports.controller.ts`
+**Affected route:** `GET /build/:projectId/analytics` — exact line 72 (the `@Get(':projectId/analytics')` handler)
+**Frontend hook:** `frontend/hooks/api/build/advanced.ts:411–423` (`useProjectAnalytics`)
 
-**Problem:** `GET /build/:projectId/analytics` accepts NO query schema. The controller calls
-`@Validate({ params: projectIdParams })` with nothing in the `query` slot. The service method
-`getProjectAnalytics(orgId: string, projectId: number)` accepts no filter arguments.
-The frontend hook `useProjectAnalytics` (`hooks/api/build/advanced.ts:409`) builds a query string with
-`range`, `teamId`, `ownerId` — but all three are silently dropped at the controller boundary (the Zod
-`.strict()` on an absent schema accepts everything and passes nothing). The caller receives full
-unfiltered data with a 200, so there is no signal the filter was not applied.
+**Exact params that are silently dropped (and must be added):** `range`, `teamId`, `ownerId`
 
-**Change 1 — add schema in `backend/src/modules/build/core/dto/analytics.schemas.ts` (after line 36):**
+**Root cause:** The controller at line 72 uses `@Validate({ params: projectIdParams })` with no `query`
+slot. The service method signature is `getProjectAnalytics(orgId: string, projectId: number)` — it
+accepts no filter arguments. On the frontend, `useProjectAnalytics` (line 411) calls
+`apiClient.get<ProjectAnalytics>('/build/${projectId}/analytics', undefined, signal, analyticsContract)`
+— the second argument is `undefined`, so no query params are sent. Neither the controller nor the
+hook currently handles these filters at all. The Overview page (`features/build/overview/project-overview-page.tsx:41`)
+and the Reports tab (`features/build/reports/reports-overview-tab.tsx:38`) both call
+`useProjectAnalytics(projectId)` with no filter args.
+
+**Change 1 — add schema in `backend/src/modules/build/core/dto/analytics.schemas.ts`:**
 ```typescript
 export const projectAnalyticsQuerySchema = z.object({
   range: z.enum(["7d", "30d", "90d", "180d", "365d"]).optional(),
@@ -42,30 +46,53 @@ export const projectAnalyticsQuerySchema = z.object({
 
 export type ProjectAnalyticsQuery = z.infer<typeof projectAnalyticsQuerySchema>;
 ```
-(Use the same enum values the `useProjectAnalytics` hook already sends; verify those against the
-frontend `advanced.ts:409` call. If the enum set differs from what the frontend sends, align them in
-the same change.)
+`.strict()` is required per BE-13. The enum values above must match what the frontend will send (agree
+in the same change to avoid a mismatch on the first call).
 
-**Change 2 — wire the schema in the controller (at the `@Validate` decorator on the analytics route):**
+**Change 2 — wire the schema in the controller at line 72:**
 ```typescript
 @Validate({ params: projectIdParams, query: projectAnalyticsQuerySchema })
 ```
 
-**Change 3 — thread filters into the service signature:**
-- `projects-analytics.service.ts` line 22: change
-  `async getProjectAnalytics(orgId: string, projectId: number)`
-  to
-  `async getProjectAnalytics(orgId: string, projectId: number, filters?: ProjectAnalyticsQuery)`
-- Thread `filters` into the query logic inside that method. The exact SQL change is inside the service
-  and within Lane 4's territory; what is blocked only by the controller schema.
-- Controller call site: pass `q.query` (the validated query object) through to the service.
+**Change 3 — thread filters into the service:**
+- `projects-analytics.service.ts` — extend `getProjectAnalytics(orgId, projectId)` to
+  `getProjectAnalytics(orgId: string, projectId: number, filters?: ProjectAnalyticsQuery)` and
+  apply `range`/`teamId`/`ownerId` inside the query logic.
+- Controller call site at line 81: pass the validated `query` object to the service.
 
-**Why `.strict()` is required:** BE-13 — all query schemas use `.strict()`. Without it, an unknown
-`foo=bar` silently passes, defeating the "filter not applied" signal.
+**Change 4 — frontend hook update (`hooks/api/build/advanced.ts:411–423` — in Lane 4 territory):**
+Extend `useProjectAnalytics` to accept a `filters` argument and pass it as the query-string param:
+```typescript
+export function useProjectAnalytics(
+  projectId: number,
+  filters?: { range?: string; teamId?: string; ownerId?: string },
+  options?: Omit<UseQueryOptions<ProjectAnalytics>, "queryKey" | "queryFn" | "enabled">
+) {
+  const canView = useCan("build:view");
+  return useQuery<ProjectAnalytics>({
+    queryKey: buildWorkQueryKeys.projects.analytics(projectId, filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectAnalytics>(
+        `/build/${projectId}/analytics`,
+        filters,
+        signal,
+        analyticsContract,
+      ),
+    enabled: canView && !!projectId,
+    staleTime: 5 * 60_000,
+    ...options,
+  });
+}
+```
 
-**Frontend hook update (in Lane 4 territory):** Once the backend schema is wired, update
-`hooks/api/build/advanced.ts:409–422` (`useProjectAnalytics`) to actually pass the filter params
-in the query string. Currently the hook takes no params at all.
+**Call sites to update once both BE and FE are wired:**
+- `features/build/overview/project-overview-page.tsx:41` — pass URL-backed `range`/`teamId`/`ownerId`
+  values from `useBuildListFilters` (same params as `10-project.md:45` requires).
+- `features/build/reports/reports-overview-tab.tsx:38` — pass report filter state to the hook.
+
+**End-to-end verification:** add a test in `project-overview-page.test.tsx` asserting that when
+URL has `?range=30d&teamId=uuid`, `useProjectAnalytics` is called with `{ range: "30d", teamId: "uuid" }`
+(not with `undefined`). Without this, the filter silently does nothing and no gate catches it.
 
 ---
 

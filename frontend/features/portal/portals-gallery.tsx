@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import {
   PortalProjectDetailLoading,
   PortalProjectDetailError,
@@ -12,6 +13,8 @@ import type {
   PortalProject,
   PortalProjectOverview,
 } from "@/features/portal/lib/portal-types";
+
+export const FAKE_INVITE_TOKEN = "FAKE-INV-0000-PORTALS-TEST-ONLY-DO-NOT-USE";
 
 const STUB_PROJECT: PortalProject = {
   id: 101,
@@ -138,6 +141,31 @@ export function PortalsGallery() {
               comments: [],
             }}
           />
+        </GallerySection>
+      </div>
+
+      <div className="space-y-6">
+        <h2 className="text-sm font-semibold text-foreground">Invitation acceptance</h2>
+        <GallerySection
+          caseId="portal-invite-accept"
+          label="portal-invite-accept — verifying (token stored in data-invite-token, not in rendered text)"
+        >
+          <div
+            className="flex flex-col items-center justify-center gap-4 px-4 py-12 bg-background"
+            data-invite-token={FAKE_INVITE_TOKEN}
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/5">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+            <div className="text-center">
+              <h1 className="text-base font-semibold text-foreground">
+                Verifying your invitation…
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This will only take a moment.
+              </p>
+            </div>
+          </div>
         </GallerySection>
       </div>
     </div>

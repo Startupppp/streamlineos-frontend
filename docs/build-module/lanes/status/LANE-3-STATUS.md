@@ -910,3 +910,67 @@ Remaining S2 C3 blockers: `ownerId` param has no overview-level mapping (it's a 
 | 7 Browser evidence | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 
 **Ticked: 41 / 63** (Round 6 final was 39; +2 from S1 C3 and S9 C3 ticked this session; S5 range adds implementation but does not tick C3)
+
+---
+
+## C6 coverage round
+
+### Describes added to `frontend/e2e/managed-products-a11y.spec.ts`
+
+| Describe | Tests added | C6 check closed |
+|---|---|---|
+| `"1920 × 1080 high-density desktop — deviceScaleFactor 2"` | 3 | High-density desktop |
+| `"keyboard — toolbar Tab order and row navigation"` | 3 | Keyboard (strengthened) |
+
+**High-density describe** uses `test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 })` at the describe level — not `setViewportSize`, which cannot change deviceScaleFactor. Three tests:
+1. Document horizontal overflow ≤ 1 — reuses `page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)` (same pattern as the viewport loop).
+2. All seven `CASES` frames overflow ≤ 1 — reuses `horizontalOverflowOf(frame(page, caseId))`.
+3. Products table right edge ≤ 1920 — uses `scope.locator("table").first()` scoped to `[data-case-frame="ready"]`.
+
+**Keyboard describe** sets viewport to 1280×800 in `beforeEach` and tests three things:
+1. Tab order: `[data-slot=search-input] input` → `[data-filter-id=status] [data-slot=select-trigger]` → `[data-filter-id=sort] [data-slot=select-trigger]`.
+2. Row Tab: `scope.locator("table a").first()` (Payments Platform link) → `getByRole("button", { name: "Actions for Payments Platform", exact: true })` → `scope.locator("table a").nth(1)` (Identity Service link).
+3. Escape: `actionsBtn.focus()` → Enter opens `role="menu"` → Escape closes and `actionsBtn.toBeFocused()`.
+
+### Selectors verified against gallery source
+
+| Selector | Source |
+|---|---|
+| `page.getByRole("heading", { name: "Managed Products surfaces" })` | `managed-products-gallery.tsx:226` — `<h1>Managed Products surfaces</h1>` |
+| `frame(page, caseId)` = `[data-case-frame="{caseId}"]` | `managed-products-gallery.tsx:97` — `<div data-case-frame={id}>` inside `GalleryCase` |
+| `scope.locator("table").first()` | `data-table.tsx:427` — `<Table>` inside the data-table's non-mobile block; visible at ≥sm (768px) via `hidden sm:block` from `data-table-row.ts:32` |
+| `[data-slot=search-input] input` | `search-input.tsx:68` — `<div data-slot="search-input">` wrapping `<Input ref={ref} type="search" />` |
+| `[data-filter-id=status] [data-slot=select-trigger]` | `build-list-toolbar.tsx:49` — `data-filter-id={filter.id}` on `ToolbarFilterSlot`; `build-filter-select.tsx:46` — `<SelectTrigger aria-label={label}>` with `data-slot="select-trigger"` |
+| `[data-filter-id=sort] [data-slot=select-trigger]` | same as above, filter id is `"sort"` |
+| `scope.locator("table a").first()` | `managed-product-table-columns.tsx:111` — `<Link href="/build/managed-products/${row.id}">{row.name}</Link>`; first row name is `"Payments Platform"` from `managed-products-gallery.tsx:28` |
+| `getByRole("button", { name: "Actions for Payments Platform", exact: true })` | `managed-product-table-columns.tsx:76` — `aria-label={\`Actions for ${product.name}\``}` on `DropdownMenuTrigger` button; `GALLERY_ROWS[0].name = "Payments Platform"` from `managed-products-gallery.tsx:28` |
+| `scope.locator("table a").nth(1)` | Second Name link, `GALLERY_ROWS[1].name = "Identity Service"` from `managed-products-gallery.tsx:28` |
+| `page.getByRole("menu")` | Radix `DropdownMenuContent` renders with `role="menu"` in a portal |
+
+### Key handlers confirmed in feature source
+
+From `use-build-list-keyboard.ts:76-131`:
+- `j` / `ArrowDown` — move index down
+- `k` / `ArrowUp` — move index up
+- `Enter` — open row at `focusedIndex`
+- `Escape` — clear selection and `focusedIndex`
+- `/` — `searchInputRef.current?.focus()`
+- `e` — `onEditRef.current(focusedIndex)`
+- `c` — `onCreateRef.current()`
+
+The spec's keyboard tests do NOT test `j`/`k`/`Enter`/`/`/`e`/`c` from `useBuildListKeyboard` directly, because the gallery component (`ManagedProductsGalleryList`) does not mount this hook — see below.
+
+### Reduced motion — verdict
+
+The existing pair IS genuinely paired. Both `"with reduce requested"` and `"with no preference"` operate on the identical locator: `[data-case-frame="loading"] .skeleton-shimmer.animate-pulse:visible` (via `shimmerAnimationName`). The "reduce" half expects `animation-name: none`; the "no-preference" half expects not `"none"`. The pair correctly proves the assertion is non-vacuous.
+
+### Secret redaction — verdict
+
+Pages checked: `managed-products-gallery.tsx` (the gallery) and `managed-products-page.tsx` (the real page). The gallery uses fully stubbed static data (`GALLERY_ROWS`, `stubOwnerOf`). Grep of both files and `managed-product-table-columns.tsx` for token-shaped values (`apiKey`, `webhookSecret`, `inviteToken`, signed URL patterns) returns zero hits. The page is an internal authenticated surface — no token, webhook secret, invite token, or signed URL surfaces. A redaction assertion would prove nothing.
+
+### What was deliberately NOT done
+
+1. **Arrow-key navigation (`j`/`ArrowDown`) with `toBeFocused()`**: `ManagedProductsGalleryList` in the gallery does not mount `useBuildListKeyboard` — the hook is only in the production page component. Adding the hook to the gallery would create N simultaneous `document.addEventListener("keydown")` listeners (one per case frame on the page), making `/` focus unpredictable across frames. The Tab-movement tests cover "movement between rows" as permitted by the mission wording ("arrow-key or Tab movement").
+2. **`/` focuses search**: Same reason as above — the gallery does not mount the hook.
+3. **No gallery component was modified**: The Tab-order and row-nav tests are achievable using only the DOM structure the existing gallery already produces. No test hook was needed.
+4. **No requests filed**: All required selectors exist in the current gallery source; no shared component changes needed.

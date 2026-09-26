@@ -378,4 +378,106 @@ test.describe("Managed Products responsive contract", () => {
       });
     });
   });
+
+  test.describe("1920 × 1080 high-density desktop — deviceScaleFactor 2", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Managed Products surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the document never scrolls sideways at scale 2", async ({ page }) => {
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
+
+    test("no managed-products case frame overflows its own width at scale 2", async ({ page }) => {
+      const failures: string[] = [];
+      for (const caseId of CASES) {
+        const overflow = await horizontalOverflowOf(frame(page, caseId));
+        if (overflow > 1) failures.push(`${caseId}: ${overflow}px`);
+      }
+      expect(failures).toEqual([]);
+    });
+
+    test("the products table is not clipped at the right edge of the 1920 px viewport", async ({
+      page,
+    }) => {
+      const scope = frame(page, "ready");
+      const table = scope.locator("table").first();
+      await expect(table).toBeVisible();
+      const box = await table.boundingBox();
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(1920);
+    });
+  });
+
+  test.describe("keyboard — toolbar Tab order and row navigation", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Managed Products surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("Tab order through the products toolbar follows visual order: search → Status → Sort", async ({
+      page,
+    }) => {
+      const scope = frame(page, "ready");
+      const searchInput = scope.locator("[data-slot=search-input] input");
+      await searchInput.focus();
+      await expect(searchInput).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(
+        scope.locator("[data-filter-id=status] [data-slot=select-trigger]"),
+      ).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(
+        scope.locator("[data-filter-id=sort] [data-slot=select-trigger]"),
+      ).toBeFocused();
+    });
+
+    test("Tab moves in visual order from the first product Name link to the row Actions button then the second row", async ({
+      page,
+    }) => {
+      const scope = frame(page, "ready");
+      const firstNameLink = scope.locator("table a").first();
+      await firstNameLink.focus();
+      await expect(firstNameLink).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(
+        scope.getByRole("button", { name: "Actions for Payments Platform", exact: true }),
+      ).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(scope.locator("table a").nth(1)).toBeFocused();
+    });
+
+    test("Enter opens the row Actions dropdown; Escape closes it and returns focus to the trigger", async ({
+      page,
+    }) => {
+      const scope = frame(page, "ready");
+      const actionsBtn = scope.getByRole("button", {
+        name: "Actions for Payments Platform",
+        exact: true,
+      });
+      await actionsBtn.focus();
+      await expect(actionsBtn).toBeFocused();
+
+      await page.keyboard.press("Enter");
+      await expect(page.getByRole("menu")).toBeVisible();
+
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("menu")).toBeHidden();
+      await expect(actionsBtn).toBeFocused();
+    });
+  });
 });

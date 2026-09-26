@@ -471,3 +471,71 @@ C2 criterion: "The page serves the stated job and success metric without exposin
 - **meetings-meeting C5** — BLOCKED. `meetingDetailContract` exists but no fixture test parses a wire sample through it; no cache-key or invalidation contract test.
 - **C6 browser half (all specs)** — deferred to coordinator. Gallery registered at `/design-system/content-intake`, Playwright spec at `frontend/e2e/content-intake-a11y.spec.ts` ready to run.
 - **C7 all specs** — awaiting orchestrator's read-only production sweep.
+
+---
+
+## C6 coverage round
+
+### Describes added
+
+**`reduced motion — public board loading skeleton stops`** (outer container)
+- Nested describe `with reduce requested`: `test.use({ contextOptions: { reducedMotion: "reduce" } })` — one test. Calls `shimmerAnimationName(page)` and asserts it equals `"none"`.
+- Nested describe `with no preference`: `test.use({ contextOptions: { reducedMotion: "no-preference" } })` — one test. Calls `shimmerAnimationName(page)` and asserts it is NOT `"none"`. Test name says "proving the reduce assertion is not vacuous."
+- Closes the **reduced motion** check for `content-intake`.
+
+**`high-density desktop — 1920×1080 scale 2`**
+- `test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 })` at the describe level (the only way to set deviceScaleFactor per the house fact; `page.setViewportSize` cannot change it).
+- Three tests: page-level no horizontal scroll, no case frame overflow (reuses `horizontalOverflowOf` and the `CASES` tuple), gallery h1 right edge within viewport.
+- Closes the **high-density desktop** check.
+
+### Gallery source for each selector
+
+**shimmerAnimationName selector** — `.skeleton-shimmer.animate-pulse:visible` scoped to `[data-case-frame="public-board-loading"]`. Source: `frontend/components/ui/skeleton.tsx` line 11 — `"skeleton-shimmer animate-pulse rounded-md bg-muted h-4"`. The `Skeleton` component has both classes, matching the compound selector.
+
+**Reduced-motion CSS rule** — `frontend/globals.css` lines 700–707:
+```css
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer.animate-pulse,
+  .skeleton-shimmer .animate-pulse {
+    animation: none;
+  }
+}
+```
+`getComputedStyle(node).animationName` returns `"none"` under reduce, `"pulse"` (Tailwind `animate-pulse`) under no-preference.
+
+**Board name selectors (redaction positive assertions)**:
+- `scope.getByText("Sprint planning board")` — source: `public-board-view.tsx` line 215: `{data.name}` inside a `<p>` (not a heading); the text matches the `STUB_VIEW_BOARD.name` constant in `content-intake-gallery.tsx` line 19.
+- `scope.getByText("Architecture overview")` — source: same component, `STUB_EDIT_BOARD.name` at `content-intake-gallery.tsx` line 61.
+- `scope.getByRole("heading", { name: "Feedback form", exact: true })` — source: `public-form-view.tsx` line 59: `<h1>...{form?.name ?? "Loading form…"}</h1>`. `form?.name` = `"Feedback form"` from `STUB_FORM.name` at gallery line 67.
+- `scope.getByRole("heading", { name: "Submit a request", exact: true })` — source: `public-intake-view.tsx` line 312: `<h1 className="text-2xl font-bold tracking-tight">{title}</h1>` where `title = intakeFormQuery.data?.name ?? "Submit a request"`. Since gallery seeds `null` for the intake form query (gallery line 116–118), `intakeFormQuery.data` is `null`, so `title = "Submit a request"`.
+
+**High-density heading selector** — `page.getByRole("heading", { name: "Content intake public surfaces", exact: true })`. Source: `content-intake-gallery.tsx` line 178–180: `<h1 className="text-lg font-semibold tracking-tight">Content intake public surfaces</h1>`.
+
+### Gallery change — public-board-loading case frame
+
+Added to `frontend/features/build/whiteboard/content-intake-gallery.tsx`:
+- `BOARD_LOADING_TOKEN = "gallery-board-loading-stub"` — a fake token, never reaches the network.
+- `useBoardLoadingQueryClient()` — creates a separate QueryClient (scope `"content-intake-gallery-board-loading"`) and calls `c.prefetchQuery` with a never-resolving `queryFn: (): Promise<unknown> => new Promise(() => {})` for the loading token's key. The never-resolving prefetch puts the query in `{ status: 'pending', fetchStatus: 'fetching' }` before `PublicBoardView` mounts, so `isLoading` is `true` when the component subscribes to the query.
+- `PublicBoardLoadingFrame` — wraps `PublicBoardView shareToken={BOARD_LOADING_TOKEN}` in its own `QueryClientProvider` (the nested provider takes precedence over the outer one for hooks inside it).
+- `CaseFrame id="public-board-loading" height="h-64"` — constrained height so the page isn't too long; `overflow-hidden` clips the inner `h-dvh` div safely.
+- `"public-board-loading"` added to `CASES` in the spec so the responsive and high-density overflow tests also cover it.
+
+### Was the existing redaction assertion vacuous?
+
+Yes, for all three cases. The tests that checked "token never appears as visible text" only asserted ABSENCE. If a case frame rendered nothing (blank element), `el.textContent` would be `""`, which does not contain the stub token — the test would pass on a blank page. The `beforeEach` only ensures the gallery heading is visible, not that each case frame rendered correctly.
+
+Fix applied: each token-absence test now adds a positive assertion in the same test body:
+- Whiteboard test: `await expect(viewScope.getByText("Sprint planning board")).toBeVisible()` and `await expect(editScope.getByText("Architecture overview")).toBeVisible()`.
+- Form test: `await expect(scope.getByRole("heading", { name: "Feedback form", exact: true })).toBeVisible()`.
+- Intake test: `await expect(scope.getByRole("heading", { name: "Submit a request", exact: true })).toBeVisible()`.
+
+### Keyboard audit (all 6 presses examined)
+
+Both keyboard tests already assert focus after every key press (the structure is: `focus()` → `toBeFocused()` → `Tab` → `toBeFocused()` → `Tab` → `toBeFocused()`). No presses were left without an assertion. No strengthening was needed.
+
+- Test "Tab moves through name → email → message in DOM order": 2 Tab presses; `#field-name`, `#field-email`, `#field-message` selectors taken from `public-form-view.tsx` — those are the actual `id` attributes set on the real `FieldInput` fields. All assertions are `toBeFocused()`. ✓
+- Test "Tab enters title then proceeds through type and priority selects": 2 Tab presses; `#intake-title`, `#intake-type`, `#intake-priority` selectors taken from `public-intake-view.tsx` lines 79, 99, 119 — those are the actual `id` attributes on the `Input` and `SelectTrigger` elements. All assertions are `toBeFocused()`. ✓
+
+### Requests filed
+
+None. All required changes were within the allowed file set.

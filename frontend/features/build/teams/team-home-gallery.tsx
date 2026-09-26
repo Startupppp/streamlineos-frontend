@@ -5,6 +5,7 @@ import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-key
 import { PmPageShell, PmPanel, PmSection, PM_ROW } from "@/components/pm-chrome";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StubMember {
   id: number;
@@ -67,6 +68,25 @@ function TeamMembersKeyboardCase() {
   );
 }
 
+function TeamDetailLoadingCase() {
+  return (
+    <section data-case-frame="team-detail-loading" className="flex min-h-0 flex-col gap-3">
+      <h2 className="text-sm font-medium">Loading — team detail</h2>
+      <PmPanel className="space-y-3 p-4">
+        <div className="flex gap-2">
+          <Skeleton className="h-5 w-16 rounded-full" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+      </PmPanel>
+      <PmPanel className="space-y-2 p-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full rounded-md" />
+        ))}
+      </PmPanel>
+    </section>
+  );
+}
+
 export function TeamHomeGallery() {
   return (
     <div className="flex flex-col gap-8 p-4">
@@ -85,6 +105,8 @@ export function TeamHomeGallery() {
           <TeamMembersKeyboardCase />
         </PmSection>
       </PmPageShell>
+
+      <TeamDetailLoadingCase />
     </div>
   );
 }

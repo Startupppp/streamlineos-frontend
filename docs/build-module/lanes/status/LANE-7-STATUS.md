@@ -1013,3 +1013,76 @@ MSYS_NO_PATHCONV=1 npx jest "features/build/settings/" "hooks/api/build/workspac
 **R7 ticked: 0** (no new box crosses the fully-met threshold)
 **Total ticked: 54 / 105**
 **BLOCKED: 51 / 105**
+
+---
+
+## C6 coverage round
+
+### Describes added to `frontend/e2e/settings-a11y.spec.ts`
+
+| Describe | C6 check closed | Gallery source lines used |
+|---|---|---|
+| `keyboard navigation` | Keyboard | view-card.tsx:89 (`<button type="button">`), view-card.tsx:125 (`aria-label="Rename saved view"`), view-card.tsx:131 (`aria-label="Delete saved view"`) |
+| `high-density desktop — 1920 × 1080 at scale 2` | High-density desktop | build-list-gallery-cases.tsx:128–135 (`data-case-frame`), settings-a11y.spec.ts:20–22 (`frame()` + `horizontalOverflowOf()`), settings-gallery.tsx:33 (`[data-slot=search-input]`) |
+| `secret redaction — token list shows only the prefix, never the full value` | Secret redaction | agent-token-list.tsx:77 (`<code>{token.tokenPrefix}…</code>`) |
+
+Reduced-motion pairing verified: the existing `"reduced motion — the skeleton shimmer stops"` describe (lines 90–126) already has both halves — `reducedMotion: "reduce"` asserting `animName === "none"` and `reducedMotion: "no-preference"` asserting `animName !== "none"`. The pair is genuine and requires no change (deliverable D: no action taken, reason recorded here).
+
+#### Keyboard assertions — why not vacuous
+
+Test 1 — `"Tab from the search input moves focus to the first view card name button"`: seeds focus at `[data-slot=search-input] input:visible` (from `settings-gallery.tsx:33` via `BuildListToolbar`), presses Tab once, then asserts `scope.locator("button").filter({ hasText: "Engineering backlog" })` `toBeFocused()`. The view name "Engineering backlog" comes from `STATIC_VIEWS[0].name` in `settings-gallery.tsx:18`. The navigate button in `view-card.tsx:89` wraps this text via `TruncatedText`. If Tab focus does not move to that element the test fails; it cannot pass on a blank page.
+
+Test 2 — `"Tab from the Rename saved view button reaches the Delete saved view button"`: seeds focus at `getByRole("button", { name: "Rename saved view", exact: true })` (from `view-card.tsx:125`), presses Tab once, asserts `getByRole("button", { name: "Delete saved view", exact: true })` `toBeFocused()` (from `view-card.tsx:131`). Both buttons are rendered only for `isOwner=true` cards; view 1 (Engineering backlog, createdBy user_a) satisfies this because the gallery passes `currentUserId="user_a"` and `canManage={true}` (`settings-gallery.tsx:45,51`).
+
+Toggle/switch assertion (`aria-checked` flip): NOT written. The gallery mounts no `role="switch"` element — the Pin button in ViewCard (`view-card.tsx:115`) is a plain `<Button>` with no `aria-checked`. Writing an assertion against it would fabricate a role the component does not declare.
+
+Escape/overlay assertion: NOT written. All ViewCard handlers are bound to `noop` (`settings-gallery.tsx:47–50`). No overlay can be opened; pressing Escape would assert against a closed state that was never open, which passes vacuously on any inert page.
+
+#### Gallery case added to `frontend/features/build/settings/settings-gallery.tsx`
+
+`settings-credentials-token-list` — renders `TokenRow` (from `agent-token-list.tsx:68`) with stub token `{ tokenPrefix: "slat_Fa9c", name: "CI bot", id: 99 }`. The `TokenRow` renders `{token.tokenPrefix}…` inside `<code>` at `agent-token-list.tsx:77`. The full token value `"slat_Fa9c_neverRenderThisValue"` is known only to the spec and is never passed to any gallery component — it is the absent value whose absence is asserted.
+
+#### Secret redaction — pages checked for persistent unmasked secret display
+
+Pages checked (all 15 in my scope):
+- `project-settings-page.tsx` — no secret values rendered
+- `project-settings-access-page.tsx` — renders member names and roles, no secrets
+- `project-settings-agents-page.tsx` — delegates to `AgentTokensSection` → `TokenRow` which renders `tokenPrefix…` (masked)
+- `project-settings-credentials-page.tsx` — same `AgentTokensSection` → `TokenRow`, masked
+- `project-settings-fields-page.tsx` — field names and types, no secrets
+- `project-settings-integrations-page.tsx` — renders `ProjectsGitIntegrationSettings`; `git-created-secret-dialog.tsx` shows full webhook secret in a one-time dialog but this is intentional one-time-reveal UX, not a persistent re-render
+- `project-settings-integrations-webhooks.tsx` — `webhook-card.tsx` shows webhook URL and delivery history, no stored signing secret re-rendered
+- `project-settings-iterations-page.tsx` — stub, no data
+- `project-settings-portal-page.tsx` — stub / EmptyState, no secrets
+- `project-settings-views-page.tsx` — view names and layout types, no secrets
+- `project-settings-agents-credentials-page.tsx` — same as agents, token prefix only
+- `project-settings-agents-page.tsx` — same
+- `agent-token-list.tsx` — confirmed: line 77 shows `{token.tokenPrefix}…` — the full token is never stored in the list endpoint, only returned once at creation (`agentTokenCreateContract` includes `token: z.string()` at `agent-tokens-schema.ts:4` but the list contract does not)
+- `/build/settings/access` — member list, no secrets
+- `/build/settings/integrations` — git connections list, no stored signing secret re-rendered
+
+Conclusion: No settings page persistently re-renders a full secret value. The only full-secret renders are one-time dialogs (`git-created-secret-dialog.tsx`, `agent-token-create-dialog.tsx`) that are intentional. The persistent list view (`agent-token-list.tsx:77`) already masks to `tokenPrefix…`. The gallery case + spec pair proves this masking contract holds.
+
+### Describes added to `frontend/e2e/build-list-responsive.spec.ts`
+
+| Describe | C6 check closed | Gallery source lines used |
+|---|---|---|
+| `reduced motion — loading skeleton shimmer stops` | Reduced motion (both halves) | build-list-gallery.tsx:49 (`DataTableSkeleton mobileCards`), skeleton.tsx:11 (`skeleton-shimmer animate-pulse`), globals.css:700–708 (prefers-reduced-motion rule) |
+| `high-density desktop — 1920 × 1080 at scale 2` | High-density desktop | build-list-gallery-cases.tsx:128–135 (`data-case-frame`), build-list-gallery-cases.tsx:226 (`data-slot=build-header-actions`) |
+
+`shimmerAnimationName` helper added at top of file: uses `[data-case-frame="loading"]` (from `build-list-gallery.tsx:43`) and `.skeleton-shimmer.animate-pulse:visible` (from `skeleton.tsx:11`).
+
+Reduced motion pair:
+- `reducedMotion: "reduce"` → asserts `animName === "none"` (globals.css:704–706 sets `animation: none` on `.skeleton-shimmer.animate-pulse` under `prefers-reduced-motion: reduce`)
+- `reducedMotion: "no-preference"` → asserts `animName !== "none"`, in a test named to prove the reduce assertion is not vacuous
+
+### Requests filed
+
+None this round.
+
+### Items deliberately NOT done
+
+- Tick any C6 acceptance box — per mission; orchestrator ticks from real drain output.
+- Switch/toggle keyboard assertion in settings spec — the gallery has no `role="switch"` / `aria-checked` element.
+- Escape/overlay keyboard assertion in settings spec — all ViewCard handlers are `noop`; no overlay can open.
+- Adding 1920 to the VIEWPORTS array in `build-list-responsive.spec.ts` — house fact 1 prohibits this; `page.setViewportSize()` cannot set `deviceScaleFactor`. A dedicated `test.use` describe is the required pattern.

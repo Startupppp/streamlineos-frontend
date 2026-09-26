@@ -733,3 +733,59 @@ Evidence:
 - **inbox**: `inboxQuerySchema` is `.strict()` accepting only `cursor`; any filter param 400s. Needs backend change to add `q`, `type`, `section` to the schema.
 - **command-center**: aggregation dashboard — no standard filter/URL surface; filtering via child panels not a single URL param set.
 - **teams-team**: detail page, not a filterable list; no `leadId`/`memberId` URL params on this surface by design.
+
+---
+
+## C6 coverage round
+
+**Files modified:**
+- `frontend/e2e/org-work-a11y.spec.ts`
+- `frontend/e2e/teams-team-a11y.spec.ts`
+- `frontend/features/build/teams/team-home-gallery.tsx`
+
+### Describes added to org-work-a11y.spec.ts
+
+**"high-density desktop — 1920×1080 at deviceScaleFactor 2"** (closes: high-density desktop)
+- `test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 })` — sets both width and deviceScaleFactor atomically at context creation; no `setViewportSize` call overrides it.
+- Test 1: document `scrollWidth - clientWidth <= 1`.
+- Test 2: `[data-case-frame="templates-grid-keyboard"]` `scrollWidth - clientWidth <= 1`. Selector sourced from `templates-gallery.tsx` line 81: `<section data-case-frame="templates-grid-keyboard"`.
+- Test 3: `[data-case-frame="templates-loading"]` `scrollWidth - clientWidth <= 1`. Selector sourced from `templates-gallery.tsx` line 124: `<section data-case-frame="templates-loading"`.
+
+**C on org-work's existing reduced-motion pair:** The pair is genuine. Both halves call `shimmerAnimationName(page)` which always resolves `[data-case-frame="templates-loading"] .skeleton-shimmer.animate-pulse:visible` — the same locator. The "no-preference" half confirms the element animates, making the "reduce" assertion non-vacuous. No change needed.
+
+### Describes added to teams-team-a11y.spec.ts
+
+**"high-density desktop — 1920×1080 at deviceScaleFactor 2"** (closes: high-density desktop)
+- Same `test.use` pattern.
+- Test 1: document overflow check.
+- Test 2: `[data-case-frame="team-members-keyboard"]` overflow check. Selector sourced from `team-home-gallery.tsx` line 44: `<section data-case-frame="team-members-keyboard"`.
+- Test 3: `[data-case-frame="team-detail-loading"]` overflow check. Selector sourced from the new `TeamDetailLoadingCase` added to `team-home-gallery.tsx`.
+
+**"reduced motion — the team detail skeleton shimmer stops"** (closes: reduced motion)
+- `shimmerAnimationName(page: Page)` helper targets `[data-case-frame="team-detail-loading"] .skeleton-shimmer.animate-pulse:visible`. The locator resolves `Skeleton` elements rendered by `TeamDetailLoadingCase` (sourced from `@/components/ui/skeleton`, which always carries `skeleton-shimmer animate-pulse`).
+- "with reduce requested": `test.use({ contextOptions: { reducedMotion: "reduce" } })` — asserts `animationName === "none"`.
+- "with no preference": `test.use({ contextOptions: { reducedMotion: "no-preference" } })` — asserts `animationName !== "none"`, proving the reduce assertion is not vacuous.
+- Pair is genuine: both halves call `shimmerAnimationName` on the same locator.
+
+### Gallery change: team-home-gallery.tsx
+
+Added `import { Skeleton } from "@/components/ui/skeleton"` and `TeamDetailLoadingCase` function that renders `Skeleton` components (the real leaf loading primitive) under `data-case-frame="team-detail-loading"`. Shape mirrors `DetailSkeleton` from `team-home-page.tsx` (lines 150–166): badge-row skeleton + 3 row-height skeletons. No mock HTML — uses the real `Skeleton` component throughout.
+
+### C6 checks closed by this round
+
+| C6 check | org-work-a11y | teams-team-a11y |
+|---|---|---|
+| 375 px mobile | pre-existing | pre-existing |
+| Screen-reader | pre-existing | pre-existing |
+| Keyboard | pre-existing | pre-existing |
+| Reduced motion | pre-existing (pair verified genuine) | NEW — both halves added |
+| High-density desktop | NEW | NEW |
+| Secret redaction | not applicable — no token-shaped value in `templates-gallery.tsx` or `team-home-gallery.tsx`; gallery renders stub template names/descriptions and stub member names/emails only | same — no token-shaped value |
+
+### Secret redaction rationale (D)
+
+Checked `frontend/features/build/templates/templates-gallery.tsx` and `frontend/features/build/teams/team-home-gallery.tsx`. Neither renders an API key, invite token, webhook secret, or signed URL. The only values rendered are: template names/descriptions/categories/ticket-titles (stub data), and member names/emails/roles (stub data). No assertion would have a target; writing one would prove nothing and would be vacuous by the definition in the task brief and in CCG-3 §4.
+
+### Requests filed
+
+None. All required changes were achievable within the two galleries and two spec files.

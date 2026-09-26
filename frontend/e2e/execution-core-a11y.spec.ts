@@ -33,6 +33,62 @@ test.describe("Execution core — responsive and a11y contract", () => {
     });
   }
 
+  test.describe("high-density desktop — 1920×1080 @ scale 2", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Execution core surfaces" }),
+      ).toBeVisible();
+    });
+
+    test(
+      "the page itself never scrolls sideways at scale-2 1920 px",
+      async ({ page }) => {
+        const overflow = await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+        );
+        expect(overflow).toBeLessThanOrEqual(1);
+      },
+    );
+
+    test(
+      "each case frame contains its content without horizontal overflow at scale-2 1920 px",
+      async ({ page }) => {
+        const frames = page.locator("[data-case-frame]");
+        const count = await frames.count();
+        expect(count).toBeGreaterThan(0);
+        for (let i = 0; i < count; i += 1) {
+          const frameOverflow = await frames.nth(i).evaluate(
+            (el: HTMLElement) => el.scrollWidth - el.clientWidth,
+          );
+          expect(frameOverflow).toBeLessThanOrEqual(1);
+        }
+      },
+    );
+
+    test(
+      "kanban scroll container is the designated overflow boundary and the page does not scroll at scale-2 1920 px",
+      async ({ page }) => {
+        const container = page.locator('[data-testid="kanban-scroll-container"]');
+        await expect(container).toBeVisible();
+        const overflowX = await container.evaluate(
+          (el: HTMLElement) => getComputedStyle(el).overflowX,
+        );
+        expect(overflowX).toBe("auto");
+        const pageOverflow = await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+        );
+        expect(pageOverflow).toBeLessThanOrEqual(1);
+      },
+    );
+  });
+
   test.describe("kanban board — horizontal overflow", () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
@@ -161,6 +217,18 @@ test.describe("Execution core — responsive and a11y contract", () => {
         const firstTrigger = scope.locator('[data-slot="select-trigger"]').first();
         await firstTrigger.focus();
         await expect(firstTrigger).toBeFocused();
+      },
+    );
+
+    test(
+      "first sidebar select opens with Space key, proving keyboard interaction is live",
+      async ({ page }) => {
+        const scope = page.locator('[data-case-frame="ticket-detail-two-panel"]');
+        const firstTrigger = scope.locator('[data-slot="select-trigger"]').first();
+        await firstTrigger.focus();
+        await expect(firstTrigger).toBeFocused();
+        await page.keyboard.press("Space");
+        await expect(page.getByRole("listbox")).toBeVisible();
       },
     );
   });

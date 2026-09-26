@@ -851,3 +851,99 @@ See `docs/build-module/lanes/requests/LANE-5.md` R6: add `from`/`to` date range 
 - **C3 SPEC 4** (updates): `status` present but not a filter axis; feed surface has no `j/k/Enter` target.
 - **C6** (all specs): browser-only; coordinator runs e2e.
 - **C7** (all specs): awaiting the orchestrator's read-only production sweep.
+
+---
+
+## C6 COVERAGE ROUND
+
+Files touched: `frontend/e2e/portals-a11y.spec.ts`, `frontend/features/portal/portals-gallery.tsx`.
+
+### Describes added
+
+| Describe | C6 checks closed |
+|---|---|
+| `high-density desktop 1920×1080 @2×` | High-density desktop |
+| `keyboard navigation` — 2 new tests added | Keyboard (extended) |
+| `reduced motion — loading skeleton shimmer stops` (replaces vacuous test) | Reduced motion |
+| `secret redaction — invite token never appears in DOM` | Secret redaction |
+
+### Selectors — gallery source lines quoted
+
+**Keyboard — "Request change" button (`portal-detail-ready`):**
+Source: `frontend/features/portal/components/portal-project-detail.tsx:253`
+```tsx
+<Button size="sm" variant="outline" onClick={handleOpen} className="shrink-0 gap-1.5">
+  <FileEdit className="h-3.5 w-3.5" />
+  Request change
+</Button>
+```
+Selector used: `getByRole("button", { name: "Request change", exact: true })` scoped to `frame(page, "portal-detail-ready")`.
+Resulting-state assertion: `page.getByRole("dialog", { name: "Submit a change request", exact: true })` is visible after Enter.
+Dialog title source: `frontend/features/portal/components/change-request-dialog.tsx:83` → `<DialogTitle>Submit a change request</DialogTitle>`.
+
+**Keyboard — "Back to projects" link (`portal-detail-not-found`):**
+Source: `frontend/components/ui/empty-state.tsx:67-73` — `Button asChild` → `Link href={action.href}` with label "Back to projects".
+Gallery uses: `PortalProjectDetailNotFound` at `portal-project-detail.tsx:338-351` → `EmptyState action={{ label: "Back to projects", href: "/client-portal" }}`.
+`BackToProjects` renders "All projects" (not "Back to projects"), so `getByRole("link", { name: "Back to projects", exact: true })` is unambiguous.
+Selector: `frame(page, "portal-detail-not-found").getByRole("link", { name: "Back to projects", exact: true })`.
+Resulting-state assertion: `toHaveAttribute("href", "/client-portal")`.
+
+**Reduced motion — shimmer (`portal-detail-loading`):**
+Source: `frontend/components/ui/skeleton.tsx:11` — `className={cn("skeleton-shimmer animate-pulse rounded-md bg-muted h-4", className)}`.
+Loaded by `PortalProjectDetailLoading` at `portal-project-detail.tsx:311-318` via `OverviewSkeleton`.
+CSS rule source: `frontend/globals.css:700-707` — `.skeleton-shimmer.animate-pulse { animation: none; }` under `@media (prefers-reduced-motion: reduce)`.
+Selector: `.skeleton-shimmer.animate-pulse:visible` scoped to `[data-case-frame="portal-detail-loading"]`.
+Assertion: `getComputedStyle(node).animationName` returns `"none"` under `reducedMotion: "reduce"` and not `"none"` under `reducedMotion: "no-preference"`.
+
+**Secret redaction — `portal-invite-accept`:**
+Gallery section added at `frontend/features/portal/portals-gallery.tsx`. The wrapper `div` carries `data-invite-token={FAKE_INVITE_TOKEN}` (test hook). The visible heading "Verifying your invitation…" is rendered as `<h1>`.
+Spec constant: `FAKE_INVITE_TOKEN = "FAKE-INV-0000-PORTALS-TEST-ONLY-DO-NOT-USE"`.
+Gallery constant (same string, exported): `frontend/features/portal/portals-gallery.tsx:17`.
+Assertions: (1) `[data-invite-token]` attribute equals `FAKE_INVITE_TOKEN`; (2) `node.innerText` does not contain `FAKE_INVITE_TOKEN`; (3) heading "Verifying your invitation…" is visible (pairing — proves case rendered); (4) no attribute other than `data-invite-token` contains the token string.
+
+**High-density overflow:**
+Selector shape: same `horizontalOverflowOf` helper over `CASES` (which now includes `portal-invite-accept`).
+Asserts: `document.documentElement.scrollWidth - clientWidth ≤ 1` and no case frame's `scrollWidth - clientWidth > 1`.
+
+### Vacuous test replaced
+
+**Was (portals-a11y.spec.ts lines 100-107):**
+```typescript
+test("no animated spinner is visible at rest under reduced motion", async ({ page }) => {
+  const spinners = page.locator(".animate-spin");
+  const count = await spinners.count();
+  for (let i = 0; i < count; i += 1) {
+    const visible = await spinners.nth(i).isVisible();
+    expect(visible).toBe(false);
+  }
+});
+```
+**Why it could not fail:** The loop over `count` is a no-op when `count === 0`. The test is run against the gallery page at rest (no spinner exists in the main gallery content), so `count` is 0 and the loop body never executes. No CSS rule disables `.animate-spin` under `prefers-reduced-motion: reduce` in `globals.css` (confirmed by grep — only `.skeleton-shimmer::after` and `.skeleton-shimmer.animate-pulse` are overridden). Asserting absence of a spinner at rest proves nothing.
+
+**Replaced with:** Two nested describes — one with `reducedMotion: "reduce"` expecting `animationName === "none"` on a visible `.skeleton-shimmer.animate-pulse` element, one with `reducedMotion: "no-preference"` expecting `animationName !== "none"`. The no-preference half is the anti-vacuity proof.
+
+### `.animate-spin` finding
+
+**Finding:** `globals.css` has NO `@media (prefers-reduced-motion: reduce)` override for `.animate-spin`. Tailwind 4's `animate-spin` (`animation: spin 1s linear infinite`) is not suppressed under reduced motion anywhere in the project's CSS. The `Loader2 animate-spin` rendered in the invitation acceptance loading state (`accept-invitation/page.tsx:29`) and in the new gallery `portal-invite-accept` case will continue to animate even when a user has requested reduced motion.
+
+This is a product finding. The fix would be to add `.animate-spin { animation: none; }` under `@media (prefers-reduced-motion: reduce)` in `globals.css`, or to replace `animate-spin` with a `motion-reduce:animate-none` Tailwind variant at each call site. Not fixed in this round.
+
+**Filed:** R7 below.
+
+### `projectId` sequential-integer oracle finding
+
+The `portal-project-card` gallery case links to `/client-portal/101`. The real portal routes accept a sequential integer `projectId` in the URL. Per the memory note `public-intake-projectid-is-an-enumeration-oracle.md`, sequential integer project IDs on public/unauthenticated endpoints leak project existence (201 vs 400 response codes) and may permit uninvited anonymous writes. The portal routes at `app/(portal)/client-portal/[projectId]/page.tsx` use the same integer `projectId`. This was not investigated further or fixed in this round.
+
+**Filed:** R8 below.
+
+### Requests filed this round
+
+- **R7**: Suppress `.animate-spin` under `prefers-reduced-motion: reduce` — add `.animate-spin { animation: none; }` to `globals.css` under the existing reduced-motion block, or apply `motion-reduce:animate-none` at each `Loader2 animate-spin` call site.
+- **R8**: Audit `app/(portal)/client-portal/[projectId]` for sequential-integer `projectId` enumeration oracle exposure (existence leak to unauthenticated callers via 401/404 response code difference).
+
+### Did NOT do
+
+- Did not tick C6 on any spec — coordinator runs the serial drain.
+- Did not change any file outside `portals-a11y.spec.ts` and `portals-gallery.tsx`.
+- Did not add `motion-reduce:animate-none` to the invitation acceptance loading component — that requires editing `accept-invitation/page.tsx` (outside my files) and/or `globals.css` (shared, out of scope).
+- Did not assert `.animate-spin` stops under reduced motion — no CSS rule backs that assertion; asserting it would prove the mock, not the product.

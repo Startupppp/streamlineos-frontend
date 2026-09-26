@@ -144,6 +144,46 @@ test.describe("Templates surfaces — responsive and a11y contract", () => {
     );
   });
 
+  test.describe("high-density desktop — 1920×1080 at deviceScaleFactor 2", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Templates surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the page itself never scrolls sideways at 1920 px scale 2", async ({ page }) => {
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
+
+    test(
+      "the templates-grid-keyboard case frame is not clipped at the right edge at 1920 px scale 2",
+      async ({ page }) => {
+        const overflow = await page
+          .locator('[data-case-frame="templates-grid-keyboard"]')
+          .evaluate((el) => el.scrollWidth - el.clientWidth);
+        expect(overflow).toBeLessThanOrEqual(1);
+      },
+    );
+
+    test(
+      "the templates-loading case frame is not clipped at the right edge at 1920 px scale 2",
+      async ({ page }) => {
+        const overflow = await page
+          .locator('[data-case-frame="templates-loading"]')
+          .evaluate((el) => el.scrollWidth - el.clientWidth);
+        expect(overflow).toBeLessThanOrEqual(1);
+      },
+    );
+  });
+
   test.describe("reduced motion — the templates skeleton shimmer stops", () => {
     test.describe("with reduce requested", () => {
       test.use({ contextOptions: { reducedMotion: "reduce" } });

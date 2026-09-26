@@ -1,4 +1,15 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function shimmerAnimationName(page: Page): Promise<string> {
+  const shimmer = page
+    .locator('[data-case-frame="team-detail-loading"]')
+    .locator(".skeleton-shimmer.animate-pulse:visible")
+    .first();
+  await expect(shimmer).toBeVisible();
+  return shimmer.evaluate(
+    (node: HTMLElement) => getComputedStyle(node).animationName,
+  );
+}
 
 const GALLERY = "/design-system/teams-team";
 
@@ -92,5 +103,69 @@ test.describe("Team detail surfaces — responsive and a11y contract", () => {
         }
       },
     );
+  });
+
+  test.describe("high-density desktop — 1920×1080 at deviceScaleFactor 2", () => {
+    test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Team detail surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("the page itself never scrolls sideways at 1920 px scale 2", async ({ page }) => {
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(1);
+    });
+
+    test(
+      "the team-members-keyboard case frame is not clipped at the right edge at 1920 px scale 2",
+      async ({ page }) => {
+        const overflow = await page
+          .locator('[data-case-frame="team-members-keyboard"]')
+          .evaluate((el) => el.scrollWidth - el.clientWidth);
+        expect(overflow).toBeLessThanOrEqual(1);
+      },
+    );
+
+    test(
+      "the team-detail-loading case frame is not clipped at the right edge at 1920 px scale 2",
+      async ({ page }) => {
+        const overflow = await page
+          .locator('[data-case-frame="team-detail-loading"]')
+          .evaluate((el) => el.scrollWidth - el.clientWidth);
+        expect(overflow).toBeLessThanOrEqual(1);
+      },
+    );
+  });
+
+  test.describe("reduced motion — the team detail skeleton shimmer stops", () => {
+    test.describe("with reduce requested", () => {
+      test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+      test("the real team detail Skeleton computes animation-name none", async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        expect(await shimmerAnimationName(page)).toBe("none");
+      });
+    });
+
+    test.describe("with no preference", () => {
+      test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+      test("the same skeleton does animate, proving the reduce assertion is not vacuous", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        expect(await shimmerAnimationName(page)).not.toBe("none");
+      });
+    });
   });
 });

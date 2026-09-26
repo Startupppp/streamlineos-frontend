@@ -731,7 +731,7 @@ npx jest "features/build/milestones/project-milestones-page|features/build/relea
 | `portfolio-scope-pages.test.tsx` | 10/10 pass (added e shortcut + permission tests) |
 | `programs-scope-pages.test.tsx` | 9/9 pass (added e shortcut + permission tests) |
 
-**Criterion 7 (production browser evidence):** BLOCKED on all 6 pages — no authenticated non-prod browser target; capture stack absent (nothing on :5432, backend/.env points at production).
+**Criterion 7 (production browser evidence):** BLOCKED on all 6 pages — C7 explicitly targets production read-only (production is the intended target, not a workaround). The real blocker per CCG-2: `denied` requires an org-admin account to fail a gate (the operator's own account bypasses every gate — stubbing /me/access would prove the stub, not the product) and `conflict` requires a rejected write, which is blocked by CCG-1. Both are unreachable read-only. Orchestrator-only task.
 
 **Spec files ticked:**
 - `docs/build-module/10-goals.md` line 102: `- [x]`
@@ -740,6 +740,80 @@ npx jest "features/build/milestones/project-milestones-page|features/build/relea
 - `docs/build-module/10-portfolios.md` line 102: `- [x]`
 - `docs/build-module/10-portfolios-portfolio.md` line 102: `- [x]`
 - `docs/build-module/10-programs.md` line 102: `- [x]` (ticked Round 5; confirmed)
+
+---
+
+---
+
+## C6 coverage round
+
+### Describes added
+
+**A. `high-density desktop — 1920 × 1080 at deviceScaleFactor 2`** (inside outer `Planning surfaces responsive contract`)
+
+Added via `test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 })` at describe level per house fact 1 — `page.setViewportSize()` cannot change `deviceScaleFactor`, so the only valid approach is a describe-level override. Three tests:
+- page-level horizontal overflow ≤ 1 px
+- per-case overflow across all 11 CASES frames (mirrors the existing viewport loop, re-uses `horizontalOverflowOf` + `frame` helpers)
+- releases table first cell right-edge ≤ 1920 (mirrors the 1280 assertion at spec line 228–235)
+
+Closes: **high-density desktop** (C6 check 5).
+
+**B. `keyboard > at 1280 × 800 — tab order follows visual order through milestones toolbar`**
+
+Seeds focus on the visible desktop "New Milestone" button, then Tabs to search → status combobox → date-range button. Tests three successive `page.keyboard.press("Tab")` with `toBeFocused()` on each expected target.
+
+Closes: **keyboard** (C6 check 4).
+
+**C. `keyboard > at 375 × 812 — filters drawer opens and closes with keyboard`**
+
+Focuses the "Filters" drawer trigger, presses Enter, asserts drawer-content is visible and has focus-within (proving vaul's real-browser focus management), presses Escape, asserts dialog is gone and trigger is refocused.
+
+Closes: **keyboard** (C6 check 4, second assertion path — overlay open/close cycle).
+
+### C6 checks closed by this round
+
+| C6 check | Status after this round |
+|---|---|
+| 375 px mobile | Was covered; unchanged |
+| Screen-reader (roles, accessible names) | Was covered; unchanged |
+| Reduced motion | Was covered (lines 245–269); unchanged |
+| Keyboard | **Now covered** by describes B and C |
+| High-density desktop | **Now covered** by describe A |
+| Secret redaction | See below |
+
+### Gallery source lines for selectors
+
+All selectors verified against source files before writing:
+
+| Selector | Source |
+|---|---|
+| `[data-slot="build-header-actions"]` | `frontend/features/build/shared/build-header-actions.tsx` line 127 — outer div of `BuildHeaderActions` |
+| `getByRole("button", { name: "New Milestone", exact: true })` | `frontend/features/build/milestones/planning-surfaces-gallery.tsx` line 245 — `actions={[{ id: "new", label: "New Milestone", ... }]}` passed to `BuildHeaderActions`; at 1280px the `hidden sm:inline-flex` button is the only visible one |
+| `[data-slot="search-input"] input[type="search"]` | `frontend/components/ui/search-input.tsx` line 69 (data-slot="search-input" on wrapper div) and line 80–81 (`<Input type="search" ...>`) |
+| `[data-filter-id="status"]` | `frontend/features/build/shared/build-list-toolbar.tsx` line 49 — `data-filter-id={filter.id}` on `ToolbarFilterSlot`; id="status" comes from `MilestoneListToolbar` at gallery line 198 |
+| `getByRole("combobox", { name: "Status", exact: true })` | `frontend/features/build/shared/build-filter-select.tsx` line 46 — `<SelectTrigger aria-label={label} ...>` with `label="Status"`; Radix `SelectTrigger` renders `role="combobox"` per select.tsx line 41–42 comment |
+| `[data-filter-id="date-range"]` | `frontend/features/build/shared/build-list-toolbar.tsx` line 49; id="date-range" from gallery line 208 |
+| `getByRole("button")` (date-range slot) | `frontend/components/ui/date-range-picker.tsx` line 66–78 — `<Button ... />` inside `PopoverTrigger asChild`; no aria-label on the button, scoped to `[data-filter-id="date-range"]` so the single button there is unambiguous |
+| `getByRole("button", { name: /^Filters/ })` | `frontend/features/build/shared/build-list-toolbar.tsx` line 132 — `<span>{BUILD_TOOLBAR_FILTERS_LABEL}</span>` where `BUILD_TOOLBAR_FILTERS_LABEL = "Filters"` (layout.ts line 18); regex used because the count badge may follow the label text |
+| `[data-slot="drawer-content"]` | `frontend/components/ui/drawer.tsx` line 60 — `data-slot="drawer-content"` on `DrawerPrimitive.Content` |
+| `[data-slot="drawer-content"]:focus-within` | Same file; `BuildListToolbar` focuses `drawerBodyRef.current` (tabIndex={-1} div) via `requestAnimationFrame` on drawer open (build-list-toolbar.tsx lines 82–88) |
+
+### Keyboard assertions are not vacuous
+
+- **Tab order test**: seeds focus on the real button element, not an arbitrary div. Each `toBeFocused()` asserts the SPECIFIC next element in DOM order is focused, not just "something is focused". The chain proves the three toolbar controls are all keyboard-reachable AND in the correct left-to-right/top-to-bottom visual order (New Milestone at header-right → Search at row-left → Status → Date-range).
+- **Drawer test**: the focus-within assertion proves focus moved INSIDE the drawer (not to document.body). The post-Escape `toBeFocused()` on the trigger proves focus returned to the correct element — a screen reader user can continue navigating from where they left off.
+
+### Secret redaction
+
+No token-shaped values found. Pages checked: `frontend/features/build/milestones/planning-surfaces-gallery.tsx` (all stub data are plain integers and human-readable strings), `frontend/features/build/milestones/milestone-card.tsx`, `frontend/features/build/releases/releases-table-columns.tsx`. Milestones and releases are internal authenticated project-management surfaces; no API keys, invite tokens, webhook secrets, or signed URLs are rendered on them.
+
+### Requests filed
+
+None. All selectors resolved from source without needing gallery modifications or shared-component changes.
+
+### C7 justification correction
+
+The previous Round 6 text said "no authenticated non-prod browser target; capture stack absent". This was wrong. Per CCG-2: production is the intended target for C7 (not a workaround). The real blockers are that `denied` and `conflict` are unreachable read-only — the operator account is org admin and bypasses every gate (stubbing would prove the stub, not the product), and `conflict` requires a write blocked by CCG-1. The status file text has been updated to reflect the CCG-2 wording.
 
 ---
 

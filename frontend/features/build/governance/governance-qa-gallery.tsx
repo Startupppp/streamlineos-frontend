@@ -1,9 +1,13 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
 import { DataTableSkeleton, DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { PM_FILL_PANEL } from "@/components/pm-chrome";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { NamedUser } from "@/lib/person-display";
 import type { Risk, TestCase, Decision, Approval } from "@/types/projects";
 import type { Incident } from "@/hooks/api/build/incidents-schema";
@@ -400,6 +404,78 @@ function ApprovalsTable() {
   );
 }
 
+function RisksWithSelection() {
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setSelectedIds(new Set());
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  const columns = buildRiskColumns({
+    canManage: true,
+    memberName,
+    ownerOf,
+    onEdit: noop,
+    onDelete: noop,
+  });
+
+  function getRowKey(row: Risk) {
+    return row.id;
+  }
+
+  function renderMobileCard(row: Risk) {
+    return (
+      <RiskMobileCard
+        risk={row}
+        canManage
+        ownerOf={ownerOf}
+        onEdit={noop}
+        onDelete={noop}
+      />
+    );
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
+      {selectedIds.size > 0 && (
+        <div
+          role="region"
+          aria-label="Bulk actions"
+          className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2 text-sm"
+        >
+          <Badge variant="secondary">{selectedIds.size} selected</Badge>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Clear selection"
+            onClick={() => setSelectedIds(new Set())}
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+      )}
+      <DataTable
+        data={RISK_ROWS}
+        columns={columns}
+        getRowKey={getRowKey}
+        minWidth="720px"
+        className={PM_FILL_PANEL}
+        mobileCard={renderMobileCard}
+        pagination={STATIC_PAGINATION}
+        selection={{
+          selected: selectedIds,
+          onChange: setSelectedIds,
+        }}
+      />
+    </div>
+  );
+}
+
 export function GovernanceQaGallery() {
   return (
     <div className="flex flex-col gap-8 p-4">
@@ -447,6 +523,13 @@ export function GovernanceQaGallery() {
         actions={ONE_ACTION}
         filterCount={2}
         body={<ApprovalsTable />}
+      />
+      <GalleryList
+        caseId="risks-with-selection"
+        title="Risks list · keyboard selection"
+        actions={ONE_ACTION}
+        filterCount={2}
+        body={<RisksWithSelection />}
       />
       <GalleryList
         caseId="loading-governance"

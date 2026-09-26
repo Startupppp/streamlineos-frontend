@@ -157,3 +157,36 @@ to: z.string().datetime().optional(),
 `grantId` filters to a single grant by its `projectClientGrantId`. `from`/`to` filter by `grantedAt` (or `expiresAt` — choose the column that matches the spec intent for the date range). The existing `state` param covers `status`; `cursor` is already present.
 
 **Reason:** `10-project-client-portal.md` URL state section specifies `grantId`, `status`, `from`, `to`, `cursor`. `status` maps to the existing `state` param and `cursor` is already there. `grantId` and `from`/`to` have no current backing. Without these axes on the backend schema, the frontend cannot wire the URL params to a real predicate, and C3 on `10-project-client-portal.md` cannot be ticked. The portal-access module is outside Lane 5 territory; this request delegates the backend change to the owning lane.
+
+---
+
+## R7 — globals.css: suppress `.animate-spin` under `prefers-reduced-motion: reduce`
+
+**File:** `frontend/globals.css`
+
+**Change:** Add to the existing `@media (prefers-reduced-motion: reduce)` block (near line 700):
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin {
+    animation: none;
+  }
+}
+```
+
+OR, alternatively, replace `animate-spin` with `motion-reduce:animate-none` Tailwind modifier at every call site where a `Loader2` or any other element uses the class.
+
+**Reason:** `globals.css` currently overrides `.skeleton-shimmer::after` and `.skeleton-shimmer.animate-pulse` under reduced motion, but has no override for `.animate-spin`. Tailwind 4's `animate-spin` (`animation: spin 1s linear infinite`) continues to run even when a user has set `prefers-reduced-motion: reduce`. This affects at minimum `accept-invitation/page.tsx` (the `Loader2` spinner shown during invitation verification) and the `portal-invite-accept` gallery case. FE-108 requires respecting `prefers-reduced-motion`. The gallery's reduced-motion tests assert on `.skeleton-shimmer.animate-pulse` rather than `.animate-spin` because no CSS rule backs a `animate-spin` assertion — fixing this would let a future spec assert that the spinner stops.
+
+---
+
+## R8 — Audit portal `[projectId]` routes for sequential-integer enumeration oracle
+
+**Routes:** `app/(portal)/client-portal/[projectId]/page.tsx` and related portal-auth service
+
+**Investigation needed:** The portal project detail route (`/client-portal/[projectId]`) accepts a sequential integer `projectId`. Per `public-intake-projectid-is-an-enumeration-oracle.md`, sequential integers on public/unauthenticated endpoints leak project existence (different HTTP status codes for found vs. not-found) and may permit uninvited anonymous writes. Determine whether:
+
+1. An unauthenticated caller (no portal session token) receives a different status code for a real vs. non-existent `projectId` (201/404 distinguishes existence).
+2. The portal auth guard always returns an identical response (e.g. 401 Unauthorized) regardless of whether `projectId` exists, preventing the oracle.
+
+If the oracle is confirmed, the fix is to return a uniform 401/404 before any tenant-specific lookup is attempted, so existence cannot be inferred from the response code. This is outside Lane 5's write scope — filing for the portal/auth owning lane.

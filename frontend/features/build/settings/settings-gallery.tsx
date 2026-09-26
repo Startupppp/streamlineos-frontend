@@ -8,6 +8,7 @@ import { PmPageShell, PmSection, PmPanel } from "@/components/pm-chrome";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { TokenRow } from "./agent-token-list";
 
 function noop() {
   return undefined;
@@ -75,6 +76,30 @@ export function SettingsGallery() {
         <GalleryCase id="settings-views-denied" title="Views — access denied">
           <PageWrapper title="Saved Views">
             <NoPermissionState />
+          </PageWrapper>
+        </GalleryCase>
+
+        <GalleryCase id="settings-credentials-token-list" title="Credentials — token list (secret-redaction stub)">
+          <PageWrapper title="Credentials">
+            <PmPageShell>
+              <PmSection index={0}>
+                <PmPanel className="p-4" solid>
+                  <TokenRow
+                    token={{
+                      id: 99,
+                      name: "CI bot",
+                      tokenPrefix: "slat_Fa9c",
+                      scopes: ["build:read"],
+                      createdAt: "2026-01-01T00:00:00Z",
+                      expiresAt: null,
+                      lastUsedAt: null,
+                      revokedAt: null,
+                    }}
+                    onRevoke={noop}
+                  />
+                </PmPanel>
+              </PmSection>
+            </PmPageShell>
           </PageWrapper>
         </GalleryCase>
       </div>
