@@ -17,7 +17,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IncidentSheet } from "./incident-sheet";
 import { getSlaState } from "./sla";
 import type { Incident } from "@/hooks/api/build/incidents-schema";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -331,7 +331,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
             }
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="ticket"
                 title="No incidents found"
                 description="Create an incident to start tracking."
@@ -345,13 +345,13 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <DataTable<Incident>
               data={displayed}
               columns={columns}
               getRowKey={(row) => row.id}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               mobileCard={renderMobileCard}
               pagination={{
                 mode: "cursor",

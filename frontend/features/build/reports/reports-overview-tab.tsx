@@ -27,7 +27,7 @@ import {
   buildVelocityData,
   buildEstimateData,
 } from "@/features/build/analytics/analytics-chart-data";
-import { PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 
 interface ReportsOverviewTabProps {
   projectId: number;
@@ -60,7 +60,7 @@ export function ReportsOverviewTab({ projectId }: ReportsOverviewTabProps) {
     <>
       <PageState
         resolution={pageState}
-        className={PM_FILL_PANEL}
+        className={CONTENT_FILL_PANEL}
         onRetry={handleRetry}
         loading={
           <>
@@ -74,7 +74,7 @@ export function ReportsOverviewTab({ projectId }: ReportsOverviewTabProps) {
         }
         empty={
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="chart"
             title="No analytics yet"
             description="Analytics will appear once your project has tickets."

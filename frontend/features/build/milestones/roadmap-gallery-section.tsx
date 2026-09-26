@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared";
-import { PM_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
+import { CONTENT_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -79,7 +79,7 @@ export function RoadmapGalleryCases() {
       </RoadmapGalleryWrapper>
 
       <RoadmapGalleryWrapper caseId="roadmap-empty-true" title="Roadmap — empty">
-        <EmptyState className={PM_FILL_PANEL} illustrationPreset="projects" title="No roadmap items yet" description="Add items to your public roadmap to share what you are building." action={{ label: "New Item", onClick: NOOP }} />
+        <EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No roadmap items yet" description="Add items to your public roadmap to share what you are building." action={{ label: "New Item", onClick: NOOP }} />
       </RoadmapGalleryWrapper>
 
       <RoadmapGalleryWrapper caseId="roadmap-error" title="Roadmap — error">

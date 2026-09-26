@@ -35,7 +35,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_PANEL,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
@@ -266,7 +266,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
             loading={<GoalsSkeleton />}
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustration={<EmptyTargetIllustration />}
                 title="No goals yet"
                 description={
@@ -284,7 +284,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <div className="flex min-h-0 flex-1 flex-col gap-2">
               <div className="space-y-8">

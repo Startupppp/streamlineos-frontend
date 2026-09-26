@@ -38,7 +38,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_FILL_SECTION,
   PM_PANEL,
 } from "@/components/pm-chrome";
@@ -277,7 +277,7 @@ export function GoalsPage() {
               loading={<GoalsGridSkeleton />}
               empty={
                 <EmptyState
-                  className={PM_FILL_PANEL}
+                  className={CONTENT_FILL_PANEL}
                   illustration={<EmptyTargetIllustration />}
                   title="No goals yet"
                   description={

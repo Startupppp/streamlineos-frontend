@@ -101,7 +101,7 @@ jest.mock("next/dynamic", () => () => MockExcalidrawCanvas);
 jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmPanel: ({ children }: { children: React.ReactNode; className?: string; solid?: boolean }) => <div>{children}</div>,
-  PM_FILL_PANEL: "fill-panel",
+  CONTENT_FILL_PANEL: "fill-panel",
   PM_ROW: "pm-row",
 }));
 

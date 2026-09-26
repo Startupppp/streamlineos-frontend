@@ -6,7 +6,7 @@ import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyInboxIllustration } from "@/components/illustrations";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { useFeedbucketSubmissions } from "@/hooks/api/feedbucket";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -379,7 +379,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
             resolution={resolution}
             loading={<DataTableSkeleton rows={10} headers={FEEDBACK_SKELETON_HEADERS} />}
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <DataTable
               data={data?.data ?? []}
@@ -400,7 +400,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
                   illustration={<EmptyInboxIllustration className="h-24 w-24" />}
                   title="No feedback submissions"
                   description="Submissions from widgets linked to this product will appear here."
-                  className={PM_FILL_PANEL}
+                  className={CONTENT_FILL_PANEL}
                 />
               }
               rowClassName={resolveRowClassName}

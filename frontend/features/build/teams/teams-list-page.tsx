@@ -29,7 +29,7 @@ import type {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { useBuildListFilters, BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
@@ -258,14 +258,14 @@ export function TeamsListPage() {
             empty={
               !isOnline ? (
                 <EmptyState
-                  className={PM_FILL_PANEL}
+                  className={CONTENT_FILL_PANEL}
                   illustrationPreset="projects"
                   title="You are offline"
                   description="Reconnect to see the latest teams."
                 />
               ) : (
                 <EmptyState
-                  className={PM_FILL_PANEL}
+                  className={CONTENT_FILL_PANEL}
                   illustrationPreset="projects"
                   title="No teams yet"
                   description="Create a team to group members and track work together."
@@ -276,7 +276,7 @@ export function TeamsListPage() {
               )
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <DataTable
               data={teams}
@@ -284,7 +284,7 @@ export function TeamsListPage() {
               getRowKey={(row) => row.id}
               minWidth="560px"
               mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               pagination={{
                 mode: "cursor",
                 pageSize: PAGE_SIZE,

@@ -44,7 +44,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPageShell,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 
 const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
@@ -403,7 +403,7 @@ export function ProjectApprovalsPage({
             }
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="approval"
                 title="No approvals yet"
                 description="Use approvals to get sign-off on tasks, milestones, and releases before they ship."
@@ -412,7 +412,7 @@ export function ProjectApprovalsPage({
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <DataTable
               data={items}
@@ -434,7 +434,7 @@ export function ProjectApprovalsPage({
               isLoading={isFetchingNextPage}
               minWidth="720px"
               mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
             />
           </PageState>
         </PmSection>

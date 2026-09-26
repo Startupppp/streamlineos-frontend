@@ -15,7 +15,7 @@ import { useCan } from "@/hooks/api/access";
 import type { ChangelogEntry } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
+import { PmStaggerList, CONTENT_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { ChangelogEntryCard } from "./changelog-entry-card";
@@ -143,7 +143,7 @@ export function ChangelogTab({
           loading={<ChangelogListSkeleton />}
           empty={
             <EmptyState
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               illustrationPreset="ticket"
               title="No changelog entries yet"
               description="Announce shipped features, improvements and fixes to your users."
@@ -151,7 +151,7 @@ export function ChangelogTab({
             />
           }
           onRetry={handleRetry}
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
         >
           <>
             <PmStaggerList className="space-y-2">

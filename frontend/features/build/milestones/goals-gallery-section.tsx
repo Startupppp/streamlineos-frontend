@@ -5,7 +5,7 @@ import { Target, TrendingUp, AlertTriangle } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared";
-import { PM_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
+import { CONTENT_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
@@ -101,11 +101,11 @@ export function GoalsGalleryCases() {
       </GoalsGalleryWrapper>
 
       <GoalsGalleryWrapper caseId="goals-empty-true" title="Goals — true empty">
-        <EmptyState className={PM_FILL_PANEL} illustrationPreset="projects" title="No goals yet" description="Create your first objective with measurable key results." action={{ label: "New Goal", onClick: NOOP }} />
+        <EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No goals yet" description="Create your first objective with measurable key results." action={{ label: "New Goal", onClick: NOOP }} />
       </GoalsGalleryWrapper>
 
       <GoalsGalleryWrapper caseId="goals-empty-filtered" title="Goals — filtered empty">
-        <EmptyState className={PM_FILL_PANEL} illustrationPreset="projects" title="No goals yet" filtersActive onClearFilters={NOOP} />
+        <EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No goals yet" filtersActive onClearFilters={NOOP} />
       </GoalsGalleryWrapper>
 
       <GoalsGalleryWrapper caseId="goals-error" title="Goals — error">

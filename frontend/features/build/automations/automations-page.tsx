@@ -26,7 +26,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -292,7 +292,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
   const emptyContent = (
     <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
       <EmptyState
-        className={PM_FILL_PANEL}
+        className={CONTENT_FILL_PANEL}
         illustration={<AutomationsIllustration className="h-32 w-32" />}
         title={
           !isOnline

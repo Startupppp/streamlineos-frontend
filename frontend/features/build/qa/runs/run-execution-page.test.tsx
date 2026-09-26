@@ -75,7 +75,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmStaggerList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
   PM_PANEL: "",
 }));
 

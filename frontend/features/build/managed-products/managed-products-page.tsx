@@ -27,7 +27,7 @@ import type {
   UpdateManagedProductInput,
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
@@ -354,7 +354,7 @@ export function ManagedProductsPage() {
             }
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No managed products yet"
                 description="Create a managed product to track delivery across projects."
@@ -368,7 +368,7 @@ export function ManagedProductsPage() {
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             {selectedIds.length > 0 && (
               <ManagedProductBulkToolbar
@@ -382,7 +382,7 @@ export function ManagedProductsPage() {
               getRowKey={(row) => row.id}
               minWidth="720px"
               mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               selection={
                 canUpdate
                   ? {

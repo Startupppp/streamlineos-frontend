@@ -6,7 +6,7 @@ import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared";
-import { PM_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
+import { CONTENT_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -69,7 +69,7 @@ function PortfoliosReadyTable() {
   const columns = buildPortfolioColumns({ canManage: true, ownerOf: () => null, onEdit: NOOP, onDelete: NOOP });
   const renderMobileCard = useCallback((row: Portfolio) => <PortfolioMobileCard portfolio={row} canManage ownerOf={() => null} onEdit={NOOP} onDelete={NOOP} />, []);
   return (
-    <DataTable data={STUB_PORTFOLIOS} columns={columns} getRowKey={(r) => r.id} mobileCard={renderMobileCard} className={PM_FILL_PANEL} pagination={{ mode: "cursor", pageSize: 20, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }} />
+    <DataTable data={STUB_PORTFOLIOS} columns={columns} getRowKey={(r) => r.id} mobileCard={renderMobileCard} className={CONTENT_FILL_PANEL} pagination={{ mode: "cursor", pageSize: 20, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }} />
   );
 }
 
@@ -104,7 +104,7 @@ function ProgramsReadyTable() {
   const columns = buildProgramColumns({ canManage: true, ownerOf: () => null, portfolioName: () => "—", onEdit: NOOP, onDelete: NOOP });
   const renderMobileCard = useCallback((row: Program) => <ProgramMobileCard program={row} canManage ownerOf={() => null} portfolioName={() => "—"} onEdit={NOOP} onDelete={NOOP} />, []);
   return (
-    <DataTable data={STUB_PROGRAMS} columns={columns} getRowKey={(r) => r.id} mobileCard={renderMobileCard} className={PM_FILL_PANEL} pagination={{ mode: "cursor", pageSize: 25, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }} />
+    <DataTable data={STUB_PROGRAMS} columns={columns} getRowKey={(r) => r.id} mobileCard={renderMobileCard} className={CONTENT_FILL_PANEL} pagination={{ mode: "cursor", pageSize: 25, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }} />
   );
 }
 
@@ -120,7 +120,7 @@ export function PortfoliosProgramsGalleryCases() {
       </PortfoliosGalleryWrapper>
 
       <PortfoliosGalleryWrapper caseId="portfolios-empty-true" title="Portfolios — true empty">
-        <EmptyState className={PM_FILL_PANEL} illustrationPreset="projects" title="No portfolios yet" description="Create a portfolio to group and govern your projects." action={{ label: "New portfolio", onClick: NOOP }} />
+        <EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No portfolios yet" description="Create a portfolio to group and govern your projects." action={{ label: "New portfolio", onClick: NOOP }} />
       </PortfoliosGalleryWrapper>
 
       <PortfoliosGalleryWrapper caseId="portfolios-error" title="Portfolios — error">
@@ -182,7 +182,7 @@ export function PortfoliosProgramsGalleryCases() {
       </ProgramsGalleryWrapper>
 
       <ProgramsGalleryWrapper caseId="programs-empty-true" title="Programs — true empty">
-        <EmptyState className={PM_FILL_PANEL} illustrationPreset="projects" title="No programs yet" description="Create a program to coordinate related projects toward one outcome." action={{ label: "New program", onClick: NOOP }} />
+        <EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No programs yet" description="Create a program to coordinate related projects toward one outcome." action={{ label: "New program", onClick: NOOP }} />
       </ProgramsGalleryWrapper>
 
       <ProgramsGalleryWrapper caseId="programs-error" title="Programs — error">

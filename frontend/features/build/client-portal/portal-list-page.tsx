@@ -12,7 +12,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_PANEL,
 } from "@/components/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
@@ -107,7 +107,7 @@ export function PortalListPage() {
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {pageState.kind === "empty" ? (
             <EmptyState
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               illustrationPreset="projects"
               title="No projects"
               description="You don't have access to any projects yet. Contact your project manager."

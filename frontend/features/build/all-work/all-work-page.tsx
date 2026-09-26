@@ -32,7 +32,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
@@ -273,14 +273,14 @@ export function AllWorkPage() {
   const emptyNode =
     !isOnline ? (
       <EmptyState
-        className={PM_FILL_PANEL}
+        className={CONTENT_FILL_PANEL}
         illustrationPreset="projects"
         title="You are offline"
         description="Showing cached data. Reconnect to see the latest tickets."
       />
     ) : (
       <EmptyState
-        className={PM_FILL_PANEL}
+        className={CONTENT_FILL_PANEL}
         illustrationPreset="projects"
         title="No tickets yet"
         description={
@@ -380,7 +380,7 @@ export function AllWorkPage() {
 
           <PageState
             resolution={pageState}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             onRetry={handleRetry}
             loading={
               <PmPanel solid className="flex-1 overflow-auto">

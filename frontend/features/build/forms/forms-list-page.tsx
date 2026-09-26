@@ -12,7 +12,7 @@ import { useCan } from "@/hooks/api/access";
 import { useForms, useCreateForm } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { FORM_TYPE_LABELS, FORM_TYPES } from "./field-type-meta";
 import type { ProjectForm } from "@/types/projects/forms";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
@@ -221,7 +221,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             {filtered.length === 0 ? (
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="documents"
                 title="No forms yet"
                 description={
@@ -243,7 +243,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
                 columns={columns}
                 getRowKey={(row) => row.id}
                 minWidth="680px"
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 mobileCard={renderMobileCard}
                 pagination={{
                   mode: "cursor",

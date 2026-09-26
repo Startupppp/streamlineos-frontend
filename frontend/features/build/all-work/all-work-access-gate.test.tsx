@@ -115,7 +115,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
 }));
 jest.mock("@/components/ui/page-tabs-toolbar", () => ({
   PageTabsToolbar: ({ filters }: { filters?: ReactNode }) => <div>{filters}</div>,

@@ -7,7 +7,7 @@ import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared";
-import { PM_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
+import { CONTENT_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import type { BuildHeaderAction } from "@/features/build/shared/build-header-actions-plan";
@@ -184,7 +184,7 @@ function ManagedProductsReadyTable() {
       getRowKey={(row) => row.id}
       minWidth="720px"
       mobileCard={renderMobileCard}
-      className={PM_FILL_PANEL}
+      className={CONTENT_FILL_PANEL}
       pagination={{
         mode: "cursor",
         pageSize: 20,
@@ -322,7 +322,7 @@ export function ManagedProductsGallery() {
         actions={ONE_ACTION}
         body={
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="projects"
             title="No managed products yet"
             description="Create a managed product to track delivery across projects."
@@ -337,7 +337,7 @@ export function ManagedProductsGallery() {
         actions={ONE_ACTION}
         body={
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="projects"
             title="No managed products yet"
             filtersActive
@@ -379,7 +379,7 @@ export function ManagedProductsGallery() {
 
       <GalleryCase id="feedback-empty" title="Feedback — empty">
         <EmptyState
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
           title="No feedback submissions"
           description="Submissions from widgets linked to this product will appear here."
@@ -395,7 +395,7 @@ export function ManagedProductsGallery() {
 
       <GalleryCase id="goals-empty" title="Goals — empty">
         <EmptyState
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
           title="No goals yet"
           description="Create goals linked to this product."
@@ -411,7 +411,7 @@ export function ManagedProductsGallery() {
 
       <GalleryCase id="roadmap-empty" title="Roadmap — empty">
         <EmptyState
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
           title="No roadmap items yet"
           description="Add items to plan what this product is working toward."
@@ -428,7 +428,7 @@ export function ManagedProductsGallery() {
       <GalleryCase id="overview-empty" title="Product overview — not found">
         <PageWrapper title="Payments Platform" backHref="/build/managed-products">
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="projects"
             title="Product not found"
             description="This product may have been deleted or moved."
@@ -490,7 +490,7 @@ export function ManagedProductsGallery() {
 
       <GalleryCase id="projects-empty" title="Linked projects — empty">
         <EmptyState
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
           title="No linked projects yet"
           description="Link projects to this product to track delivery."
@@ -508,7 +508,7 @@ export function ManagedProductsGallery() {
 
       <GalleryCase id="feedbucket-empty" title="Feedbucket — no widget">
         <EmptyState
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
           title="No feedback widget"
           description="Create a widget to embed on your product and start collecting feedback."
@@ -527,7 +527,7 @@ export function ManagedProductsGallery() {
       <GalleryCase id="submission-empty" title="Submission detail — not found">
         <PageWrapper title="Submission" backHref="/build/1/feedbucket">
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="projects"
             title="Submission not found"
             description="This feedback submission was deleted, or the link is out of date."

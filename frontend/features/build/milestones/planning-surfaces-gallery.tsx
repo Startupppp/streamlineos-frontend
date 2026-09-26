@@ -8,7 +8,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared";
-import { PM_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
+import { CONTENT_FILL_PANEL, PmPageShell, PmSection } from "@/components/pm-chrome";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -382,7 +382,7 @@ function ReleasesReadyTable() {
       columns={columns}
       getRowKey={(r) => r.id}
       mobileCard={renderMobileCard}
-      className={PM_FILL_PANEL}
+      className={CONTENT_FILL_PANEL}
       pagination={{
         mode: "cursor",
         pageSize: 25,
@@ -412,7 +412,7 @@ export function PlanningSurfacesGallery() {
 
       <MilestoneGalleryWrapper caseId="milestones-empty-true" title="Milestones — true empty">
         <EmptyState
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
           title="No milestones yet"
           description="Add milestones to track key checkpoints and target dates."
@@ -422,7 +422,7 @@ export function PlanningSurfacesGallery() {
 
       <MilestoneGalleryWrapper caseId="milestones-empty-filtered" title="Milestones — filtered empty">
         <EmptyState
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
           title="No milestones yet"
           filtersActive
@@ -461,7 +461,7 @@ export function PlanningSurfacesGallery() {
           title="No releases yet"
           description="Create your first release to track shipped features and versions."
           action={{ label: "New Release", onClick: STUB_NOOP }}
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
         />
       </ReleaseGalleryWrapper>
 
@@ -471,7 +471,7 @@ export function PlanningSurfacesGallery() {
           title="No releases yet"
           filtersActive
           onClearFilters={STUB_NOOP}
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
         />
       </ReleaseGalleryWrapper>
 

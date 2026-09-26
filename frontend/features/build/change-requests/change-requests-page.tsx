@@ -28,7 +28,7 @@ import { useCursorPager } from "@/components/ui/table-pagination";
 import {
   PmPageShell,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
@@ -335,7 +335,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
             }
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="ticket"
                 title="No change requests"
                 description="Create a change request to get started."
@@ -345,7 +345,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <DataTable<ChangeRequest>
               data={crs}
@@ -356,7 +356,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
                 onChange: setSelectedCrIds,
                 getRowLabel: (row) => `CR-${row.crNumber}: ${row.title}`,
               }}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               mobileCard={renderMobileCard}
               pagination={{
                 mode: "cursor",

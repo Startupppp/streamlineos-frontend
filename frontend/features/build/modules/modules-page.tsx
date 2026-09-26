@@ -41,7 +41,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_FILL_SECTION,
 } from "@/components/pm-chrome";
 import {
@@ -413,7 +413,7 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
               title="No modules yet"
               description="Create your first module to organize work into feature areas."
               action={canManage ? { label: "Create First Module", onClick: handleOpenCreate } : undefined}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
             />
           </PmSection>
         ) : (

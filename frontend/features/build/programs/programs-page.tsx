@@ -28,7 +28,7 @@ import type {
   UpdateProgramInput,
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import {
   BUILD_FILTER_ALL,
@@ -347,7 +347,7 @@ export function ProgramsPage() {
             }
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No programs yet"
                 description="Create a program to coordinate related projects toward one outcome."
@@ -361,7 +361,7 @@ export function ProgramsPage() {
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <DataTable
               data={rows}
@@ -369,7 +369,7 @@ export function ProgramsPage() {
               getRowKey={(row) => row.id}
               minWidth="780px"
               mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               pagination={{
                 mode: "cursor",
                 pageSize: PAGE_SIZE,

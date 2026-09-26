@@ -37,7 +37,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 
 const CATEGORY_OPTIONS = [
@@ -279,14 +279,14 @@ export function BuildTemplatesPage() {
               </>
             ) : !isOnline ? (
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
                 title="You are offline"
                 description="Showing cached data. Reconnect to see the latest templates."
               />
             ) : (
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustration={<EmptyProjectsIllustration className="h-32 w-32" />}
                 title="No templates yet"
                 description="Create a reusable project structure to bootstrap new projects quickly."

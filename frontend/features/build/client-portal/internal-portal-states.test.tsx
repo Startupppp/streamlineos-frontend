@@ -41,7 +41,7 @@ jest.mock("@/components/pm-chrome", () => ({
   ),
   PM_ROW: "pm-row-class",
   PM_PANEL: "pm-panel-class",
-  PM_FILL_PANEL: "pm-fill-panel-class",
+  CONTENT_FILL_PANEL: "pm-fill-panel-class",
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({

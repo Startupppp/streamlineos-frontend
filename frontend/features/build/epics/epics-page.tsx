@@ -32,7 +32,7 @@ import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-key
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
-import { PmPageShell, PmPanel, PmSection, PmStaggerList, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmPanel, PmSection, PmStaggerList, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -183,7 +183,7 @@ export function EpicsPage({ params }: PageProps) {
 
           <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
             {epics.length === 0 ? (
-              <EmptyState className={PM_FILL_PANEL} illustrationPreset="projects" title="No epics yet" description="Create your first epic to organize related stories and tasks." />
+              <EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No epics yet" description="Create your first epic to organize related stories and tasks." />
             ) : (
               <PmStaggerList className="space-y-2.5">
                 {epics.map((epic) => (

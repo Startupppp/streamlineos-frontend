@@ -21,7 +21,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
@@ -172,7 +172,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
       <PmPageShell>
         <PageState
           resolution={pageState}
-          className={PM_FILL_PANEL}
+          className={CONTENT_FILL_PANEL}
           onRetry={handleRetry}
           loading={
             <>
@@ -182,7 +182,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
           }
           empty={
             <EmptyState
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               illustrationPreset="calendar"
               title="No budget data"
               description="Budget details are unavailable for this project."
@@ -264,7 +264,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
 
         {(budget?.memberBreakdown?.length ?? 0) === 0 && !isLoading ? (
           <EmptyState
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               illustrationPreset="calendar"
               title="No billable time logged"
               description="Log billable hours to track costs against this project's budget."

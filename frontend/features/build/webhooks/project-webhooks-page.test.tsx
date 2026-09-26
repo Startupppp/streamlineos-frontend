@@ -77,7 +77,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmStaggerList: ({ children, ...props }: { children: React.ReactNode; [k: string]: unknown }) => (
     <div {...props}>{children}</div>
   ),
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
 }));
 
 jest.mock("@/components/shared/page-state", () => ({

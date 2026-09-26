@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PmPageShell, PmPanel, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmPanel, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -452,7 +452,7 @@ export function ProjectSettingsRetentionPage({ projectId }: ProjectSettingsReten
 
   const emptyState = (
     <EmptyState
-      className={PM_FILL_PANEL}
+      className={CONTENT_FILL_PANEL}
       illustrationPreset="projects"
       title="Retention policy not configured"
       description="No retention policy is currently active for this project. Save a policy to begin managing data retention."

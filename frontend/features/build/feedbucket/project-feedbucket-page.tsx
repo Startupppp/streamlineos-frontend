@@ -9,7 +9,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -126,7 +126,7 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
           </PmSection>
         ) : (
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustration={<EmptyTicketIllustration className="h-24 w-24" />}
             title="No feedback widget"
             description="Create a widget to embed on your product and start collecting feedback for this project."

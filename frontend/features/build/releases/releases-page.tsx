@@ -22,7 +22,7 @@ import { useCan } from "@/hooks/api/access";
 import { ReleaseFormSheet } from "./release-form-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, PM_FILL_PANEL, PM_TOOLBAR } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL, PM_TOOLBAR } from "@/components/pm-chrome";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
@@ -347,15 +347,15 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
                 filtersActive={listFilters.isFiltered}
                 onClearFilters={listFilters.clearAll}
                 action={{ label: "New Release", onClick: handleOpenCreate }}
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <>
               <DataTable
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 data={releases}
                 columns={columns}
                 getRowKey={(r) => r.id}

@@ -38,7 +38,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/components/pm-chrome";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
@@ -374,7 +374,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
               </>
             ) : (
               <EmptyState
-                  className={PM_FILL_PANEL}
+                  className={CONTENT_FILL_PANEL}
                   illustrationPreset="projects"
                   title="No milestones yet"
                   description={

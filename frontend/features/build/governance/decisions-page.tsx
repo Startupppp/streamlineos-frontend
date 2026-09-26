@@ -30,7 +30,7 @@ import { DecisionFormSheet } from "./decision-form-sheet";
 import {
   PmPageShell,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -330,7 +330,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
             }
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="documents"
                 title="No decisions recorded"
                 description="Record key project decisions to maintain a clear audit trail."
@@ -344,7 +344,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <DataTable
               data={displayed}
@@ -352,7 +352,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
               getRowKey={(row) => row.id}
               minWidth="720px"
               mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               pagination={{
                 mode: "cursor",
                 pageSize: GOVERNANCE_PAGE_SIZE,

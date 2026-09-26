@@ -26,7 +26,7 @@ import {
   PmSection,
   PmPanel,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_PANEL,
 } from "@/components/pm-chrome";
 
@@ -243,7 +243,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
             loading={<RoadmapSkeleton />}
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No roadmap items yet"
                 description="Add items to plan what this product is working toward."
@@ -251,7 +251,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <div className="flex min-h-0 flex-1 flex-col gap-2">
               <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">

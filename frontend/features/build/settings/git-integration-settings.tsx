@@ -64,7 +64,7 @@ import { cn } from "@/lib/utils";
 import {
   PmPageShell,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_PANEL,
 } from "@/components/pm-chrome";
 import { ProviderIcon, ConnectionRow } from "./git-connection-row";
@@ -283,7 +283,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                 </div>
               ) : isError ? (
                 <ErrorState
-                  className={PM_FILL_PANEL}
+                  className={CONTENT_FILL_PANEL}
                   title="Could not load connections"
                   description="There was a problem loading your Git connections."
                   onRetry={handleRetry}
@@ -291,14 +291,14 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
               ) : filteredConnections.length === 0 ? (
                 !isOnline ? (
                   <EmptyState
-                    className={PM_FILL_PANEL}
+                    className={CONTENT_FILL_PANEL}
                     illustration={<EmptyDevicesIllustration />}
                     title="You are offline"
                     description="Git connections cannot be modified while offline."
                   />
                 ) : (
                   <EmptyState
-                    className={PM_FILL_PANEL}
+                    className={CONTENT_FILL_PANEL}
                     illustration={<EmptyDevicesIllustration />}
                     title={listFilters.isFiltered ? "No matching connections" : "No repositories connected"}
                     description={listFilters.isFiltered ? undefined : "Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."}

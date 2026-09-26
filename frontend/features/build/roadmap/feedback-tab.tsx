@@ -14,7 +14,7 @@ import {
 import type { FeedbackPost } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
+import { PmStaggerList, CONTENT_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { FeedbackRow } from "./feedback-row";
@@ -114,7 +114,7 @@ export function FeedbackTab({
         loading={<FeedbackListSkeleton />}
         empty={
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="mail"
             title={isFiltered ? "No feedback matched your search" : "No feedback yet"}
             description={
@@ -126,7 +126,7 @@ export function FeedbackTab({
           />
         }
         onRetry={handleRetry}
-        className={PM_FILL_PANEL}
+        className={CONTENT_FILL_PANEL}
       >
         <PmStaggerList className="space-y-2">
           {(data?.data ?? []).map((post) => (

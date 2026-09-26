@@ -88,7 +88,7 @@ jest.mock("@/components/ui/stat-card", () => ({
 jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "pm-fill-panel",
+  CONTENT_FILL_PANEL: "pm-fill-panel",
   PM_TOOLBAR: "",
 }));
 

@@ -6,7 +6,7 @@ import { DataTableSkeleton, DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { PM_FILL_PANEL } from "@/components/pm-chrome";
+import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { NamedUser } from "@/lib/person-display";
@@ -365,7 +365,7 @@ function RisksTable() {
       columns={columns}
       getRowKey={getRowKey}
       minWidth="720px"
-      className={PM_FILL_PANEL}
+      className={CONTENT_FILL_PANEL}
       mobileCard={renderMobileCard}
       pagination={STATIC_PAGINATION}
     />
@@ -400,7 +400,7 @@ function QaTestCasesTable() {
       columns={columns}
       getRowKey={getRowKey}
       minWidth="600px"
-      className={PM_FILL_PANEL}
+      className={CONTENT_FILL_PANEL}
       mobileCard={renderMobileCard}
       pagination={STATIC_PAGINATION}
     />
@@ -438,7 +438,7 @@ function IncidentsTable() {
       columns={columns}
       getRowKey={getRowKey}
       minWidth="760px"
-      className={PM_FILL_PANEL}
+      className={CONTENT_FILL_PANEL}
       mobileCard={renderMobileCard}
       pagination={STATIC_PAGINATION}
     />
@@ -476,7 +476,7 @@ function DecisionsTable() {
       columns={columns}
       getRowKey={getRowKey}
       minWidth="720px"
-      className={PM_FILL_PANEL}
+      className={CONTENT_FILL_PANEL}
       mobileCard={renderMobileCard}
       pagination={STATIC_PAGINATION}
     />
@@ -519,7 +519,7 @@ function ApprovalsTable() {
       columns={columns}
       getRowKey={getRowKey}
       minWidth="720px"
-      className={PM_FILL_PANEL}
+      className={CONTENT_FILL_PANEL}
       mobileCard={renderMobileCard}
       pagination={STATIC_PAGINATION}
     />
@@ -586,7 +586,7 @@ function RisksWithSelection() {
         columns={columns}
         getRowKey={getRowKey}
         minWidth="720px"
-        className={PM_FILL_PANEL}
+        className={CONTENT_FILL_PANEL}
         mobileCard={renderMobileCard}
         pagination={STATIC_PAGINATION}
         selection={{
@@ -636,7 +636,7 @@ function BudgetOverview() {
             columns={MEMBER_COST_COLUMNS}
             getRowKey={getRowKey}
             minWidth="400px"
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             mobileCard={renderMobileCard}
             pagination={STATIC_PAGINATION}
           />
@@ -747,7 +747,7 @@ function QaRunExecutionCase() {
             columns={columns}
             getRowKey={getRowKey}
             minWidth="640px"
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             mobileCard={renderMobileCard}
             pagination={STATIC_PAGINATION}
           />
@@ -923,7 +923,7 @@ export function GovernanceQaGallery() {
         filterCount={2}
         body={
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="documents"
             title="No risks recorded"
             description="Track project risks to stay ahead of blockers."

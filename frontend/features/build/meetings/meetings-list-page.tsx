@@ -27,7 +27,7 @@ import type { Meeting, CreateMeetingInput } from "@/types/projects";
 import {
   PmPageShell,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { getUserDisplayName } from "@/lib/person-display";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -431,14 +431,14 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
                     ? { label: "Cycle Planning", onClick: handleSchedulePlanning }
                     : undefined
                 }
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <DataTable
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               data={displayed}
               columns={columns}
               getRowKey={(row) => row.id}

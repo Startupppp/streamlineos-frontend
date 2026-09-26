@@ -41,7 +41,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
   PM_PANEL,
 } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
@@ -345,7 +345,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
 
           {filteredResults.length === 0 ? (
             <EmptyState
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               illustrationPreset="ticket"
               title={listFilters.isFiltered ? "No results match the current filters" : "No test results"}
               description={listFilters.isFiltered ? "Try clearing the filters." : "No test cases were added to this run."}

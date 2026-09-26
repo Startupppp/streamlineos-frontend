@@ -101,7 +101,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmStaggerList: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
 }));
 
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({

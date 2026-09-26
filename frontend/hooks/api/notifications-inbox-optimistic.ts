@@ -52,13 +52,25 @@ export async function beginInboxPatch(
   };
 }
 
+function isSnoozed(snoozedUntil: Notification["snoozedUntil"]): boolean {
+  if (snoozedUntil === null || snoozedUntil === undefined) return false;
+  const until = new Date(snoozedUntil).getTime();
+  return !Number.isNaN(until) && until > Date.now();
+}
+
+export function countsTowardUnreadBadge(row: Notification): boolean {
+  if (row.isRead) return false;
+  if (row.archivedAt !== null && row.archivedAt !== undefined) return false;
+  return !isSnoozed(row.snoozedUntil);
+}
+
 function collectUnread(
   rows: Notification[],
   ids: ReadonlySet<number>,
   into: Set<number>,
 ): void {
   for (const row of rows)
-    if (ids.has(row.id) && !row.isRead) into.add(row.id);
+    if (ids.has(row.id) && countsTowardUnreadBadge(row)) into.add(row.id);
 }
 
 /**
@@ -89,7 +101,7 @@ export function isUnreadNow(
   id: number,
 ): boolean {
   const found = findInLists(queryClient, listKey, (row) => row.id === id);
-  return found !== undefined && !found.isRead;
+  return found !== undefined && countsTowardUnreadBadge(found);
 }
 
 export function applyUnreadDelta(

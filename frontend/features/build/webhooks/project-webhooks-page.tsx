@@ -53,7 +53,7 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { WebhookCard } from "@/features/build/settings/webhook-card";
@@ -321,21 +321,21 @@ export function ProjectWebhooksPage({
             empty={
               !isOnline ? (
                 <EmptyState
-                  className={PM_FILL_PANEL}
+                  className={CONTENT_FILL_PANEL}
                   illustrationPreset="automations"
                   title="You are offline"
                   description="Webhooks cannot be configured while offline."
                 />
               ) : hasActiveFilters ? (
                 <EmptyState
-                  className={PM_FILL_PANEL}
+                  className={CONTENT_FILL_PANEL}
                   illustrationPreset="automations"
                   title="No webhooks match"
                   description="Try adjusting the filters above."
                 />
               ) : (
                 <EmptyState
-                  className={PM_FILL_PANEL}
+                  className={CONTENT_FILL_PANEL}
                   illustrationPreset="automations"
                   title="No webhooks configured"
                   description="Get notified in real-time when tickets, sprints, or members change."

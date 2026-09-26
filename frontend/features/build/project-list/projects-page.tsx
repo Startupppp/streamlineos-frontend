@@ -26,7 +26,7 @@ import {
   PmPageShell,
   PmStaggerList,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { fadeUp, fadeUpReduced } from "@/lib/motion-presets";
 import { motion, useReducedMotion } from "framer-motion";
@@ -316,7 +316,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                   viewMode === "grid" ? <GridSkeleton /> : <ListSkeleton />
                 }
                 onRetry={handleRetry}
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
               >
                 {null}
               </PageState>
@@ -324,7 +324,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
               <ProjectsEmptyState onCreate={handleOpenCreate} />
             ) : visibleProjects.length === 0 ? (
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="search"
                 title={
                   filtersActive

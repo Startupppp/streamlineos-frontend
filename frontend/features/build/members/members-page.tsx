@@ -39,7 +39,7 @@ import { useBuildListFilters } from "@/features/build/shared/use-build-list-filt
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 
 const MEMBER_TABLE_HEADERS = ["Name", "Role", "Added", "Actions"] as const;
 
@@ -230,14 +230,14 @@ export function MembersPage() {
               empty={
                 !isOnline ? (
                   <EmptyState
-                    className={PM_FILL_PANEL}
+                    className={CONTENT_FILL_PANEL}
                     illustrationPreset="team"
                     title="You are offline"
                     description="Reconnect to see the latest member list."
                   />
                 ) : (
                 <EmptyState
-                  className={PM_FILL_PANEL}
+                  className={CONTENT_FILL_PANEL}
                   illustrationPreset="team"
                   title="No members yet"
                   description={
@@ -258,10 +258,10 @@ export function MembersPage() {
                 )
               }
               onRetry={handleRetry}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
             >
               <DataTable
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 data={members}
                 columns={columns}
                 getRowKey={(member) => member.id}

@@ -13,7 +13,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
@@ -162,7 +162,7 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
           }
           empty={
             <EmptyState
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               illustrationPreset="projects"
               title="No statuses configured"
               description="Add custom statuses in project settings before setting up workflow transitions."

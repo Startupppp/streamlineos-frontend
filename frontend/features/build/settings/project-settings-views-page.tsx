@@ -16,7 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
-import { PmPageShell, PmPanel, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmPanel, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { ViewCard, type ViewItem } from "@/features/build/views/saved-views/view-card";
 import { CreateViewSheet } from "@/features/build/views/saved-views/create-view-sheet";
 import { RenameViewDialog } from "@/features/build/views/saved-views/rename-view-dialog";
@@ -151,7 +151,7 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
 
   const emptyState = (
     <EmptyState
-      className={PM_FILL_PANEL}
+      className={CONTENT_FILL_PANEL}
       illustrationPreset="projects"
       title="No saved views yet"
       description="Save a filtered issue layout so the team can return to the same working context."

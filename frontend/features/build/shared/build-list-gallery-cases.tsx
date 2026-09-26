@@ -5,7 +5,7 @@ import { Download, Plus, Upload } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { Button } from "@/components/ui/button";
 import { BuildHeaderActions } from "./build-header-actions";
 import type { BuildHeaderAction } from "./build-header-actions-plan";
@@ -253,7 +253,7 @@ export function ReadyTable() {
       getRowKey={getRowKey}
       minWidth="780px"
       mobileCard={renderMobileCard}
-      className={PM_FILL_PANEL}
+      className={CONTENT_FILL_PANEL}
       pagination={{
         mode: "cursor",
         pageSize: 20,

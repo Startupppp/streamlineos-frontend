@@ -37,7 +37,7 @@ import {
   PmPageShell,
   PmSection,
   PmPanel,
-  PM_FILL_PANEL,
+  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -479,7 +479,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
             }
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="alert"
                 title="No risks logged"
                 description="Log risks to track probability, impact, and mitigation plans."
@@ -493,7 +493,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <DataTable
               data={displayed}
@@ -501,7 +501,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
               getRowKey={(row) => row.id}
               minWidth="780px"
               mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               selection={{
                 selected: selectedIds,
                 onChange: setSelectedIds,

@@ -128,7 +128,7 @@ jest.mock("@/components/pm-chrome", () => ({
   PmStaggerList: ({ children, role, "aria-label": ariaLabel }: { children: React.ReactNode; role?: string; "aria-label"?: string }) => (
     <div role={role} aria-label={ariaLabel}>{children}</div>
   ),
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
   PM_FILL_SECTION: "",
 }));
 

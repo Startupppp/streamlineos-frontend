@@ -29,7 +29,7 @@ jest.mock("@/components/illustrations", () => ({ EmptyProjectsIllustration: () =
 jest.mock("@/components/pm-chrome", () => ({
   PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmStaggerList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PM_FILL_PANEL: "",
+  CONTENT_FILL_PANEL: "",
   PM_PANEL: "",
 }));
 jest.mock("./roadmap-item-card", () => ({ RoadmapItemCard: () => null }));

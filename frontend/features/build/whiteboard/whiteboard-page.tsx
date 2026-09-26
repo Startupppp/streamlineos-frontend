@@ -12,8 +12,24 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Globe, Lock, PanelLeftClose, PanelLeftOpen, Plus, StickyNote, Trash2 } from "lucide-react";
-import { useCreateWhiteboard, useDeleteWhiteboard, useUpdateWhiteboard, useWhiteboard, useWhiteboards, type ExcalidrawSceneData, type WhiteboardSummary } from "@/hooks/api/build";
+import {
+  Globe,
+  Lock,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  StickyNote,
+  Trash2,
+} from "lucide-react";
+import {
+  useCreateWhiteboard,
+  useDeleteWhiteboard,
+  useUpdateWhiteboard,
+  useWhiteboard,
+  useWhiteboards,
+  type ExcalidrawSceneData,
+  type WhiteboardSummary,
+} from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -23,7 +39,12 @@ import { useWhiteboardAutosave } from "./use-whiteboard-autosave";
 import { WhiteboardToolbar } from "./whiteboard-toolbar";
 import { ShareDialog } from "./share-dialog";
 import { computeStoredVersion } from "./scene-utils";
-import { PmPageShell, PmPanel, PM_FILL_PANEL, PM_ROW } from "@/components/pm-chrome";
+import {
+  PmPageShell,
+  PmPanel,
+  CONTENT_FILL_PANEL,
+  PM_ROW,
+} from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -178,7 +199,11 @@ export function WhiteboardPage({
     () => whiteboardPages?.pages.flatMap((p) => p.data) ?? [],
     [whiteboardPages],
   );
-  const handleLoadMoreBoards = useCallback(() => { void fetchNextPage(); }, [fetchNextPage]);
+
+  const handleLoadMoreBoards = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
+
   const pageState = usePageState({
     permission: "build:view",
     isLoading,
@@ -368,7 +393,7 @@ export function WhiteboardPage({
             resolution={pageState}
             loading={null}
             onRetry={handleRefetch}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             {null}
           </PageState>
@@ -382,7 +407,7 @@ export function WhiteboardPage({
                 ? { label: "New Board", onClick: handleOpenCreate }
                 : undefined
             }
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <div className="flex min-h-0 flex-1 gap-3">

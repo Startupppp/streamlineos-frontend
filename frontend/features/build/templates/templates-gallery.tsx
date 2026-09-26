@@ -5,7 +5,7 @@ import type { ProjectTemplate } from "@/hooks/api/build";
 import { TemplateCard } from "./template-card";
 import { TemplatesGridSkeleton } from "./templates-grid-skeleton";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 
 const STUB_TEMPLATES: ProjectTemplate[] = [
   {

@@ -26,7 +26,7 @@ import type {
   UpdatePortfolioInput,
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import {
   BUILD_FILTER_ALL,
@@ -260,7 +260,7 @@ export function PortfoliosPage() {
             }
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No portfolios yet"
                 description="Create a portfolio to group and govern your projects."
@@ -274,7 +274,7 @@ export function PortfoliosPage() {
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <DataTable
               data={displayed}
@@ -282,7 +282,7 @@ export function PortfoliosPage() {
               getRowKey={(row) => row.id}
               minWidth="780px"
               mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               pagination={{
                 mode: "cursor",
                 pageSize: PAGE_SIZE,

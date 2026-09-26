@@ -34,7 +34,7 @@ import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-key
 import { ENTITY_OPTIONS, STATUS_OPTIONS } from "./approvals-constants";
 import type { ApprovalInboxItem, DecideApprovalInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import {
   INBOX_TABLE_HEADERS,
   type DecideTarget,
@@ -370,7 +370,7 @@ export function ApprovalsInboxPage() {
             }
             empty={
               <EmptyState
-                className={PM_FILL_PANEL}
+                className={CONTENT_FILL_PANEL}
                 illustrationPreset="approval"
                 title="No approvals waiting"
                 description="You have no pending approvals across your projects."
@@ -379,7 +379,7 @@ export function ApprovalsInboxPage() {
               />
             }
             onRetry={handleRetry}
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
           >
             <DataTable
               data={filteredItems}
@@ -400,7 +400,7 @@ export function ApprovalsInboxPage() {
               isLoading={isFetchingNextPage}
               minWidth="680px"
               mobileCard={renderMobileCard}
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
             />
           </PageState>
         </PmSection>

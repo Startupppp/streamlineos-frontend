@@ -15,7 +15,7 @@ function toRoadmapStatus(s: string): RoadmapStatus | undefined {
 }
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
+import { PmPanel, PmStaggerList, CONTENT_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { ROADMAP_COLUMNS } from "./roadmap-constants";
@@ -167,7 +167,7 @@ export function RoadmapTab({
         loading={<RoadmapBoardSkeleton />}
         empty={
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="projects"
             title="No roadmap items yet"
             description="Plan what's coming and share it publicly with your users."
@@ -175,7 +175,7 @@ export function RoadmapTab({
           />
         }
         onRetry={handleRetry}
-        className={PM_FILL_PANEL}
+        className={CONTENT_FILL_PANEL}
       >
         <div className="flex min-h-0 flex-1 flex-col gap-2">
           <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">

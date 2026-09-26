@@ -16,7 +16,7 @@ import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Switch } from "@/components/ui/switch";
-import { PmPageShell, PmPanel, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
+import { PmPageShell, PmPanel, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 
 interface ProjectSettingsPortalPageProps {
   projectId: number;
@@ -143,7 +143,7 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
           }
           empty={
             <EmptyState
-              className={PM_FILL_PANEL}
+              className={CONTENT_FILL_PANEL}
               illustrationPreset="projects"
               title="No portal content yet"
               description="Add tickets or milestones to this project to control client visibility."

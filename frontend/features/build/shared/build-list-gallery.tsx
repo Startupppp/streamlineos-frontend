@@ -3,7 +3,7 @@
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { PM_FILL_PANEL } from "@/components/pm-chrome";
+import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { GALLERY_HEADERS, ONE_ACTION, TWO_ACTIONS, FOUR_ACTIONS, GalleryList, ReadyTable } from "./build-list-gallery-cases";
 
 export function BuildListGallery() {
@@ -60,7 +60,7 @@ export function BuildListGallery() {
         filterCount={3}
         body={
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="projects"
             title="No projects yet"
             description="Create a project to start planning work."
@@ -75,7 +75,7 @@ export function BuildListGallery() {
         filterCount={3}
         body={
           <EmptyState
-            className={PM_FILL_PANEL}
+            className={CONTENT_FILL_PANEL}
             illustrationPreset="projects"
             title="No projects yet"
             action={{ label: "New project" }}
