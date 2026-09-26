@@ -175,12 +175,20 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     (index: number) => { setEditDecision(allDecisions[index]); setSheetOpen(true); },
     [allDecisions],
   );
+  const handleEditRow = useCallback((d: Decision) => setEditDecision(d), []);
+  const handleDeleteRow = useCallback((d: Decision) => setDeleteTarget(d), []);
+  const handleEditDecisionByIndex = useCallback(
+    (index: number) => { if (allDecisions[index]) handleEditRow(allDecisions[index]); },
+    [allDecisions, handleEditRow],
+  );
   const handleClearKeyboardSelection = useCallback(() => {}, []);
   useBuildListKeyboard({
     itemCount: allDecisions.length,
     onOpen: handleOpenFocused,
+    onEdit: canManage ? handleEditDecisionByIndex : undefined,
+    onCreate: canManage ? handleNewDecision : undefined,
     onClearSelection: handleClearKeyboardSelection,
-    enabled: !sheetOpen && !deleteTarget,
+    enabled: !sheetOpen && !editDecision && !deleteTarget,
   });
 
   const handleRetry = useCallback(() => {
@@ -201,9 +209,6 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       setEditDecision(null);
     }
   }, []);
-
-  const handleEditRow = useCallback((d: Decision) => setEditDecision(d), []);
-  const handleDeleteRow = useCallback((d: Decision) => setDeleteTarget(d), []);
 
   const columns = useMemo(
     () =>

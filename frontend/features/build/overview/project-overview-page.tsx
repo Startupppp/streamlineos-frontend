@@ -76,7 +76,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
   const analytics = analyticsQuery.data;
   const cycles = cyclesQuery.data ?? [];
   const columnCounts = columnCountsQuery.data ?? {};
-  const milestones = milestonesQuery.data ?? [];
+  const milestones = milestonesQuery.data?.data ?? [];
 
   const activeCycle = cycles.find((c) => c.status === "active");
   const nextMilestone = milestones

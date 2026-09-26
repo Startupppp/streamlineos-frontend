@@ -19,6 +19,7 @@ import type {
   Risk,
   RiskProbability,
   RiskImpact,
+  RiskStatus,
   CreateRiskInput,
   UpdateRiskInput,
 } from "@/types/projects";
@@ -51,6 +52,7 @@ import {
   buildRiskColumns,
   RiskMobileCard,
 } from "./risks-table-columns";
+import { RiskBulkActionBar } from "./risk-bulk-action-bar";
 
 const STATUS_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All statuses" },
@@ -238,17 +240,49 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const handleEditRow = useCallback((r: Risk) => setEditRisk(r), []);
   const handleDeleteRow = useCallback((r: Risk) => setDeleteTarget(r), []);
 
+  const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
+
   const handleOpenFocused = useCallback(
     (index: number) => { handleEditRow(filteredRisks[index]); },
+    [filteredRisks, handleEditRow],
+  );
+  const handleEditRiskByIndex = useCallback(
+    (index: number) => { if (filteredRisks[index]) handleEditRow(filteredRisks[index]); },
     [filteredRisks, handleEditRow],
   );
   const handleClearKeyboardSelection = useCallback(() => {}, []);
   useBuildListKeyboard({
     itemCount: filteredRisks.length,
     onOpen: handleOpenFocused,
+    onEdit: canManage ? handleEditRiskByIndex : undefined,
+    onCreate: canManage ? handleNewRisk : undefined,
     onClearSelection: handleClearKeyboardSelection,
-    enabled: !sheetOpen && !deleteTarget,
+    enabled: !sheetOpen && !editRisk && !deleteTarget,
   });
+
+  const handleBulkStatus = useCallback(
+    (status: RiskStatus) => {
+      selectedIds.forEach((id) => {
+        const risk = filteredRisks.find((r) => r.id === Number(id));
+        if (risk) updateRisk.mutate({ riskId: risk.id, status });
+      });
+      setSelectedIds(new Set());
+    },
+    [selectedIds, filteredRisks, updateRisk],
+  );
+
+  const handleBulkOwner = useCallback(
+    (ownerId: string) => {
+      selectedIds.forEach((id) => {
+        const risk = filteredRisks.find((r) => r.id === Number(id));
+        if (risk) updateRisk.mutate({ riskId: risk.id, ownerId });
+      });
+      setSelectedIds(new Set());
+    },
+    [selectedIds, filteredRisks, updateRisk],
+  );
+
+  const handleBulkClear = useCallback(() => setSelectedIds(new Set()), []);
 
   const columns = useMemo(
     () =>
@@ -363,6 +397,15 @@ export function RisksPage({ projectId }: RisksPageProps) {
         ) : null}
 
         <PmSection index={2} className="flex min-h-0 flex-1 flex-col">
+          {selectedIds.size > 0 && (
+            <RiskBulkActionBar
+              selectedCount={selectedIds.size}
+              onBulkStatus={handleBulkStatus}
+              onBulkOwner={handleBulkOwner}
+              members={members}
+              onClear={handleBulkClear}
+            />
+          )}
           <PageState
             resolution={pageState}
             loading={
@@ -397,6 +440,11 @@ export function RisksPage({ projectId }: RisksPageProps) {
               minWidth="780px"
               mobileCard={renderMobileCard}
               className={PM_FILL_PANEL}
+              selection={{
+                selected: selectedIds,
+                onChange: setSelectedIds,
+                getRowLabel: (row) => row.title,
+              }}
               pagination={{
                 mode: "cursor",
                 pageSize: GOVERNANCE_PAGE_SIZE,

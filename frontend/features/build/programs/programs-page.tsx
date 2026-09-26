@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import {
   PROGRAM_TABLE_HEADERS,
@@ -220,6 +221,31 @@ export function ProgramsPage() {
     openCreate();
   }, [openCreate]);
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const handleOpenByIndex = useCallback(
+    (index: number) => {
+      const row = rows[index];
+      if (row) setEditTarget(row);
+    },
+    [rows],
+  );
+  const handleEditByIndex = useCallback(
+    (index: number) => {
+      const row = rows[index];
+      if (row) setEditTarget(row);
+    },
+    [rows],
+  );
+  const handleClearSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: rows.length,
+    onOpen: handleOpenByIndex,
+    onEdit: handleEditByIndex,
+    onCreate: handleOpenCreate,
+    onClearSelection: handleClearSelection,
+    searchInputRef,
+  });
+
   const handleSheetOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
@@ -287,6 +313,7 @@ export function ProgramsPage() {
           ownerOptions={ownerOptions}
           portfolioOptions={portfolioOptions}
           projectOptions={projectOptions}
+          searchInputRef={searchInputRef}
         />
       }
       actions={

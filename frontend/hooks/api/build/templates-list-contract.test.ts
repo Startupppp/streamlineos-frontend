@@ -84,24 +84,56 @@ describe("templateRowContract — shape matches the backend template projection"
   });
 });
 
-describe("templateListContract — array of templateRowContract", () => {
-  it("parses an empty list", () => {
-    const result = templateListContract.parse([]);
-    expect(result).toHaveLength(0);
+describe("templateListContract — idCursorPage envelope wrapping templateRowContract", () => {
+  it("parses an empty page", () => {
+    const result = templateListContract.parse({
+      data: [],
+      hasMore: false,
+      nextCursor: null,
+    });
+    expect(result.data).toHaveLength(0);
+    expect(result.hasMore).toBe(false);
+    expect(result.nextCursor).toBeNull();
   });
 
-  it("parses a list of two templates", () => {
-    const result = templateListContract.parse([
-      KNOWN_GOOD_TEMPLATE,
-      { ...KNOWN_GOOD_TEMPLATE, id: 2, name: "Bug triage template" },
-    ]);
-    expect(result).toHaveLength(2);
-    expect(result[1].name).toBe("Bug triage template");
+  it("parses a page with two templates and a nextCursor", () => {
+    const result = templateListContract.parse({
+      data: [
+        KNOWN_GOOD_TEMPLATE,
+        { ...KNOWN_GOOD_TEMPLATE, id: 2, name: "Bug triage template" },
+      ],
+      hasMore: true,
+      nextCursor: 2,
+    });
+    expect(result.data).toHaveLength(2);
+    expect(result.data[1].name).toBe("Bug triage template");
+    expect(result.hasMore).toBe(true);
+    expect(result.nextCursor).toBe(2);
   });
 
-  it("rejects a list containing a template with an invalid shape", () => {
+  it("parses a last page with null nextCursor", () => {
+    const result = templateListContract.parse({
+      data: [KNOWN_GOOD_TEMPLATE],
+      hasMore: false,
+      nextCursor: null,
+    });
+    expect(result.hasMore).toBe(false);
+    expect(result.nextCursor).toBeNull();
+  });
+
+  it("rejects a payload missing the hasMore field", () => {
     expect(() =>
-      templateListContract.parse([{ id: "not-a-number", name: "x" }]),
+      templateListContract.parse({ data: [], nextCursor: null }),
+    ).toThrow(ZodError);
+  });
+
+  it("rejects a page containing a template with an invalid shape", () => {
+    expect(() =>
+      templateListContract.parse({
+        data: [{ id: "not-a-number", name: "x" }],
+        hasMore: false,
+        nextCursor: null,
+      }),
     ).toThrow(ZodError);
   });
 });

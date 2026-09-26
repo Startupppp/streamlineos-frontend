@@ -227,6 +227,59 @@ describe("ManagedProductOverviewPage", () => {
     expect(screen.queryByText("10+")).not.toBeInTheDocument();
   });
 
+  it("renders feedback stat card from insights feedbackByStatus so the core feedback field is visible on the overview (BSN-MP-01)", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useManagedProduct, useManagedProductInsights } = jest.requireMock(
+      "@/hooks/api/build/managed-products",
+    );
+    (useManagedProduct as jest.Mock).mockReturnValue({
+      data: { id: 42, name: "Payments Platform", key: "PAY", description: null, vision: null, status: "active", updatedAt: "2024-11-01T00:00:00Z" },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+    (useManagedProductInsights as jest.Mock).mockReturnValue({
+      data: {
+        linkedProjectCount: 3,
+        feedbackByStatus: { open: 4, planned: 2, in_progress: 1, completed: 5, declined: 1 },
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    expect(screen.getByText("Feedback")).toBeInTheDocument();
+    expect(screen.getByText("13")).toBeInTheDocument();
+  });
+
+  it("renders status and updated date in the subtitle so core fields are visible without opening a sub-page (BSN-MP-02)", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
+    (useManagedProduct as jest.Mock).mockReturnValue({
+      data: {
+        id: 42,
+        name: "Payments Platform",
+        key: "PAY",
+        description: null,
+        vision: null,
+        status: "active",
+        updatedAt: "2024-11-01T10:30:00Z",
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+
+    expect(screen.getByText(/active/)).toBeInTheDocument();
+    expect(screen.getByText(/updated 2024-11-01/)).toBeInTheDocument();
+  });
+
   it("renders the error state when the resolution reports an error", () => {
     usePageState.mockReturnValue({ kind: "error", error: new Error("Load failed") });
 

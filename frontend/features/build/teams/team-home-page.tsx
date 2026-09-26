@@ -1,18 +1,21 @@
 ﻿"use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useProjectTeam,
+  useTeamMembers,
   useUpdateProjectTeam,
   useDeleteProjectTeam,
   useAddProjectTeamMember,
   useRemoveProjectTeamMember,
   useUpdateProjectTeamMemberRole,
 } from "@/hooks/api/build/teams";
+import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -169,11 +172,14 @@ interface Props {
 export function TeamHomePage({ teamId }: Props) {
   const canManage = useCan("build:teams:manage");
   const router = useRouter();
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [addMemberId, setAddMemberId] = useState<string | undefined>(undefined);
   const [addMemberRole, setAddMemberRole] = useState<"member" | "lead">("member");
+
+  const memberPager = useCursorPager();
 
   function handleAddMemberRoleChange(value: string): void {
     const role = TEAM_MEMBER_ROLES.find((candidate) => candidate === value);
@@ -181,11 +187,27 @@ export function TeamHomePage({ teamId }: Props) {
   }
 
   const { data, isLoading, isError, error, refetch } = useProjectTeam(teamId);
+  const membersResult = useTeamMembers(teamId, memberPager.cursor);
+  const pageMembers = useMemo(() => membersResult.data?.data ?? [], [membersResult.data]);
   const updateTeam = useUpdateProjectTeam();
   const deleteTeam = useDeleteProjectTeam();
   const addMember = useAddProjectTeamMember(teamId);
   const removeMember = useRemoveProjectTeamMember(teamId);
   const updateMemberRole = useUpdateProjectTeamMemberRole(teamId);
+
+  const handleMembersNext = useCallback(() => {
+    memberPager.goNext(membersResult.data?.pagination.nextCursor);
+  }, [memberPager, membersResult.data?.pagination.nextCursor]);
+
+  const handleKeyboardOpen = useCallback(() => undefined, []);
+
+  useBuildListKeyboard({
+    itemCount: pageMembers.length,
+    onOpen: handleKeyboardOpen,
+    onClearSelection: memberPager.reset,
+    searchInputRef: searchRef,
+    enabled: !isLoading,
+  });
 
   function handleEdit(input: UpdateTeamInput & { teamId: number }) {
     updateTeam.mutate(input, {
@@ -336,7 +358,7 @@ export function TeamHomePage({ teamId }: Props) {
               </Badge>
             )}
             <span className="text-sm text-muted-foreground">
-              {data.members.length} member{data.members.length !== 1 ? "s" : ""}
+              {pageMembers.length}{membersResult.data?.pagination.hasMore ? "+" : ""} member{pageMembers.length !== 1 ? "s" : ""}
             </span>
           </PmPanel>
         </PmSection>
@@ -344,7 +366,7 @@ export function TeamHomePage({ teamId }: Props) {
         <PmSection index={1} className="space-y-3">
           <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
             <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
-              Members{data.members.length > 0 ? ` (${data.members.length})` : ""}
+              Members{pageMembers.length > 0 ? ` (${pageMembers.length}${membersResult.data?.pagination.hasMore ? "+" : ""})` : ""}
             </p>
             {canManage ? (
               <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -373,7 +395,7 @@ export function TeamHomePage({ teamId }: Props) {
             ) : null}
           </div>
 
-          {data.members.length === 0 ? (
+          {pageMembers.length === 0 && !membersResult.isLoading ? (
             <PmPanel className="flex items-center justify-center p-4">
               <EmptyState
                 illustrationPreset="projects"
@@ -384,7 +406,7 @@ export function TeamHomePage({ teamId }: Props) {
             </PmPanel>
           ) : (
             <PmPanel>
-              {data.members.map((member) => {
+              {pageMembers.map((member) => {
                 const displayName = getUserDisplayName({
                   firstName: member.firstName,
                   lastName: member.lastName,
@@ -402,17 +424,10 @@ export function TeamHomePage({ teamId }: Props) {
                       <AvatarFallback className="text-micro">{initials}</AvatarFallback>
                     </Avatar>
                     <div className="flex min-w-0 flex-1 flex-col">
-                      <span
-                        className={cn(
-                          TEXT_ONE_LINE,
-                          "text-sm font-medium text-foreground",
-                        )}
-                      >
+                      <span className={cn(TEXT_ONE_LINE, "text-sm font-medium text-foreground")}>
                         {displayName}
                       </span>
-                      <span className="text-dense text-muted-foreground">
-                        {member.email}
-                      </span>
+                      <span className="text-dense text-muted-foreground">{member.email}</span>
                     </div>
                     {canManage ? (
                       <MemberRoleSelect
@@ -421,10 +436,7 @@ export function TeamHomePage({ teamId }: Props) {
                         onRoleChange={handleRoleChange}
                       />
                     ) : (
-                      <Badge
-                        variant="outline"
-                        className="shrink-0 px-1.5 py-0.5 text-micro capitalize"
-                      >
+                      <Badge variant="outline" className="shrink-0 px-1.5 py-0.5 text-micro capitalize">
                         {member.role}
                       </Badge>
                     )}
@@ -438,6 +450,20 @@ export function TeamHomePage({ teamId }: Props) {
                   </div>
                 );
               })}
+              {(memberPager.hasPrevious || membersResult.data?.pagination.hasMore) ? (
+                <div className="flex items-center justify-end gap-2 border-t px-3 py-2">
+                  {memberPager.hasPrevious ? (
+                    <Button type="button" variant="outline" size="sm" onClick={memberPager.goPrevious}>
+                      Previous
+                    </Button>
+                  ) : null}
+                  {membersResult.data?.pagination.hasMore ? (
+                    <Button type="button" variant="outline" size="sm" onClick={handleMembersNext}>
+                      Next
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
             </PmPanel>
           )}
         </PmSection>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { Plus } from "lucide-react";
 import { Tag, CheckCircle2, Archive, Clock } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import {
   useReleases,
   useDeleteRelease,
@@ -50,13 +51,27 @@ interface ReleasesPageProps {
 }
 
 export function ReleasesPage({ projectId }: ReleasesPageProps) {
+  const listFilters = useBuildListFilters({ filters: RELEASE_FILTER_DEFINITIONS });
+  const pager = useCursorPager(listFilters.resetKey);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const statusFilterValue = listFilters.value("status");
+  const serverStatus =
+    statusFilterValue !== BUILD_FILTER_ALL
+      ? (statusFilterValue as "draft" | "released" | "archived")
+      : undefined;
+
   const {
-    data: releases,
+    data,
     isLoading,
     isError,
     error,
     refetch,
-  } = useReleases(projectId);
+  } = useReleases(projectId, {
+    cursor: pager.cursor,
+    status: serverStatus,
+    q: listFilters.debouncedSearch || undefined,
+  });
 
   const pageState = usePageState({
     permission: "build:view",
@@ -68,34 +83,19 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   const canManage = useCan("build:manage");
   const deleteRelease = useDeleteRelease(projectId);
 
-  const listFilters = useBuildListFilters({ filters: RELEASE_FILTER_DEFINITIONS });
-
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Release | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Release | null>(null);
 
-  const search = listFilters.debouncedSearch.trim().toLowerCase();
-  const statusFilterValue = listFilters.value("status");
+  const releases = data?.data ?? [];
+  const pagination = data?.pagination;
 
-  const displayed = useMemo(() => {
-    const list = releases ?? [];
-    let result = list;
-    if (statusFilterValue !== BUILD_FILTER_ALL) {
-      result = result.filter((r) => r.status === statusFilterValue);
-    }
-    if (search) result = result.filter((r) => r.name.toLowerCase().includes(search));
-    return result;
-  }, [releases, search, statusFilterValue]);
-
-  const stats = useMemo(() => {
-    const list = releases ?? [];
-    return {
-      total: list.length,
-      released: list.filter((r) => r.status === "released").length,
-      draft: list.filter((r) => r.status === "draft").length,
-      archived: list.filter((r) => r.status === "archived").length,
-    };
-  }, [releases]);
+  const stats = useMemo(() => ({
+    total: releases.length,
+    released: releases.filter((r) => r.status === "released").length,
+    draft: releases.filter((r) => r.status === "draft").length,
+    archived: releases.filter((r) => r.status === "archived").length,
+  }), [releases]);
 
   const handleOpenCreate = useCallback(() => {
     setEditTarget(null);
@@ -141,15 +141,25 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   const handleClearSelection = useCallback(() => {}, []);
   const handleOpenByIndex = useCallback(
     (index: number) => {
-      const row = displayed[index];
+      const row = releases[index];
       if (row) handleOpenEdit(row);
     },
-    [displayed, handleOpenEdit],
+    [releases, handleOpenEdit],
+  );
+  const handleEditByIndex = useCallback(
+    (index: number) => {
+      const row = releases[index];
+      if (row) handleOpenEdit(row);
+    },
+    [releases, handleOpenEdit],
   );
   useBuildListKeyboard({
-    itemCount: displayed.length,
+    itemCount: releases.length,
     onOpen: handleOpenByIndex,
+    onEdit: handleEditByIndex,
+    onCreate: handleOpenCreate,
     onClearSelection: handleClearSelection,
+    searchInputRef,
   });
 
   const columns = useMemo(
@@ -185,6 +195,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             onValueChange: listFilters.setSearch,
             placeholder: "Search releases…",
             label: "Search releases",
+            inputRef: searchInputRef,
           }}
           filters={[
             {
@@ -225,7 +236,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       <PmPageShell>
         <PmSection index={0}>
           <StatCardGrid cols={4}>
-            <StatCard label="Total" value={stats.total} icon={Tag} tone="default" index={0} />
+            <StatCard label="This page" value={stats.total} icon={Tag} tone="default" index={0} />
             <StatCard
               label="Released"
               value={stats.released}
@@ -268,15 +279,26 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             onRetry={handleRetry}
             className={PM_FILL_PANEL}
           >
-            <DataTable
-              className={PM_FILL_PANEL}
-              data={displayed}
-              columns={columns}
-              getRowKey={(r) => r.id}
-              onRowClick={handleOpenEdit}
-              mobileCard={renderMobileCard}
-              pagination={{ pageSize: 25 }}
-            />
+            <>
+              <DataTable
+                className={PM_FILL_PANEL}
+                data={releases}
+                columns={columns}
+                getRowKey={(r) => r.id}
+                onRowClick={handleOpenEdit}
+                mobileCard={renderMobileCard}
+              />
+              {(pagination?.hasMore || pager.hasPrevious) ? (
+                <TablePagination
+                  mode="cursor"
+                  rowCount={releases.length}
+                  hasMore={pagination?.hasMore ?? false}
+                  hasPrevious={pager.hasPrevious}
+                  onNext={() => pager.goNext(pagination?.nextCursor)}
+                  onPrevious={pager.goPrevious}
+                />
+              ) : null}
+            </>
           </PageState>
         </PmSection>
 

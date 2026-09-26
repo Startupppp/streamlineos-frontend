@@ -16,6 +16,8 @@ function isInputTarget(target: EventTarget | null): boolean {
 export interface UseBuildListKeyboardOptions {
   itemCount: number;
   onOpen: (index: number) => void;
+  onEdit?: (index: number) => void;
+  onCreate?: () => void;
   onClearSelection: () => void;
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
   enabled?: boolean;
@@ -29,6 +31,8 @@ export interface UseBuildListKeyboardReturn {
 export function useBuildListKeyboard({
   itemCount,
   onOpen,
+  onEdit,
+  onCreate,
   onClearSelection,
   searchInputRef,
   enabled = true,
@@ -36,11 +40,21 @@ export function useBuildListKeyboard({
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
   const onOpenRef = useRef(onOpen);
+  const onEditRef = useRef(onEdit);
+  const onCreateRef = useRef(onCreate);
   const onClearRef = useRef(onClearSelection);
 
   useEffect(() => {
     onOpenRef.current = onOpen;
   }, [onOpen]);
+
+  useEffect(() => {
+    onEditRef.current = onEdit;
+  }, [onEdit]);
+
+  useEffect(() => {
+    onCreateRef.current = onCreate;
+  }, [onCreate]);
 
   useEffect(() => {
     onClearRef.current = onClearSelection;
@@ -95,6 +109,20 @@ export function useBuildListKeyboard({
         case "/": {
           e.preventDefault();
           searchInputRef?.current?.focus();
+          break;
+        }
+        case "e": {
+          if (focusedIndex !== null && onEditRef.current) {
+            e.preventDefault();
+            onEditRef.current(focusedIndex);
+          }
+          break;
+        }
+        case "c": {
+          if (onCreateRef.current) {
+            e.preventDefault();
+            onCreateRef.current();
+          }
           break;
         }
         default:

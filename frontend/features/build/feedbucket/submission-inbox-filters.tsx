@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type RefObject } from "react";
 import {
   Select,
   SelectContent,
@@ -36,6 +36,7 @@ export interface SubmissionInboxFilterValues {
 interface SubmissionInboxFiltersProps {
   values: SubmissionInboxFilterValues;
   onChange: (key: keyof SubmissionInboxFilterValues, value: string | null) => void;
+  searchInputRef?: RefObject<HTMLInputElement | null>;
 }
 
 function dateParamToInput(value: string | null): string {
@@ -46,7 +47,7 @@ function inputToDateParam(value: string): string | null {
   return value ? `${value}T00:00:00Z` : null;
 }
 
-export function SubmissionInboxFilters({ values, onChange }: SubmissionInboxFiltersProps) {
+export function SubmissionInboxFilters({ values, onChange, searchInputRef }: SubmissionInboxFiltersProps) {
   const [searchDraft, setSearchDraft] = useState(values.search ?? "");
   const debouncedSearch = useDebouncedValue(searchDraft, 300);
 
@@ -83,6 +84,7 @@ export function SubmissionInboxFilters({ values, onChange }: SubmissionInboxFilt
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-b border-border flex-wrap">
       <SearchInput
+        ref={searchInputRef}
         value={searchDraft}
         onValueChange={setSearchDraft}
         placeholder="Search messages…"

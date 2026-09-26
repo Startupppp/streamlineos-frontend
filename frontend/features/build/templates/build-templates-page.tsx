@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useRef, useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { RequireModule } from "@/components/auth/require-module";
 import {
   useProjectTemplates,
@@ -23,6 +24,7 @@ import { TemplateCard } from "@/features/build/templates/template-card";
 import { CreateTemplateSheet } from "@/features/build/templates/create-template-sheet";
 import { ApplyTemplateDialog } from "@/features/build/templates/apply-template-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   PmPageShell,
   PmSection,
@@ -41,7 +43,7 @@ function NewTemplateButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function TemplatesGridSkeleton() {
+export function TemplatesGridSkeleton() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 9 }).map((_, i) => (
@@ -68,11 +70,26 @@ function TemplatesGridSkeleton() {
 
 export function BuildTemplatesPage() {
   const canManage = useCan("build:manage");
-  const { data: templates, isLoading, isError, error, refetch } = useProjectTemplates();
+  const {
+    data: templatePages,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useProjectTemplates();
   const deleteTemplate = useDeleteProjectTemplate();
   const [createOpen, setCreateOpen] = useState(false);
   const [applyTarget, setApplyTarget] = useState<ProjectTemplate | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectTemplate | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const templates = useMemo(
+    () => templatePages?.pages.flatMap((p) => p.data) ?? [],
+    [templatePages],
+  );
 
   const pageState = usePageState({
     permission: "build:view",
@@ -86,6 +103,22 @@ export function BuildTemplatesPage() {
   const handleApplyTarget = useCallback((t: ProjectTemplate) => setApplyTarget(t), []);
   const handleCloseApply = useCallback(() => setApplyTarget(null), []);
   const handleDeleteTarget = useCallback((t: ProjectTemplate) => setDeleteTarget(t), []);
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const handleKeyboardOpen = useCallback((index: number) => {
+    const t = templates[index];
+    if (t) setApplyTarget(t);
+  }, [templates]);
+  const handleKeyboardClear = useCallback(() => setApplyTarget(null), []);
+
+  useBuildListKeyboard({
+    itemCount: templates.length,
+    onOpen: handleKeyboardOpen,
+    onClearSelection: handleKeyboardClear,
+    searchInputRef: searchRef,
+    enabled: pageState.kind === "ready",
+  });
 
   function handleDeleteDialogChange(open: boolean) {
     if (!open) setDeleteTarget(null);
@@ -152,22 +185,30 @@ export function BuildTemplatesPage() {
       >
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            {templates && templates.length > 0 ? (
-              <PmStaggerList
-                className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-                role="list"
-                aria-label="Project templates"
-              >
-                {templates.map((t) => (
-                  <div key={t.id} role="listitem">
-                    <TemplateCard
-                      template={t}
-                      onApply={handleApplyTarget}
-                      onDelete={handleDeleteTarget}
-                    />
-                  </div>
-                ))}
-              </PmStaggerList>
+            {templates.length > 0 ? (
+              <>
+                <PmStaggerList
+                  className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                  role="list"
+                  aria-label="Project templates"
+                >
+                  {templates.map((t) => (
+                    <div key={t.id} role="listitem">
+                      <TemplateCard
+                        template={t}
+                        onApply={handleApplyTarget}
+                        onDelete={handleDeleteTarget}
+                      />
+                    </div>
+                  ))}
+                </PmStaggerList>
+                <InfiniteScrollSentinel
+                  hasNextPage={!!hasNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
+                  onLoadMore={handleLoadMore}
+                  label="Load more templates"
+                />
+              </>
             ) : (
               <EmptyState
                 className={PM_FILL_PANEL}

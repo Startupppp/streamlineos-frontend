@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
-import type { RoadmapItem } from "@/types/projects";
+import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -18,7 +18,9 @@ import { ROADMAP_COLUMNS } from "@/features/build/roadmap/roadmap-constants";
 import { RoadmapItemCard } from "@/features/build/roadmap/roadmap-item-card";
 import { RoadmapItemSheet } from "@/features/build/roadmap/roadmap-item-sheet";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   PmPageShell,
   PmSection,
@@ -46,17 +48,48 @@ function RoadmapSkeleton() {
   );
 }
 
+const ROADMAP_STATUS_OPTS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "planned", label: "Planned" },
+  { value: "in_progress", label: "In progress" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+const ROADMAP_HORIZON_OPTS = [
+  { value: BUILD_FILTER_ALL, label: "All horizons" },
+  { value: "now", label: "Now" },
+  { value: "next", label: "Next" },
+  { value: "later", label: "Later" },
+];
+
+const ROADMAP_FILTER_DEFS = [
+  { param: "status", options: ROADMAP_STATUS_OPTS.map((o) => o.value) },
+  { param: "horizon" },
+] as const;
+
 export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps) {
-  const listFilters = useBuildListFilters({ filters: [] });
+  const listFilters = useBuildListFilters({ filters: ROADMAP_FILTER_DEFS });
   const pager = useCursorPager(listFilters.resetKey);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  const statusValue = listFilters.value("status");
+  const horizonValue = listFilters.value("horizon");
+
+  const typedStatus = useMemo(
+    () => (statusValue && statusValue !== BUILD_FILTER_ALL ? (statusValue as RoadmapStatus) : undefined),
+    [statusValue],
+  );
 
   const filters = useMemo(
     () => ({
       managedProductId,
+      ...(typedStatus ? { status: typedStatus } : {}),
+      ...(horizonValue && horizonValue !== BUILD_FILTER_ALL ? { horizon: horizonValue } : {}),
       ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
       cursor: pager.cursor,
     }),
-    [managedProductId, listFilters.debouncedSearch, pager.cursor],
+    [managedProductId, typedStatus, horizonValue, listFilters.debouncedSearch, pager.cursor],
   );
 
   const { data, isLoading, isError, error, refetch } = useRoadmapItems(filters);
@@ -102,6 +135,23 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleOpenCreate = useCallback(() => { setCreateOpen(true); }, []);
   const handleCloseCreate = useCallback(() => { setCreateOpen(false); }, []);
+
+  useBuildListKeyboard({
+    itemCount: 0,
+    onOpen: () => undefined,
+    onClearSelection: () => undefined,
+    searchInputRef,
+    enabled: !createOpen && !editTarget && !deleteTarget,
+  });
+
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+  const handleHorizonChange = useCallback(
+    (value: string) => listFilters.setValue("horizon", value),
+    [listFilters],
+  );
   const handleCloseEdit = useCallback(() => { setEditTarget(null); }, []);
 
   const handleDeleteOpenChange = useCallback((open: boolean) => {
@@ -126,8 +176,36 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
             onValueChange: listFilters.setSearch,
             placeholder: "Search roadmap…",
             label: "Search roadmap",
+            inputRef: searchInputRef,
           }}
-          filters={[]}
+          filters={[
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={statusValue}
+                  onValueChange={handleStatusChange}
+                  options={ROADMAP_STATUS_OPTS}
+                />
+              ),
+            },
+            {
+              id: "horizon",
+              label: "Horizon",
+              active: listFilters.isActive("horizon"),
+              control: (
+                <BuildFilterSelect
+                  label="Horizon"
+                  value={horizonValue}
+                  onValueChange={handleHorizonChange}
+                  options={ROADMAP_HORIZON_OPTS}
+                />
+              ),
+            },
+          ]}
           onClearAll={listFilters.clearAll}
         />
       }

@@ -203,7 +203,8 @@ export function GanttView({
   }, [projectId, requestLeave, router]);
 
   const { data: cpData } = useCriticalPath(projectId);
-  const { data: milestones } = useProjectMilestones(projectId);
+  const { data: milestonesPage } = useProjectMilestones(projectId);
+  const milestones = milestonesPage?.data;
 
   const criticalPathIds = useMemo(
     () => new Set((cpData?.criticalPath ?? []).map((n) => n.ticketId)),

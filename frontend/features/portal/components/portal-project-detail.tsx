@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ReactNode } from "react";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -297,15 +297,23 @@ export function OverviewSkeleton() {
   );
 }
 
-export function PortalProjectDetailLoading() {
+export function PortalProjectDetailShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col min-h-dvh bg-background">
       <PortalHeader showProjectsLink />
       <main className="flex-1 px-4 sm:px-6 py-8 max-w-3xl mx-auto w-full">
-        <Skeleton className="h-4 w-24 mb-6" />
-        <OverviewSkeleton />
+        {children}
       </main>
     </div>
+  );
+}
+
+export function PortalProjectDetailLoading() {
+  return (
+    <PortalProjectDetailShell>
+      <Skeleton className="h-4 w-24 mb-6" />
+      <OverviewSkeleton />
+    </PortalProjectDetailShell>
   );
 }
 
@@ -315,36 +323,30 @@ interface PortalProjectDetailErrorProps {
 
 export function PortalProjectDetailError({ onRetry }: PortalProjectDetailErrorProps) {
   return (
-    <div className="flex flex-col min-h-dvh bg-background">
-      <PortalHeader showProjectsLink />
-      <main className="flex-1 px-4 sm:px-6 py-8 max-w-3xl mx-auto w-full">
-        <BackToProjects />
-        <ErrorState
-          title="Could not load project"
-          description="There was a problem loading this project. Please try again."
-          onRetry={onRetry}
-          className="min-h-[320px]"
-        />
-      </main>
-    </div>
+    <PortalProjectDetailShell>
+      <BackToProjects />
+      <ErrorState
+        title="Could not load project"
+        description="There was a problem loading this project. Please try again."
+        onRetry={onRetry}
+        className="min-h-[320px]"
+      />
+    </PortalProjectDetailShell>
   );
 }
 
 export function PortalProjectDetailNotFound() {
   return (
-    <div className="flex flex-col min-h-dvh bg-background">
-      <PortalHeader showProjectsLink />
-      <main className="flex-1 px-4 sm:px-6 py-8 max-w-3xl mx-auto w-full">
-        <BackToProjects />
-        <EmptyState
-          illustrationPreset="projects"
-          title="Project not found"
-          description="This project is not available. Please check your access or contact the project team."
-          action={{ label: "Back to projects", href: "/client-portal" }}
-          className="min-h-[320px]"
-        />
-      </main>
-    </div>
+    <PortalProjectDetailShell>
+      <BackToProjects />
+      <EmptyState
+        illustrationPreset="projects"
+        title="Project not found"
+        description="This project is not available. Please check your access or contact the project team."
+        action={{ label: "Back to projects", href: "/client-portal" }}
+        className="min-h-[320px]"
+      />
+    </PortalProjectDetailShell>
   );
 }
 

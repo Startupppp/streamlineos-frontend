@@ -1,13 +1,14 @@
 "use client";
 import type { z } from "zod";
 import type { templateRowContract as templateRowContractDef } from "@/hooks/api/build/roadmap-schema";
-﻿
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const templateListContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.templateListContract),
@@ -63,9 +64,20 @@ const TEMPLATES_KEY = buildWorkQueryKeys.projects.templates();
 
 export function useProjectTemplates() {
   const canView = useCan("build:view");
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: TEMPLATES_KEY,
-    queryFn: ({ signal }) => apiClient.get<ProjectTemplate[]>("/build/templates", undefined, signal, templateListContract),
+    queryFn: ({ pageParam, signal }) => {
+      const params: Record<string, string> = {};
+      if (pageParam !== undefined) params["cursor"] = String(pageParam);
+      return apiClient.get(
+        "/build/templates",
+        Object.keys(params).length > 0 ? params : undefined,
+        signal,
+        templateListContract,
+      );
+    },
+    initialPageParam: NO_ID_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canView,
     staleTime: 60_000,
   });

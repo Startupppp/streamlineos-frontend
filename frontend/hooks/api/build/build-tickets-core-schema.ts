@@ -11,14 +11,18 @@ const userSummarySchema = z
   })
   .nullable();
 
+export const ticketTypeContract = z.enum(["EPIC", "STORY", "TASK", "BUG"]);
+
+export const ticketPriorityContract = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
+
 export const ticketRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
-  type: z.string(),
+  type: ticketTypeContract,
   status: z.string(),
-  priority: z.string(),
+  priority: ticketPriorityContract,
   projectId: z.number().int().nullable(),
   ticketNumber: z.number().int(),
   epicId: z.number().int().nullable(),

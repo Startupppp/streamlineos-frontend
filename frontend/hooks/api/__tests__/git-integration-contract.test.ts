@@ -53,3 +53,30 @@ describe("git connection contracts accept the integer projectId the column store
     expect(parsed.projectId).toBe(12);
   });
 });
+
+describe("git integration cache key contract (BLD-X-BE-SETTINGS-GIT-001)", () => {
+  it("includes 'gitIntegration' segment in the connections cache key", () => {
+    const { accountingAndSupportQueryKeys } = require("@/lib/query-keys/accounting-and-support");
+    const key = accountingAndSupportQueryKeys.gitIntegration.connections();
+    expect(key.some((s: unknown) => s === "gitIntegration")).toBe(true);
+  });
+
+  it("includes 'connections' segment in the connections cache key", () => {
+    const { accountingAndSupportQueryKeys } = require("@/lib/query-keys/accounting-and-support");
+    const key = accountingAndSupportQueryKeys.gitIntegration.connections();
+    expect(key.some((s: unknown) => s === "connections")).toBe(true);
+  });
+
+  it("connections key is an extension of the gitIntegration.all base key — invalidating all also purges every connection query", () => {
+    const { accountingAndSupportQueryKeys } = require("@/lib/query-keys/accounting-and-support");
+    const allKey = accountingAndSupportQueryKeys.gitIntegration.all;
+    const connectionsKey = accountingAndSupportQueryKeys.gitIntegration.connections();
+    expect(JSON.stringify(connectionsKey).startsWith(JSON.stringify(allKey).slice(0, -1))).toBe(true);
+  });
+
+  it("gitConnectionListContract rejects a list payload that wraps in 'items' instead of 'data' — envelope shape is load-bearing", () => {
+    expect(() =>
+      gitConnectionListContract.parse({ items: [ROW], pagination: { limit: 20, hasMore: false, nextCursor: null } }),
+    ).toThrow();
+  });
+});

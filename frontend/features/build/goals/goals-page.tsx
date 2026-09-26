@@ -129,12 +129,15 @@ export function GoalsPage() {
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const handleClearSelection = useCallback(() => {}, []);
   const handleOpenFocused = useCallback(() => {}, []);
   useBuildListKeyboard({
     itemCount: goals?.length ?? 0,
     onOpen: handleOpenFocused,
+    onCreate: handleOpenCreate,
     onClearSelection: handleClearSelection,
+    searchInputRef,
   });
 
   const pageState = usePageState({
@@ -182,7 +185,7 @@ export function GoalsPage() {
       <PageWrapper
         title="Goals & OKRs"
         subtitle="Track company, team, and individual objectives and their key results"
-        filters={<GoalsListToolbar listFilters={listFilters} />}
+        filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} />}
         actions={<BuildHeaderActions actions={createActions} />}
       >
         <PmPageShell>

@@ -5,18 +5,16 @@ const mockUseVelocityReport = jest.fn();
 const mockUseBurnupReport = jest.fn();
 const mockUseCycleTimeReport = jest.fn();
 const mockUseLeadTimeReport = jest.fn();
+const mockUseCfdReport = jest.fn();
+const mockUseCriticalPath = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseCanState = jest.fn();
 
 jest.mock("@/hooks/api/build/reports", () => ({
   useVelocityReport: (...args: unknown[]) => mockUseVelocityReport(...args),
   useBurnupReport: (...args: unknown[]) => mockUseBurnupReport(...args),
-  useCfdReport: jest
-    .fn()
-    .mockReturnValue({ data: undefined, isLoading: false, isError: false }),
-  useCriticalPath: jest
-    .fn()
-    .mockReturnValue({ data: undefined, isLoading: false, isError: false }),
+  useCfdReport: (...args: unknown[]) => mockUseCfdReport(...args),
+  useCriticalPath: (...args: unknown[]) => mockUseCriticalPath(...args),
   useCycleTimeReport: (...args: unknown[]) => mockUseCycleTimeReport(...args),
   useLeadTimeReport: (...args: unknown[]) => mockUseLeadTimeReport(...args),
   useCaptureSnapshot: jest
@@ -71,6 +69,7 @@ jest.mock("@/components/illustrations", () => ({
 
 jest.mock("./chart-card", () => ({
   ChartCard: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  numberFormatter: { format: (n: number) => String(n) },
 }));
 
 jest.mock("./velocity-chart", () => ({
@@ -125,12 +124,17 @@ jest.mock("lucide-react", () => ({
   Activity: () => null,
   GitMerge: () => null,
   Timer: () => null,
+  ChevronRight: () => null,
+  AlertTriangle: () => null,
+  Route: () => null,
 }));
 
 import { VelocitySection } from "./velocity-section";
 import { BurnupSection } from "./burnup-section";
 import { CycleTimeSection } from "./cycle-time-section";
 import { LeadTimeSection } from "./lead-time-section";
+import { CfdSection } from "./cfd-section";
+import { CriticalPathSection } from "./critical-path-section";
 
 function settled<T>(data: T) {
   return {
@@ -194,6 +198,8 @@ beforeEach(() => {
   mockUseBurnupReport.mockReturnValue(settled([]));
   mockUseCycleTimeReport.mockReturnValue(settled([]));
   mockUseLeadTimeReport.mockReturnValue(settled([]));
+  mockUseCfdReport.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+  mockUseCriticalPath.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() });
 });
 
 // --------------------------------------------------------------------------
@@ -317,5 +323,99 @@ describe("LeadTimeSection — page states", () => {
     render(<LeadTimeSection projectId={1} />);
     expect(screen.getByTestId("lead-time-chart")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  });
+});
+
+// --------------------------------------------------------------------------
+// CfdSection — uses LoadingState / ErrorState / EmptyState / CfdChart (dynamic)
+// --------------------------------------------------------------------------
+
+describe("CfdSection — page states", () => {
+  it("renders the loading state while CFD data is in flight", () => {
+    mockUseCfdReport.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: null, refetch: jest.fn() });
+    render(<CfdSection projectId={1} />);
+    expect(screen.getByTestId("loading-state")).toBeInTheDocument();
+  });
+
+  it("renders the error state when the CFD read fails", () => {
+    mockUseCfdReport.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new Error("Network timeout"), refetch: jest.fn() });
+    render(<CfdSection projectId={1} />);
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+  });
+
+  it("renders the empty state when there are no CFD data points — positive control shows flow history prompt", () => {
+    mockUseCfdReport.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    render(<CfdSection projectId={1} />);
+    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+    expect(screen.getByText(/no flow history yet/i)).toBeInTheDocument();
+  });
+
+  it("does not render the empty or error state when series data is present — positive control confirms data reaches the chart layer", () => {
+    mockUseCfdReport.mockReturnValue({
+      data: { series: [{ date: "2026-01-01", backlog: 5, unstarted: 2, started: 3, completed: 1, cancelled: 0 }] },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    render(<CfdSection projectId={1} />);
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  });
+
+  it("returns null when accessState is denied — access gate is honoured", () => {
+    mockUseCanState.mockReturnValue("denied");
+    const { container } = render(<CfdSection projectId={1} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+});
+
+// --------------------------------------------------------------------------
+// CriticalPathSection — uses LoadingState / ErrorState / EmptyState / chain list
+// --------------------------------------------------------------------------
+
+const CRITICAL_PATH_DATA = {
+  criticalPath: [
+    { ticketId: 1, title: "Design API", estimate: 2, earliestFinish: 2 },
+    { ticketId: 2, title: "Implement endpoint", estimate: 3, earliestFinish: 5 },
+  ],
+  totalDuration: 5,
+  edgeCount: 1,
+  nodeCount: 2,
+  hasCycle: false,
+};
+
+describe("CriticalPathSection — page states", () => {
+  it("renders the loading state while critical path data is in flight", () => {
+    mockUseCriticalPath.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: null, refetch: jest.fn() });
+    render(<CriticalPathSection projectId={1} />);
+    expect(screen.getByTestId("loading-state")).toBeInTheDocument();
+  });
+
+  it("renders the error state when the critical path read fails", () => {
+    mockUseCriticalPath.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new Error("Timeout"), refetch: jest.fn() });
+    render(<CriticalPathSection projectId={1} />);
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+  });
+
+  it("renders the empty state when there are no dependency chain nodes", () => {
+    mockUseCriticalPath.mockReturnValue({ data: { criticalPath: [], totalDuration: 0, edgeCount: 0, nodeCount: 0, hasCycle: false }, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    render(<CriticalPathSection projectId={1} />);
+    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+    expect(screen.getByText(/no dependency chain yet/i)).toBeInTheDocument();
+  });
+
+  it("renders the chain nodes when critical path data is present — positive control confirms titles reach the UI", () => {
+    mockUseCriticalPath.mockReturnValue({ data: CRITICAL_PATH_DATA, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    render(<CriticalPathSection projectId={1} />);
+    expect(screen.getByText("Design API")).toBeInTheDocument();
+    expect(screen.getByText("Implement endpoint")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  });
+
+  it("returns null when accessState is denied — access gate is honoured", () => {
+    mockUseCanState.mockReturnValue("denied");
+    const { container } = render(<CriticalPathSection projectId={1} />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

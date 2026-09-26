@@ -19,15 +19,22 @@ const noContentContract = lazyContract(() =>
 import { queryKeyBase } from "@/lib/query-keys/base";
 export type { Release } from "@/types/projects";
 
-function releaseKey(projectId: number) {
-  return [...queryKeyBase, "projects", projectId, "releases"] as const;
+interface ReleaseListQuery {
+  cursor?: string;
+  limit?: number;
+  status?: "draft" | "released" | "archived";
+  q?: string;
 }
 
-export function useReleases(projectId: number) {
+function releaseKey(projectId: number, query?: ReleaseListQuery) {
+  return [...queryKeyBase, "projects", projectId, "releases", query ?? {}] as const;
+}
+
+export function useReleases(projectId: number, query: ReleaseListQuery = {}) {
   const canView = useCan("build:view");
-  return useQuery<Release[]>({
-    queryKey: releaseKey(projectId),
-    queryFn: ({ signal }) => apiClient.get<Release[]>(`/build/${projectId}/releases`, undefined, signal, projectReleaseListContract),
+  return useQuery({
+    queryKey: releaseKey(projectId, query),
+    queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/releases`, query, signal, projectReleaseListContract),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -39,7 +46,7 @@ export function useCreateRelease(projectId: number) {
     mutationKey: ["projects", projectId, "releases", "create"],
     mutationFn: (data: CreateReleaseInput) =>
       apiClient.post<Release>(`/build/${projectId}/releases`, data, undefined, projectReleaseRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: releaseKey(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeyBase, "projects", projectId, "releases"] }),
   });
 }
 
@@ -49,7 +56,7 @@ export function useUpdateRelease(projectId: number) {
     mutationKey: ["projects", projectId, "releases", "update"],
     mutationFn: ({ releaseId, ...data }: UpdateReleaseInput) =>
       apiClient.patch<Release>(`/build/${projectId}/releases/${releaseId}`, data, undefined, projectReleaseRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: releaseKey(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeyBase, "projects", projectId, "releases"] }),
   });
 }
 
@@ -59,6 +66,6 @@ export function useDeleteRelease(projectId: number) {
     mutationKey: ["projects", projectId, "releases", "delete"],
     mutationFn: (releaseId: number) =>
       apiClient.delete<void>(`/build/${projectId}/releases/${releaseId}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: releaseKey(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeyBase, "projects", projectId, "releases"] }),
   });
 }

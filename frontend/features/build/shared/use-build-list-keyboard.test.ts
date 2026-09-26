@@ -204,3 +204,80 @@ describe("useBuildListKeyboard — modifier keys suppress shortcuts", () => {
     expect(result.current.focusedIndex).toBe(0);
   });
 });
+
+describe("useBuildListKeyboard — c creates and e edits, so no page needs its own keydown listener", () => {
+  const mockCreate = jest.fn();
+  const mockEdit = jest.fn();
+
+  function setupWithActions(itemCount = 5) {
+    return renderHook(() =>
+      useBuildListKeyboard({
+        itemCount,
+        onOpen: mockOpen,
+        onEdit: mockEdit,
+        onCreate: mockCreate,
+        onClearSelection: mockClear,
+      }),
+    );
+  }
+
+  beforeEach(() => {
+    mockCreate.mockClear();
+    mockEdit.mockClear();
+  });
+
+  it("c calls onCreate without needing a focused row", () => {
+    setupWithActions();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "c" });
+    });
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("e calls onEdit with the focused index once a row is focused", () => {
+    const { result } = setupWithActions();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "j" });
+    });
+    expect(result.current.focusedIndex).toBe(0);
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "e" });
+    });
+    expect(mockEdit).toHaveBeenCalledWith(0);
+  });
+
+  it("e does nothing while no row is focused, rather than editing an arbitrary row", () => {
+    setupWithActions();
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "e" });
+    });
+    expect(mockEdit).not.toHaveBeenCalled();
+  });
+
+  it("neither c nor e fires while typing in a text input", () => {
+    setupWithActions();
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    act(() => {
+      fireEvent.keyDown(input, { key: "c" });
+      fireEvent.keyDown(input, { key: "e" });
+    });
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockEdit).not.toHaveBeenCalled();
+    input.remove();
+  });
+
+  it("c is inert when the caller supplies no onCreate, so a read-only list is unaffected", () => {
+    renderHook(() =>
+      useBuildListKeyboard({
+        itemCount: 5,
+        onOpen: mockOpen,
+        onClearSelection: mockClear,
+      }),
+    );
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "c" });
+    });
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+});

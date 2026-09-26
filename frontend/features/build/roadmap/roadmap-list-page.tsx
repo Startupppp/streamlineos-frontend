@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { MessageSquare, Megaphone, Plus, Sparkles } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -76,12 +76,15 @@ export function RoadmapListPage() {
   const horizonValue = listFilters.value("horizon");
   const sortValue = listFilters.value("sort");
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const handleClearSelection = useCallback(() => {}, []);
   useBuildListKeyboard({
     itemCount: 0,
     onOpen: handleClearSelection,
+    onCreate: handleOpenRoadmapCreate,
     onClearSelection: handleClearSelection,
     enabled: activeTab === "roadmap",
+    searchInputRef,
   });
 
   const showSearch = activeTab === "roadmap" || activeTab === "feedback";
@@ -140,6 +143,7 @@ export function RoadmapListPage() {
                     placeholder="Search…"
                     value={listFilters.search}
                     onValueChange={listFilters.setSearch}
+                    ref={searchInputRef}
                   />
                 ) : null
               }

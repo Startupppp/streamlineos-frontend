@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api";
-import { useCycles, useProjectBoardTickets } from "@/hooks/api/build";
+import { useCycles, useProjectBoardTickets, useBulkUpdateTickets } from "@/hooks/api/build";
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
 import { ListView } from "@/features/build/views/list-view";
@@ -34,6 +34,13 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
+import { useCan } from "@/hooks/api/access";
+import type { ListSelection } from "@/features/build/views/list-view-shared";
+import { toast } from "sonner";
 
 interface CycleDetailPageProps {
   projectId: string;
@@ -51,10 +58,22 @@ export function CycleDetailPage({
   const requestLeave = useNavigationLeave();
   const searchParams = useSearchParams();
   const view = parseViewType(searchParams.get("view"));
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const listFilters = useBuildListFilters();
 
-  const [displayOptions, setDisplayOptions] = useState<DisplayOptions>(
-    DEFAULT_DISPLAY_OPTIONS,
-  );
+  const [displayOptions, setDisplayOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+  const canUpdate = useCan("build:tickets:update");
+  const bulkUpdate = useBulkUpdateTickets(projectId);
+  const handleSelectionChange = useCallback((sel: Set<string | number>) => setSelectedIds(sel), []);
+  const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
+  const listSelection: ListSelection = { selected: selectedIds, onChange: handleSelectionChange };
+  const handleBulkStatus = useCallback((v: string) => {
+    bulkUpdate.mutate(
+      { ticketIds: [...selectedIds].map(Number), status: v },
+      { onSuccess: () => { setSelectedIds(new Set()); toast.success("Updated"); }, onError: (e) => toast.error(getErrorMessage(e)) },
+    );
+  }, [bulkUpdate, selectedIds]);
 
   const {
     data: projectData,
@@ -162,9 +181,17 @@ export function CycleDetailPage({
     }));
   }, [boardTickets]);
 
+  const q = listFilters.debouncedSearch.toLowerCase();
+  const statusFilter = listFilters.value("status");
   const cycleTickets = useMemo(
-    () => allTickets.filter((t) => t.cycleId === cycleId),
-    [allTickets, cycleId],
+    () =>
+      allTickets.filter(
+        (t) =>
+          t.cycleId === cycleId &&
+          (!q || t.title.toLowerCase().includes(q)) &&
+          (!statusFilter || statusFilter === "all" || t.status === statusFilter),
+      ),
+    [allTickets, cycleId, q, statusFilter],
   );
 
   const handleTicketSelect = useCallback(
@@ -185,6 +212,14 @@ export function CycleDetailPage({
     void refetchCycles();
     void refetchTickets();
   }, [refetchProject, refetchCycles, refetchTickets]);
+
+  useBuildListKeyboard({
+    itemCount: cycleTickets.length,
+    onOpen: handleTicketSelect,
+    onClearSelection: handleClearSelection,
+    enabled: pageState.kind === "ready" && view === "list",
+    searchInputRef,
+  });
 
   const handleViewChange = useCallback(
     (v: ViewType) => {
@@ -265,6 +300,15 @@ export function CycleDetailPage({
               {cycle.status}
             </Badge>
           )}
+          <BuildListToolbar
+            search={{
+              value: listFilters.search,
+              onValueChange: listFilters.setSearch,
+              placeholder: "Search tickets",
+              inputRef: searchInputRef,
+            }}
+            onClearAll={listFilters.clearAll}
+          />
         </div>
       }
     >
@@ -292,25 +336,21 @@ export function CycleDetailPage({
             )}
             {view === "list" && (
               <div className="h-full min-h-0 overflow-y-auto pb-2 pt-0">
+                {canUpdate && selectedIds.size > 0 && (
+                  <BulkActionBar selectedCount={selectedIds.size} members={[]} cycles={cycles ?? []} statuses={statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkStatus} onBulkAssignee={handleBulkStatus} onBulkCycle={handleBulkStatus} onClear={handleClearSelection} />
+                )}
                 <ListView
                   tickets={cycleTickets}
                   onTicketClick={handleTicketSelect}
-                  groupBy={
-                    displayOptions.groupBy !== "none"
-                      ? displayOptions.groupBy
-                      : undefined
-                  }
-                  rowBy={
-                    displayOptions.rowBy !== "none"
-                      ? displayOptions.rowBy
-                      : undefined
-                  }
+                  groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
+                  rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
                   projectKey={projectData?.key}
                   projectStatuses={statuses}
                   displayOptions={displayOptions}
                   showEmptyColumns={displayOptions.showEmptyColumns}
                   showEmptyRows={displayOptions.showEmptyRows}
                   projectId={projectId}
+                  selection={listSelection}
                 />
               </div>
             )}

@@ -20,7 +20,7 @@ const WORKFLOW_LABELS: Record<string, string> = {
 };
 
 export function StepReview({ draft }: StepReviewProps) {
-  const { data: templates } = useProjectTemplates();
+  const { data: templatePages } = useProjectTemplates();
   const { data: membersData } = useOrgMembers(1, 100);
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
@@ -45,7 +45,9 @@ export function StepReview({ draft }: StepReviewProps) {
         ].join(", ");
   const templateName =
     draft.templateId !== null
-      ? (templates ?? []).find((t) => t.id === draft.templateId)?.name ?? "Unknown template"
+      ? ((templatePages?.pages.flatMap((page) => page.data) ?? []).find(
+          (t) => t.id === draft.templateId,
+        )?.name ?? "Unknown template")
       : "Blank";
 
   const moduleEntries: Array<[string, boolean]> = [

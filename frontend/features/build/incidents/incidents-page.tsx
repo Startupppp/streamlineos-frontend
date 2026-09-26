@@ -187,10 +187,16 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     (index: number) => { router.push(`/build/${projectId}/incidents/${all[index].id}`); },
     [all, projectId, router],
   );
+  const handleEditByIndex = useCallback(
+    (index: number) => { if (all[index]) handleEdit(all[index]); },
+    [all, handleEdit],
+  );
   const handleClearKeyboardSelection = useCallback(() => {}, []);
   useBuildListKeyboard({
     itemCount: all.length,
     onOpen: handleOpenFocused,
+    onEdit: canManage ? handleEditByIndex : undefined,
+    onCreate: canManage ? handleNew : undefined,
     onClearSelection: handleClearKeyboardSelection,
     enabled: !sheetOpen && !deleteTarget,
   });

@@ -90,8 +90,9 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: () => null,
 }));
 
+const mockTestRunSheet = jest.fn((_props: { open: boolean }) => null);
 jest.mock("./test-run-sheet", () => ({
-  TestRunSheet: () => null,
+  TestRunSheet: (props: { open: boolean }) => { mockTestRunSheet(props); return null; },
 }));
 
 import { TestRunsTab } from "./test-runs-tab";
@@ -219,4 +220,13 @@ it("pressing j then Enter navigates to the first run's detail page so keyboard u
   fireEvent.keyDown(document, { key: "j" });
   fireEvent.keyDown(document, { key: "Enter" });
   expect(mockRouterPush).toHaveBeenCalledWith("/build/7/qa/runs/99");
+});
+
+it("pressing c opens the new run sheet when build:qa:manage is granted", () => {
+  mockUseCan.mockReturnValue(true);
+  render(<TestRunsTab projectId={1} />);
+  fireEvent.keyDown(document, { key: "c" });
+  const calls = mockTestRunSheet.mock.calls;
+  const lastCall = calls[calls.length - 1][0] as { open: boolean };
+  expect(lastCall.open).toBe(true);
 });

@@ -252,6 +252,30 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "patch", path: "/build/{projectId}" },
   },
   {
+    prefix: "/build/[projectId]/settings/access",
+    product: "build",
+    permission: "build:members:view",
+    reason:
+      "Membership administration takes the members key the page itself declares at project-settings-access-page.tsx:38, and GET /build/members is the route that gates on it. The parent /build/[projectId]/settings entry resolves to build:update, which strands a role that may administer membership without holding the project-update key.",
+    backendRoute: { method: "get", path: "/build/members" },
+  },
+  {
+    prefix: "/build/[projectId]/settings/agents/credentials",
+    product: "build",
+    permission: "settings:api-tokens:read",
+    reason:
+      "Agent credentials are API tokens, and the route that lists them declares settings:api-tokens:read. Inheriting build:update from the parent settings entry would let anyone who can edit a project read its agent tokens, which is a secret-bearing surface and a different scope from project configuration.",
+    backendRoute: { method: "get", path: "/agent-tokens" },
+  },
+  {
+    prefix: "/build/[projectId]/settings/portal",
+    product: "build",
+    permission: "build:clientvisibility:manage",
+    reason:
+      "Portal settings decide what an external client can see, which is the client-visibility key the backend gates on, not generic project update. Inheriting build:update would let any project editor change the external disclosure boundary.",
+    backendRoute: { method: "get", path: "/build/{projectId}/client-visibility" },
+  },
+  {
     prefix: "/build/[projectId]/budget",
     product: "build",
     permission: "build:manage",

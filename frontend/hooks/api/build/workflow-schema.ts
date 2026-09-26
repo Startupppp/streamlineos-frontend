@@ -25,7 +25,7 @@ export const projectStatusContract = z.object({
   name: z.string(),
   order: z.number().int(),
   color: z.string().nullable(),
-  type: z.string(),
+  type: z.enum(["backlog", "unstarted", "started", "completed", "cancelled"]),
   wipLimit: z.number().int().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),

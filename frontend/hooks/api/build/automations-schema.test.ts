@@ -1,43 +1,7 @@
-import { z } from "zod";
-
-const projectAutomationConditionSchema = z.object({
-  field: z.string(),
-  operator: z.enum(["equals", "not_equals", "contains", "is_empty", "is_not_empty"]),
-  value: z.string().optional(),
-});
-
-const projectAutomationActionSchema = z.object({
-  type: z.enum(["set_status", "set_assignee", "set_priority", "add_label", "add_comment"]),
-  value: z.string(),
-});
-
-const projectAutomationListItemSchema = z.object({
-  id: z.number(),
-  projectId: z.number(),
-  name: z.string(),
-  isActive: z.boolean(),
-  triggerEvent: z.string(),
-  conditions: z.array(projectAutomationConditionSchema),
-  actions: z.array(projectAutomationActionSchema),
-  createdAt: z.string(),
-});
-
-const projectAutomationRowSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  projectId: z.number(),
-  name: z.string(),
-  isActive: z.boolean(),
-  triggerEvent: z.string(),
-  conditions: z.array(projectAutomationConditionSchema),
-  actions: z.array(projectAutomationActionSchema),
-  createdBy: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-const projectAutomationListContract = z.array(projectAutomationListItemSchema);
-const projectAutomationRowContract = projectAutomationRowSchema;
+import {
+  projectAutomationListContract,
+  projectAutomationRowContract,
+} from "./build-project-schema";
 
 describe("projectAutomationListContract (BLD-X-BE-SETTINGS-AUTO-001)", () => {
   it("accepts a valid automation list", () => {
@@ -155,5 +119,26 @@ describe("projectAutomationRowContract (BLD-X-BE-SETTINGS-AUTO-002)", () => {
       createdAt: "2024-01-01T00:00:00.000Z",
     };
     expect(() => projectAutomationRowContract.parse(raw)).toThrow();
+  });
+});
+
+describe("automations cache key contract (BLD-X-BE-SETTINGS-AUTO-003)", () => {
+  it("includes projectId in the automation cache key — correct scope prevents cross-project data leaks", () => {
+    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
+    const key = buildWorkQueryKeys.projects.automations(10);
+    expect(key).toContain(10);
+  });
+
+  it("includes 'automations' segment in the cache key", () => {
+    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
+    const key = buildWorkQueryKeys.projects.automations(10);
+    expect(key.some((s: unknown) => s === "automations")).toBe(true);
+  });
+
+  it("two different projectIds produce different automation cache keys — cross-project cache collision is impossible", () => {
+    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
+    const key1 = buildWorkQueryKeys.projects.automations(1);
+    const key2 = buildWorkQueryKeys.projects.automations(2);
+    expect(JSON.stringify(key1)).not.toBe(JSON.stringify(key2));
   });
 });

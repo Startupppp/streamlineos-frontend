@@ -41,6 +41,12 @@ interface ApprovalFilters {
   entityType?: string;
 }
 
+interface InboxFilters {
+  status?: string;
+  type?: string;
+  q?: string;
+}
+
 type ApprovalInboxPage = {
   data: ApprovalInboxItem[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
@@ -76,16 +82,25 @@ function removeInboxApproval(
   };
 }
 
-export function useApprovalInbox() {
+export function useApprovalInbox(filters?: InboxFilters) {
   const canView = useCan("build:approvals:view");
+  const activeFilters: InboxFilters | undefined =
+    filters && (filters.status || filters.type || filters.q) ? filters : undefined;
   return useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.approvals.inbox(),
-    queryFn: async ({ pageParam, signal }) => normalizeApprovalPage(await apiClient.get(
-      "/build/approvals/inbox",
-      pageParam !== undefined ? { cursor: pageParam } : undefined,
-      signal,
-      approvalInboxPageContract,
-    )),
+    queryKey: buildWorkQueryKeys.projects.approvals.inbox(activeFilters),
+    queryFn: async ({ pageParam, signal }) => {
+      const params: Record<string, string> = {};
+      if (pageParam !== undefined) params["cursor"] = pageParam as string;
+      if (activeFilters?.status) params["status"] = activeFilters.status;
+      if (activeFilters?.type) params["type"] = activeFilters.type;
+      if (activeFilters?.q) params["q"] = activeFilters.q;
+      return normalizeApprovalPage(await apiClient.get(
+        "/build/approvals/inbox",
+        Object.keys(params).length > 0 ? params : undefined,
+        signal,
+        approvalInboxPageContract,
+      ));
+    },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView,

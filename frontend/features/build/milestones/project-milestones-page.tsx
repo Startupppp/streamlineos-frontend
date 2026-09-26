@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -10,7 +10,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { Diamond, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import {
@@ -25,6 +25,7 @@ import {
   useDeleteMilestone,
   type ProjectMilestone,
 } from "@/hooks/api/build";
+import { useCan } from "@/hooks/api/access";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
 import { toast } from "sonner";
@@ -37,8 +38,6 @@ import {
   PmStaggerList,
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
-
-const MILESTONE_PAGE_SIZE = 20;
 
 const MILESTONE_STATUS_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All statuses" },
@@ -70,22 +69,28 @@ interface ProjectMilestonesPageProps {
 
 export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilestonesPageProps) {
   const projectId = Number(projectIdStr);
+  const canManage = useCan("build:manage");
   const listFilters = useBuildListFilters({ filters: MILESTONE_FILTER_DEFINITIONS });
+  const pager = useCursorPager(listFilters.resetKey);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const [page, setPage] = useState(1);
-  const prevResetKey = useRef(listFilters.resetKey);
-  if (prevResetKey.current !== listFilters.resetKey) {
-    prevResetKey.current = listFilters.resetKey;
-    setPage(1);
-  }
+  const statusFilterValue = listFilters.value("status");
+  const serverStatus =
+    statusFilterValue !== BUILD_FILTER_ALL
+      ? (statusFilterValue as "PENDING" | "ACHIEVED" | "MISSED")
+      : undefined;
 
   const {
-    data: allMilestones,
+    data,
     isLoading,
     isError,
     error,
     refetch,
-  } = useProjectMilestones(projectId);
+  } = useProjectMilestones(projectId, {
+    cursor: pager.cursor,
+    status: serverStatus,
+    q: listFilters.debouncedSearch || undefined,
+  });
   const pageState = usePageState({
     permission: "build:view",
     isLoading,
@@ -98,31 +103,15 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   const [editTarget, setEditTarget] = useState<ProjectMilestone | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectMilestone | null>(null);
 
-  const statusFilterValue = listFilters.value("status");
-  const filtered = useMemo(() => {
-    const list = allMilestones ?? [];
-    let result = list;
-    if (statusFilterValue !== BUILD_FILTER_ALL) {
-      result = result.filter((m) => m.status === statusFilterValue);
-    }
-    const q = listFilters.debouncedSearch.trim().toLowerCase();
-    if (q) result = result.filter((m) => m.name.toLowerCase().includes(q));
-    return result;
-  }, [allMilestones, statusFilterValue, listFilters.debouncedSearch]);
+  const milestones = data?.data ?? [];
+  const pagination = data?.pagination;
 
-  const milestones = useMemo(
-    () => filtered.slice((page - 1) * MILESTONE_PAGE_SIZE, page * MILESTONE_PAGE_SIZE),
-    [filtered, page],
-  );
-
-  const total = allMilestones?.length ?? 0;
-  const achieved = allMilestones?.filter((m) => m.status === "ACHIEVED").length ?? 0;
-  const pending = allMilestones?.filter((m) => m.status === "PENDING").length ?? 0;
-  const overdue =
-    allMilestones?.filter((m) => {
-      const d = new Date(m.targetDate);
-      return isPast(d) && !isToday(d) && m.status === "PENDING";
-    }).length ?? 0;
+  const achieved = milestones.filter((m) => m.status === "ACHIEVED").length;
+  const pending = milestones.filter((m) => m.status === "PENDING").length;
+  const overdue = milestones.filter((m) => {
+    const d = new Date(m.targetDate);
+    return isPast(d) && !isToday(d) && m.status === "PENDING";
+  }).length;
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -157,10 +146,20 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
     },
     [milestones, handleEditTarget],
   );
+  const handleEditByIndex = useCallback(
+    (index: number) => {
+      const m = milestones[index];
+      if (m) handleEditTarget(m);
+    },
+    [milestones, handleEditTarget],
+  );
   useBuildListKeyboard({
     itemCount: milestones.length,
     onOpen: handleOpenByIndex,
+    onEdit: handleEditByIndex,
+    onCreate: handleOpenCreate,
     onClearSelection: handleClearSelection,
+    searchInputRef,
   });
 
   const handleStatusFilterChange = useCallback(
@@ -175,6 +174,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
         onValueChange: listFilters.setSearch,
         placeholder: "Search milestones…",
         label: "Search milestones",
+        inputRef: searchInputRef,
       }}
       filters={[
         {
@@ -251,13 +251,13 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
     <PageWrapper
       title="Milestones"
       subtitle="Key checkpoints and target dates for this project"
-      actions={<NewMilestoneButton onClick={handleOpenCreate} />}
+      actions={canManage ? <NewMilestoneButton onClick={handleOpenCreate} /> : undefined}
       filters={filterToolbar}
     >
       <PmPageShell>
           <PmSection index={0} className="shrink-0">
             <StatCardGrid cols={4}>
-              <StatCard label="Total" value={total} icon={Diamond} tone="default" index={0} />
+              <StatCard label="This page" value={milestones.length} icon={Diamond} tone="default" index={0} />
               <StatCard
                 label="Achieved"
                 value={achieved}
@@ -271,7 +271,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
           </PmSection>
 
           <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-            {milestones && milestones.length > 0 ? (
+            {milestones.length > 0 ? (
               <>
                 <PmStaggerList className="space-y-2.5" aria-label="Project milestones">
                   {milestones.map((m) => (
@@ -279,16 +279,18 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
                       key={m.id}
                       milestone={m}
                       onEdit={handleEditTarget}
-                      onDelete={handleDeleteTarget}
+                      onDelete={canManage ? handleDeleteTarget : undefined}
                     />
                   ))}
                 </PmStaggerList>
-                {filtered.length > MILESTONE_PAGE_SIZE ? (
+                {(pagination?.hasMore || pager.hasPrevious) ? (
                   <TablePagination
-                    page={page}
-                    pageSize={MILESTONE_PAGE_SIZE}
-                    total={filtered.length}
-                    onPageChange={setPage}
+                    mode="cursor"
+                    rowCount={milestones.length}
+                    hasMore={pagination?.hasMore ?? false}
+                    hasPrevious={pager.hasPrevious}
+                    onNext={() => pager.goNext(pagination?.nextCursor)}
+                    onPrevious={pager.goPrevious}
                   />
                 ) : null}
               </>
@@ -304,7 +306,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
                   }
                   filtersActive={listFilters.isFiltered}
                   onClearFilters={listFilters.clearAll}
-                  action={listFilters.isFiltered ? undefined : { label: "Add Milestone", onClick: handleOpenCreate }}
+                  action={listFilters.isFiltered || !canManage ? undefined : { label: "Add Milestone", onClick: handleOpenCreate }}
                 />
             )}
           </PmSection>
@@ -324,7 +326,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
           open={!!deleteTarget}
           onOpenChange={handleDeleteDialogOpenChange}
           title="Delete milestone?"
-          description={`“${deleteTarget?.name ?? ""}” will be permanently deleted.`}
+          description={`"${deleteTarget?.name ?? ""}" will be permanently deleted.`}
           confirmLabel="Delete"
           destructive
           isPending={deleteMilestone.isPending}

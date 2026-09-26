@@ -74,8 +74,10 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
   const projectKey = project?.key ?? "";
 
   const { data: ticketsData, isFetching: ticketsFetching } = useTickets(projectId, { limit: 50 });
-  const { data: milestones, isFetching: milestonesFetching } = useProjectMilestones(projectId);
-  const { data: releases, isFetching: releasesFetching } = useReleases(projectId);
+  const { data: milestonesPage, isFetching: milestonesFetching } = useProjectMilestones(projectId);
+  const { data: releasesPage, isFetching: releasesFetching } = useReleases(projectId);
+  const milestones = milestonesPage?.data;
+  const releases = releasesPage?.data;
   const { data: changeRequests, isFetching: crFetching } = useChangeRequests(projectId);
   const { data: timesheetData, isFetching: timesheetFetching } = useTimesheetEntries(
     { projectId, limit: 50 },

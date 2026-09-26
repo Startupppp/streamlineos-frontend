@@ -4,7 +4,7 @@ import { portalApiClient, getPortalToken } from "@/lib/portal-api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import type { PortalProject } from "@/features/portal/lib/portal-types";
 
-const backendPortalProjectSchema = z.object({
+export const backendPortalProjectSchema = z.object({
   id: z.number().int(),
   name: z.string(),
   key: z.string(),
@@ -13,7 +13,7 @@ const backendPortalProjectSchema = z.object({
   targetEndDate: z.string().nullable(),
 });
 
-const backendPortalProjectListSchema = z.array(backendPortalProjectSchema);
+export const backendPortalProjectListSchema = z.array(backendPortalProjectSchema);
 
 export const portalProjectsQueryOptions = queryOptions({
   queryKey: directoryAndOwnershipQueryKeys.portal.projects(),

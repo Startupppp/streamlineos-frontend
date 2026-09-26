@@ -17,6 +17,10 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   },
 }));
 
+jest.mock("@/hooks/api/build/agent-tokens", () => ({
+  useAgentTokens: () => ({ data: [], isLoading: false }),
+}));
+
 jest.mock("@/features/build/settings/agent-tokens-section", () => ({
   AgentTokensSection: () => <div data-testid="agent-tokens-section" />,
 }));

@@ -28,6 +28,7 @@ import {
   TestCaseMobileCard,
 } from "./test-case-columns";
 import { TestCaseSheet } from "./test-case-sheet";
+import { QaBulkActionBar } from "./qa-bulk-action-bar";
 
 const CASE_PAGE_SIZE = 50;
 
@@ -54,6 +55,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCase, setEditCase] = useState<TestCase | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TestCase | null>(null);
+  const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
 
   const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
     listFilters.resetKey,
@@ -128,14 +130,24 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     [listFilters],
   );
 
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
   const handleOpenFocused = useCallback(
     (index: number) => { handleEdit(cases[index]); },
+    [cases, handleEdit],
+  );
+  const handleEditByIndex = useCallback(
+    (index: number) => { if (cases[index]) handleEdit(cases[index]); },
     [cases, handleEdit],
   );
   const handleClearKeyboardSelection = useCallback(() => {}, []);
   useBuildListKeyboard({
     itemCount: cases.length,
     onOpen: handleOpenFocused,
+    onEdit: canManage ? handleEditByIndex : undefined,
+    onCreate: canManage ? handleNewCase : undefined,
     onClearSelection: handleClearKeyboardSelection,
     enabled: !sheetOpen && !deleteTarget,
   });
@@ -227,12 +239,24 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
         onRetry={handleRetry}
         className="flex-1 min-h-0"
       >
+        {selectedIds.size > 0 ? (
+          <QaBulkActionBar
+            projectId={projectId}
+            selectedIds={selectedIds}
+            onClear={handleClearSelection}
+          />
+        ) : null}
         <DataTable<TestCase>
           data={cases}
           columns={columns}
           getRowKey={(row) => row.id}
           mobileCard={renderMobileCard}
           className="flex-1 min-h-0"
+          selection={{
+            selected: selectedIds,
+            onChange: setSelectedIds,
+            getRowLabel: (row) => row.title,
+          }}
           pagination={{
             mode: "cursor",
             pageSize: CASE_PAGE_SIZE,

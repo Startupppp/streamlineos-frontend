@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 
 export interface BuildToolbarFilter {
   id: string;
@@ -12,6 +12,7 @@ export interface BuildToolbarSearch {
   onValueChange: (value: string) => void;
   placeholder: string;
   label?: string;
+  inputRef?: RefObject<HTMLInputElement | null>;
 }
 
 export const BUILD_TOOLBAR_FILTERS_LABEL = "Filters";

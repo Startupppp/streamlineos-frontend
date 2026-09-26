@@ -1,3 +1,4 @@
+import { createRef } from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { BuildListToolbar } from "./build-list-toolbar";
 import { BuildFilterSelect } from "./build-filter-select";
@@ -231,5 +232,25 @@ describe("BuildListToolbar", () => {
   it("names the search field for assistive technology", () => {
     render(<BuildListToolbar search={search} filters={[statusFilter()]} />);
     expect(screen.getByLabelText("Search bugs")).toBeInTheDocument();
+  });
+
+  it("hands the search input back through inputRef so the / shortcut can focus it", () => {
+    const inputRef = createRef<HTMLInputElement>();
+    render(
+      <BuildListToolbar
+        search={{ ...search, inputRef }}
+        filters={[statusFilter()]}
+      />,
+    );
+    expect(inputRef.current).toBe(screen.getByLabelText("Search bugs"));
+
+    inputRef.current?.focus();
+    expect(screen.getByLabelText("Search bugs")).toHaveFocus();
+  });
+
+  it("renders the search field with no inputRef supplied, so the ref stays optional", () => {
+    render(<BuildListToolbar search={search} filters={[statusFilter()]} />);
+    expect(screen.getByLabelText("Search bugs")).toBeInTheDocument();
+    expect(screen.getByLabelText("Search bugs")).not.toHaveFocus();
   });
 });

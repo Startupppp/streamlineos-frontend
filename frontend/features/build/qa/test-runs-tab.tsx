@@ -237,6 +237,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
   useBuildListKeyboard({
     itemCount: runs.length,
     onOpen: handleOpenFocused,
+    onCreate: canManage ? handleNewRun : undefined,
     onClearSelection: handleClearKeyboardSelection,
     enabled: !sheetOpen && !deleteTarget,
   });

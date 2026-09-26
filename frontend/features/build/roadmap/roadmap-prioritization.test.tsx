@@ -13,6 +13,10 @@ jest.mock("@/hooks/api/org-display", () => ({
   useOrgDisplay: () => ({ currency: "INR", locale: "en-IN" }),
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCanState: jest.fn(() => "granted"),
+}));
+
 const mockUseSignals = useRoadmapItemSignals as unknown as jest.Mock;
 
 function prioritization(overrides: Partial<RoadmapPrioritization> = {}): RoadmapPrioritization {

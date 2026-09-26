@@ -214,9 +214,18 @@ export function ManagedProductsPage() {
     /* keyboard Esc: nothing to deselect on this page, but the hook requires the callback */
   }, []);
 
+  const handleEditFocused = useCallback(
+    (index: number) => {
+      const product = displayed[index];
+      if (product) setEditTarget(product);
+    },
+    [displayed],
+  );
+
   useBuildListKeyboard({
     itemCount: displayed.length,
     onOpen: handleOpenFocused,
+    onEdit: handleEditFocused,
     onClearSelection: handleClearKeyboardSelection,
     searchInputRef,
     enabled: !createOpen && !editTarget && !deleteTarget,
@@ -272,6 +281,7 @@ export function ManagedProductsPage() {
             onValueChange: listFilters.setSearch,
             placeholder: "Search products…",
             label: "Search products",
+            inputRef: searchInputRef,
           }}
           filters={[
             {

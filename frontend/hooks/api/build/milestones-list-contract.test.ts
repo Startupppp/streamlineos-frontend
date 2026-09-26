@@ -20,24 +20,31 @@ const MILESTONE_ROW = {
   updatedAt: "2026-09-19T10:00:00.000Z",
 };
 
+const CURSOR_PAGE = {
+  data: [MILESTONE_ROW],
+  pagination: { limit: 20, hasMore: false, nextCursor: null },
+};
+
 describe("milestones list contract matches the workspace service projection", () => {
   it("reaches the backend workspace service and members schema, so a broken scan fails instead of passing vacuously", () => {
     expect(backendReachable(WORKSPACE_SERVICE)).toBe(true);
     expect(backendReachable(MEMBERS_SCHEMA)).toBe(true);
   });
 
-  it("backend listMilestones uses findMany without a select, returning all columns — contract covers the full row", () => {
-    const parsed = milestoneListContract.parse([MILESTONE_ROW]);
-    expect(parsed).toHaveLength(1);
-    expect(parsed[0]?.id).toBe(1);
+  it("parses a cursor page envelope with one milestone row", () => {
+    const parsed = milestoneListContract.parse(CURSOR_PAGE);
+    expect(parsed.data).toHaveLength(1);
+    expect(parsed.data[0]?.id).toBe(1);
+    expect(parsed.pagination.hasMore).toBe(false);
+    expect(parsed.pagination.nextCursor).toBeNull();
   });
 
   it("rejects a status outside the three DB check-constraint values, where z.string() would let an invalid status through", () => {
     expect(() =>
-      milestoneListContract.parse([{ ...MILESTONE_ROW, status: "DONE" }]),
+      milestoneListContract.parse({ ...CURSOR_PAGE, data: [{ ...MILESTONE_ROW, status: "DONE" }] }),
     ).toThrow();
     expect(() =>
-      milestoneListContract.parse([{ ...MILESTONE_ROW, status: "PENDING_APPROVAL" }]),
+      milestoneListContract.parse({ ...CURSOR_PAGE, data: [{ ...MILESTONE_ROW, status: "PENDING_APPROVAL" }] }),
     ).toThrow();
   });
 
@@ -45,21 +52,22 @@ describe("milestones list contract matches the workspace service projection", ()
     const validStatuses = ["PENDING", "ACHIEVED", "MISSED"];
     for (const status of validStatuses) {
       expect(() =>
-        milestoneListContract.parse([{ ...MILESTONE_ROW, status }]),
+        milestoneListContract.parse({ ...CURSOR_PAGE, data: [{ ...MILESTONE_ROW, status }] }),
       ).not.toThrow();
     }
   });
 
   it("keeps clientVisible so milestone visibility can be gated on the client portal flag", () => {
-    const parsed = milestoneListContract.parse([MILESTONE_ROW]);
-    expect(parsed[0]?.clientVisible).toBe(false);
+    const parsed = milestoneListContract.parse(CURSOR_PAGE);
+    expect(parsed.data[0]?.clientVisible).toBe(false);
   });
 
   it("keeps deletedAt so a soft-deleted milestone is distinguishable from an absent one", () => {
-    const parsed = milestoneListContract.parse([
-      { ...MILESTONE_ROW, deletedAt: "2026-09-01T00:00:00.000Z" },
-    ]);
-    expect(parsed[0]?.deletedAt).toBe("2026-09-01T00:00:00.000Z");
+    const parsed = milestoneListContract.parse({
+      ...CURSOR_PAGE,
+      data: [{ ...MILESTONE_ROW, deletedAt: "2026-09-01T00:00:00.000Z" }],
+    });
+    expect(parsed.data[0]?.deletedAt).toBe("2026-09-01T00:00:00.000Z");
   });
 
   it("confirms the backend members schema file defines clientVisible on project_milestones", () => {
@@ -70,6 +78,6 @@ describe("milestones list contract matches the workspace service projection", ()
 
   it("confirms the backend workspace service has a limit on listMilestones to keep reads bounded", () => {
     const source = readFileSync(backendPath(WORKSPACE_SERVICE), "utf8");
-    expect(source).toMatch(/limit:\s*\d+/);
+    expect(source).toMatch(/limit\s*\+\s*1/);
   });
 });

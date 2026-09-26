@@ -11,13 +11,18 @@ import { useCanState } from "@/hooks/api/access";
 
 export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
   const accessState = useCanState("build:view");
-  const { data: templates, isLoading, isError, refetch } = useProjectTemplates();
+  const {
+    data: templatePages,
+    isLoading,
+    isError,
+    refetch,
+  } = useProjectTemplates();
   const templateAccessDenied = accessState === "denied";
   const templateAccessGranted = accessState === "granted";
   const templateList = templateAccessDenied
     ? []
     : templateAccessGranted
-      ? templates ?? []
+      ? (templatePages?.pages.flatMap((page) => page.data) ?? [])
       : [];
 
   function handleSelect(id: number | null) {

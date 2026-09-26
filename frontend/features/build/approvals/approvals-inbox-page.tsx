@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Clock, ListChecks } from "lucide-react";
 import { toast } from "sonner";
+import { isApiError } from "@/lib/api-envelope";
 import { useApprovalInbox, useDecideApproval } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -24,7 +25,7 @@ import {
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
-import { STATUS_OPTIONS } from "./approvals-constants";
+import { ENTITY_OPTIONS, STATUS_OPTIONS } from "./approvals-constants";
 import type { ApprovalInboxItem, DecideApprovalInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
@@ -37,15 +38,22 @@ import {
 
 const FILTER_DEFINITIONS = [
   { param: "status", options: STATUS_OPTIONS.map((o) => o.value) },
+  { param: "type", options: ENTITY_OPTIONS.map((o) => o.value) },
 ] as const;
 
 export function ApprovalsInboxPage() {
   const canDecide = useCan("build:approvals:decide");
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const listFilters = useBuildListFilters({
     filters: FILTER_DEFINITIONS,
-    withSearch: false,
+    withSearch: true,
   });
+
+  const statusFilter = listFilters.value("status");
+  const typeFilter = listFilters.value("type");
+  const searchDisplay = listFilters.search;
+  const searchParam = listFilters.debouncedSearch;
 
   const {
     data,
@@ -56,7 +64,11 @@ export function ApprovalsInboxPage() {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useApprovalInbox();
+  } = useApprovalInbox({
+    status: statusFilter !== BUILD_FILTER_ALL ? statusFilter : undefined,
+    type: typeFilter !== BUILD_FILTER_ALL ? typeFilter : undefined,
+    q: searchParam || undefined,
+  });
   const items = useMemo(
     () => data?.pages.flatMap((page) => page.data) ?? [],
     [data],
@@ -66,8 +78,6 @@ export function ApprovalsInboxPage() {
 
   const [decideTarget, setDecideTarget] = useState<DecideTarget | null>(null);
   const decideApproval = useDecideApproval(decideTarget?.projectId ?? 0);
-
-  const statusValue = listFilters.value("status");
 
   const pending = useMemo(
     () =>
@@ -88,10 +98,9 @@ export function ApprovalsInboxPage() {
   }, [items]);
 
   const filteredItems = useMemo(() => {
-    const all = items;
-    if (statusValue === BUILD_FILTER_ALL) return all;
-    return all.filter((a) => a.status === statusValue);
-  }, [items, statusValue]);
+    if (statusFilter === BUILD_FILTER_ALL) return items;
+    return items.filter((a) => a.status === statusFilter);
+  }, [items, statusFilter]);
 
   const memberName = useCallback(
     (userId: string | null): string => {
@@ -129,7 +138,14 @@ export function ApprovalsInboxPage() {
             toast.success("Decision submitted");
             setDecideTarget(null);
           },
-          onError: (e) => toast.error(getErrorMessage(e)),
+          onError: (e) => {
+            if (isApiError(e) && e.status === 409) {
+              toast.error("This approval was already decided. Refresh to see the latest state.");
+              void refetch();
+            } else {
+              toast.error(getErrorMessage(e));
+            }
+          },
         },
       );
     },
@@ -146,6 +162,11 @@ export function ApprovalsInboxPage() {
 
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
+  const handleTypeChange = useCallback(
+    (value: string) => listFilters.setValue("type", value),
     [listFilters],
   );
 
@@ -182,6 +203,7 @@ export function ApprovalsInboxPage() {
     itemCount: filteredItems.length,
     onOpen: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
+    searchInputRef,
     enabled: !isLoading,
   });
 
@@ -206,13 +228,27 @@ export function ApprovalsInboxPage() {
               control: (
                 <BuildFilterSelect
                   label="Status"
-                  value={statusValue}
+                  value={statusFilter}
                   onValueChange={handleStatusChange}
                   options={STATUS_OPTIONS}
                 />
               ),
             },
+            {
+              id: "type",
+              label: "Type",
+              active: listFilters.isActive("type"),
+              control: (
+                <BuildFilterSelect
+                  label="Type"
+                  value={typeFilter}
+                  onValueChange={handleTypeChange}
+                  options={ENTITY_OPTIONS}
+                />
+              ),
+            },
           ]}
+          search={{ value: searchDisplay, onValueChange: listFilters.setSearch, placeholder: "Search approvals…", inputRef: searchInputRef }}
           onClearAll={listFilters.clearAll}
         />
       }

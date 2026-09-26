@@ -8,6 +8,22 @@ jest.mock("@/hooks/api/build", () => ({
   useUpdateTicket: jest.fn(),
   useDeleteTicket: jest.fn(),
   useCreateTicket: jest.fn(),
+  useBulkUpdateTickets: jest.fn(),
+  useCycles: jest.fn(),
+}));
+
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: jest.fn(),
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: () => <div data-testid="build-list-toolbar" />,
+}));
+
+jest.mock("@/features/build/shared/bulk-action-bar", () => ({
+  BulkActionBar: ({ selectedCount }: { selectedCount: number }) => (
+    <div data-testid="bulk-action-bar">{selectedCount}</div>
+  ),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -40,17 +56,8 @@ jest.mock("@/features/build/epics/epic-story-row", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({
-    children,
-    title,
-  }: {
-    children: React.ReactNode;
-    title?: string;
-  }) => (
-    <div>
-      {title ? <h1>{title}</h1> : null}
-      {children}
-    </div>
+  PageWrapper: ({ children, title }: { children: React.ReactNode; title?: string }) => (
+    <div>{title ? <h1>{title}</h1> : null}{children}</div>
   ),
 }));
 
@@ -113,24 +120,22 @@ jest.mock("framer-motion", () => ({
   ),
 }));
 
-import {
-  useProject,
-  useProjectBoardTickets,
-  useUpdateTicket,
-  useDeleteTicket,
-  useCreateTicket,
-} from "@/hooks/api/build";
+import { useProject, useProjectBoardTickets, useUpdateTicket, useDeleteTicket, useCreateTicket, useBulkUpdateTickets, useCycles } from "@/hooks/api/build";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 
 const mockUseProject = useProject as jest.Mock;
 const mockUseProjectBoardTickets = useProjectBoardTickets as jest.Mock;
 const mockUseUpdateTicket = useUpdateTicket as jest.Mock;
 const mockUseDeleteTicket = useDeleteTicket as jest.Mock;
 const mockUseCreateTicket = useCreateTicket as jest.Mock;
+const mockUseBulkUpdateTickets = useBulkUpdateTickets as jest.Mock;
+const mockUseCycles = useCycles as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
+const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
 
 const ACCESS_LOADING = { data: undefined, isLoading: true };
 const ACCESS_GRANTED = {
@@ -142,15 +147,7 @@ const ACCESS_DENIED = {
   isLoading: false,
 };
 
-function disabledQueryResult() {
-  return {
-    data: undefined,
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-  };
-}
+const disabledQueryResult = () => ({ data: undefined, isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
 
 function makeMutationResult() {
   return { mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false };
@@ -176,7 +173,10 @@ beforeEach(() => {
   mockUseUpdateTicket.mockReturnValue(makeMutationResult());
   mockUseDeleteTicket.mockReturnValue(makeMutationResult());
   mockUseCreateTicket.mockReturnValue(makeMutationResult());
+  mockUseBulkUpdateTickets.mockReturnValue(makeMutationResult());
+  mockUseCycles.mockReturnValue({ data: [] });
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+  mockUseBuildListFilters.mockReturnValue({ search: "", debouncedSearch: "", setSearch: jest.fn(), value: jest.fn(() => ""), setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: false });
 });
 
 const params = Promise.resolve({ projectId: "1" });

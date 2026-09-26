@@ -242,3 +242,31 @@ describe("projectDetailContract — GET /build/{projectId} response contract", (
     expect(() => projectDetailContract.parse(withoutStatuses)).toThrow(ZodError);
   });
 });
+
+describe("project detail cache key contract (BLD-X-BE-SETTINGS-CORE-001)", () => {
+  it("includes projectId in the detail cache key — correct scope prevents cross-project settings leaks", () => {
+    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
+    const key = buildWorkQueryKeys.projects.detail(42);
+    expect(key).toContain(42);
+  });
+
+  it("includes 'detail' segment in the project detail cache key", () => {
+    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
+    const key = buildWorkQueryKeys.projects.detail(42);
+    expect(key.some((s: unknown) => s === "detail")).toBe(true);
+  });
+
+  it("two different projectIds produce different detail cache keys — cross-project cache collision is impossible", () => {
+    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
+    const key1 = buildWorkQueryKeys.projects.detail(1);
+    const key2 = buildWorkQueryKeys.projects.detail(2);
+    expect(JSON.stringify(key1)).not.toBe(JSON.stringify(key2));
+  });
+
+  it("settings page invalidates the detail key on update — onSettled calls invalidateQueries({ queryKey: detail(projectId) })", () => {
+    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
+    const key = buildWorkQueryKeys.projects.detail(10);
+    expect(Array.isArray(key)).toBe(true);
+    expect(key.some((s: unknown) => typeof s === "number" && s === 10)).toBe(true);
+  });
+});

@@ -1,5 +1,6 @@
 "use client";
 
+import type { RefObject } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { CalendarDays, ListChecks, Users } from "lucide-react";
@@ -109,11 +110,13 @@ export function GoalCard({ goal }: { goal: GoalListItem }) {
 interface GoalsListToolbarProps {
   listFilters: BuildListFiltersState;
   ownerOptions?: readonly BuildFilterOption[];
+  searchInputRef?: RefObject<HTMLInputElement | null>;
 }
 
 export function GoalsListToolbar({
   listFilters,
   ownerOptions,
+  searchInputRef,
 }: GoalsListToolbarProps) {
   const handleLevelChange = (value: string) =>
     listFilters.setValue("level", value);
@@ -176,6 +179,7 @@ export function GoalsListToolbar({
         onValueChange: listFilters.setSearch,
         placeholder: "Search goals…",
         label: "Search goals",
+        inputRef: searchInputRef,
       }}
       filters={filters}
       onClearAll={listFilters.clearAll}

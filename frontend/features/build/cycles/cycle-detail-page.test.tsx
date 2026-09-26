@@ -8,6 +8,11 @@ jest.mock("@/hooks/api", () => ({
 jest.mock("@/hooks/api/build", () => ({
   useCycles: jest.fn(),
   useProjectBoardTickets: jest.fn(),
+  useBulkUpdateTickets: jest.fn(),
+}));
+
+jest.mock("@/features/build/shared/bulk-action-bar", () => ({
+  BulkActionBar: () => <div data-testid="bulk-action-bar" />,
 }));
 
 jest.mock("@/hooks/api/build/ticket-queries", () => ({
@@ -27,6 +32,21 @@ jest.mock("next/navigation", () => ({
   notFound: jest.fn(),
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
   useSearchParams: jest.fn(() => ({ get: jest.fn(() => null), toString: jest.fn(() => "") })),
+  usePathname: jest.fn(() => "/build/1/cycles/1"),
+}));
+
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: jest.fn(),
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: () => <div data-testid="build-list-toolbar" />,
+}));
+
+jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
+
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: jest.fn(),
 }));
 
 jest.mock("framer-motion", () => ({
@@ -93,10 +113,13 @@ jest.mock("@/features/build/ticket-details/build-ticket-detail-url", () => ({
 }));
 
 import { useProject } from "@/hooks/api";
-import { useCycles, useProjectBoardTickets } from "@/hooks/api/build";
+import { useCycles, useProjectBoardTickets, useBulkUpdateTickets } from "@/hooks/api/build";
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { notFound } from "next/navigation";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { parseViewType } from "@/features/build/views/view-switcher";
 
 const mockUseProject = useProject as jest.Mock;
 const mockUseCycles = useCycles as jest.Mock;
@@ -104,6 +127,10 @@ const mockUseProjectBoardTickets = useProjectBoardTickets as jest.Mock;
 const mockUseTicketColumnCounts = useTicketColumnCounts as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
+const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
+const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
+const mockParseViewType = parseViewType as jest.Mock;
+const mockUseBulkUpdateTickets = useBulkUpdateTickets as jest.Mock;
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:cycles:view": "all" }, modules: {} },
@@ -152,6 +179,15 @@ beforeEach(() => {
   mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_ROW] }));
   mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseTicketColumnCounts.mockReturnValue(baseQueryResult({ data: {} }));
+  mockUseBuildListFilters.mockReturnValue({
+    search: "", debouncedSearch: "", cursor: null,
+    setSearch: jest.fn(), setCursor: jest.fn(), clearAll: jest.fn(),
+    resetKey: "", value: jest.fn(() => ""), setValue: jest.fn(),
+    activeCount: 0, isFiltered: false,
+  });
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+  mockParseViewType.mockReturnValue("board");
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
 it("renders NoPermissionState when build:cycles:view is denied instead of calling notFound", () => {
@@ -191,5 +227,57 @@ it("renders the error state with the backend message when the cycles query fails
   const errorEl = screen.getByTestId("error-state");
   expect(errorEl.textContent).toContain("Failed to load cycle data");
   expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+});
+
+const makeTicket = (id: number, title: string, status = "TODO") => ({
+  id, title, status, ticketNumber: id, cycleId: 5, rank: "0",
+  epicId: null, assigneeId: null, priority: null, points: null,
+  timeSpent: null, dueDate: null, startDate: null, sequenceId: `T-${id}`,
+  labels: [], assignee: null, cycle: null,
+});
+
+it("search filter narrows cycleTickets and keyboard receives the reduced itemCount", () => {
+  mockUseBuildListFilters.mockReturnValue({
+    search: "alpha", debouncedSearch: "alpha", cursor: null,
+    setSearch: jest.fn(), setCursor: jest.fn(), clearAll: jest.fn(),
+    resetKey: "", value: jest.fn(() => ""), setValue: jest.fn(),
+    activeCount: 1, isFiltered: true,
+  });
+  mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({
+    data: [makeTicket(1, "Alpha sprint task"), makeTicket(2, "Beta sprint task")],
+  }));
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  const calls = mockUseBuildListKeyboard.mock.calls;
+  const lastArgs = calls[calls.length - 1]?.[0];
+  expect(lastArgs?.itemCount).toBe(1);
+});
+
+it("status filter narrows cycleTickets to only the matching status, reflected in keyboard itemCount", () => {
+  mockUseBuildListFilters.mockReturnValue({
+    search: "", debouncedSearch: "", cursor: null,
+    setSearch: jest.fn(), setCursor: jest.fn(), clearAll: jest.fn(),
+    resetKey: "", value: jest.fn((k: string) => k === "status" ? "DONE" : ""),
+    setValue: jest.fn(), activeCount: 1, isFiltered: true,
+  });
+  mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({
+    data: [makeTicket(3, "Task A", "TODO"), makeTicket(4, "Task B", "DONE")],
+  }));
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  const calls = mockUseBuildListKeyboard.mock.calls;
+  const lastArgs = calls[calls.length - 1]?.[0];
+  expect(lastArgs?.itemCount).toBe(1);
+});
+
+it("keyboard is disabled on board view and enabled on list view", () => {
+  mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({ data: [makeTicket(5, "X")] }));
+  mockParseViewType.mockReturnValue("board");
+  const { unmount } = render(<CycleDetailPage projectId="1" cycleId="5" />);
+  const boardArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+  expect(boardArgs?.enabled).toBe(false);
+  unmount();
+  mockParseViewType.mockReturnValue("list");
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  const listArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+  expect(listArgs?.enabled).toBe(true);
 });
 

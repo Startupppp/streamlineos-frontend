@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ProjectMilestonesPage } from "./project-milestones-page";
 
 jest.mock("next/navigation", () => ({
@@ -45,9 +45,10 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: React.ReactNode; title?: string }) => (
+  PageWrapper: ({ children, title, actions }: { children: React.ReactNode; title?: string; actions?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {actions ? <div data-testid="page-actions">{actions}</div> : null}
       {children}
     </div>
   ),
@@ -85,7 +86,7 @@ jest.mock("@/components/pm-chrome", () => ({
 }));
 
 jest.mock("./milestone-upsert-sheet", () => ({
-  MilestoneUpsertSheet: () => null,
+  MilestoneUpsertSheet: () => <div data-testid="milestone-upsert-sheet" />,
 }));
 
 jest.mock("./milestone-card", () => ({
@@ -122,10 +123,14 @@ function baseQueryResult(overrides = {}) {
   };
 }
 
+function cursorPage<T>(items: T[]) {
+  return { data: items, pagination: { limit: 20, hasMore: false, nextCursor: null } };
+}
+
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseProjectMilestones.mockReturnValue(baseQueryResult({ data: [] }));
+  mockUseProjectMilestones.mockReturnValue(baseQueryResult({ data: cursorPage([]) }));
   mockUseDeleteMilestone.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
@@ -138,26 +143,42 @@ it("renders NoPermissionState when build:view is denied instead of empty milesto
 });
 
 it("renders milestone cards when data is populated", () => {
+  const milestone = {
+    id: 1,
+    projectId: 1,
+    orgId: "org-1",
+    name: "Beta Launch",
+    targetDate: "2026-12-01",
+    status: "PENDING",
+    description: null,
+    createdBy: null,
+    clientVisible: false,
+    deletedAt: null,
+    createdAt: "2026-09-01T00:00:00Z",
+    updatedAt: "2026-09-01T00:00:00Z",
+  };
   mockUseProjectMilestones.mockReturnValue(
-    baseQueryResult({
-      data: [
-        {
-          id: 1,
-          projectId: 1,
-          orgId: "org-1",
-          name: "Beta Launch",
-          targetDate: "2026-12-01",
-          status: "PENDING",
-          description: null,
-          createdBy: null,
-          clientVisible: false,
-          deletedAt: null,
-          createdAt: "2026-09-01T00:00:00Z",
-          updatedAt: "2026-09-01T00:00:00Z",
-        },
-      ],
-    }),
+    baseQueryResult({ data: cursorPage([milestone]) }),
   );
   render(<ProjectMilestonesPage projectId="1" />);
   expect(screen.getByTestId("milestone-card")).toHaveTextContent("Beta Launch");
+});
+
+it("hides New Milestone button and delete actions when build:manage is denied", () => {
+  mockUseCan.mockReturnValue(false);
+  render(<ProjectMilestonesPage projectId="1" />);
+  expect(screen.queryByRole("button", { name: /new milestone/i })).not.toBeInTheDocument();
+});
+
+it("shows New Milestone button when build:manage is granted", () => {
+  mockUseCan.mockReturnValue(true);
+  render(<ProjectMilestonesPage projectId="1" />);
+  expect(screen.getByRole("button", { name: /new milestone/i })).toBeInTheDocument();
+});
+
+it("keyboard c shortcut opens create sheet when build:manage granted", () => {
+  mockUseCan.mockReturnValue(true);
+  render(<ProjectMilestonesPage projectId="1" />);
+  fireEvent.keyDown(document, { key: "c" });
+  expect(screen.getByTestId("milestone-upsert-sheet")).toBeInTheDocument();
 });

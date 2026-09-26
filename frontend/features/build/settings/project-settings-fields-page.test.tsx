@@ -17,6 +17,10 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   },
 }));
 
+jest.mock("@/hooks/api/build/custom-fields", () => ({
+  useProjectCustomFields: () => ({ data: [], isLoading: false }),
+}));
+
 jest.mock("@/features/build/settings/custom-fields-settings", () => ({
   CustomFieldsSettings: () => <div data-testid="custom-fields-settings" />,
 }));

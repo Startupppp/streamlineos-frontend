@@ -144,7 +144,10 @@ export const buildWorkQueryKeys = {
         [...base, "projects", "scope-directory", "search", params] as const,
     },
     approvals: {
-      inbox: () => [...base, "projects", "approvals", "inbox"] as const,
+      inbox: (params?: QueryKeyParams) =>
+        params === undefined
+          ? ([...base, "projects", "approvals", "inbox"] as const)
+          : ([...base, "projects", "approvals", "inbox", params] as const),
       inboxCount: () =>
         [...base, "projects", "approvals", "inbox", "count"] as const,
       list: (projectId: number, params?: QueryKeyParams) =>

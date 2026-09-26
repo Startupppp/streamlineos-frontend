@@ -38,7 +38,7 @@ const STATUS_CONFIG = {
 interface MilestoneCardProps {
   milestone: ProjectMilestone;
   onEdit: (milestone: ProjectMilestone) => void;
-  onDelete: (milestone: ProjectMilestone) => void;
+  onDelete?: (milestone: ProjectMilestone) => void;
 }
 
 function DeleteButton({ onClick, label }: { onClick: () => void; label: string }) {
@@ -68,7 +68,7 @@ export const MilestoneCard = memo(function MilestoneCard({
   const overdue = isPast(dateObj) && !isToday(dateObj) && milestone.status === "PENDING";
 
   const handleEdit = useCallback(() => onEdit(milestone), [onEdit, milestone]);
-  const handleDelete = useCallback(() => onDelete(milestone), [onDelete, milestone]);
+  const handleDelete = useCallback(() => onDelete?.(milestone), [onDelete, milestone]);
 
   const daysLabel =
     milestone.status !== "PENDING"
@@ -145,7 +145,9 @@ export const MilestoneCard = memo(function MilestoneCard({
               >
                 <Pencil className="h-3 w-3" />
               </Button>
-              <DeleteButton onClick={handleDelete} label={`Delete ${milestone.name}`} />
+              {onDelete ? (
+                <DeleteButton onClick={handleDelete} label={`Delete ${milestone.name}`} />
+              ) : null}
             </div>
           </div>
         </div>

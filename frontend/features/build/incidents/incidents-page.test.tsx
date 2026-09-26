@@ -81,8 +81,9 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: () => null,
 }));
 
+const mockIncidentSheet = jest.fn((_props: { open: boolean }) => null);
 jest.mock("./incident-sheet", () => ({
-  IncidentSheet: () => null,
+  IncidentSheet: (props: { open: boolean }) => { mockIncidentSheet(props); return null; },
 }));
 
 jest.mock("./sla", () => ({
@@ -197,4 +198,34 @@ it("pressing j then Enter navigates to the first incident's detail page so keybo
   fireEvent.keyDown(document, { key: "j" });
   fireEvent.keyDown(document, { key: "Enter" });
   expect(mockRouterPush).toHaveBeenCalledWith("/build/1/incidents/55");
+});
+
+it("pressing c opens the create incident sheet when build:incidents:manage is granted", () => {
+  mockUseCan.mockReturnValue(true);
+  mockUseIncidents.mockReturnValue(baseQuery({ data: [] }));
+  render(<IncidentsPage projectId={1} />);
+  fireEvent.keyDown(document, { key: "c" });
+  const lastCall = mockIncidentSheet.mock.calls[mockIncidentSheet.mock.calls.length - 1];
+  expect(lastCall[0].open).toBe(true);
+});
+
+it("pressing c does not open the sheet if build:incidents:manage is not granted", () => {
+  mockUseCan.mockReturnValue(false);
+  mockUseIncidents.mockReturnValue(baseQuery({ data: [] }));
+  render(<IncidentsPage projectId={1} />);
+  mockIncidentSheet.mockClear();
+  fireEvent.keyDown(document, { key: "c" });
+  const openCalls = mockIncidentSheet.mock.calls.filter((call) => call[0].open === true);
+  expect(openCalls).toHaveLength(0);
+});
+
+it("pressing e on the focused incident opens the edit sheet for that incident", () => {
+  const incident = { id: 77, incidentNumber: 3, title: "DB failure", severity: "critical", status: "detected", ownerId: null, detectedAt: null };
+  mockUseIncidents.mockReturnValue(baseQuery({ data: [incident] }));
+  render(<IncidentsPage projectId={1} />);
+  fireEvent.keyDown(document, { key: "j" });
+  mockIncidentSheet.mockClear();
+  fireEvent.keyDown(document, { key: "e" });
+  const lastCall = mockIncidentSheet.mock.calls[mockIncidentSheet.mock.calls.length - 1];
+  expect(lastCall[0].open).toBe(true);
 });

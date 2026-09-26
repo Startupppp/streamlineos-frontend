@@ -173,7 +173,11 @@ export const templateRowContract = z.object({
   })).optional(),
 });
 
-export const templateListContract = z.array(templateRowContract);
+export const templateListContract = z.object({
+  data: z.array(templateRowContract),
+  hasMore: z.boolean(),
+  nextCursor: z.number().int().nullable(),
+});
 
 export const applyTemplateResultContract = z.object({
   projectId: z.number().int(),

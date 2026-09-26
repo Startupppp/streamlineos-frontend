@@ -120,6 +120,12 @@ jest.mock("./approvals-toolbar", () => ({
   RequestApprovalMenuButton: () => null,
 }));
 
+jest.mock("./approval-bulk-action-bar", () => ({
+  ApprovalBulkActionBar: ({ selectedCount }: { selectedCount: number }) => (
+    <div data-testid="bulk-action-bar">{selectedCount} selected</div>
+  ),
+}));
+
 jest.mock("./approvals-filter-bar", () => ({
   ApprovalsFilterBar: () => null,
 }));

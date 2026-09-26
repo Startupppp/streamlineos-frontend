@@ -158,6 +158,37 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
     if (!open) setDeleteTarget(null);
   }
 
+  function renderTransitionMobileCard(row: WorkflowTransition) {
+    return (
+      <div className="flex items-start justify-between gap-2 px-3 py-3">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant={row.fromStatusId === null ? "secondary" : "outline"} className="text-xs">
+              {resolveStatusName(row.fromStatusId)}
+            </Badge>
+            <span className="text-xs text-muted-foreground">→</span>
+            <Badge variant="outline" className="text-xs">
+              {resolveStatusName(row.toStatusId)}
+            </Badge>
+          </div>
+          {row.name ? (
+            <p className="text-sm font-medium text-foreground">{row.name}</p>
+          ) : null}
+          {row.requiresApproval ? (
+            <Badge variant="secondary" className="text-micro">Approval required</Badge>
+          ) : null}
+        </div>
+        {canManage ? (
+          <TransitionRowActions
+            transition={row}
+            onEdit={handleEditClick}
+            onDelete={setDeleteTarget}
+          />
+        ) : null}
+      </div>
+    );
+  }
+
   const columns: DataTableColumn<WorkflowTransition>[] = [
     {
       key: "fromStatusId",
@@ -250,7 +281,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
       </div>
 
       {isLoading ? (
-        <DataTableSkeleton rows={12} headers={TRANSITION_TABLE_HEADERS} className="px-4 pb-4" />
+        <DataTableSkeleton rows={12} headers={TRANSITION_TABLE_HEADERS} className="px-4 pb-4" mobileCards />
       ) : (transitions ?? []).length === 0 ? (
         <EmptyState
           illustrationPreset="projects"
@@ -267,6 +298,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
           getRowKey={(row) => row.id}
           minWidth="680px"
           className="border-0"
+          mobileCard={renderTransitionMobileCard}
         />
       )}
 

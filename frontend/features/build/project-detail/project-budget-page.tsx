@@ -28,7 +28,8 @@ import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { formatMoneyCompact } from "@/lib/format-utils";
-import { useMemberCostColumns } from "./use-member-cost-columns";
+import { useMemberCostColumns, type MemberBreakdownRow } from "./use-member-cost-columns";
+import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 
 interface ProjectBudgetPageProps {
   projectId: string;
@@ -107,6 +108,22 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
   }
 
   const memberColumns = useMemberCostColumns({ resolveMemberUser, resolveMemberImage });
+
+  const renderMemberMobileCard = useCallback(
+    (row: MemberBreakdownRow) => {
+      const user = resolveMemberUser(row.userId);
+      return (
+        <BuildMobileCard
+          title={user ? (user.name ?? user.email ?? row.userId) : row.userId}
+          meta={[
+            { label: "Hours", value: `${row.hours.toFixed(1)} hrs` },
+            { label: "Cost", value: formatMoneyCompact(row.cost, display) },
+          ]}
+        />
+      );
+    },
+    [resolveMemberUser, display],
+  );
 
   const budgetActions = editMode ? (
     <div className="flex items-center gap-2">
@@ -239,6 +256,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
                 columns={memberColumns}
                 getRowKey={(row) => row.userId}
                 className="rounded-none border-0"
+                mobileCard={renderMemberMobileCard}
               />
             </PmPanel>
           </PmSection>

@@ -17,6 +17,10 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   },
 }));
 
+jest.mock("@/hooks/api/build/project-members", () => ({
+  useProjectMembers: () => ({ data: [], isLoading: false }),
+}));
+
 jest.mock("@/features/build/settings/project-member-roles-section", () => ({
   ProjectMemberRolesSection: () => (
     <div data-testid="project-member-roles-section" />

@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api-envelope";
 const mockUseTestCases = jest.fn();
 const mockUseTestSuites = jest.fn();
 const mockUseDeleteTestCase = jest.fn();
+const mockUseUpdateTestCase = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseAccess = jest.fn();
 
@@ -12,6 +13,7 @@ jest.mock("@/hooks/api/build/qa", () => ({
   useTestCases: (...args: unknown[]) => mockUseTestCases(...args),
   useTestSuites: (...args: unknown[]) => mockUseTestSuites(...args),
   useDeleteTestCase: () => mockUseDeleteTestCase(),
+  useUpdateTestCase: () => mockUseUpdateTestCase(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -53,7 +55,12 @@ jest.mock("next/link", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: () => <div data-testid="data-table" />,
+  DataTable: ({ selection }: { selection?: { onChange: (s: Set<string | number>) => void } }) => (
+    <div
+      data-testid="data-table"
+      onClick={() => selection?.onChange(new Set([42]))}
+    />
+  ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
@@ -72,6 +79,16 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
 const mockTestCaseSheet = jest.fn((_props: { open: boolean }) => null);
 jest.mock("./test-case-sheet", () => ({
   TestCaseSheet: (props: { open: boolean }) => { mockTestCaseSheet(props); return null; },
+}));
+
+const mockQaBulkActionBar = jest.fn(
+  (_props: { projectId: number; selectedIds: Set<string | number>; onClear: () => void }) => null,
+);
+jest.mock("./qa-bulk-action-bar", () => ({
+  QaBulkActionBar: (props: { projectId: number; selectedIds: Set<string | number>; onClear: () => void }) => {
+    mockQaBulkActionBar(props);
+    return <div data-testid="bulk-action-bar">{props.selectedIds.size} selected</div>;
+  },
 }));
 
 jest.mock("./test-case-columns", () => ({
@@ -126,6 +143,7 @@ beforeEach(() => {
   mockUseTestCases.mockReturnValue(baseQuery({ data: EMPTY_PAGE }));
   mockUseTestSuites.mockReturnValue(baseQuery({ data: [] }));
   mockUseDeleteTestCase.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseUpdateTestCase.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
 it("testCasePageContract rejects a bare array so a backend regression serving the old array shape fails loudly instead of rendering an empty list", () => {
@@ -178,4 +196,34 @@ it("pressing j then Enter opens the first test case in the edit sheet so keyboar
   const calls = mockTestCaseSheet.mock.calls;
   const lastCall = calls[calls.length - 1][0] as { open: boolean };
   expect(lastCall.open).toBe(true);
+});
+
+it("pressing c opens the create sheet when build:qa:manage is granted", () => {
+  mockUseCan.mockReturnValue(true);
+  render(<TestCasesTab projectId={1} />);
+  fireEvent.keyDown(document, { key: "c" });
+  const calls = mockTestCaseSheet.mock.calls;
+  const lastCall = calls[calls.length - 1][0] as { open: boolean };
+  expect(lastCall.open).toBe(true);
+});
+
+it("pressing e on the focused test case opens the edit sheet", () => {
+  const tc = { id: 42, caseNumber: 1, title: "Login flow", suiteId: null };
+  mockUseTestCases.mockReturnValue(baseQuery({ data: { data: [tc], hasMore: false, nextCursor: null } }));
+  render(<TestCasesTab projectId={1} />);
+  fireEvent.keyDown(document, { key: "j" });
+  fireEvent.keyDown(document, { key: "e" });
+  const calls = mockTestCaseSheet.mock.calls;
+  const lastCall = calls[calls.length - 1][0] as { open: boolean };
+  expect(lastCall.open).toBe(true);
+});
+
+it("bulk action bar renders with correct selected count when rows are selected via the data table", () => {
+  const tc = { id: 42, caseNumber: 1, title: "Login flow", suiteId: null };
+  mockUseTestCases.mockReturnValue(baseQuery({ data: { data: [tc], hasMore: false, nextCursor: null } }));
+  render(<TestCasesTab projectId={1} />);
+  expect(screen.queryByTestId("bulk-action-bar")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("data-table"));
+  expect(screen.getByTestId("bulk-action-bar")).toBeInTheDocument();
+  expect(screen.getByTestId("bulk-action-bar")).toHaveTextContent("1 selected");
 });

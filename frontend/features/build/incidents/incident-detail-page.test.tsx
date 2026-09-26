@@ -49,8 +49,8 @@ jest.mock("@animateicons/react/lucide", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: ReactNode; title?: ReactNode }) => (
-    <div>{title ? <h1>{title}</h1> : null}{children}</div>
+  PageWrapper: ({ children, title, badge }: { children: ReactNode; title?: ReactNode; badge?: ReactNode }) => (
+    <div>{title ? <h1>{title}</h1> : null}{badge}{children}</div>
   ),
 }));
 
@@ -137,6 +137,13 @@ function baseIncident(overrides: Partial<Incident> = {}): Incident {
   };
 }
 
+function releasePage(items: Array<{ id: number; name: string; version: string }>) {
+  return {
+    data: items,
+    pagination: { limit: 50, hasMore: false, nextCursor: null },
+  };
+}
+
 function baseIncidentDetail(overrides: Partial<IncidentDetail> = {}): IncidentDetail {
   return {
     ...baseIncident(),
@@ -158,7 +165,7 @@ beforeEach(() => {
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseIncident.mockReturnValue(baseQuery());
   mockUseProjectMembers.mockReturnValue(baseQuery({ data: [] }));
-  mockUseReleases.mockReturnValue(baseQuery({ data: [] }));
+  mockUseReleases.mockReturnValue(baseQuery({ data: releasePage([]) }));
   mockUseTicket.mockReturnValue(baseQuery({ data: null }));
   mockUseDeleteIncident.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
@@ -193,6 +200,17 @@ describe("IncidentDetailPage page-state gating", () => {
     );
   });
 
+  it("reads the linked release out of the cursor envelope useReleases now returns, not off the envelope itself", () => {
+    mockUseIncident.mockReturnValue(
+      baseQuery({ data: baseIncidentDetail({ id: 1, releaseId: 7 }) }),
+    );
+    mockUseReleases.mockReturnValue(
+      baseQuery({ data: releasePage([{ id: 7, name: "Autumn", version: "2.4.0" }]) }),
+    );
+    render(<IncidentDetailPage projectId={1} incidentId={1} />);
+    expect(screen.getByText("Autumn (2.4.0)")).toBeInTheDocument();
+  });
+
   it("renders the not-found empty state only once access is granted and the incident is genuinely absent", () => {
     mockUseIncident.mockReturnValue(baseQuery());
     render(<IncidentDetailPage projectId={1} incidentId={999} />);
@@ -203,6 +221,14 @@ describe("IncidentDetailPage page-state gating", () => {
     mockUseIncident.mockReturnValue(baseQuery({ data: baseIncidentDetail() }));
     render(<IncidentDetailPage projectId={1} incidentId={1} />);
     expect(screen.getByRole("heading", { name: "Payments outage" })).toBeInTheDocument();
+  });
+
+  it("renders the incident's severity, SLA status and owner when data is loaded", () => {
+    mockUseIncident.mockReturnValue(baseQuery({ data: baseIncidentDetail() }));
+    render(<IncidentDetailPage projectId={1} incidentId={1} />);
+    expect(screen.getByText("critical")).toBeInTheDocument();
+    expect(screen.getByText("Detected")).toBeInTheDocument();
+    expect(screen.getByText("Unassigned")).toBeInTheDocument();
   });
 });
 

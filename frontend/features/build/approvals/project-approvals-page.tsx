@@ -22,6 +22,7 @@ import { DecideDialog } from "./decide-dialog";
 import { DelegateDialog } from "./delegate-dialog";
 import { RequestApprovalSheet } from "./request-approval-sheet";
 import { RequestApprovalMenuButton } from "./approvals-toolbar";
+import { ApprovalBulkActionBar } from "./approval-bulk-action-bar";
 import { ApprovalsFilterBar } from "./approvals-filter-bar";
 import { useApprovalsColumns } from "./use-approvals-columns";
 import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
@@ -30,6 +31,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { STATUS_OPTIONS, ENTITY_OPTIONS } from "./approvals-constants";
 import type {
   Approval,
@@ -88,6 +90,7 @@ export function ProjectApprovalsPage({
     withSearch: false,
   });
 
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
   const [requestOpen, setRequestOpen] = useState(false);
   const [defaultEntityType, setDefaultEntityType] = useState<
     ApprovalEntityType | undefined
@@ -110,6 +113,10 @@ export function ProjectApprovalsPage({
   );
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
+  const items = useMemo(
+    () => data?.pages.flatMap((page) => page.data) ?? [],
+    [data],
+  );
 
   const createApproval = useCreateApproval(projectId);
   const decideApproval = useDecideApproval(projectId);
@@ -154,6 +161,35 @@ export function ProjectApprovalsPage({
     () => handleOpenRequest("milestone"),
     [handleOpenRequest],
   );
+
+  const handleOpenFocused = useCallback(
+    (index: number) => { if (items[index]) setDecideTarget(items[index]); },
+    [items],
+  );
+  const handleClearKeyboardSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: items.length,
+    onOpen: handleOpenFocused,
+    onCreate: canRequest ? handleOpenRequest : undefined,
+    onClearSelection: handleClearKeyboardSelection,
+    enabled: !requestOpen && !decideTarget && !delegateTarget && !cancelTarget && !deleteTarget,
+  });
+
+  const handleBulkCancel = useCallback(() => {
+    const count = selectedIds.size;
+    for (const id of selectedIds) {
+      updateApproval.mutate(
+        { approvalId: id as number, status: "cancelled" },
+        { onError: (e) => toast.error(getErrorMessage(e)) },
+      );
+    }
+    setSelectedIds(new Set());
+    toast.success(`${count} approval${count === 1 ? "" : "s"} cancelled`);
+  }, [selectedIds, updateApproval]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
 
   const handleCreate = useCallback(
     (input: CreateApprovalInput) => {
@@ -308,8 +344,6 @@ export function ProjectApprovalsPage({
     error,
   });
 
-  const items = data?.pages.flatMap((page) => page.data) ?? [];
-
   return (
     <PageWrapper
       title="Approvals"
@@ -337,6 +371,14 @@ export function ProjectApprovalsPage({
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          {selectedIds.size > 0 && (
+            <ApprovalBulkActionBar
+              selectedCount={selectedIds.size}
+              isPending={updateApproval.isPending}
+              onCancelSelected={handleBulkCancel}
+              onClear={handleClearSelection}
+            />
+          )}
           <PageState
             resolution={pageState}
             loading={
@@ -363,6 +405,12 @@ export function ProjectApprovalsPage({
               data={items}
               columns={columns}
               getRowKey={(row) => row.id}
+              selection={{
+                selected: selectedIds,
+                onChange: setSelectedIds,
+                isRowSelectable: () => canManage,
+                getRowLabel: (row) => row.title,
+              }}
               pagination={{
                 mode: "cursor",
                 pageSize: 25,

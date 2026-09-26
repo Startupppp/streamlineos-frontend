@@ -109,6 +109,11 @@ jest.mock("./apply-template-dialog", () => ({
   ApplyTemplateDialog: () => null,
 }));
 
+const mockUseBuildListKeyboard = jest.fn();
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (args: unknown) => mockUseBuildListKeyboard(args),
+}));
+
 import { useProjectTemplates, useDeleteProjectTemplate } from "@/hooks/api/build";
 import { useCan, useAccess } from "@/hooks/api/access";
 
@@ -134,15 +139,26 @@ function baseQueryResult(overrides = {}) {
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
     ...overrides,
+  };
+}
+
+function templatePages(items: unknown[]) {
+  return {
+    pages: [{ data: items, hasMore: false, nextCursor: null }],
+    pageParams: [undefined],
   };
 }
 
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseProjectTemplates.mockReturnValue(baseQueryResult({ data: [] }));
+  mockUseProjectTemplates.mockReturnValue(baseQueryResult({ data: templatePages([]) }));
   mockUseDeleteProjectTemplate.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseBuildListKeyboard.mockReset();
 });
 
 it("shows a skeleton while the access snapshot is in flight, not an empty or denied state", () => {
@@ -184,4 +200,33 @@ it("hides the create template button when the user lacks build:manage permission
   mockUseCan.mockImplementation((key: string) => key !== "build:manage");
   render(<BuildTemplatesPage />);
   expect(screen.queryByText(/new template/i)).not.toBeInTheDocument();
+});
+
+it("wires useBuildListKeyboard with the template count so j/k navigate the grid", () => {
+  const templates = [
+    { id: 1, name: "Sprint", description: null, category: null, tickets: [] },
+    { id: 2, name: "Bug Bash", description: null, category: null, tickets: [] },
+  ];
+  mockUseProjectTemplates.mockReturnValue(baseQueryResult({ data: templatePages(templates) }));
+  render(<BuildTemplatesPage />);
+  expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+    expect.objectContaining({ itemCount: 2, enabled: true }),
+  );
+});
+
+it("disables keyboard nav when the page is not yet ready", () => {
+  mockUseProjectTemplates.mockReturnValue(baseQueryResult({ isLoading: true, data: undefined }));
+  render(<BuildTemplatesPage />);
+  expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+    expect.objectContaining({ enabled: false }),
+  );
+});
+
+it("opens the apply dialog via onOpen callback so Enter on a focused template applies it", () => {
+  const template = { id: 3, name: "Kanban", description: null, category: null, tickets: [] };
+  mockUseProjectTemplates.mockReturnValue(baseQueryResult({ data: templatePages([template]) }));
+  render(<BuildTemplatesPage />);
+  const [call] = mockUseBuildListKeyboard.mock.calls;
+  const { onOpen } = call[0] as { onOpen: (index: number) => void };
+  onOpen(0);
 });

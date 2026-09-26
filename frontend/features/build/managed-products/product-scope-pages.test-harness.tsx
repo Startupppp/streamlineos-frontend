@@ -71,6 +71,7 @@ jest.mock("@/hooks/api/organization", () => ({
 
 jest.mock("@/hooks/api/goals", () => ({
   useGoals: jest.fn(),
+  useGoalsPage: jest.fn(),
   useGoalStats: jest.fn(() => ({ data: undefined })),
 }));
 
@@ -183,7 +184,13 @@ jest.mock("@/features/build/goals/goal-form-sheet", () => ({
 }));
 
 jest.mock("@/features/build/goals/constants", () => ({
-  STATUS_CONFIG: {},
+  STATUS_CONFIG: {
+    not_started: { label: "Not started", variant: "outline" as const },
+    on_track: { label: "On track", variant: "default" as const },
+    at_risk: { label: "At risk", variant: "destructive" as const },
+    off_track: { label: "Off track", variant: "destructive" as const },
+    completed: { label: "Completed", variant: "secondary" as const },
+  },
   LEVEL_LABEL: { company: "Company", team: "Team", individual: "Individual" },
   STATUS_OPTIONS: [],
   LEVEL_OPTIONS: [],
@@ -235,10 +242,12 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 
 jest.mock("@animateicons/react/lucide", () => ({
   PlusIcon: () => null,
+  EllipsisIcon: () => <span data-testid="ellipsis-icon" />,
 }));
 
-export const { useGoals } = jest.requireMock("@/hooks/api/goals") as {
+export const { useGoals, useGoalsPage } = jest.requireMock("@/hooks/api/goals") as {
   useGoals: jest.Mock;
+  useGoalsPage: jest.Mock;
 };
 export const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
@@ -261,6 +270,14 @@ export const { useManagedProducts } = jest.requireMock("@/hooks/api/build") as {
 
 export const EMPTY_GOALS_RESULT = {
   data: [],
+  isLoading: false,
+  isError: false,
+  error: null,
+  refetch: jest.fn(),
+};
+
+export const EMPTY_GOALS_PAGE_RESULT = {
+  data: { items: [], page: 1, pageSize: 20, total: 0 },
   isLoading: false,
   isError: false,
   error: null,

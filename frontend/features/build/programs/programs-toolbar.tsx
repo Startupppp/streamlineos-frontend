@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import type { RefObject } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
@@ -78,6 +79,7 @@ interface ProgramsToolbarProps {
   ownerOptions: readonly BuildFilterOption[];
   portfolioOptions: readonly BuildFilterOption[];
   projectOptions: readonly BuildFilterOption[];
+  searchInputRef?: RefObject<HTMLInputElement | null>;
 }
 
 export function ProgramsToolbar({
@@ -85,6 +87,7 @@ export function ProgramsToolbar({
   ownerOptions,
   portfolioOptions,
   projectOptions,
+  searchInputRef,
 }: ProgramsToolbarProps) {
   const status = filters.value("status");
   const health = filters.value("health");
@@ -130,6 +133,7 @@ export function ProgramsToolbar({
         onValueChange: filters.setSearch,
         placeholder: "Search programs…",
         label: "Search programs",
+        inputRef: searchInputRef,
       }}
       filters={[
         {

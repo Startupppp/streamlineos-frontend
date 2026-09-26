@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
@@ -177,10 +177,13 @@ export function PortfoliosPage() {
     },
     [displayed, handleEditRow],
   );
+  const searchInputRef = useRef<HTMLInputElement>(null);
   useBuildListKeyboard({
     itemCount: displayed.length,
     onOpen: handleOpenByIndex,
+    onCreate: handleOpenCreate,
     onClearSelection: handleClearSelection,
+    searchInputRef,
   });
 
   const handleNextPage = useCallback(() => {
@@ -216,7 +219,7 @@ export function PortfoliosPage() {
       title="Portfolios"
       subtitle="Group related projects into portfolios"
       filters={
-        <PortfoliosToolbar listFilters={listFilters} ownerOptions={ownerOptions} />
+        <PortfoliosToolbar listFilters={listFilters} ownerOptions={ownerOptions} searchInputRef={searchInputRef} />
       }
       actions={
         <BuildHeaderActions

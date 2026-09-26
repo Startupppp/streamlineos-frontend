@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useModulePages, useCreateModule } from "@/hooks/api/build";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -53,6 +53,8 @@ import {
 } from "./create-module-schema";
 import { useCan } from "@/hooks/api/access";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
@@ -74,6 +76,8 @@ interface ModulesPageProps {
 export function ModulesPage({ projectId }: ModulesPageProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const canManage = useCan("build:workspace:manage");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const listFilters = useBuildListFilters();
 
   const {
     data: modulePages,
@@ -87,7 +91,16 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
   } = useModulePages(projectId);
 
   const pageState = usePageState({ isLoading, isError, error, permission: "build:view" });
-  const modules = modulePages?.pages.flatMap((page) => page.data) ?? [];
+  const allModules = modulePages?.pages.flatMap((page) => page.data) ?? [];
+  const q = listFilters.debouncedSearch.toLowerCase();
+  const statusFilter = listFilters.value("status");
+  const leadFilter = listFilters.value("leadId");
+  const modules = allModules.filter(
+    (m) =>
+      (!q || m.name.toLowerCase().includes(q)) &&
+      (!statusFilter || statusFilter === "all" || m.status === statusFilter) &&
+      (!leadFilter || leadFilter === "all" || m.leadId === leadFilter),
+  );
   const createMutation = useCreateModule();
 
   const form = useForm<CreateModuleForm>({
@@ -180,6 +193,7 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
     onOpen: handleOpenModuleByIndex,
     onClearSelection: handleClearModulesKeyboard,
     enabled: pageState.kind === "ready",
+    searchInputRef,
   });
 
   const total = modules?.length ?? 0;
@@ -226,6 +240,17 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
     <PageWrapper
       title="Modules"
       subtitle="Organize work into feature groups and track module progress"
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search modules",
+            inputRef: searchInputRef,
+          }}
+          onClearAll={listFilters.clearAll}
+        />
+      }
       actions={
         canManage ? <Sheet open={createOpen} onOpenChange={handleOpenChange}>
           <SheetTrigger asChild>

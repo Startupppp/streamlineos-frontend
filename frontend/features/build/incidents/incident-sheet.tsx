@@ -133,7 +133,8 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
   const create = useCreateIncident();
   const update = useUpdateIncident();
   const { data: project } = useProject(projectId);
-  const { data: releases = [] } = useReleases(projectId);
+  const releasesPage = useReleases(projectId);
+  const releases = releasesPage.data?.data ?? [];
   const projectKey = project?.key ?? "";
 
   const form = useForm<IncidentFormValues>({

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import type { RefObject } from "react";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import type { BuildFilterOption } from "@/features/build/shared/build-filter-select";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -40,11 +41,13 @@ export const PORTFOLIO_FILTER_DEFINITIONS = [
 interface PortfoliosToolbarProps {
   listFilters: BuildListFiltersState;
   ownerOptions?: readonly BuildFilterOption[];
+  searchInputRef?: RefObject<HTMLInputElement | null>;
 }
 
 export function PortfoliosToolbar({
   listFilters,
   ownerOptions,
+  searchInputRef,
 }: PortfoliosToolbarProps) {
   const statusValue = listFilters.value("status");
   const healthValue = listFilters.value("health");
@@ -79,6 +82,7 @@ export function PortfoliosToolbar({
         onValueChange: listFilters.setSearch,
         placeholder: "Search portfolios…",
         label: "Search portfolios",
+        inputRef: searchInputRef,
       }}
       filters={[
         {

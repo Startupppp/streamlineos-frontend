@@ -22,12 +22,19 @@ export function resolveBuildScopeFallback({
   scope,
   isInaccessible,
   hasAnyBuildAccess,
+  accessibleParent,
   organizationHref,
 }: BuildScopeFallbackInput): BuildScopeFallback {
   if (!isInaccessible) return { kind: "stay" };
   if (scope.type === "organization")
     return hasAnyBuildAccess ? { kind: "stay" } : { kind: "no-access" };
   if (!hasAnyBuildAccess) return { kind: "no-access" };
+  if (accessibleParent?.type === "product")
+    return {
+      kind: "recover",
+      href: `/build/managed-products/${accessibleParent.id}`,
+      label: "Go to product",
+    };
   if (organizationHref !== null)
     return {
       kind: "recover",

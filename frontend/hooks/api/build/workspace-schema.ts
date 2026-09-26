@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 const milestoneRowSchema = z.object({
   id: z.number(),
@@ -135,7 +136,7 @@ const analyticsSchema = z.object({
   healthBreakdown: z.object({ completionPct: z.number(), onTimePct: z.number(), velocityScore: z.number(), overdueTickets: z.number(), totalTickets: z.number() }).optional(),
 });
 
-export const milestoneListContract = z.array(milestoneRowSchema);
+export const milestoneListContract = cursorPageContract(milestoneRowSchema);
 export const milestoneRowContract = milestoneRowSchema;
 export const intakeItemContract = intakeItemSchema;
 export const intakeListContract = intakeListSchema;

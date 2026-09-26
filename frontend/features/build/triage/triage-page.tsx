@@ -1,7 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useProject, useTickets, useUpdateTicket } from "@/hooks/api";
+import { useBulkUpdateTickets } from "@/hooks/api/build";
+import { useCan } from "@/hooks/api/access";
+import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -49,7 +53,11 @@ export function TriagePage({ projectId }: TriagePageProps) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
   const listFilters = useBuildListFilters();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [storedTrail, setStoredTrail] = useState<(string | null)[]>([null]);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const canUpdate = useCan("build:tickets:update");
+  const bulkUpdate = useBulkUpdateTickets(projectId);
   const cursorTrail = useMemo(
     () =>
       storedTrail[storedTrail.length - 1] === listFilters.cursor
@@ -59,6 +67,8 @@ export function TriagePage({ projectId }: TriagePageProps) {
   );
   const cursor = cursorTrail[cursorTrail.length - 1] ?? undefined;
   const hasPrevious = cursorTrail.length > 1;
+  const triageOwner = listFilters.value("ownerId") || undefined;
+  const triageSort = (listFilters.value("sort") as "created" | "updated" | "priority" | "dueDate" | undefined) || "created";
   const {
     data: ticketPage,
     isLoading: ticketsLoading,
@@ -70,8 +80,9 @@ export function TriagePage({ projectId }: TriagePageProps) {
     cursor,
     status: TRIAGE_STATUS,
     limit: PAGE_LIMIT,
-    orderBy: "created",
+    orderBy: triageSort,
     orderDir: "asc",
+    assigneeId: triageOwner,
   });
   const { data: project, isLoading: projectLoading } = useProject(projectId);
 
@@ -187,12 +198,22 @@ export function TriagePage({ projectId }: TriagePageProps) {
     },
     [tickets, handleOpen],
   );
-  const handleClearTriageKeyboard = useCallback(() => {}, []);
+  const handleClearTriageKeyboard = useCallback(() => setSelectedIds(new Set()), []);
+  const handleToggleSelect = useCallback((id: number) => {
+    setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }, []);
+  const handleBulkStatus = useCallback((status: string) => {
+    bulkUpdate.mutate(
+      { ticketIds: [...selectedIds], status },
+      { onSuccess: () => { setSelectedIds(new Set()); toast.success("Updated"); }, onError: (e) => toast.error(getErrorMessage(e)) },
+    );
+  }, [bulkUpdate, selectedIds]);
   const { focusedIndex: triageFocusedIndex } = useBuildListKeyboard({
     itemCount: tickets.length,
     onOpen: handleOpenTicketByIndex,
     onClearSelection: handleClearTriageKeyboard,
     enabled: isReady,
+    searchInputRef,
   });
 
   return (
@@ -209,6 +230,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
             value: listFilters.search,
             onValueChange: listFilters.setSearch,
             placeholder: "Search triage",
+            inputRef: searchInputRef,
           }}
           onClearAll={listFilters.clearAll}
         />
@@ -231,19 +253,28 @@ export function TriagePage({ projectId }: TriagePageProps) {
             />
           ) : (
             <PmSection index={0}>
+              {canUpdate && selectedIds.size > 0 && (
+                <BulkActionBar selectedCount={selectedIds.size} members={[]} cycles={[]} statuses={project?.statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkStatus} onBulkAssignee={handleBulkStatus} onBulkCycle={handleBulkStatus} onClear={handleClearTriageKeyboard} />
+              )}
               <PmStaggerList className="flex flex-col gap-2.5">
                 {tickets.map((ticket, index) => (
-                  <TriageRow
-                    key={ticket.id}
-                    ticket={ticket}
-                    projectKey={project?.key}
-                    isAccepting={pendingAccept.has(ticket.id)}
-                    isDeclining={pendingDecline.has(ticket.id)}
-                    onAccept={handleAccept}
-                    onDecline={handleDecline}
-                    onOpen={handleOpen}
-                    isSelected={triageFocusedIndex === index}
-                  />
+                  <div key={ticket.id} className="flex items-start gap-2">
+                    {canUpdate && (
+                      <Checkbox className="mt-4 shrink-0" checked={selectedIds.has(ticket.id)} onCheckedChange={() => handleToggleSelect(ticket.id)} aria-label={`Select ticket ${ticket.ticketNumber}`} />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <TriageRow
+                        ticket={ticket}
+                        projectKey={project?.key}
+                        isAccepting={pendingAccept.has(ticket.id)}
+                        isDeclining={pendingDecline.has(ticket.id)}
+                        onAccept={handleAccept}
+                        onDecline={handleDecline}
+                        onOpen={handleOpen}
+                        isSelected={triageFocusedIndex === index}
+                      />
+                    </div>
+                  </div>
                 ))}
               </PmStaggerList>
               <TablePagination

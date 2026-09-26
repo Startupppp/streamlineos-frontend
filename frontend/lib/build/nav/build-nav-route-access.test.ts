@@ -100,3 +100,33 @@ describe("BLD-L4-001 — project settings sub-routes inherit access via extensio
     expect(webhooks?.requiredPermission).toBe("build:update");
   });
 });
+
+describe("three project-settings sub-routes take their own key, not the parent build:update", () => {
+  it("settings/access resolves to build:members:view, the key its own page declares", () => {
+    const decision = resolveRouteAccess("/build/[projectId]/settings/access");
+    expect(decision.kind).toBe("permission");
+    expect(decision).toMatchObject({ permission: "build:members:view" });
+  });
+
+  it("settings/agents/credentials resolves to settings:api-tokens:read because agent credentials are API tokens", () => {
+    const decision = resolveRouteAccess("/build/[projectId]/settings/agents/credentials");
+    expect(decision.kind).toBe("permission");
+    expect(decision).toMatchObject({ permission: "settings:api-tokens:read" });
+  });
+
+  it("settings/portal resolves to build:clientvisibility:manage because it sets the external disclosure boundary", () => {
+    const decision = resolveRouteAccess("/build/[projectId]/settings/portal");
+    expect(decision.kind).toBe("permission");
+    expect(decision).toMatchObject({ permission: "build:clientvisibility:manage" });
+  });
+
+  it("settings/agents without the credentials segment still inherits build:update, so the new entries did not widen their reach", () => {
+    const decision = resolveRouteAccess("/build/[projectId]/settings/agents");
+    expect(decision).toMatchObject({ permission: "build:update" });
+  });
+
+  it("settings/fields still inherits build:update, proving the parent entry is intact", () => {
+    const decision = resolveRouteAccess("/build/[projectId]/settings/fields");
+    expect(decision).toMatchObject({ permission: "build:update" });
+  });
+});

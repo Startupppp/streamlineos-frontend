@@ -25,10 +25,21 @@ jest.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+jest.mock("@/features/build/shared/build-header-actions", () => ({
+  BuildHeaderActions: ({ actions }: { actions: Array<{ id: string; label: string; onSelect?: () => void }> }) => (
+    <div>
+      {actions.map((action) => (
+        <button key={action.id} type="button" onClick={action.onSelect}>{action.label}</button>
+      ))}
+    </div>
+  ),
+}));
+
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: React.ReactNode; title?: string }) => (
+  PageWrapper: ({ children, title, actions }: { children: React.ReactNode; title?: string; actions?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
+      {actions ? <div data-testid="page-actions">{actions}</div> : null}
       {children}
     </div>
   ),
@@ -87,9 +98,10 @@ jest.mock("./releases-page-parts", () => ({
 }));
 
 jest.mock("./release-form-sheet", () => ({
-  ReleaseFormSheet: () => null,
+  ReleaseFormSheet: () => <div data-testid="release-form-sheet" />,
 }));
 
+import { fireEvent } from "@testing-library/react";
 import { useReleases, useDeleteRelease } from "@/hooks/api/build/releases";
 import { useCan, useAccess } from "@/hooks/api/access";
 
@@ -133,10 +145,14 @@ function baseQueryResult(overrides = {}) {
   };
 }
 
+function cursorPage<T>(items: T[]) {
+  return { data: items, pagination: { limit: 25, hasMore: false, nextCursor: null } };
+}
+
 beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseReleases.mockReturnValue(baseQueryResult({ data: [] }));
+  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([]) }));
   mockUseDeleteRelease.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
@@ -155,4 +171,23 @@ it("shows actual query error message on failure instead of hardcoded text", () =
   render(<ReleasesPage projectId={1} />);
   const errorEl = screen.getByTestId("error-state");
   expect(errorEl.textContent).toContain("Build module is not enabled");
+});
+
+it("hides New Release button when build:manage is denied", () => {
+  mockUseCan.mockReturnValue(false);
+  render(<ReleasesPage projectId={1} />);
+  expect(screen.queryByRole("button", { name: /new release/i })).not.toBeInTheDocument();
+});
+
+it("shows New Release button when build:manage is granted", () => {
+  mockUseCan.mockReturnValue(true);
+  render(<ReleasesPage projectId={1} />);
+  expect(screen.getByRole("button", { name: /new release/i })).toBeInTheDocument();
+});
+
+it("keyboard c shortcut opens the release form sheet", () => {
+  mockUseCan.mockReturnValue(true);
+  render(<ReleasesPage projectId={1} />);
+  fireEvent.keyDown(document, { key: "c" });
+  expect(screen.getByTestId("release-form-sheet")).toBeInTheDocument();
 });

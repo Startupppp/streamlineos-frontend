@@ -2,6 +2,8 @@ import { z } from "zod";
 import {
   ticketRowContract,
   ticketListRowContract,
+  ticketPriorityContract,
+  ticketTypeContract,
 } from "./build-tickets-core-schema";
 
 const ticketRelationRelatedTicketSchema = z
@@ -10,8 +12,8 @@ const ticketRelationRelatedTicketSchema = z
     title: z.string(),
     ticketNumber: z.number().int().nullable(),
     status: z.string().nullable(),
-    priority: z.string().nullable(),
-    type: z.string().nullable(),
+    priority: ticketPriorityContract.nullable(),
+    type: ticketTypeContract.nullable(),
     points: z.number().nullable(),
     assigneeMembershipId: z.number().int().nullable(),
     projectId: z.number().int().nullable(),
@@ -209,8 +211,8 @@ const allWorkItemSchema = z.object({
   id: z.number().int(),
   title: z.string(),
   status: z.string(),
-  priority: z.string().nullable(),
-  type: z.string(),
+  priority: ticketPriorityContract.nullable(),
+  type: ticketTypeContract,
   dueDate: z.string().nullable(),
   startDate: z.string().nullable(),
   ticketNumber: z.number().int(),

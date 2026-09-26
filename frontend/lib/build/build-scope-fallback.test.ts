@@ -64,7 +64,7 @@ describe("resolveBuildScopeFallback", () => {
     ).toEqual({ kind: "no-access" });
   });
 
-  it("uses the permission-filtered organization destination instead of trusting a parent hint", () => {
+  it("prefers the nearer product parent over the organization destination, because use-build-scope-recovery only supplies a parent whose product read already succeeded", () => {
     expect(
       resolveBuildScopeFallback({
         scope: PROJECT_SCOPE,
@@ -75,8 +75,8 @@ describe("resolveBuildScopeFallback", () => {
       }),
     ).toEqual({
       kind: "recover",
-      href: "/build/command-center",
-      label: "Go to All of Build",
+      href: "/build/managed-products/7",
+      label: "Go to product",
     });
   });
 
@@ -124,7 +124,7 @@ describe("resolveBuildScopeFallback", () => {
     ).toEqual({ kind: "no-access" });
   });
 
-  it("uses a narrow-access organization destination when a parent hint is present", () => {
+  it("still prefers the product parent when the only organization destination is a narrow one", () => {
     expect(
       resolveBuildScopeFallback({
         scope: PROJECT_SCOPE,
@@ -135,18 +135,34 @@ describe("resolveBuildScopeFallback", () => {
       }),
     ).toEqual({
       kind: "recover",
-      href: "/build/my-work",
-      label: "Go to All of Build",
+      href: "/build/managed-products/7",
+      label: "Go to product",
     });
   });
 
-  it("does not emit a parent link when no authorized organization destination exists", () => {
+  it("still offers the product parent when no organization destination is authorized at all, so a product member is not stranded on no-access", () => {
     expect(
       resolveBuildScopeFallback({
         scope: PROJECT_SCOPE,
         isInaccessible: true,
         hasAnyBuildAccess: true,
         accessibleParent: { type: "product", id: "7" },
+        organizationHref: null,
+      }),
+    ).toEqual({
+      kind: "recover",
+      href: "/build/managed-products/7",
+      label: "Go to product",
+    });
+  });
+
+  it("falls back to no-access when there is neither an accessible product parent nor an authorized organization destination", () => {
+    expect(
+      resolveBuildScopeFallback({
+        scope: PROJECT_SCOPE,
+        isInaccessible: true,
+        hasAnyBuildAccess: true,
+        accessibleParent: null,
         organizationHref: null,
       }),
     ).toEqual({ kind: "no-access" });

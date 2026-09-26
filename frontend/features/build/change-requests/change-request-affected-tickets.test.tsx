@@ -3,6 +3,7 @@ import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import { ChangeRequestAffectedTickets } from "./change-request-affected-tickets";
 
 let mockCanManage = true;
+let mockAccessState = "allowed";
 let mockAffectedTicketsResult: {
   data: { data: unknown[]; pagination: { hasMore: boolean } } | undefined;
   isLoading: boolean;
@@ -30,6 +31,7 @@ jest.mock("@/hooks/api", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanManage,
+  useCanState: () => mockAccessState,
 }));
 
 jest.mock("@/hooks/common/use-debounce", () => ({
@@ -68,6 +70,7 @@ const mockUseTicketSearch = jest.mocked(useTicketSearch);
 beforeEach(() => {
   jest.clearAllMocks();
   mockCanManage = true;
+  mockAccessState = "allowed";
   mockAffectedTicketsResult = { data: { data: [], pagination: { hasMore: false } }, isLoading: false };
 });
 
@@ -83,6 +86,22 @@ it("shows an empty state when no tickets are linked", () => {
   render(<ChangeRequestAffectedTickets projectId={1} changeRequestId={7} />);
 
   expect(screen.getByText("No affected tickets yet.")).toBeInTheDocument();
+});
+
+it("renders nothing while the access snapshot is still loading, so the empty state is never shown as a false negative", () => {
+  mockAccessState = "loading";
+
+  render(<ChangeRequestAffectedTickets projectId={1} changeRequestId={7} />);
+
+  expect(screen.queryByText("No affected tickets yet.")).not.toBeInTheDocument();
+});
+
+it("renders nothing when the viewer is denied change-request view, rather than an empty state", () => {
+  mockAccessState = "denied";
+
+  render(<ChangeRequestAffectedTickets projectId={1} changeRequestId={7} />);
+
+  expect(screen.queryByText("No affected tickets yet.")).not.toBeInTheDocument();
 });
 
 it("renders a linked ticket with its ticket key and title", () => {

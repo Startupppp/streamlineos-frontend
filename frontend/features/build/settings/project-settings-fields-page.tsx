@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useProjectCustomFields } from "@/hooks/api/build/custom-fields";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,16 +20,20 @@ interface ProjectSettingsFieldsPageProps {
 
 export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPageProps) {
   const listFilters = useBuildListFilters({ withSearch: true });
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const { data: customFields } = useProjectCustomFields(projectId);
 
-  const handleKeyboardOpen = useCallback((_index: number) => {}, []);
   const handleKeyboardClear = useCallback(() => {
     listFilters.clearAll();
   }, [listFilters]);
 
+  const handleKeyboardOpen = useCallback((_index: number) => {}, []);
+
   useBuildListKeyboard({
-    itemCount: 0,
+    itemCount: customFields?.length ?? 0,
     onOpen: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
+    searchInputRef,
   });
 
   const pageState = usePageState({
@@ -48,6 +53,7 @@ export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPa
             value: listFilters.search,
             onValueChange: listFilters.setSearch,
             placeholder: "Search fields…",
+            inputRef: searchInputRef,
           }}
           onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
         />

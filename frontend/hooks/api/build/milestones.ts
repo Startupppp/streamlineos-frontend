@@ -40,15 +40,22 @@ interface UpdateMilestoneInput {
   status?: "PENDING" | "ACHIEVED" | "MISSED";
 }
 
-function milestoneKey(projectId: number) {
-  return [...queryKeyBase, "projects", projectId, "milestones"] as const;
+interface MilestoneListQuery {
+  cursor?: string;
+  limit?: number;
+  status?: "PENDING" | "ACHIEVED" | "MISSED";
+  q?: string;
 }
 
-export function useProjectMilestones(projectId: number) {
+function milestoneKey(projectId: number, query?: MilestoneListQuery) {
+  return [...queryKeyBase, "projects", projectId, "milestones", query ?? {}] as const;
+}
+
+export function useProjectMilestones(projectId: number, query: MilestoneListQuery = {}) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: milestoneKey(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectMilestone[]>(`/build/${projectId}/milestones`, undefined, signal, milestoneListContract),
+    queryKey: milestoneKey(projectId, query),
+    queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/milestones`, query, signal, milestoneListContract),
     enabled: canView && !!projectId,
     staleTime: 30_000,
   });
@@ -70,7 +77,7 @@ export function useUpdateMilestone(projectId: number) {
     mutationKey: ["projects", "milestones", "update"],
     mutationFn: ({ milestoneId, ...input }: UpdateMilestoneInput & { milestoneId: number }) =>
       apiClient.patch<ProjectMilestone>(`/build/${projectId}/milestones/${milestoneId}`, input, undefined, milestoneRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeyBase, "projects", projectId, "milestones"] }),
   });
 }
 
@@ -80,7 +87,7 @@ export function useDeleteMilestone(projectId: number) {
     mutationKey: ["projects", "milestones", "delete"],
     mutationFn: (milestoneId: number) =>
       apiClient.delete<void>(`/build/${projectId}/milestones/${milestoneId}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: milestoneKey(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeyBase, "projects", projectId, "milestones"] }),
   });
 }
 

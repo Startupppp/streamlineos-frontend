@@ -1,16 +1,17 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Plus, Target, TrendingUp, AlertTriangle } from "lucide-react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
-  useGoals,
+  useGoalsPage,
   useGoalStats,
   type GoalListItem,
   type GoalLevel,
@@ -33,6 +34,7 @@ import {
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   GoalCard,
   GoalsListToolbar,
@@ -44,6 +46,7 @@ interface ProductGoalsPageProps {
   managedProductId: number;
 }
 
+const PAGE_SIZE = 20;
 const CREATE_ACTION = { id: "create", label: "New Goal", icon: Plus, primary: true as const };
 
 function GoalsSkeleton() {
@@ -66,6 +69,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
   const listFilters = useBuildListFilters({ filters: GOAL_FILTER_DEFINITIONS });
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const levelValue = listFilters.value("level");
   const statusValue = listFilters.value("status");
@@ -80,25 +84,37 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     [statusValue],
   );
 
+  const [page, setPage] = useState(1);
+  const [appliedResetKey, setAppliedResetKey] = useState(listFilters.resetKey);
+
+  if (appliedResetKey !== listFilters.resetKey) {
+    setAppliedResetKey(listFilters.resetKey);
+    setPage(1);
+  }
+
   const params = useMemo(
     () => ({
       managedProductId,
+      page,
+      limit: PAGE_SIZE,
       ...(typedStatus ? { status: typedStatus } : {}),
       ...(typedLevel ? { level: typedLevel } : {}),
       ...(listFilters.debouncedSearch.trim()
         ? { search: listFilters.debouncedSearch.trim() }
         : {}),
     }),
-    [managedProductId, typedStatus, typedLevel, listFilters.debouncedSearch],
+    [managedProductId, page, typedStatus, typedLevel, listFilters.debouncedSearch],
   );
 
-  const { data: goals, isLoading, isError, error, refetch } = useGoals(params);
+  const { data: goalsPage, isLoading, isError, error, refetch } = useGoalsPage(params);
+  const goals = goalsPage?.items ?? [];
+  const totalGoals = goalsPage?.total ?? 0;
   const { data: stats } = useGoalStats();
 
   const grouped = useMemo(() => {
     const map = new Map<GoalLevel, GoalListItem[]>();
     for (const level of GOAL_LEVEL_ORDER) map.set(level, []);
-    for (const goal of goals ?? []) map.get(goal.level)?.push(goal);
+    for (const goal of goals) map.get(goal.level)?.push(goal);
     return map;
   }, [goals]);
 
@@ -107,12 +123,24 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     isLoading,
     isError,
     error,
-    isEmpty: (goals?.length ?? 0) === 0,
+    isEmpty: goals.length === 0 && page === 1,
   });
+
+  const handlePageChange = useCallback((nextPage: number) => {
+    setPage(nextPage);
+  }, []);
 
   const handleOpenCreate = useCallback(() => { openCreate(); }, [openCreate]);
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  useBuildListKeyboard({
+    itemCount: goals.length,
+    onOpen: () => undefined,
+    onClearSelection: () => undefined,
+    searchInputRef,
+    enabled: !createOpen,
+  });
 
   const createActions = useMemo(
     () =>
@@ -126,7 +154,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     <PageWrapper
       title="Goals & OKRs"
       subtitle="Product objectives and key results"
-      filters={<GoalsListToolbar listFilters={listFilters} />}
+      filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} />}
       actions={<BuildHeaderActions actions={createActions} />}
     >
       <PmPageShell>
@@ -189,28 +217,37 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
             onRetry={handleRetry}
             className={PM_FILL_PANEL}
           >
-            <div className="space-y-8">
-              {GOAL_LEVEL_ORDER.map((level) => {
-                const levelGoals = grouped.get(level) ?? [];
-                if (levelGoals.length === 0) return null;
-                return (
-                  <div key={level} className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-sm font-semibold text-foreground">
-                        {LEVEL_LABEL[level]}
-                      </h2>
-                      <Badge variant="secondary" className="text-micro">
-                        {levelGoals.length}
-                      </Badge>
+            <div className="flex min-h-0 flex-1 flex-col gap-2">
+              <div className="space-y-8">
+                {GOAL_LEVEL_ORDER.map((level) => {
+                  const levelGoals = grouped.get(level) ?? [];
+                  if (levelGoals.length === 0) return null;
+                  return (
+                    <div key={level} className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-sm font-semibold text-foreground">
+                          {LEVEL_LABEL[level]}
+                        </h2>
+                        <Badge variant="secondary" className="text-micro">
+                          {levelGoals.length}
+                        </Badge>
+                      </div>
+                      <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {levelGoals.map((goal) => (
+                          <GoalCard key={goal.id} goal={goal} />
+                        ))}
+                      </PmStaggerList>
                     </div>
-                    <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {levelGoals.map((goal) => (
-                        <GoalCard key={goal.id} goal={goal} />
-                      ))}
-                    </PmStaggerList>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+              <TablePagination
+                mode="offset"
+                page={page}
+                pageSize={PAGE_SIZE}
+                total={totalGoals}
+                onPageChange={handlePageChange}
+              />
             </div>
           </PageState>
         </PmSection>

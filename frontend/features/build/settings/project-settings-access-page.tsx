@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
@@ -22,16 +23,20 @@ interface ProjectSettingsAccessPageProps {
 
 export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPageProps) {
   const listFilters = useBuildListFilters({ withSearch: true });
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const { data: members } = useProjectMembers(projectId);
 
-  const handleKeyboardOpen = useCallback((_index: number) => {}, []);
   const handleKeyboardClear = useCallback(() => {
     listFilters.clearAll();
   }, [listFilters]);
 
+  const handleKeyboardOpen = useCallback((_index: number) => {}, []);
+
   useBuildListKeyboard({
-    itemCount: 0,
+    itemCount: members?.length ?? 0,
     onOpen: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
+    searchInputRef,
   });
 
   const pageState = usePageState({
@@ -51,6 +56,7 @@ export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPa
             value: listFilters.search,
             onValueChange: listFilters.setSearch,
             placeholder: "Search members…",
+            inputRef: searchInputRef,
           }}
           onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
         />

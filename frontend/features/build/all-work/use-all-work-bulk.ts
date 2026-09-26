@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useCallback, useState } from "react";
+import { toBulkPriority } from "@/features/build/shared/bulk-priority";
+import type { BulkPriority } from "@/features/build/shared/bulk-priority";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
@@ -17,8 +19,6 @@ const bulkUpdateResultLazy = lazyContract(() =>
   ),
 );
 
-type BulkPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-const BULK_PRIORITIES: readonly BulkPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 const MAX_BULK_CHUNK = 100;
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
@@ -184,7 +184,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
 
   const handleBulkPriority = useCallback(
     (value: string) => {
-      const found = BULK_PRIORITIES.find((p) => p === value);
+      const found = toBulkPriority(value);
       if (found) void handleBulkAction({ priority: found });
     },
     [handleBulkAction],

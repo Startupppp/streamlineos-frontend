@@ -112,8 +112,17 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/[projectId]/reports", "module:build + build:view"],
     ["/build/[projectId]/risks", "module:build + build:risks:view"],
     ["/build/[projectId]/settings", "module:build + build:update"],
+    ["/build/[projectId]/settings/access", "module:build + build:members:view"],
+    ["/build/[projectId]/settings/agents", "module:build + build:update"],
+    ["/build/[projectId]/settings/agents/credentials", "module:build + settings:api-tokens:read"],
     ["/build/[projectId]/settings/automations", "module:build + build:update"],
+    ["/build/[projectId]/settings/fields", "module:build + build:update"],
+    ["/build/[projectId]/settings/integrations", "module:build + build:update"],
     ["/build/[projectId]/settings/integrations/webhooks", "module:build + build:update"],
+    ["/build/[projectId]/settings/iterations", "module:build + build:update"],
+    ["/build/[projectId]/settings/portal", "module:build + build:clientvisibility:manage"],
+    ["/build/[projectId]/settings/retention", "module:build + build:update"],
+    ["/build/[projectId]/settings/views", "module:build + build:update"],
     ["/build/[projectId]/settings/workflow", "module:build + build:update"],
     ["/build/[projectId]/tickets/[ticketKey]", "module:build + build:view"],
     ["/build/[projectId]/triage", "module:build + build:tickets:view"],
@@ -148,7 +157,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/templates", "module:build + build:create"],
   ];
 
-  it("pins all 65 manifest routes so this table cannot drift out of step with the manifest", () => {
+  it("pins all 74 manifest routes so this table cannot drift out of step with the manifest", () => {
     expect(EXPECTED_ACCESS).toHaveLength(BUILD_ROUTE_MANIFEST.length);
     expect(EXPECTED_ACCESS.map(([route]) => route).sort()).toEqual(
       BUILD_ROUTE_MANIFEST.map((entry) => entry.route).sort(),

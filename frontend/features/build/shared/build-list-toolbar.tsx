@@ -102,6 +102,7 @@ export function BuildListToolbar({
       {search ? (
         <SearchInput
           fill
+          ref={search.inputRef}
           value={search.value}
           onValueChange={search.onValueChange}
           placeholder={search.placeholder}

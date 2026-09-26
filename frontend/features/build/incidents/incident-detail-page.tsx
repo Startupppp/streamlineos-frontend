@@ -94,7 +94,9 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
     isFetchingNextPage,
   } = useIncident(projectId, incidentId);
   const { data: members = [] } = useProjectMembers(projectId);
-  const { data: releases = [], isLoading: releasesLoading } = useReleases(projectId);
+  const releasesPage = useReleases(projectId);
+  const releases = releasesPage.data?.data ?? [];
+  const releasesLoading = releasesPage.isLoading;
   const { data: linkedTicket, isLoading: linkedTicketLoading } = useTicket(
     projectId,
     incident?.linkedTicketId ?? 0,

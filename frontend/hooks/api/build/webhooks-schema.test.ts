@@ -1,29 +1,8 @@
-import { z } from "zod";
-
-const projectWebhookSchema = z.object({
-  id: z.number(),
-  orgId: z.string(),
-  projectId: z.number(),
-  url: z.string(),
-  events: z.array(z.string()),
-  isActive: z.boolean(),
-  createdAt: z.string(),
-});
-
-const webhookDeliverySchema = z.object({
-  id: z.number(),
-  webhookId: z.number(),
-  event: z.string(),
-  status: z.enum(["success", "failed", "pending"]),
-  responseCode: z.number().nullable(),
-  attempts: z.number(),
-  lastError: z.string().nullable(),
-  deliveredAt: z.string(),
-});
-
-const projectWebhookListContract = z.array(projectWebhookSchema);
-const projectWebhookRowContract = projectWebhookSchema;
-const webhookDeliveryListContract = z.array(webhookDeliverySchema);
+import {
+  projectWebhookListContract,
+  projectWebhookRowContract,
+  webhookDeliveryListContract,
+} from "./build-project-schema";
 
 describe("projectWebhookListContract (BLD-X-BE-SETTINGS-WH-001)", () => {
   it("accepts a valid webhook list", () => {
@@ -134,5 +113,33 @@ describe("projectWebhookRowContract (BLD-X-BE-SETTINGS-WH-003)", () => {
     };
     const result = projectWebhookRowContract.parse(raw);
     expect(result.url).toBe("https://example.com/hook");
+  });
+});
+
+describe("webhooks cache key contract (BLD-X-BE-SETTINGS-WH-004)", () => {
+  it("includes projectId in the webhook cache key — correct scope prevents cross-project data leaks", () => {
+    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
+    const key = buildWorkQueryKeys.projects.webhooks(10);
+    expect(key).toContain(10);
+  });
+
+  it("includes 'webhooks' segment in the cache key", () => {
+    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
+    const key = buildWorkQueryKeys.projects.webhooks(10);
+    expect(key.some((s: unknown) => s === "webhooks")).toBe(true);
+  });
+
+  it("webhook delivery key includes both projectId and webhookId — correct scope prevents cross-webhook delivery data leaks", () => {
+    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
+    const key = buildWorkQueryKeys.projects.webhookDeliveries(10, 55);
+    expect(key).toContain(10);
+    expect(key).toContain(55);
+  });
+
+  it("two different projectIds produce different webhook cache keys — cross-project cache collision is impossible", () => {
+    const { buildWorkQueryKeys } = require("@/lib/query-keys/build-work");
+    const key1 = buildWorkQueryKeys.projects.webhooks(1);
+    const key2 = buildWorkQueryKeys.projects.webhooks(2);
+    expect(JSON.stringify(key1)).not.toBe(JSON.stringify(key2));
   });
 });

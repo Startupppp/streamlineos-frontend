@@ -26,6 +26,7 @@ const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
   { path: "/chat", reason: "Platform core communication surface." },
   { path: "/chat/channels", subtree: true, reason: "Channel membership is enforced per channel, not per route." },
   { path: "/chat/invite", subtree: true, reason: "Accepting a chat invite is a member self-service action." },
+  { path: "/chat/settings", reason: "Alias that redirects to /chat and renders nothing. The destination carries its own gate." },
   { path: "/me", subtree: true, reason: "Employee self-service. The whole /me/* subtree derives its subject from the session." },
   { path: "/settings", reason: "The personal account landing page. Everything beneath it is organization administration." },
   { path: "/settings/notifications/my-preferences", subtree: true, reason: "A member's own notification preferences under Settings." },

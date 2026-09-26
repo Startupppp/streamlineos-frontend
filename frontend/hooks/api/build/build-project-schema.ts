@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 const ticketLabelSchema = z.object({
   id: z.number(),
@@ -326,7 +327,7 @@ export const buildCustomFieldListContract = z.array(buildCustomFieldSchema);
 export const buildCustomFieldContract = buildCustomFieldSchema;
 export const ticketFieldValueListContract = z.array(ticketFieldValueSchema);
 export const ticketFieldValueCreateContract = z.object({ success: z.literal(true) });
-export const projectReleaseListContract = z.array(projectReleaseListItemSchema);
+export const projectReleaseListContract = cursorPageContract(projectReleaseListItemSchema);
 export const projectReleaseRowContract = projectReleaseRowSchema;
 export const projectWebhookListContract = z.array(projectWebhookSchema);
 export const projectWebhookRowContract = projectWebhookSchema;

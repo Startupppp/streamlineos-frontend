@@ -10,8 +10,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import type { NamedUser } from "@/lib/person-display";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
@@ -53,6 +55,17 @@ export function ProductRowActions({
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleEdit = useCallback(() => onEdit(product), [product, onEdit]);
   const handleDelete = useCallback(() => onDelete(product), [product, onDelete]);
+  const handleCopyKey = useCallback(() => {
+    void navigator.clipboard.writeText(product.key).then(() => {
+      toast.success(`Copied key ${product.key}`);
+    });
+  }, [product.key]);
+  const handleCopyLink = useCallback(() => {
+    const href = `${window.location.origin}/build/managed-products/${product.id}`;
+    void navigator.clipboard.writeText(href).then(() => {
+      toast.success("Link copied");
+    });
+  }, [product.id]);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -67,7 +80,14 @@ export function ProductRowActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem asChild>
+          <Link href={`/build/managed-products/${product.id}`}>Open</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleCopyLink}>Copy link</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleCopyKey}>Copy key</DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={handleDelete}>
           Delete
         </DropdownMenuItem>

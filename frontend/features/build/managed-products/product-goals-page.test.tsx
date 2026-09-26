@@ -1,16 +1,19 @@
 import "./product-scope-pages.test-harness";
 import { ProductGoalsPage } from "./product-goals-page";
 import {
-  EMPTY_GOALS_RESULT,
+  EMPTY_GOALS_PAGE_RESULT,
   render,
   screen,
-  useGoals,
+  useGoalsPage,
   usePageState,
 } from "./product-scope-pages.test-harness";
 
 describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
+  beforeEach(() => {
+    useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
+  });
+
   it("calls usePageState with build:goals:view permission so 402 errors get classified correctly", () => {
-    useGoals.mockReturnValue(EMPTY_GOALS_RESULT);
     render(<ProductGoalsPage managedProductId={7} />);
     expect(usePageState).toHaveBeenCalledWith(
       expect.objectContaining({ permission: "build:goals:view" }),
@@ -19,7 +22,6 @@ describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
 
   it("shows NoPermissionState when usePageState resolution is denied", () => {
     usePageState.mockReturnValue({ kind: "denied", permission: "build:goals:view" });
-    useGoals.mockReturnValue(EMPTY_GOALS_RESULT);
     render(<ProductGoalsPage managedProductId={7} />);
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
@@ -27,7 +29,6 @@ describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
 
   it("passes build:goals:view as the permission key in denied resolution (BSN-01-027)", () => {
     usePageState.mockReturnValue({ kind: "denied", permission: "build:goals:view" });
-    useGoals.mockReturnValue(EMPTY_GOALS_RESULT);
     render(<ProductGoalsPage managedProductId={7} />);
     expect(screen.getByTestId("no-permission")).toHaveAttribute(
       "data-permission",
@@ -35,10 +36,40 @@ describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
     );
   });
 
-  it("passes managedProductId to useGoals so the query is product-scope-filtered (BSN-01-022)", () => {
-    useGoals.mockReturnValue(EMPTY_GOALS_RESULT);
+  it("passes managedProductId to useGoalsPage so the query is product-scope-filtered (BSN-01-022)", () => {
     render(<ProductGoalsPage managedProductId={7} />);
-    const [callParams] = useGoals.mock.calls[0] as [Record<string, unknown>];
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).toMatchObject({ managedProductId: 7 });
+  });
+
+  it("passes page=1 and limit=20 so the backend paginates at the server rather than loading all rows (C4)", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ page: 1, limit: 20 });
+  });
+
+  it("renders pagination controls so a user can advance past the first 20 goals (C4)", () => {
+    useGoalsPage.mockReturnValue({
+      data: {
+        items: Array.from({ length: 20 }, (_, i) => ({
+          id: i + 1,
+          title: `Goal ${i + 1}`,
+          level: "company",
+          status: "on_track",
+          progress: 50,
+          owner: null,
+          keyResultCount: 0,
+        })),
+        page: 1,
+        pageSize: 20,
+        total: 45,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByRole("button", { name: /next page/i })).toBeInTheDocument();
   });
 });

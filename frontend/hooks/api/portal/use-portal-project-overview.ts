@@ -4,7 +4,7 @@ import { portalApiClient, getPortalToken } from "@/lib/portal-api-client";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import type { PortalProjectOverview } from "@/features/portal/lib/portal-types";
 
-const backendPortalProjectOverviewSchema = z.object({
+export const backendPortalProjectOverviewSchema = z.object({
   project: z.object({
     id: z.number().int(),
     name: z.string(),

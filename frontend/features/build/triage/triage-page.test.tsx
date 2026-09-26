@@ -35,6 +35,10 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
     setCursor: jest.fn(),
     clearAll: jest.fn(),
     resetKey: "",
+    value: jest.fn(() => ""),
+    setValue: jest.fn(),
+    activeCount: 0,
+    isFiltered: false,
   }),
 }));
 
@@ -96,6 +100,14 @@ jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 
+jest.mock("@/hooks/api/build", () => ({
+  useBulkUpdateTickets: jest.fn(),
+}));
+
+jest.mock("@/features/build/shared/bulk-action-bar", () => ({
+  BulkActionBar: () => <div data-testid="bulk-action-bar" />,
+}));
+
 jest.mock("@/components/shared/format-ticket-key", () => ({
   getTicketDetailHref: jest.fn(() => "/build/1/tickets/1"),
 }));
@@ -103,6 +115,7 @@ jest.mock("@/components/shared/format-ticket-key", () => ({
 import { useProject, useTickets, useUpdateTicket } from "@/hooks/api";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBulkUpdateTickets } from "@/hooks/api/build";
 
 const mockUseProject = useProject as jest.Mock;
 const mockUseTickets = useTickets as jest.Mock;
@@ -110,6 +123,7 @@ const mockUseUpdateTicket = useUpdateTicket as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
+const mockUseBulkUpdateTickets = useBulkUpdateTickets as jest.Mock;
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:tickets:view": "all" }, modules: {} },
@@ -141,6 +155,7 @@ beforeEach(() => {
   );
   mockUseUpdateTicket.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: jest.fn(), isPending: false });
 });
 
 it("shows a skeleton while the access snapshot is in flight, not an empty or denied state", () => {
@@ -242,4 +257,21 @@ it("wires useBuildListKeyboard enabled only when triage is in the ready state, n
   expect(lastArgs?.enabled).toBe(true);
   expect(typeof lastArgs?.onOpen).toBe("function");
   expect(lastArgs?.itemCount).toBe(1);
+});
+
+it("renders a checkbox per row when the user has build:tickets:update permission", () => {
+  const submission = {
+    id: 99, orgId: "org-1", projectId: 1, title: "Bug: button broken",
+    type: "BUG", status: "TRIAGE", priority: "HIGH", ticketNumber: 99,
+    epicId: null, reporterId: "user-1", points: null, storyPoints: null,
+    link: null, rank: "1000", parentTicketId: null, originalEstimate: null,
+    timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null,
+    sequenceId: "PROJ-99", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
+  };
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [submission], pagination: { hasMore: false } } }),
+  );
+  const { container } = render(<TriagePage projectId={1} />);
+  const checkbox = container.querySelector('button[role="checkbox"], input[type="checkbox"]');
+  expect(checkbox).toBeInTheDocument();
 });

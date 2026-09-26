@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -9,21 +8,12 @@ import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome";
 import { ProjectsGitIntegrationSettings } from "@/features/build/settings/git-integration-settings";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
 interface ProjectSettingsIntegrationsPageProps {
   projectId: number;
 }
 
 export function ProjectSettingsIntegrationsPage({ projectId: _projectId }: ProjectSettingsIntegrationsPageProps) {
-  const handleKeyboardOpen = useCallback((_index: number) => {}, []);
-  const handleKeyboardClear = useCallback(() => {}, []);
-
-  useBuildListKeyboard({
-    itemCount: 0,
-    onOpen: handleKeyboardOpen,
-    onClearSelection: handleKeyboardClear,
-  });
 
   const pageState = usePageState({
     permission: "build:update",

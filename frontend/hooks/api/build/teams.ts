@@ -34,6 +34,9 @@ const teamProjectItemListContract = lazyContract(() =>
 const teamMemberRowContract = lazyContract(() =>
   import("@/hooks/api/build/teams-schema").then((m) => m.teamMemberRowContract),
 );
+const teamMemberPageContract = lazyContract(() =>
+  import("@/hooks/api/build/teams-schema").then((m) => m.teamMemberPageContract),
+);
 const teamProjectRowContract = lazyContract(() =>
   import("@/hooks/api/build/teams-schema").then((m) => m.teamProjectRowContract),
 );
@@ -72,6 +75,25 @@ export function useProjectTeam(teamId: number) {
     enabled: !!teamId,
     staleTime: 60_000,
     throwOnError: false,
+  });
+}
+
+export function useTeamMembers(teamId: number, cursor?: string, pageSize = 50) {
+  const query: Record<string, string> = {};
+  if (cursor) query["cursor"] = cursor;
+  if (pageSize !== 50) query["pageSize"] = String(pageSize);
+  const params = Object.keys(query).length ? query : undefined;
+  return useGatedQuery<import("@/hooks/api/build/teams-schema").TeamMemberPage>("build:teams:view", {
+    queryKey: buildWorkQueryKeys.projects.teams.members(teamId, params),
+    queryFn: ({ signal }) =>
+      apiClient.get<import("@/hooks/api/build/teams-schema").TeamMemberPage>(
+        `/build/teams/${teamId}/members`,
+        params,
+        signal,
+        teamMemberPageContract,
+      ),
+    enabled: !!teamId,
+    staleTime: 30_000,
   });
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -53,6 +53,7 @@ export function ProjectSubmissionsInbox({
   const [, startTransition] = useTransition();
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const canDelete = useCan("feedbucket:submissions:delete");
   const canUpdate = useCan("feedbucket:submissions:update");
   const deleteSubmission = useDeleteFeedbucketSubmission();
@@ -170,6 +171,7 @@ export function ProjectSubmissionsInbox({
     itemCount: rows.length,
     onOpen: handleOpenFocusedSubmission,
     onClearSelection: handleClearSelection,
+    searchInputRef,
     enabled: pendingDeleteId === null,
   });
 
@@ -258,7 +260,7 @@ export function ProjectSubmissionsInbox({
 
   return (
     <>
-      <SubmissionInboxFilters values={filterValues} onChange={handleFilterChange} />
+      <SubmissionInboxFilters values={filterValues} onChange={handleFilterChange} searchInputRef={searchInputRef} />
 
       {selectedIds.length > 0 ? (
         <SubmissionBulkToolbar

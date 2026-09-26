@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Briefcase, Map, Target } from "lucide-react";
+import { Briefcase, Map, MessageSquare, Target } from "lucide-react";
 
 interface ManagedProductOverviewPageProps {
   managedProductId: number;
@@ -76,11 +76,19 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
   const hasMoreRoadmap = roadmapQuery.data?.pagination?.hasMore ?? false;
   const goalsLabel = String(goalsQuery.data?.total ?? 0);
 
+  const feedbackTotal = Object.values(
+    insightsQuery.data?.feedbackByStatus ?? {},
+  ).reduce((a: number, b: number) => a + b, 0);
+
   return (
     <PageWrapper
       title={product?.name ?? "Product overview"}
       badge={product?.key}
-      subtitle={product?.description ?? undefined}
+      subtitle={
+        product?.status && product?.updatedAt
+          ? `${product.status} · updated ${product.updatedAt.slice(0, 10)}`
+          : product?.status ?? undefined
+      }
     >
       <PageState
         resolution={resolution}
@@ -90,7 +98,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
         className="flex-1 min-h-0"
       >
         <div className="flex flex-1 min-h-0 flex-col gap-6">
-          <StatCardGrid cols={2}>
+          <StatCardGrid cols={3}>
             <StatCard
               label="Linked projects"
               value={linkedProjectsLabel}
@@ -106,6 +114,14 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
               tone="emerald"
               isLoading={goalsQuery.isLoading}
               href={`/build/managed-products/${managedProductId}/goals`}
+            />
+            <StatCard
+              label="Feedback"
+              value={String(feedbackTotal)}
+              icon={MessageSquare}
+              tone="amber"
+              isLoading={insightsQuery.isLoading}
+              href={`/build/managed-products/${managedProductId}/feedback`}
             />
           </StatCardGrid>
 
