@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useKnowledgeGaps,
@@ -45,11 +46,29 @@ function GapListSkeletons() {
 }
 
 export function KnowledgeGapsPage() {
-  const [cursor, setCursor] = useState<number | undefined>(undefined);
-  const { data, isLoading, isFetching, isError, refetch } = useKnowledgeGaps(cursor);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useKnowledgeGaps();
   const detectMutation = useDetectGaps();
   const draftMutation = useDraftGap();
   const dismissMutation = useDismissGap();
+
+  const gaps = data?.pages.flatMap((page) => page.gaps) ?? [];
+
+  const pageState = usePageState({
+    permission: "support:knowledge-gaps:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: gaps.length === 0,
+  });
 
   function handleDetect() {
     detectMutation.mutate(void 0, {
@@ -79,9 +98,9 @@ export function KnowledgeGapsPage() {
     void refetch();
   }
 
-  function handleLoadMore() {
-    if (data?.nextCursor) setCursor(data.nextCursor);
-  }
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   const canManage = useCan("support:knowledge-gaps:manage");
 
@@ -103,28 +122,26 @@ export function KnowledgeGapsPage() {
       subtitle="Repeated unresolved questions that need KB articles"
       actions={detectAction}
     >
-      {isLoading && <GapListSkeletons />}
-
-      {!isLoading && isError && (
-        <ErrorState
-          title="Failed to load knowledge gaps"
-          description="We couldn't load gap data. Please try again."
-          onRetry={handleRetry}
-        />
-      )}
-
-      {!isLoading && !isError && data && data.gaps.length === 0 && (
-        <EmptyState
-          illustrationPreset="search"
-          title="No knowledge gaps detected yet"
-          description="Run detection to find repeated unresolved questions that need KB articles."
-          action={{ label: "Detect Gaps", onClick: handleDetect }}
-        />
-      )}
-
-      {!isLoading && !isError && data && data.gaps.length > 0 && (
+      <PageState
+        resolution={pageState}
+        className="flex-1"
+        onRetry={handleRetry}
+        loading={<GapListSkeletons />}
+        empty={
+          <EmptyState
+            illustrationPreset="search"
+            title="No knowledge gaps detected yet"
+            description="Run detection to find repeated unresolved questions that need KB articles."
+            action={
+              canManage
+                ? { label: "Detect Gaps", onClick: handleDetect }
+                : undefined
+            }
+          />
+        }
+      >
         <div className="flex flex-1 min-h-0 flex-col gap-3">
-          {data.gaps.map((gap) => (
+          {gaps.map((gap) => (
             <KnowledgeGapCard
               key={gap.id}
               gap={gap}
@@ -135,13 +152,13 @@ export function KnowledgeGapsPage() {
             />
           ))}
           <InfiniteScrollSentinel
-            hasNextPage={(data.nextCursor ?? null) !== null}
-            isFetchingNextPage={isFetching && !isLoading}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
             onLoadMore={handleLoadMore}
             label="Load more knowledge gaps"
           />
         </div>
-      )}
+      </PageState>
     </PageWrapper>
   );
 }
