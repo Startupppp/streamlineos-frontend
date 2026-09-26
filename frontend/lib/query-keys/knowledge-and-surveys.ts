@@ -61,7 +61,6 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "kb", "pageReviews"] as const)
         : ([...base, "kb", "pageReviews", params] as const),
-    pageReviewsDue: () => [...base, "kb", "pageReviewsDue"] as const,
     pageReviewsBulkDecide: () =>
       [...base, "kb", "pageReviews", "bulk-decide"] as const,
     pageRecordLinks: (pageId: number) =>
