@@ -42,7 +42,9 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const canCreate = useCan("kb:pages:create");
 
   function resolveHref(pageId: number): string {
-    return isProjectScoped ? projectPageHref(projectId!, pageId) : pageHref(pageId);
+    return projectId !== undefined && projectId > 0
+      ? projectPageHref(projectId, pageId)
+      : pageHref(pageId);
   }
 
   function handleSearchSubmit(e: React.FormEvent) {

@@ -20,7 +20,6 @@ import { useKbPageReviews } from "@/hooks/api/kb/page-reviews";
 import type {
   KbPageReview,
   KbReviewStatus,
-  KbReviewStatusFilter,
   KbReviewType,
   BulkDecideResultItem,
 } from "@/hooks/api/kb/page-reviews";
@@ -151,7 +150,7 @@ export default function ReviewsPage() {
 
   const statusFilter = parseEnum(searchParams.get("status"), STATUS_FILTER_VALUES, "all");
   const typeFilter = parseEnum(searchParams.get("type"), TYPE_FILTER_VALUES, "all");
-  const sortDir = parseEnum(searchParams.get("sortDir"), SORT_DIR_VALUES, "asc") as "asc" | "desc";
+  const sortDir = parseEnum(searchParams.get("sortDir"), SORT_DIR_VALUES, "asc");
   const searchFilter = searchParams.get("q") ?? "";
   const spaceFilter = searchParams.get("spaceId") ?? "";
   const reviewerFilter = searchParams.get("reviewer") ?? "";
@@ -176,8 +175,8 @@ export default function ReviewsPage() {
   const params = {
     cursor: cursorState.cursor,
     limit: DEFAULT_LIMIT,
-    status: statusFilter === "all" ? undefined : (statusFilter as KbReviewStatusFilter),
-    type: typeFilter === "all" ? undefined : (typeFilter as KbReviewType),
+    status: statusFilter === "all" ? undefined : statusFilter,
+    type: typeFilter === "all" ? undefined : typeFilter,
     q: searchFilter || undefined,
     spaceId: Number.isFinite(parsedSpaceId) && parsedSpaceId > 0 ? parsedSpaceId : undefined,
     reviewer: reviewerFilter || undefined,

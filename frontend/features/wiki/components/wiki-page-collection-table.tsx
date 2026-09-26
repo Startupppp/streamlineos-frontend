@@ -74,7 +74,6 @@ const STATUS_OPTIONS = [
 
 const PAGE_LIMIT = 50;
 
-type SortValue = "updated_desc" | "created_desc" | "title_asc";
 const SORT_VALUES = ["updated_desc", "created_desc", "title_asc"] as const;
 const VIEW_VALUES = ["list", "card"] as const;
 
@@ -273,11 +272,7 @@ export function WikiPageCollectionTable({
   const { update } = useUrlFilters();
 
   const rawSearch = searchParams.get("q") ?? "";
-  const sort = parseEnum(
-    searchParams.get("sort"),
-    SORT_VALUES,
-    "updated_desc",
-  ) as SortValue;
+  const sort = parseEnum(searchParams.get("sort"), SORT_VALUES, "updated_desc");
   const status = searchParams.get("status") ?? "";
   const spaceParam = searchParams.get("space") ?? "";
   const urlSpaceId = spaceParam !== "" ? Number(spaceParam) : undefined;

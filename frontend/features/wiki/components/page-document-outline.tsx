@@ -18,6 +18,10 @@ function nodeText(node: SlateHeadingNode): string {
   return node.children.map((leaf) => (typeof leaf.text === "string" ? leaf.text : "")).join("");
 }
 
+function isSlateHeadingNode(node: unknown): node is SlateHeadingNode {
+  return typeof node === "object" && node !== null;
+}
+
 function headingLevelOf(type: unknown): HeadingLevel | null {
   if (type === "h1") return 1;
   if (type === "h2") return 2;
@@ -30,10 +34,10 @@ export function extractHeadings(content: unknown): OutlineHeading[] {
   const headings: OutlineHeading[] = [];
   let index = 0;
   for (const node of content) {
-    if (typeof node !== "object" || node === null) continue;
-    const level = headingLevelOf((node as SlateHeadingNode).type);
+    if (!isSlateHeadingNode(node)) continue;
+    const level = headingLevelOf(node.type);
     if (level === null) continue;
-    headings.push({ level, text: nodeText(node as SlateHeadingNode).trim(), index: index++ });
+    headings.push({ level, text: nodeText(node).trim(), index: index++ });
   }
   return headings;
 }

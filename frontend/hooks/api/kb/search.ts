@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useKbSpaces } from "./spaces";
 import { ACL_VERSION_SPACE_LIMIT, deriveAclVersion } from "./pages";
 import type { KbSearchParams } from "@/types/kb";
@@ -98,7 +99,7 @@ export function useKbPageFullSearch(
         signal,
         kbPageFullSearchResponseContract,
       ),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 0,
     enabled:

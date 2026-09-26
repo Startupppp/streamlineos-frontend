@@ -10,6 +10,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useKbSpaces } from "./spaces";
@@ -150,11 +151,11 @@ export function useKbPageTreeInfinite(params: {
         {
           ...params,
           ...(pageParam === undefined ? {} : { cursor: pageParam }),
-        } as Record<string, unknown>,
+        },
         signal,
         kbPageTreeLevelContract,
       ),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) =>
       lastPage.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
@@ -180,11 +181,11 @@ export function useKbPageChildrenLevel(
           parentId: nodeId,
           ...(spaceId === undefined ? {} : { spaceId }),
           ...(pageParam === undefined ? {} : { cursor: pageParam }),
-        } as Record<string, unknown>,
+        },
         signal,
         kbPageTreeLevelContract,
       ),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) =>
       lastPage.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
@@ -247,7 +248,7 @@ export function useKbPagesTrash(params?: TrashPageParams) {
     queryFn: ({ signal }) =>
       apiClient.get<KbTrashCursorPage>(
         "/kb/pages/trash",
-        params as Record<string, unknown> | undefined,
+        params,
         signal,
         kbTrashPageListContract,
       ),

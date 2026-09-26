@@ -241,7 +241,7 @@ export default function TrashPage() {
           </span>
           {row.legalHold && (
             <span
-              className="shrink-0 rounded px-1.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+              className="shrink-0 rounded px-1.5 py-0.5 text-xs font-medium bg-status-warning-surface text-status-warning-ink border border-status-warning-rule"
               title={row.legalHoldReason ?? "Page is under a legal hold and cannot be purged"}
               aria-label="Legal hold"
             >
@@ -385,7 +385,7 @@ export default function TrashPage() {
                       </p>
                       {row.legalHold && (
                         <p
-                          className="text-xs font-medium text-amber-700 dark:text-amber-400"
+                          className="text-xs font-medium text-status-warning-ink"
                           title={row.legalHoldReason ?? undefined}
                         >
                           Legal hold

@@ -170,7 +170,7 @@ function EvidencePopover({ pageId, kind }: EvidencePopoverProps) {
         {isLoading ? (
           <Skeleton className="h-16 w-full" />
         ) : data?.evidence ? (
-          <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap break-all max-h-48 overflow-y-auto">
+          <pre className="text-micro text-muted-foreground whitespace-pre-wrap break-all max-h-48 overflow-y-auto">
             {JSON.stringify(data.evidence, null, 2)}
           </pre>
         ) : (
@@ -207,7 +207,7 @@ function HealthTrendWidget({ activeSignal }: HealthTrendWidgetProps) {
       <span className="text-muted-foreground text-sm">→</span>
       <div className="flex flex-col">
         <span className="text-xs text-muted-foreground">Now ({SIGNAL_LABELS[activeSignal]})</span>
-        <span className={`text-lg font-semibold tabular-nums ${improved ? "text-green-600 dark:text-green-400" : "text-foreground"}`}>
+        <span className={`text-lg font-semibold tabular-nums ${improved ? "text-status-success-ink" : "text-foreground"}`}>
           {data.afterCount}
         </span>
       </div>

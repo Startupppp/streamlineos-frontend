@@ -192,6 +192,16 @@ const GapTableRow = memo(function GapTableRow({
       setDismissValue("");
     }
   }
+  function handleAssignToggle(e: React.MouseEvent) {
+    e.stopPropagation();
+    setAssignOpen((o) => !o);
+    setDismissOpen(false);
+  }
+  function handleDismissToggle(e: React.MouseEvent) {
+    e.stopPropagation();
+    setDismissOpen((o) => !o);
+    setAssignOpen(false);
+  }
   return (
     <div>
       <div
@@ -218,7 +228,7 @@ const GapTableRow = memo(function GapTableRow({
           size="sm"
           variant="ghost"
           className="px-2 text-xs gap-1 shrink-0"
-          onClick={(e) => { e.stopPropagation(); setAssignOpen((o) => !o); setDismissOpen(false); }}
+          onClick={handleAssignToggle}
           disabled={!row.query}
           type="button"
           aria-label="Assign gap owner"
@@ -229,7 +239,7 @@ const GapTableRow = memo(function GapTableRow({
           size="sm"
           variant="ghost"
           className="px-2 text-xs gap-1 shrink-0"
-          onClick={(e) => { e.stopPropagation(); setDismissOpen((o) => !o); setAssignOpen(false); }}
+          onClick={handleDismissToggle}
           disabled={!row.query}
           type="button"
           aria-label="Dismiss gap"

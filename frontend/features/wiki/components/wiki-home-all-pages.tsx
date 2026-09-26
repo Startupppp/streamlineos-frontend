@@ -63,7 +63,6 @@ import { KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
 
 const SORT_VALUES = ["updated_desc", "created_desc", "title_asc"] as const;
 const VIEW_VALUES = ["list", "card"] as const;
-type SortValue = (typeof SORT_VALUES)[number];
 
 const SORT_OPTIONS = [
   { value: "updated_desc", label: "Last updated" },
@@ -285,8 +284,10 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
 
   const resolveHref = useCallback(
     (pageId: number) =>
-      isProjectScoped ? projectPageHref(projectId!, pageId) : pageHref(pageId),
-    [isProjectScoped, projectId],
+      projectId !== undefined && projectId > 0
+        ? projectPageHref(projectId, pageId)
+        : pageHref(pageId),
+    [projectId],
   );
 
   const columns = useMemo(() => buildColumns(resolveHref), [resolveHref]);
@@ -295,11 +296,7 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
   const spaceParam = searchParams.get("space") ?? "";
   const spaceId = spaceParam !== "" ? Number(spaceParam) : undefined;
   const ownerParam = searchParams.get("owner") ?? "";
-  const sort = parseEnum(
-    searchParams.get("sort"),
-    SORT_VALUES,
-    "updated_desc",
-  ) as SortValue;
+  const sort = parseEnum(searchParams.get("sort"), SORT_VALUES, "updated_desc");
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
 
   const filtersActive =

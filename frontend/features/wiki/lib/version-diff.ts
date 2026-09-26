@@ -42,30 +42,36 @@ function tipTapBlockText(node: TipTapNode): string {
   return node.content.map(tipTapBlockText).join("");
 }
 
+function isSlateNode(node: unknown): node is SlateNode {
+  return typeof node === "object" && node !== null;
+}
+
+function isTipTapNode(node: unknown): node is TipTapNode {
+  if (typeof node !== "object" || node === null) return false;
+  return "type" in node && typeof node.type === "string";
+}
+
 function slateNodeText(node: unknown): string {
-  if (typeof node !== "object" || node === null) return "";
-  const n = node as SlateNode;
-  if (typeof n.text === "string") return n.text;
-  if (Array.isArray(n.children)) return n.children.map(slateNodeText).join("");
+  if (!isSlateNode(node)) return "";
+  if (typeof node.text === "string") return node.text;
+  if (Array.isArray(node.children)) return node.children.map(slateNodeText).join("");
   return "";
 }
 
 function extractTipTapBlocks(content: Record<string, unknown>): ContentBlock[] {
-  const topLevel = Array.isArray(content.content) ? (content.content as TipTapNode[]) : [];
+  const raw: unknown = content.content;
+  const topLevel: TipTapNode[] = Array.isArray(raw) ? raw.filter(isTipTapNode) : [];
   return topLevel.map((node) => ({
-    type: node.type ?? "paragraph",
+    type: node.type,
     text: tipTapBlockText(node).replace(/\s+/g, " ").trim(),
   }));
 }
 
 function extractSlateBlocks(content: unknown[]): ContentBlock[] {
-  return content.map((node) => {
-    const n = node as SlateNode;
-    return {
-      type: typeof n.type === "string" ? n.type : "paragraph",
-      text: slateNodeText(n).replace(/\s+/g, " ").trim(),
-    };
-  });
+  return content.map((node) => ({
+    type: isSlateNode(node) && typeof node.type === "string" ? node.type : "paragraph",
+    text: slateNodeText(node).replace(/\s+/g, " ").trim(),
+  }));
 }
 
 export function extractBlocks(
@@ -74,14 +80,14 @@ export function extractBlocks(
   if (!content) return [];
   if (Array.isArray(content)) return extractSlateBlocks(content);
   if (content.type === "doc") return extractTipTapBlocks(content);
-  const roots = Array.isArray(content.children)
+  const roots: unknown[] | null = Array.isArray(content.children)
     ? content.children
     : Array.isArray(content.nodes)
       ? content.nodes
       : Array.isArray(content.root)
         ? content.root
         : null;
-  if (roots) return extractSlateBlocks(roots as unknown[]);
+  if (roots) return extractSlateBlocks(roots);
   return [];
 }
 
@@ -101,13 +107,18 @@ function textSimilarity(a: string, b: string): number {
 function lcs(a: ContentBlock[], b: ContentBlock[]): number[][] {
   const m = a.length;
   const n = b.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  const dp: number[][] = Array.from({ length: m + 1 }, () =>
+    new Array<number>(n + 1).fill(0),
+  );
   for (let i = 1; i <= m; i++) {
+    const row = dp[i];
+    const above = dp[i - 1];
+    if (!row || !above) continue;
     for (let j = 1; j <= n; j++) {
       if (a[i - 1]?.type === b[j - 1]?.type && a[i - 1]?.text === b[j - 1]?.text) {
-        dp[i]![j] = (dp[i - 1]![j - 1] ?? 0) + 1;
+        row[j] = (above[j - 1] ?? 0) + 1;
       } else {
-        dp[i]![j] = Math.max(dp[i - 1]![j] ?? 0, dp[i]![j - 1] ?? 0);
+        row[j] = Math.max(above[j] ?? 0, row[j - 1] ?? 0);
       }
     }
   }
@@ -123,24 +134,25 @@ function backtrack(
   result: BlockDiff[],
 ): void {
   if (i === 0 && j === 0) return;
+  const aBlock = i === 0 ? undefined : a[i - 1];
+  const bBlock = j === 0 ? undefined : b[j - 1];
   if (i === 0) {
     backtrack(dp, a, b, i, j - 1, result);
-    result.push({ kind: "added", type: b[j - 1]!.type, text: b[j - 1]!.text });
+    if (bBlock) result.push({ kind: "added", type: bBlock.type, text: bBlock.text });
     return;
   }
   if (j === 0) {
     backtrack(dp, a, b, i - 1, j, result);
-    result.push({ kind: "removed", type: a[i - 1]!.type, text: a[i - 1]!.text });
+    if (aBlock) result.push({ kind: "removed", type: aBlock.type, text: aBlock.text });
     return;
   }
-  const aBlock = a[i - 1]!;
-  const bBlock = b[j - 1]!;
+  if (!aBlock || !bBlock) return;
   if (aBlock.type === bBlock.type && aBlock.text === bBlock.text) {
     backtrack(dp, a, b, i - 1, j - 1, result);
     result.push({ kind: "unchanged", type: aBlock.type, text: aBlock.text });
     return;
   }
-  if ((dp[i - 1]![j] ?? 0) > (dp[i]![j - 1] ?? 0)) {
+  if ((dp[i - 1]?.[j] ?? 0) > (dp[i]?.[j - 1] ?? 0)) {
     backtrack(dp, a, b, i - 1, j, result);
     result.push({ kind: "removed", type: aBlock.type, text: aBlock.text });
   } else {
@@ -153,7 +165,8 @@ function mergeAdjacentChanges(diffs: BlockDiff[]): BlockDiff[] {
   const result: BlockDiff[] = [];
   let i = 0;
   while (i < diffs.length) {
-    const curr = diffs[i]!;
+    const curr = diffs[i];
+    if (!curr) break;
     const next = diffs[i + 1];
     if (curr.kind === "removed" && next?.kind === "added") {
       const similarity = textSimilarity(curr.text, next.text);
