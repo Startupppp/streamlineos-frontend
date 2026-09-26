@@ -10,6 +10,9 @@ export const kbPageGrantItemContract = z.object({
   grantedByMembershipId: z.number().int().nullable(),
   createdAt: z.string(),
   revokedAt: z.string().nullable(),
+  granteeName: z.string().nullable(),
+  granteeEmail: z.string().nullable(),
+  granteeImage: z.string().nullable(),
 });
 
 export const kbPageGrantListContract = cursorPageContract(kbPageGrantItemContract);

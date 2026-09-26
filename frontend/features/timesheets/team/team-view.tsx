@@ -34,7 +34,6 @@ const PERIOD_STATUSES: PeriodStatus[] = [
   "APPROVED",
   "REJECTED",
   "LOCKED",
-  "REOPENED",
 ];
 
 function getWeekBounds(offset: number) {

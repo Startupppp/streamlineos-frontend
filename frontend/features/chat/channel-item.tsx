@@ -1,10 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
-import { CircleDot } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Tooltip,
   TooltipContent,
@@ -15,7 +11,6 @@ import type { Channel } from "./chat-types";
 import { ChannelAvatar } from "./channel-avatar";
 import { resolveDirectPartner } from "./channel-member-lookup";
 import dynamic from "next/dynamic";
-import { useMarkChannelUnread } from "@/hooks/api/chat-personal-b";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const ChannelItemMenu = dynamic(
@@ -31,6 +26,7 @@ export function ChannelItem({
   currentUserId,
   onlineUserIds,
   compact = false,
+  tabIndex,
   onStartCall,
   onOpenSettings,
 }: {
@@ -40,6 +36,7 @@ export function ChannelItem({
   currentUserId: string;
   onlineUserIds: Set<string>;
   compact?: boolean;
+  tabIndex?: number;
   onStartCall?: (channelId: number, type: "huddle") => void;
   onOpenSettings?: (channelId: number) => void;
 }) {
@@ -57,20 +54,8 @@ export function ChannelItem({
       : false;
 
   const hasUnread = channel.unreadCount > 0 && !isActive;
-  const markUnread = useMarkChannelUnread();
-
-  const handleMarkUnread = useCallback(
-    async (e: React.MouseEvent) => {
-      e.stopPropagation();
-      try {
-        await markUnread.mutateAsync(channel.id);
-        toast.success("Marked as unread");
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    [markUnread, channel.id],
-  );
+  const preview = conversationPreview(channel);
+  const rowLabel = conversationRowLabel(displayName, preview, channel.unreadCount, isActive, isOnline);
 
   if (compact) {
     return (
@@ -78,12 +63,17 @@ export function ChannelItem({
         <Tooltip>
           <TooltipTrigger asChild>
             <button
+              type="button"
+              data-conversation-row="true"
+              tabIndex={tabIndex}
               onClick={onClick}
-              aria-label={displayName}
+              aria-current={isActive ? "true" : undefined}
+              aria-label={rowLabel}
               className={cn(
-                "relative flex items-center justify-center rounded-xl p-1 transition-colors duration-100",
+                "relative flex size-11 items-center justify-center rounded-xl transition-colors duration-100",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 isActive
-                  ? "bg-muted text-foreground"
+                  ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
@@ -116,16 +106,20 @@ export function ChannelItem({
     : null;
 
   return (
-    <div className="relative group/item min-w-0">
+    <div className="group/item relative min-w-0">
       <button
         type="button"
+        data-conversation-row="true"
+        tabIndex={tabIndex}
         onClick={onClick}
+        aria-current={isActive ? "true" : undefined}
+        aria-label={rowLabel}
         className={cn(
-          "w-full min-w-0 overflow-hidden flex items-center gap-2.5 px-2 py-2 rounded-xl text-left transition-colors duration-100",
+          "flex min-h-14 w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl px-2 py-2 text-left transition-colors duration-100",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           isActive
-            ? "bg-muted text-foreground"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground",
-          hasUnread && !isActive && "text-foreground",
+            ? "bg-accent text-accent-foreground"
+            : "hover:bg-muted",
         )}
       >
         <div className="relative shrink-0">
@@ -137,82 +131,42 @@ export function ChannelItem({
             className="h-10 w-10"
           />
           {isOnline && (
-            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-status-success-fill border-2 border-background" />
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background bg-status-success-fill" />
           )}
         </div>
 
-        <div className="flex-1 min-w-0 pr-8">
+        <div className="min-w-0 flex-1 pr-12">
           <div className="flex items-center justify-between gap-2">
             <TruncatedText
               text={displayName}
               className={cn(
-                "text-label leading-tight",
-                hasUnread || isActive
-                  ? "font-bold text-foreground"
-                  : "font-medium text-muted-foreground",
+                "text-label leading-tight text-foreground",
+                hasUnread || isActive ? "font-semibold" : "font-medium",
               )}
             />
-
             {lastMessageTime && (
-              <span
-                className={cn(
-                  "text-dense tabular-nums shrink-0 transition-opacity duration-150",
-                  isActive
-                    ? "text-foreground"
-                    : "text-muted-foreground group-hover/item:text-foreground",
-                  !hasUnread && "group-hover/item:opacity-0",
-                )}
-              >
+              <span className="shrink-0 text-dense tabular-nums text-muted-foreground">
                 {lastMessageTime}
               </span>
             )}
           </div>
-
-          <div className="flex items-center justify-between gap-1.5 mt-0.5 min-w-0">
+          <div className="mt-0.5 flex min-w-0 items-center justify-between gap-2">
             <p
               className={cn(
-                "min-w-0 flex-1 text-dense line-clamp-1 break-all break-words leading-tight",
-                isActive
-                  ? "text-foreground"
-                  : "text-muted-foreground group-hover/item:text-foreground",
+                "min-w-0 flex-1 break-words text-dense leading-tight line-clamp-1",
+                hasUnread || isActive ? "text-foreground" : "text-muted-foreground",
               )}
             >
-              {channel.lastMessage?.content
-                ? `${channel.type === "GROUP" && channel.lastMessage.senderName ? `${channel.lastMessage.senderName.split(" ")[0]}: ` : ""}${channel.lastMessage.content}`
-                : "No messages yet"}
+              {preview}
             </p>
             {hasUnread && (
-              <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-primary text-primary-foreground text-micro font-bold rounded-full px-1 shrink-0 transition-opacity duration-150 group-hover/item:opacity-0">
+              <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1 font-mono text-micro font-bold tabular-nums text-primary-foreground">
                 {channel.unreadCount > 99 ? "99+" : channel.unreadCount}
               </span>
             )}
           </div>
         </div>
       </button>
-
-      {!hasUnread && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={handleMarkUnread}
-              aria-label="Mark as unread"
-              className={cn(
-                "absolute right-8 top-[11px] z-10",
-                "h-6 w-6 flex items-center justify-center rounded-md",
-                "text-muted-foreground hover:text-foreground hover:bg-background/90",
-                "opacity-0 pointer-events-none group-hover/item:opacity-100 group-hover/item:pointer-events-auto",
-                "transition-all duration-150",
-              )}
-            >
-              <CircleDot className="h-3.5 w-3.5" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-xs px-2 py-1">
-            Mark as unread
-          </TooltipContent>
-        </Tooltip>
-      )}
 
       {onStartCall && onOpenSettings && (
         <ChannelItemMenu
@@ -224,4 +178,28 @@ export function ChannelItem({
       )}
     </div>
   );
+}
+
+function conversationPreview(channel: Channel): string {
+  const content = channel.lastMessage?.content;
+  if (!content) return "No messages yet";
+  const sender =
+    channel.type === "GROUP" ? channel.lastMessage?.senderName?.split(" ")[0] : undefined;
+  return sender ? `${sender}: ${content}` : content;
+}
+
+function conversationRowLabel(
+  displayName: string,
+  preview: string,
+  unreadCount: number,
+  isActive: boolean,
+  isOnline: boolean,
+): string {
+  const details = [displayName];
+  if (isOnline) details.push("online");
+  if (unreadCount > 0) {
+    details.push(unreadCount === 1 ? "1 unread" : `${unreadCount} unread`);
+  }
+  if (isActive) details.push("selected");
+  return `${details.join(", ")}. ${preview}`;
 }

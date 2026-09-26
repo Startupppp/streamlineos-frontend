@@ -170,21 +170,9 @@ export default function PageGrantsSheet({
   });
   const memberOptions = membersData?.data ?? [];
 
-  const { data: allMembersData } = useOrgMembers(1, 100, undefined, {
-    staleTime: 60_000,
-  });
-
-  const memberById = useMemo(
-    () => new Map((allMembersData?.data ?? []).map((m) => [m.membershipId, m])),
-    [allMembersData?.data],
-  );
-
   function resolveGrantLabel(grant: KbPageGrant): string {
     if (grant.role !== null) return formatRoleLabel(grant.role);
-    if (grant.membershipId !== null) {
-      const member = memberById.get(grant.membershipId);
-      if (member) return getUserDisplayName(member);
-    }
+    if (grant.granteeName != null) return grant.granteeName;
     return "Team member";
   }
 

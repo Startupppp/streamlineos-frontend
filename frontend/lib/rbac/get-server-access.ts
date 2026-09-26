@@ -13,7 +13,7 @@ const DENIED: AccessResponse = {
   isOrgOwner: false,
   canManageOrganizationMembership: false,
   modules: {},
-  mfa: { enforced: false, satisfied: true },
+  mfa: { enforced: true, satisfied: false },
 };
 
 export type ServerAccessResult =

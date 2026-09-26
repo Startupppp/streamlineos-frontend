@@ -1,37 +1,33 @@
 "use client";
 
 import React from "react";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { SearchInput } from "@/components/ui/search-input";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
-  CompassIcon,
-  PlusIcon,
-  SearchIcon,
-  UsersIcon,
-} from "@animateicons/react/lucide";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { PlusIcon, SearchIcon } from "@animateicons/react/lucide";
 import { MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const RAIL_ICON_SIZE = 14;
-
-const SidebarSearchButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function SidebarSearchButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <SearchIcon ref={iconRef} size={RAIL_ICON_SIZE} />
-    </button>
-  );
-});
+import { ChatInboxFilters } from "./chat-inbox-filters";
+import {
+  formatInboxSummary,
+  type ChatInboxFilter,
+  type ChatInboxFilterCounts,
+} from "./chat-inbox-filter";
 
 interface ChannelSidebarHeaderProps {
   isCollapsed: boolean;
   onlineUserCount: number;
+  unreadTotal: number;
   search: string;
   showArchived: boolean;
+  inboxFilter: ChatInboxFilter;
+  inboxCounts: ChatInboxFilterCounts;
+  onInboxFilter: (filter: ChatInboxFilter) => void;
   onSearchChange: (value: string) => void;
   onClearSearch: () => void;
   onOpenChatSearch: () => void;
@@ -44,8 +40,12 @@ interface ChannelSidebarHeaderProps {
 export function ChannelSidebarHeader({
   isCollapsed,
   onlineUserCount,
+  unreadTotal,
   search,
   showArchived,
+  inboxFilter,
+  inboxCounts,
+  onInboxFilter,
   onSearchChange,
   onClearSearch,
   onOpenChatSearch,
@@ -55,56 +55,40 @@ export function ChannelSidebarHeader({
   searchInputRef,
 }: ChannelSidebarHeaderProps) {
   return (
-    <div className={cn("px-3 pt-3 pb-2 sm:px-4", isCollapsed && "lg:hidden")}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
-            <MessageSquareText className="h-4 w-4 text-white" />
+    <div className={cn("flex flex-col gap-2 px-3 pt-2 pb-2 sm:px-4", isCollapsed && "lg:hidden")}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-sm">
+            <MessageSquareText className="h-4 w-4 text-primary-foreground" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h2 className="text-base font-bold leading-tight">Messages</h2>
-            <p className="text-dense text-muted-foreground leading-tight">
-              {onlineUserCount} online
+            <p className="text-dense leading-tight text-muted-foreground">
+              {formatInboxSummary(unreadTotal, onlineUserCount)}
             </p>
           </div>
         </div>
-        <div className="hidden items-center gap-0.5 lg:flex">
-          <SidebarSearchButton
-            type="button"
+        <div className="hidden items-center gap-1 lg:flex">
+          <AnimatedIconButton
+            icon={SearchIcon}
+            iconSize={16}
+            variant="ghost"
+            size="icon"
             onClick={onOpenChatSearch}
-            className="w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-            aria-label="Search"
-            title="Search"
+            aria-label="Search messages"
           />
-          <button
-            type="button"
-            onClick={onOpenBrowse}
-            className="w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-            aria-label="Browse public channels"
-            title="Browse Channels"
-          >
-            <CompassIcon size={RAIL_ICON_SIZE} />
-          </button>
-          <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={RAIL_ICON_SIZE}
-            variant="ghost"
-            size="icon"
-            className="w-7 rounded-lg"
-            onClick={onOpenNewDM}
-            title="New Direct Message"
-            aria-label="New Direct Message"
-          />
-          <AnimatedIconButton
-            icon={UsersIcon}
-            iconSize={RAIL_ICON_SIZE}
-            variant="ghost"
-            size="icon"
-            className="w-7 rounded-lg"
-            onClick={onOpenNewGroup}
-            title="New Channel"
-            aria-label="New Channel"
-          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm">
+                New
+              </AnimatedIconButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onSelect={onOpenNewDM}>New message</DropdownMenuItem>
+              <DropdownMenuItem onSelect={onOpenNewGroup}>New channel</DropdownMenuItem>
+              <DropdownMenuItem onSelect={onOpenBrowse}>Browse channels</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -115,8 +99,17 @@ export function ChannelSidebarHeader({
         value={search}
         onValueChange={onSearchChange}
         onClear={onClearSearch}
-        inputClassName="bg-muted/30 border-border/30 rounded-lg placeholder:text-muted-foreground"
+        aria-label={showArchived ? "Search archived chats" : "Search conversations"}
+        inputClassName="rounded-lg border-border/30 bg-muted/30 placeholder:text-muted-foreground"
       />
+
+      {!showArchived && (
+        <ChatInboxFilters
+          value={inboxFilter}
+          counts={inboxCounts}
+          onChange={onInboxFilter}
+        />
+      )}
     </div>
   );
 }

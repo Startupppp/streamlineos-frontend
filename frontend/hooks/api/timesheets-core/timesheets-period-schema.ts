@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { approvalCandidateContract } from "@/hooks/api/hr/approval-route-schema";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 export const timesheetApprovalRouteContract = z.object({
   source: z.enum(["reporting_manager", "project_manager", "auto"]),
@@ -33,7 +34,7 @@ export const timesheetPeriodContract = z.object({
   userMembershipId: z.number().nullable(),
   periodStart: z.string(),
   periodEnd: z.string(),
-  status: z.enum(["OPEN", "DRAFT", "SUBMITTED", "APPROVED", "REJECTED", "LOCKED", "REOPENED"]),
+  status: z.enum(DB_ENUMS.timesheet_period_status),
   totalHours: z.string(),
   billableHours: z.string(),
   nonBillableHours: z.string(),

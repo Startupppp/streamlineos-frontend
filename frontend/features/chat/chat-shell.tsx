@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ChannelSidebar } from "./channel-sidebar";
 import { getChatSidebarClassName } from "./chat-shell-layout";
@@ -40,6 +40,7 @@ export function ChatShell({
 }: ChatShellProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { sidebarCollapsed } = useChatSidebarCollapse();
 
   const handleSelectChannel = useCallback(
@@ -48,9 +49,11 @@ export function ChatShell({
         onSelectChannel(channelId);
         return;
       }
-      router.push(`/chat?channel=${channelId}`);
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("channel", String(channelId));
+      router.push(`/chat?${next.toString()}`);
     },
-    [onSelectChannel, router],
+    [onSelectChannel, router, searchParams],
   );
 
   return (

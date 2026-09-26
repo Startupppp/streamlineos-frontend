@@ -8,6 +8,7 @@ import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-sur
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useCan, useModuleEnabled, useScope } from "@/hooks/api/access";
 import type { DocumentClassification } from "@/types/hr";
+import type { PublishBlockerCode } from "@/hooks/api/hr/document-kb-link-schema";
 
 const classificationLazy = lazyContract(() =>
   import("@/hooks/api/hr/document-classification-schema").then((m) => m.documentClassificationContract),
@@ -31,12 +32,7 @@ export interface DocumentAudience extends DocumentAudienceEntry {
   label: string | null;
 }
 
-export type PublishBlockerCode =
-  | "CLASSIFICATION_NOT_SHAREABLE"
-  | "BELONGS_TO_AN_EMPLOYEE"
-  | "TYPE_NOT_ALLOWED"
-  | "DOCUMENT_INACTIVE"
-  | "HIRING_ARTEFACT";
+export type { PublishBlockerCode };
 
 export interface DocumentClassificationView {
   documentId: number;

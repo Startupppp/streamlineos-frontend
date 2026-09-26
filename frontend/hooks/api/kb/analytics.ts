@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { selectFlatPages } from "@/lib/api/select-flat-pages";
 import type {
   KbAnalyticsOverview,
   KbAnalyticsRange,
@@ -89,7 +90,7 @@ export function usePageAnalytics(filters?: PageAnalyticsFilters) {
     ...(spaceId !== undefined ? { spaceId } : {}),
     ...(staleOnly === true ? { staleOnly: true } : {}),
   };
-  const query = useInfiniteQuery({
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageAnalytics(
       Object.keys(keyParams).length > 0 ? keyParams : undefined,
     ),
@@ -108,14 +109,10 @@ export function usePageAnalytics(filters?: PageAnalyticsFilters) {
       );
     },
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 60_000,
     enabled: canViewAnalytics,
   });
-
-  return {
-    ...query,
-    data: query.data?.pages.flatMap((page) => page.data),
-  };
 }
 
 export function useCitationReuse(range?: KbAnalyticsRange) {
@@ -173,13 +170,14 @@ export function useKnowledgeGaps(range?: KbAnalyticsRange) {
       );
     },
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 60_000,
     enabled: canViewAnalytics,
   });
 
   return {
     ...query,
-    gaps: query.data?.pages.flatMap((page) => page.data),
+    gaps: query.data,
   };
 }
 
@@ -206,13 +204,14 @@ export function useGapRelatedPages(searchQuery: string | undefined) {
       );
     },
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     staleTime: 30_000,
     enabled: canViewAnalytics && typeof searchQuery === "string" && searchQuery.length > 0,
   });
 
   return {
     ...query,
-    pages: query.data?.pages.flatMap((page) => page.data),
+    pages: query.data,
   };
 }
 

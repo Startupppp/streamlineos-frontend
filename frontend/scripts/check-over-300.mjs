@@ -26,7 +26,12 @@
  *   node_modules, every .next* build directory (.next, .next-e2e — gitignored
  *   generated output, not code anyone wrote), feedbucket-widget (a separate
  *   bundled widget),
- *   *.spec.ts, *.spec.tsx, *.d.ts, scripts/ (gate scripts themselves).
+ *   *.spec.ts, *.spec.tsx, *.d.ts, scripts/ (gate scripts themselves),
+ *   *.generated.ts — machine-written output vendored from the backend
+ *   (contracts/db-enums.generated.ts), excluded for the same reason the
+ *   .next* directories are: nobody authored its shape, and the only way to
+ *   shorten it is to make the generator emit two files to satisfy a line
+ *   count. check:file-sizes already excludes contracts/ wholesale.
  *
  * Passes when actual count <= BASELINE. Fails when it increases.
  * To lower the baseline after a split, decrement BASELINE and commit.
@@ -90,6 +95,7 @@ function collectFiles(dir, files = []) {
       const ext = extname(entry);
       if ((ext === ".ts" || ext === ".tsx") &&
           !entry.endsWith(".d.ts") &&
+          !entry.endsWith(".generated.ts") &&
           !entry.endsWith(".spec.ts") &&
           !entry.endsWith(".spec.tsx")) {
         files.push(full);

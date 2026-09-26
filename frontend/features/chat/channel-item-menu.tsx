@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import {
   Bell,
   BellOff,
+  CircleDot,
   EyeOff,
   Phone,
   Settings,
@@ -30,6 +31,7 @@ import {
 import {
   useArchiveChannel,
   useFavoriteChannel,
+  useMarkChannelUnread,
   useMuteChannel,
   useSetNotificationPreference,
   useUnfavoriteChannel,
@@ -70,6 +72,7 @@ export function ChannelItemMenu({
   const unmuteChannel = useUnmuteChannel();
   const setNotificationPreference = useSetNotificationPreference();
   const archiveChannel = useArchiveChannel();
+  const markUnread = useMarkChannelUnread();
 
   const myMembership = useMemo(
     () => channel.members?.find((m) => m.user?.id === currentUserId),
@@ -156,6 +159,19 @@ export function ChannelItemMenu({
     [archiveChannel, channel.id],
   );
 
+  const handleMarkUnread = useCallback(
+    async (event: Event) => {
+      event.preventDefault();
+      try {
+        await markUnread.mutateAsync(channel.id);
+        toast.success("Marked as unread");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [markUnread, channel.id],
+  );
+
   const handleStartCall = useCallback(
     (event: Event) => {
       event.preventDefault();
@@ -187,7 +203,7 @@ export function ChannelItemMenu({
             type="button"
             onClick={(event) => event.stopPropagation()}
             aria-label="Conversation options"
-            className="absolute right-2 top-[11px] z-10 h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-background/90 opacity-0 pointer-events-none group-hover/item:opacity-100 group-hover/item:pointer-events-auto transition-all duration-150 data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto"
+            className="absolute right-1 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring max-lg:pointer-events-auto max-lg:opacity-100 lg:pointer-events-none lg:size-9 lg:opacity-0 lg:group-hover/item:pointer-events-auto lg:group-hover/item:opacity-100 lg:group-focus-within/item:pointer-events-auto lg:group-focus-within/item:opacity-100 data-[state=open]:pointer-events-auto data-[state=open]:opacity-100"
             {...menuHoverHandlers}
           >
             <EllipsisIcon ref={menuIconRef} size={14} />
@@ -198,6 +214,12 @@ export function ChannelItemMenu({
             <Phone className="h-4 w-4" />
             Start Call
           </DropdownMenuItem>
+          {channel.unreadCount === 0 && (
+            <DropdownMenuItem onSelect={handleMarkUnread}>
+              <CircleDot className="h-4 w-4" />
+              Mark as unread
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={handleOpenInvite}>
             <UserPlus className="h-4 w-4" />

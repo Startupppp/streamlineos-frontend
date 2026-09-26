@@ -11,8 +11,8 @@ import {
   useCanReadDocumentSharing,
   type DocumentAudience,
   type DocumentAudienceEntry,
-  type PublishBlockerCode,
 } from "@/hooks/api/hr/document-classification";
+import type { PublishBlocker } from "@/hooks/api/hr/document-kb-link-schema";
 
 const linkLazy = lazyContract(() => import("@/hooks/api/hr/document-kb-link-schema").then((m) => m.documentKbLinkStateContract));
 const versionsLazy = lazyContract(() => import("@/hooks/api/hr/document-kb-link-schema").then((m) => m.documentVersionsContract));
@@ -31,7 +31,7 @@ export interface DocumentKbLinkState {
     newerVersionAvailable: boolean;
   } | null;
   publishable: boolean;
-  blockers: Array<{ code: PublishBlockerCode; message: string }>;
+  blockers: Array<PublishBlocker>;
   documentAudiences: Array<Omit<DocumentAudience, "id">>;
 }
 

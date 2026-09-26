@@ -20,14 +20,17 @@ export function MessagePanelWorkspace({
   messageList,
   messageInput,
   huddle,
+  mobileActions,
 }: {
   messageList: MessageListProps;
   messageInput: MessageInputProps;
   huddle?: HuddlePanelProps;
+  mobileActions?: React.ReactNode;
 }) {
   return (
     <>
       <MessageList {...messageList} />
+      {mobileActions}
       <MessageInput {...messageInput} />
       {huddle ? <HuddlePanel {...huddle} /> : null}
     </>

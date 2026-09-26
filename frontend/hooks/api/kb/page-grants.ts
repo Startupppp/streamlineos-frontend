@@ -16,6 +16,9 @@ export type KbPageGrant = {
   grantedByMembershipId: number | null;
   createdAt: string;
   revokedAt: string | null;
+  granteeName: string | null;
+  granteeEmail: string | null;
+  granteeImage: string | null;
 };
 
 export type KbPageGrantsPage = {

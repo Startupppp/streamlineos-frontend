@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { selectFlatPages } from "@/lib/api/select-flat-pages";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -56,7 +57,7 @@ const kbPageTemplateSingleContract = lazyContract(() =>
 
 export function useKbPageTemplates(q?: string) {
   const canViewPages = useCan("kb:pages:view");
-  const query = useInfiniteQuery({
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates(q),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) => {
@@ -72,14 +73,10 @@ export function useKbPageTemplates(q?: string) {
       );
     },
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     enabled: canViewPages,
     staleTime: 300_000,
   });
-
-  return {
-    ...query,
-    data: query.data?.pages.flatMap((page) => page.data),
-  };
 }
 
 export function useCreateKbPageTemplate() {

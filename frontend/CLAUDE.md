@@ -67,7 +67,7 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 **FE-45.** Use the endpoint's exact `@RequirePermission` key (BE-26). A key absent from the backend catalog makes `useCan` false forever. (gate: check:permission-catalog, check:permission-binding)
 **FE-46.** Gate every permissioned read. (gate: check:gated-reads)
 **FE-47.** Never render an empty state for a denial. A disabled Query v5 read is `isPending: true, isFetching: false`, so `isLoading` is **false** — identical to an empty list.
-**FE-48.** `lib/rbac/denial-is-not-emptiness.known.json` (278 entries) may only shrink. A surface not on it that reads a gated hook and renders empty fails the build.
+**FE-48.** `lib/rbac/denial-is-not-emptiness.known.json` (233 entries) may only shrink. A surface not on it that reads a gated hook and renders empty fails the build.
 **FE-49.** Render denial as `NoPermissionState`, never an empty-success state. (gate: check:empty-states)
 **FE-50.** `useModuleEnabled` returning true while access loads is not proof of authorization.
 **FE-51.** Never fire a request the role cannot access. Prevent predictable 403 fetch loops.

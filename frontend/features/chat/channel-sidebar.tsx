@@ -3,12 +3,10 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Archive, Star } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   useChatChannels,
   useArchivedChannels,
@@ -17,14 +15,19 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
-import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelSectionList } from "./channel-section-list";
 import { ChatOverlayFallback } from "./chat-lazy-fallbacks";
-import { ChatSidebarNav } from "./chat-sidebar-nav";
 import { ChannelCompactRail } from "./channel-compact-rail";
-import { ChannelArchivedSection } from "./channel-archived-section";
 import { ChannelSidebarHeader } from "./channel-sidebar-header";
-import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { ChannelInboxSections } from "./channel-inbox-sections";
+import { handleConversationListKeyDown } from "./chat-inbox-keys";
+import {
+  channelMatchesInboxFilter,
+  countChatInboxFilters,
+  readChatInboxFilter,
+  withChatInboxFilter,
+  type ChatInboxFilter,
+} from "./chat-inbox-filter";
 
 const NewDMDialog = dynamic(
   () => import("./new-dm-dialog").then((m) => ({ default: m.NewDMDialog })),
@@ -65,6 +68,9 @@ export function ChannelSidebar({
   onOpenSettings,
 }: ChannelSidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const inboxFilter = readChatInboxFilter(searchParams.get("inbox"));
   const canReadChannels = useCan("chat:channels:read");
   const {
     channels,
@@ -97,6 +103,18 @@ export function ChannelSidebar({
 
   const handleSearchChange = useCallback((value: string) => setSearch(value), []);
   const handleClearSearch = useCallback(() => setSearch(""), []);
+  const handleInboxFilterChange = useCallback(
+    (filter: ChatInboxFilter) => {
+      const query = withChatInboxFilter(new URLSearchParams(searchParams.toString()), filter);
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    const query = withChatInboxFilter(new URLSearchParams(searchParams.toString()), "all");
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
   const handleRetryChannels = useCallback(() => {
     refetchChannels();
   }, [refetchChannels]);
@@ -157,32 +175,47 @@ export function ChannelSidebar({
     [archivedChannels],
   );
 
+  const visibleChannels = useMemo(
+    () => filteredChannels.filter((channel) => channelMatchesInboxFilter(channel, inboxFilter)),
+    [filteredChannels, inboxFilter],
+  );
+
+  const unreadTotal = useMemo(
+    () => channels.reduce((sum, channel) => sum + channel.unreadCount, 0),
+    [channels],
+  );
+
+  const inboxCounts = useMemo(
+    () => countChatInboxFilters(filteredChannels),
+    [filteredChannels],
+  );
+
   const favorites = useMemo(
     () =>
-      filteredChannels.filter((c) =>
+      visibleChannels.filter((c) =>
         c.members?.find((m) => m.user?.id === currentUserId)?.isFavorite,
       ),
-    [filteredChannels, currentUserId],
+    [visibleChannels, currentUserId],
   );
 
   const favoriteIds = useMemo(() => new Set(favorites.map((c) => c.id)), [favorites]);
 
   const dms = useMemo(
-    () => filteredChannels.filter((c) => c.type === "DIRECT" && !favoriteIds.has(c.id)),
-    [filteredChannels, favoriteIds]
+    () => visibleChannels.filter((c) => c.type === "DIRECT" && !favoriteIds.has(c.id)),
+    [visibleChannels, favoriteIds]
   );
 
   const groups = useMemo(
     () =>
-      filteredChannels.filter(
+      visibleChannels.filter(
         (c) => (c.type === "GROUP" || c.type === "PRIVATE") && !favoriteIds.has(c.id),
       ),
-    [filteredChannels, favoriteIds]
+    [visibleChannels, favoriteIds]
   );
 
   const publicChannels = useMemo(
-    () => filteredChannels.filter((c) => c.type === "PUBLIC" && !favoriteIds.has(c.id)),
-    [filteredChannels, favoriteIds]
+    () => visibleChannels.filter((c) => c.type === "PUBLIC" && !favoriteIds.has(c.id)),
+    [visibleChannels, favoriteIds]
   );
 
   const compactChannels = useMemo(
@@ -193,11 +226,13 @@ export function ChannelSidebar({
   return (
     <TooltipProvider>
       <div className="relative flex flex-col h-full overflow-visible">
-        <ChatSidebarNav isCollapsed={isCollapsed} />
-
         <ChannelSidebarHeader
           isCollapsed={isCollapsed}
           onlineUserCount={onlineUsers?.length ?? 0}
+          unreadTotal={unreadTotal}
+          inboxFilter={inboxFilter}
+          inboxCounts={inboxCounts}
+          onInboxFilter={handleInboxFilterChange}
           search={search}
           showArchived={showArchived}
           searchInputRef={searchInputRef}
@@ -225,24 +260,7 @@ export function ChannelSidebar({
               permission="chat:channels:read"
               description="You don’t have permission to see this workspace’s conversations."
             />
-          ) : showArchived ? (
-            <ChannelArchivedSection
-              isLoading={isArchivedLoading}
-              channels={filteredArchivedChannels}
-              isCollapsed={isCollapsed}
-              search={search}
-              activeChannelId={activeChannelId}
-              currentUserId={currentUserId}
-              onlineUserIds={onlineUserIds}
-              onSelectChannel={onSelectChannel}
-              onClose={handleCloseArchived}
-              hasMore={hasMoreArchived}
-              isLoadingMore={isLoadingMoreArchived}
-              onLoadMore={loadMoreArchived}
-              onStartCall={onStartCall}
-              onOpenSettings={onOpenSettings}
-            />
-          ) : isError ? (
+          ) : isError && !showArchived ? (
             <ErrorState
               compact
               className="m-2"
@@ -250,11 +268,11 @@ export function ChannelSidebar({
               description="The channel list could not be read. Please try again."
               onRetry={handleRetryChannels}
             />
-          ) : isLoading ? (
-            <div className="p-3 space-y-2" aria-busy="true">
+          ) : isLoading && !showArchived ? (
+            <div className="space-y-2 p-3" aria-busy="true">
               <span role="status" className="sr-only">Loading conversations…</span>
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center gap-2.5 px-2 py-2">
+                <div key={i} className="flex min-h-14 items-center gap-3 px-2 py-2">
                   <Skeleton className="h-10 w-10 rounded-full" />
                   <div className={cn("flex-1 space-y-1.5", isCollapsed && "lg:hidden")}>
                     <Skeleton className="h-3.5 w-24" />
@@ -264,8 +282,9 @@ export function ChannelSidebar({
               ))}
             </div>
           ) : (
-            <>
-              <div className={cn("py-1", isCollapsed && "hidden lg:block")}>
+            <div onKeyDown={handleConversationListKeyDown}>
+              <p className="sr-only">Use the arrow keys to move between conversations.</p>
+              <div className={cn("hidden py-1", isCollapsed && "lg:block")}>
                 <ChannelSectionList
                   channels={compactChannels}
                   label="Conversations"
@@ -277,135 +296,45 @@ export function ChannelSidebar({
                   onSelectChannel={onSelectChannel}
                 />
               </div>
-
-              <div className={cn("py-1", isCollapsed && "lg:hidden")}>
-                {favorites.length > 0 && (
-                  <ChannelSidebarSection
-                    title="Favorites"
-                    count={favorites.reduce((a, c) => a + c.unreadCount, 0)}
-                    collapsed={favoritesCollapsed}
-                    onToggle={handleToggleFavorites}
-                    icon={<Star className="h-3 w-3 fill-amber-400 text-status-warning-ink" />}
-                  >
-                    <ChannelSectionList
-                      channels={favorites}
-                      label="Favorites"
-                      activeChannelId={activeChannelId}
-                      currentUserId={currentUserId}
-                      onlineUserIds={onlineUserIds}
-                      onSelectChannel={onSelectChannel}
-                      onStartCall={onStartCall}
-                      onOpenSettings={onOpenSettings}
-                    />
-                  </ChannelSidebarSection>
-                )}
-              </div>
-
-              <div className={cn("py-1", isCollapsed && "lg:hidden")}>
-                {!search && archivedChannels.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleOpenArchived}
-                    className="w-full flex items-center gap-2.5 px-2 py-2.5 mb-1 rounded-xl text-left hover:bg-muted/40 transition-colors"
-                  >
-                    <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center shrink-0">
-                      <Archive className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <span className="flex-1 text-label font-medium text-foreground">Archived</span>
-                    {archivedUnreadCount > 0 && (
-                      <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-primary text-primary-foreground text-micro font-bold rounded-full px-1 shrink-0">
-                        {archivedUnreadCount > 99 ? "99+" : archivedUnreadCount}
-                      </span>
-                    )}
-                  </button>
-                )}
-
-                {publicChannels.length > 0 && (
-                  <ChannelSidebarSection
-                    title="Public Channels"
-                    count={publicChannels.reduce((a, c) => a + c.unreadCount, 0)}
-                    collapsed={publicCollapsed}
-                    onToggle={handleTogglePublic}
-                  >
-                    <ChannelSectionList
-                      channels={publicChannels}
-                      label="Public channels"
-                      activeChannelId={activeChannelId}
-                      currentUserId={currentUserId}
-                      onlineUserIds={onlineUserIds}
-                      onSelectChannel={onSelectChannel}
-                      onStartCall={onStartCall}
-                      onOpenSettings={onOpenSettings}
-                    />
-                  </ChannelSidebarSection>
-                )}
-
-                {groups.length > 0 && (
-                  <ChannelSidebarSection
-                    title="Groups"
-                    count={groups.reduce((a, c) => a + c.unreadCount, 0)}
-                    collapsed={groupsCollapsed}
-                    onToggle={handleToggleGroups}
-                  >
-                    <ChannelSectionList
-                      channels={groups}
-                      label="Groups"
-                      activeChannelId={activeChannelId}
-                      currentUserId={currentUserId}
-                      onlineUserIds={onlineUserIds}
-                      onSelectChannel={onSelectChannel}
-                      onStartCall={onStartCall}
-                      onOpenSettings={onOpenSettings}
-                    />
-                  </ChannelSidebarSection>
-                )}
-
-                {dms.length > 0 && (
-                  <ChannelSidebarSection
-                    title="Direct Messages"
-                    count={dms.reduce((a, c) => a + c.unreadCount, 0)}
-                    collapsed={dmsCollapsed}
-                    onToggle={handleToggleDMs}
-                  >
-                    <ChannelSectionList
-                      channels={dms}
-                      label="Direct messages"
-                      activeChannelId={activeChannelId}
-                      currentUserId={currentUserId}
-                      onlineUserIds={onlineUserIds}
-                      onSelectChannel={onSelectChannel}
-                      onStartCall={onStartCall}
-                      onOpenSettings={onOpenSettings}
-                    />
-                  </ChannelSidebarSection>
-                )}
-
-                {filteredChannels.length === 0 && !hasMoreChannels && (
-                  <EmptyState
-                    compact
-                    illustrationPreset="mail"
-                    title="No conversations yet"
-                    description="Start a direct message or create a channel to begin."
-                    filtersActive={Boolean(search)}
-                    filteredTitle="No conversations match your search."
-                    onClearFilters={handleClearSearch}
-                  />
-                )}
-
-                {channelsTruncated ? (
-                  <p role="status" className="px-2 py-1.5 text-dense text-muted-foreground">
-                    {"Showing the channels loaded so far. Search by name to reach the rest."}
-                  </p>
-                ) : (
-                  <InfiniteScrollSentinel
-                    hasNextPage={hasMoreChannels}
-                    isFetchingNextPage={isLoadingMoreChannels}
-                    onLoadMore={loadMoreChannels}
-                    label="Load more conversations"
-                  />
-                )}
-              </div>
-            </>
+              <ChannelInboxSections
+                inboxFilter={inboxFilter}
+                search={search}
+                isCollapsed={isCollapsed}
+                showArchived={showArchived}
+                favorites={favorites}
+                publicChannels={publicChannels}
+                groups={groups}
+                dms={dms}
+                favoritesCollapsed={favoritesCollapsed}
+                publicCollapsed={publicCollapsed}
+                groupsCollapsed={groupsCollapsed}
+                dmsCollapsed={dmsCollapsed}
+                onToggleFavorites={handleToggleFavorites}
+                onTogglePublic={handleTogglePublic}
+                onToggleGroups={handleToggleGroups}
+                onToggleDMs={handleToggleDMs}
+                archivedChannels={filteredArchivedChannels}
+                archivedUnreadCount={archivedUnreadCount}
+                isArchivedLoading={isArchivedLoading}
+                hasMoreArchived={hasMoreArchived}
+                isLoadingMoreArchived={isLoadingMoreArchived}
+                onLoadMoreArchived={loadMoreArchived}
+                onOpenArchived={handleOpenArchived}
+                onCloseArchived={handleCloseArchived}
+                activeChannelId={activeChannelId}
+                currentUserId={currentUserId}
+                onlineUserIds={onlineUserIds}
+                onSelectChannel={onSelectChannel}
+                onStartCall={onStartCall}
+                onOpenSettings={onOpenSettings}
+                visibleCount={visibleChannels.length}
+                hasMoreChannels={hasMoreChannels}
+                channelsTruncated={channelsTruncated}
+                isLoadingMoreChannels={isLoadingMoreChannels}
+                onLoadMoreChannels={loadMoreChannels}
+                onClearFilters={handleClearFilters}
+              />
+            </div>
           )}
         </ScrollArea>
 

@@ -358,7 +358,7 @@ describe("DashboardShell /chat mobile bottom nav", () => {
 
   it("the authenticated layout hands the shell that slot, so the mount is not test-only", () => {
     const layoutClient = readFileSync(
-      join(process.cwd(), "app", "(authenticated)", "layout-client.tsx"),
+      join(process.cwd(), "components", "layout", "layout-client.tsx"),
       "utf8",
     );
 

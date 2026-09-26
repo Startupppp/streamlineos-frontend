@@ -29,7 +29,7 @@ function CompactRailButton({ label, icon, onClick }: CompactRailButtonProps) {
         <button
           type="button"
           onClick={onClick}
-          className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          className="flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={label}
         >
           {icon}

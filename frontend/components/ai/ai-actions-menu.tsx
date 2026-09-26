@@ -96,6 +96,12 @@ export function AiActionsMenu({
     setPickerOpen(open);
   }
 
+  function handleDirectRun() {
+    const onlyAction = actions[0];
+    if (!onlyAction || onlyAction.disabledReason) return;
+    void runAction(onlyAction);
+  }
+
   const overlayBody = (
     <AiActionResultBody
       state={state}
@@ -190,6 +196,33 @@ export function AiActionsMenu({
       {iconOnly ? null : triggerLabel}
     </Button>
   );
+
+  if (actions.length === 1 && !asSubmenu) {
+    const onlyAction = actions[0];
+    return (
+      <>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={disabled || Boolean(onlyAction?.disabledReason)}
+          aria-label={
+            iconOnly || !onlyAction ? triggerLabel : `${triggerLabel}, ${onlyAction.label}`
+          }
+          onClick={handleDirectRun}
+          className={cn("h-8 gap-1.5 text-xs", iconOnly && "h-9 w-9 px-0", className)}
+          {...hoverHandlers}
+        >
+          <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
+          {iconOnly ? null : triggerLabel}
+        </Button>
+        <ResponsivePopover open={popoverOpen} onOpenChange={handlePopoverOpenChange}>
+          {popoverResult}
+        </ResponsivePopover>
+        {overlays}
+      </>
+    );
+  }
 
   if (asSubmenu) {
     return (

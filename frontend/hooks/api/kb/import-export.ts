@@ -7,6 +7,7 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { selectFlatPages } from "@/lib/api/select-flat-pages";
 
 export type KbImportItem = {
   title: string;
@@ -156,7 +157,7 @@ export function useDryRunImport() {
 
 export function useKbImportJobs() {
   const canImport = useCan("kb:pages:import");
-  const query = useInfiniteQuery({
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) =>
@@ -167,19 +168,15 @@ export function useKbImportJobs() {
         kbImportJobListPageContract,
       ),
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     enabled: canImport,
     staleTime: 30_000,
   });
-
-  return {
-    ...query,
-    data: query.data?.pages.flatMap((page) => page.data),
-  };
 }
 
 export function useKbExportJobs() {
   const canExport = useCan("kb:pages:export");
-  const query = useInfiniteQuery({
+  return useInfiniteQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.exportJobs(),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) =>
@@ -190,19 +187,15 @@ export function useKbExportJobs() {
         kbExportJobListPageContract,
       ),
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
+    select: selectFlatPages,
     enabled: canExport,
     staleTime: 0,
     refetchInterval: (query) => {
       const jobs = query.state.data?.pages.flatMap((page) => page.data) ?? [];
       const inFlight = jobs.some(
-        (job) => job.status === "pending" || job.status === "processing",
+        (job) => job != null && (job.status === "pending" || job.status === "processing"),
       );
       return inFlight ? 1500 : false;
     },
   });
-
-  return {
-    ...query,
-    data: query.data?.pages.flatMap((page) => page.data),
-  };
 }

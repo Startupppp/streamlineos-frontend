@@ -3,24 +3,18 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import { ArrowLeft } from "lucide-react";
-import { EllipsisIcon, MicIcon, UsersIcon } from "@animateicons/react/lucide";
+import { MicIcon, UsersIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { AiAction } from "@/components/ai";
 import { useIsChatPanelNarrow } from "./use-chat-mobile";
 import { ChannelAvatar } from "./channel-avatar";
-import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
 import { MessagePanelWorkspace } from "./message-panel-workspace";
+import { ChatNarrowThreadActions } from "./chat-narrow-thread-actions";
 import { MessagePanelSidePanels } from "./message-panel-side-panels";
 import { BookmarkButton, PaperclipButton } from "./message-panel-actions";
 import {
@@ -121,8 +115,6 @@ export function MessagePanelView({
     showSavedPanel,
     onToggleInfo,
     showInfoPanel,
-    isSidebarCollapsed,
-    onToggleSidebar,
   } = header;
 
   const isPanelNarrow = useIsChatPanelNarrow();
@@ -137,14 +129,14 @@ export function MessagePanelView({
     <div className="flex flex-1 min-w-0 overflow-hidden">
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {isPanelNarrow && (
-        <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border/40 bg-card/80 px-3 backdrop-blur-sm">
+        <div className="flex min-h-14 shrink-0 items-center gap-2 border-b border-border/40 bg-card/80 px-3">
           <button
             type="button"
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onClick={onBack}
             aria-label="Back to conversations"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-5" />
           </button>
           <div className="min-w-0 flex-1">
             <TruncatedText
@@ -152,66 +144,11 @@ export function MessagePanelView({
               className="text-sm font-semibold"
             />
           </div>
-          {!isInHuddle && (
-            <AnimatedIconButton
-              icon={MicIcon}
-              iconSize={16}
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "size-8 shrink-0",
-                activeHuddle &&
-                  "text-status-success-ink hover:text-status-success-ink",
-              )}
-              onClick={onHuddle}
-              disabled={huddleStartPending || huddleJoinPending}
-              aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
-            />
-          )}
-          {canUseAi && (
-            <AiActionsMenu
-              actions={[summarizeAction]}
-              align="end"
-              disabled={!channelId}
-              triggerLabel="AI"
-              className="h-8 px-2 text-micro"
-            />
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <AnimatedIconButton
-                ref={dropdownTriggerRef}
-                icon={EllipsisIcon}
-                iconSize={16}
-                variant="ghost"
-                size="icon"
-                className="size-8 shrink-0"
-                aria-label="Conversation actions"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onSelect={onToggleFiles}>
-                Shared files
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={onToggleSaved}>
-                Saved messages
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={onToggleInfo}>
-                Member details
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
         )}
 
         {!isPanelNarrow && (
-        <div className="flex h-[56px] shrink-0 items-center gap-3 border-b border-border/40 bg-card/80 px-4 backdrop-blur-sm sticky top-0 z-20">
-          {onToggleSidebar && (
-            <ChannelSidebarCollapseButton
-              isCollapsed={isSidebarCollapsed ?? false}
-              onToggle={onToggleSidebar}
-            />
-          )}
+        <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border/40 bg-card/80 px-4 sticky top-0 z-20">
           <button
             type="button"
             onClick={onBack}
@@ -364,7 +301,27 @@ export function MessagePanelView({
             Reconnecting to live chat…
           </div>
         ) : null}
-        <MessagePanelWorkspace {...workspace} />
+        <MessagePanelWorkspace
+          {...workspace}
+          mobileActions={
+            isPanelNarrow ? (
+              <ChatNarrowThreadActions
+                activeHuddle={activeHuddle}
+                isInHuddle={isInHuddle}
+                onHuddle={onHuddle}
+                huddleStartPending={huddleStartPending}
+                huddleJoinPending={huddleJoinPending}
+                canUseAi={canUseAi}
+                summarizeAction={summarizeAction}
+                channelId={channelId}
+                onToggleFiles={onToggleFiles}
+                onToggleSaved={onToggleSaved}
+                onToggleInfo={onToggleInfo}
+                dropdownTriggerRef={dropdownTriggerRef}
+              />
+            ) : null
+          }
+        />
       </div>
 
       <AnimatePresence>

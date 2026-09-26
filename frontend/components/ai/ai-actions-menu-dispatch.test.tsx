@@ -15,10 +15,9 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
-async function openAndRun(actionKey: string) {
+async function openAndRun() {
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: /AI/i }));
-  await user.click(await screen.findByText(actionKey));
 }
 
 describe("AiActionsMenu — a state transition never issues a second paid call", () => {
@@ -35,7 +34,7 @@ describe("AiActionsMenu — a state transition never issues a second paid call",
     };
 
     render(<AiActionsMenu actions={[action]} />);
-    await openAndRun("summarize");
+    await openAndRun();
 
     expect(run).toHaveBeenCalledTimes(1);
     const loading = sessions[sessions.length - 1];
@@ -73,7 +72,7 @@ describe("AiActionsMenu — a state transition never issues a second paid call",
     };
 
     render(<AiActionsMenu actions={[action]} />);
-    await openAndRun("summarize");
+    await openAndRun();
 
     act(() => {
       sessions[sessions.length - 1]?.cancel();
@@ -102,7 +101,7 @@ describe("AiActionsMenu — a state transition never issues a second paid call",
     };
 
     render(<AiActionsMenu actions={[action]} />);
-    await openAndRun("summarize");
+    await openAndRun();
 
     await act(async () => {
       pending.reject(
@@ -129,7 +128,7 @@ describe("AiActionsMenu — a state transition never issues a second paid call",
     };
 
     const view = render(<AiActionsMenu actions={[action]} />);
-    await openAndRun("summarize");
+    await openAndRun();
     view.unmount();
 
     expect(seen?.aborted).toBe(true);
@@ -155,7 +154,7 @@ describe("AiActionsMenu — a state transition never issues a second paid call",
         <AiActionsMenu actions={[action]} />
       </StrictMode>,
     );
-    await openAndRun("summarize");
+    await openAndRun();
 
     expect(run).toHaveBeenCalledTimes(1);
     expect(seen?.aborted).toBe(false);
@@ -186,7 +185,7 @@ describe("AiActionsMenu — streaming, retry and partial output reach the surfac
     };
 
     render(<AiActionsMenu actions={[action]} />);
-    await openAndRun("summarize");
+    await openAndRun();
 
     act(() => {
       emit?.("half an ");
@@ -225,7 +224,7 @@ describe("AiActionsMenu — streaming, retry and partial output reach the surfac
     };
 
     render(<AiActionsMenu actions={[action]} />);
-    await openAndRun("summarize");
+    await openAndRun();
 
     const firstLoading = sessions[sessions.length - 1];
     expect(firstLoading?.state.status).toBe("loading");

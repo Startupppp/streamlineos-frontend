@@ -19,8 +19,7 @@ export function getChatConversationListPaneClassName(
 ): string {
   return [
     isMobileListVisible ? "flex" : "hidden lg:flex",
-    "w-full",
-    CHAT_PANE_CHROME,
+    "relative z-20 w-full shrink-0 flex-col overflow-visible border-r border-border/40 bg-card/50 transition-[width] duration-300 ease-in-out",
     paneWidthClassName(isCollapsed),
   ].join(" ");
 }

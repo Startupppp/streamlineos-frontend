@@ -196,6 +196,9 @@ function makeGrant(overrides: Partial<KbPageGrant> = {}): KbPageGrant {
     grantedByMembershipId: 1,
     createdAt: "2026-01-01T00:00:00Z",
     revokedAt: null,
+    granteeName: null,
+    granteeEmail: null,
+    granteeImage: null,
     ...overrides,
   };
 }
@@ -380,6 +383,53 @@ describe("PageGrantsSheet — permission gating", () => {
     expect(screen.queryByRole("button", { name: /revoke access/i })).not.toBeInTheDocument();
 
     expect(screen.getByTestId("icon-users")).toBeInTheDocument();
+  });
+});
+
+describe("PageGrantsSheet — server-provided grantee names", () => {
+  it("renders the server-provided granteeName for a member grant so no org-member fetch is needed to resolve the display name", () => {
+    const grant = makeGrant({ id: 1, membershipId: 999, granteeName: "Priya Ramachandran" });
+    useKbPageGrants.mockReturnValue(defaultGrantsPage([grant]));
+    useOrgMembers.mockReturnValue({
+      data: { data: [], pagination: { limit: 20, hasMore: false, nextCursor: null } },
+    });
+
+    renderSheet();
+
+    expect(screen.getByText("Priya Ramachandran")).toBeInTheDocument();
+    expect(screen.queryByText("Team member")).not.toBeInTheDocument();
+  });
+
+  it("a grantee whose membershipId is outside any 100-member window still shows a name when the server projection provides granteeName", () => {
+    const grant = makeGrant({ id: 2, membershipId: 101, granteeName: "Outside Window User" });
+    useKbPageGrants.mockReturnValue(defaultGrantsPage([grant]));
+    useOrgMembers.mockReturnValue({
+      data: { data: [], pagination: { limit: 20, hasMore: false, nextCursor: null } },
+    });
+
+    renderSheet();
+
+    expect(screen.getByText("Outside Window User")).toBeInTheDocument();
+    expect(screen.queryByText("Team member")).not.toBeInTheDocument();
+  });
+
+  it("a role grant renders the formatted role label, not a member name", () => {
+    const grant = makeGrant({ id: 3, membershipId: null, role: "MEMBER", granteeName: null });
+    useKbPageGrants.mockReturnValue(defaultGrantsPage([grant]));
+
+    renderSheet();
+
+    expect(screen.getByText("Member")).toBeInTheDocument();
+    expect(screen.queryByText("Team member")).not.toBeInTheDocument();
+  });
+
+  it("a member grant with no server-provided name falls back to Team member rather than silently disappearing", () => {
+    const grant = makeGrant({ id: 4, membershipId: 50, granteeName: null });
+    useKbPageGrants.mockReturnValue(defaultGrantsPage([grant]));
+
+    renderSheet();
+
+    expect(screen.getByText("Team member")).toBeInTheDocument();
   });
 });
 
