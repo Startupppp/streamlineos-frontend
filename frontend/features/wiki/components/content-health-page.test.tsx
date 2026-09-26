@@ -1,4 +1,4 @@
-import { render as rtlRender, screen } from "@testing-library/react";
+import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -19,6 +19,8 @@ const accessDenied = {
 
 const useContentHealthCounts = jest.fn();
 const useContentHealthSignals = jest.fn();
+const mockUseAssignHealthItem = jest.fn();
+const mockUseOrgMembersByIds = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -39,6 +41,32 @@ jest.mock("@/hooks/api/kb/content-health", () => ({
   useContentHealthCounts: () => useContentHealthCounts(),
   useContentHealthSignals: () => useContentHealthSignals(),
   useDismissHealthItem: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  useContentHealthTrend: () => ({ data: { beforeCount: 10, afterCount: 8 }, isLoading: false }),
+  useAssignHealthItem: () => mockUseAssignHealthItem(),
+  useContentHealthEvidence: () => ({ data: undefined, isLoading: false }),
+  useBulkRepairHealthItems: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembersByIds: (...args: unknown[]) => mockUseOrgMembersByIds(...args),
+}));
+
+jest.mock("@/components/ui/user-combobox", () => ({
+  UserCombobox: ({ value, onChange }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) => (
+    <button
+      data-testid="user-combobox"
+      type="button"
+      onClick={() => onChange("user-abc")}
+    >
+      {value ? value : "Select member…"}
+    </button>
+  ),
+}));
+
+jest.mock("@/components/ui/popover", () => ({
+  Popover: ({ children }: { children: React.ReactNode; open?: boolean; onOpenChange?: (o: boolean) => void }) => <>{children}</>,
+  PopoverTrigger: ({ children }: { children: React.ReactNode; asChild?: boolean }) => <>{children}</>,
+  PopoverContent: ({ children }: { children: React.ReactNode; className?: string; align?: string }) => <div>{children}</div>,
 }));
 
 import ContentHealthPage from "./content-health-page";
@@ -103,6 +131,25 @@ beforeEach(() => {
   useAccess.mockReturnValue(accessGranted);
   useContentHealthCounts.mockReturnValue({ ...IDLE, data: MIXED_COUNTS });
   useContentHealthSignals.mockReturnValue({ ...IDLE, data: SIGNAL_PAGE_WITH_ROWS });
+  mockUseAssignHealthItem.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseOrgMembersByIds.mockReturnValue({
+    data: {
+      data: [
+        {
+          userId: "user-abc",
+          membershipId: 99,
+          name: "Alice Smith",
+          email: "alice@example.com",
+          image: null,
+          role: "member",
+          totpEnabled: false,
+          joinedAt: "2024-01-01",
+        },
+      ],
+      pagination: { hasMore: false, nextCursor: null },
+    },
+    isLoading: false,
+  });
 });
 
 afterEach(() => jest.resetAllMocks());
@@ -196,5 +243,23 @@ describe("ContentHealthPage — error state", () => {
     });
     render(<ContentHealthPage />);
     expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+  });
+});
+
+describe("ContentHealthPage — assign by name, not by raw ID", () => {
+  it("selecting a member by name passes the resolved membership ID to the assign mutation, not a typed numeric ID", () => {
+    const assignMutate = jest.fn();
+    mockUseAssignHealthItem.mockReturnValue({ mutate: assignMutate, isPending: false });
+
+    render(<ContentHealthPage />);
+
+    fireEvent.click(screen.getByTestId("user-combobox"));
+
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    expect(assignMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ assigneeMembershipId: 99 }),
+      expect.anything(),
+    );
   });
 });

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   useKbAnalyticsOverview,
   useKbNoResults,
@@ -265,12 +266,11 @@ const GapTableRow = memo(function GapTableRow({
           onClick={(e) => e.stopPropagation()}
           className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-t border-border/40"
         >
-          <Input
-            className="h-7 text-xs flex-1"
-            placeholder="Assignee user ID"
+          <UserCombobox
             value={assignValue}
-            onChange={(e) => setAssignValue(e.target.value)}
-            autoFocus
+            onChange={setAssignValue}
+            placeholder="Select member…"
+            className="flex-1"
           />
           <Button size="sm" type="submit" disabled={isAssigning || !assignValue.trim()} className="h-7 px-2 text-xs">
             Assign

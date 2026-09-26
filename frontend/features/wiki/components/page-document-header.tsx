@@ -10,16 +10,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -191,30 +182,16 @@ export default function PageDocumentHeader({
         onOpenChange={setMoveOpen}
       />
 
-      <AlertDialog
+      <ConfirmDialog
         open={deleteAlertOpen}
         onOpenChange={handleDeleteAlertOpenChange}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Move page to trash?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This page will be moved to trash. You can restore it from trash
-              later.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDelete}
-              disabled={deletePage.isPending}
-            >
-              Move to trash
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title="Move page to trash?"
+        description="This page will be moved to trash. You can restore it from trash later."
+        destructive
+        confirmLabel="Move to trash"
+        isPending={deletePage.isPending}
+        onConfirm={handleConfirmDelete}
+      />
 
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
         <DialogContent className="sm:max-w-md gap-3">

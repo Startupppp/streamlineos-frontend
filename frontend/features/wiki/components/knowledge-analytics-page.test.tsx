@@ -3,6 +3,8 @@ import type { ReactElement } from "react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 
+const mockAssignGapMutate = jest.fn();
+
 const useAccess = jest.fn();
 const accessLoading = { data: undefined, isLoading: true };
 const accessGranted = {
@@ -54,9 +56,21 @@ jest.mock("@/hooks/api/kb", () => ({
   useCitationReuse: (...args: unknown[]) => useCitationReuse(...args),
   useReviewSla: (...args: unknown[]) => useReviewSla(...args),
   useCreateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
-  useAssignGap: () => ({ mutate: jest.fn(), isPending: false }),
+  useAssignGap: () => ({ mutate: mockAssignGapMutate, isPending: false }),
   useDismissGap: () => ({ mutate: jest.fn(), isPending: false }),
   useCreateGapFix: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/components/ui/user-combobox", () => ({
+  UserCombobox: ({ value, onChange }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) => (
+    <button
+      data-testid="user-combobox"
+      type="button"
+      onClick={() => onChange("user-selected-id")}
+    >
+      {value ? value : "Select member…"}
+    </button>
+  ),
 }));
 
 import KnowledgeAnalyticsPage from "./knowledge-analytics-page";
@@ -117,6 +131,7 @@ function cancelled() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockAssignGapMutate.mockReset();
   searchParams = new URLSearchParams();
   useKbSpaces.mockReturnValue({
     data: { data: [{ id: 42, name: "Engineering" }] },
@@ -405,5 +420,25 @@ describe("KnowledgeAnalyticsPage — gap rows render without crashing and suppor
 
     expect(screen.getByText("Password Reset Guide")).toBeInTheDocument();
     expect(useGapRelatedPages).toHaveBeenCalledWith("reset password");
+  });
+});
+
+describe("KnowledgeAnalyticsPage — gap assign uses a person picker, not a raw UUID input", () => {
+  it("selecting a member by name passes the user ID to the assign mutation, not a typed UUID string", () => {
+    useKnowledgeGaps.mockReturnValue(
+      settledGaps([{ query: "export report", count: 3, lastOccurredAt: "2024-03-01T00:00:00Z" }]),
+    );
+
+    render(<KnowledgeAnalyticsPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Assign gap owner" }));
+
+    fireEvent.click(screen.getByTestId("user-combobox"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Assign" }));
+
+    expect(mockAssignGapMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ query: "export report", assigneeUserId: "user-selected-id" }),
+    );
   });
 });

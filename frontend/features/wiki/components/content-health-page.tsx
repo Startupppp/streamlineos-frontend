@@ -46,6 +46,8 @@ import {
 } from "@/features/wiki/components/content-health-dismiss-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { UserCombobox } from "@/components/ui/user-combobox";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 
 const SIGNAL_TYPES: ContentHealthSignalType[] = [
   "unowned",
@@ -301,15 +303,29 @@ interface AssignPopoverProps {
 
 function AssignPopover({ pageId, kind }: AssignPopoverProps) {
   const [open, setOpen] = useState(false);
-  const [membershipId, setMembershipId] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
   const [dueAt, setDueAt] = useState("");
   const assign = useAssignHealthItem();
 
+  const { data: selectedMemberData, isLoading: memberLoading } = useOrgMembersByIds(
+    selectedUserId ? [selectedUserId] : [],
+  );
+  const resolvedMembershipId = selectedMemberData?.data.find(
+    (m) => m.userId === selectedUserId,
+  )?.membershipId;
+
+  function handleUserChange(userId: string) {
+    setSelectedUserId(userId);
+  }
+
+  function handleDueAtChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setDueAt(e.target.value);
+  }
+
   function handleAssign() {
-    const parsed = parseInt(membershipId, 10);
-    if (!Number.isFinite(parsed)) return;
+    if (!resolvedMembershipId) return;
     assign.mutate(
-      { pageId, kind, assigneeMembershipId: parsed, dueAt: dueAt || undefined },
+      { pageId, kind, assigneeMembershipId: resolvedMembershipId, dueAt: dueAt || undefined },
       {
         onSuccess: () => {
           toast.success("Assigned");
@@ -337,18 +353,15 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3 space-y-2" align="end">
         <p className="text-xs font-medium text-foreground">Assign owner</p>
-        <input
-          type="number"
-          placeholder="Membership ID"
-          value={membershipId}
-          onChange={(e) => setMembershipId(e.target.value)}
-          className="w-full h-8 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Membership ID"
+        <UserCombobox
+          value={selectedUserId}
+          onChange={handleUserChange}
+          placeholder="Select member…"
         />
         <input
           type="date"
           value={dueAt}
-          onChange={(e) => setDueAt(e.target.value)}
+          onChange={handleDueAtChange}
           className="w-full h-8 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Due date"
         />
@@ -357,7 +370,7 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
           size="sm"
           className="w-full text-xs h-7"
           onClick={handleAssign}
-          disabled={!membershipId}
+          disabled={!selectedUserId || memberLoading || !resolvedMembershipId}
           isPending={assign.isPending}
           loadingText="Saving…"
         >
