@@ -21,6 +21,7 @@ import {
   ClipboardList,
   Calendar,
   LifeBuoy,
+  Calculator,
   type LucideIcon,
 } from "lucide-react";
 
@@ -221,6 +222,12 @@ export const NOTIFICATION_CATEGORY_CONFIG: Record<
     icon: LifeBuoy,
     color: "text-category-lime-ink",
     bg: "bg-category-lime-surface",
+  },
+  ACCOUNTING: {
+    label: "Accounting",
+    icon: Calculator,
+    color: "text-category-slate-ink",
+    bg: "bg-category-slate-surface",
   },
 };
 

@@ -1,25 +1,8 @@
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
+
 export type NotificationType = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
 export type NotificationPriority = "LOW" | "NORMAL" | "HIGH" | "CRITICAL";
-export const NOTIFICATION_CATEGORY_VALUES = [
-  "SECURITY",
-  "CRM",
-  "HRMS",
-  "BILLING",
-  "AI",
-  "PROJECTS",
-  "WORKFLOW",
-  "MARKETING",
-  "SYSTEM",
-  "CHAT",
-  "PAYROLL",
-  "RECRUITMENT",
-  "KNOWLEDGE",
-  "SIGN",
-  "INVENTORY",
-  "SURVEYS",
-  "CALENDAR",
-  "SUPPORT",
-] as const;
+export const NOTIFICATION_CATEGORY_VALUES = DB_ENUMS.notification_category;
 
 export type NotificationCategory =
   (typeof NOTIFICATION_CATEGORY_VALUES)[number];
