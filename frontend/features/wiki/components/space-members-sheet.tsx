@@ -9,6 +9,9 @@ import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { useKbSpaceMembers } from "@/hooks/api/kb/spaces";
 import type { KbSpaceMember } from "@/hooks/api/kb/spaces";
 import { KbUsersIcon } from "@/features/wiki/lib/kb-icons";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { useCallback } from "react";
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "Admin",
@@ -65,9 +68,24 @@ export function SpaceMembersSheet({
   open,
   onOpenChange,
 }: SpaceMembersSheetProps) {
-  const { data: members, isLoading, isError } = useKbSpaceMembers(spaceId, {
-    enabled: open,
+  const {
+    data: members,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useKbSpaceMembers(spaceId, { enabled: open });
+  const membersState = usePageState({
+    permission: "kb:spaces:manage",
+    isLoading,
+    isError,
+    error,
+    isEmpty: (members ?? []).length === 0,
   });
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -76,34 +94,31 @@ export function SpaceMembersSheet({
           <SheetTitle>Members — {spaceName}</SheetTitle>
         </SheetHeader>
         <SheetBody className="px-6 py-2 flex-1 overflow-y-auto">
-          {isLoading && (
+          <PageState
+            resolution={membersState}
+            onRetry={handleRetry}
+            compact
+            loading={
+              <div className="divide-y divide-border">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <MemberRowSkeleton key={i} />
+                ))}
+              </div>
+            }
+            empty={
+              <EmptyState
+                illustration={<KbUsersIcon className="w-8 text-muted-foreground" />}
+                title="No members yet"
+                description="Add members to this space to control who can access it."
+              />
+            }
+          >
             <div className="divide-y divide-border">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <MemberRowSkeleton key={i} />
-              ))}
-            </div>
-          )}
-          {!isLoading && isError && (
-            <EmptyState
-              illustration={<KbUsersIcon className="w-8 text-muted-foreground" />}
-              title="Could not load members"
-              description="Try closing and reopening the panel."
-            />
-          )}
-          {!isLoading && !isError && members && members.length === 0 && (
-            <EmptyState
-              illustration={<KbUsersIcon className="w-8 text-muted-foreground" />}
-              title="No members yet"
-              description="Add members to this space to control who can access it."
-            />
-          )}
-          {!isLoading && !isError && members && members.length > 0 && (
-            <div className="divide-y divide-border">
-              {members.map((member) => (
+              {(members ?? []).map((member) => (
                 <MemberRow key={member.id} member={member} />
               ))}
             </div>
-          )}
+          </PageState>
         </SheetBody>
       </SheetContent>
     </Sheet>
