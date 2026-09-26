@@ -296,3 +296,81 @@ the hook is wired and tested.
 This entry exists because "it is not implemented anywhere" is the most expensive kind of wrong
 report: it converts a twenty-minute task into a permanent exemption. Verify an absence claim by
 grepping for the hook before repeating it.
+
+---
+
+## CCG-6 — C3 says "everything above", and for 74 pages "above" is the same boilerplate
+
+**Affects:** the core-field, action and overlay clauses of C3 on **74 of 83** pages.
+
+C3 reads: "Every core field, action, overlay, query parameter, bulk action, shortcut, state, and
+permission **above** is implemented and tested." Measured 2026-09-26, "above" is largely not about
+the page:
+
+| Spec section | Distinct versions across 83 pages |
+|---|---|
+| `## Elements and interactions` (whole block) | **2** — one shared by 74 pages, one by 9 |
+| `- Keyboard:` line | 2 — see CCG-4, now resolved |
+| `- **Core fields:**` line | 13 pages share the settings parent's section list |
+
+Every one of these five lines appears on exactly the same 74 pages, byte-identical:
+
+- `Title/breadcrumb: clickable ancestors…`
+- `Search: debounced, keyboard focused with '/'…`
+- `Rows/cards: single click selects/opens preview…`
+- `Inline edits: status, priority, assignee, dates, estimate, and labels…`
+- `Non-interactive: explanatory copy, historical audit events…`
+
+So `10-project-settings-retention.md` — a per-project singleton form with three field rows and no
+list — is specified as having rows and cards, right-click row menus, and inline edits of status,
+priority, assignee, dates, estimate and labels. It has none of those and should have none.
+
+The same artifact hits the core-fields line inside the settings family. These 13 files all declare
+`Core fields: general, access, workflow, views, fields, iterations, automations, integrations,
+portal, agents, retention` — which is the **parent** page's list of settings sections:
+
+`10-project-settings.md`, `-access`, `-agents`, `-agents-credentials`, `-fields`, `-integrations`,
+`-iterations`, `-portal`, `-retention`, `-views`, `10-settings-access.md`, `10-settings-client-access.md`,
+`10-settings-integrations.md`
+
+It is correct on the parent and wrong on the other twelve: the fields page's core fields are custom
+fields, not "retention".
+
+Note which sections are genuinely per-page and therefore load-bearing: **Route decision**, **Product
+contract**, **Above-the-fold text wireframe**, **URL state**, **States**, **Permissions**,
+**Components**, **API and data contract**, and **Gaps**. The URL-state line in particular is authored
+per page — `10-inbox.md` names `view, unread, type, projectId, q, cursor` while
+`10-project-settings-retention.md` names `section and search`. Those are real requirements and this
+entry does not touch them.
+
+**Recommended resolution — needs the product owner, not yet applied.** Read C3's core-field, action
+and overlay clauses against the page's **own** sections (the nine listed above), and treat the shared
+`Elements and interactions` block as module-wide UX policy rather than a per-page inventory. It is
+still binding wherever the page has the surface: a page with a `DataTable` must honour the rows/cards
+and inline-edit rules; a page with `SearchInput` must honour the search rule.
+
+**What this must not become.** "The spec is boilerplate" is not a licence to tick. Four lanes this
+session correctly left C3 open on genuine, page-specific gaps found in the load-bearing sections —
+`activity` with no project-level endpoint, `lastRunAt`/`lastFailureAt` absent from
+`project_automations`, `wins`/`risks`/`next`/`citations` absent from `updateRowSchema`, `capacity`
+absent from `teamDetailSchema`. None of those are boilerplate and none are excused here.
+
+Until this is decided, evaluate C3 from the load-bearing sections, and record in the lane status doc
+which items were judged boilerplate so the decision can be applied mechanically afterwards.
+
+### Decision applied 2026-09-26 — judge C3 from the per-page sections
+
+The product owner chose the recommended reading. **C3's core-field, action and overlay clauses are
+evaluated against the page's own nine load-bearing sections**, and the shared `Elements and
+interactions` block is module-wide UX policy — binding wherever the page has the surface it describes,
+and silent where it does not.
+
+The 74 shared blocks and the 12 wrong core-field lines are **left in place deliberately**, so this
+entry stays the single record of why they are not read as a per-page inventory. Do not delete them and
+do not rewrite them page by page; that was considered and rejected as 74 sections of authoring before
+any box could move.
+
+The bar does not drop. A gap found in a load-bearing section still blocks C3, and the same owner
+separately authorised building the backend work behind those gaps rather than documenting it — so
+`activity`, `capacity`, `lastRunAt`/`lastFailureAt`, `wins`/`risks`/`next`/`citations`, the webhook
+PATCH route and the bulk verbs are being implemented, not excused.

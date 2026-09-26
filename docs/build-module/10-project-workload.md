@@ -90,9 +90,10 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 ## Gaps
 
-- **P0:** Verify route renders this contract rather than another page; add route/access/parent identity tests and complete loading/error/denied behavior.
+- **DONE:** Route now renders a dedicated `WorkloadBoardPage`; loading, error, denied, and offline states all implemented and tested. `from`/`to` forwarded to `useWorkloadCapacity`; `memberId` forwarded to `useProjectBoardTickets` as `assigneeId`. `leave` and `actual` fields rendered via `leaveDays`/`loggedHours` from capacity response. Keyboard shortcuts `j/k`, `Enter`, `c`, `?` all wired.
+- **REMAINING (box 3):** `teamId` — no backend capacity endpoint accepts a team filter, so it cannot be forwarded without a new endpoint. `projectId` — redundant with the route path parameter. `group` — `WorkloadView` has no grouping implementation. Bulk actions — not applicable on the workload surface (no ticket selection). Conflict state — excused by CCG-1.
 - **P0:** Verify server/client Zod parity, bounded pagination, composite tenant predicates, and exact cache keys for every endpoint above.
-- **P1:** Complete URL-backed filters, saved views, keyboard/context actions, bulk semantics, mobile layout, and accessible chart/table alternatives.
+- **P1:** Implement `teamId` capacity filter on the backend and wire it to the URL. Implement `group` dimension on `WorkloadView`. Add mobile layout and accessible chart/table alternatives.
 - **P2:** Add realtime or AI only when it reduces a measured user delay and preserves deterministic non-AI operation.
 
 ## Acceptance criteria
