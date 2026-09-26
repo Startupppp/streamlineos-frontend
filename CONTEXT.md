@@ -4,8 +4,9 @@ The words this codebase uses for its own concepts, and what each one means
 *here*. A term in this file is the name to use in code, tests, PRDs and review
 comments; a synonym is a drift.
 
-> **Coverage:** the Ask OS lane only, as of 2026-09-19. Other domains are not yet
-> written down. Add a section rather than a parallel file.
+> **Coverage:** the Ask OS lane (2026-09-19) and the Documents lane
+> (2026-09-26). Other domains are not yet written down. Add a section rather
+> than a parallel file.
 
 ---
 
@@ -168,3 +169,132 @@ because the availability check fails closed. `confirms` is checked at module
 load, so a mistyped action id fails at boot rather than at redemption time.
 Resolving a person by name goes through `modules/directory/person-seam.ts` —
 never by querying a facet table, and never once per name.
+
+---
+
+## Documents
+
+The **Documents** module is the knowledge base. One physical table, `kb_pages`,
+carries every kind of document the product has; the sub-modules under
+`modules/kb/` divide the work of authoring, reading and retrieving them.
+
+"Knowledge base" and "documents" are the same domain. Prefer **Documents**.
+
+### Document
+
+One row in `kb_pages`. The unit of authorship, access and retrieval.
+
+*Avoid*: **page** and **article** when you mean the row — both are Variants of a
+Document, and using either for the general case is what allowed two controllers
+to be built over the same table.
+
+### Variant
+
+Which kind of Document a row is, held in `content_type`: `page`, `article`,
+`attachment`, `source`, `note`. A Variant changes what the row means to a
+reader, not how it is stored or who may see it.
+
+A query that does not name its Variant returns all five. That is almost never
+what the caller wants, and it is not a type error.
+
+### Slug · Revision
+
+**Slug** is the URL-stable identifier within an org. **Content revision** and
+**ACL revision** are separate monotonic counters on the Document: the first
+changes when the body changes, the second when who-may-see-it changes. They are
+bumped by the writer, never by a caller, and they are not interchangeable —
+retrieval fences on the ACL revision alone.
+
+---
+
+### Standing
+
+Everything the system knows about one actor's reach into Documents, resolved
+once per request: `orgId`, `userId`, `membershipId`, `roleSlugs`, `isOrgOwner`,
+`isKbAdmin`, `accessibleSpaceIds`, `accessibleProjectIds`, `permissionsVersion`.
+
+A Standing always names a person. There is no anonymous Standing — public
+reads take a separate entry point, so serving org-internal Documents to
+unauthenticated traffic is unrepresentable rather than merely guarded.
+
+### Space
+
+A container for Documents, and an **access boundary**. A Document inside a Space
+requires the actor to reach that Space, whatever its Visibility. A Document with
+no Space is reachable on its Visibility alone.
+
+*Avoid*: **collection** and **folder**. A Space is not organisational grouping;
+treating it as such is how the boundary was once removed by accident.
+
+### Visibility · Accessible
+
+**Visibility** is the column — `private`, `org`, `public`. It is one input.
+**Accessible** is the resolved answer for a given Standing, after Space, Grants,
+Restrictions and ownership are applied.
+
+These are not synonyms and must never be used as such. A Document may be
+`visibility = 'org'` and not accessible.
+
+### Grant · Restriction
+
+A **Grant** widens: an explicit share of one Document to one member or one role,
+at `view` / `comment` / `edit` / `manage`, revocable rather than deleted.
+A **Restriction** narrows: where Restrictions exist for a Document, the actor
+must appear in them.
+
+Grants and Restrictions are separate arms of one rule. The rule lives in exactly
+one builder; a second implementation of it is a defect, not a variation.
+
+---
+
+### Commit
+
+The post-write contract for a Document: version snapshot, link resync, mention
+diff, revision bumps, audit, and the Index event. Callers name *what changed*;
+the module decides what that implies. Every mutating path Commits.
+
+### Index event
+
+The outbox event that makes a Document findable. A Document that is written
+without one is invisible to search and to Ask until something later rewrites it
+— silently, with no error and no failing test.
+
+### Engagement
+
+A view count, a helpful vote. **Engagement is not a content change**: it must
+not bump a revision and must not emit an Index event. Anonymous traffic
+generates Engagement constantly; treating it as authorship would re-embed the
+corpus on every page view.
+
+---
+
+### Retrieve
+
+One entry point that answers "what is relevant to this question for this
+Standing", returning documents, passages, a Degradation and a Strategy. It
+embeds the question once.
+
+### Chunk
+
+An embedded fragment of a Document, in `kb_article_chunks`. A Chunk's
+visibility is the Document's visibility — expressed as a semi-join to the
+canonical scope, never as a second copy of the rule.
+
+### Citation
+
+A Document named in an answer. **Retrieval visibility and Citation visibility
+are deliberately different**, and the distinction is load-bearing: what may
+inform an answer is not identical to what may be shown as its source. Do not
+collapse them to simplify an interface.
+
+### Degraded
+
+A retrieval source failed. Degraded is reported **per source**, because
+passages failing while documents succeed is materially different from both
+total success and total failure. An empty result with no Degradation means the
+corpus is empty; the two must never be conflated.
+
+### Strategy
+
+The retrieval plan for a query — exact below the tenant's chunk threshold, ANN
+above it. Always inspectable on the result, never implicit.
