@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckSquare } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -12,7 +13,9 @@ import {
 } from "@/hooks/api/build/checklists";
 import { TicketAiGenerateChecklistAction } from "@/features/build/ai/ticket-detail-ai";
 import { ChecklistSection } from "./checklist-section";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 interface TicketChecklistsProps {
   projectId: number;
@@ -27,9 +30,8 @@ export function TicketChecklists({
   canUseAI = false,
   generateChecklistDisabledReason,
 }: TicketChecklistsProps) {
-  const accessState = useCanState("build:tickets:view");
   const canUpdate = useCan("build:tickets:update");
-  const { data: checklists = [], isLoading } = useChecklists(
+  const { data: checklists = [], isLoading, isError, error, refetch } = useChecklists(
     projectId,
     ticketId,
   );
@@ -41,72 +43,72 @@ export function TicketChecklists({
     });
   }, [createChecklist]);
 
-  if (accessState === "denied" || accessState === "loading") {
-    return null;
-  }
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2 animate-pulse">
-        <div className="h-4 bg-muted rounded w-24" />
-        <div className="h-3 bg-muted rounded w-full ml-6" />
-        <div className="h-3 bg-muted rounded w-3/4 ml-6" />
-      </div>
-    );
-  }
+  const resolution = usePageState({ isLoading, isError, error });
+
+  const loadingSkeleton = (
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-24" />
+      <Skeleton className="h-3 w-full" />
+      <Skeleton className="h-3 w-3/4" />
+    </div>
+  );
 
   return (
-    <div className="space-y-4">
-      <div className="flex w-full items-center gap-2">
-        <CheckSquare className="h-4 w-4 text-primary shrink-0" />
-        <h4 className="text-sm font-semibold">Checklists</h4>
-        {canUpdate ? (
-          <TicketAiGenerateChecklistAction
-            projectId={projectId}
-            ticketId={ticketId}
-            canUseAI={canUseAI}
-            disabledReason={generateChecklistDisabledReason}
-          />
-        ) : null}
-      </div>
-
-      {checklists.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
-          {canUpdate
-            ? "No checklists on this ticket yet. Add one to break the work into steps."
-            : "No checklists on this ticket yet."}
-        </p>
-      ) : null}
-
-      <AnimatePresence initial={false}>
-        {checklists.map((checklist) => (
-          <motion.div
-            key={checklist.id}
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, height: 0 }}
-          >
-            <ChecklistSection
-              checklist={checklist}
+    <PageState resolution={resolution} loading={loadingSkeleton} onRetry={handleRetry} compact>
+      <div className="space-y-4">
+        <div className="flex w-full items-center gap-2">
+          <CheckSquare className="h-4 w-4 text-primary shrink-0" />
+          <h4 className="text-sm font-semibold">Checklists</h4>
+          {canUpdate ? (
+            <TicketAiGenerateChecklistAction
               projectId={projectId}
               ticketId={ticketId}
-              canUpdate={canUpdate}
+              canUseAI={canUseAI}
+              disabledReason={generateChecklistDisabledReason}
             />
-          </motion.div>
-        ))}
-      </AnimatePresence>
+          ) : null}
+        </div>
 
-      {canUpdate ? (
-        <button
-          type="button"
-          onClick={handleAddChecklist}
-          disabled={createChecklist.isPending}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <PlusIcon size={16} />
-          Add checklist
-        </button>
-      ) : null}
-    </div>
+        {checklists.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            {canUpdate
+              ? "No checklists on this ticket yet. Add one to break the work into steps."
+              : "No checklists on this ticket yet."}
+          </p>
+        ) : null}
+
+        <AnimatePresence initial={false}>
+          {checklists.map((checklist) => (
+            <motion.div
+              key={checklist.id}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <ChecklistSection
+                checklist={checklist}
+                projectId={projectId}
+                ticketId={ticketId}
+                canUpdate={canUpdate}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {canUpdate ? (
+          <button
+            type="button"
+            onClick={handleAddChecklist}
+            disabled={createChecklist.isPending}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <PlusIcon size={16} />
+            Add checklist
+          </button>
+        ) : null}
+      </div>
+    </PageState>
   );
 }

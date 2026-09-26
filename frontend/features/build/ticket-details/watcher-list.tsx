@@ -1,19 +1,20 @@
-﻿"use client";
+"use client";
 
 import { useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye, Loader2 } from "lucide-react";
+import { Eye } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
 import { MemberPicker } from "@/components/members/member-picker";
 import { useWatchers, useToggleWatch, useAddWatcher } from "@/hooks/api/build";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 interface WatcherListProps {
   projectId: number;
@@ -21,9 +22,9 @@ interface WatcherListProps {
 }
 
 export function WatcherList({ projectId, ticketId }: WatcherListProps) {
-  const accessState = useCanState("build:tickets:view");
   const canUpdate = useCan("build:tickets:update");
-  const { iconRef: watchIconRef, hoverHandlers: watchHoverHandlers } = useAnimatedIcon();
+  const { iconRef: watchIconRef, hoverHandlers: watchHoverHandlers } =
+    useAnimatedIcon();
   const { data: session } = useSession();
   const {
     data: watchers = [],
@@ -51,81 +52,88 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
     [addWatcher, ticketId, watchers],
   );
 
-  if (accessState === "denied" || accessState === "loading") {
-    return null;
-  }
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Loader2 className="h-3 w-3 animate-spin" />
-        Loading watchers...
+  const resolution = usePageState({ isLoading, isError, error });
+
+  const loadingSkeleton = (
+    <div className="space-y-2">
+      <Skeleton className="h-3 w-16" />
+      <div className="flex gap-1">
+        <Skeleton className="h-6 w-6 rounded-full" />
+        <Skeleton className="h-6 w-6 rounded-full" />
       </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        compact
-        title="Couldn't load watchers"
-        description={getErrorMessage(error)}
-        onRetry={() => void refetch()}
-      />
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1">
-          <Eye className="h-3 w-3" /> Watchers
-        </label>
-        {canUpdate ? <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 px-2 text-xs"
-          onClick={handleToggleWatch}
-          disabled={toggleWatch.isPending}
-          {...watchHoverHandlers}
-        >
-          {isWatching ? (
-            <>
-              <EyeOffIcon ref={watchIconRef} size={12} className="mr-1" /> Unwatch
-            </>
-          ) : (
-            <>
-              <EyeIcon ref={watchIconRef} size={12} className="mr-1" /> Watch
-            </>
-          )}
-        </Button> : null}
-      </div>
-
-      {watchers.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
-          No one is watching this ticket yet.
-        </p>
-      ) : null}
-
-      {watchers.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {watchers.map((w) => (
-            <Avatar key={w.userId} className="h-6 w-6" title={getUserDisplayName(w.user)}>
-              <AvatarImage src={resolveImageUrl(w.user?.image)} />
-              <AvatarFallback className="text-micro bg-primary/10 text-primary">
-                {getUserInitials(w.user)}
-              </AvatarFallback>
-            </Avatar>
-          ))}
+    <PageState
+      resolution={resolution}
+      loading={loadingSkeleton}
+      onRetry={handleRetry}
+      compact
+    >
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1">
+            <Eye className="h-3 w-3" /> Watchers
+          </label>
+          {canUpdate ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={handleToggleWatch}
+              disabled={toggleWatch.isPending}
+              {...watchHoverHandlers}
+            >
+              {isWatching ? (
+                <>
+                  <EyeOffIcon ref={watchIconRef} size={12} className="mr-1" />{" "}
+                  Unwatch
+                </>
+              ) : (
+                <>
+                  <EyeIcon ref={watchIconRef} size={12} className="mr-1" />{" "}
+                  Watch
+                </>
+              )}
+            </Button>
+          ) : null}
         </div>
-      )}
 
-      {canUpdate ? <MemberPicker
-        projectId={projectId}
-        value=""
-        onChange={handleAddWatcher}
-        placeholder="+ Add watcher"
-      /> : null}
-    </div>
+        {watchers.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            No one is watching this ticket yet.
+          </p>
+        ) : null}
+
+        {watchers.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {watchers.map((w) => (
+              <Avatar
+                key={w.userId}
+                className="h-6 w-6"
+                title={getUserDisplayName(w.user)}
+              >
+                <AvatarImage src={resolveImageUrl(w.user?.image)} />
+                <AvatarFallback className="text-micro bg-primary/10 text-primary">
+                  {getUserInitials(w.user)}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+          </div>
+        )}
+
+        {canUpdate ? (
+          <MemberPicker
+            projectId={projectId}
+            value=""
+            onChange={handleAddWatcher}
+            placeholder="+ Add watcher"
+          />
+        ) : null}
+      </div>
+    </PageState>
   );
 }

@@ -3,14 +3,14 @@ import { useProjectBoardTickets } from "@/hooks/api/build";
 import { TicketRelations } from "./ticket-relations";
 
 let mockCanUpdate = true;
-let mockAccessState: "granted" | "denied" | "loading" = "granted";
+let mockPageStateResolution: { kind: string; error?: unknown } = { kind: "ready" };
 let mockRelationsResult: {
   data: unknown[];
   isLoading: boolean;
   isError?: boolean;
   error?: Error;
   refetch?: () => void;
-} = { data: [], isLoading: false };
+} = { data: [], isLoading: false, refetch: jest.fn() };
 
 jest.mock("@/hooks/api/build", () => ({
   useTicketRelations: () => mockRelationsResult,
@@ -25,7 +25,10 @@ jest.mock("@/hooks/api", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanUpdate,
-  useCanState: () => mockAccessState,
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => mockPageStateResolution,
 }));
 
 jest.mock("@/components/ui/responsive-popover", () => ({
@@ -53,17 +56,25 @@ const mockUseProjectBoardTickets = jest.mocked(useProjectBoardTickets);
 beforeEach(() => {
   jest.clearAllMocks();
   mockCanUpdate = true;
-  mockAccessState = "granted";
-  mockRelationsResult = { data: [], isLoading: false };
+  mockPageStateResolution = { kind: "ready" };
+  mockRelationsResult = { data: [], isLoading: false, refetch: jest.fn() };
 });
 
-it("does not render an empty relation state while ticket access is denied", () => {
-  mockAccessState = "denied";
+it("does not render an empty relation state while the page-state resolution is not ready", () => {
+  mockPageStateResolution = { kind: "loading" };
 
   render(<TicketRelations ticketId={10} projectId={42} />);
 
   expect(screen.queryByText("No relations yet.")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Add" })).not.toBeInTheDocument();
+});
+
+it("does not render an empty relation state when the viewer is denied", () => {
+  mockPageStateResolution = { kind: "denied", permission: "build:tickets:view" };
+
+  render(<TicketRelations ticketId={10} projectId={42} />);
+
+  expect(screen.queryByText("No relations yet.")).not.toBeInTheDocument();
 });
 
 it("does not load or offer relation mutations to a read-only member", () => {
@@ -85,8 +96,9 @@ it("loads relation candidates only after the picker opens", () => {
   expect(mockUseProjectBoardTickets).toHaveBeenLastCalledWith(42);
 });
 
-it("shows an inline retry instead of a false empty state when the relations read fails, so a denied or transient error never reads as 'no relations'", () => {
+it("shows a retry instead of a false empty state when the relations read fails, so a denied or transient error never reads as 'no relations'", () => {
   const refetch = jest.fn();
+  mockPageStateResolution = { kind: "error", error: new Error("Not a project member.") };
   mockRelationsResult = {
     data: [],
     isLoading: false,
@@ -97,8 +109,8 @@ it("shows an inline retry instead of a false empty state when the relations read
 
   render(<TicketRelations ticketId={10} projectId={42} />);
 
-  expect(screen.getByText("Couldn't load relations")).toBeInTheDocument();
   expect(screen.queryByText("No relations yet.")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: "Try again" }));
   expect(refetch).toHaveBeenCalledTimes(1);
