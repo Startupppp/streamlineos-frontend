@@ -408,15 +408,22 @@ export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[
   });
 }
 
+export interface ProjectAnalyticsParams {
+  range?: "7d" | "30d" | "90d";
+  teamId?: number;
+  ownerId?: string;
+}
+
 export function useProjectAnalytics(
   projectId: number,
+  params?: ProjectAnalyticsParams,
   options?: Omit<UseQueryOptions<ProjectAnalytics>, "queryKey" | "queryFn" | "enabled">
 ) {
   const canView = useCan("build:view");
   return useQuery<ProjectAnalytics>({
-    queryKey: buildWorkQueryKeys.projects.analytics(projectId),
+    queryKey: buildWorkQueryKeys.projects.analytics(projectId, params),
     queryFn: ({ signal }) =>
-      apiClient.get<ProjectAnalytics>(`/build/${projectId}/analytics`, undefined, signal, analyticsContract),
+      apiClient.get<ProjectAnalytics>(`/build/${projectId}/analytics`, params, signal, analyticsContract),
     enabled: canView && !!projectId,
     staleTime: 5 * 60_000,
     ...options,

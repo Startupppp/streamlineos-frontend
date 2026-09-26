@@ -52,7 +52,10 @@ export const kbSpaceFullContract = z.object({
   archivedAt: z.string().nullable(),
   pagesOverdueForReview: z.number().int().optional(),
   pagesWithReviewPolicy: z.number().int().optional(),
-  viewerSpaceRole: z.enum(["viewer", "commenter", "editor", "publisher", "admin"]).nullable().optional(),
+  viewerSpaceRole: z
+    .enum(["viewer", "commenter", "editor", "publisher", "admin"])
+    .nullable()
+    .optional(),
 });
 
 export const kbSpaceSuccessContract = z.object({ success: z.boolean() });
@@ -83,6 +86,8 @@ export const kbSpaceMemberContract = z.object({
 
 export const kbSpaceMemberListContract = z.array(kbSpaceMemberContract);
 export type KbSpaceMember = z.infer<typeof kbSpaceMemberContract>;
+
+export const kbSpaceMemberSuccessContract = z.object({ success: z.boolean() });
 
 export const kbSettingsContract = z.object({
   trashRetentionDays: z.number().int(),

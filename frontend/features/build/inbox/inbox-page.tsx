@@ -82,7 +82,7 @@ export function InboxPage() {
   }
 
   function handleProjectClear() {
-    urlState.setParams({ project: null });
+    urlState.setParams({ projectId: null });
     handleFilterChange();
   }
 

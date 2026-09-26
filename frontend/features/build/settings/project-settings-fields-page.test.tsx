@@ -17,6 +17,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCanState: (_permission: string): AccessState => mockAccessState,
 }));
 
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
+}));
+
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: () => {
     if (mockAccessState === "denied") return "denied";
@@ -216,5 +220,30 @@ describe("ProjectSettingsFieldsPage — keyboard shortcuts (extended)", () => {
     const capturedOptions = mockUseBuildListKeyboard.mock.calls[0][0] as { onShortcutHelp: () => void };
     expect(typeof capturedOptions.onShortcutHelp).toBe("function");
     await act(async () => { capturedOptions.onShortcutHelp(); });
+  });
+});
+
+describe("ProjectSettingsFieldsPage — offline state", () => {
+  let useOnlineStatusMock: jest.Mock;
+
+  beforeEach(() => {
+    useOnlineStatusMock = (
+      jest.requireMock("@/hooks/common/use-online-status") as {
+        useOnlineStatus: jest.Mock;
+      }
+    ).useOnlineStatus;
+    useOnlineStatusMock.mockReturnValue(true);
+    mockAccessState = "granted";
+  });
+
+  it("shows the offline banner when the device is offline and the page is ready", () => {
+    useOnlineStatusMock.mockReturnValue(false);
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
+  });
+
+  it("does not show the offline banner when the device is online", () => {
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(screen.queryByText(/you are offline/i)).not.toBeInTheDocument();
   });
 });

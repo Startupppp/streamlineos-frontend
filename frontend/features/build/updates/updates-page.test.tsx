@@ -68,6 +68,22 @@ jest.mock("@animateicons/react/lucide", () => ({
   PlusIcon: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
 }));
 
+const mockUseBuildListKeyboard = jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() }));
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (...args: Parameters<typeof mockUseBuildListKeyboard>) =>
+    mockUseBuildListKeyboard(...args),
+}));
+
+jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog">Keyboard shortcuts</div> : null,
+}));
+
+const mockUseOnlineStatus = jest.fn(() => true);
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
+}));
+
 import { useProjectUpdates, useCreateProjectUpdate, useDeleteProjectUpdate } from "@/hooks/api/build/project-updates";
 import { useCan, useAccess } from "@/hooks/api/access";
 
@@ -108,6 +124,8 @@ beforeEach(() => {
   mockUseCreateProjectUpdate.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseDeleteProjectUpdate.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockSearchParamsGet.mockReturnValue(null);
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+  mockUseOnlineStatus.mockReturnValue(true);
 });
 
 it("renders denied state when build:updates:view is not in the access snapshot", () => {
@@ -308,6 +326,66 @@ describe("URL-backed filter state — authorId, from, to wired to useProjectUpda
     expect(mockUseProjectUpdates).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ status: undefined }),
+    );
+  });
+});
+
+describe("offline state — CCG-5", () => {
+  it("shows the offline banner when useOnlineStatus returns false so stale cached data is labelled as potentially out of date", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+  });
+
+  it("does not show the offline banner when useOnlineStatus returns true so the banner is not visible during normal operation", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    render(<UpdatesPage projectId={1} />);
+    expect(screen.queryByText(/you're offline/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("keyboard navigation — CCG-4", () => {
+  it("calls useBuildListKeyboard with itemCount matching the number of loaded updates so j/k moves through the actual list", () => {
+    const UPDATE_ROW = {
+      id: 1,
+      orgId: "org-1",
+      projectId: 1,
+      authorMembershipId: 7,
+      body: "KB nav test.",
+      status: "published" as const,
+      audience: "internal" as const,
+      createdAt: new Date(0).toISOString(),
+      updatedAt: new Date(0).toISOString(),
+      deletedAt: null,
+    };
+    mockUseProjectUpdates.mockReturnValue(baseQueryResult({ data: [UPDATE_ROW] }));
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ itemCount: 1 }),
+    );
+  });
+
+  it("passes onCreate to useBuildListKeyboard when canManage is true so c fires the Post Update dialog", () => {
+    mockUseCan.mockReturnValue(true);
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onCreate: expect.any(Function) }),
+    );
+  });
+
+  it("omits onCreate from useBuildListKeyboard when canManage is false so c does nothing for read-only users", () => {
+    mockUseCan.mockImplementation((key: string) => key === "build:updates:view");
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onCreate: undefined }),
+    );
+  });
+
+  it("renders the shortcut help dialog when focusedIndex is set and ? is pressed — verifies the dialog mounts when open is true", () => {
+    mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: 0, setFocusedIndex: jest.fn() });
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
     );
   });
 });

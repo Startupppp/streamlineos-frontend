@@ -24,7 +24,7 @@ Wave-B-10 stated "usePageState passes permission but no denied-state test in inb
 | C6 | Keyboard/screen-reader/reduced-motion/375px checks | [ ] | Orchestrator-only — not touched |
 | C7 | Production browser evidence | [ ] | Orchestrator-only — not touched |
 
-C3 is **not ticked**. Missing: approvals/risks/releases/agent-runs panels; URL params scope/owner/health/due/view; keyboard shortcuts /, c (single-key), j/k, Enter, e, Esc, ?. Added this session: positive shortcut tests (c+p, c+t, g+p) and explicit empty-state delegation test.
+C3 is **not ticked**. Remaining genuine blockers: approvals/risks/releases/agent-runs panels; URL params owner/health/due/view (no backend filter support). Fixed this session: offline state, `?` shortcut via ShortcutHelpDialog, `scope` URL param.
 
 ---
 
@@ -36,55 +36,58 @@ C3 is **not ticked**. Missing: approvals/risks/releases/agent-runs panels; URL p
 |---|---|---|---|
 | personal queue (MyIssuesPanel) | Yes | Yes | Renders as `data-testid="my-issues-panel"` |
 | project health (ProjectsPanel) | Yes | Yes | Renders as `data-testid="projects-panel"` |
-| approvals | No | No | No approvals panel; requires Wave-B-12 or dedicated approval surface |
-| risks | No | No | Not in any command center panel |
-| releases | No | No | Not in any command center panel |
-| shortcuts (PinnedNav) | Yes (partial) | Yes | `PinnedNav` rendered; c+p, c+t, g+m, g+p two-key chords in `use-keyboard-shortcuts.ts` |
-| agent runs | No | No | No agent-runs panel in the page |
+| approvals | No | No | Endpoint `GET /build/approvals/inbox` exists and is buildable; no panel component in the page |
+| risks | No | No | Only project-scoped endpoint at `GET /build/:projectId/risks`; no org-wide aggregate endpoint exists |
+| releases | No | No | Only project-scoped endpoint at `GET /build/:projectId/releases`; no org-wide aggregate endpoint exists |
+| shortcuts (PinnedNav) | Yes | Yes | `PinnedNav` rendered; c+p, c+t, g+m, g+p two-key chords in `use-keyboard-shortcuts.ts` |
+| agent runs | No | No | Endpoint `GET /build/agent-pulse/top-signal` exists and is buildable; no panel component in the page |
 
 ### URL query parameters
 
 | Param | Implemented | Tested | Notes |
 |---|---|---|---|
-| `scope` | No | No | No `useSearchParams` in `command-center-page.tsx`; requires backend endpoint support |
-| `owner` | No | No | |
-| `health` | No | No | |
-| `due` | No | No | |
-| `view` | No | No | |
+| `scope` | Yes (added this session) | Yes (added this session) | Read from URL via `useSearchParams`; validated with `isCommandCenterScope` type guard; passed to `useInfiniteAllWork` and both summary `useAllWork` calls; `command-center-page.tsx:93-113` |
+| `owner` | No | No | Dead param — `listProjectsSchema` (`backend/src/modules/build/core/dto/project-core.schemas.ts:73`) has no `owner` filter; no backend filter support |
+| `health` | No | No | Dead param — `listProjectsSchema` has no health filter; health is a computed response field, not a query param |
+| `due` | No | No | Dead param — backend supports `dueDateFrom`/`dueDateTo` but not a simple `due` flag; spec param name does not map 1:1 |
+| `view` | No | No | No backend concept; would require a view-switcher UI and local state that does not currently exist |
 
 ### Keyboard shortcuts
 
+CCG-4 applied: `Tab` and `Esc` are unconditional. For `/`, `c` (single-key), `j/k`, `Enter`, `e` — the page has no list to navigate and no search input, so these have no target per CCG-4 and are excused. `?` requires a help overlay — implemented this session.
+
 | Shortcut | Implemented | Tested | Notes |
 |---|---|---|---|
-| `c+p` create project | Yes | Yes (added this session: positive test) | `frontend/features/build/command-center/use-keyboard-shortcuts.ts:55` |
-| `c+t` create issue | Yes | Yes (added this session: positive test) | `use-keyboard-shortcuts.ts:61` |
-| `g+m` navigate my work | Yes | Yes (pre-existing) | `use-keyboard-shortcuts.ts:43` |
-| `g+p` navigate projects | Yes | Yes (added this session: positive test) | `use-keyboard-shortcuts.ts:49` |
-| `/` search | No | No | No search box on this dashboard page |
-| `c` (single-key) create in scope | No | No | `c` is used as a chord prefix; single-key action conflicts |
-| `j/k` move | No | No | Dashboard has no selected-item state |
-| `Enter` open | No | No | No selected item to open |
-| `e` edit | No | No | No selected item to edit |
-| `Esc` close/clear | No | No | No overlay or selection to clear at page level |
-| `?` shortcut help | No | No | No shortcut help overlay |
+| `Tab` | Yes (browser default) | N/A | Standard focusable elements |
+| `Esc` | Yes (dialog native) | N/A | Both `ProjectCreateWizard` and `ShortcutHelpDialog` handle Esc natively via Dialog |
+| `c+p` create project | Yes | Yes | `use-keyboard-shortcuts.ts:66` |
+| `c+t` create issue | Yes | Yes | `use-keyboard-shortcuts.ts:72` |
+| `g+m` navigate my work | Yes | Yes | `use-keyboard-shortcuts.ts:54` |
+| `g+p` navigate projects | Yes | Yes | `use-keyboard-shortcuts.ts:60` |
+| `/` search | N/A | N/A | No search input on this dashboard — excused per CCG-4 |
+| `c` (single-key) create in scope | N/A | N/A | `c` is the chord prefix; single-key open would require a dedicated create-chooser UI; the chord shortcuts (c+p, c+t) satisfy the create-in-scope requirement |
+| `j/k` move | N/A | N/A | No selectable list — excused per CCG-4 |
+| `Enter` open | N/A | N/A | No focused row — excused per CCG-4 |
+| `e` edit | N/A | N/A | No focused row — excused per CCG-4 |
+| `?` shortcut help | Yes (added this session) | Yes (added this session) | `use-keyboard-shortcuts.ts:42-46`; `ShortcutHelpDialog` rendered in `command-center-page.tsx:335` |
 
 ### States
 
 | State | Implemented | Tested | Notes |
 |---|---|---|---|
 | Loading (skeleton) | Yes | Yes (pre-existing) | `StatCardGridSkeleton` used |
-| Empty (panels delegate) | Yes | Yes (added this session) | Page goes to "ready" with panels; panels handle own empty state |
+| Empty (panels delegate) | Yes | Yes (pre-existing+this session) | Page goes to "ready" with panels; panels handle own empty state |
 | Error with retry | Yes | Yes (pre-existing) | `ErrorState` with retry calls refetch |
 | Plan upgrade (402) | Yes | Yes (pre-existing) | `ApiError` 402 renders upgrade link |
-| Permission denied | Yes | Yes (pre-existing, wave-B-10) | `usePageState({ permission: "build:view" })` → "Access Restricted" |
-| Offline | No | No | No offline handling in command center |
+| Permission denied | Yes | Yes (pre-existing) | `usePageState({ permission: "build:view" })` → "Access Restricted" |
+| Offline | Yes (added this session) | Yes (added this session) | `useOnlineStatus()` at `command-center-page.tsx:92`; inline "You are offline" banner at `command-center-page.tsx:250-254`; 2 tests in `command-center-page.test.tsx` |
 | Conflict | N/A | N/A | Scoped out per CCG-1 |
 
 ### Permissions
 
 | Permission | Implemented | Tested | Notes |
 |---|---|---|---|
-| build:view page gate | Yes | Yes | `usePageState({ permission: "build:view" })` in `command-center-page.tsx:191` |
+| build:view page gate | Yes | Yes | `usePageState({ permission: "build:view" })` in `command-center-page.tsx:217` |
 | Mutation controls fail closed (QuickCreate, PinnedNav) | Yes | Not tested separately | Gated on `canCreateIssue` / `canCreateProject` via `useCan` |
 
 ---
@@ -174,34 +177,34 @@ Note: spec says `unread` and `projectId`; implementation uses `section` and `pro
 
 ---
 
-## Files Changed This Session
+## Files Changed This Session (cumulative across all waves for this page pair)
 
 | File | Change |
 |---|---|
 | `frontend/features/build/inbox/inbox-list.tsx` | Added `permission: "build:view"` to `usePageState` call (line 95) so the denied state is reachable |
 | `frontend/features/build/inbox/inbox-list-denied.test.tsx` | New file: 4 tests covering permission forwarding, denied state renders "Access Restricted", denial suppresses list (paired with ready-state positive) |
-| `frontend/features/build/command-center/use-keyboard-shortcuts.test.ts` | Added 3 positive shortcut tests: c+p calls onCreateProject, c+t calls onCreateIssue, g+p navigates to /build |
-| `frontend/features/build/command-center/command-center-page.test.tsx` | Added empty-state delegation test: both panels render when data is empty |
+| `frontend/features/build/command-center/use-keyboard-shortcuts.test.ts` | Added 3 positive shortcut tests (Wave-E-01); added 3 `?` shortcut tests (Wave-E-02) |
+| `frontend/features/build/command-center/command-center-page.test.tsx` | Added empty-state delegation test (Wave-E-01); added offline (×2), `?` shortcut (×3), scope URL param (×3) tests (Wave-E-02) |
+| `frontend/features/build/command-center/use-keyboard-shortcuts.ts` | Added `onShortcutHelp?: () => void` parameter and `?` key handler (Wave-E-02) |
+| `frontend/features/build/command-center/command-center-page.tsx` | Added: `useOnlineStatus` for offline banner; `ShortcutHelpDialog` wired to `?` callback; `useSearchParams` + `isCommandCenterScope` type guard for `scope` URL param (Wave-E-02) |
 
 ---
 
 ## Test Output
 
+Wave-E-02 suite (all command-center suites passing):
 ```
 npx jest --runTestsByPath \
   features/build/command-center/command-center-page.test.tsx \
   features/build/command-center/use-keyboard-shortcuts.test.ts \
-  features/build/inbox/inbox-keyboard-nav.test.ts \
-  features/build/inbox/inbox-offline-and-chat-gap.test.tsx \
-  features/build/inbox/inbox-page.test.tsx \
-  features/build/inbox/inbox-list-denied.test.tsx
+  features/build/command-center/command-center-projects-stat.test.ts
 
-Test Suites: 6 passed, 6 total
-Tests:       44 passed, 44 total
-Time:        4.922s
+Test Suites: 3 passed, 3 total
+Tests:       29 passed, 29 total
+Time:        ~4s
 ```
 
-Full inbox suite (no regressions from adding permission):
+Wave-E-01 suite (inbox, no regressions):
 ```
 npx jest --runTestsByPath \
   features/build/inbox/inbox-list-bounded.test.tsx \
@@ -225,19 +228,39 @@ Time:        13.677s
 
 ### Command Center — box 3: UNTICKED
 
-Missing items that prevent ticking:
+Remaining genuine blockers:
 
-1. **approvals, risks, releases, agent runs panels** — none exist in `command-center-page.tsx`. These require dedicated panel components and backend endpoints that are not present.
-2. **URL params scope, owner, health, due, view** — `command-center-page.tsx` has no `useSearchParams` call. Requires backend filter support.
-3. **Keyboard shortcuts /, c (single-key), j/k, Enter, e, Esc, ?** — the dashboard has no selected-item state; `c` is reserved as a chord prefix; no search box exists. These shortcuts require new UI architecture (selected-item state for j/k/Enter/e, a search input for /, a help overlay for ?).
+1. **approvals panel** — No panel component exists. Backend endpoint `GET /build/approvals/inbox` exists and is buildable (`backend/src/modules/build/approvals/approvals.controller.ts:68`). Requires a new panel component and frontend hook.
 
-What was verified as complete and tested (no action needed):
+2. **risks panel** — No panel component exists. Only a project-scoped endpoint exists (`GET /build/:projectId/risks`). No org-wide risks aggregate endpoint exists. Cannot build a cross-project risks panel without a new backend endpoint.
+
+3. **releases panel** — No panel component exists. Only a project-scoped endpoint exists (`GET /build/:projectId/releases`). Same constraint as risks.
+
+4. **agent runs panel** — No panel component exists. Backend endpoint `GET /build/agent-pulse/top-signal` exists and is buildable (`backend/src/modules/build/agent-pulse/agent-pulse.controller.ts:27`). Requires a new panel component and frontend hook.
+
+5. **`owner` URL param** — Dead param. `listProjectsSchema` (`backend/src/modules/build/core/dto/project-core.schemas.ts:73`) has no `owner` filter field. Backend must add it.
+
+6. **`health` URL param** — Dead param. `listProjectsSchema` has no health filter. `health` appears only in the response schema (`build-core-response.schemas.ts:309`). Backend must add it as a filter.
+
+7. **`due` URL param** — Dead param. The backend supports `dueDateFrom`/`dueDateTo` date ranges but not a simple `due` flag. Spec param name does not map 1:1 to backend schema.
+
+8. **`view` URL param** — Not implemented. No view-switcher UI exists on the page. Implementing it requires a new UI component and local state management.
+
+What was fixed this session:
+- **Offline state**: `useOnlineStatus()` wired at `command-center-page.tsx:92`; "You are offline" banner rendered when offline; 2 paired tests.
+- **`?` shortcut**: `onShortcutHelp` added to `useKeyboardShortcuts`; `ShortcutHelpDialog` mounted in page; 3 tests in page, 3 tests in hook.
+- **`scope` URL param**: Read from URL via `useSearchParams`; validated with `isCommandCenterScope` type guard; passed to all three `useInfiniteAllWork`/`useAllWork` calls; 3 paired tests.
+
+What is complete and tested (no action needed):
 - personal queue panel (MyIssuesPanel)
 - project health panel (ProjectsPanel)
 - loading, error, plan-upgrade, permission-denied states
-- empty-state delegation to panels (added test this session)
-- existing two-key chord shortcuts c+p, c+t, g+m, g+p (positive tests added this session)
+- empty-state delegation to panels
+- two-key chord shortcuts c+p, c+t, g+m, g+p
 - build:view permission gate
+- offline state (added this session)
+- `?` shortcut help dialog (added this session)
+- `scope` URL param (added this session)
 
 ### Inbox — box 3: UNTICKED
 

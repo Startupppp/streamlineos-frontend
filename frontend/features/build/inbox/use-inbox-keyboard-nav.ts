@@ -22,6 +22,7 @@ interface UseInboxKeyboardNavParams {
   onSelect: (notification: Notification) => void;
   onClearSelection: () => void;
   searchInputRef: RefObject<HTMLInputElement | null>;
+  onShortcutHelp?: () => void;
 }
 
 export function useInboxKeyboardNav({
@@ -30,11 +31,18 @@ export function useInboxKeyboardNav({
   onSelect,
   onClearSelection,
   searchInputRef,
+  onShortcutHelp,
 }: UseInboxKeyboardNavParams): void {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (isInputTarget(e)) return;
+
+      if (e.key === "?") {
+        e.preventDefault();
+        onShortcutHelp?.();
+        return;
+      }
 
       if (e.key === "j" || e.key === "k") {
         e.preventDefault();
@@ -75,7 +83,7 @@ export function useInboxKeyboardNav({
         return;
       }
     },
-    [notifications, selectedId, onSelect, onClearSelection, searchInputRef],
+    [notifications, selectedId, onSelect, onClearSelection, searchInputRef, onShortcutHelp],
   );
 
   useEffect(() => {

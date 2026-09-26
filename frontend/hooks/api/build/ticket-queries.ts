@@ -45,6 +45,9 @@ export function useTickets(
   });
 }
 
+export type TicketOrderBy = "created" | "updated" | "priority" | "dueDate" | "rank";
+export type TicketOrderDir = "asc" | "desc";
+
 export type BoardFilters = {
   q?: string;
   status?: string;
@@ -56,6 +59,8 @@ export type BoardFilters = {
   module?: string;
   dueDateFrom?: string;
   dueDateTo?: string;
+  orderBy?: TicketOrderBy;
+  orderDir?: TicketOrderDir;
 };
 
 export function useProjectBoardTickets(projectId: number, filters?: BoardFilters) {
@@ -65,8 +70,8 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = {
         limit: BOARD_PAGE_SIZE,
-        orderBy: "rank",
-        orderDir: "asc",
+        orderBy: filters?.orderBy ?? "rank",
+        orderDir: filters?.orderDir ?? "asc",
         ...(pageParam !== undefined ? { cursor: pageParam } : {}),
       };
       if (filters?.q) params.search = filters.q;

@@ -23,6 +23,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { companyDocumentHref } from "@/lib/knowledge-routes";
 import { WITHDRAWAL_CODE_NOT_SHAREABLE, humanWithdrawalReason } from "@/lib/linked-document-withdrawal";
+import { DocumentKbRetargetPanel } from "./document-kb-retarget-panel";
 import { DocumentWithdrawFormFields } from "./document-withdraw-form-fields";
 import { documentWithdrawSchema, type DocumentWithdrawValues } from "./document-withdraw-schema";
 
@@ -166,11 +167,14 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
       ) : null}
 
       {canPublish ? (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {live ? (
-            <LoadingButton type="button" variant="outline" isPending={withdraw.isPending} onClick={handleAskRemove}>
-              Remove from Knowledge Base
-            </LoadingButton>
+            <>
+              <DocumentKbRetargetPanel documentId={documentId} link={link} documentName={documentName} />
+              <LoadingButton type="button" variant="outline" isPending={withdraw.isPending} onClick={handleAskRemove}>
+                Remove from Knowledge Base
+              </LoadingButton>
+            </>
           ) : (
             <LoadingButton type="button" isPending={publish.isPending} disabled={!publishable} onClick={handleAskAdd}>
               Add to Knowledge Base

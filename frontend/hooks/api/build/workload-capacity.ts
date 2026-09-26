@@ -40,6 +40,7 @@ export function useWorkloadCapacity(
         m.userId,
         {
           capacityHours: m.capacityHours,
+          leaveDays: m.leaveDays,
           loggedHours: m.loggedHours,
           isOverAllocated: m.isOverAllocated,
           isZeroCapacity: m.isZeroCapacity,

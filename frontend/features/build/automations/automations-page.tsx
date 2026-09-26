@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence } from "framer-motion";
@@ -64,6 +65,7 @@ interface AutomationsPageProps {
 
 export function AutomationsPage({ projectId }: AutomationsPageProps) {
   const canManage = useCan("build:manage");
+  const isOnline = useOnlineStatus();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingAutomation, setEditingAutomation] = useState<ProjectAutomation | null>(null);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
@@ -256,14 +258,24 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
       <EmptyState
         className={PM_FILL_PANEL}
         illustration={<AutomationsIllustration className="h-32 w-32" />}
-        title={isFiltered ? "No automations match your filters" : "No automations yet"}
+        title={
+          !isOnline
+            ? "You are offline"
+            : isFiltered
+            ? "No automations match your filters"
+            : "No automations yet"
+        }
         description={
-          isFiltered
+          !isOnline
+            ? "Reconnect to see your automations."
+            : isFiltered
             ? "Try adjusting your search or filter to find what you're looking for."
             : "Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
         }
         action={
-          isFiltered
+          !isOnline
+            ? undefined
+            : isFiltered
             ? { label: "Clear filters", onClick: handleClearFilters }
             : canManage
             ? { label: "Create Automation", onClick: handleOpenNew }

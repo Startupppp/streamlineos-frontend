@@ -33,6 +33,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
 const VISIBILITY_TABS = ["tickets", "milestones"] as const;
 type VisibilityTab = (typeof VISIBILITY_TABS)[number];
@@ -122,6 +123,8 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
 
   const activeQuery = activeTab === "tickets" ? ticketsQuery : milestonesQuery;
 
+  const isOnline = useOnlineStatus();
+
   const pageState = usePageState({
     permission: "build:clientvisibility:manage",
     isLoading: activeQuery.isLoading,
@@ -172,6 +175,11 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
               Only enabled tickets and milestones appear in the client portal.
             </AlertDescription>
           </Alert>
+          {!isOnline && (
+            <p className="mt-2 rounded-md bg-muted/50 px-4 py-2 text-sm text-muted-foreground">
+              You&apos;re offline — results may not be up to date
+            </p>
+          )}
         </PmSection>
 
         <PmSection index={1}>

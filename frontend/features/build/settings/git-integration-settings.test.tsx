@@ -20,6 +20,15 @@ jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
 }));
 
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
+}));
+
+jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
+}));
+
 const BASE_CONNECTION = {
   id: 1,
   provider: "github" as const,
@@ -101,6 +110,11 @@ beforeEach(() => {
   mockRouterReplace.mockClear();
   mockUseBuildListKeyboard.mockClear();
   mockSearchParamsValue = new URLSearchParams();
+  (
+    jest.requireMock("@/hooks/common/use-online-status") as {
+      useOnlineStatus: jest.Mock;
+    }
+  ).useOnlineStatus.mockReturnValue(true);
 });
 
 describe("ProjectsGitIntegrationSettings — loading state (BLD-X-FE-SETTINGS-INT-010)", () => {
@@ -270,5 +284,67 @@ describe("ProjectsGitIntegrationSettings — RequireModule gate (BLD-X-FE-SETTIN
     mockData = [BASE_CONNECTION];
     render(<ProjectsGitIntegrationSettings />);
     expect(screen.getByTestId("connection-row")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectsGitIntegrationSettings — shortcut help dialog (BLD-X-FE-SETTINGS-INT-018)", () => {
+  it("passes onShortcutHelp to useBuildListKeyboard so the ? key can open the help overlay", () => {
+    mockData = [];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
+    );
+  });
+
+  it("ShortcutHelpDialog is not shown on initial render — paired with the open test below", () => {
+    mockData = [];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("the onShortcutHelp callback passed to the keyboard hook opens the dialog — calling it does not throw and transitions open state", async () => {
+    mockData = [];
+    render(<ProjectsGitIntegrationSettings />);
+    const capturedOptions = mockUseBuildListKeyboard.mock.calls[0]?.[0] as { onShortcutHelp: () => void };
+    expect(typeof capturedOptions.onShortcutHelp).toBe("function");
+    await act(async () => { capturedOptions.onShortcutHelp(); });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectsGitIntegrationSettings — offline state (BLD-X-FE-SETTINGS-INT-019)", () => {
+  it("hides the Add connection button when the user is offline — creation requires the server", () => {
+    mockData = [];
+    (
+      jest.requireMock("@/hooks/common/use-online-status") as {
+        useOnlineStatus: jest.Mock;
+      }
+    ).useOnlineStatus.mockReturnValue(false);
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.queryByRole("button", { name: /add connection/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the Add connection button when online — paired with the offline assertion above so it cannot pass on a blank frame", () => {
+    mockData = [];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.getByRole("button", { name: /add connection/i })).toBeInTheDocument();
+  });
+
+  it("shows You are offline in the empty state when the device is offline", () => {
+    mockData = [];
+    (
+      jest.requireMock("@/hooks/common/use-online-status") as {
+        useOnlineStatus: jest.Mock;
+      }
+    ).useOnlineStatus.mockReturnValue(false);
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.getByText("You are offline")).toBeInTheDocument();
+  });
+
+  it("does not show You are offline when the device is online and there are no connections", () => {
+    mockData = [];
+    render(<ProjectsGitIntegrationSettings />);
+    expect(screen.queryByText("You are offline")).not.toBeInTheDocument();
+    expect(screen.getByText(/no repositories connected/i)).toBeInTheDocument();
   });
 });

@@ -10,6 +10,10 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/build/1/client-portal",
 }));
 
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => true,
+}));
+
 jest.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => (

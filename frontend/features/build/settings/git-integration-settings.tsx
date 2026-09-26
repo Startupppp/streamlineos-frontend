@@ -8,6 +8,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Bot, ExternalLink, GitBranch } from "lucide-react";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -93,6 +95,8 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isOnline = useOnlineStatus();
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const {
     data: connections,
     isLoading,
@@ -176,6 +180,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
   }, []);
 
   const handleCloseCreated = useCallback(() => setCreated(null), []);
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -206,8 +211,9 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
   useBuildListKeyboard({
     itemCount: connectionsList.length,
     onOpen: handleOpenConnection,
-    onCreate: handleOpenDialog,
+    onCreate: isOnline ? handleOpenDialog : undefined,
     onClearSelection: handleClearConnectionSelection,
+    onShortcutHelp: handleShortcutHelp,
     enabled: !isLoading && !isError,
   });
 
@@ -217,7 +223,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
         title="Integrations"
         subtitle="Connect Git repositories to link commits and pull requests to tickets"
         actions={
-          activeTab === "connections" ? (
+          activeTab === "connections" && isOnline ? (
             <AddConnectionButton onClick={handleOpenDialog} />
           ) : null
         }
@@ -265,13 +271,22 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                   onRetry={handleRetry}
                 />
               ) : connectionsList.length === 0 ? (
-                <EmptyState
-                  className={PM_FILL_PANEL}
-                  illustration={<EmptyDevicesIllustration />}
-                  title="No repositories connected"
-                  description="Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."
-                  action={{ label: "Add connection", onClick: handleOpenDialog }}
-                />
+                !isOnline ? (
+                  <EmptyState
+                    className={PM_FILL_PANEL}
+                    illustration={<EmptyDevicesIllustration />}
+                    title="You are offline"
+                    description="Git connections cannot be modified while offline."
+                  />
+                ) : (
+                  <EmptyState
+                    className={PM_FILL_PANEL}
+                    illustration={<EmptyDevicesIllustration />}
+                    title="No repositories connected"
+                    description="Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."
+                    action={{ label: "Add connection", onClick: handleOpenDialog }}
+                  />
+                )
               ) : (
                 <PmStaggerList className="space-y-3">
                   {connectionsList.map((connection) => (
@@ -396,6 +411,8 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
           destructive
           onConfirm={handleConfirmDelete}
         />
+
+        <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
       </PageWrapper>
     </RequireModule>
   );

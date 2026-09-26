@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectWebhooksPage } from "./project-webhooks-page";
 import type { ProjectWebhook } from "@/hooks/api/build/webhooks";
@@ -9,6 +9,15 @@ const mockUseBuildListKeyboard = jest.fn(() => ({
 }));
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
+}));
+
+jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));
 
 let mockAccessState: AccessState = "denied";
@@ -90,6 +99,11 @@ beforeEach(() => {
   mockIsLoading = false;
   mockIsError = false;
   mockUseBuildListKeyboard.mockClear();
+  (
+    jest.requireMock("@/hooks/common/use-online-status") as {
+      useOnlineStatus: jest.Mock;
+    }
+  ).useOnlineStatus.mockReturnValue(true);
 });
 
 const SAMPLE_WEBHOOK: ProjectWebhook = {
@@ -253,5 +267,72 @@ describe("ProjectWebhooksPage — keyboard shortcut wiring (BLD-X-FE-SETTINGS-WH
     render(<ProjectWebhooksPage projectId="1" />);
     const lastArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
     expect(lastArgs?.enabled).toBe(false);
+  });
+});
+
+describe("ProjectWebhooksPage — shortcut help dialog (BLD-X-FE-SETTINGS-WH-031)", () => {
+  it("passes onShortcutHelp to useBuildListKeyboard so the ? key can open the help overlay", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
+    );
+  });
+
+  it("ShortcutHelpDialog is not shown on initial render — paired with the open test below", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("the onShortcutHelp callback passed to the keyboard hook opens the dialog — calling it does not throw and transitions open state", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    const capturedOptions = mockUseBuildListKeyboard.mock.calls[0]?.[0] as { onShortcutHelp: () => void };
+    expect(typeof capturedOptions.onShortcutHelp).toBe("function");
+    await act(async () => { capturedOptions.onShortcutHelp(); });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectWebhooksPage — offline state (BLD-X-FE-SETTINGS-WH-032)", () => {
+  it("hides the Add Webhook button when the user is offline — creation requires the server", () => {
+    mockAccessState = "granted";
+    (
+      jest.requireMock("@/hooks/common/use-online-status") as {
+        useOnlineStatus: jest.Mock;
+      }
+    ).useOnlineStatus.mockReturnValue(false);
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.queryByRole("button", { name: /add webhook/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the Add Webhook button when online — paired with the offline assertion above so it cannot pass on a blank frame", () => {
+    mockAccessState = "granted";
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByRole("button", { name: /add webhook/i })).toBeInTheDocument();
+  });
+
+  it("shows You are offline in the empty state when the device is offline", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [];
+    (
+      jest.requireMock("@/hooks/common/use-online-status") as {
+        useOnlineStatus: jest.Mock;
+      }
+    ).useOnlineStatus.mockReturnValue(false);
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByText("You are offline")).toBeInTheDocument();
+  });
+
+  it("does not show You are offline when the device is online and there are no webhooks", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.queryByText("You are offline")).not.toBeInTheDocument();
+    expect(screen.getByText("No webhooks configured")).toBeInTheDocument();
   });
 });

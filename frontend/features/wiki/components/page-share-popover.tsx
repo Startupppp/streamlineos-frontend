@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import {
   KbBuilding2Icon,
   KbCheckIcon,
@@ -8,6 +9,7 @@ import {
   KbGlobeIcon,
   KbLockIcon,
   KbShare2Icon,
+  KbUsersIcon,
   type KbIconComponent,
 } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,8 @@ import { toast } from "sonner";
 import { useSetKbPageVisibility } from "@/hooks/api/kb/pages";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { cn } from "@/lib/utils";
+
+const PageGrantsSheet = dynamic(() => import("./page-grants-sheet"));
 
 type Visibility = "private" | "org" | "public";
 
@@ -56,6 +60,7 @@ interface PageSharePopoverProps {
 
 export default function PageSharePopover({ page }: PageSharePopoverProps) {
   const [open, setOpen] = useState(false);
+  const [grantsOpen, setGrantsOpen] = useState(false);
   const setVisibility = useSetKbPageVisibility();
 
   const currentVisibility: Visibility = page.visibility ?? "private";
@@ -75,6 +80,11 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
     );
   }
 
+  function handleOpenGrants() {
+    setOpen(false);
+    setGrantsOpen(true);
+  }
+
   function handleCopyLink() {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/wiki/${page.publicToken ?? ""}`;
@@ -90,6 +100,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
     currentVisibility === "public" && Boolean(page.publicToken);
 
   return (
+    <>
     <ResponsivePopover open={open} onOpenChange={setOpen}>
       <ResponsivePopoverTrigger asChild>
         <Button
@@ -163,7 +174,25 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
             </Button>
           </div>
         ) : null}
+
+        <div className="mt-1 border-t border-border pt-1">
+          <button
+            type="button"
+            onClick={handleOpenGrants}
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted"
+          >
+            <KbUsersIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="text-xs font-medium text-foreground">Manage access</span>
+          </button>
+        </div>
       </ResponsivePopoverContent>
     </ResponsivePopover>
+
+    <PageGrantsSheet
+      pageId={page.id}
+      open={grantsOpen}
+      onOpenChange={setGrantsOpen}
+    />
+    </>
   );
 }

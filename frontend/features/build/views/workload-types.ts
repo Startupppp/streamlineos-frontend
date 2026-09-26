@@ -2,6 +2,7 @@ export type StatFilter = "all" | "assigned" | "unassigned" | "over-capacity";
 
 export interface MemberCapacityData {
   capacityHours: number | null;
+  leaveDays: number;
   loggedHours: number;
   isOverAllocated: boolean;
   isZeroCapacity: boolean;

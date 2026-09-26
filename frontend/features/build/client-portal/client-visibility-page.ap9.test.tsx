@@ -10,6 +10,11 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/build/1/client-portal",
 }));
 
+const mockUseOnlineStatus = jest.fn(() => true);
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
+}));
+
 jest.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -128,6 +133,7 @@ beforeEach(() => {
   mockUseCan.mockReturnValue(false);
   mockUsePageState.mockReturnValue({ kind: "loading" });
   mockInfiniteScrollSentinel.mockReturnValue(null);
+  mockUseOnlineStatus.mockReturnValue(true);
 });
 
 describe("AP-9: ClientVisibilityPage must resolve through usePageState not a bare boolean useCan gate", () => {
@@ -219,5 +225,21 @@ describe("C4: ClientVisibilityPage uses IntersectionObserver sentinel so lists a
     expect(ticketSentinelCall![0]).toEqual(
       expect.objectContaining({ hasNextPage: false }),
     );
+  });
+});
+
+describe("offline state — CCG-5", () => {
+  it("shows the offline banner when useOnlineStatus returns false so stale data is labelled", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    render(<ClientVisibilityPage projectId={1} />);
+    expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+  });
+
+  it("does not show the offline banner when useOnlineStatus returns true so the banner is absent during normal operation — pairs the above", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    render(<ClientVisibilityPage projectId={1} />);
+    expect(screen.queryByText(/you're offline/i)).not.toBeInTheDocument();
   });
 });

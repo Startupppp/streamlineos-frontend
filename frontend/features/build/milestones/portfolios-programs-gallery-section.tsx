@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -132,7 +132,18 @@ export function PortfoliosProgramsGalleryCases() {
       </GalleryCase>
 
       <GalleryCase id="portfolio-detail-ready" title="Portfolio detail — populated">
-        <PageWrapper title="Platform Modernisation" subtitle="Active · On track · 4 projects">
+        <PageWrapper
+          title="Platform Modernisation"
+          subtitle="Active · On track · 4 projects"
+          actions={
+            <BuildHeaderActions
+              actions={[
+                { id: "edit", label: "Edit portfolio", icon: Pencil, primary: false, onSelect: NOOP },
+                { id: "delete", label: "Delete portfolio", icon: Trash2, primary: false, onSelect: NOOP },
+              ]}
+            />
+          }
+        >
           <PmPageShell>
             <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
               <h2 className="text-sm font-semibold">Linked projects</h2>
@@ -140,6 +151,23 @@ export function PortfoliosProgramsGalleryCases() {
                 <li className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 text-sm"><span className="font-medium">Auth service refactor</span></li>
                 <li className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 text-sm"><span className="font-medium">Data pipeline v2</span></li>
               </ul>
+            </PmSection>
+          </PmPageShell>
+        </PageWrapper>
+      </GalleryCase>
+
+      <GalleryCase id="portfolio-detail-loading" title="Portfolio detail — loading">
+        <PageWrapper title="Portfolio" subtitle="Loading…">
+          <PmPageShell>
+            <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+              <div className="skeleton-shimmer animate-pulse h-4 w-1/4 rounded-md bg-muted" />
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-card p-3">
+                    <div className="skeleton-shimmer animate-pulse h-4 w-3/4 rounded-md bg-muted" />
+                  </div>
+                ))}
+              </div>
             </PmSection>
           </PmPageShell>
         </PageWrapper>

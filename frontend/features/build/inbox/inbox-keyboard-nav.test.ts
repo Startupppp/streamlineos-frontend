@@ -186,3 +186,38 @@ describe("useInboxKeyboardNav — Enter key activates the current selection", ()
     document.body.removeChild(input);
   });
 });
+
+describe("useInboxKeyboardNav — ? shortcut opens shortcut help dialog", () => {
+  it("? calls onShortcutHelp when provided", () => {
+    const onShortcutHelp = jest.fn();
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    renderHook(() =>
+      useInboxKeyboardNav({ notifications, selectedId: null, onSelect: jest.fn(), onClearSelection: jest.fn(), searchInputRef: ref, onShortcutHelp }),
+    );
+    fireEvent.keyDown(document, { key: "?" });
+    expect(onShortcutHelp).toHaveBeenCalledTimes(1);
+  });
+
+  it("? does not throw when onShortcutHelp is not provided — paired with the fire test above confirming the hook is reached", () => {
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    expect(() => {
+      renderHook(() =>
+        useInboxKeyboardNav({ notifications, selectedId: null, onSelect: jest.fn(), onClearSelection: jest.fn(), searchInputRef: ref }),
+      );
+      fireEvent.keyDown(document, { key: "?" });
+    }).not.toThrow();
+  });
+
+  it("? is inert when the target is an input element — paired with the positive test confirming the key is otherwise handled", () => {
+    const onShortcutHelp = jest.fn();
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    renderHook(() =>
+      useInboxKeyboardNav({ notifications, selectedId: null, onSelect: jest.fn(), onClearSelection: jest.fn(), searchInputRef: ref, onShortcutHelp }),
+    );
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: "?" });
+    expect(onShortcutHelp).not.toHaveBeenCalled();
+    document.body.removeChild(input);
+  });
+});

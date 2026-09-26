@@ -63,6 +63,21 @@ export function RoadmapGalleryCases() {
         </ul>
       </RoadmapGalleryWrapper>
 
+      <RoadmapGalleryWrapper caseId="roadmap-loading" title="Roadmap — loading">
+        <div className="flex flex-col gap-3 p-0">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="space-y-3 rounded-xl border border-border bg-card p-4">
+              <div className="skeleton-shimmer animate-pulse h-4 w-3/4 rounded-md bg-muted" />
+              <div className="skeleton-shimmer animate-pulse h-3 w-full rounded-md bg-muted" />
+              <div className="flex gap-2">
+                <div className="skeleton-shimmer animate-pulse h-3 w-1/4 rounded-md bg-muted" />
+                <div className="skeleton-shimmer animate-pulse h-3 w-1/6 rounded-md bg-muted" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </RoadmapGalleryWrapper>
+
       <RoadmapGalleryWrapper caseId="roadmap-empty-true" title="Roadmap — empty">
         <EmptyState className={PM_FILL_PANEL} illustrationPreset="projects" title="No roadmap items yet" description="Add items to your public roadmap to share what you are building." action={{ label: "New Item", onClick: NOOP }} />
       </RoadmapGalleryWrapper>

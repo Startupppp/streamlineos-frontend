@@ -54,6 +54,8 @@ import {
 } from "@/features/build/webhooks/webhook-schema";
 import { setListMembership } from "@/lib/toggle-in-list";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
 function subscribeToEvent(
   onChange: (events: string[]) => void,
@@ -96,7 +98,9 @@ export function ProjectWebhooksPage({
 }: ProjectWebhooksPageProps) {
   const projectId = parseInt(projectIdStr);
   const canManage = useCan("build:manage");
+  const isOnline = useOnlineStatus();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
 
   const {
     data: webhooks,
@@ -164,6 +168,7 @@ export function ProjectWebhooksPage({
   }, [form]);
 
   const handleShowForm = useCallback(() => setSheetOpen(true), []);
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   const webhookList = webhooks ?? [];
   const handleOpenWebhook = useCallback((_index: number) => {}, []);
@@ -171,8 +176,9 @@ export function ProjectWebhooksPage({
   useBuildListKeyboard({
     itemCount: webhookList.length,
     onOpen: handleOpenWebhook,
-    onCreate: canManage ? handleShowForm : undefined,
+    onCreate: canManage && isOnline ? handleShowForm : undefined,
     onClearSelection: handleClearWebhookSelection,
+    onShortcutHelp: handleShortcutHelp,
     enabled: pageState.kind === "ready",
   });
 
@@ -181,7 +187,7 @@ export function ProjectWebhooksPage({
       title="Webhooks"
       subtitle="Receive HTTP POST notifications when project events occur"
       actions={
-        canManage ? <AddWebhookButton onClick={handleShowForm} /> : undefined
+        canManage && isOnline ? <AddWebhookButton onClick={handleShowForm} /> : undefined
       }
     >
       <PmPageShell>
@@ -196,17 +202,26 @@ export function ProjectWebhooksPage({
               </div>
             }
             empty={
-              <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="automations"
-                title="No webhooks configured"
-                description="Get notified in real-time when tickets, sprints, or members change."
-                action={
-                  canManage
-                    ? { label: "Create Webhook", onClick: handleShowForm }
-                    : undefined
-                }
-              />
+              !isOnline ? (
+                <EmptyState
+                  className={PM_FILL_PANEL}
+                  illustrationPreset="automations"
+                  title="You are offline"
+                  description="Webhooks cannot be configured while offline."
+                />
+              ) : (
+                <EmptyState
+                  className={PM_FILL_PANEL}
+                  illustrationPreset="automations"
+                  title="No webhooks configured"
+                  description="Get notified in real-time when tickets, sprints, or members change."
+                  action={
+                    canManage
+                      ? { label: "Create Webhook", onClick: handleShowForm }
+                      : undefined
+                  }
+                />
+              )
             }
             onRetry={handleRetry}
             className="flex-1"
@@ -232,6 +247,8 @@ export function ProjectWebhooksPage({
           </PageState>
         </PmSection>
       </PmPageShell>
+
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md overflow-hidden">

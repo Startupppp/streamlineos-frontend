@@ -28,6 +28,7 @@ import {
   resolveInboxVisibleCount,
 } from "./inbox-render-window";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 
 const SECTION_FILTERS: { label: string; value: NotificationSection }[] = [
   { label: "Unread", value: "UNREAD" },
@@ -78,6 +79,8 @@ export function InboxList({
   const renderPageSize = isDesktopInbox ? INBOX_RENDER_PAGE_SIZE : INBOX_MOBILE_RENDER_PAGE_SIZE;
   const isOnline = useOnlineStatus();
   const bulk = useInboxBulkActions();
+  const [shortcutHelpOpen, setShortcutHelpOpen] = React.useState(false);
+  function handleShortcutHelp() { setShortcutHelpOpen(true); }
 
   const { data, isPending, isError, error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useInfiniteNotifications({ section, sourceModule: "build", search: q ?? undefined, category: type ?? undefined, projectId: projectId ?? undefined, limit: INBOX_FETCH_PAGE_SIZE, initialCursor: cursor });
@@ -148,12 +151,14 @@ export function InboxList({
     if (first) onSelectRef.current(first);
   }, [isPending, isError, isDesktopInbox, selectedId, selectedStillVisible, selectionDismissed, firstNotification?.id]);
 
-  useInboxKeyboardNav({ notifications: deferredVisibleNotifications, selectedId, onSelect: handleSelect, onClearSelection: () => onClearSelection?.(), searchInputRef });
+  useInboxKeyboardNav({ notifications: deferredVisibleNotifications, selectedId, onSelect: handleSelect, onClearSelection: () => onClearSelection?.(), searchInputRef, onShortcutHelp: handleShortcutHelp });
 
   const emptyTitle = section === "UNREAD" ? "All caught up" : section === "MENTIONS" ? "No mentions" : "No notifications";
   const emptyDesc = section === "UNREAD" ? "You have no unread notifications." : section === "MENTIONS" ? "You have not been mentioned in any comments yet." : "Notifications will appear here when you receive them.";
 
   return (
+    <>
+    <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
     <Tabs value={section} onValueChange={handleTabChange} className="flex h-full min-h-0 flex-col gap-0">
       <div className="flex shrink-0 items-center justify-between gap-2 border border-r-0 border-border px-4 py-2">
         <TabsList>
@@ -192,5 +197,6 @@ export function InboxList({
         </PageState>
       </div>
     </Tabs>
+    </>
   );
 }

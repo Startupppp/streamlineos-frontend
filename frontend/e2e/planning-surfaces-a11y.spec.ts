@@ -46,12 +46,14 @@ const CASES = [
   "portfolios-error",
   "portfolios-denied",
   "portfolio-detail-ready",
+  "portfolio-detail-loading",
   "programs-ready",
   "programs-loading",
   "programs-empty-true",
   "programs-error",
   "programs-denied",
   "roadmap-ready",
+  "roadmap-loading",
   "roadmap-empty-true",
   "roadmap-error",
   "roadmap-denied",
@@ -448,6 +450,76 @@ test.describe("Planning surfaces responsive contract", () => {
     });
   });
 
+  test.describe("reduced motion — portfolio-detail and roadmap skeleton shimmers also stop", () => {
+    test.describe("with reduce requested", () => {
+      test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+      test("portfolio-detail-loading skeleton computes animation-name none on the visible shimmer", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        const shimmer = frame(page, "portfolio-detail-loading")
+          .locator(".skeleton-shimmer.animate-pulse:visible")
+          .first();
+        await expect(shimmer).toBeVisible();
+        const animName = await shimmer.evaluate(
+          (node: HTMLElement) => getComputedStyle(node).animationName,
+        );
+        expect(animName).toBe("none");
+      });
+
+      test("roadmap-loading skeleton computes animation-name none on the visible shimmer", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        const shimmer = frame(page, "roadmap-loading")
+          .locator(".skeleton-shimmer.animate-pulse:visible")
+          .first();
+        await expect(shimmer).toBeVisible();
+        const animName = await shimmer.evaluate(
+          (node: HTMLElement) => getComputedStyle(node).animationName,
+        );
+        expect(animName).toBe("none");
+      });
+    });
+
+    test.describe("with no preference", () => {
+      test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+      test("portfolio-detail-loading skeleton does animate, proving the reduce assertion is not vacuous", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        const shimmer = frame(page, "portfolio-detail-loading")
+          .locator(".skeleton-shimmer.animate-pulse:visible")
+          .first();
+        await expect(shimmer).toBeVisible();
+        const animName = await shimmer.evaluate(
+          (node: HTMLElement) => getComputedStyle(node).animationName,
+        );
+        expect(animName).not.toBe("none");
+      });
+
+      test("roadmap-loading skeleton does animate, proving the reduce assertion is not vacuous", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        const shimmer = frame(page, "roadmap-loading")
+          .locator(".skeleton-shimmer.animate-pulse:visible")
+          .first();
+        await expect(shimmer).toBeVisible();
+        const animName = await shimmer.evaluate(
+          (node: HTMLElement) => getComputedStyle(node).animationName,
+        );
+        expect(animName).not.toBe("none");
+      });
+    });
+  });
+
   test.describe("keyboard", () => {
     test.describe("at 1280 × 800 — tab order follows visual order through milestones toolbar", () => {
       test.beforeEach(async ({ page }) => {
@@ -603,6 +675,48 @@ test.describe("Planning surfaces responsive contract", () => {
         await expect(newItem).toBeFocused();
         await page.keyboard.press("Tab");
         await expect(scope.locator('[data-slot="search-input"] input[type="search"]')).toBeFocused();
+      });
+    });
+
+    test.describe("at 1280 × 800 — goal-detail key results keyboard order", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Planning surfaces" })).toBeVisible();
+      });
+
+      test("Tab from first key-result Check-in button reaches the second in visual order", async ({
+        page,
+      }) => {
+        const scope = frame(page, "goal-detail-ready");
+        const checkInButtons = scope.getByRole("button", { name: "Check in", exact: true });
+        await checkInButtons.first().focus();
+        await expect(checkInButtons.first()).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(checkInButtons.nth(1)).toBeFocused();
+      });
+    });
+
+    test.describe("at 1280 × 800 — portfolio-detail header actions keyboard order", () => {
+      test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(page.getByRole("heading", { name: "Planning surfaces" })).toBeVisible();
+      });
+
+      test("Tab from Edit portfolio button reaches Delete portfolio button", async ({ page }) => {
+        const scope = frame(page, "portfolio-detail-ready");
+        const editButton = scope
+          .locator('[data-slot="build-header-actions"]')
+          .getByRole("button", { name: "Edit portfolio", exact: true });
+        await editButton.focus();
+        await expect(editButton).toBeFocused();
+        await page.keyboard.press("Tab");
+        await expect(
+          scope
+            .locator('[data-slot="build-header-actions"]')
+            .getByRole("button", { name: "Delete portfolio", exact: true }),
+        ).toBeFocused();
       });
     });
   });

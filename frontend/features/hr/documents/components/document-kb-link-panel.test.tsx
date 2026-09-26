@@ -16,6 +16,11 @@ jest.mock("@/hooks/api/hr/document-kb-link", () => ({
   useDocumentKbLink: () => mockState(),
   usePublishDocumentToKb: () => ({ mutateAsync: mockPublish, isPending: false }),
   useWithdrawDocumentFromKb: () => ({ mutateAsync: mockWithdraw, isPending: false }),
+  useRetargetDocumentKbLink: () => ({ mutateAsync: jest.fn(), isPending: false }),
+}));
+
+jest.mock("./document-kb-retarget-panel", () => ({
+  DocumentKbRetargetPanel: () => <button type="button">Change settings</button>,
 }));
 
 function stateFixture(over: Partial<DocumentKbLinkState> = {}): DocumentKbLinkState {

@@ -45,6 +45,14 @@ const kbSpaceMemberListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceMemberListContract),
 );
 
+const kbSpaceMemberContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceMemberContract),
+);
+
+const kbSpaceMemberSuccessContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceMemberSuccessContract),
+);
+
 export function useKbSpaces(params?: KbSpacesListParams) {
   const canView = useCan("kb:spaces:view");
   const queryParams: Record<string, unknown> = {};
@@ -164,6 +172,51 @@ export function useDeleteKbSpace() {
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.spaces() });
+    },
+  });
+}
+
+export interface AddKbSpaceMemberInput {
+  spaceId: number;
+  spaceRole: "viewer" | "commenter" | "editor" | "publisher" | "admin";
+  userId?: string;
+  role?: string;
+}
+
+export function useAddKbSpaceMember() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:spaces:manage", {
+    mutationKey: ["kb", "spaces", "members", "add"],
+    mutationFn: ({ spaceId, ...body }: AddKbSpaceMemberInput) =>
+      apiClient.post(
+        `/kb/spaces/${spaceId}/members`,
+        body,
+        undefined,
+        kbSpaceMemberContract,
+      ),
+    onSuccess: (_data, { spaceId }) => {
+      void qc.invalidateQueries({
+        queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "members"],
+      });
+    },
+  });
+}
+
+export function useRemoveKbSpaceMember() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:spaces:manage", {
+    mutationKey: ["kb", "spaces", "members", "remove"],
+    mutationFn: ({ spaceId, memberId }: { spaceId: number; memberId: number }) =>
+      apiClient.delete(
+        `/kb/spaces/${spaceId}/members/${memberId}`,
+        undefined,
+        undefined,
+        kbSpaceMemberSuccessContract,
+      ),
+    onSuccess: (_data, { spaceId }) => {
+      void qc.invalidateQueries({
+        queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "members"],
+      });
     },
   });
 }

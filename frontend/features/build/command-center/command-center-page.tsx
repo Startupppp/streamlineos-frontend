@@ -2,6 +2,7 @@
 
 import { useMemo, useCallback, useState, type UIEvent } from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { format, subDays } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
 import { Briefcase, CheckSquare, AlertCircle } from "lucide-react";
@@ -17,7 +18,9 @@ import {
   useAllWork,
   useInfiniteAllWork,
 } from "@/hooks/api/build/all-work";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { QuickCreateMenu, PinnedNav } from "./command-center-actions";
 import {
   PmPageShell,
@@ -40,6 +43,13 @@ import {
 } from "./command-center-constants";
 import { MyIssuesPanel } from "./command-center-my-issues-panel";
 import { ProjectsPanel } from "./command-center-projects-panel";
+
+const COMMAND_CENTER_SCOPE_VALUES = ["all", "mine", "created", "subscribed"] as const;
+type CommandCenterScope = (typeof COMMAND_CENTER_SCOPE_VALUES)[number];
+
+function isCommandCenterScope(v: string): v is CommandCenterScope {
+  return (COMMAND_CENTER_SCOPE_VALUES as readonly string[]).includes(v);
+}
 
 const ProjectCreateWizard = dynamic(
   () =>
@@ -73,11 +83,17 @@ function CommandCenterLoading() {
 
 export function CommandCenterPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const { openCreateTicket } = useCommandPalette();
   const canCreateIssue = useCan("build:tickets:create");
   const canCreateProject = useCan("build:create");
   const canViewTickets = useCan("build:tickets:view");
   const shouldReduceMotion = useReducedMotion();
+  const isOnline = useOnlineStatus();
+  const searchParams = useSearchParams();
+  const rawUrlScope = searchParams.get("scope");
+  const urlScope: CommandCenterScope | null =
+    rawUrlScope !== null && isCommandCenterScope(rawUrlScope) ? rawUrlScope : null;
   const overdueDueDateTo = format(subDays(new Date(), 1), "yyyy-MM-dd");
 
   const {
@@ -88,6 +104,14 @@ export function CommandCenterPage() {
     refetch: refetchProjects,
   } = useProjects({ status: "ACTIVE" });
 
+  const myIssuesFilters = useMemo(
+    () =>
+      urlScope !== null
+        ? { ...COMMAND_CENTER_MY_ISSUES_FILTERS, scope: urlScope }
+        : COMMAND_CENTER_MY_ISSUES_FILTERS,
+    [urlScope],
+  );
+
   const {
     data: myIssuesPages,
     isLoading: myIssuesLoading,
@@ -97,13 +121,13 @@ export function CommandCenterPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteAllWork(COMMAND_CENTER_MY_ISSUES_FILTERS, { enabled: canViewTickets });
+  } = useInfiniteAllWork(myIssuesFilters, { enabled: canViewTickets });
 
   const {
     data: openIssuesSummary,
     refetch: refetchOpenIssuesSummary,
   } = useAllWork(
-    { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1 },
+    { ...myIssuesFilters, limit: 1 },
     { enabled: canViewTickets },
   );
 
@@ -111,7 +135,7 @@ export function CommandCenterPage() {
     data: overdueIssuesSummary,
     refetch: refetchOverdueIssuesSummary,
   } = useAllWork(
-    { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1, dueDateTo: overdueDueDateTo },
+    { ...myIssuesFilters, limit: 1, dueDateTo: overdueDueDateTo },
     { enabled: canViewTickets },
   );
 
@@ -133,7 +157,9 @@ export function CommandCenterPage() {
     openCreateTicket();
   }, [canCreateIssue, projects.length, openCreateTicket]);
 
-  useKeyboardShortcuts(handleOpenWizard, handleCreateIssueShortcut);
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+
+  useKeyboardShortcuts(handleOpenWizard, handleCreateIssueShortcut, handleShortcutHelp);
 
   const handleRetry = useCallback(() => {
     void refetchProjects();
@@ -221,6 +247,11 @@ export function CommandCenterPage() {
           className="flex-1"
         >
           <PmPageShell className={COMMAND_CENTER_PAGE_SHELL}>
+            {!isOnline && (
+              <p className="text-sm text-muted-foreground px-4 py-2 bg-muted/50 rounded-md mb-2">
+                You are offline — content may not be up to date
+              </p>
+            )}
             <PmSection index={0} className="min-w-0 w-full max-w-full">
               <StatCardGrid cols={3}>
                 <motion.div
@@ -301,6 +332,7 @@ export function CommandCenterPage() {
       </PageWrapper>
 
       {isReady && <ProjectCreateWizard open={wizardOpen} onOpenChange={setWizardOpen} />}
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
     </>
   );
 }

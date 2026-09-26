@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useProjectCustomFields } from "@/hooks/api/build/custom-fields";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -21,6 +22,7 @@ interface ProjectSettingsFieldsPageProps {
 }
 
 export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPageProps) {
+  const isOnline = useOnlineStatus();
   const listFilters = useBuildListFilters({ withSearch: true });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const createFieldRef = useRef<(() => void) | null>(null);
@@ -103,6 +105,14 @@ export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPa
           className="flex-1"
         >
           <PmSection index={0}>
+            {!isOnline && (
+              <div
+                role="status"
+                className="mb-4 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground"
+              >
+                You are offline — changes will not be saved until you reconnect.
+              </div>
+            )}
             <PmPanel className="p-4" solid>
               <div className="mb-3 border-b border-border pb-3">
                 <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>

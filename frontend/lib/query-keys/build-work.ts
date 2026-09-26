@@ -63,8 +63,10 @@ export const buildWorkQueryKeys = {
       params === undefined
         ? ([...base, "projects", "intake", projectId] as const)
         : ([...base, "projects", "intake", projectId, params] as const),
-    analytics: (projectId: number) =>
-      [...base, "projects", "analytics", projectId] as const,
+    analytics: (projectId: number, params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "projects", "analytics", projectId] as const)
+        : ([...base, "projects", "analytics", projectId, params] as const),
     watchers: (ticketId: number) =>
       [...base, "projects", "watchers", ticketId] as const,
     budget: (projectId: number) =>

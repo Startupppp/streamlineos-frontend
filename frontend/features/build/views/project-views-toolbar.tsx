@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback } from "react";
+import { useCallback, type RefObject } from "react";
 import { Save, X } from "lucide-react";
 import { BookmarkIcon } from "@animateicons/react/lucide";
 import type { IconHandle } from "@animateicons/react";
@@ -83,6 +83,7 @@ interface ProjectViewsToolbarProps {
   filterSeverity: string;
   filterQaState: string;
   onQaFilterChange: (key: "severity" | "qaState", value: string) => void;
+  searchInputRef?: RefObject<HTMLInputElement | null>;
 }
 
 export function ProjectViewsToolbar({
@@ -108,6 +109,7 @@ export function ProjectViewsToolbar({
   filterSeverity,
   filterQaState,
   onQaFilterChange,
+  searchInputRef,
 }: ProjectViewsToolbarProps) {
   const canManageViews = useCan("build:workspace:manage");
   const handleSaveViewClick = useCallback(() => {
@@ -206,6 +208,7 @@ export function ProjectViewsToolbar({
       hideCompleted={hideCompleted}
       onHideCompletedChange={onHideCompletedChange}
       doneCount={doneCount}
+      searchInputRef={searchInputRef}
     />
   );
 }

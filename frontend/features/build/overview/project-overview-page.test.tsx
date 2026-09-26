@@ -1,12 +1,14 @@
 import { render, screen } from "@testing-library/react";
 import { ProjectOverviewPage } from "./project-overview-page";
 
+let mockSearchParams = new URLSearchParams();
+
 const usePageState = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
   usePathname: () => "/build/101",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -55,8 +57,22 @@ jest.mock("@/hooks/api/build/milestones", () => ({
   })),
 }));
 
+jest.mock("@/hooks/api/build/releases", () => ({
+  useReleases: jest.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+  })),
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearchParams = new URLSearchParams();
 });
 
 describe("ProjectOverviewPage", () => {
@@ -93,6 +109,60 @@ describe("ProjectOverviewPage", () => {
     expect(screen.getByText("Open issues")).toBeInTheDocument();
     expect(screen.getByText("Active cycle")).toBeInTheDocument();
     expect(screen.getByText("Health")).toBeInTheDocument();
+  });
+
+  it("renders the Progress stat card with completion percentage from analytics healthBreakdown", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    (useProjectAnalytics as jest.Mock).mockReturnValue({
+      data: {
+        healthStatus: "GOOD",
+        healthScore: 65,
+        healthBreakdown: { completionPct: 72, onTimePct: 80, velocityScore: 60, overdueTickets: 3, totalTickets: 25 },
+        stateDistribution: [],
+        priorityBreakdown: [],
+        assigneeCompletion: [],
+        volumeOverTime: [],
+        cycleVelocity: [],
+        estimateVsActual: [],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByText("Progress")).toBeInTheDocument();
+    expect(screen.getByText("72%")).toBeInTheDocument();
+  });
+
+  it("renders the Overdue stat card with count from analytics healthBreakdown so risks are visible without navigating to issues", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    (useProjectAnalytics as jest.Mock).mockReturnValue({
+      data: {
+        healthStatus: "AT_RISK",
+        healthScore: 45,
+        healthBreakdown: { completionPct: 40, onTimePct: 60, velocityScore: 50, overdueTickets: 8, totalTickets: 20 },
+        stateDistribution: [],
+        priorityBreakdown: [],
+        assigneeCompletion: [],
+        volumeOverTime: [],
+        cycleVelocity: [],
+        estimateVsActual: [],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByText("Overdue")).toBeInTheDocument();
+    expect(screen.getByText("8")).toBeInTheDocument();
   });
 
   it("renders quick-nav links to Issues, Cycles and Milestones in the populated state", () => {
@@ -190,6 +260,33 @@ describe("ProjectOverviewPage", () => {
     );
   });
 
+  it("includes the releases query error in the page error so a failed releases load does not silently degrade to an empty releases card", () => {
+    const releasesError = new Error("RELEASES_UNAVAILABLE");
+    const { useProject } = jest.requireMock("@/hooks/api/build/projects");
+    (useProject as jest.Mock).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    const { useReleases } = jest.requireMock("@/hooks/api/build/releases");
+    (useReleases as jest.Mock).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: releasesError,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "error", error: releasesError });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ error: releasesError }),
+    );
+  });
+
   it("renders the loading skeleton and not content when the resolution is loading so the page does not flash an empty state while queries are in flight", () => {
     usePageState.mockReturnValue({ kind: "loading" });
 
@@ -229,5 +326,147 @@ describe("ProjectOverviewPage", () => {
     expect(screen.getByText("Next milestone")).toBeInTheDocument();
     expect(screen.getByText("Beta Release")).toBeInTheDocument();
     expect(screen.queryByText("GA Launch")).not.toBeInTheDocument();
+  });
+
+  it("renders the next-release card name and version when a draft release exists, so the upcoming shipment is visible without navigating to releases", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useReleases } = jest.requireMock("@/hooks/api/build/releases");
+    (useReleases as jest.Mock).mockReturnValue({
+      data: {
+        data: [
+          { id: 1, name: "v2.0 beta", version: "2.0.0-beta", status: "draft", releaseDate: "2026-11-15", ticketCount: 12, projectId: 101, description: null, createdAt: "2026-01-01", updatedAt: "2026-01-01" },
+          { id: 2, name: "v2.1", version: "2.1.0", status: "draft", releaseDate: "2027-01-10", ticketCount: 5, projectId: 101, description: null, createdAt: "2026-01-01", updatedAt: "2026-01-01" },
+        ],
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByText("Next release")).toBeInTheDocument();
+    expect(screen.getByText("v2.0 beta")).toBeInTheDocument();
+    expect(screen.queryByText("v2.1")).not.toBeInTheDocument();
+  });
+
+  it("does not render the next-release card when all releases are already shipped so the card does not appear with stale data", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useReleases } = jest.requireMock("@/hooks/api/build/releases");
+    (useReleases as jest.Mock).mockReturnValue({
+      data: {
+        data: [
+          { id: 1, name: "v1.0", version: "1.0.0", status: "released", releaseDate: "2026-06-01", ticketCount: 8, projectId: 101, description: null, createdAt: "2026-01-01", updatedAt: "2026-01-01" },
+        ],
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.queryByText("Next release")).not.toBeInTheDocument();
+  });
+
+  it("shows the offline banner when the user has no network connection so stale data is not silently mistaken for live data", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useOnlineStatus } = jest.requireMock("@/hooks/common/use-online-status");
+    (useOnlineStatus as jest.Mock).mockReturnValue(false);
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+  });
+
+  it("does not show the offline banner when the user is online so normal connectivity does not add noise", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useOnlineStatus } = jest.requireMock("@/hooks/common/use-online-status");
+    (useOnlineStatus as jest.Mock).mockReturnValue(true);
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.queryByText(/you're offline/i)).not.toBeInTheDocument();
+  });
+
+  it("passes range URL param to useProjectAnalytics so the backend filters analytics by the requested time window", () => {
+    mockSearchParams = new URLSearchParams("range=7d");
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(useProjectAnalytics).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({ range: "7d" }),
+    );
+  });
+
+  it("passes teamId URL param to useProjectAnalytics as a number so team-scoped analytics are not broken by a string cast", () => {
+    mockSearchParams = new URLSearchParams("teamId=5");
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(useProjectAnalytics).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({ teamId: 5 }),
+    );
+  });
+
+  it("passes ownerId URL param to useProjectAnalytics so owner-scoped analytics load correctly", () => {
+    mockSearchParams = new URLSearchParams("ownerId=user-abc");
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(useProjectAnalytics).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({ ownerId: "user-abc" }),
+    );
+  });
+
+  it("passes undefined params to useProjectAnalytics when no URL params are set so the unfiltered analytics query key is stable", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(useProjectAnalytics).toHaveBeenCalledWith(101, undefined);
+  });
+
+  it("ignores an invalid range URL param so a typo does not break the analytics query", () => {
+    mockSearchParams = new URLSearchParams("range=invalid");
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(useProjectAnalytics).toHaveBeenCalledWith(101, undefined);
+  });
+
+  it("renders no element with a positive tabIndex so document Tab order is not broken", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { container } = render(<ProjectOverviewPage projectId={101} />);
+
+    const positiveTabIndexElements = container.querySelectorAll("[tabindex]");
+    positiveTabIndexElements.forEach((el) => {
+      const tabIndex = parseInt(el.getAttribute("tabindex") ?? "0", 10);
+      expect(tabIndex).toBeLessThanOrEqual(0);
+    });
   });
 });

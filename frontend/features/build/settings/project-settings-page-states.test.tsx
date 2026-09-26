@@ -12,6 +12,10 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/build/1/settings",
 }));
 
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
+}));
+
 jest.mock("next-auth/react", () => ({
   useSession: () => ({
     data: { user: { id: "user-1" } },
@@ -238,6 +242,31 @@ describe("project settings page — page-level state transitions", () => {
     test("the project name input is present in the ready state", async () => {
       await renderPage();
       expect(screen.getByPlaceholderText("Enter project name")).toBeInTheDocument();
+    });
+  });
+
+  describe("offline state", () => {
+    let useOnlineStatusMock: jest.Mock;
+
+    beforeEach(() => {
+      mockPageStateResolution = { kind: "ready" };
+      useOnlineStatusMock = (
+        jest.requireMock("@/hooks/common/use-online-status") as {
+          useOnlineStatus: jest.Mock;
+        }
+      ).useOnlineStatus;
+      useOnlineStatusMock.mockReturnValue(true);
+    });
+
+    test("shows the offline banner when the device is offline and the page is ready", async () => {
+      useOnlineStatusMock.mockReturnValue(false);
+      await renderPage();
+      expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
+    });
+
+    test("does not show the offline banner when the device is online and the page is ready", async () => {
+      await renderPage();
+      expect(screen.queryByText(/you are offline/i)).not.toBeInTheDocument();
     });
   });
 });

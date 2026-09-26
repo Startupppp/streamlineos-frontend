@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useMemo } from "react";
+import { use, useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { format, addDays } from "date-fns";
 import { Clock3 } from "lucide-react";
@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound } from "next/navigation";
@@ -112,6 +113,9 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     { enabled: view === "workload" },
   );
 
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+
   const handleOpenFocusedTicket = useCallback(
     (index: number) => {
       const ticket = filteredTickets[index];
@@ -125,11 +129,16 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     [handleCreateOpenChange],
   );
 
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+
   const { focusedIndex } = useBuildListKeyboard({
     itemCount: filteredTickets.length,
     onOpen: handleOpenFocusedTicket,
+    onEdit: handleOpenFocusedTicket,
     onClearSelection: handleClearSelection,
     onCreate: handleKeyboardCreate,
+    onShortcutHelp: handleShortcutHelp,
+    searchInputRef,
     enabled: view === "list",
   });
 
@@ -301,6 +310,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
           filterSeverity={filterSeverity}
           filterQaState={filterQaState}
           onQaFilterChange={handleQaFilterChange}
+          searchInputRef={searchInputRef}
         />
       }
     >
@@ -358,6 +368,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         isSaving={createView.isPending}
         activeLayout={view}
       />
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
     </PageWrapper>
   );
 }

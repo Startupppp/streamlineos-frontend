@@ -2,7 +2,10 @@
 
 import { useCallback, useMemo, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { NotificationSection, NotificationCategory } from "@/types/notifications";
+import type {
+  NotificationSection,
+  NotificationCategory,
+} from "@/types/notifications";
 import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
 import { buildListSearchParams } from "../shared/use-build-list-url-state";
 
@@ -14,7 +17,7 @@ const VALID_SECTIONS: readonly NotificationSection[] = [
   "MENTIONS",
 ];
 
-const FILTER_PARAMS = ["q", "type", "project"] as const;
+const FILTER_PARAMS = ["q", "type", "projectId"] as const;
 
 function parseSection(raw: string | null): NotificationSection {
   const match = VALID_SECTIONS.find((section) => section === raw);
@@ -69,7 +72,7 @@ export function useInboxUrlState(): InboxUrlState {
   const section = parseSection(searchParams.get("section"));
   const q = searchParams.get("q");
   const type = parseType(searchParams.get("type"));
-  const projectId = parseProjectId(searchParams.get("project"));
+  const projectId = parseProjectId(searchParams.get("projectId"));
   const cursor = parseCursor(searchParams.get("cursor"));
 
   const replaceWith = useCallback(

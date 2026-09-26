@@ -5,6 +5,7 @@ import {
   useState,
   useCallback,
   type ReactNode,
+  type RefObject,
 } from "react";
 import dynamic from "next/dynamic";
 import { SearchInput } from "@/components/ui/search-input";
@@ -70,6 +71,7 @@ interface TicketFilterBarProps {
   leading?: ReactNode;
   trailing?: ReactNode;
   mobileSearchFirst?: boolean;
+  searchInputRef?: RefObject<HTMLInputElement | null>;
 }
 
 function formatDueRange(from: string, to: string): string {
@@ -94,6 +96,7 @@ export function TicketFilterBar({
   leading,
   trailing,
   mobileSearchFirst = false,
+  searchInputRef,
 }: TicketFilterBarProps) {
   const [filterMounted, setFilterMounted] = useState(false);
   const handleFilterOpen = useCallback(() => setFilterMounted(true), []);
@@ -204,6 +207,7 @@ export function TicketFilterBar({
       )}
     >
       <SearchInput
+        ref={searchInputRef}
         placeholder="Search..."
         value={localSearch}
         onValueChange={handleSearchChange}

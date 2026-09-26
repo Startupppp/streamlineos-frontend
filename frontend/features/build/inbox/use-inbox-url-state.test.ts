@@ -150,6 +150,53 @@ describe("useInboxUrlState — param round-trips", () => {
   });
 });
 
+describe("useInboxUrlState — projectId param matches the spec URL name", () => {
+  it("reads projectId from the URL and parses it as a positive integer", () => {
+    mockSearchParams = new URLSearchParams("projectId=42");
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.projectId).toBe(42);
+  });
+
+  it("ignores the legacy project param — renamed to projectId to match the spec", () => {
+    mockSearchParams = new URLSearchParams("project=7");
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.projectId).toBeNull();
+  });
+
+  it("hasActiveFilters is true when projectId is set", () => {
+    mockSearchParams = new URLSearchParams("projectId=5");
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.hasActiveFilters).toBe(true);
+  });
+
+  it("clearFilters removes projectId so the filter resets", () => {
+    mockSearchParams = new URLSearchParams("projectId=3&q=foo");
+    const { result } = renderHook(() => useInboxUrlState());
+    act(() => {
+      result.current.clearFilters();
+    });
+    const url = replace.mock.calls[0][0];
+    expect(url).not.toContain("projectId=");
+    expect(url).not.toContain("q=");
+  });
+
+  it("setParams with null for projectId removes the param", () => {
+    mockSearchParams = new URLSearchParams("projectId=10");
+    const { result } = renderHook(() => useInboxUrlState());
+    act(() => {
+      result.current.setParams({ projectId: null });
+    });
+    const url = replace.mock.calls[0][0];
+    expect(url).not.toContain("projectId=");
+  });
+
+  it("ignores a non-positive projectId value", () => {
+    mockSearchParams = new URLSearchParams("projectId=0");
+    const { result } = renderHook(() => useInboxUrlState());
+    expect(result.current.projectId).toBeNull();
+  });
+});
+
 describe("useInboxUrlState — type param validation", () => {
   it("a valid category round-trips through parseType", () => {
     mockSearchParams = new URLSearchParams("type=PROJECTS");

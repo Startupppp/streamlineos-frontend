@@ -16,6 +16,8 @@ import {
 } from "@/hooks/api/build/teams";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListFilters, BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -40,6 +42,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { SearchInput } from "@/components/ui/search-input";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { TeamFormSheet } from "./team-form-sheet";
 import { TeamProjectsSection } from "./team-projects-section";
 import { MemberPicker } from "@/components/members/member-picker";
@@ -58,6 +62,8 @@ import { cn } from "@/lib/utils";
 import { resolveImageUrl } from "@/lib/utils";
 
 const TEAM_MEMBER_ROLES = ["member", "lead"] as const;
+
+const FILTER_DEFINITIONS = [{ param: "leadId" }, { param: "memberId" }] as const;
 
 function TeamActionsButton() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -174,13 +180,16 @@ export function TeamHomePage({ teamId }: Props) {
   const canManage = useCan("build:teams:manage");
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
+  const isOnline = useOnlineStatus();
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [addMemberId, setAddMemberId] = useState<string | undefined>(undefined);
   const [addMemberRole, setAddMemberRole] = useState<"member" | "lead">("member");
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
 
-  const memberPager = useCursorPager();
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS, withSearch: true });
+  const memberPager = useCursorPager(listFilters.resetKey);
 
   function handleAddMemberRoleChange(value: string): void {
     const role = TEAM_MEMBER_ROLES.find((candidate) => candidate === value);
@@ -190,6 +199,27 @@ export function TeamHomePage({ teamId }: Props) {
   const { data, isLoading, isError, error, refetch } = useProjectTeam(teamId);
   const membersResult = useTeamMembers(teamId, memberPager.cursor);
   const pageMembers = useMemo(() => membersResult.data?.data ?? [], [membersResult.data]);
+
+  const debouncedSearch = listFilters.debouncedSearch;
+  const leadIdFilter = listFilters.value("leadId");
+  const memberIdFilter = listFilters.value("memberId");
+
+  const filteredMembers = useMemo(() => {
+    if (!debouncedSearch && leadIdFilter === BUILD_FILTER_ALL && memberIdFilter === BUILD_FILTER_ALL) {
+      return pageMembers;
+    }
+    return pageMembers.filter((member) => {
+      const q = debouncedSearch.trim().toLowerCase();
+      if (q) {
+        const displayName = getUserDisplayName(member).toLowerCase();
+        if (!displayName.includes(q) && !member.email.toLowerCase().includes(q)) return false;
+      }
+      if (leadIdFilter !== BUILD_FILTER_ALL && member.userId !== leadIdFilter) return false;
+      if (memberIdFilter !== BUILD_FILTER_ALL && member.userId !== memberIdFilter) return false;
+      return true;
+    });
+  }, [pageMembers, debouncedSearch, leadIdFilter, memberIdFilter]);
+
   const updateTeam = useUpdateProjectTeam();
   const deleteTeam = useDeleteProjectTeam();
   const addMember = useAddProjectTeamMember(teamId);
@@ -201,11 +231,13 @@ export function TeamHomePage({ teamId }: Props) {
   }, [memberPager, membersResult.data?.pagination.nextCursor]);
 
   const handleKeyboardOpen = useCallback(() => undefined, []);
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   useBuildListKeyboard({
-    itemCount: pageMembers.length,
+    itemCount: filteredMembers.length,
     onOpen: handleKeyboardOpen,
     onClearSelection: memberPager.reset,
+    onShortcutHelp: handleShortcutHelp,
     searchInputRef: searchRef,
     enabled: !isLoading,
   });
@@ -369,45 +401,54 @@ export function TeamHomePage({ teamId }: Props) {
             <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
               Members{pageMembers.length > 0 ? ` (${pageMembers.length}${membersResult.data?.pagination.hasMore ? "+" : ""})` : ""}
             </p>
-            {canManage ? (
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <MemberPicker
-                  value={addMemberId}
-                  onChange={(id) => setAddMemberId(id ?? undefined)}
-                  excludeUserIds={data.members.map((m) => m.userId)}
-                  placeholder="Add a member…"
-                  className="h-8 min-w-[180px]"
-                />
-                <Select value={addMemberRole} onValueChange={handleAddMemberRoleChange}>
-                  <SelectTrigger className="w-24 border-input bg-card">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                    <SelectItem value="member">Member</SelectItem>
-                    <SelectItem value="lead">Lead</SelectItem>
-                  </SelectContent>
-                </Select>
-                <AddMemberButton
-                  disabled={!addMemberId}
-                  isPending={addMember.isPending}
-                  onClick={handleAddMember}
-                />
-              </div>
-            ) : null}
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <SearchInput
+                ref={searchRef}
+                value={listFilters.search}
+                onValueChange={listFilters.setSearch}
+                placeholder="Search members…"
+                aria-label="Search members"
+              />
+              {canManage ? (
+                <>
+                  <MemberPicker
+                    value={addMemberId}
+                    onChange={(id) => setAddMemberId(id ?? undefined)}
+                    excludeUserIds={data.members.map((m) => m.userId)}
+                    placeholder="Add a member…"
+                    className="h-8 min-w-[180px]"
+                  />
+                  <Select value={addMemberRole} onValueChange={handleAddMemberRoleChange}>
+                    <SelectTrigger className="w-24 border-input bg-card">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                      <SelectItem value="member">Member</SelectItem>
+                      <SelectItem value="lead">Lead</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <AddMemberButton
+                    disabled={!addMemberId}
+                    isPending={addMember.isPending}
+                    onClick={handleAddMember}
+                  />
+                </>
+              ) : null}
+            </div>
           </div>
 
-          {pageMembers.length === 0 && !membersResult.isLoading ? (
+          {filteredMembers.length === 0 && !membersResult.isLoading ? (
             <PmPanel className="flex items-center justify-center p-4">
               <EmptyState
                 illustrationPreset="projects"
-                title="No members yet"
-                description="Add members to this team."
+                title={!isOnline && pageMembers.length === 0 ? "You are offline" : "No members yet"}
+                description={!isOnline && pageMembers.length === 0 ? "Reconnect to see team members." : "Add members to this team."}
                 compact
               />
             </PmPanel>
           ) : (
             <PmPanel role="list" aria-label="Team members">
-              {pageMembers.map((member) => {
+              {filteredMembers.map((member) => {
                 const displayName = getUserDisplayName({
                   firstName: member.firstName,
                   lastName: member.lastName,

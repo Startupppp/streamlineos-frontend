@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import {
@@ -181,6 +182,8 @@ export function ProjectSettingsPage({ params }: PageProps) {
     setReassignDialog(null);
   }, []);
 
+  const isOnline = useOnlineStatus();
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
@@ -243,7 +246,16 @@ export function ProjectSettingsPage({ params }: PageProps) {
           className="flex-1"
         >
           {project && (
-            <div className="flex flex-col gap-4 pb-8 md:flex-row">
+            <>
+              {!isOnline && (
+                <div
+                  role="status"
+                  className="mb-4 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground"
+                >
+                  You are offline — changes will not be saved until you reconnect.
+                </div>
+              )}
+              <div className="flex flex-col gap-4 pb-8 md:flex-row">
               <PmSection index={0} className="w-full shrink-0 md:w-52">
                 <PmPanel className="p-1.5">
                   <nav
@@ -414,6 +426,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
                 ) : null}
               </PmSection>
             </div>
+            </>
           )}
         </PageState>
       </PmPageShell>

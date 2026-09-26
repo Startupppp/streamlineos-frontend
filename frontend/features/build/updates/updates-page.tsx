@@ -15,6 +15,9 @@ import {
   useBuildListFilters,
   BUILD_FILTER_ALL,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -24,6 +27,7 @@ import { EntityFormDialog } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Card, CardContent } from "@/components/ui/card";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -51,16 +55,18 @@ function UpdateCard({
   update,
   canManage,
   onDelete,
+  focused,
 }: {
   update: ProjectUpdateRow;
   canManage: boolean;
   onDelete: (id: number) => void;
+  focused?: boolean;
 }) {
   const handleDelete = useCallback(() => onDelete(update.id), [update.id, onDelete]);
   const date = new Date(update.createdAt).toLocaleString();
 
   return (
-    <Card className={CONTENT_PANEL_SOLID}>
+    <Card className={cn(CONTENT_PANEL_SOLID, focused && "ring-2 ring-primary")}>
       <CardContent className="p-4 space-y-2">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize bg-muted text-muted-foreground">
@@ -104,6 +110,11 @@ interface UpdatesPageProps {
 export function UpdatesPage({ projectId }: UpdatesPageProps) {
   const canManage = useCan("build:updates:manage");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const isOnline = useOnlineStatus();
+
+  const handleOpenShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+  const handleShortcutHelpOpenChange = useCallback((open: boolean) => setShortcutHelpOpen(open), []);
 
   const listFilters = useBuildListFilters({ filters: UPDATE_FILTER_DEFINITIONS, withSearch: false });
   const authorId = listFilters.value("authorId");
@@ -155,6 +166,14 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
 
   const handleDialogOpenChange = useCallback((open: boolean) => setDialogOpen(open), []);
 
+  const { focusedIndex } = useBuildListKeyboard({
+    itemCount: data.length,
+    onOpen: () => {},
+    onCreate: canManage ? handleOpenDialog : undefined,
+    onClearSelection: () => {},
+    onShortcutHelp: handleOpenShortcutHelp,
+    enabled: !dialogOpen && !shortcutHelpOpen,
+  });
 
   const pageState = usePageState({
     permission: "build:updates:view",
@@ -170,6 +189,11 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
       subtitle="Project status updates and announcements"
       actions={canManage ? <NewUpdateButton onClick={handleOpenDialog} /> : undefined}
     >
+      {!isOnline && (
+        <p className="mb-2 rounded-md bg-muted/50 px-4 py-2 text-sm text-muted-foreground">
+          You&apos;re offline — results may not be up to date
+        </p>
+      )}
       <PageState
         resolution={pageState}
         loading={
@@ -192,12 +216,13 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
         className="flex flex-1 min-h-0 flex-col gap-4"
       >
         <div className="flex flex-col gap-3">
-          {data.map((update) => (
+          {data.map((update, index) => (
             <UpdateCard
               key={update.id}
               update={update}
               canManage={canManage}
               onDelete={handleDelete}
+              focused={focusedIndex === index}
             />
           ))}
         </div>
@@ -242,6 +267,8 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
           </Form>
         )}
       </EntityFormDialog>
+
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={handleShortcutHelpOpenChange} />
     </PageWrapper>
   );
 }

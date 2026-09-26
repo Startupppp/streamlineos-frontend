@@ -93,11 +93,13 @@ Server guards, token/grant status, tenant scope, source ACL, expiry, and record 
 
 - [x] The canonical route/disposition is implemented and legacy callers are redirected or removed deliberately.
 - [ ] The page serves the stated job and success metric without exposing internal identifiers or unauthorized record existence.
-  - BLOCKED (measured 2026-09-26) — this criterion is currently **violated**, not merely unimplemented. The public intake route is keyed on the raw sequential integer `projectId`, which is an internal identifier, and that yields two distinct capabilities:
-    1. **A platform-wide existence oracle.** The route differentiates 201 from 400 by whether the project exists and is live, so walking `projectId` enumerates which projects exist across every tenant. The differentiation is explicit at `backend/src/modules/build/.../intake.service.ts:25-28`.
-    2. **Uninvited cross-tenant anonymous writes.** Any live project accepts an anonymous intake submission without that project having opted in to public intake.
-  - The `public:intake` rate limit bounds the enumeration *rate* but removes neither capability, so it is mitigation rather than a fix.
-  - Product owner decision 2026-09-26: **record, do not change yet.** The fix is a per-project unguessable intake token plus a route rename, which needs a migration and breaks any already-published intake URL. Do not substitute a UUID-shaped `projectId` or normalise only the status codes and tick this box — normalising 201/400 closes the oracle but leaves capability 2 intact.
+  - BLOCKED (stage 1 measured 2026-09-26) — stage 1 (`intake_published_at` flag, migration 1300) closes capability 2 below; capabilities 1a and 1b remain open until stage 2 ships the opaque token and route rename.
+    1. **A platform-wide existence oracle — two sub-capabilities:**
+       - **1a. Sequential integer in the URL.** `POST /public/intake/42` reveals that project 42 exists across all tenants. The sequential integer is still in the path after stage 1.
+       - **1b. 201 vs 400 status-code differentiation.** For any project whose `intake_published_at IS NOT NULL`, a 201 still tells an unauthenticated caller that a live published project exists at that id. Stage 1 narrows the oracle to published projects only, but does not close it.
+    2. ~~**Uninvited cross-tenant anonymous writes.**~~ **CLOSED by stage 1.** A project with `intake_published_at IS NULL` now returns `BadRequestException("Invalid request")` — the same body and status as a non-existent project — so the endpoint refuses writes for every project that has not explicitly published its intake form.
+  - The `public:intake` rate limit bounds the enumeration *rate* but removes neither remaining capability, so it is mitigation rather than a fix.
+  - Stage 2 must: add `intake_token UUID` to `build.projects`, add route `POST /public/intake/:intakeToken`, resolve by token (not integer id), and retire the integer path. That closes 1a and 1b by replacing the enumerable key with an unguessable one.
 - [x] Loading, ready, empty, first-run, invalid/expired/revoked, rate-limited, server-error, denied/not-found, and offline states are tested.
 - [x] Every read and write enforces tenant, lifecycle, grant/token capability, expiry, source ACL, and publication state on the server.
 - [x] Schemas, response envelopes, cursor rules, cache partitioning, invalidation, idempotency, and rate limits have contract tests.

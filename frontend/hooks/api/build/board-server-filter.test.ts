@@ -139,7 +139,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     expect(call).not.toHaveProperty("assigneeId");
   });
 
-  it("uses orderBy=rank and the board page size for the board endpoint", () => {
+  it("uses orderBy=rank and the board page size for the board endpoint when no sort filter is provided", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
@@ -151,6 +151,30 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
       expect.objectContaining({ orderBy: "rank", orderDir: "asc", limit: 100 }),
       forwardedSignal,
       expect.any(Function),
+    );
+  });
+
+  it("uses the orderBy from the URL-backed sort filter so the sort param reaches the server rather than being dropped", () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client");
+    (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
+
+    const opts = useCaptureQueryOptions(1, { orderBy: "priority", orderDir: "desc" });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/build/1/tickets",
+      expect.objectContaining({ orderBy: "priority", orderDir: "desc" }),
+      forwardedSignal,
+      expect.any(Function),
+    );
+  });
+
+  it("includes orderBy in the query key so different sort orders get separate cache entries and do not collide", () => {
+    const optsRank = useCaptureQueryOptions(5, { orderBy: "rank" });
+    const optsCreated = useCaptureQueryOptions(5, { orderBy: "created" });
+
+    expect(JSON.stringify(optsRank.queryKey)).not.toEqual(
+      JSON.stringify(optsCreated.queryKey),
     );
   });
 

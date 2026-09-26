@@ -60,6 +60,10 @@ export const knowledgeAndSurveysQueryKeys = {
         : ([...base, "kb", "pageReviews", params] as const),
     pageReviewsBulkDecide: () =>
       [...base, "kb", "pageReviews", "bulk-decide"] as const,
+    pageGrants: (pageId: number, params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "pages", pageId, "grants"] as const)
+        : ([...base, "kb", "pages", pageId, "grants", params] as const),
     pageRecordLinks: (pageId: number) =>
       [...base, "kb", "pages", pageId, "record-links"] as const,
     importJobs: () => [...base, "kb", "import-jobs"] as const,

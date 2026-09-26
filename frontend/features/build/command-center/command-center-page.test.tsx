@@ -1,5 +1,5 @@
 import type { ReactNode, HTMLAttributes } from "react";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { CommandCenterPage } from "./command-center-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -12,6 +12,21 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
+const mockUseOnlineStatus = jest.fn(() => true);
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
+}));
+
+let mockSearchParams = new URLSearchParams();
+jest.mock("next/navigation", () => ({
+  useSearchParams: () => mockSearchParams,
+}));
+
+jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
+}));
+
 jest.mock("@/hooks/api/build/projects", () => ({
   useProjects: jest.fn(),
 }));
@@ -19,7 +34,7 @@ jest.mock("@/hooks/api/build/projects", () => ({
 jest.mock("@/hooks/api/build/all-work", () => ({
   useInfiniteAllWork: jest.fn(),
   useAllWork: jest.fn(),
-  COMMAND_CENTER_MY_ISSUES_FILTERS: { limit: 20 },
+  COMMAND_CENTER_MY_ISSUES_FILTERS: { scope: "mine", limit: 20 },
 }));
 
 jest.mock("@/components/command-palette/hooks/use-command-palette", () => ({
@@ -30,8 +45,9 @@ jest.mock("@/features/build/project-create/project-create-wizard", () => ({
   ProjectCreateWizard: () => null,
 }));
 
+const mockUseKeyboardShortcuts = jest.fn();
 jest.mock("./use-keyboard-shortcuts", () => ({
-  useKeyboardShortcuts: jest.fn(),
+  useKeyboardShortcuts: (...args: unknown[]) => mockUseKeyboardShortcuts(...args),
 }));
 
 jest.mock("./command-center-actions", () => ({
@@ -158,6 +174,9 @@ beforeEach(() => {
   mockUseProjects.mockReturnValue(baseProjectsResult());
   mockUseInfiniteAllWork.mockReturnValue(baseInfiniteResult());
   mockUseAllWork.mockReturnValue({ data: undefined, refetch: jest.fn() });
+  mockUseOnlineStatus.mockReturnValue(true);
+  mockUseKeyboardShortcuts.mockReset();
+  mockSearchParams = new URLSearchParams();
 });
 
 it("renders the page skeleton and not the ready panels while the access snapshot is still loading because useCan returns false before access lands and a disabled query yields empty not loading", () => {
@@ -239,4 +258,64 @@ it("renders the Access Restricted state when the user lacks build:view and does 
   expect(screen.getByText("Access Restricted")).toBeInTheDocument();
   expect(screen.queryByTestId("my-issues-panel")).not.toBeInTheDocument();
   expect(screen.queryByTestId("projects-panel")).not.toBeInTheDocument();
+});
+
+it("shows the offline banner when the device is offline, confirming useOnlineStatus drives the indicator", () => {
+  mockUseOnlineStatus.mockReturnValue(false);
+  render(<CommandCenterPage />);
+  expect(screen.getByText(/You are offline/)).toBeInTheDocument();
+});
+
+it("does not show the offline banner when the device is online — paired with the offline test above", () => {
+  mockUseOnlineStatus.mockReturnValue(true);
+  render(<CommandCenterPage />);
+  expect(screen.queryByText(/You are offline/)).not.toBeInTheDocument();
+});
+
+it("passes onShortcutHelp to useKeyboardShortcuts so the ? key can open the help overlay", () => {
+  render(<CommandCenterPage />);
+  expect(mockUseKeyboardShortcuts).toHaveBeenCalledWith(
+    expect.any(Function),
+    expect.any(Function),
+    expect.any(Function),
+  );
+});
+
+it("ShortcutHelpDialog is not shown on initial render before the ? callback fires — paired with the open test below", () => {
+  render(<CommandCenterPage />);
+  expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+});
+
+it("the onShortcutHelp callback passed to the keyboard hook opens the shortcut help dialog when called", async () => {
+  render(<CommandCenterPage />);
+  const capturedOnShortcutHelp = mockUseKeyboardShortcuts.mock.calls[0]?.[2] as () => void;
+  expect(typeof capturedOnShortcutHelp).toBe("function");
+  await act(async () => { capturedOnShortcutHelp(); });
+  expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
+});
+
+it("passes scope from the URL to useInfiniteAllWork, overriding the default mine scope", () => {
+  mockSearchParams = new URLSearchParams("scope=all");
+  render(<CommandCenterPage />);
+  expect(mockUseInfiniteAllWork).toHaveBeenCalledWith(
+    expect.objectContaining({ scope: "all" }),
+    expect.anything(),
+  );
+});
+
+it("uses the default mine scope when no scope param is in the URL — paired with the scope-all test above", () => {
+  render(<CommandCenterPage />);
+  expect(mockUseInfiniteAllWork).toHaveBeenCalledWith(
+    expect.objectContaining({ scope: "mine" }),
+    expect.anything(),
+  );
+});
+
+it("ignores an invalid scope URL param and falls back to the default mine scope", () => {
+  mockSearchParams = new URLSearchParams("scope=invalid-value");
+  render(<CommandCenterPage />);
+  expect(mockUseInfiniteAllWork).toHaveBeenCalledWith(
+    expect.objectContaining({ scope: "mine" }),
+    expect.anything(),
+  );
 });

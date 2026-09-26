@@ -139,6 +139,23 @@ export function useUploadDocumentVersion() {
   });
 }
 
+export interface RetargetDocumentInput {
+  documentId: number;
+  audiences?: DocumentAudienceEntry[];
+  versionMode?: "FOLLOW_LATEST" | "PINNED";
+  pinnedVersion?: number;
+}
+
+export function useRetargetDocumentKbLink() {
+  const refresh = useRefreshAfterLinkChange();
+  return useAuthorizedMutation("hr:documents:publish", {
+    mutationKey: ["hr", "documents", "kbRetarget"],
+    mutationFn: ({ documentId, ...body }: RetargetDocumentInput) =>
+      apiClient.patch<DocumentKbLinkState>(`/hr/documents/${documentId}/kb-link`, body, undefined, linkLazy),
+    onSuccess: refresh,
+  });
+}
+
 export function useApproveDocumentVersion() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:documents:publish", {

@@ -7,6 +7,7 @@ import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 export function useKeyboardShortcuts(
   onCreateProject: () => void,
   onCreateIssue: () => void,
+  onShortcutHelp?: () => void,
 ) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
@@ -25,6 +26,13 @@ export function useKeyboardShortcuts(
         target.tagName === "SELECT" ||
         target.isContentEditable
       ) {
+        return;
+      }
+
+      if (e.key === "?") {
+        clearTimeout(timer);
+        setPendingKey(null);
+        onShortcutHelp?.();
         return;
       }
 
@@ -72,5 +80,5 @@ export function useKeyboardShortcuts(
       document.removeEventListener("keydown", handleKeyDown);
       clearTimeout(timer);
     };
-  }, [pendingKey, onCreateProject, onCreateIssue, requestLeave, router]);
+  }, [pendingKey, onCreateProject, onCreateIssue, onShortcutHelp, requestLeave, router]);
 }

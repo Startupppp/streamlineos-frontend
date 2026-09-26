@@ -40,6 +40,7 @@ interface WorkloadMemberRowProps {
   projectId: number;
   projectKey?: string | null;
   expanded: boolean;
+  focused?: boolean;
   motionDelay: number;
   reducedMotion: boolean | null;
   onToggle: (id: string) => void;
@@ -64,6 +65,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
   projectId,
   projectKey,
   expanded,
+  focused = false,
   motionDelay,
   reducedMotion,
   onToggle,
@@ -82,6 +84,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
         className={cn(
           "flex items-center border-b cursor-pointer hover:bg-muted/30 transition-colors",
           expanded && "bg-muted/40",
+          focused && "ring-2 ring-inset ring-primary/40",
           overCapacity && "border-l-2 border-l-red-400",
         )}
         role="button"
@@ -155,6 +158,18 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
         <div className="w-20 shrink-0 px-2 py-3 text-center">
           <span className="text-sm text-muted-foreground tabular-nums">
             {points > 0 ? points : "—"}
+          </span>
+        </div>
+
+        <div className="w-20 shrink-0 px-2 py-3 text-center">
+          <span className="text-sm tabular-nums text-muted-foreground">
+            {capacityData != null ? `${capacityData.leaveDays}d` : "—"}
+          </span>
+        </div>
+
+        <div className="w-20 shrink-0 px-2 py-3 text-center">
+          <span className="text-sm tabular-nums text-muted-foreground">
+            {capacityData != null ? `${capacityData.loggedHours}h` : "—"}
           </span>
         </div>
 

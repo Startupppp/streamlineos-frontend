@@ -405,4 +405,25 @@ describe("ProjectBoardPage — keyboard navigation", () => {
       expect.objectContaining({ onCreate: expect.any(Function) }),
     );
   });
+
+  it("passes a searchInputRef to useBuildListKeyboard so the / shortcut focuses the search input instead of being a no-op", () => {
+    renderPage();
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ searchInputRef: expect.objectContaining({ current: null }) }),
+    );
+  });
+
+  it("passes an onEdit handler to useBuildListKeyboard so the e shortcut opens the focused ticket for editing", () => {
+    renderPage();
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onEdit: expect.any(Function) }),
+    );
+  });
+
+  it("passes an onShortcutHelp handler to useBuildListKeyboard so the ? shortcut opens the shortcut help dialog", () => {
+    renderPage();
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
+    );
+  });
 });

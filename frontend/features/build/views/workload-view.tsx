@@ -49,6 +49,7 @@ interface WorkloadViewProps {
   ) => void;
   onClearFilters: () => void;
   capacityByMemberId?: Map<string, MemberCapacityData>;
+  focusedMemberId?: string | null;
 }
 
 function applyTicketFilters(
@@ -178,6 +179,7 @@ export const WorkloadView = memo(function WorkloadView({
   onFilterChange,
   onClearFilters,
   capacityByMemberId,
+  focusedMemberId = null,
 }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
@@ -299,6 +301,12 @@ export const WorkloadView = memo(function WorkloadView({
               <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
                 Points
               </div>
+              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+                Leave
+              </div>
+              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+                Actual
+              </div>
               {days.map((day, i) => (
                 <div
                   key={i}
@@ -359,6 +367,7 @@ export const WorkloadView = memo(function WorkloadView({
                     projectId={projectId}
                     projectKey={projectKey}
                     expanded={expandedMembers.has(member.id)}
+                    focused={focusedMemberId === member.id}
                     motionDelay={idx * 0.04}
                     reducedMotion={shouldReduceMotion}
                     onToggle={handleToggleExpand}
@@ -487,9 +496,4 @@ export const WorkloadView = memo(function WorkloadView({
                 )}
               </motion.div>
             )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-});
+          

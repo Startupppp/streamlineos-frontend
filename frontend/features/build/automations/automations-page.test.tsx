@@ -16,6 +16,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCanState: (_permission: string): AccessState => mockAccessState,
 }));
 
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
+}));
+
 jest.mock("@/hooks/api/build/automations", () => ({
   useAutomations: () => ({
     data: mockAutomations,
@@ -305,5 +309,33 @@ describe("AutomationsPage — keyboard shortcut help (BLD-X-FE-SETTINGS-006)", (
     const capturedOptions = mockUseBuildListKeyboard.mock.calls[0][0] as { onShortcutHelp: () => void };
     expect(typeof capturedOptions.onShortcutHelp).toBe("function");
     await act(async () => { capturedOptions.onShortcutHelp(); });
+  });
+});
+
+describe("AutomationsPage — offline state", () => {
+  let useOnlineStatusMock: jest.Mock;
+
+  beforeEach(() => {
+    useOnlineStatusMock = (
+      jest.requireMock("@/hooks/common/use-online-status") as {
+        useOnlineStatus: jest.Mock;
+      }
+    ).useOnlineStatus;
+    useOnlineStatusMock.mockReturnValue(true);
+    mockAccessState = "granted";
+    mockAutomations = [];
+    mockIsFiltered = false;
+  });
+
+  it("shows You are offline in the empty state when the device is offline", () => {
+    useOnlineStatusMock.mockReturnValue(false);
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.getByText("You are offline")).toBeInTheDocument();
+  });
+
+  it("does not show You are offline when the device is online and there are no automations", () => {
+    render(<AutomationsPage projectId={1} />);
+    expect(screen.queryByText("You are offline")).not.toBeInTheDocument();
+    expect(screen.getByText("No automations yet")).toBeInTheDocument();
   });
 });

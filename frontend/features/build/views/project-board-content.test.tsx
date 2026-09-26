@@ -18,6 +18,7 @@ jest.mock("framer-motion", () => ({
 jest.mock("next/dynamic", () => () => () => null);
 
 let mockScopes: Record<string, boolean> = { "build:tickets:view": true };
+let mockIsOnline = true;
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => false,
@@ -25,6 +26,10 @@ jest.mock("@/hooks/api/access", () => ({
     data: { isOrgOwner: false, scopes: mockScopes, modules: {} },
     isLoading: false,
   }),
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockIsOnline,
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -84,6 +89,7 @@ import { buildBaseProps } from "./project-board-content-test-harness";
 
 beforeEach(() => {
   mockScopes = { "build:tickets:view": true };
+  mockIsOnline = true;
 });
 
 describe("ProjectBoardContent — render-ladder exhaustiveness", () => {
@@ -186,6 +192,32 @@ describe("ProjectBoardContent — the ticket query's loading, error, empty and d
 
     expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectBoardContent — offline state", () => {
+  beforeEach(() => {
+    mockIsOnline = false;
+    mockScopes = { "build:tickets:view": true };
+  });
+
+  it("renders the offline panel instead of the filtered-empty state when the device is offline, so the user sees a freshness warning rather than an empty list", () => {
+    render(
+      <ProjectBoardContent {...buildBaseProps()} showEmptyFilterState />,
+    );
+
+    expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+  });
+
+  it("renders the online filtered-empty state when the device is online, confirming the offline branch is not always shown", () => {
+    mockIsOnline = true;
+    render(
+      <ProjectBoardContent {...buildBaseProps()} showEmptyFilterState />,
+    );
+
+    expect(screen.getByText("No tickets match your filters")).toBeInTheDocument();
+    expect(screen.queryByText(/you're offline/i)).not.toBeInTheDocument();
   });
 });
 
