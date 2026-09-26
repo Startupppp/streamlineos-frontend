@@ -10,8 +10,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DataTablePagination } from "@/components/shared/data-table-pagination";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { DocumentTypeList } from "@/features/hr/document-types/document-type-list";
 import {
@@ -221,15 +220,15 @@ export function DocumentTypesPage() {
           onReactivate={setReactivateTarget}
           onCreateClick={openCreate}
         />
-        <DataTablePagination
+        <TablePagination
           mode="cursor"
-          limit={limit}
+          pageSize={limit}
           rowCount={list.length}
           hasMore={hasMore}
           hasPrevious={pager.hasPrevious}
           onNext={handleNextPage}
           onPrevious={pager.goPrevious}
-          onLimitChange={handleLimitChange}
+          onPageSizeChange={handleLimitChange}
         />
       </div>
 

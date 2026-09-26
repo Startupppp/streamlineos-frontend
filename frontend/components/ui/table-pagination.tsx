@@ -1,17 +1,29 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
+import { numericSelectChange } from "@/lib/numeric-field";
 import { cn } from "@/lib/utils";
 
-/**
- * Offset mode: the server knows how many rows there are, so the footer can
- * offer numbered pages and a "Showing 21–40 of 312" window.
- */
 interface TablePaginationChrome {
   disabled?: boolean;
   className?: string;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: readonly number[];
 }
 
 export interface TablePaginationOffsetProps extends TablePaginationChrome {
@@ -21,36 +33,31 @@ export interface TablePaginationOffsetProps extends TablePaginationChrome {
   total: number;
   onPageChange: (page: number) => void;
   showPageNumbers?: boolean;
+  showEdgeJumps?: boolean;
   rowCount?: never;
+  pageNumber?: never;
   hasMore?: never;
   hasPrevious?: never;
   onNext?: never;
   onPrevious?: never;
 }
 
-/**
- * Cursor mode: a keyset list has no total and no page index, so there is
- * nothing to number and nothing to divide. It renders prev/next only.
- *
- * The two shapes are a discriminated union whose inactive half is typed
- * `never` on every field, so the invalid state is unrepresentable in both
- * directions — a cursor caller cannot pass `total`, and an offset caller
- * cannot pass `hasMore`. Excess-property checking alone would only catch the
- * object-literal form; `never` also catches a spread of a wider variable.
- */
 export interface TablePaginationCursorProps extends TablePaginationChrome {
   mode: "cursor";
   /** Rows on the page currently rendered. Never a total — a keyset list has none. */
   rowCount: number;
+
+  pageNumber?: number;
   hasMore: boolean;
   hasPrevious: boolean;
   onNext: () => void;
   onPrevious: () => void;
+  pageSize?: number;
   page?: never;
-  pageSize?: never;
   total?: never;
   onPageChange?: never;
   showPageNumbers?: never;
+  showEdgeJumps?: never;
 }
 
 export type TablePaginationProps =
@@ -66,21 +73,6 @@ export function getVisiblePageItems(totalPages: number): (number | "gap")[] {
   return [1, 2, "gap", total - 1, total];
 }
 
-/**
- * The cursor stack a prev/next pager needs.
- *
- * A keyset cursor only walks forward, so "previous" is not a subtraction — it
- * is the cursor that produced the page before this one. Keeping that history
- * here is what stops each call site inventing its own array.
- *
- * A cursor is only valid for the query that minted it, so replaying one
- * against different filters returns a window from the wrong result set. Pass
- * `resetKey` — a string summarising the active filters and page size — and the
- * stack rewinds to the head during the render in which that key changes, which
- * is React's own "adjust state when an input changes" pattern rather than an
- * effect that would let one stale request go out first. `reset()` is the
- * imperative form for a call site that already has a handler.
- */
 export interface CursorPager {
   cursor: string | undefined;
   hasPrevious: boolean;
@@ -123,20 +115,73 @@ export function useCursorPager(resetKey?: string): CursorPager {
   );
 }
 
+function PageSizeSelect({
+  pageSize,
+  onPageSizeChange,
+  pageSizeOptions,
+  disabled,
+}: {
+  pageSize: number | undefined;
+  onPageSizeChange: ((pageSize: number) => void) | undefined;
+  pageSizeOptions: readonly number[] | undefined;
+  disabled: boolean;
+}) {
+  if (!onPageSizeChange || pageSize === undefined) return null;
+
+  return (
+    <Select
+      value={String(pageSize)}
+      onValueChange={numericSelectChange(onPageSizeChange)}
+      disabled={disabled}
+    >
+      <SelectTrigger
+        className="h-7 w-[4.75rem] px-2 text-xs"
+        aria-label="Rows per page"
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {(pageSizeOptions ?? STANDARD_PAGE_SIZE_OPTIONS).map((size) => (
+          <SelectItem key={size} value={String(size)} className="text-xs">
+            {size}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 function CursorFooter({
   rowCount,
+  pageNumber,
   hasMore,
   hasPrevious,
   onNext,
   onPrevious,
+  pageSize,
+  onPageSizeChange,
+  pageSizeOptions,
   disabled = false,
   className,
 }: TablePaginationCursorProps) {
+  if (rowCount === 0 && !hasPrevious) return null;
+
   return (
-    <div className={cn(SHELL_CLASS, className)}>
-      <p className="min-w-0 flex-1 truncate text-left text-xs text-muted-foreground tabular-nums">
-        {rowCount === 1 ? "1 result on this page" : `${rowCount} results on this page`}
-      </p>
+    <nav aria-label="Pagination" className={cn(SHELL_CLASS, className)}>
+      <div className="flex min-w-0 flex-1 items-center gap-1.5">
+        <span className="min-w-0 truncate text-left text-xs text-muted-foreground tabular-nums">
+          {rowCount === 1
+            ? "1 result on this page"
+            : `${rowCount} results on this page`}
+          {pageNumber ? ` · page ${pageNumber}` : null}
+        </span>
+        <PageSizeSelect
+          pageSize={pageSize}
+          onPageSizeChange={onPageSizeChange}
+          pageSizeOptions={pageSizeOptions}
+          disabled={disabled}
+        />
+      </div>
 
       <div className="flex shrink-0 flex-nowrap items-center justify-end gap-0.5">
         <Button
@@ -162,7 +207,7 @@ function CursorFooter({
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>
       </div>
-    </div>
+    </nav>
   );
 }
 
@@ -172,6 +217,9 @@ function OffsetFooter({
   total,
   onPageChange,
   showPageNumbers = true,
+  showEdgeJumps = false,
+  onPageSizeChange,
+  pageSizeOptions,
   disabled = false,
   className,
 }: TablePaginationOffsetProps) {
@@ -181,13 +229,37 @@ function OffsetFooter({
   const to = Math.min(currentPage * pageSize, total);
   const pageItems = getVisiblePageItems(totalPages);
 
+  if (total === 0) return null;
+
   return (
-    <div className={cn(SHELL_CLASS, className)}>
-      <p className="min-w-0 flex-1 truncate text-left text-xs text-muted-foreground tabular-nums">
-        Showing {from}–{to} of {total}
-      </p>
+    <nav aria-label="Pagination" className={cn(SHELL_CLASS, className)}>
+      <div className="flex min-w-0 flex-1 items-center gap-1.5">
+        <span className="min-w-0 truncate text-left text-xs text-muted-foreground tabular-nums">
+          Showing {from}–{to} of {total}
+        </span>
+        <PageSizeSelect
+          pageSize={pageSize}
+          onPageSizeChange={onPageSizeChange}
+          pageSizeOptions={pageSizeOptions}
+          disabled={disabled}
+        />
+      </div>
 
       <div className="flex shrink-0 flex-nowrap items-center justify-end gap-0.5">
+        {showEdgeJumps ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 px-1.5"
+            disabled={disabled || currentPage <= 1}
+            onClick={() => onPageChange(1)}
+            aria-label="First page"
+          >
+            <ChevronsLeft className="h-3.5 w-3.5" />
+          </Button>
+        ) : null}
+
         <Button
           type="button"
           variant="outline"
@@ -245,8 +317,22 @@ function OffsetFooter({
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>
+
+        {showEdgeJumps ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 px-1.5"
+            disabled={disabled || currentPage >= totalPages}
+            onClick={() => onPageChange(totalPages)}
+            aria-label="Last page"
+          >
+            <ChevronsRight className="h-3.5 w-3.5" />
+          </Button>
+        ) : null}
       </div>
-    </div>
+    </nav>
   );
 }
 

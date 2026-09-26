@@ -11,9 +11,9 @@ invalidate key  [ ..., projectId, {} ]        <- same length, so not a prefix
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Mutating a ticket on a filtered board updates that board's column counts
-- [ ] The argument-less key factory produces a genuine prefix of the filtered key
-- [ ] Unfiltered boards behave exactly as before
-- [ ] A test asserts the invalidation key is a prefix of the filtered query key, so the regression cannot return silently
+- [x] Mutating a ticket on a filtered board updates that board's column counts
+- [x] The argument-less key factory produces a genuine prefix of the filtered key
+- [x] Unfiltered boards behave exactly as before
+- [x] A test asserts the invalidation key is a prefix of the filtered query key, so the regression cannot return silently

@@ -6,9 +6,11 @@ Both should derive from the canonical enum, following the pattern the approvals 
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The phantom type value is no longer accepted or offered anywhere
-- [ ] An invalid ticket type on create or update returns 400, never 500
-- [ ] Both schemas derive from the canonical database enum rather than restating its values
-- [ ] Adding a value to the enum makes it valid on both paths with no schema edit
+**Phantom value:** `SUBTASK` — present in `createTicketSchema` and `csvToTicketTypeArray` but absent from `ticketTypeEnum` (`["EPIC", "STORY", "TASK", "BUG"]`).
+
+- [x] The phantom type value is no longer accepted or offered anywhere
+- [x] An invalid ticket type on create or update returns 400, never 500
+- [x] Both schemas derive from the canonical database enum rather than restating its values
+- [x] Adding a value to the enum makes it valid on both paths with no schema edit

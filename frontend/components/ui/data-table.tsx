@@ -21,16 +21,14 @@ import { WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { DataTableFooter } from "@/components/ui/data-table-footer";
-import { PAUSED_LABEL, PAUSED_MESSAGE } from "@/components/shared/loading-state";
+import {
+  PAUSED_LABEL,
+  PAUSED_MESSAGE,
+} from "@/components/shared/loading-state";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { SearchInput } from "@/components/ui/search-input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -39,8 +37,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { DataTableColumn, DataTableProps } from "./data-table.types";
-import { createRowActivationKeyHandler, propagationShield } from "@/lib/keyboard-activation";
-import { MOBILE_CARD_BREAKPOINT, readSortKey, selectionRowLabel } from "./data-table-row";
+import {
+  createRowActivationKeyHandler,
+  propagationShield,
+} from "@/lib/keyboard-activation";
+import {
+  MOBILE_CARD_BREAKPOINT,
+  readSortKey,
+  selectionRowLabel,
+} from "./data-table-row";
 
 export type { DataTableColumn, DataTableProps };
 
@@ -70,10 +75,13 @@ export function DataTable<T>({
     ? [{ id: sortState.field, desc: sortState.direction === "desc" }]
     : [];
   const serverSortFields = sortState?.fields;
-  const [localRowSelection, setLocalRowSelection] = useState<RowSelectionState>({});
+  const [localRowSelection, setLocalRowSelection] = useState<RowSelectionState>(
+    {},
+  );
   const [internalPage, setInternalPage] = useState(0);
 
-  const tagged = pagination !== undefined && "mode" in pagination ? pagination : undefined;
+  const tagged =
+    pagination !== undefined && "mode" in pagination ? pagination : undefined;
   const serverPag = tagged?.mode === "server" ? tagged : null;
   const cursorPag = tagged?.mode === "cursor" ? tagged : null;
   const clientPag = tagged === undefined ? pagination : null;
@@ -97,7 +105,9 @@ export function DataTable<T>({
 
   const rowSelection = useMemo<RowSelectionState>(() => {
     if (!selection) return localRowSelection;
-    return Object.fromEntries([...selection.selected].map((id) => [String(id), true]));
+    return Object.fromEntries(
+      [...selection.selected].map((id) => [String(id), true]),
+    );
   }, [selection, localRowSelection]);
 
   const columnDefs = useMemo<ColumnDef<T>[]>(() => {
@@ -185,14 +195,18 @@ export function DataTable<T>({
         cell: ({ row }) => col.cell(row.original),
         enableSorting: serverSortable || clientSortable,
         sortDescFirst: serverSortable ? false : undefined,
-        sortingFn: clientSortable && sortValueFn
-          ? (rowA, rowB) => {
-              const a = sortValueFn(rowA.original);
-              const b = sortValueFn(rowB.original);
-              return a < b ? -1 : a > b ? 1 : 0;
-            }
-          : "auto",
-        meta: { className: col.className, headerClassName: col.headerClassName },
+        sortingFn:
+          clientSortable && sortValueFn
+            ? (rowA, rowB) => {
+                const a = sortValueFn(rowA.original);
+                const b = sortValueFn(rowB.original);
+                return a < b ? -1 : a > b ? 1 : 0;
+              }
+            : "auto",
+        meta: {
+          className: col.className,
+          headerClassName: col.headerClassName,
+        },
       });
     }
 
@@ -206,22 +220,24 @@ export function DataTable<T>({
     state: {
       sorting: sortState ? externalSorting : sorting,
       rowSelection,
-      pagination: serverPag !== null
-        ? { pageIndex: serverPag.page - 1, pageSize: serverPag.pageSize }
-        : cursorPag !== null
-          ? { pageIndex: 0, pageSize: cursorPag.pageSize }
-          : { pageIndex: clientPage, pageSize: clientPageSize },
+      pagination:
+        serverPag !== null
+          ? { pageIndex: serverPag.page - 1, pageSize: serverPag.pageSize }
+          : cursorPag !== null
+            ? { pageIndex: 0, pageSize: cursorPag.pageSize }
+            : { pageIndex: clientPage, pageSize: clientPageSize },
     },
     manualSorting: !clientSortEnabled,
     // Table-core drops the sort on the third click by default, which leaves no
     // field to send and makes the header look broken.
     enableSortingRemoval: false,
     manualPagination: isServerPagination,
-    pageCount: serverPag !== null
-      ? Math.ceil(serverPag.total / serverPag.pageSize)
-      : cursorPag !== null
-        ? -1
-        : undefined,
+    pageCount:
+      serverPag !== null
+        ? Math.ceil(serverPag.total / serverPag.pageSize)
+        : cursorPag !== null
+          ? -1
+          : undefined,
     enableRowSelection: !selection
       ? false
       : isRowSelectable
@@ -251,7 +267,10 @@ export function DataTable<T>({
       // by a page index — there is no index to move to.
       if (cursorPag) return;
       if (serverPag) {
-        const prev = { pageIndex: serverPag.page - 1, pageSize: serverPag.pageSize };
+        const prev = {
+          pageIndex: serverPag.page - 1,
+          pageSize: serverPag.pageSize,
+        };
         const next = typeof updater === "function" ? updater(prev) : updater;
         if (next.pageIndex !== prev.pageIndex) {
           serverPag.onPageChange(next.pageIndex + 1);
@@ -264,20 +283,13 @@ export function DataTable<T>({
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: clientSortEnabled ? getSortedRowModel() : undefined,
-    getPaginationRowModel: isServerPagination ? undefined : getPaginationRowModel(),
+    getPaginationRowModel: isServerPagination
+      ? undefined
+      : getPaginationRowModel(),
   });
 
   const rows = table.getRowModel().rows;
 
-  /**
-   * A row click is a navigation intent 74 call sites over, and the App Router
-   * answers it by keeping the current page painted while the next segment
-   * resolves — so without a marker here the row looks ignored for exactly as
-   * long as the destination takes. `setPendingRowKey` is an urgent update
-   * deliberately left OUTSIDE the transition: it commits in the same render
-   * pass as the click, so the row is `aria-busy` before the navigation has
-   * begun, while `startTransition` keeps the table interactive meanwhile.
-   */
   const [isRowPending, startRowTransition] = useTransition();
   const [pendingRowKey, setPendingRowKey] = useState<string | null>(null);
 
@@ -296,20 +308,29 @@ export function DataTable<T>({
     if (!isRowPending) setPendingRowKey(null);
   }, [isRowPending]);
 
-  const currentPage = serverPag !== null ? serverPag.page - 1 : cursorPag !== null ? 0 : clientPage;
-  const totalPages = serverPag !== null
-    ? Math.ceil(serverPag.total / serverPag.pageSize)
-    : cursorPag !== null
-      ? 1
-      : table.getPageCount();
+  const currentPage =
+    serverPag !== null
+      ? serverPag.page - 1
+      : cursorPag !== null
+        ? 0
+        : clientPage;
+  const totalPages =
+    serverPag !== null
+      ? Math.ceil(serverPag.total / serverPag.pageSize)
+      : cursorPag !== null
+        ? 1
+        : table.getPageCount();
   const totalItems = serverPag !== null ? serverPag.total : data.length;
-  const pSize = serverPag !== null
-    ? serverPag.pageSize
-    : cursorPag !== null
-      ? cursorPag.pageSize
-      : clientPageSize;
+  const pSize =
+    serverPag !== null
+      ? serverPag.pageSize
+      : cursorPag !== null
+        ? cursorPag.pageSize
+        : clientPageSize;
   const hasPageSizeControl = !!(
-    serverPag?.onPageSizeChange ?? cursorPag?.onPageSizeChange ?? clientPag?.onPageSizeChange
+    serverPag?.onPageSizeChange ??
+    cursorPag?.onPageSizeChange ??
+    clientPag?.onPageSizeChange
   );
   /**
    * A keyset page cannot say how many rows exist, so `aria-rowcount` is -1 —
@@ -318,10 +339,11 @@ export function DataTable<T>({
    * reader the table ends here.
    */
   // An empty page reached by Next still owes the reader a way back.
-  const showPagination = cursorPag !== null
-    ? (data.length > 0 || cursorPag.hasPrevious) &&
-      (cursorPag.hasMore || cursorPag.hasPrevious || hasPageSizeControl)
-    : totalItems > 0 && (totalPages > 1 || hasPageSizeControl);
+  const showPagination =
+    cursorPag !== null
+      ? (data.length > 0 || cursorPag.hasPrevious) &&
+        (cursorPag.hasMore || cursorPag.hasPrevious || hasPageSizeControl)
+      : totalItems > 0 && (totalPages > 1 || hasPageSizeControl);
   const ariaRowCount = cursorPag !== null ? -1 : totalItems + 1;
   const firstRowNumber = currentPage * pSize + 1;
 
@@ -335,7 +357,12 @@ export function DataTable<T>({
   }
 
   return (
-    <div className={cn("flex w-full min-w-0 flex-col rounded-md border border-border bg-card", className)}>
+    <div
+      className={cn(
+        "flex w-full min-w-0 flex-col rounded-md border border-border bg-card",
+        className,
+      )}
+    >
       {(search !== undefined || toolbar !== undefined) && (
         <div className="shrink-0 flex flex-col gap-2 border-b border-border bg-muted/50 px-2 py-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
           {search !== undefined ? (
@@ -343,7 +370,8 @@ export function DataTable<T>({
               value={search.value}
               onValueChange={handleSearchChange}
               placeholder={search.placeholder ?? "Search…"}
-              aria-label={search.placeholder ?? "Search"} className="min-w-0"
+              aria-label={search.placeholder ?? "Search"}
+              className="min-w-0"
             />
           ) : (
             <div className="hidden sm:block" />
@@ -355,7 +383,10 @@ export function DataTable<T>({
           ) : null}
         </div>
       )}
-      <div role={scrollRegionLabel ? "region" : undefined} aria-label={scrollRegionLabel} tabIndex={scrollRegionLabel ? 0 : undefined}
+      <div
+        role={scrollRegionLabel ? "region" : undefined}
+        aria-label={scrollRegionLabel}
+        tabIndex={scrollRegionLabel ? 0 : undefined}
         className="flex-1 min-h-0 overflow-auto overscroll-x-contain flex flex-col [-webkit-overflow-scrolling:touch] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {isLoading ? (
@@ -370,7 +401,12 @@ export function DataTable<T>({
               </p>
             )}
             {mobileCard ? (
-              <div className={cn("flex flex-col gap-2 p-1", MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].cards)}>
+              <div
+                className={cn(
+                  "flex flex-col gap-2 p-1",
+                  MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].cards,
+                )}
+              >
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} className="h-20 w-full rounded-lg" />
                 ))}
@@ -380,11 +416,19 @@ export function DataTable<T>({
               style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
               className={cn(
                 (!minWidth || minWidth === "content") && "min-w-max",
-                mobileCard && MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].table,
+                mobileCard &&
+                  MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].table,
               )}
             >
-              <Table containerClassName="overflow-visible" containerFocusable={!scrollRegionLabel}>
-                <DataTableHeader table={table} announceSort={false} rowIndex={1} />
+              <Table
+                containerClassName="overflow-visible"
+                containerFocusable={!scrollRegionLabel}
+              >
+                <DataTableHeader
+                  table={table}
+                  announceSort={false}
+                  rowIndex={1}
+                />
                 <TableBody>
                   {Array.from({ length: 12 }).map((_, i) => (
                     <TableRow key={i} className="h-10 hover:bg-transparent">
@@ -410,83 +454,109 @@ export function DataTable<T>({
           </div>
         ) : (
           <>
-          {mobileCard ? (
-            <div className={cn("flex flex-col gap-2 p-1", MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].cards)}>
-              {rows.map((row, index) => (
-                <div
-                  key={row.id}
-                  role={onRowClick ? "button" : undefined}
-                  tabIndex={onRowClick ? 0 : undefined}
-                  aria-busy={pendingRowKey === row.id ? true : undefined}
-                  data-pending={pendingRowKey === row.id ? "true" : undefined}
-                  onClick={onRowClick ? () => handleRowActivate(row.original, row.id) : undefined}
-                  onKeyDown={
-                    onRowClick
-                      ? createRowActivationKeyHandler(() => handleRowActivate(row.original, row.id))
-                      : undefined
-                  }
-                  className={cn(
-                    "rounded-lg border border-border bg-card p-3 text-left touch-manipulation",
-                    onRowClick && "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    "data-[pending=true]:animate-pulse data-[pending=true]:bg-muted",
-                    rowClassName?.(row.original, index),
-                  )}
-                >
-                  {mobileCard(row.original, index)}
-                </div>
-              ))}
-            </div>
-          ) : null}
-          <div
-            style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
-            className={cn(
-              (!minWidth || minWidth === "content") && "min-w-max",
-              mobileCard && MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].table,
-            )}
-          >
-            <Table
-              containerClassName="overflow-visible" containerFocusable={!scrollRegionLabel}
-              aria-rowcount={ariaRowCount}
-            >
-              <DataTableHeader table={table} announceSort rowIndex={1} />
-              <TableBody>
-                {rows.map((row, rowIndex) => (
-                  <TableRow
+            {mobileCard ? (
+              <div
+                className={cn(
+                  "flex flex-col gap-2 p-1",
+                  MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].cards,
+                )}
+              >
+                {rows.map((row, index) => (
+                  <div
                     key={row.id}
-                    aria-rowindex={firstRowNumber + rowIndex + 1}
-                    className={cn(
-                      "h-10 hover:bg-muted/50 transition-colors",
-                      onRowClick && "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-                      "data-[pending=true]:animate-pulse data-[pending=true]:bg-muted",
-                      rowClassName?.(row.original, rowIndex),
-                    )}
+                    role={onRowClick ? "button" : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
                     aria-busy={pendingRowKey === row.id ? true : undefined}
                     data-pending={pendingRowKey === row.id ? "true" : undefined}
-                    onClick={onRowClick ? () => handleRowActivate(row.original, row.id) : undefined}
-                    onKeyDown={
+                    onClick={
                       onRowClick
-                        ? createRowActivationKeyHandler(() => handleRowActivate(row.original, row.id))
+                        ? () => handleRowActivate(row.original, row.id)
                         : undefined
                     }
-                    tabIndex={onRowClick ? 0 : undefined}
-                    data-state={row.getIsSelected() ? "selected" : undefined}
+                    onKeyDown={
+                      onRowClick
+                        ? createRowActivationKeyHandler(() =>
+                            handleRowActivate(row.original, row.id),
+                          )
+                        : undefined
+                    }
+                    className={cn(
+                      "rounded-lg border border-border bg-card p-3 text-left touch-manipulation",
+                      onRowClick &&
+                        "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      "data-[pending=true]:animate-pulse data-[pending=true]:bg-muted",
+                      rowClassName?.(row.original, index),
+                    )}
                   >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className={cn(
-                          "px-2 py-2 text-sm",
-                          cell.column.columnDef.meta?.className,
-                        )}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
+                    {mobileCard(row.original, index)}
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
+              </div>
+            ) : null}
+            <div
+              style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
+              className={cn(
+                (!minWidth || minWidth === "content") && "min-w-max",
+                mobileCard &&
+                  MOBILE_CARD_BREAKPOINT[mobileCardBreakpoint].table,
+              )}
+            >
+              <Table
+                containerClassName="overflow-visible"
+                containerFocusable={!scrollRegionLabel}
+                aria-rowcount={ariaRowCount}
+              >
+                <DataTableHeader table={table} announceSort rowIndex={1} />
+                <TableBody>
+                  {rows.map((row, rowIndex) => (
+                    <TableRow
+                      key={row.id}
+                      aria-rowindex={firstRowNumber + rowIndex + 1}
+                      className={cn(
+                        "h-10 hover:bg-muted/50 transition-colors",
+                        onRowClick &&
+                          "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                        "data-[pending=true]:animate-pulse data-[pending=true]:bg-muted",
+                        rowClassName?.(row.original, rowIndex),
+                      )}
+                      aria-busy={pendingRowKey === row.id ? true : undefined}
+                      data-pending={
+                        pendingRowKey === row.id ? "true" : undefined
+                      }
+                      onClick={
+                        onRowClick
+                          ? () => handleRowActivate(row.original, row.id)
+                          : undefined
+                      }
+                      onKeyDown={
+                        onRowClick
+                          ? createRowActivationKeyHandler(() =>
+                              handleRowActivate(row.original, row.id),
+                            )
+                          : undefined
+                      }
+                      tabIndex={onRowClick ? 0 : undefined}
+                      data-state={row.getIsSelected() ? "selected" : undefined}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className={cn(
+                            "px-2 py-2 text-sm",
+                            cell.column.columnDef.meta?.className,
+                          )}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </>
         )}
       </div>
@@ -501,12 +571,13 @@ export function DataTable<T>({
         <DataTableFooter
           cursor={cursorPag}
           page={currentPage + 1}
-          totalPages={totalPages}
           total={totalItems}
           limit={pSize}
           rowCount={data.length}
           onPageChange={handlePageChange}
-          onLimitChange={serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange}
+          onLimitChange={
+            serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange
+          }
           pageSizeOptions={serverPag?.pageSizeOptions}
         />
       )}
