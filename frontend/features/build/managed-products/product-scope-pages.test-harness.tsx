@@ -47,7 +47,7 @@ jest.mock("@/components/shared/page-state", () => ({
         />
       );
     if (resolution.kind === "error") return <div data-testid="error-state" />;
-    if (resolution.kind === "empty") return <div data-testid="empty-state">{empty}</div>;
+    if (resolution.kind === "empty") return <div data-testid="page-state-empty">{empty}</div>;
     return <div data-testid="page-state-ready">{children}</div>;
   },
 }));

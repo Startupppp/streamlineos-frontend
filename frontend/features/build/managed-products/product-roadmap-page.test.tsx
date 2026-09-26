@@ -41,9 +41,10 @@ describe("ProductRoadmapPage — usePageState integration (BSN-01-027)", () => {
     expect(screen.getByTestId("error-state")).toBeInTheDocument();
   });
 
-  it("shows the empty state when usePageState resolves to empty", () => {
+  it("renders the empty state inside the page state so filtered-empty is distinct from ready", () => {
     usePageState.mockReturnValue({ kind: "empty" });
     render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.getByTestId("page-state-empty")).toBeInTheDocument();
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
   });
 
