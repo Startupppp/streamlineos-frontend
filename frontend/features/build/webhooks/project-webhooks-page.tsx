@@ -30,8 +30,9 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   useWebhooks,
   useCreateWebhook,
@@ -93,16 +94,25 @@ export function ProjectWebhooksPage({
   projectId: projectIdStr,
 }: ProjectWebhooksPageProps) {
   const projectId = parseInt(projectIdStr);
-  const accessState = useCanState("build:manage");
   const canManage = useCan("build:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const {
-    data: webhooks = [],
+    data: webhooks,
     isLoading,
     isError,
+    error,
     refetch,
   } = useWebhooks(projectId);
+
+  const pageState = usePageState({
+    permission: "build:manage",
+    isLoading,
+    isError,
+    error,
+    isEmpty: webhooks !== undefined && webhooks.length === 0,
+  });
+
   const createWebhook = useCreateWebhook(projectId);
   const deleteWebhook = useDeleteWebhook(projectId);
 
@@ -154,8 +164,6 @@ export function ProjectWebhooksPage({
 
   const handleShowForm = useCallback(() => setSheetOpen(true), []);
 
-  if (accessState === "denied" || accessState === "loading") return null;
-
   return (
     <PageWrapper
       title="Webhooks"
@@ -165,44 +173,39 @@ export function ProjectWebhooksPage({
       }
     >
       <PmPageShell>
-        {isLoading ? (
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-xl" />
-            ))}
-          </PmSection>
-        ) : isError ? (
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <ErrorState
-              title="Could not load webhooks"
-              description="Failed to load webhooks."
-              onRetry={handleRetry}
-              className="flex-1"
-            />
-          </PmSection>
-        ) : webhooks.length === 0 ? (
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustrationPreset="automations"
-              title="No webhooks configured"
-              description="Get notified in real-time when tickets, sprints, or members change."
-              action={
-                canManage
-                  ? { label: "Create Webhook", onClick: handleShowForm }
-                  : undefined
-              }
-            />
-          </PmSection>
-        ) : (
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          <PageState
+            resolution={pageState}
+            loading={
+              <div className="flex flex-col gap-3">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <Skeleton key={i} className="h-20 w-full rounded-xl" />
+                ))}
+              </div>
+            }
+            empty={
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="automations"
+                title="No webhooks configured"
+                description="Get notified in real-time when tickets, sprints, or members change."
+                action={
+                  canManage
+                    ? { label: "Create Webhook", onClick: handleShowForm }
+                    : undefined
+                }
+              />
+            }
+            onRetry={handleRetry}
+            className="flex-1"
+          >
             <PmStaggerList
               className="space-y-2.5"
               role="list"
               aria-label="Webhooks"
             >
               <AnimatePresence initial={false}>
-                {webhooks.map((wh) => (
+                {(webhooks ?? []).map((wh) => (
                   <div key={wh.id} role="listitem">
                     <WebhookCard
                       webhook={wh}
@@ -214,8 +217,8 @@ export function ProjectWebhooksPage({
                 ))}
               </AnimatePresence>
             </PmStaggerList>
-          </PmSection>
-        )}
+          </PageState>
+        </PmSection>
       </PmPageShell>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

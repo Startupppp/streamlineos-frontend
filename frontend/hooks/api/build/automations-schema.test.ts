@@ -51,6 +51,22 @@ describe("projectAutomationListContract (BLD-X-BE-SETTINGS-AUTO-001)", () => {
     expect(() => projectAutomationListContract.parse(raw)).toThrow();
   });
 
+  it("rejects an automation with an unknown triggerEvent — z.string() over an enum would silently accept this", () => {
+    const raw = [
+      {
+        id: 1,
+        projectId: 10,
+        name: "test",
+        isActive: true,
+        triggerEvent: "ticket.unknown_event",
+        conditions: [],
+        actions: [{ type: "set_status", value: "done" }],
+        createdAt: "2024-01-01T00:00:00.000Z",
+      },
+    ];
+    expect(() => projectAutomationListContract.parse(raw)).toThrow();
+  });
+
   it("rejects a condition with an unknown operator", () => {
     const raw = [
       {

@@ -73,7 +73,11 @@ export const kbImportJobCancelContract = z.object({
   message: z.string(),
 });
 
-export const kbFromTicketSuccessContract = z.object({ success: z.boolean() });
+export const kbExportResultContract = z.object({
+  jobId: z.number().int(),
+  format: z.enum(["markdown", "html"]),
+  content: z.string(),
+});
 
 export const kbMediaUploadContract = z.object({
   key: z.string(),

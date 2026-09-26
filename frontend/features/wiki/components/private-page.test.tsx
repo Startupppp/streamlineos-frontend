@@ -12,7 +12,13 @@ jest.mock("@/hooks/api/kb/page-collection", () => ({
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
-  useKbSpaces: jest.fn(() => ({ data: [], isLoading: false, isError: false })),
+  useKbSpaces: jest.fn(() =>
+    jest
+      .requireActual<typeof import("@/test-utils/kb-spaces-fixture")>(
+        "@/test-utils/kb-spaces-fixture",
+      )
+      .kbSpacesQueryStub(),
+  ),
 }));
 
 jest.mock("@/hooks/api/access", () => ({

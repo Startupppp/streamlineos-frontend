@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import WikiHomePage from "./wiki-home-page";
+import { kbSpacesQueryStub } from "@/test-utils/kb-spaces-fixture";
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
@@ -194,7 +195,7 @@ beforeEach(() => {
     isError: false,
   });
   useCreateKbPage.mockReturnValue({ mutate: jest.fn(), isPending: false });
-  useKbSpaces.mockReturnValue({ data: [], isLoading: false, isError: false });
+  useKbSpaces.mockReturnValue(kbSpacesQueryStub());
 
   useKbPageCollection.mockReturnValue({
     data: makeResponse([makeItem(1)]),

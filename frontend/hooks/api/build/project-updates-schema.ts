@@ -6,6 +6,8 @@ export const updateRowContract = z.object({
   projectId: z.number().int(),
   authorMembershipId: z.number().int(),
   body: z.string(),
+  status: z.enum(["draft", "published"]),
+  audience: z.enum(["internal", "client"]),
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),

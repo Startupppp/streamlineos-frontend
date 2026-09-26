@@ -14,6 +14,7 @@ let mockQuery: {
   isError: boolean;
   error?: Error;
 } = { data: makePage([]), isLoading: false, isError: false };
+const mockDeleteMutate = jest.fn();
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { user: { id: "user-1" } } }),
@@ -30,7 +31,7 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/hooks/api/build", () => ({
   useViews: () => ({ ...mockQuery, refetch: jest.fn() }),
   useUpdateView: () => ({ mutate: jest.fn(), isPending: false }),
-  useDeleteView: () => ({ mutate: jest.fn(), isPending: false }),
+  useDeleteView: () => ({ mutate: mockDeleteMutate, isPending: false }),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -87,7 +88,28 @@ jest.mock("@/components/ui/table-pagination", () => ({
 }));
 
 jest.mock("@/features/build/views/saved-views/view-card", () => ({
-  ViewCard: ({ view }: { view: { name: string } }) => <div data-testid="view-card">{view.name}</div>,
+  ViewCard: ({
+    view,
+    isSelected,
+    onToggleSelect,
+  }: {
+    view: { name: string; id: number };
+    isSelected?: boolean;
+    onToggleSelect?: (id: number, sel: boolean) => void;
+  }) => (
+    <div data-testid="view-card">
+      {onToggleSelect ? (
+        <input
+          type="checkbox"
+          data-testid={`select-view-${view.id}`}
+          aria-label={`Select ${view.name}`}
+          checked={isSelected ?? false}
+          onChange={(e) => onToggleSelect(view.id, e.target.checked)}
+        />
+      ) : null}
+      {view.name}
+    </div>
+  ),
 }));
 
 jest.mock("@/features/build/views/saved-views/create-view-sheet", () => ({
@@ -96,6 +118,23 @@ jest.mock("@/features/build/views/saved-views/create-view-sheet", () => ({
 
 jest.mock("@/features/build/views/saved-views/rename-view-dialog", () => ({
   RenameViewDialog: () => null,
+}));
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: ({
+    open,
+    onConfirm,
+    title,
+  }: {
+    open: boolean;
+    onConfirm: () => void;
+    title: string;
+  }) =>
+    open ? (
+      <div role="alertdialog" aria-label={title}>
+        <button onClick={onConfirm}>Confirm delete</button>
+      </div>
+    ) : null,
 }));
 
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({
@@ -131,6 +170,7 @@ describe("ProjectSettingsViewsPage", () => {
     mockCanManage = true;
     mockQuery = { data: makePage([]), isLoading: false, isError: false };
     mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+    mockDeleteMutate.mockReset();
   });
 
   it("renders the loading state while saved views are loading", () => {
@@ -210,6 +250,78 @@ describe("ProjectSettingsViewsPage", () => {
 
     expect(screen.getAllByTestId("view-card")).toHaveLength(3);
     expect(screen.queryByTestId("table-pagination")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsViewsPage — bulk delete (Requirement C3)", () => {
+  const viewsList = [
+    { id: 1, name: "Sprint view", layoutType: "list" as const, isPinned: false },
+    { id: 2, name: "Board view", layoutType: "board" as const, isPinned: true },
+  ];
+
+  beforeEach(() => {
+    mockCanManage = true;
+    mockQuery = { data: makePage(viewsList), isLoading: false, isError: false };
+    mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+    mockDeleteMutate.mockReset();
+  });
+
+  it("shows a checkbox for each view when canManage is true", () => {
+    render(<ProjectSettingsViewsPage projectId={6} />);
+    expect(screen.getByLabelText("Select Sprint view")).toBeInTheDocument();
+    expect(screen.getByLabelText("Select Board view")).toBeInTheDocument();
+  });
+
+  it("does not show checkboxes when the user cannot manage views", () => {
+    mockCanManage = false;
+    render(<ProjectSettingsViewsPage projectId={6} />);
+    expect(screen.queryByLabelText("Select Sprint view")).not.toBeInTheDocument();
+  });
+
+  it("shows the bulk delete bar when a view is selected", async () => {
+    const user = userEvent.setup();
+    render(<ProjectSettingsViewsPage projectId={6} />);
+
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Select Sprint view"));
+
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Delete 1 view/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear" })).toBeInTheDocument();
+  });
+
+  it("hides the bulk delete bar after clearing the selection", async () => {
+    const user = userEvent.setup();
+    render(<ProjectSettingsViewsPage projectId={6} />);
+
+    await user.click(screen.getByLabelText("Select Sprint view"));
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
+  });
+
+  it("fires delete mutation for every selected view when confirmed", async () => {
+    const user = userEvent.setup();
+    render(<ProjectSettingsViewsPage projectId={6} />);
+
+    await user.click(screen.getByLabelText("Select Sprint view"));
+    await user.click(screen.getByLabelText("Select Board view"));
+    expect(screen.getByText("2 selected")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Delete 2 views/ }));
+    await user.click(screen.getByRole("button", { name: "Confirm delete" }));
+
+    expect(mockDeleteMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ viewId: 1, projectId: 6 }),
+      expect.anything(),
+    );
+    expect(mockDeleteMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ viewId: 2, projectId: 6 }),
+      expect.anything(),
+    );
+    expect(mockDeleteMutate).toHaveBeenCalledTimes(2);
   });
 });
 

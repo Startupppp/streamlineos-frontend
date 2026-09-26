@@ -62,6 +62,13 @@ export function useInboxKeyboardNav({
         return;
       }
 
+      if (e.key === "Enter") {
+        if (selectedId == null) return;
+        const current = notifications.find((n) => n.id === selectedId);
+        if (current) onSelect(current);
+        return;
+      }
+
       if (e.key === "/") {
         e.preventDefault();
         searchInputRef.current?.focus();

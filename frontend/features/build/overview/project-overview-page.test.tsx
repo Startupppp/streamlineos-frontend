@@ -189,4 +189,22 @@ describe("ProjectOverviewPage", () => {
       expect.objectContaining({ error: networkError }),
     );
   });
+
+  it("renders the loading skeleton and not content when the resolution is loading so the page does not flash an empty state while queries are in flight", () => {
+    usePageState.mockReturnValue({ kind: "loading" });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.queryByText("Open issues")).not.toBeInTheDocument();
+    expect(screen.queryByText("Active cycle")).not.toBeInTheDocument();
+  });
+
+  it("renders the empty state for a project that is not found, not the stat cards, so a deleted project does not look like a zero-issues project", () => {
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByText(/project not found/i)).toBeInTheDocument();
+    expect(screen.queryByText("Open issues")).not.toBeInTheDocument();
+  });
 });

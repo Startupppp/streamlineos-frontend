@@ -13,6 +13,7 @@ import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import type { CustomFieldItem } from "@/features/build/settings/custom-fields-settings";
 
 interface ProjectSettingsFieldsPageProps {
   projectId: number;
@@ -21,17 +22,43 @@ interface ProjectSettingsFieldsPageProps {
 export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPageProps) {
   const listFilters = useBuildListFilters({ withSearch: true });
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const createFieldRef = useRef<(() => void) | null>(null);
+  const editFieldRef = useRef<((field: CustomFieldItem) => void) | null>(null);
   const { data: customFields } = useProjectCustomFields(projectId);
+
+  const filteredCount = listFilters.debouncedSearch
+    ? (customFields ?? []).filter((f) =>
+        f.name.toLowerCase().includes(listFilters.debouncedSearch.toLowerCase()),
+      ).length
+    : (customFields?.length ?? 0);
 
   const handleKeyboardClear = useCallback(() => {
     listFilters.clearAll();
   }, [listFilters]);
 
-  const handleKeyboardOpen = useCallback((_index: number) => {}, []);
+  const handleKeyboardCreate = useCallback(() => {
+    createFieldRef.current?.();
+  }, []);
+
+  const handleKeyboardOpen = useCallback(
+    (index: number) => {
+      if (!customFields) return;
+      const visible = listFilters.debouncedSearch
+        ? customFields.filter((f) =>
+            f.name.toLowerCase().includes(listFilters.debouncedSearch.toLowerCase()),
+          )
+        : customFields;
+      const field = visible[index];
+      if (field) editFieldRef.current?.(field);
+    },
+    [customFields, listFilters.debouncedSearch],
+  );
 
   useBuildListKeyboard({
-    itemCount: customFields?.length ?? 0,
+    itemCount: filteredCount,
     onOpen: handleKeyboardOpen,
+    onCreate: handleKeyboardCreate,
+    onEdit: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
     searchInputRef,
   });
@@ -81,7 +108,12 @@ export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPa
                   project-specific information on every ticket.
                 </p>
               </div>
-              <CustomFieldsSettings projectId={projectId} />
+              <CustomFieldsSettings
+                projectId={projectId}
+                search={listFilters.debouncedSearch || undefined}
+                createRef={createFieldRef}
+                editRef={editFieldRef}
+              />
             </PmPanel>
           </PmSection>
         </PageState>

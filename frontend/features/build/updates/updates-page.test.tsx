@@ -137,6 +137,8 @@ it("renders update cards when data is populated", () => {
           projectId: 1,
           authorMembershipId: 7,
           body: "Sprint 3 is on track.",
+          status: "published",
+          audience: "internal",
           createdAt: new Date(0).toISOString(),
           updatedAt: new Date(0).toISOString(),
           deletedAt: null,
@@ -159,6 +161,8 @@ it("hides delete button when canManage is false", () => {
           projectId: 1,
           authorMembershipId: 7,
           body: "An update body.",
+          status: "draft",
+          audience: "internal",
           createdAt: new Date(0).toISOString(),
           updatedAt: new Date(0).toISOString(),
           deletedAt: null,
@@ -236,6 +240,28 @@ describe("URL-backed filter state — authorId, from, to wired to useProjectUpda
     expect(mockUseProjectUpdates).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ authorId: undefined, from: undefined, to: undefined }),
+    );
+  });
+
+  it("passes status:published from the URL to useProjectUpdates when the param is present so the backend can filter by publication state", () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "status" ? "published" : null,
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ status: "published" }),
+    );
+  });
+
+  it("passes undefined for an unrecognised status value so an invalid enum value does not reach the backend", () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "status" ? "archived" : null,
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ status: undefined }),
     );
   });
 });

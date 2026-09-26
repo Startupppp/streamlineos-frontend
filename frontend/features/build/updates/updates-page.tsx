@@ -62,6 +62,14 @@ function UpdateCard({
   return (
     <Card className={CONTENT_PANEL_SOLID}>
       <CardContent className="p-4 space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize bg-muted text-muted-foreground">
+            {update.status}
+          </span>
+          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize bg-muted text-muted-foreground">
+            {update.audience}
+          </span>
+        </div>
         <p className="text-sm text-foreground whitespace-pre-wrap">{update.body}</p>
         <div className="flex items-center justify-between pt-1">
           <span className="text-dense font-medium text-muted-foreground tabular-nums">{date}</span>
@@ -86,6 +94,7 @@ const UPDATE_FILTER_DEFINITIONS = [
   { param: "authorId" },
   { param: "from" },
   { param: "to" },
+  { param: "status" },
 ] as const;
 
 interface UpdatesPageProps {
@@ -100,12 +109,17 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
   const authorId = listFilters.value("authorId");
   const from = listFilters.value("from");
   const to = listFilters.value("to");
+  const statusParam = listFilters.value("status");
 
   const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useProjectUpdates(projectId, {
       authorId: authorId !== BUILD_FILTER_ALL ? authorId : undefined,
       from: from !== BUILD_FILTER_ALL ? from : undefined,
       to: to !== BUILD_FILTER_ALL ? to : undefined,
+      status:
+        statusParam !== BUILD_FILTER_ALL && (statusParam === "draft" || statusParam === "published")
+          ? statusParam
+          : undefined,
     });
   const createUpdate = useCreateProjectUpdate(projectId);
   const deleteUpdate = useDeleteProjectUpdate(projectId);
@@ -142,29 +156,13 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
   const handleDialogOpenChange = useCallback((open: boolean) => setDialogOpen(open), []);
 
 
-  const pageState = usePageState({ permission: "build:updates:view", isLoading, isError, error });
-
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
-    return (
-      <PageWrapper title="Updates" subtitle="Project status updates and announcements">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
-          {null}
-        </PageState>
-      </PageWrapper>
-    );
-  }
-
-  if (pageState.kind === "loading") {
-    return (
-      <PageWrapper title="Updates" subtitle="Project status updates and announcements">
-        <div className="flex flex-col gap-3">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className={`${CONTENT_PANEL_SOLID} h-24 animate-pulse`} />
-          ))}
-        </div>
-      </PageWrapper>
-    );
-  }
+  const pageState = usePageState({
+    permission: "build:updates:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !isLoading && !isError && data.length === 0,
+  });
 
   return (
     <PageWrapper
@@ -172,8 +170,16 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
       subtitle="Project status updates and announcements"
       actions={canManage ? <NewUpdateButton onClick={handleOpenDialog} /> : undefined}
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        {data.length === 0 ? (
+      <PageState
+        resolution={pageState}
+        loading={
+          <div className="flex flex-col gap-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className={`${CONTENT_PANEL_SOLID} h-24 animate-pulse`} />
+            ))}
+          </div>
+        }
+        empty={
           <EmptyState
             className="flex-1 min-h-0"
             illustrationPreset="activity"
@@ -181,27 +187,27 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
             description="Post project updates to keep your team informed on progress, blockers, and milestones."
             action={canManage ? { label: "Post Update", onClick: handleOpenDialog } : undefined}
           />
-        ) : (
-          <>
-            <div className="flex flex-col gap-3">
-              {data.map((update) => (
-                <UpdateCard
-                  key={update.id}
-                  update={update}
-                  canManage={canManage}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-            <InfiniteScrollSentinel
-              hasNextPage={hasNextPage}
-              isFetchingNextPage={isFetchingNextPage}
-              onLoadMore={fetchNextPage}
-              label="Load more updates"
+        }
+        onRetry={handleRetry}
+        className="flex flex-1 min-h-0 flex-col gap-4"
+      >
+        <div className="flex flex-col gap-3">
+          {data.map((update) => (
+            <UpdateCard
+              key={update.id}
+              update={update}
+              canManage={canManage}
+              onDelete={handleDelete}
             />
-          </>
-        )}
-      </div>
+          ))}
+        </div>
+        <InfiniteScrollSentinel
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={fetchNextPage}
+          label="Load more updates"
+        />
+      </PageState>
 
       <EntityFormDialog<CreateUpdateInput>
         open={dialogOpen}

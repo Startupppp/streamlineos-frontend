@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useCustomStates } from "@/hooks/api/build/custom-states";
+import { useWorkflowTransitions } from "@/hooks/api/build/workflow";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -15,11 +16,15 @@ import {
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   TRANSITION_TABLE_HEADERS,
   TransitionsTable,
 } from "./transitions-table";
 import { WipRow } from "./wip-row";
+import type { WorkflowTransition } from "@/types/projects/workflow";
 
 const WIP_TABLE_HEADERS = ["Status", "WIP limit"] as const;
 
@@ -38,6 +43,14 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
     refetch,
   } = useCustomStates(projectId);
 
+  const { data: ownTransitions, isLoading: transitionsLoading } = useWorkflowTransitions(projectId);
+
+  const listFilters = useBuildListFilters({ withSearch: true });
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const [transitionSheetOpen, setTransitionSheetOpen] = useState(false);
+  const [transitionEditTarget, setTransitionEditTarget] = useState<WorkflowTransition | null>(null);
+
   const pageState = usePageState({
     permission: "build:workflow:view",
     isLoading,
@@ -50,10 +63,89 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
     void refetch();
   }, [refetch]);
 
+  const { debouncedSearch } = listFilters;
+
+  const statusMap = new Map((statuses ?? []).map((s) => [s.id, s.name]));
+
+  const filteredStatuses = debouncedSearch
+    ? (statuses ?? []).filter((s) =>
+        s.name.toLowerCase().includes(debouncedSearch.toLowerCase()),
+      )
+    : (statuses ?? []);
+
+  const allTransitions = ownTransitions ?? [];
+  const filteredTransitions = debouncedSearch
+    ? allTransitions.filter((t) => {
+        const fromName =
+          t.fromStatusId === null ? "any" : (statusMap.get(t.fromStatusId) ?? "");
+        const toName = statusMap.get(t.toStatusId) ?? "";
+        const label = t.name ?? "";
+        const q = debouncedSearch.toLowerCase();
+        return (
+          fromName.toLowerCase().includes(q) ||
+          toName.toLowerCase().includes(q) ||
+          label.toLowerCase().includes(q)
+        );
+      })
+    : allTransitions;
+
+  const handleKeyboardOpen = useCallback(
+    (index: number) => {
+      const t = filteredTransitions[index];
+      if (t) {
+        setTransitionEditTarget(t);
+        setTransitionSheetOpen(true);
+      }
+    },
+    [filteredTransitions],
+  );
+
+  const handleKeyboardEdit = useCallback(
+    (index: number) => {
+      const t = filteredTransitions[index];
+      if (t) {
+        setTransitionEditTarget(t);
+        setTransitionSheetOpen(true);
+      }
+    },
+    [filteredTransitions],
+  );
+
+  const handleKeyboardCreate = useCallback(() => {
+    if (!canManage) return;
+    setTransitionEditTarget(null);
+    setTransitionSheetOpen(true);
+  }, [canManage]);
+
+  const handleKeyboardClear = useCallback(() => {
+    setTransitionEditTarget(null);
+  }, []);
+
+  useBuildListKeyboard({
+    itemCount: filteredTransitions.length,
+    onOpen: handleKeyboardOpen,
+    onEdit: handleKeyboardEdit,
+    onCreate: canManage ? handleKeyboardCreate : undefined,
+    onClearSelection: handleKeyboardClear,
+    searchInputRef,
+    enabled: pageState.kind === "ready",
+  });
+
   return (
     <PageWrapper
       title="Workflow"
       subtitle="Configure allowed status transitions and WIP limits."
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search statuses or transitions…",
+            inputRef: searchInputRef,
+          }}
+          onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
+        />
+      }
     >
       <PmPageShell>
         <PageState
@@ -89,7 +181,7 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
                 WIP limit caps how many items can sit in this status. Leave empty for no limit.
               </p>
               <PmPanel solid>
-                {(statuses ?? []).map((s) => (
+                {filteredStatuses.map((s) => (
                   <WipRow
                     key={s.id}
                     status={s}
@@ -102,7 +194,16 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
 
             <PmSection index={1}>
               <PmPanel className="p-0" solid>
-                <TransitionsTable projectId={projectId} statuses={statuses ?? []} />
+                <TransitionsTable
+                  projectId={projectId}
+                  statuses={statuses ?? []}
+                  transitions={filteredTransitions}
+                  isTransitionsLoading={transitionsLoading}
+                  sheetOpen={transitionSheetOpen}
+                  editTarget={transitionEditTarget}
+                  onSheetOpenChange={setTransitionSheetOpen}
+                  onEditTargetChange={setTransitionEditTarget}
+                />
               </PmPanel>
             </PmSection>
           </div>

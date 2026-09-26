@@ -71,6 +71,12 @@ function TransitionRowActions({
 interface TransitionsTableProps {
   projectId: number;
   statuses: CustomState[];
+  transitions?: WorkflowTransition[];
+  isTransitionsLoading?: boolean;
+  sheetOpen?: boolean;
+  editTarget?: WorkflowTransition | null;
+  onSheetOpenChange?: (open: boolean) => void;
+  onEditTargetChange?: (target: WorkflowTransition | null) => void;
 }
 
 export const TRANSITION_TABLE_HEADERS = [
@@ -83,17 +89,33 @@ export const TRANSITION_TABLE_HEADERS = [
   "Actions",
 ] as const;
 
-export function TransitionsTable({ projectId, statuses }: TransitionsTableProps) {
+export function TransitionsTable({
+  projectId,
+  statuses,
+  transitions: externalTransitions,
+  isTransitionsLoading: externalIsLoading,
+  sheetOpen: externalSheetOpen,
+  editTarget: externalEditTarget,
+  onSheetOpenChange,
+  onEditTargetChange,
+}: TransitionsTableProps) {
   const canManage = useCan("build:workflow:manage");
   const accessState = useCanState("build:workflow:view");
-  const { data: transitions, isLoading } = useWorkflowTransitions(projectId);
+  const { data: ownTransitions, isLoading: ownIsLoading } = useWorkflowTransitions(projectId);
   const createTransition = useCreateTransition(projectId);
   const updateTransition = useUpdateTransition(projectId);
   const deleteTransition = useDeleteTransition(projectId);
 
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<WorkflowTransition | null>(null);
+  const [internalSheetOpen, setInternalSheetOpen] = useState(false);
+  const [internalEditTarget, setInternalEditTarget] = useState<WorkflowTransition | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<WorkflowTransition | null>(null);
+
+  const transitions = externalTransitions ?? (ownTransitions ?? []);
+  const isLoading = externalIsLoading !== undefined ? externalIsLoading : ownIsLoading;
+  const sheetOpen = externalSheetOpen !== undefined ? externalSheetOpen : internalSheetOpen;
+  const editTarget = externalEditTarget !== undefined ? externalEditTarget : internalEditTarget;
+  const setSheetOpen = onSheetOpenChange ?? setInternalSheetOpen;
+  const setEditTarget = onEditTargetChange ?? setInternalEditTarget;
 
   if (accessState === "denied" || accessState === "loading") return null;
 

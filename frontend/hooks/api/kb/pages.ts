@@ -244,7 +244,7 @@ export type KbTrashCursorPage = {
 export function useKbPagesTrash(params?: TrashPageParams) {
   const canView = useCan("kb:pages:view");
   return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrashList(params),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(params),
     queryFn: ({ signal }) =>
       apiClient.get<KbTrashCursorPage>(
         "/kb/pages/trash",
@@ -456,6 +456,9 @@ export function useUpdateKbPage() {
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
       });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(),
+      });
     },
   });
 }
@@ -571,6 +574,9 @@ export function useDuplicateKbPage() {
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
       });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(),
+      });
     },
   });
 }
@@ -592,6 +598,9 @@ export function useMoveKbPage() {
       });
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
+      });
+      qc.invalidateQueries({
+        queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(),
       });
     },
   });

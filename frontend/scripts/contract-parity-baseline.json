@@ -743,7 +743,6 @@
     "post /invoices client",
     "post /invoices creator",
     "post /invoices project",
-    "post /kb/articles/from-ticket/{ticketId} success",
     "post /leads activities",
     "post /leads assignedBy",
     "post /leads assignedTo",

@@ -37,7 +37,7 @@ describe("editing or deleting an HR document refreshes the Knowledge Base entrie
       await result.current.mutateAsync({ documentId: 1, name: "Leave policy" });
     });
 
-    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
   });
 
   it("invalidates the linked-document lists after a delete", async () => {
@@ -48,7 +48,7 @@ describe("editing or deleting an HR document refreshes the Knowledge Base entrie
       await result.current.mutateAsync(1);
     });
 
-    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
   });
 
   it("does not reach the server, and so invalidates nothing, for someone who may not manage documents", async () => {

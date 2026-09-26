@@ -64,7 +64,6 @@ describe("Wiki page body must not reach Web Storage", () => {
     const violations: string[] = [];
     for (const file of sourceFiles) {
       const rel = path.relative(WIKI_SRC, file).replace(/\\/g, "/");
-      if (rel === "lib/export-page.ts") continue;
       const src = fs.readFileSync(file, "utf-8");
       for (const pattern of PAGE_BODY_EXPORT_PATTERNS) {
         if (pattern.test(src)) {
@@ -75,13 +74,19 @@ describe("Wiki page body must not reach Web Storage", () => {
     expect(violations).toHaveLength(0);
   });
 
-  it("(d) export-page.ts no longer contains the client-side serializer — it calls the backend API", () => {
-    const exportFile = path.join(WIKI_SRC, "lib", "export-page.ts");
+  it("(d) export now lives in the hooks layer, holds no client-side serializer, and invalidates the export-job history it creates", () => {
+    const wikiExportFile = path.join(WIKI_SRC, "lib", "export-page.ts");
+    expect(fs.existsSync(wikiExportFile)).toBe(false);
+    const exportFile = path.resolve(
+      __dirname,
+      "../../../hooks/api/kb/export-page.ts",
+    );
     expect(fs.existsSync(exportFile)).toBe(true);
     const src = fs.readFileSync(exportFile, "utf-8");
     expect(src).not.toMatch(/function serializeLeaf/);
     expect(src).not.toMatch(/function slateToHtml/);
     expect(src).toMatch(/apiClient\.post/);
+    expect(src).toMatch(/kb\.exportJobs\(\)/);
   });
 
   it("(e) logout transition — use-page-autosave.ts is storage-silent: pending content is flushed to the server on unmount and not persisted to localStorage or sessionStorage", () => {

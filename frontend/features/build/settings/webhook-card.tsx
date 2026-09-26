@@ -133,10 +133,23 @@ export function WebhookCard({
           <Zap className="h-4 w-4 text-muted-foreground" />
         </div>
         <div className="min-w-0 flex-1">
-          <TruncatedText
-            text={webhook.url}
-            className="text-sm font-medium text-foreground"
-          />
+          <div className="flex items-center gap-2">
+            <TruncatedText
+              text={webhook.url}
+              className="text-sm font-medium text-foreground"
+            />
+            <Badge
+              variant={webhook.isActive ? "default" : "outline"}
+              className={cn(
+                "shrink-0 text-micro py-0 px-1.5",
+                webhook.isActive
+                  ? "bg-status-success-fill text-status-success-ink-strong border-transparent"
+                  : "bg-muted text-muted-foreground border-border",
+              )}
+            >
+              {webhook.isActive ? "Enabled" : "Disabled"}
+            </Badge>
+          </div>
           <div className="flex flex-wrap gap-1 mt-1">
             {webhook.events.slice(0, 3).map((e) => (
               <Badge
@@ -152,6 +165,13 @@ export function WebhookCard({
                 +{webhook.events.length - 3} more
               </Badge>
             )}
+            <span className="text-micro text-muted-foreground ml-auto shrink-0">
+              since{" "}
+              {new Date(webhook.createdAt).toLocaleDateString(undefined, {
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
           </div>
         </div>
         <button

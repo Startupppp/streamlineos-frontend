@@ -2,11 +2,9 @@ import { queryKeyBase as base, type QueryKeyParams } from "./base";
 
 export const knowledgeAndSurveysQueryKeys = {
   kb: {
-    all: [...base, "kb"] as const,
     kbPages: () => [...base, "kb", "pages"] as const,
     hrLinkConfig: () => [...base, "kb", "hrLinkConfig"] as const,
     hrLinkFlagsAdmin: () => [...base, "kb", "hrLinkConfig", "admin"] as const,
-    linkedDocumentsAll: [...base, "kb", "linkedDocuments"] as const,
     linkedDocuments: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "kb", "linkedDocuments"] as const)
@@ -18,8 +16,7 @@ export const knowledgeAndSurveysQueryKeys = {
       [...base, "kb", "pages", "tree", "project", projectId] as const,
     pagesRecent: () => [...base, "kb", "pages", "recent"] as const,
     pagesFavorites: () => [...base, "kb", "pages", "favorites"] as const,
-    pagesTrash: () => [...base, "kb", "pages", "trash"] as const,
-    pagesTrashList: (params?: QueryKeyParams) =>
+    pagesTrash: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "kb", "pages", "trash"] as const)
         : ([...base, "kb", "pages", "trash", params] as const),
@@ -41,7 +38,7 @@ export const knowledgeAndSurveysQueryKeys = {
         ? ([...base, "kb", "page-templates"] as const)
         : ([...base, "kb", "page-templates", { q }] as const),
     spaces: () => [...base, "kb", "spaces"] as const,
-    space: (spaceId: number) => [...base, "kb", "space", spaceId] as const,
+    space: (spaceId: number) => [...base, "kb", "spaces", spaceId] as const,
     search: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "kb", "search"] as const)
@@ -105,9 +102,8 @@ export const knowledgeAndSurveysQueryKeys = {
         : ([...base, "kb", "sources", params] as const),
     pageCollection: (params?: QueryKeyParams) =>
       params === undefined
-        ? ([...base, "kb", "page-collection"] as const)
-        : ([...base, "kb", "page-collection", params] as const),
-    contentHealthSignalsAll: [...base, "kb", "contentHealthSignals"] as const,
+        ? ([...base, "kb", "pages", "page-collection"] as const)
+        : ([...base, "kb", "pages", "page-collection", params] as const),
     contentHealthSignals: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "kb", "contentHealthSignals"] as const)
@@ -118,18 +114,6 @@ export const knowledgeAndSurveysQueryKeys = {
       [...base, "kb", "contentHealthTrend"] as const,
     contentHealthEvidence: (pageId: number | null, kind: string | null) =>
       [...base, "kb", "contentHealthEvidence", pageId, kind] as const,
-    wikiPageStats: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "kb", "wikiPageStats"] as const)
-        : ([...base, "kb", "wikiPageStats", params] as const),
-    wikiStalePages: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "kb", "wikiStalePages"] as const)
-        : ([...base, "kb", "wikiStalePages", params] as const),
-    wikiContributors: (params?: QueryKeyParams) =>
-      params === undefined
-        ? ([...base, "kb", "wikiContributors"] as const)
-        : ([...base, "kb", "wikiContributors", params] as const),
   },
 
   roadmap: {

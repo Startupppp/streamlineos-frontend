@@ -11,15 +11,21 @@ import type {
 } from "@/hooks/api/kb/content-health-schema";
 
 const contentHealthSignalsContract = lazyContract(() =>
-  import("@/hooks/api/kb/content-health-schema").then((m) => m.contentHealthSignalsContract),
+  import("@/hooks/api/kb/content-health-schema").then(
+    (m) => m.contentHealthSignalsContract,
+  ),
 );
 
 const contentHealthCountsContract = lazyContract(() =>
-  import("@/hooks/api/kb/content-health-schema").then((m) => m.contentHealthCountsContract),
+  import("@/hooks/api/kb/content-health-schema").then(
+    (m) => m.contentHealthCountsContract,
+  ),
 );
 
 const dismissHealthItemContract = lazyContract(() =>
-  import("@/hooks/api/kb/content-health-schema").then((m) => m.dismissHealthItemContract),
+  import("@/hooks/api/kb/content-health-schema").then(
+    (m) => m.dismissHealthItemContract,
+  ),
 );
 
 export interface ContentHealthSignalsParams {
@@ -36,7 +42,12 @@ export function useContentHealthSignals(params: ContentHealthSignalsParams) {
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthSignals(queryParams),
     queryFn: ({ signal }) =>
-      apiClient.get("/kb/wiki/content-health/signals", queryParams, signal, contentHealthSignalsContract),
+      apiClient.get(
+        "/kb/wiki/content-health/signals",
+        queryParams,
+        signal,
+        contentHealthSignalsContract,
+      ),
     staleTime: 2 * 60_000,
     enabled: canManage,
   });
@@ -47,7 +58,12 @@ export function useContentHealthCounts() {
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthCounts(),
     queryFn: ({ signal }) =>
-      apiClient.get("/kb/wiki/content-health/counts", undefined, signal, contentHealthCountsContract),
+      apiClient.get(
+        "/kb/wiki/content-health/counts",
+        undefined,
+        signal,
+        contentHealthCountsContract,
+      ),
     staleTime: 2 * 60_000,
     enabled: canManage,
   });
@@ -58,13 +74,18 @@ export function useDismissHealthItem() {
   return useMutation({
     mutationKey: ["knowledge", "kb", "contentHealth", "dismiss"],
     mutationFn: (params: DismissHealthItemParams) =>
-      apiClient.post("/kb/wiki/content-health/signals/dismiss", params, undefined, dismissHealthItemContract),
+      apiClient.post(
+        "/kb/wiki/content-health/signals/dismiss",
+        params,
+        undefined,
+        dismissHealthItemContract,
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthCounts(),
       });
       void queryClient.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthSignalsAll,
+        queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthSignals(),
       });
     },
   });
@@ -78,7 +99,9 @@ export interface AssignHealthItemParams {
 }
 
 const assignHealthItemContract = lazyContract(() =>
-  import("@/hooks/api/kb/content-health-schema").then((m) => m.dismissHealthItemContract),
+  import("@/hooks/api/kb/content-health-schema").then(
+    (m) => m.dismissHealthItemContract,
+  ),
 );
 
 export function useAssignHealthItem() {
@@ -86,10 +109,15 @@ export function useAssignHealthItem() {
   return useMutation({
     mutationKey: ["knowledge", "kb", "contentHealth", "assign"],
     mutationFn: (params: AssignHealthItemParams) =>
-      apiClient.post("/kb/wiki/content-health/signals/assign", params, undefined, assignHealthItemContract),
+      apiClient.post(
+        "/kb/wiki/content-health/signals/assign",
+        params,
+        undefined,
+        assignHealthItemContract,
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthSignalsAll,
+        queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthSignals(),
       });
     },
   });
@@ -103,7 +131,9 @@ export interface BulkRepairParams {
 }
 
 const bulkRepairContract = lazyContract(() =>
-  import("@/hooks/api/kb/content-health-schema").then((m) => m.bulkRepairHealthItemsContract),
+  import("@/hooks/api/kb/content-health-schema").then(
+    (m) => m.bulkRepairHealthItemsContract,
+  ),
 );
 
 export function useBulkRepairHealthItems() {
@@ -111,26 +141,39 @@ export function useBulkRepairHealthItems() {
   return useMutation({
     mutationKey: ["knowledge", "kb", "contentHealth", "bulkRepair"],
     mutationFn: (params: BulkRepairParams) =>
-      apiClient.post("/kb/wiki/content-health/signals/bulk-repair", params, undefined, bulkRepairContract),
+      apiClient.post(
+        "/kb/wiki/content-health/signals/bulk-repair",
+        params,
+        undefined,
+        bulkRepairContract,
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthCounts(),
       });
       void queryClient.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthSignalsAll,
+        queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthSignals(),
       });
     },
   });
 }
 
 const evidenceContract = lazyContract(() =>
-  import("@/hooks/api/kb/content-health-schema").then((m) => m.contentHealthEvidenceContract),
+  import("@/hooks/api/kb/content-health-schema").then(
+    (m) => m.contentHealthEvidenceContract,
+  ),
 );
 
-export function useContentHealthEvidence(pageId: number | null, kind: ContentHealthSignalType | null) {
+export function useContentHealthEvidence(
+  pageId: number | null,
+  kind: ContentHealthSignalType | null,
+) {
   const canManage = useCan("kb:pages:manage");
   return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthEvidence(pageId, kind),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthEvidence(
+      pageId,
+      kind,
+    ),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/kb/wiki/content-health/signals/evidence",
@@ -144,7 +187,9 @@ export function useContentHealthEvidence(pageId: number | null, kind: ContentHea
 }
 
 const contentHealthTrendContract = lazyContract(() =>
-  import("@/hooks/api/kb/content-health-schema").then((m) => m.contentHealthTrendContract),
+  import("@/hooks/api/kb/content-health-schema").then(
+    (m) => m.contentHealthTrendContract,
+  ),
 );
 
 export function useContentHealthTrend() {
@@ -152,7 +197,12 @@ export function useContentHealthTrend() {
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthTrend(),
     queryFn: ({ signal }) =>
-      apiClient.get("/kb/wiki/content-health/trend", undefined, signal, contentHealthTrendContract),
+      apiClient.get(
+        "/kb/wiki/content-health/trend",
+        undefined,
+        signal,
+        contentHealthTrendContract,
+      ),
     staleTime: 5 * 60_000,
     enabled: canManage,
   });

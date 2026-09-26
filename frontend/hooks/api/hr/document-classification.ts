@@ -94,7 +94,7 @@ export function useCanClassifyDocuments(): boolean {
  */
 function refreshKnowledgeBaseView(qc: QueryClient, documentId: number): void {
   void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentKbLink(documentId) });
-  void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+  void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
 }
 
 export function useDocumentClassification(documentId: number | null, options?: { enabled?: boolean }) {
@@ -131,7 +131,7 @@ export function useClassifyDocument() {
       // `documentsAll` is the prefix of this document's classification, link state and versions as well as of the HR list, so this one call refreshes all four.
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       // Reclassifying can take the entry down (`linksTakenDown`), and the Knowledge Base lists are a different key tree.
-      void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+      void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
     },
   });
 }

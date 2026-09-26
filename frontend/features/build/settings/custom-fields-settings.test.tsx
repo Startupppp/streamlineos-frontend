@@ -133,6 +133,49 @@ describe("CustomFieldsSettings — edit form submits with changed values", () =>
   });
 });
 
+describe("CustomFieldsSettings — search filtering", () => {
+  beforeEach(() => {
+    mockAccessState = "granted";
+    mockViewAccessState = "granted";
+  });
+
+  it("shows all fields when no search prop is provided", () => {
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(screen.getByText("Story Points")).toBeInTheDocument();
+    expect(screen.getByText("Priority Label")).toBeInTheDocument();
+  });
+
+  it("shows only fields matching the search term (case-insensitive)", () => {
+    render(<CustomFieldsSettings projectId={1} search="story" />);
+    expect(screen.getByText("Story Points")).toBeInTheDocument();
+    expect(screen.queryByText("Priority Label")).not.toBeInTheDocument();
+  });
+
+  it("shows the filtered-empty state when no field names match the search", () => {
+    render(<CustomFieldsSettings projectId={1} search="xyz-no-match" />);
+    expect(screen.getByText("No fields match your search")).toBeInTheDocument();
+    expect(screen.queryByText("Story Points")).not.toBeInTheDocument();
+  });
+});
+
+describe("CustomFieldsSettings — createRef and editRef imperative handles", () => {
+  it("sets createRef.current to the show-form handler so a keyboard shortcut can open the create form", async () => {
+    mockAccessState = "granted";
+    mockViewAccessState = "granted";
+    const createRef = { current: null as (() => void) | null };
+    render(<CustomFieldsSettings projectId={1} createRef={createRef} />);
+    expect(typeof createRef.current).toBe("function");
+  });
+
+  it("sets editRef.current to the open-edit handler so a keyboard shortcut can open the edit dialog", () => {
+    mockAccessState = "granted";
+    mockViewAccessState = "granted";
+    const editRef = { current: null as ((f: { id: number; name: string; type: "text"; options?: string[] | null; required?: boolean }) => void) | null };
+    render(<CustomFieldsSettings projectId={1} editRef={editRef} />);
+    expect(typeof editRef.current).toBe("function");
+  });
+});
+
 describe("customFieldSchema — fieldType carries the domain union, not bare string", () => {
   it("rejects a fieldType outside CustomFieldType, so the form boundary refuses it instead of a cast carrying it to the API", () => {
     const result = customFieldSchema.safeParse({ fieldName: "Effort", fieldType: "bogus", options: "" });

@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react";
 import { BuildProjectChatPage } from "./build-project-chat-page";
-import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { user: { id: "user-1" } }, status: "authenticated" }),
@@ -52,24 +51,6 @@ jest.mock("@/components/ui/empty-state", () => ({
   ),
 }));
 
-jest.mock("@/components/shared/error-state", () => ({
-  ErrorState: ({
-    title,
-    description,
-    onRetry,
-  }: {
-    title?: string;
-    description?: string;
-    onRetry?: () => void;
-  }) => (
-    <div data-testid="error-state">
-      {title ? <span>{title}</span> : null}
-      {description ? <span>{description}</span> : null}
-      {onRetry ? <button type="button" onClick={onRetry}>Retry</button> : null}
-    </div>
-  ),
-}));
-
 jest.mock("@/components/ui/sheet", () => ({
   Sheet: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SheetContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -113,13 +94,46 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: string) => mockUseCan(permission),
 }));
 
-jest.mock("@/lib/api-client", () => ({
-  isApiError: (e: unknown) =>
-    e instanceof Error && "status" in e && typeof (e as { status: unknown }).status === "number",
-}));
-
 jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : "Unknown error"),
+}));
+
+const mockUsePageState = jest.fn();
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: (...args: Parameters<typeof mockUsePageState>) => mockUsePageState(...args),
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    resolution,
+    loading,
+    empty,
+    children,
+    onRetry,
+  }: {
+    resolution: { kind: string };
+    loading: React.ReactNode;
+    empty?: React.ReactNode;
+    children?: React.ReactNode;
+    onRetry?: () => void;
+  }) => {
+    if (resolution.kind === "loading") return <>{loading}</>;
+    if (resolution.kind === "empty") return <>{empty}</>;
+    if (
+      resolution.kind === "denied" ||
+      resolution.kind === "module-disabled" ||
+      resolution.kind === "plan-required" ||
+      resolution.kind === "module-denied"
+    )
+      return <div role="status" data-testid="no-permission-state">Access Restricted</div>;
+    if (resolution.kind === "error")
+      return (
+        <div data-testid="error-state">
+          <button type="button" onClick={onRetry}>Retry</button>
+        </div>
+      );
+    return <>{children}</>;
+  },
 }));
 
 function baseChannelResult(overrides = {}) {
@@ -138,68 +152,89 @@ beforeEach(() => {
   mockUseCan.mockReturnValue(false);
   mockUseEntityChannel.mockReturnValue(baseChannelResult());
   mockUseCreateEntityChannel.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUsePageState.mockReturnValue({ kind: "ready" });
 });
 
 describe("BuildProjectChatPage — loading state", () => {
   it("renders nothing while the channel query is loading so there is no flash of empty or denied state", () => {
     mockUseEntityChannel.mockReturnValue(baseChannelResult({ isLoading: true }));
-    const { container } = render(<BuildProjectChatPage projectId="1" />);
-    expect(container.firstChild).toBeNull();
+    mockUsePageState.mockReturnValue({ kind: "loading" });
+    render(<BuildProjectChatPage projectId="1" />);
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("message-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("no-permission-state")).not.toBeInTheDocument();
   });
 });
 
 describe("BuildProjectChatPage — channel not found (empty) state", () => {
-  it("renders the empty state when the channel query returns a 404 so the user knows no channel is linked yet", () => {
-    const notFoundError = Object.assign(new Error("Not found"), { status: 404 });
-    mockUseEntityChannel.mockReturnValue(
-      baseChannelResult({ error: notFoundError, isError: true }),
-    );
+  it("renders the empty state when the channel is not found so the user knows no channel is linked yet", () => {
+    mockUseEntityChannel.mockReturnValue(baseChannelResult({ data: null }));
+    mockUsePageState.mockReturnValue({ kind: "empty" });
     render(<BuildProjectChatPage projectId="1" />);
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.getByText(/no chat channel/i)).toBeInTheDocument();
   });
 
   it("shows the create channel action in the empty state when the user has chat:channels:write", () => {
-    const notFoundError = Object.assign(new Error("Not found"), { status: 404 });
-    mockUseEntityChannel.mockReturnValue(
-      baseChannelResult({ error: notFoundError, isError: true }),
-    );
+    mockUseEntityChannel.mockReturnValue(baseChannelResult({ data: null }));
+    mockUsePageState.mockReturnValue({ kind: "empty" });
     mockUseCan.mockReturnValue(true);
     render(<BuildProjectChatPage projectId="1" />);
     expect(screen.getByRole("button", { name: /create chat channel/i })).toBeInTheDocument();
   });
 
   it("hides the create action when the user lacks chat:channels:write so the empty state does not expose a control that will 403", () => {
-    const notFoundError = Object.assign(new Error("Not found"), { status: 404 });
-    mockUseEntityChannel.mockReturnValue(
-      baseChannelResult({ error: notFoundError, isError: true }),
-    );
+    mockUseEntityChannel.mockReturnValue(baseChannelResult({ data: null }));
+    mockUsePageState.mockReturnValue({ kind: "empty" });
     mockUseCan.mockReturnValue(false);
     render(<BuildProjectChatPage projectId="1" />);
     expect(screen.queryByRole("button", { name: /create chat channel/i })).not.toBeInTheDocument();
-  });
-
-  it("renders the empty state when query succeeds but returns no channel so a project without a linked channel shows the correct prompt", () => {
-    mockUseEntityChannel.mockReturnValue(baseChannelResult({ data: null, isLoading: false }));
-    render(<BuildProjectChatPage projectId="1" />);
-    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
   });
 });
 
 describe("BuildProjectChatPage — error state", () => {
   it("renders the error state for non-404 errors so network failures show retry rather than an empty channel prompt", () => {
-    const serverError = Object.assign(new ApiError("Server error", 500, "SERVER_ERROR"), {});
     mockUseEntityChannel.mockReturnValue(
-      baseChannelResult({ error: serverError, isError: true }),
+      baseChannelResult({ isError: true, error: new Error("Server error") }),
     );
+    mockUsePageState.mockReturnValue({ kind: "error", error: new Error("Server error") });
     render(<BuildProjectChatPage projectId="1" />);
     expect(screen.getByTestId("error-state")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
   });
 });
 
+describe("BuildProjectChatPage — permission-denied state", () => {
+  it("renders the access-restricted view when build:view is denied, not the empty state, so a missing permission is not confused with a missing channel", () => {
+    mockUsePageState.mockReturnValue({ kind: "denied", permission: "build:view" });
+    render(<BuildProjectChatPage projectId="1" />);
+    expect(screen.getByTestId("no-permission-state")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("message-panel")).not.toBeInTheDocument();
+  });
+
+  it("does not claim denial while the access snapshot is loading, because useCan returns false during that window", () => {
+    mockUsePageState.mockReturnValue({ kind: "loading" });
+    render(<BuildProjectChatPage projectId="1" />);
+    expect(screen.queryByTestId("no-permission-state")).not.toBeInTheDocument();
+  });
+
+  it("passes build:view permission to usePageState so the correct gate is evaluated", () => {
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    mockUseEntityChannel.mockReturnValue(
+      baseChannelResult({ data: { id: "channel-1" } }),
+    );
+    render(<BuildProjectChatPage projectId="1" />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:view" }),
+    );
+  });
+});
+
 describe("BuildProjectChatPage — ready state", () => {
   it("renders the MessagePanel when the channel is present and a session user is available", () => {
+    mockUsePageState.mockReturnValue({ kind: "ready" });
     mockUseEntityChannel.mockReturnValue(
       baseChannelResult({ data: { id: "channel-1", name: "Project Chat" } }),
     );
@@ -208,6 +243,7 @@ describe("BuildProjectChatPage — ready state", () => {
   });
 
   it("passes the channelId to MessagePanel from the resolved channel so the wrong channel is not displayed", () => {
+    mockUsePageState.mockReturnValue({ kind: "ready" });
     mockUseEntityChannel.mockReturnValue(
       baseChannelResult({ data: { id: "channel-42", name: "Build Chat" } }),
     );
@@ -219,6 +255,7 @@ describe("BuildProjectChatPage — ready state", () => {
   });
 
   it("passes the current user id to MessagePanel from the session so the message composer knows who is typing", () => {
+    mockUsePageState.mockReturnValue({ kind: "ready" });
     mockUseEntityChannel.mockReturnValue(
       baseChannelResult({ data: { id: "channel-1" } }),
     );
@@ -230,6 +267,7 @@ describe("BuildProjectChatPage — ready state", () => {
   });
 
   it("does not render the empty state or error state when the channel is present", () => {
+    mockUsePageState.mockReturnValue({ kind: "ready" });
     mockUseEntityChannel.mockReturnValue(
       baseChannelResult({ data: { id: "channel-1" } }),
     );

@@ -14,6 +14,7 @@ import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { PmPageShell, PmPanel, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { ViewCard, type ViewItem } from "@/features/build/views/saved-views/view-card";
@@ -40,6 +41,8 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
   const deleteView = useDeleteView();
   const [createOpen, setCreateOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<ViewItem | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
 
   const pagedViews = viewPage?.data ?? [];
   const pagination = viewPage?.pagination;
@@ -115,6 +118,27 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
 
   const handleKeyboardClear = useCallback(() => setRenameTarget(null), []);
 
+  const handleToggleSelect = useCallback((viewId: number, selected: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (selected) next.add(viewId);
+      else next.delete(viewId);
+      return next;
+    });
+  }, []);
+
+  const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  const handleBulkDeleteConfirm = useCallback(() => {
+    const count = selectedIds.size;
+    for (const viewId of selectedIds) {
+      deleteView.mutate({ viewId, projectId }, { onError: (err) => toast.error(getErrorMessage(err)) });
+    }
+    setSelectedIds(new Set());
+    setConfirmBulkDeleteOpen(false);
+    toast.success(`Deleted ${count} view${count !== 1 ? "s" : ""}`);
+  }, [selectedIds, projectId, deleteView]);
+
   useBuildListKeyboard({
     itemCount: filteredViews.length,
     onOpen: handleKeyboardOpen,
@@ -166,6 +190,23 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
           className="flex-1"
         >
           <PmSection index={0} className="flex-1">
+            {selectedIds.size > 0 ? (
+              <div className="mb-2 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+                <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                <div className="ml-auto flex items-center gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setConfirmBulkDeleteOpen(true)}
+                  >
+                    Delete {selectedIds.size} view{selectedIds.size !== 1 ? "s" : ""}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={handleClearSelection}>
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            ) : null}
             <PmPanel className="flex min-h-0 flex-col p-2" solid>
               {filteredViews.map((view) => (
                 <ViewCard
@@ -178,6 +219,8 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
                   onRename={setRenameTarget}
                   onDelete={handleDelete}
                   canManage={canManage}
+                  isSelected={selectedIds.has(view.id)}
+                  onToggleSelect={canManage ? handleToggleSelect : undefined}
                 />
               ))}
             </PmPanel>
@@ -211,6 +254,15 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
           isSaving={updateView.isPending}
         />
       ) : null}
+      <ConfirmDialog
+        open={confirmBulkDeleteOpen}
+        onOpenChange={setConfirmBulkDeleteOpen}
+        title={`Delete ${selectedIds.size} view${selectedIds.size !== 1 ? "s" : ""}?`}
+        description="These saved views will be permanently removed. This cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleBulkDeleteConfirm}
+      />
     </PageWrapper>
   );
 }

@@ -1,3 +1,11 @@
+export type AutomationTriggerEvent =
+  | "ticket.created"
+  | "ticket.updated"
+  | "ticket.status_changed"
+  | "ticket.assigned"
+  | "sprint.started"
+  | "sprint.completed";
+
 export interface AutomationCondition {
   field: string;
   operator: "equals" | "not_equals" | "contains" | "is_empty" | "is_not_empty";
@@ -14,7 +22,7 @@ export interface ProjectAutomation {
   projectId: number;
   name: string;
   isActive: boolean;
-  triggerEvent: string;
+  triggerEvent: AutomationTriggerEvent;
   conditions: AutomationCondition[];
   actions: AutomationAction[];
   createdAt: string;

@@ -3,6 +3,14 @@ import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectSettingsFieldsPage } from "./project-settings-fields-page";
 
 let mockAccessState: AccessState = "denied";
+let mockDebouncedSearch = "";
+let mockCustomFields: Array<{
+  id: number;
+  name: string;
+  type: string;
+  options: string[] | null;
+  required: boolean;
+}> = [];
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (_permission: string) => mockAccessState === "granted",
@@ -18,7 +26,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({
 }));
 
 jest.mock("@/hooks/api/build/custom-fields", () => ({
-  useProjectCustomFields: () => ({ data: [], isLoading: false }),
+  useProjectCustomFields: () => ({ data: mockCustomFields, isLoading: false }),
 }));
 
 jest.mock("@/features/build/settings/custom-fields-settings", () => ({
@@ -27,8 +35,8 @@ jest.mock("@/features/build/settings/custom-fields-settings", () => ({
 
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   useBuildListFilters: () => ({
-    search: "",
-    debouncedSearch: "",
+    search: mockDebouncedSearch,
+    debouncedSearch: mockDebouncedSearch,
     cursor: null,
     setSearch: jest.fn(),
     setCursor: jest.fn(),
@@ -78,6 +86,8 @@ jest.mock("@/components/shared/page-state", () => ({
 
 beforeEach(() => {
   mockAccessState = "denied";
+  mockDebouncedSearch = "";
+  mockCustomFields = [];
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });
 
@@ -117,5 +127,67 @@ describe("ProjectSettingsFieldsPage — access control (BLD-X-FE-SETTINGS-FIELDS
     mockAccessState = "loading";
     render(<ProjectSettingsFieldsPage projectId={1} />);
     expect(screen.queryByTestId("custom-fields-settings")).not.toBeInTheDocument();
+  });
+
+  it("shows the loading skeleton while access is being resolved", () => {
+    mockAccessState = "loading";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(screen.getByTestId("page-loading")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsFieldsPage — keyboard shortcuts (extended)", () => {
+  it("passes onCreate to useBuildListKeyboard so the c key can trigger the create form", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onCreate: expect.any(Function) }),
+    );
+  });
+
+  it("passes onEdit to useBuildListKeyboard so the e key can open the edit dialog for the focused field", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onEdit: expect.any(Function) }),
+    );
+  });
+
+  it("passes itemCount equal to the filtered field count when a search term is active", () => {
+    mockAccessState = "granted";
+    mockCustomFields = [
+      { id: 1, name: "Story Points", type: "number", options: null, required: false },
+      { id: 2, name: "Priority Label", type: "select", options: ["P0"], required: false },
+    ];
+    mockDebouncedSearch = "story";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ itemCount: 1 }),
+    );
+  });
+
+  it("passes itemCount equal to the total field count when no search is active", () => {
+    mockAccessState = "granted";
+    mockCustomFields = [
+      { id: 1, name: "Story Points", type: "number", options: null, required: false },
+      { id: 2, name: "Priority Label", type: "select", options: ["P0"], required: false },
+    ];
+    mockDebouncedSearch = "";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ itemCount: 2 }),
+    );
+  });
+
+  it("passes itemCount of 0 when search term matches no field names", () => {
+    mockAccessState = "granted";
+    mockCustomFields = [
+      { id: 1, name: "Story Points", type: "number", options: null, required: false },
+    ];
+    mockDebouncedSearch = "xyz";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ itemCount: 0 }),
+    );
   });
 });

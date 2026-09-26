@@ -222,3 +222,15 @@ it("retries both server-derived summary queries with the page retry action", () 
   expect(refetchOpenIssues).toHaveBeenCalledTimes(1);
   expect(refetchOverdueIssues).toHaveBeenCalledTimes(1);
 });
+
+it("renders the Access Restricted state when the user lacks build:view and does not render the ready panels", () => {
+  mockUseAccess.mockReturnValue({
+    data: { isOrgOwner: false, scopes: {}, modules: {} },
+    isLoading: false,
+  });
+  mockUseCan.mockReturnValue(false);
+  render(<CommandCenterPage />);
+  expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+  expect(screen.queryByTestId("my-issues-panel")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("projects-panel")).not.toBeInTheDocument();
+});

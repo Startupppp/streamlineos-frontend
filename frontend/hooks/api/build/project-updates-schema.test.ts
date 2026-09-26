@@ -10,6 +10,8 @@ const minimalRow = {
   projectId: 7,
   authorMembershipId: 3,
   body: "Sprint review went well.",
+  status: "draft" as const,
+  audience: "internal" as const,
   createdAt: "2026-09-10T12:00:00.000Z",
   updatedAt: "2026-09-10T12:00:00.000Z",
   deletedAt: null,
@@ -47,6 +49,23 @@ describe("updateRowContract", () => {
   it("rejects a row missing createdAt because the feed sorts by createdAt and a missing value would produce a broken date display", () => {
     const { createdAt: _omit, ...withoutCreatedAt } = minimalRow;
     expect(updateRowContract.safeParse(withoutCreatedAt).success).toBe(false);
+  });
+
+  it("accepts status:published so a published update decodes without error", () => {
+    expect(updateRowContract.safeParse({ ...minimalRow, status: "published" }).success).toBe(true);
+  });
+
+  it("rejects an unknown status value so a typo or future enum value is caught at the contract boundary", () => {
+    expect(updateRowContract.safeParse({ ...minimalRow, status: "archived" }).success).toBe(false);
+  });
+
+  it("accepts audience:client so a client-visible update decodes without error", () => {
+    expect(updateRowContract.safeParse({ ...minimalRow, audience: "client" }).success).toBe(true);
+  });
+
+  it("rejects a row missing status because publication state is now required and an absent status would silently default to an incorrect value", () => {
+    const { status: _omit, ...withoutStatus } = minimalRow;
+    expect(updateRowContract.safeParse(withoutStatus).success).toBe(false);
   });
 });
 

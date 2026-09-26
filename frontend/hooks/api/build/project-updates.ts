@@ -29,6 +29,8 @@ export interface ProjectUpdateRow {
   projectId: number;
   authorMembershipId: number;
   body: string;
+  status: "draft" | "published";
+  audience: "internal" | "client";
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -47,6 +49,7 @@ export interface ProjectUpdatesFilters {
   authorId?: string;
   from?: string;
   to?: string;
+  status?: "draft" | "published";
 }
 
 export function useProjectUpdates(
@@ -59,6 +62,7 @@ export function useProjectUpdates(
   if (filters?.authorId) activeFilters.authorId = filters.authorId;
   if (filters?.from) activeFilters.from = filters.from;
   if (filters?.to) activeFilters.to = filters.to;
+  if (filters?.status) activeFilters.status = filters.status;
 
   const query = useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.updates.list(
@@ -73,6 +77,7 @@ export function useProjectUpdates(
           ...(activeFilters.authorId ? { authorId: activeFilters.authorId } : {}),
           ...(activeFilters.from ? { from: activeFilters.from } : {}),
           ...(activeFilters.to ? { to: activeFilters.to } : {}),
+          ...(activeFilters.status ? { status: activeFilters.status } : {}),
         },
         signal,
         updatePageContract,

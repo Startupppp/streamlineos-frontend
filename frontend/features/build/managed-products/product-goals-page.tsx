@@ -140,6 +140,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
   useBuildListKeyboard({
     itemCount: goals.length,
     onOpen: () => undefined,
+    onCreate: handleOpenCreate,
     onClearSelection: () => undefined,
     searchInputRef,
     enabled: !createOpen,

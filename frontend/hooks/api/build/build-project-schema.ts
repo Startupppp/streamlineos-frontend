@@ -261,12 +261,21 @@ const projectAutomationActionSchema = z.object({
   value: z.string(),
 });
 
+const AUTOMATION_TRIGGER_EVENT_VALUES = [
+  "ticket.created",
+  "ticket.updated",
+  "ticket.status_changed",
+  "ticket.assigned",
+  "sprint.started",
+  "sprint.completed",
+] as const;
+
 const projectAutomationListItemSchema = z.object({
   id: z.number(),
   projectId: z.number(),
   name: z.string(),
   isActive: z.boolean(),
-  triggerEvent: z.string(),
+  triggerEvent: z.enum(AUTOMATION_TRIGGER_EVENT_VALUES),
   conditions: z.array(projectAutomationConditionSchema),
   actions: z.array(projectAutomationActionSchema),
   createdAt: z.string(),
@@ -278,7 +287,7 @@ const projectAutomationRowSchema = z.object({
   projectId: z.number(),
   name: z.string(),
   isActive: z.boolean(),
-  triggerEvent: z.string(),
+  triggerEvent: z.enum(AUTOMATION_TRIGGER_EVENT_VALUES),
   conditions: z.array(projectAutomationConditionSchema),
   actions: z.array(projectAutomationActionSchema),
   createdBy: z.string().nullable(),

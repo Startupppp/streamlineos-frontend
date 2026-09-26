@@ -191,7 +191,14 @@ export function useKbExportJobs() {
       ),
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canExport,
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchInterval: (query) => {
+      const jobs = query.state.data?.pages.flatMap((page) => page.data) ?? [];
+      const inFlight = jobs.some(
+        (job) => job.status === "pending" || job.status === "processing",
+      );
+      return inFlight ? 1500 : false;
+    },
   });
 
   return {

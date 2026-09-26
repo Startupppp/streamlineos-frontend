@@ -52,24 +52,6 @@ export const kbPageWithAncestorsContract = kbPageBaseContract.extend({
   canEdit: z.boolean().optional(),
 });
 
-export const kbPageTreeItemContract = z.object({
-  id: z.number().int(),
-  parentPageId: z.number().int().nullable(),
-  spaceId: z.number().int().nullable(),
-  projectId: z.number().int().nullable(),
-  title: z.string(),
-  icon: z.string().nullable(),
-  coverImage: z.string().nullable().optional(),
-  sortOrder: z.number().int().nullable(),
-  visibility: z.string(),
-  createdById: z.string().nullable(),
-  status: z.string(),
-  updatedAt: z.string().optional(),
-  hasChildren: z.boolean(),
-});
-
-export const kbPageTreeContract = z.array(kbPageTreeItemContract);
-
 export const kbPageSearchResponseContract = z.object({
   items: z.array(
     z.object({

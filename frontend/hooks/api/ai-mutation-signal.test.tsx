@@ -5,7 +5,6 @@ import { useTicketAiSummarize, useTicketDraftSuggestTitle } from "./build/ticket
 import { useProjectAiSummary } from "./build/ai";
 import { useLeadSummaryWithCitations } from "./crm/ai";
 import { useSummarizeEnvelope } from "./sign/ai";
-import { useKbArticleSummarize } from "./kb/article-ai";
 
 installAbortSignalPolyfill();
 
@@ -81,13 +80,6 @@ const FAMILIES: Family[] = [
     name: "useSummarizeEnvelope",
     useDispatch: () => {
       const mutation = useSummarizeEnvelope(3);
-      return (signal) => mutation.mutateAsync({ signal });
-    },
-  },
-  {
-    name: "useKbArticleSummarize",
-    useDispatch: () => {
-      const mutation = useKbArticleSummarize(9);
       return (signal) => mutation.mutateAsync({ signal });
     },
   },

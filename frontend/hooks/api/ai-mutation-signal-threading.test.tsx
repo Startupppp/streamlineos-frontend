@@ -2,7 +2,6 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { AllProviders } from "@/test-utils/render";
 import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
 import { useAnalyzeTicket, useImproveReply, useTranslateMessage } from "./support/ai";
-import { useKbPageSummarize } from "./kb/page-ai";
 import { useKbAsk } from "./kb/ask";
 import { useMailThreadSummary } from "./mail";
 import { useExplainPayslip } from "./payroll/use-explain-payslip";
@@ -13,7 +12,6 @@ import {
   useGenerateEmail,
   useNLSearch,
 } from "./ai";
-import { useKbPageAsk } from "./kb/page-ai";
 
 installAbortSignalPolyfill();
 
@@ -81,13 +79,6 @@ const FAMILIES: Family[] = [
     },
   },
   {
-    name: "useKbPageSummarize",
-    useDispatch: () => {
-      const mutation = useKbPageSummarize(11);
-      return (signal) => mutation.mutateAsync({ signal });
-    },
-  },
-  {
     name: "useKbAsk",
     useDispatch: () => {
       const mutation = useKbAsk();
@@ -134,13 +125,6 @@ const FAMILIES: Family[] = [
     useDispatch: () => {
       const mutation = useNLSearch();
       return (signal) => mutation.mutateAsync({ value: "leads in Berlin", signal });
-    },
-  },
-  {
-    name: "useKbPageAsk",
-    useDispatch: () => {
-      const mutation = useKbPageAsk(11);
-      return (signal) => mutation.mutateAsync({ value: "what changed?", signal });
     },
   },
 ];
@@ -252,16 +236,6 @@ describe("the union variables keeps every existing bare-scalar call site legal",
 
     expect(requestBody).toBe(JSON.stringify({ leadId: 5 }));
     await waitFor(() => expect(result.current.data).toEqual(LEAD_SCORE_RESPONSE));
-  });
-
-  it("useKbPageAsk still accepts mutate(question) and sends the same body", async () => {
-    const { result } = renderHook(() => useKbPageAsk(11), { wrapper: AllProviders });
-
-    await act(async () => {
-      await result.current.mutateAsync("what changed?").catch(() => undefined);
-    });
-
-    expect(requestBody).toBe(JSON.stringify({ question: "what changed?" }));
   });
 });
 

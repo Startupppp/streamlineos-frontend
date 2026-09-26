@@ -12,7 +12,13 @@ jest.mock("@/hooks/api/kb/page-collection", () => ({
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
-  useKbSpaces: jest.fn(() => ({ data: [], isLoading: false, isError: false })),
+  useKbSpaces: jest.fn(() =>
+    jest
+      .requireActual<typeof import("@/test-utils/kb-spaces-fixture")>(
+        "@/test-utils/kb-spaces-fixture",
+      )
+      .kbSpacesQueryStub(),
+  ),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),

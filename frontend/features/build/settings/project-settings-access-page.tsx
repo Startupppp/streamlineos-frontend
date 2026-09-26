@@ -24,7 +24,9 @@ interface ProjectSettingsAccessPageProps {
 export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPageProps) {
   const listFilters = useBuildListFilters({ withSearch: true });
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const { data: members } = useProjectMembers(projectId);
+  const { data: members, isLoading, isError, error, refetch } = useProjectMembers(projectId);
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleKeyboardClear = useCallback(() => {
     listFilters.clearAll();
@@ -33,7 +35,7 @@ export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPa
   const handleKeyboardOpen = useCallback((_index: number) => {}, []);
 
   useBuildListKeyboard({
-    itemCount: members?.length ?? 0,
+    itemCount: members?.data.length ?? 0,
     onOpen: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
     searchInputRef,
@@ -41,9 +43,9 @@ export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPa
 
   const pageState = usePageState({
     permission: "build:members:view",
-    isLoading: false,
-    isError: false,
-    error: undefined,
+    isLoading,
+    isError,
+    error,
   });
 
   return (
@@ -72,6 +74,7 @@ export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPa
               className="flex-1"
             />
           }
+          onRetry={handleRetry}
           className="flex-1"
         >
           <div className="flex flex-col gap-4">

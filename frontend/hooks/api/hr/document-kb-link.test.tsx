@@ -117,7 +117,7 @@ describe("usePublishDocumentToKb and useWithdrawDocumentFromKb", () => {
       await result.current.mutateAsync({ documentId: 7 });
     });
 
-    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
     expect(spy).toHaveBeenCalledWith({ queryKey: humanResourcesQueryKeys.hr.documentClassification(7) });
     expect(client.getQueryState(knowledgeAndSurveysQueryKeys.kb.linkedDocuments({ limit: 20 }))?.isInvalidated).toBe(true);
   });
@@ -143,7 +143,7 @@ describe("usePublishDocumentToKb and useWithdrawDocumentFromKb", () => {
     });
 
     expect(mockDelete).toHaveBeenCalledWith("/hr/documents/7/kb-link", { reason: "Superseded by the 2026 handbook" }, undefined, expect.anything());
-    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
   });
 
   it("neither sends anything for someone without the permission to publish", async () => {
@@ -184,6 +184,6 @@ describe("useUploadDocumentVersion and useApproveDocumentVersion", () => {
     expect(mockCan).toHaveBeenCalledWith("hr:documents:publish");
     expect(spy).toHaveBeenCalledWith({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
     expect(spy).toHaveBeenCalledWith({ queryKey: humanResourcesQueryKeys.hr.documentKbLink(7) });
-    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
   });
 });

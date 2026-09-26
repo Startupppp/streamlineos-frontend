@@ -91,12 +91,6 @@ export interface KbSearchParams {
   pageSize?: number;
 }
 
-export interface KbAskInput {
-  question: string;
-  spaceId?: number;
-  conversationId?: number;
-}
-
 export interface KbAnalyticsOverview {
   totalCount: number;
   publishedCount: number;

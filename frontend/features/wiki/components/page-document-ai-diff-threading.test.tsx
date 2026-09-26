@@ -29,8 +29,8 @@ jest.mock("./page-share-popover", () => ({
   default: () => <button type="button" aria-label="Share page" />,
 }));
 
-jest.mock("@/features/wiki/lib/export-page", () => ({
-  exportKbPage: jest.fn(() => Promise.resolve()),
+jest.mock("@/hooks/api/kb/export-page", () => ({
+  useExportKbPage: () => ({ mutate: jest.fn() }),
 }));
 
 const page = {

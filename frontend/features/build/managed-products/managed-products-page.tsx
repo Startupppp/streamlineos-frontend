@@ -233,6 +233,7 @@ export function ManagedProductsPage() {
     itemCount: displayed.length,
     onOpen: handleOpenFocused,
     onEdit: handleEditFocused,
+    onCreate: canCreate ? handleOpenCreate : undefined,
     onClearSelection: handleClearKeyboardSelection,
     searchInputRef,
     enabled: !createOpen && !editTarget && !deleteTarget,

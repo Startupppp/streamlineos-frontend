@@ -42,6 +42,21 @@ describe("ProductInsightsPage — usePageState integration (BSN-01-022)", () => 
   });
 });
 
+describe("ProductInsightsPage — page states (BSN-INS-STATE)", () => {
+  it("shows the loading skeleton when usePageState resolves to loading so layout does not shift on first paint", () => {
+    usePageState.mockReturnValue({ kind: "loading" });
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByTestId("page-state-loading")).toBeInTheDocument();
+    expect(screen.getAllByTestId("stat-card-grid-skeleton").length).toBeGreaterThan(0);
+  });
+
+  it("shows the error state when usePageState resolves to error so the user can retry", () => {
+    usePageState.mockReturnValue({ kind: "error", error: new Error("network fail") });
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+  });
+});
+
 describe("ProductInsightsPage — range URL param (BSN-INS-RANGE)", () => {
   beforeEach(() => {
     useManagedProductInsights.mockReturnValue({

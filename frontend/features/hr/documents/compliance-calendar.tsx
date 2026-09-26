@@ -6,10 +6,8 @@ import { format, parseISO } from "date-fns";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useComplianceCalendar } from "@/hooks/api/hr/compliance-calendar";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -30,8 +28,7 @@ export function ComplianceCalendar() {
   const [month, setMonth] = useState(today.getMonth() + 1);
 
   const { data, isLoading, isError, error, refetch } = useComplianceCalendar(year, month);
-  // GET /hr/compliance/calendar is `hr:compliance:manage`; resolve denial before "No compliance events" (FE-47).
-  const access = usePageState({ permission: "hr:compliance:manage", isLoading: false, isError: false, error: null });
+  const access = usePageState({ permission: "hr:compliance:manage", isLoading, isError, error });
 
   const handlePrev = useCallback(() => {
     if (month === 1) { setYear((y) => y - 1); setMonth(12); }
@@ -47,7 +44,22 @@ export function ComplianceCalendar() {
   const monthLabel = format(new Date(year, month - 1, 1), "MMMM yyyy");
 
   if (access.kind !== "ready") {
-    return <PageState resolution={access} loading={null} compact>{null}</PageState>;
+    return (
+      <PageState
+        resolution={access}
+        onRetry={refetch}
+        compact
+        loading={
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full rounded-xl" />
+            ))}
+          </div>
+        }
+      >
+        {null}
+      </PageState>
+    );
   }
 
   return (
@@ -74,21 +86,7 @@ export function ComplianceCalendar() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full rounded-xl" />
-          ))}
-        </div>
-      ) : isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Couldn't load compliance calendar"
-          description={getErrorMessage(error)}
-          onRetry={refetch}
-          compact
-        />
-      ) : events.length === 0 ? (
+      {events.length === 0 ? (
         <EmptyState
           illustrationPreset="calendar"
           title="No compliance events"

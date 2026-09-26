@@ -172,7 +172,7 @@ describe("useClassifyDocument", () => {
     expect(mockPatch).toHaveBeenCalledWith("/hr/documents/7/classification", { classification: "CONFIDENTIAL" }, undefined, expect.anything());
     expect(client.getQueryData(classificationKey)).toEqual(classified);
     expect(spy).toHaveBeenCalledWith({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
-    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
     expect(isInvalidated(listKey)).toBe(true);
     expect(isInvalidated(kbLinkKey)).toBe(true);
     expect(isInvalidated(linkedListKey)).toBe(true);
@@ -206,7 +206,7 @@ describe("useSetDocumentAudiences", () => {
     expect(mockPut).toHaveBeenCalledWith("/hr/documents/7/audiences", { audiences: input.audiences }, undefined, expect.anything());
     expect(client.getQueryData(classificationKey)).toEqual(shared);
     expect(spy).toHaveBeenCalledWith({ queryKey: humanResourcesQueryKeys.hr.documentKbLink(7) });
-    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+    expect(spy).toHaveBeenCalledWith({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
     expect(isInvalidated(kbLinkKey)).toBe(true);
     expect(isInvalidated(linkedListKey)).toBe(true);
   });

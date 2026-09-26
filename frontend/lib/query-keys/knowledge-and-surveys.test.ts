@@ -7,7 +7,7 @@ describe("contentGaps factory — no-arg partial match", () => {
     qc.setQueryData(qk.kb.contentGaps({ type: "outdated" }), { items: [] });
 
     // Manually construct the pre-fix key: [..., "content-gaps", undefined]
-    const oldNoArgKey = [...qk.kb.all, "content-gaps", undefined];
+    const oldNoArgKey = [...qk.kb.contentGaps(), undefined];
     const matches = qc.getQueriesData({ queryKey: oldNoArgKey });
     expect(matches).toHaveLength(0);
     qc.clear();
@@ -108,7 +108,7 @@ describe("kb.pagesSearch — ACL dimension is required and discriminates by spac
     const qc = new QueryClient();
     qc.setQueryData(qk.kb.pagesSearch("hello", "1"), [{ id: 1 }]);
     qc.setQueryData(qk.kb.pagesSearch("hello", "1,2"), [{ id: 2 }]);
-    const prefix = [...qk.kb.all, "pages", "search"];
+    const prefix = [...qk.kb.kbPages(), "search"];
     expect(qc.getQueriesData({ queryKey: prefix })).toHaveLength(2);
     qc.clear();
   });

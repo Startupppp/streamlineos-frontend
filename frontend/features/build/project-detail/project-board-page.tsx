@@ -128,10 +128,18 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
   });
 
   const focusedTicketId =
-    focusedIndex === null ? null : Number(filteredTickets[focusedIndex]?.id ?? null);
+    focusedIndex === null
+      ? null
+      : Number(filteredTickets[focusedIndex]?.id ?? null);
 
-  const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
-  const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
+  const handleRetryProject = useCallback(
+    () => void refetchProject(),
+    [refetchProject],
+  );
+  const handleRetryTickets = useCallback(
+    () => void refetchTickets(),
+    [refetchTickets],
+  );
 
   const handleBulkUpdate = useCallback(
     (
@@ -150,7 +158,9 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         { ticketIds: [...selectedIds].map(Number), ...update },
         {
           onSuccess: (d) => {
-            toast.success(`${d.updated} ticket${d.updated !== 1 ? "s" : ""} updated`);
+            toast.success(
+              `${d.updated} ticket${d.updated !== 1 ? "s" : ""} updated`,
+            );
             handleClearSelection();
           },
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -177,7 +187,8 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     [handleBulkUpdate],
   );
   const handleBulkCycle = useCallback(
-    (v: string) => handleBulkUpdate({ cycleId: v === "backlog" ? null : Number(v) }),
+    (v: string) =>
+      handleBulkUpdate({ cycleId: v === "backlog" ? null : Number(v) }),
     [handleBulkUpdate],
   );
   const handleBulkParent = useCallback(
@@ -196,6 +207,16 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     return (
       <PageWrapper title={<Skeleton className="h-5 w-40" />} noInternalScroll>
         <KanbanBoardSkeleton />
+      </PageWrapper>
+    );
+  }
+
+  if (resolution.kind !== "ready" && resolution.kind !== "error") {
+    return (
+      <PageWrapper title="Board" noInternalScroll>
+        <PageState resolution={resolution} loading={<KanbanBoardSkeleton />}>
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }

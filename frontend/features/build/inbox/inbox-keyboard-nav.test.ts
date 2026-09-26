@@ -151,3 +151,38 @@ describe("useInboxKeyboardNav — j/k navigation", () => {
     expect(onSelect).toHaveBeenCalledWith(notifications[0]);
   });
 });
+
+describe("useInboxKeyboardNav — Enter key activates the current selection", () => {
+  it("Enter calls onSelect with the currently selected notification", () => {
+    const onSelect = jest.fn();
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    renderHook(() =>
+      useInboxKeyboardNav({ notifications, selectedId: 2, onSelect, onClearSelection: jest.fn(), searchInputRef: ref }),
+    );
+    fireEvent.keyDown(document, { key: "Enter" });
+    expect(onSelect).toHaveBeenCalledWith(notifications[1]);
+  });
+
+  it("Enter is inert when no notification is selected", () => {
+    const onSelect = jest.fn();
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    renderHook(() =>
+      useInboxKeyboardNav({ notifications, selectedId: null, onSelect, onClearSelection: jest.fn(), searchInputRef: ref }),
+    );
+    fireEvent.keyDown(document, { key: "Enter" });
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("Enter is inert when the target is an input element", () => {
+    const onSelect = jest.fn();
+    const ref = { current: null } as RefObject<HTMLInputElement | null>;
+    renderHook(() =>
+      useInboxKeyboardNav({ notifications, selectedId: 1, onSelect, onClearSelection: jest.fn(), searchInputRef: ref }),
+    );
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(onSelect).not.toHaveBeenCalled();
+    document.body.removeChild(input);
+  });
+});

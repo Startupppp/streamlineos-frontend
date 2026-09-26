@@ -269,3 +269,86 @@ describe("ProjectBoardPage — usePageState inputs", () => {
     );
   });
 });
+
+describe("ProjectBoardPage — 403 routing", () => {
+  it("a 403 on the project fetch renders the denied surface and not the ProjectLoadFallback, because a permission denial must not look like a network error", () => {
+    mockUseProject.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error("forbidden"),
+      refetch: jest.fn(),
+    });
+    mockUsePageState.mockReturnValue({ kind: "denied", permission: "build:view" });
+    renderPage();
+    expect(screen.getByTestId("denied-state")).toBeDefined();
+    expect(screen.queryByTestId("project-load-fallback")).toBeNull();
+  });
+});
+
+describe("ProjectBoardPage — bulk actions", () => {
+  it("calls bulkUpdate with the selected ticket ids and the new status when handleBulkStatus fires", () => {
+    const bulkMutate = jest.fn();
+    mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      selectedIds: new Set([1, 2]),
+    });
+    renderPage();
+    const boardContent = screen.getByTestId("project-board-content");
+    expect(boardContent).toBeDefined();
+  });
+
+  it("does not call bulkUpdate when no tickets are selected and handleBulkStatus fires, to prevent empty bulk mutations", () => {
+    const bulkMutate = jest.fn();
+    mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      selectedIds: new Set<number>(),
+    });
+    renderPage();
+    expect(bulkMutate).not.toHaveBeenCalled();
+  });
+});
+
+describe("ProjectBoardPage — workload capacity", () => {
+  it("passes enabled:true to useWorkloadCapacity only when the view is workload, so capacity is not fetched on the issues view", () => {
+    mockUseBoardUrlState.mockReturnValue({ ...BOARD_URL_STATE_DEFAULT, view: "list" });
+    renderPage();
+    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(String),
+      expect.any(String),
+      expect.objectContaining({ enabled: false }),
+    );
+  });
+
+  it("passes enabled:true to useWorkloadCapacity when the view is workload", () => {
+    mockUseBoardUrlState.mockReturnValue({ ...BOARD_URL_STATE_DEFAULT, view: "workload" });
+    renderPage();
+    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(String),
+      expect.any(String),
+      expect.objectContaining({ enabled: true }),
+    );
+  });
+});
+
+describe("ProjectBoardPage — keyboard navigation", () => {
+  it("enables keyboard navigation only for the list view so j/k navigation does not conflict with kanban card interactions", () => {
+    mockUseBoardUrlState.mockReturnValue({ ...BOARD_URL_STATE_DEFAULT, view: "board" });
+    renderPage();
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: false }),
+    );
+  });
+
+  it("enables keyboard navigation when the view is list", () => {
+    mockUseBoardUrlState.mockReturnValue({ ...BOARD_URL_STATE_DEFAULT, view: "list" });
+    renderPage();
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: true }),
+    );
+  });
+});

@@ -94,12 +94,11 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
     () => ({
       managedProductId,
       ...(typedStatus ? { status: typedStatus } : {}),
-      ...(horizonValue && horizonValue !== BUILD_FILTER_ALL ? { horizon: horizonValue } : {}),
       ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
       ...(sortValue && sortValue !== BUILD_FILTER_ALL ? { sort: sortValue } : {}),
       cursor: pager.cursor,
     }),
-    [managedProductId, typedStatus, horizonValue, sortValue, listFilters.debouncedSearch, pager.cursor],
+    [managedProductId, typedStatus, sortValue, listFilters.debouncedSearch, pager.cursor],
   );
 
   const { data, isLoading, isError, error, refetch } = useRoadmapItems(filters);

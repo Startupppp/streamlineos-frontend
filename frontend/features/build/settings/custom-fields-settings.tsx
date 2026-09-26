@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useCallback, useMemo } from "react";
+import { memo, useEffect, useState, useCallback, useMemo } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -71,7 +71,7 @@ const fieldTypeColors: Record<CustomFieldType, string> = {
   currency: "bg-category-green-surface text-category-green-ink",
 };
 
-interface CustomFieldItem {
+export interface CustomFieldItem {
   id: number;
   name: string;
   type: CustomFieldType;
@@ -228,9 +228,12 @@ function CustomFieldFormFields({ form }: CustomFieldFormFieldsProps) {
 
 interface CustomFieldsSettingsProps {
   projectId: number;
+  search?: string;
+  createRef?: React.RefObject<(() => void) | null>;
+  editRef?: React.RefObject<((field: CustomFieldItem) => void) | null>;
 }
 
-export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
+export function CustomFieldsSettings({ projectId, search, createRef, editRef }: CustomFieldsSettingsProps) {
   const accessState = useCanState("build:view");
   const canManage = useCan("build:manage");
   const [showForm, setShowForm] = useState(false);
@@ -338,6 +341,18 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
     void refetch();
   }, [refetch]);
 
+  useEffect(() => {
+    if (createRef) createRef.current = handleShowForm;
+  }, [createRef, handleShowForm]);
+
+  useEffect(() => {
+    if (editRef) editRef.current = handleOpenEdit;
+  }, [editRef, handleOpenEdit]);
+
+  const filteredFields = search
+    ? fields.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()))
+    : fields;
+
   if (accessState === "denied" || accessState === "loading") return null;
 
   return (
@@ -380,7 +395,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
       ) : (
         <div className="space-y-3">
           <AnimatePresence initial={false}>
-            {fields.length === 0 && !showForm && (
+            {filteredFields.length === 0 && fields.length === 0 && !showForm && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <EmptyState
                   compact
@@ -392,7 +407,18 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
               </motion.div>
             )}
 
-            {fields.map((field, idx) => (
+            {filteredFields.length === 0 && fields.length > 0 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <EmptyState
+                  compact
+                  illustrationPreset="settings"
+                  title="No fields match your search"
+                  description="Try a different search term."
+                />
+              </motion.div>
+            )}
+
+            {filteredFields.map((field, idx) => (
               <CustomFieldRow
                 key={field.id}
                 field={field}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,14 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AutomationsIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
+import { SearchInput } from "@/components/ui/search-input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -20,30 +27,69 @@ import {
   PmStaggerList,
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import {
   useAutomations,
   useCreateAutomation,
   useUpdateAutomation,
   useDeleteAutomation,
+  TRIGGER_EVENTS,
   type ProjectAutomation,
 } from "@/hooks/api/build/automations";
+import {
+  useBuildListFilters,
+  BUILD_FILTER_ALL,
+} from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { formSchema, type FormValues } from "./automation-schema";
 import { AutomationCard } from "./automation-card";
 import { NewAutomationButton } from "./new-automation-button";
 import { AutomationSheet } from "./automation-sheet";
+
+const TRIGGER_FILTER_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All triggers" },
+  ...TRIGGER_EVENTS.map((t) => ({ value: t.value, label: t.label })),
+];
+
+const FILTER_DEFINITIONS = [
+  { param: "trigger", options: TRIGGER_EVENTS.map((t) => t.value) },
+] as const;
 
 interface AutomationsPageProps {
   projectId: number;
 }
 
 export function AutomationsPage({ projectId }: AutomationsPageProps) {
-  const accessState = useCanState("build:view");
   const canManage = useCan("build:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingAutomation, setEditingAutomation] = useState<ProjectAutomation | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  const { data: automations = [], isLoading, isError, refetch } = useAutomations(projectId);
+  const listFilters = useBuildListFilters({
+    filters: FILTER_DEFINITIONS,
+    withSearch: true,
+  });
+
+  const { data: automations = [], isLoading, isError, error, refetch } = useAutomations(projectId);
+
+  const filteredAutomations = automations.filter((automation) => {
+    const q = listFilters.debouncedSearch.toLowerCase();
+    if (q.length > 0 && !automation.name.toLowerCase().includes(q)) return false;
+    const triggerFilter = listFilters.value("trigger");
+    if (triggerFilter !== BUILD_FILTER_ALL && automation.triggerEvent !== triggerFilter) return false;
+    return true;
+  });
+
+  const pageState = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: filteredAutomations.length === 0,
+  });
+
   const createAutomation = useCreateAutomation(projectId);
   const updateAutomation = useUpdateAutomation(projectId);
   const deleteAutomation = useDeleteAutomation(projectId);
@@ -146,9 +192,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
   );
 
   const handleCloseSheet = useCallback(() => setSheetOpen(false), []);
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const handleAppendCondition = useCallback(() => {
     appendCondition({ field: "status", operator: "equals", value: "" });
@@ -158,9 +202,72 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
     appendAction({ type: "set_status", value: "" });
   }, [appendAction]);
 
-  if (accessState === "denied" || accessState === "loading") {
-    return null;
-  }
+  const handleClearFilters = useCallback(() => listFilters.clearAll(), [listFilters]);
+
+  const handleKeyboardOpen = useCallback(
+    (index: number) => {
+      const automation = filteredAutomations[index];
+      if (automation) handleEdit(automation);
+    },
+    [filteredAutomations, handleEdit],
+  );
+
+  const handleKeyboardEdit = useCallback(
+    (index: number) => {
+      const automation = filteredAutomations[index];
+      if (automation) handleEdit(automation);
+    },
+    [filteredAutomations, handleEdit],
+  );
+
+  const handleKeyboardClear = useCallback(() => undefined, []);
+
+  const keyboard = useBuildListKeyboard({
+    itemCount: filteredAutomations.length,
+    onOpen: handleKeyboardOpen,
+    onEdit: handleKeyboardEdit,
+    onCreate: canManage ? handleOpenNew : undefined,
+    onClearSelection: handleKeyboardClear,
+    searchInputRef,
+    enabled: !sheetOpen,
+  });
+
+  const handleTriggerFilterChange = useCallback(
+    (v: string) => listFilters.setValue("trigger", v),
+    [listFilters],
+  );
+
+  const isFiltered = listFilters.isFiltered;
+
+  const loadingContent = (
+    <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3">
+      {Array.from({ length: 2 }).map((_, i) => (
+        <Skeleton key={i} className="h-28 w-full rounded-xl" />
+      ))}
+    </PmSection>
+  );
+
+  const emptyContent = (
+    <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+      <EmptyState
+        className={PM_FILL_PANEL}
+        illustration={<AutomationsIllustration className="h-32 w-32" />}
+        title={isFiltered ? "No automations match your filters" : "No automations yet"}
+        description={
+          isFiltered
+            ? "Try adjusting your search or filter to find what you're looking for."
+            : "Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
+        }
+        action={
+          isFiltered
+            ? { label: "Clear filters", onClick: handleClearFilters }
+            : canManage
+            ? { label: "Create Automation", onClick: handleOpenNew }
+            : undefined
+        }
+      />
+    </PmSection>
+  );
 
   return (
     <PageWrapper
@@ -169,69 +276,83 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
       actions={canManage ? <NewAutomationButton onClick={handleOpenNew} /> : undefined}
     >
       <PmPageShell>
-        {isLoading ? (
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <Skeleton key={i} className="h-28 w-full rounded-xl" />
-            ))}
-          </PmSection>
-        ) : isError ? (
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <ErrorState
-              title="Could not load automations"
-              description="Failed to load automations."
-              onRetry={handleRetry}
-              className="flex-1"
-            />
-          </PmSection>
-        ) : automations.length === 0 ? (
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <EmptyState
-              className={PM_FILL_PANEL}
-              illustration={<AutomationsIllustration className="h-32 w-32" />}
-              title="No automations yet"
-              description="Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
-              action={canManage ? { label: "Create Automation", onClick: handleOpenNew } : undefined}
-            />
-          </PmSection>
-        ) : (
-          <>
-            <PmSection index={0} className="shrink-0">
-              <StatCardGrid cols={2} className="mb-1">
-                <StatCard
-                  label="Active"
-                  value={automations.filter((a) => a.isActive).length}
-                  icon={Zap}
-                  tone="emerald"
-                />
-                <StatCard
-                  label="Inactive"
-                  value={automations.filter((a) => !a.isActive).length}
-                  icon={Zap}
-                  tone="default"
-                />
-              </StatCardGrid>
-            </PmSection>
-
-            <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-              <PmStaggerList className="space-y-2.5" role="list" aria-label="Automations">
-                <AnimatePresence initial={false}>
-                  {automations.map((auto) => (
-                    <div key={auto.id} role="listitem">
-                      <AutomationCard
-                        automation={auto}
-                        onToggle={handleToggle}
-                        onDelete={handleDelete}
-                        onEdit={handleEdit}
-                        canManage={canManage}
-                      />
-                    </div>
+        <PageState
+          resolution={pageState}
+          loading={loadingContent}
+          empty={emptyContent}
+          onRetry={handleRetry}
+        >
+          <PmSection index={0} className="shrink-0">
+            <div className="flex items-center gap-2 mb-3">
+              <SearchInput
+                ref={searchInputRef}
+                value={listFilters.search}
+                onValueChange={listFilters.setSearch}
+                placeholder="Search automations…"
+                className="flex-1 h-8 text-sm"
+                aria-label="Search automations"
+              />
+              <Select
+                value={listFilters.value("trigger")}
+                onValueChange={handleTriggerFilterChange}
+              >
+                <SelectTrigger className="h-8 w-44 text-sm" aria-label="Filter by trigger">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TRIGGER_FILTER_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value} className="text-sm">
+                      {opt.label}
+                    </SelectItem>
                   ))}
-                </AnimatePresence>
-              </PmStaggerList>
-            </PmSection>
-          </>
-        )}
+                </SelectContent>
+              </Select>
+            </div>
+          </PmSection>
+
+          <PmSection index={1} className="shrink-0">
+            <StatCardGrid cols={2} className="mb-1">
+              <StatCard
+                label="Active"
+                value={automations.filter((a) => a.isActive).length}
+                icon={Zap}
+                tone="emerald"
+              />
+              <StatCard
+                label="Inactive"
+                value={automations.filter((a) => !a.isActive).length}
+                icon={Zap}
+                tone="default"
+              />
+            </StatCardGrid>
+          </PmSection>
+
+          <PmSection index={2} className="flex min-h-0 flex-1 flex-col">
+            <PmStaggerList className="space-y-2.5" role="list" aria-label="Automations">
+              <AnimatePresence initial={false}>
+                {filteredAutomations.map((auto, idx) => (
+                  <div
+                    key={auto.id}
+                    role="listitem"
+                    className={
+                      keyboard.focusedIndex === idx
+                        ? "rounded-xl ring-2 ring-primary/50"
+                        : undefined
+                    }
+                  >
+                    <AutomationCard
+                      automation={auto}
+                      onToggle={handleToggle}
+                      onDelete={handleDelete}
+                      onEdit={handleEdit}
+                      canManage={canManage}
+                    />
+                  </div>
+                ))}
+              </AnimatePresence>
+            </PmStaggerList>
+          </PmSection>
+        </PageState>
       </PmPageShell>
 
       <AutomationSheet

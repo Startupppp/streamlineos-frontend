@@ -22,11 +22,11 @@ import {
   useLockKbPage,
   useKbPageBacklinks,
 } from "@/hooks/api/kb";
+import { useExportKbPage } from "@/hooks/api/kb/export-page";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { KbPageAiActions } from "./kb-page-ai-actions";
 import PageSharePopover from "./page-share-popover";
-import { exportKbPage } from "@/features/wiki/lib/export-page";
 import {
   resolveKbPageActions,
   groupKbPageActions,
@@ -76,6 +76,7 @@ export function PageDocumentToolbar({
   const toggleFavorite = useToggleFavoriteKbPage();
   const duplicatePage = useDuplicateKbPage();
   const lockPage = useLockKbPage();
+  const exportPage = useExportKbPage();
   const { data: backlinks = [] } = useKbPageBacklinks(pageId);
 
   const actions = resolveKbPageActions(
@@ -126,8 +127,9 @@ export function PageDocumentToolbar({
   }
 
   function handleExport() {
-    void exportKbPage(pageId, "html").catch((error: unknown) =>
-      toast.error(getErrorMessage(error)),
+    exportPage.mutate(
+      { pageId, format: "html" },
+      { onError: (error) => toast.error(getErrorMessage(error)) },
     );
   }
 

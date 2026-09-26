@@ -70,7 +70,7 @@ function useRefreshAfterLinkChange() {
   const qc = useQueryClient();
   return (state: DocumentKbLinkState) => {
     qc.setQueryData(humanResourcesQueryKeys.hr.documentKbLink(state.documentId), state);
-    void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+    void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
     void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentClassification(state.documentId) });
   };
 }
@@ -150,7 +150,7 @@ export function useApproveDocumentVersion() {
       // The file everyone reads just changed: the HR list, the entry and its readers all have a new version.
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentKbLink(view.documentId) });
-      void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocumentsAll });
+      void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
     },
   });
 }

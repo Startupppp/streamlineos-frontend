@@ -111,11 +111,8 @@ export function useUpdateKbSpace() {
     mutationKey: ["kb", "spaces", "update"],
     mutationFn: ({ spaceId, ...data }: UpdateSpaceInput) =>
       apiClient.patch<KbSpace>(`/kb/spaces/${spaceId}`, data, undefined, kbSpaceFullContract),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.spaces() });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.space(variables.spaceId),
-      });
     },
   });
 }

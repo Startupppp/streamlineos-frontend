@@ -303,6 +303,8 @@ export const buildWorkQueryKeys = {
       [...base, "projects", projectId, "webhooks", webhookId, "deliveries"] as const,
     workspaceViews: () => [...base, "projects", "workspace-views"] as const,
     agentTokens: () => [...base, "projects", "agent-tokens"] as const,
+    iterationSettings: (projectId: number) =>
+      [...base, "projects", projectId, "settings", "iterations"] as const,
     agentPulse: (scopeKey: string) =>
       [...base, "projects", "agent-pulse", scopeKey] as const,
     workloadCapacity: (projectId: number, start: string, end: string) =>
@@ -364,6 +366,8 @@ export const buildWorkQueryKeys = {
       projectIntakeForm: (projectId: string) =>
         [...base, "projects", "intake-form", projectId] as const,
     },
+    retentionSettings: (projectId: number) =>
+      [...base, "projects", projectId, "retention-settings"] as const,
   },
 
   projectReports: {

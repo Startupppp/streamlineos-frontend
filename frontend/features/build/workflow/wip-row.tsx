@@ -2,11 +2,20 @@
 
 import { memo, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { CustomState } from "@/hooks/api/build/custom-states";
 import { useUpdateStatusWip } from "@/hooks/api/build/workflow";
+
+const CATEGORY_LABEL: Record<string, string> = {
+  backlog: "Backlog",
+  unstarted: "Unstarted",
+  started: "In Progress",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
 
 interface WipRowProps {
   status: CustomState;
@@ -58,6 +67,11 @@ export const WipRow = memo(function WipRow({ status, projectId, canManage }: Wip
           />
         )}
         <span className="min-w-0 truncate text-sm font-medium">{status.name}</span>
+        {status.type ? (
+          <Badge variant="outline" className="shrink-0 text-micro text-muted-foreground">
+            {CATEGORY_LABEL[status.type] ?? status.type}
+          </Badge>
+        ) : null}
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {canManage ? (

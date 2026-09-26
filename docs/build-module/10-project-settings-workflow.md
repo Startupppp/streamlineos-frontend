@@ -99,7 +99,8 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+  - Closed 2026-09-26 Wave-B-02: `useWorkflowTransitions` lifted to `WorkflowPage`; `useBuildListFilters`+`BuildListToolbar` add URL-backed `q` search that filters both WIP rows and transition rows (by from/to status name or label); `useBuildListKeyboard` wired with `c`→create transition, `j/k/Enter/e`→navigate+open transition, `/`→focus search, `Esc`→clear; `TransitionsTable` accepts optional lifted-state props (transitions, sheetOpen, editTarget) for controlled keyboard integration; `WipRow` now displays a read-only category badge (Backlog/Unstarted/In Progress/Completed/Cancelled); 12 tests pass covering loading, error, empty, denied, ready states, search toolbar, permissions (canManage=false), and keyboard shortcut wiring.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.

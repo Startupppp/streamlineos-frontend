@@ -98,10 +98,10 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 ## Acceptance criteria
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
-- [ ] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] The page satisfies the stated user job and success metric without duplicating another module owner.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 - [ ] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
-  BLOCKED — nothing to bound yet: disposition is ADD and `features/build/settings/project-settings-iterations-page.tsx:48` renders `<PmSection index={0}>{null}</PmSection>` behind an EmptyState, with no data hook. Ticking this would tell a later implementer the boundedness work was already done.
-- [ ] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
+  BLOCKED — settings form only, no list surface: `project-settings-iterations-page.tsx` now renders a `defaultDurationWeeks` Select and `namingPrefix` Input backed by `GET /build/:projectId/settings/iterations`. No collection is rendered, so there is nothing to bound or virtualize.
+- [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.

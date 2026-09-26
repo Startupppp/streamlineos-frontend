@@ -16,6 +16,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { PM_ROW } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
@@ -49,6 +50,8 @@ interface ViewCardProps {
   onRename: (view: ViewItem) => void;
   onDelete: (viewId: number) => void;
   canManage: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (viewId: number, selected: boolean) => void;
 }
 
 export const ViewCard = memo(function ViewCard({
@@ -60,6 +63,8 @@ export const ViewCard = memo(function ViewCard({
   onRename,
   onDelete,
   canManage,
+  isSelected,
+  onToggleSelect,
 }: ViewCardProps) {
   const handleNavigate = useCallback(() => onNavigate(view), [onNavigate, view]);
   const handleStopPropagation = useCallback(
@@ -72,6 +77,13 @@ export const ViewCard = memo(function ViewCard({
   );
   const handleRename = useCallback(() => onRename(view), [onRename, view]);
   const handleDelete = useCallback(() => onDelete(view.id), [onDelete, view.id]);
+
+  const handleToggleSelect = useCallback(
+    (checked: boolean | "indeterminate") => {
+      if (onToggleSelect) onToggleSelect(view.id, checked === true);
+    },
+    [onToggleSelect, view.id],
+  );
 
   const filterCount = view.filters ? Object.keys(view.filters).length : 0;
   const meta = LAYOUT_META[view.layoutType] ?? LAYOUT_META["board"];
@@ -139,6 +151,14 @@ export const ViewCard = memo(function ViewCard({
           />
         )}
         <ArrowRight className="h-4 w-4 text-muted-foreground ml-1" />
+        {onToggleSelect !== undefined ? (
+          <Checkbox
+            checked={isSelected ?? false}
+            onCheckedChange={handleToggleSelect}
+            aria-label={`Select ${view.name}`}
+            className="ml-1"
+          />
+        ) : null}
       </div>
     </div>
   );
