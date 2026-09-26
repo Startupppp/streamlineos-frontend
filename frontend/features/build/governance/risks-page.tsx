@@ -45,6 +45,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   RISK_TABLE_HEADERS,
   buildRiskColumns,
@@ -236,6 +237,18 @@ export function RisksPage({ projectId }: RisksPageProps) {
 
   const handleEditRow = useCallback((r: Risk) => setEditRisk(r), []);
   const handleDeleteRow = useCallback((r: Risk) => setDeleteTarget(r), []);
+
+  const handleOpenFocused = useCallback(
+    (index: number) => { handleEditRow(filteredRisks[index]); },
+    [filteredRisks, handleEditRow],
+  );
+  const handleClearKeyboardSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: filteredRisks.length,
+    onOpen: handleOpenFocused,
+    onClearSelection: handleClearKeyboardSelection,
+    enabled: !sheetOpen && !deleteTarget,
+  });
 
   const columns = useMemo(
     () =>

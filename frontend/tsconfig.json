@@ -40,12 +40,15 @@
     ".next-build-check/types/**/*.ts",
     ".next-build-check/dev/types/**/*.ts",
     ".next-e2e/types/**/*.ts",
-    ".next-e2e/dev/types/**/*.ts"
+    ".next-e2e/dev/types/**/*.ts",
+    ".next-intercepted/types/**/*.ts",
+    ".next-intercepted/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "drizzle",
     "scripts",
+    ".next-e2e",
     ".next/dev/types",
     "**/__tests__/**",
     "**/*.test.ts",

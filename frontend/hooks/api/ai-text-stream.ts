@@ -13,8 +13,13 @@ import {
 const CHAT_STREAM_SERVER_DEADLINE_MS = 120_000;
 export const AI_STREAM_TIMEOUT_MS = CHAT_STREAM_SERVER_DEADLINE_MS + 5_000;
 
+export interface AiStreamCitation {
+  id: string | number;
+  title: string;
+}
+
 export type AiTextStreamResult =
-  | { status: "completed"; text: string; headers: Headers }
+  | { status: "completed"; text: string; headers: Headers; citations?: AiStreamCitation[] }
   | { status: "cancelled"; text: string };
 
 export type AiTextStreamOutcome = AiTextStreamResult | { status: "busy" };

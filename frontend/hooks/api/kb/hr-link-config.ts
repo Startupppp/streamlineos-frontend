@@ -30,7 +30,6 @@ export interface HrKbLinkFlagsAdmin {
 
 const ALL_OFF: HrKbLinkFlags = { link: false, search: false, ai: false };
 
-/** Every member may read it (the UI needs it to know whether to render the feature at all); a member of a tenant that never turned it on gets three `false`s. */
 export function useHrKbLinkConfig() {
   return useGatedQuery("kb:pages:view", {
     queryKey: knowledgeAndSurveysQueryKeys.kb.hrLinkConfig(),
@@ -41,13 +40,11 @@ export function useHrKbLinkConfig() {
   });
 }
 
-/** The switches as plain booleans. Off until the answer arrives: a feature must never flash on for a tenant that has it off. */
 export function useHrKbLinkFlags(): HrKbLinkFlags {
   const { data } = useHrKbLinkConfig();
   return data ?? ALL_OFF;
 }
 
-/** What an administrator sees: what is stored, what the routes will act on, and whether HR is enabled. */
 export function useHrKbLinkFlagsAdmin() {
   return useGatedQuery("kb:settings:manage", {
     queryKey: knowledgeAndSurveysQueryKeys.kb.hrLinkFlagsAdmin(),

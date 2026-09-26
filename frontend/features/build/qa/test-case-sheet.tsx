@@ -41,6 +41,7 @@ import { useCreateTestCase, useUpdateTestCase } from "@/hooks/api/build/qa";
 import { useProject } from "@/hooks/api/build/projects";
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import type { TestCase, TestSuite } from "@/types/projects";
+import { useCanState } from "@/hooks/api/access";
 
 interface TestCaseSheetProps {
   projectId: number;
@@ -57,6 +58,7 @@ export function TestCaseSheet({
   editCase,
   suites,
 }: TestCaseSheetProps) {
+  const accessState = useCanState("build:qa:view");
   const create = useCreateTestCase();
   const update = useUpdateTestCase();
   const { data: project } = useProject(projectId);
@@ -110,6 +112,8 @@ export function TestCaseSheet({
       );
     }
   }, [open, editCase, form]);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   function addStep() {
     append({ action: "", expected: "" });

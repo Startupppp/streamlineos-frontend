@@ -51,6 +51,8 @@ export function usePageAutosave({
   const pendingPatchRef = useRef<PageAutosavePatch | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightRef = useRef(false);
+  const idleElapsedRef = useRef(false);
+  const flushAfterFlightRef = useRef(false);
   const offlineRef = useRef(false);
   const revisionRef = useRef<{ pageId: number; value: number } | null>(null);
   const runRef = useRef<((patch: PageAutosavePatch) => void) | null>(null);
@@ -109,6 +111,7 @@ export function usePageAutosave({
         setStateIfMounted("pending");
         return;
       }
+      idleElapsedRef.current = false;
       inFlightRef.current = true;
       setStateIfMounted("saving");
       const payload: SavePayload = {
@@ -122,7 +125,14 @@ export function usePageAutosave({
         adoptRevision(targetPageId, data.contentRevision);
         setStateIfMounted("saved");
         if (mountedRef.current) setSavedAt(new Date());
-        drainQueued();
+        const pausedDuringSave = idleElapsedRef.current && timerRef.current === null;
+        if (flushAfterFlightRef.current || pausedDuringSave) {
+          flushAfterFlightRef.current = false;
+          idleElapsedRef.current = false;
+          drainQueued();
+          return;
+        }
+        if (pendingPatchRef.current !== null) setStateIfMounted("pending");
       }
 
       function handleFailed(error: unknown) {
@@ -158,9 +168,11 @@ export function usePageAutosave({
         return;
       }
       setSaveState("pending");
+      idleElapsedRef.current = false;
       clearTimer();
       timerRef.current = setTimeout(function drainTimer() {
         timerRef.current = null;
+        idleElapsedRef.current = true;
         const queued = pendingPatchRef.current;
         pendingPatchRef.current = null;
         setPendingFields([]);
@@ -173,6 +185,10 @@ export function usePageAutosave({
   const flush = useCallback(() => {
     clearTimer();
     if (conflictRef.current !== null) return;
+    if (inFlightRef.current) {
+      flushAfterFlightRef.current = true;
+      return;
+    }
     const queued = pendingPatchRef.current;
     if (!queued) return;
     pendingPatchRef.current = null;
@@ -222,6 +238,8 @@ export function usePageAutosave({
     conflictRef.current = null;
     setConflict(null);
     pendingPatchRef.current = null;
+    idleElapsedRef.current = false;
+    flushAfterFlightRef.current = false;
     setSaveState("idle");
     pageIdRef.current = pageId;
     return flush;

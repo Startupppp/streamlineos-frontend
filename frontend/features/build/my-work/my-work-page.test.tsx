@@ -353,7 +353,8 @@ describe("MyWorkPage — Previous walks back one page instead of jumping to the 
     const last = calls[calls.length - 1] as [string] | undefined;
     expect(last?.[0]).toBeDefined();
     const url = last?.[0] ?? "";
-    expect(url).toContain("tab=created");
+    expect(url).toContain("relation=created");
+    expect(url).not.toContain("tab=");
     expect(url).not.toContain("cursor=");
   });
 });

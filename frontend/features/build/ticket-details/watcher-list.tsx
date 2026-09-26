@@ -13,7 +13,7 @@ import { useWatchers, useToggleWatch, useAddWatcher } from "@/hooks/api/build";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 
 interface WatcherListProps {
   projectId: number;
@@ -21,6 +21,7 @@ interface WatcherListProps {
 }
 
 export function WatcherList({ projectId, ticketId }: WatcherListProps) {
+  const accessState = useCanState("build:tickets:view");
   const canUpdate = useCan("build:tickets:update");
   const { iconRef: watchIconRef, hoverHandlers: watchHoverHandlers } = useAnimatedIcon();
   const { data: session } = useSession();
@@ -49,6 +50,10 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
     },
     [addWatcher, ticketId, watchers],
   );
+
+  if (accessState === "denied" || accessState === "loading") {
+    return null;
+  }
 
   if (isLoading) {
     return (

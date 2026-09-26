@@ -27,7 +27,11 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import type { OrgChartNode } from "./types";
-import { splitOrgChartRoots, unassignedRootsHeading } from "./org-chart-roots";
+import {
+  splitOrgChartRoots,
+  topLevelRootsHeading,
+  unassignedRootsHeading,
+} from "./org-chart-roots";
 import { useHrOrgChart } from "./use-org-chart";
 
 const PAGE_SIZE = 20;
@@ -268,10 +272,17 @@ function OrgChartCollection({ search }: { search?: string }) {
     );
   }
 
-  const { managers, unassigned } = search
-    ? { managers: query.data.data, unassigned: [] as OrgChartNode[] }
+  const { owner, topLevel, unassigned } = search
+    ? {
+        owner: query.data.data,
+        topLevel: [] as OrgChartNode[],
+        unassigned: [] as OrgChartNode[],
+      }
     : splitOrgChartRoots(query.data.data);
-  const unassignedHeading = unassignedRootsHeading(managers.length > 0);
+  const topLevelHeading = topLevelRootsHeading();
+  const unassignedHeading = unassignedRootsHeading(
+    owner.length + topLevel.length > 0,
+  );
 
   return (
     <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
@@ -282,12 +293,35 @@ function OrgChartCollection({ search }: { search?: string }) {
             ? "Search results; expand a person to load their direct reports."
             : "People you can see who report to nobody above them. Expand a person to load one branch at a time."}
         </div>
-        {managers.length > 0 ? (
+        {owner.length > 0 ? (
           <ul className="min-w-max space-y-2">
-            {managers.map((employee) => (
+            {owner.map((employee) => (
               <OrgChartBranch key={employee.id} employee={employee} lineage={[]} />
             ))}
           </ul>
+        ) : null}
+        {topLevel.length > 0 ? (
+          // V-026. A deliberate top-level role is its own group, so it is never
+          // drawn as a second CEO beside the owner, and never confused with
+          // someone who is only missing a manager.
+          <section className="min-w-max space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+            <div className="flex items-start gap-2">
+              <Network className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold text-foreground">
+                  {topLevelHeading.title}
+                </h2>
+                <p className="max-w-prose text-xs leading-relaxed text-muted-foreground">
+                  {topLevelHeading.description}
+                </p>
+              </div>
+            </div>
+            <ul className="space-y-2">
+              {topLevel.map((employee) => (
+                <OrgChartBranch key={employee.id} employee={employee} lineage={[]} />
+              ))}
+            </ul>
+          </section>
         ) : null}
         {unassigned.length > 0 ? (
           <section className="min-w-max space-y-2 rounded-lg border border-dashed border-border bg-muted/30 p-3">

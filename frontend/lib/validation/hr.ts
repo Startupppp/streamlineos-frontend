@@ -80,6 +80,21 @@ function validateReportingChoice(
   });
 }
 
+/**
+ * V-135. The Skills & Pay step labels the salary with a required asterisk, so
+ * it is genuinely required. The backend onboarding DTO takes `monthlySalary`
+ * as optional, so always sending it is accepted; the admin wizard is the only
+ * consumer of this schema (the CSV bulk path builds its own row object and
+ * keeps salary optional there).
+ */
+function requireMonthlySalary(
+  value: { monthlySalary?: number },
+  ctx: z.RefinementCtx,
+): void {
+  if (value.monthlySalary == null)
+    ctx.addIssue({ code: "custom", message: "Monthly salary is required", path: ["monthlySalary"] });
+}
+
 export const onboardEmployeeInputSchema = z.object({
   firstName: z
     .string()
@@ -151,6 +166,10 @@ export const onboardEmployeeInputSchema = z.object({
     )
     .optional()
     .or(z.literal("")),
+  // V-135: required, but enforced in `requireMonthlySalary` below rather than
+  // as `z.number()` here — a missing field on the object aborts the parse
+  // before any object-level refinement runs, which would silently switch off
+  // the reports-to rule.
   monthlySalary: z
     .number()
     .min(0, "Salary cannot be negative")
@@ -210,4 +229,8 @@ export const onboardEmployeeInputSchema = z.object({
         .or(z.literal("")),
     })
     .optional(),
-}).superRefine(validateReportingChoice);
+})
+  .superRefine((value, ctx) => {
+    validateReportingChoice(value, ctx);
+    requireMonthlySalary(value, ctx);
+  });

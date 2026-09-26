@@ -11,11 +11,6 @@ import { WikiPageCard, WIKI_PAGE_CARD_GRID_CLASS } from "@/features/wiki/compone
 
 const STRIP_LIMIT = 6;
 
-/**
- * The newest company documents, on the wiki home, marked as HR documents. Absent for a tenant that has not
- * switched HR documents on, and absent when there is nothing to show: a reader is never told about a feature that
- * has nothing for them.
- */
 export function WikiCompanyDocumentsStrip() {
   const flags = useHrKbLinkFlags();
   const { data } = useLinkedDocuments({ limit: STRIP_LIMIT }, { enabled: flags.link });

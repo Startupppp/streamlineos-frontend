@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { WikiPageCollectionTable } from "./wiki-page-collection-table";
+import { ApiError } from "@/lib/api-envelope";
 
 const mockReplace = jest.fn();
 let mockSearchParams = new URLSearchParams();
@@ -37,14 +38,34 @@ jest.mock("@/components/shared/page-state", () => ({
       loading,
       empty,
       children,
+      onRetry,
     }: {
       resolution: { kind: string };
       loading: React.ReactNode;
       empty?: React.ReactNode;
       children: React.ReactNode;
+      onRetry?: () => void;
     }) => {
       if (resolution.kind === "loading") return <>{loading}</>;
       if (resolution.kind === "empty") return <>{empty ?? children}</>;
+      if (resolution.kind === "error") {
+        const errRes = resolution as unknown as { kind: "error"; error?: { details?: { correlationId?: string } } };
+        const corrId = errRes.error?.details?.correlationId;
+        return (
+          <div role="alert" data-testid="error-state">
+            <span>Something went wrong</span>
+            {corrId !== undefined && corrId !== "" && <code data-testid="error-reference">{corrId}</code>}
+            {onRetry !== undefined && (
+              <button type="button" onClick={onRetry} data-testid="retry-button">
+                Try again
+              </button>
+            )}
+          </div>
+        );
+      }
+      if (resolution.kind === "denied") {
+        return <div data-testid="denied-state">Access denied</div>;
+      }
       return <>{children}</>;
     },
   ),
@@ -398,5 +419,203 @@ describe("WikiPageCollectionTable — cursor pagination", () => {
     ][0] as Record<string, unknown>;
     expect(lastCall.sort).toBe("created_desc");
     expect(lastCall.cursor).toBeUndefined();
+  });
+});
+
+describe("WikiPageCollectionTable — owner filter", () => {
+  it("passes owner: \"me\" to the collection query when the URL carries owner=me", () => {
+    mockSearchParams = new URLSearchParams("owner=me");
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+
+    expect(useKbPageCollection).toHaveBeenLastCalledWith(
+      expect.objectContaining({ owner: "me" }),
+    );
+  });
+
+  it("passes owner: undefined when the URL carries no owner param, so the table shows everyone's pages by default", () => {
+    mockSearchParams = new URLSearchParams();
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+
+    expect(useKbPageCollection).toHaveBeenLastCalledWith(
+      expect.objectContaining({ owner: undefined }),
+    );
+  });
+
+  it("renders an Owner selector when the table's owner is not pinned by the caller", () => {
+    mockSearchParams = new URLSearchParams();
+
+    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+
+    expect(screen.getByText("Anyone")).toBeInTheDocument();
+  });
+
+  it("hides the Owner selector when the caller already pins owner, e.g. a dedicated My Pages view", () => {
+    mockSearchParams = new URLSearchParams();
+
+    render(
+      <WikiPageCollectionTable fixedParams={{ owner: "me" }} emptyTitle="No pages" />,
+    );
+
+    expect(screen.queryByText("Anyone")).not.toBeInTheDocument();
+  });
+});
+
+describe("WikiPageCollectionTable — My pages six states (S02 evidence)", () => {
+  it("loading: renders the data table skeleton while the server call is in-flight", () => {
+    useKbPageCollection.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "loading" });
+
+    render(
+      <WikiPageCollectionTable
+        fixedParams={{ owner: "me" }}
+        emptyTitle="No pages yet"
+      />,
+    );
+
+    expect(screen.getByTestId("loading-skeleton")).toBeInTheDocument();
+    expect(screen.queryByTestId("table-rows")).not.toBeInTheDocument();
+    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
+  });
+
+  it("ready: renders page rows when the server returns owned pages", () => {
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([makeItem(1), makeItem(2)]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(
+      <WikiPageCollectionTable
+        fixedParams={{ owner: "me" }}
+        emptyTitle="No pages yet"
+      />,
+    );
+
+    expect(screen.getByTestId("table-rows")).toBeInTheDocument();
+    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
+  });
+
+  it("first-empty: renders the empty title without a clear-filters button when no filters are active", () => {
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(
+      <WikiPageCollectionTable
+        fixedParams={{ owner: "me" }}
+        emptyTitle="No pages yet"
+        emptyDescription="Pages you own will appear here."
+      />,
+    );
+
+    expect(screen.getByText("No pages yet")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /clear filters/i })).not.toBeInTheDocument();
+  });
+
+  it("filtered-empty: renders a different title and a clear-filters button when a filter is active but result is empty", () => {
+    mockSearchParams = new URLSearchParams("q=nonexistent");
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(
+      <WikiPageCollectionTable
+        fixedParams={{ owner: "me" }}
+        emptyTitle="No pages yet"
+      />,
+    );
+
+    expect(screen.getByText("No results match your filters.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /clear filters/i })).toBeInTheDocument();
+    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
+  });
+
+  it("error: renders an error state with a retry button when the server call fails", () => {
+    const error = new Error("Failed to fetch");
+    useKbPageCollection.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "error", error });
+
+    render(
+      <WikiPageCollectionTable
+        fixedParams={{ owner: "me" }}
+        emptyTitle="No pages yet"
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+    expect(screen.getByTestId("retry-button")).toBeInTheDocument();
+    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
+  });
+
+  it("error with request id: renders the correlation id when the api error carries one, so the user can quote it to support", () => {
+    const error = new ApiError("Server error", 500, "INTERNAL", { correlationId: "req-abc-12345" });
+    useKbPageCollection.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "error", error });
+
+    render(
+      <WikiPageCollectionTable
+        fixedParams={{ owner: "me" }}
+        emptyTitle="No pages yet"
+      />,
+    );
+
+    expect(screen.getByTestId("error-reference")).toHaveTextContent("req-abc-12345");
+    expect(screen.getByTestId("retry-button")).toBeInTheDocument();
+  });
+
+  it("denied: renders the access-denied state without any page data or empty state copy", () => {
+    useKbPageCollection.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "denied", permission: "kb:pages:view" });
+
+    render(
+      <WikiPageCollectionTable
+        fixedParams={{ owner: "me" }}
+        emptyTitle="No pages yet"
+      />,
+    );
+
+    expect(screen.getByTestId("denied-state")).toBeInTheDocument();
+    expect(screen.queryByText("No pages yet")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("table-rows")).not.toBeInTheDocument();
   });
 });

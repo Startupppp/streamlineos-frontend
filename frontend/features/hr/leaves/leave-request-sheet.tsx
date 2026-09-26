@@ -58,6 +58,9 @@ export function LeaveRequestSheet({
 
   const form = useForm<LeaveFormValues>({
     resolver: zodResolver(leaveFormSchema),
+    // V-041. Validate as the user goes, so a field that is wrong says so where
+    // it is wrong rather than silently disabling the footer button.
+    mode: "onTouched",
     defaultValues: {
       leaveTypeId: "",
       startDate: "",
@@ -175,7 +178,7 @@ export function LeaveRequestSheet({
     [leaveDayLimitError, attachmentUrl, form, onOpenChange, requestLeaveMutation],
   );
 
-  const { isValid, isDirty } = form.formState;
+  const { isDirty } = form.formState;
 
   return (
     <HrSheet
@@ -192,11 +195,14 @@ export function LeaveRequestSheet({
             : "No approver available"
       }
       isPending={requestLeaveMutation.isPending}
-      submitDisabled={
-        (!isValid && isDirty) ||
-        leaveTypes.length === 0 ||
-        !approverAvailable
-      }
+      // V-041. Only a reason the LABEL states may disable this button. It used
+      // to also disable on `!isValid && isDirty` — and this form never
+      // maintained `formState.isValid`, so the button disabled itself the
+      // moment the form became dirty, kept the plain "Submit leave request"
+      // label, and never re-enabled: a complete, valid request could not be
+      // submitted and nothing on screen said why. An incomplete form now stays
+      // pressable; `handleSubmit` refuses it and each field says what is wrong.
+      submitDisabled={leaveTypes.length === 0 || !approverAvailable}
       isDirty={isDirty}
       onDiscard={() => form.reset()}
     >

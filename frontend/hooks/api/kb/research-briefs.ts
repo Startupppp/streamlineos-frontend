@@ -31,6 +31,14 @@ const kbResearchBriefRateContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbResearchBriefRateContract),
 );
 
+const kbConvertBriefToPageContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbConvertBriefToPageContract),
+);
+
+const kbResearchBriefApproveContract = lazyContract(() =>
+  import("@/hooks/api/kb/kb-research-schema").then((m) => m.kbResearchBriefApproveContract),
+);
+
 export function useKbResearchBriefs() {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
@@ -98,12 +106,42 @@ export function useRetryResearchBrief() {
   });
 }
 
+export function useConvertResearchBriefToPage() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:create", {
+    mutationKey: ["kb", "research-briefs", "convert-to-page"],
+    mutationFn: (briefId: number) =>
+      apiClient.post<{ pageId: number }>(
+        `/kb/research-briefs/${briefId}/convert-to-page`,
+        {},
+        undefined,
+        kbConvertBriefToPageContract,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection() });
+    },
+  });
+}
+
 export function useCancelResearchBrief() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "research-briefs", "cancel"],
     mutationFn: (briefId: number) =>
       apiClient.delete<void>(`/kb/research-briefs/${briefId}`, undefined, undefined),
+    onSuccess: (_, briefId) => {
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
+    },
+  });
+}
+
+export function useApproveResearchBrief() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:pages:manage", {
+    mutationKey: ["kb", "research-briefs", "approve"],
+    mutationFn: (briefId: number) =>
+      apiClient.post<{ success: true }>(`/kb/research-briefs/${briefId}/approve`, {}, undefined, kbResearchBriefApproveContract),
     onSuccess: (_, briefId) => {
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
       qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });

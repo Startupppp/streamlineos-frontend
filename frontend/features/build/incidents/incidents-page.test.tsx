@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -92,16 +92,18 @@ jest.mock("./sla", () => ({
 import { IncidentsPage } from "./incidents-page";
 
 const mockReplace = jest.fn();
+const mockRouterPush = jest.fn();
 let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mockReplace, push: jest.fn(), refresh: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace, push: mockRouterPush, refresh: jest.fn() }),
   usePathname: () => "/build",
   useSearchParams: () => mockSearchParams,
 }));
 
 beforeEach(() => {
   mockReplace.mockClear();
+  mockRouterPush.mockClear();
   mockSearchParams = new URLSearchParams();
 });
 
@@ -186,4 +188,13 @@ it("does not show the cap disclosure when the list is well under the cap", () =>
   mockUseIncidents.mockReturnValue(baseQuery({ data: [{ id: 1, incidentNumber: 1, title: "Incident 1", severity: "low", status: "detected", ownerId: null, detectedAt: null }] }));
   render(<IncidentsPage projectId={1} />);
   expect(screen.queryByText(/most recent 100 incidents/i)).not.toBeInTheDocument();
+});
+
+it("pressing j then Enter navigates to the first incident's detail page so keyboard users can open it without a mouse", () => {
+  const incident = { id: 55, incidentNumber: 2, title: "API down", severity: "high", status: "investigating", ownerId: null, detectedAt: null };
+  mockUseIncidents.mockReturnValue(baseQuery({ data: [incident] }));
+  render(<IncidentsPage projectId={1} />);
+  fireEvent.keyDown(document, { key: "j" });
+  fireEvent.keyDown(document, { key: "Enter" });
+  expect(mockRouterPush).toHaveBeenCalledWith("/build/1/incidents/55");
 });

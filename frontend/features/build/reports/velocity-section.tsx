@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Gauge } from "lucide-react";
 import { useVelocityReport } from "@/hooks/api/build/reports";
 import { ChartCard } from "./chart-card";
+import { useCanState } from "@/hooks/api/access";
 
 const VelocityChart = dynamic(
   () => import("./velocity-chart").then((m) => ({ default: m.VelocityChart })),
@@ -17,6 +18,7 @@ const VelocityChart = dynamic(
 );
 
 export function VelocitySection({ projectId }: { projectId: number }) {
+  const accessState = useCanState("build:view");
   const { data, isLoading, isError, refetch } = useVelocityReport(projectId);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
@@ -30,6 +32,8 @@ export function VelocitySection({ projectId }: { projectId: number }) {
       })),
     [data],
   );
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   return (
     <ChartCard title="Velocity · latest 100 cycles" icon={Gauge}>

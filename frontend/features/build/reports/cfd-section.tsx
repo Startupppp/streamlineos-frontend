@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ChartCard } from "./chart-card";
+import { useCanState } from "@/hooks/api/access";
 
 const CfdChart = dynamic(
   () => import("./cfd-chart").then((m) => ({ default: m.CfdChart })),
@@ -28,9 +29,12 @@ const CfdChart = dynamic(
 );
 
 export function CfdSection({ projectId }: { projectId: number }) {
+  const accessState = useCanState("build:view");
   const [days, setDays] = useState(30);
   const { data, isLoading, isError, refetch } = useCfdReport(projectId, days);
   const capture = useCaptureSnapshot(projectId);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
 

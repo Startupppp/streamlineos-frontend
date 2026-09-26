@@ -81,6 +81,8 @@ import {
   ToggleElement,
   MentionElement,
   PageLinkElement,
+  CitationElement,
+  LinkPreviewElement,
 } from "./plate-elements";
 import {
   BoldLeaf,
@@ -223,6 +225,14 @@ export function buildPlugins() {
       key: "page_link",
       node: { isElement: true, isInline: true, isVoid: true },
     }).withComponent(PageLinkElement),
+    createPlatePlugin({
+      key: "citation",
+      node: { isElement: true },
+    }).withComponent(CitationElement),
+    createPlatePlugin({
+      key: "link_preview",
+      node: { isElement: true, isVoid: true },
+    }).withComponent(LinkPreviewElement),
     SlashPlugin.configure({
       options: { trigger: "/", triggerPreviousCharPattern: /^\s?$/ },
     }),

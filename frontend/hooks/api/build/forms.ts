@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -16,16 +16,17 @@ import type {
   FormType,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 
 const formListContract = lazyContract(() =>
-  import("@/hooks/api/build/forms-schema").then((m) => m.formListContract),
+  import("@/hooks/api/build/forms-schema").then((m) => m.formResponseContract),
 );
 const formRowContract = lazyContract(() =>
   import("@/hooks/api/build/forms-schema").then((m) => m.formRowContract),
 );
 const submissionListContract = lazyContract(() =>
-  import("@/hooks/api/build/forms-schema").then((m) => m.submissionListContract),
+  import("@/hooks/api/build/forms-schema").then((m) => m.submissionResponseContract),
 );
 const submissionCreateResultContract = lazyContract(() =>
   import("@/hooks/api/build/forms-schema").then((m) => m.submissionCreateResultContract),
@@ -48,12 +49,24 @@ export function useForms(projectId: number, filters?: FormFilters) {
   if (filters?.type) params["type"] = filters.type;
   if (filters?.isActive !== undefined) params["isActive"] = String(filters.isActive);
 
-  return useQuery<ProjectForm[]>({
+  return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.forms.list(
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: ({ signal }) => apiClient.get<ProjectForm[]>(`/build/${projectId}/forms`, params, signal, formListContract),
+    queryFn: async ({ pageParam, signal }) => {
+      const response = await apiClient.get<ProjectForm[] | { data: ProjectForm[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+        `/build/${projectId}/forms`,
+        pageParam !== undefined ? { ...params, cursor: pageParam } : params,
+        signal,
+        formListContract,
+      );
+      return Array.isArray(response)
+        ? { data: response, pagination: { limit: response.length || 100, hasMore: false, nextCursor: null } }
+        : response;
+    },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -108,10 +121,21 @@ export function useDeleteForm(projectId: number) {
 
 export function useFormSubmissions(projectId: number, formId: number) {
   const canManage = useCan("build:forms:manage");
-  return useQuery<FormSubmission[]>({
+  return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.forms.submissions(projectId, formId),
-    queryFn: ({ signal }) =>
-      apiClient.get<FormSubmission[]>(`/build/${projectId}/forms/${formId}/submissions`, undefined, signal, submissionListContract),
+    queryFn: async ({ pageParam, signal }) => {
+      const response = await apiClient.get<FormSubmission[] | { data: FormSubmission[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+        `/build/${projectId}/forms/${formId}/submissions`,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
+        signal,
+        submissionListContract,
+      );
+      return Array.isArray(response)
+        ? { data: response, pagination: { limit: response.length || 100, hasMore: false, nextCursor: null } }
+        : response;
+    },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canManage && !!projectId && !!formId,
     staleTime: 60_000,
   });

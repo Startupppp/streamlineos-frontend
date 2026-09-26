@@ -292,7 +292,7 @@ describe("PortfolioDetailPage — denied state (BSN-FE-D4)", () => {
 
     expect(screen.getByText("Project One")).toBeInTheDocument();
     expect(screen.getByText("Program Alpha")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Show more linked projects" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Next page" })[0]);
     expect(screen.getByText("Project Two")).toBeInTheDocument();
     expect(screen.getAllByText("Project One")).toHaveLength(1);
     expect(screen.queryByTestId("select-item-1")).not.toBeInTheDocument();

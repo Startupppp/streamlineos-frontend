@@ -33,7 +33,7 @@ The baseline was audited on 2026-09-19 against:
 
 The second-pass source inventory currently contains:
 
-- 65 unique authenticated `app/(authenticated)/build/**/page.tsx` routes;
+- 74 unique authenticated `app/(authenticated)/build/**/page.tsx` routes;
 - 5 internal or external portal pages: internal preview index/detail, external
   client portal index/detail, and invitation acceptance;
 - 4 public Build pages: published form, legacy public intake, shared board, and
@@ -53,8 +53,8 @@ must be rechecked at implementation time because the working tree is active.
 
 The Build module is **not complete**.
 
-The documentation census now accounts for the current 74-route Build census
-(65 authenticated pages plus nine portal/public routes) in BLD-01A, every
+The documentation census now accounts for the current 83-route Build census
+(74 authenticated pages plus nine portal/public routes) in BLD-01A, every
 current/final page's product contract in BLD-02C through BLD-02F, the current
 mutation surfaces in BLD-05A, the 49-controller/325-handler matrix in BLD-06A,
 and all 36 Build schema files in BLD-06B. That is

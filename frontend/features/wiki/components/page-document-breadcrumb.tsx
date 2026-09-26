@@ -8,7 +8,7 @@ import {
   KbChevronRightIcon,
   KbLoader2Icon,
 } from "@/features/wiki/lib/kb-icons";
-import { KNOWLEDGE_BASE, pageHref, projectPageHref } from "@/lib/knowledge-routes";
+import { KNOWLEDGE_BASE, KB_SPACES, pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import {
   KB_STATUS_LABELS,
@@ -21,6 +21,26 @@ interface PageDocumentBreadcrumbProps {
   savedAt?: Date | null;
   isOffline?: boolean;
   projectId?: number;
+}
+
+interface SpaceBreadcrumbProps {
+  spaceName: string;
+}
+
+export function SpaceBreadcrumb({ spaceName }: SpaceBreadcrumbProps) {
+  return (
+    <nav className="flex min-w-0 flex-1 items-center gap-1 text-sm text-muted-foreground">
+      <Link href={KNOWLEDGE_BASE} className="shrink-0 transition-colors hover:text-foreground">
+        Wiki
+      </Link>
+      <KbChevronRightIcon className="h-3 w-3 shrink-0" />
+      <Link href={KB_SPACES} className="shrink-0 transition-colors hover:text-foreground">
+        Spaces
+      </Link>
+      <KbChevronRightIcon className="h-3 w-3 shrink-0" />
+      <span className="min-w-0 truncate font-medium text-foreground">{spaceName}</span>
+    </nav>
+  );
 }
 
 function formatSavedAt(date: Date): string {
@@ -45,13 +65,13 @@ export function PageDocumentBreadcrumb({
   }
 
   return (
-    <div className="flex items-center gap-2 min-w-0">
-      <nav className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap min-w-0">
+    <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+      <nav className="flex min-w-0 flex-1 items-center gap-1 text-sm text-muted-foreground">
         {isProjectScoped && (
           <>
             <Link
               href={`/build/${projectId}`}
-              className="hover:text-foreground transition-colors shrink-0"
+              className="shrink-0 transition-colors hover:text-foreground"
             >
               Project
             </Link>
@@ -60,7 +80,7 @@ export function PageDocumentBreadcrumb({
         )}
         <Link
           href={wikiHref}
-          className="hover:text-foreground transition-colors shrink-0"
+          className="shrink-0 transition-colors hover:text-foreground"
         >
           Wiki
         </Link>
@@ -85,52 +105,44 @@ export function PageDocumentBreadcrumb({
         </span>
       </nav>
 
-      {isOffline && (
-        <span className="flex items-center gap-1 text-xs text-status-warning-ink shrink-0">
-          <KbAlertCircleIcon className="h-3 w-3" />
-          Offline — edits queued
-        </span>
-      )}
-      {!isOffline && (saveState === "pending" || saveState === "saving") && (
-        <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-          <KbLoader2Icon className="h-3 w-3 animate-spin" />
-          Saving…
-        </span>
-      )}
-      {!isOffline && saveState === "saved" && (
-        <span className="text-xs text-muted-foreground shrink-0" suppressHydrationWarning>
-          {savedAt ? `Saved at ${formatSavedAt(savedAt)}` : "Saved"}
-        </span>
-      )}
+      <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+        {isOffline && (
+          <span className="flex items-center gap-1 text-xs text-status-warning-ink">
+            <KbAlertCircleIcon className="h-3 w-3" />
+            Offline — edits queued
+          </span>
+        )}
+        {!isOffline && (saveState === "pending" || saveState === "saving") && (
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <KbLoader2Icon className="h-3 w-3 animate-spin" />
+            Saving…
+          </span>
+        )}
+        {!isOffline && saveState === "saved" && (
+          <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+            {savedAt ? `Saved at ${formatSavedAt(savedAt)}` : "Saved"}
+          </span>
+        )}
 
-      {page.status && (
-        <div className="flex items-center gap-1.5 shrink-0">
-          <Badge
-            variant="outline"
-            className={`text-micro h-4 px-1.5 ${KB_STATUS_BADGE_CLASS[page.status] ?? ""}`}
-          >
-            {KB_STATUS_LABELS[page.status] ?? page.status}
-          </Badge>
-          {page.trustState === "verified" && (
+        {page.status ? (
+          <>
             <Badge
               variant="outline"
-              className="text-micro h-4 px-1.5 bg-status-success-surface text-status-success-ink border-status-success-rule"
+              className={`h-5 px-1.5 text-micro ${KB_STATUS_BADGE_CLASS[page.status] ?? ""}`}
             >
-              Verified
+              {KB_STATUS_LABELS[page.status] ?? page.status}
             </Badge>
-          )}
-          {page.coverImage && (
-            <Badge variant="outline" className="text-micro h-4 px-1.5">
-              Cover
-            </Badge>
-          )}
-          {page.isFavorite && (
-            <Badge variant="outline" className="text-micro h-4 px-1.5">
-              Favorite
-            </Badge>
-          )}
-        </div>
-      )}
+            {page.trustState === "verified" ? (
+              <Badge
+                variant="outline"
+                className="h-5 border-status-success-rule bg-status-success-surface px-1.5 text-micro text-status-success-ink"
+              >
+                Verified
+              </Badge>
+            ) : null}
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

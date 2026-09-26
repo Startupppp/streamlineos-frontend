@@ -28,6 +28,10 @@ jest.mock("@/hooks/api/organization", () => ({
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
+}));
+
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
@@ -183,6 +187,9 @@ jest.mock("lucide-react", () => ({
 import { useChangeRequests, useDeleteChangeRequest } from "@/hooks/api/build/change-requests";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+
+const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
 
 const mockUseChangeRequests = useChangeRequests as jest.Mock;
 const mockUseDeleteChangeRequest = useDeleteChangeRequest as jest.Mock;
@@ -216,6 +223,8 @@ beforeEach(() => {
   mockUseChangeRequests.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseDeleteChangeRequest.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseOrgMembers.mockReturnValue(baseQueryResult({ data: { data: [] } }));
+  mockUseBuildListKeyboard.mockClear();
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });
 
 it("renders NoPermissionState when build:changerequests:view is denied instead of empty state", () => {
@@ -314,5 +323,84 @@ describe("ChangeRequestsPage — cursor page consumption", () => {
     );
     render(<ChangeRequestsPage projectId={1} />);
     expect(screen.getByTestId("data-table")).toHaveAttribute("data-has-more", "false");
+  });
+});
+
+describe("ChangeRequestsPage — keyboard shortcut wiring", () => {
+  const crRow = {
+    id: 7,
+    orgId: "org-1",
+    projectId: 1,
+    crNumber: 7,
+    title: "keyboard target",
+    description: null,
+    impact: null,
+    estimateMinutes: null,
+    budgetImpactCents: null,
+    timelineImpactDays: null,
+    status: "submitted" as const,
+    requestedById: null,
+    approvalOwnerId: null,
+    approvalOwnerMembershipId: null,
+    decisionComment: null,
+    decidedAt: null,
+    createdBy: null,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+    deletedAt: null,
+  };
+
+  it("calls useBuildListKeyboard with itemCount equal to the number of rows in the ready state", () => {
+    mockUseChangeRequests.mockReturnValue(
+      baseQueryResult({
+        data: {
+          data: [crRow],
+          pagination: { hasMore: false, nextCursor: null, limit: 25 },
+        },
+      }),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ itemCount: 1 }),
+    );
+  });
+
+  it("enables keyboard shortcuts when the page is in ready state", () => {
+    mockUseChangeRequests.mockReturnValue(
+      baseQueryResult({
+        data: {
+          data: [crRow],
+          pagination: { hasMore: false, nextCursor: null, limit: 25 },
+        },
+      }),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: true }),
+    );
+  });
+
+  it("disables keyboard shortcuts while the page is loading so j/k do not misfire", () => {
+    mockUseChangeRequests.mockReturnValue(baseQueryResult({ isLoading: true }));
+    render(<ChangeRequestsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: false }),
+    );
+  });
+
+  it("passes an onOpen callback that opens the edit sheet for the row at the given index", () => {
+    mockUseChangeRequests.mockReturnValue(
+      baseQueryResult({
+        data: {
+          data: [crRow],
+          pagination: { hasMore: false, nextCursor: null, limit: 25 },
+        },
+      }),
+    );
+    render(<ChangeRequestsPage projectId={1} />);
+    const { onOpen } = mockUseBuildListKeyboard.mock.calls[
+      mockUseBuildListKeyboard.mock.calls.length - 1
+    ][0] as { onOpen: (index: number) => void };
+    expect(() => onOpen(0)).not.toThrow();
   });
 });

@@ -5,6 +5,7 @@ import { CustomFieldsSettings } from "./custom-fields-settings";
 import { customFieldSchema } from "./custom-fields-schema";
 
 let mockAccessState: AccessState = "denied";
+let mockViewAccessState: AccessState = "granted";
 const mockUpdateMutate = jest.fn();
 
 const mockPermissionsAsked: string[] = [];
@@ -16,7 +17,7 @@ jest.mock("@/hooks/api/access", () => ({
   },
   useCanState: (permission: string): AccessState => {
     mockPermissionsAsked.push(permission);
-    return mockAccessState;
+    return permission === "build:view" ? mockViewAccessState : mockAccessState;
   },
 }));
 
@@ -38,6 +39,7 @@ jest.mock("@/hooks/api/build/custom-fields", () => ({
 
 beforeEach(() => {
   mockAccessState = "denied";
+  mockViewAccessState = "granted";
   mockUpdateMutate.mockReset();
 });
 

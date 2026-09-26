@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useModules, useCreateModule } from "@/hooks/api/build";
+import { useModulePages, useCreateModule } from "@/hooks/api/build";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ModuleCard, ModuleCardSkeleton } from "@/features/build/modules/module-card";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +52,10 @@ import {
   DESC_MAX,
 } from "./create-module-schema";
 import { useCan } from "@/hooks/api/access";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 function NewModuleButton() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -73,12 +76,18 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
   const canManage = useCan("build:workspace:manage");
 
   const {
-    data: modules,
+    data: modulePages,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
     isLoading,
     isError,
     error,
     refetch,
-  } = useModules(projectId);
+  } = useModulePages(projectId);
+
+  const pageState = usePageState({ isLoading, isError, error, permission: "build:view" });
+  const modules = modulePages?.pages.flatMap((page) => page.data) ?? [];
   const createMutation = useCreateModule();
 
   const form = useForm<CreateModuleForm>({
@@ -126,6 +135,10 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
     void refetch();
   }, [refetch]);
 
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
   const handleLeadChange = useCallback(
     (userId: string | null) => form.setValue("leadId", userId ?? undefined),
     [form],
@@ -160,12 +173,34 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
     [createMutation, form, projectId],
   );
 
+  const handleClearModulesKeyboard = useCallback(() => {}, []);
+  const handleOpenModuleByIndex = useCallback((_index: number) => {}, []);
+  useBuildListKeyboard({
+    itemCount: modules.length,
+    onOpen: handleOpenModuleByIndex,
+    onClearSelection: handleClearModulesKeyboard,
+    enabled: pageState.kind === "ready",
+  });
+
   const total = modules?.length ?? 0;
   const inProgress = modules?.filter((m) => m.status === "in-progress").length ?? 0;
   const completed = modules?.filter((m) => m.status === "completed").length ?? 0;
   const planned = modules?.filter((m) => m.status === "planned").length ?? 0;
 
-  if (isLoading) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+    return (
+      <PageWrapper
+        title="Modules"
+        subtitle="Organize work into feature groups and track module progress"
+      >
+        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+          {null}
+        </PageState>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "loading") {
     return (
       <PageWrapper
         title="Modules"
@@ -182,24 +217,6 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
               ))}
             </div>
           </PmSection>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Modules"
-        subtitle="Organize work into feature groups and track module progress"
-      >
-        <PmPageShell>
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load modules"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
         </PmPageShell>
       </PageWrapper>
     );
@@ -381,6 +398,12 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
                 <ModuleCard key={mod.id} module={mod} projectId={projectId} index={index} />
               ))}
             </PmStaggerList>
+            <InfiniteScrollSentinel
+              hasNextPage={!!hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+              label="Load more modules"
+            />
           </PmSection>
         )}
       </PmPageShell>

@@ -16,7 +16,6 @@ jest.mock("@/hooks/api/access", () => {
   };
 });
 
-/** The app's client sends a read that failed with no data to the route's error page, unless the hook opts a status out. */
 function appClient(): QueryClient {
   return new QueryClient({
     defaultOptions: { queries: { retry: false, throwOnError: readErrorReachesBoundary }, mutations: { retry: false } },

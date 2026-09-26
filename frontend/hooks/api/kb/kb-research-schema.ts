@@ -16,6 +16,10 @@ const kbResearchBriefBaseContract = {
   sourceCount: z.number().int(),
   errorMessage: z.string().nullable(),
   rating: z.enum(["helpful", "not_helpful"]).nullable(),
+  costCredits: z.number().int().nullable(),
+  provider: z.string().nullable(),
+  model: z.string().nullable(),
+  approvedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 };
@@ -42,3 +46,9 @@ export const kbResearchBriefDetailContract = z.object({
 });
 
 export const kbResearchBriefRateContract = z.object({ success: z.boolean() });
+
+export const kbResearchBriefApproveContract = z.object({ success: z.literal(true) });
+
+export const kbConvertBriefToPageContract = z.object({
+  pageId: z.number().int(),
+});

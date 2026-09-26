@@ -17,6 +17,9 @@ const kbPageReviewWithContextContract = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   pageTitle: z.string().nullable(),
+  pageTrustState: z
+    .enum(["unverified", "verified", "verification_expired"])
+    .nullable(),
   requestedByName: z.string().nullable(),
   reviewerName: z.string().nullable(),
 });

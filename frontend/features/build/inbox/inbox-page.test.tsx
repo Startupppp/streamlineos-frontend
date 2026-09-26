@@ -98,22 +98,25 @@ beforeEach(() => {
 });
 
 describe("InboxPage", () => {
-  it("renders the inbox list panel", () => {
+  it("renders the inbox list panel", async () => {
     render(<InboxPage />);
-    expect(screen.getByTestId("inbox-list")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("inbox-list")).toBeInTheDocument());
   });
 
-  it("passes null as the selected notification id initially", () => {
+  it("passes null as the selected notification id initially", async () => {
     render(<InboxPage />);
-    expect(screen.getByTestId("inbox-list")).toHaveAttribute(
-      "data-selected-id",
-      "null",
+    await waitFor(() =>
+      expect(screen.getByTestId("inbox-list")).toHaveAttribute(
+        "data-selected-id",
+        "null",
+      ),
     );
   });
 
   it("passes the selected notification id to InboxList when a notification is selected", async () => {
     const user = userEvent.setup();
     render(<InboxPage />);
+    await waitFor(() => expect(screen.getByTestId("select-notification")).toBeInTheDocument());
     await user.click(screen.getByTestId("select-notification"));
     expect(screen.getByTestId("inbox-list")).toHaveAttribute(
       "data-selected-id",
@@ -124,6 +127,7 @@ describe("InboxPage", () => {
   it("resets the selected notification id when InboxList triggers auto-clear", async () => {
     const user = userEvent.setup();
     render(<InboxPage />);
+    await waitFor(() => expect(screen.getByTestId("select-notification")).toBeInTheDocument());
     await user.click(screen.getByTestId("select-notification"));
     await user.click(screen.getByTestId("auto-clear"));
     expect(screen.getByTestId("inbox-list")).toHaveAttribute(
@@ -136,14 +140,15 @@ describe("InboxPage", () => {
     (useShellVariant as jest.Mock).mockReturnValue("mobile");
     const user = userEvent.setup();
     render(<InboxPage />);
+    await waitFor(() => expect(screen.getByTestId("select-notification")).toBeInTheDocument());
     const listPanel = screen.getByTestId("inbox-list").closest("div[class]");
     await user.click(screen.getByTestId("select-notification"));
     expect(listPanel?.className).toMatch(/hidden/);
   });
 
-  it("does not own usePageState itself — state classification lives in InboxList", () => {
+  it("does not own usePageState itself — state classification lives in InboxList", async () => {
     render(<InboxPage />);
-    expect(InboxList).toHaveBeenCalled();
+    await waitFor(() => expect(InboxList).toHaveBeenCalled());
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
@@ -154,9 +159,9 @@ describe("InboxPage", () => {
     expect(screen.queryByTestId("inbox-list")).not.toBeInTheDocument();
   });
 
-  it("renders the inbox list when no view param is present", () => {
+  it("renders the inbox list when no view param is present", async () => {
     render(<InboxPage />);
-    expect(screen.getByTestId("inbox-list")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("inbox-list")).toBeInTheDocument());
     expect(screen.queryByTestId("inbox-drafts-panel")).not.toBeInTheDocument();
   });
 });

@@ -1,4 +1,10 @@
-import { cycleListContract, cycleRowContract, epicListContract } from "./execution-schema";
+import {
+  cycleListContract,
+  cycleRowContract,
+  epicListContract,
+  workloadCapacityContract,
+  modulePageContract,
+} from "./execution-schema";
 
 it("accepts the unprojected ticket row listEpics actually returns, since the service selects every tickets column with no projection", () => {
   const row = {
@@ -116,4 +122,86 @@ it("cycleListContract rejects a list item missing progress — the iteration das
     progress: 40,
   };
   expect(cycleListContract.safeParse([withoutProgress]).success).toBe(false);
+});
+
+const baseCapacityMember = {
+  userId: "user-abc",
+  membershipId: 42,
+  workingDaysInWindow: 10,
+  leaveDays: 1,
+  halfLeaveDays: 0,
+  netCapacityDays: 9,
+  capacityHours: 72,
+  loggedHours: 40,
+  isOverAllocated: false,
+  isZeroCapacity: false,
+  utilizationPercent: 55.6,
+};
+
+it("workloadCapacityContract accepts a well-formed capacity response — the workload view reads this shape from the allocation endpoint", () => {
+  const response = { members: [baseCapacityMember] };
+  const result = workloadCapacityContract.parse(response);
+  expect(result.members[0]?.userId).toBe("user-abc");
+  expect(result.members[0]?.isOverAllocated).toBe(false);
+});
+
+it("workloadCapacityContract accepts null capacityHours — a member with no configured capacity reports null, not zero", () => {
+  const member = { ...baseCapacityMember, capacityHours: null };
+  const result = workloadCapacityContract.parse({ members: [member] });
+  expect(result.members[0]?.capacityHours).toBeNull();
+});
+
+it("workloadCapacityContract rejects a member whose utilizationPercent is absent — a missing field would render the bar as indeterminate with no gate catching it", () => {
+  const { utilizationPercent: _u, ...withoutUtil } = baseCapacityMember;
+  expect(
+    workloadCapacityContract.safeParse({ members: [withoutUtil] }).success,
+  ).toBe(false);
+});
+
+it("workloadCapacityContract rejects a response that sends members as an array directly instead of wrapped — the envelope is { members: [] } not []", () => {
+  expect(
+    workloadCapacityContract.safeParse([baseCapacityMember]).success,
+  ).toBe(false);
+});
+
+const baseModuleListItem = {
+  id: 3,
+  name: "Checkout",
+  orgId: "org-1",
+  status: "in-progress" as const,
+  leadId: null,
+  endDate: null,
+  startDate: null,
+  createdBy: "user-1",
+  projectId: 7,
+  createdAt: "2026-09-01T00:00:00.000Z",
+  updatedAt: "2026-09-01T00:00:00.000Z",
+  description: null,
+  totalItems: 8,
+  completedItems: 3,
+  progress: 37,
+};
+
+it("modulePageContract accepts a paginated module response with cursor envelope — the modules list endpoint returns this shape", () => {
+  const response = {
+    data: [baseModuleListItem],
+    pagination: { limit: 20, hasMore: false, nextCursor: null },
+  };
+  const result = modulePageContract.parse(response);
+  expect(result.data[0]?.name).toBe("Checkout");
+  expect(result.pagination.hasMore).toBe(false);
+});
+
+it("modulePageContract rejects a module with an invalid status enum — status is a pgEnum and z.string() would silently accept garbage values", () => {
+  const bad = { ...baseModuleListItem, status: "ACTIVE" };
+  const response = {
+    data: [bad],
+    pagination: { limit: 20, hasMore: false, nextCursor: null },
+  };
+  expect(modulePageContract.safeParse(response).success).toBe(false);
+});
+
+it("modulePageContract rejects a missing pagination field — the client uses hasMore to decide whether to offer more pages", () => {
+  const response = { data: [baseModuleListItem] };
+  expect(modulePageContract.safeParse(response).success).toBe(false);
 });

@@ -82,7 +82,7 @@ A child company is a separate Organization. The Organization is selected globall
 | The project sidebar links Cycles to `/build/1/sprints`; that route has no page and renders the Projects surface | Production route and `frontend/app/(authenticated)/build/[projectId]/cycles/page.tsx` | P0 |
 | `/build/6/workload` canonicalizes to `/build/6?view=workload`, while a physical workload page also exists | Production redirect and `frontend/app/(authenticated)/build/[projectId]/workload/page.tsx` | P0 |
 | My Work, Templates, Backlog, Intake, Files, and Analytics rendered another surface or an under-specified generic surface during the crawl | Production routes listed in each page specification | P0/P1 |
-| Current code owns 74 Build routes: 65 authenticated Build pages plus nine portal/public collaboration pages | `pnpm check:route-census`; `frontend/lib/build/build-route-manifest.ts` | Evidence |
+| Current code owns 83 Build routes: 74 authenticated Build pages plus nine portal/public collaboration pages | `pnpm check:route-census`; `frontend/lib/build/build-route-manifest.ts` | Evidence |
 | Organization Command Center showed two projects and 84 open issues, proving production data is sufficient for organization and project audit | `/build/command-center` | Evidence |
 | Several list pages remained on skeletons during a bounded wait, obscuring empty/error/slow distinctions | `/build/managed-products`, `/build/portfolios`, `/build/programs`, `/build/teams` | P0 |
 

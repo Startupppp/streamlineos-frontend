@@ -94,10 +94,17 @@ interface CoverageTableProps {
   canEdit: boolean;
   canReview: boolean;
   memberNameMap: Map<string, string>;
+  onOpenPerson: (userId: string | null) => void;
 }
 
-function CoverageTable({ view, data, canEdit, canReview, memberNameMap }: CoverageTableProps) {
+function CoverageTable({ view, data, canEdit, canReview, memberNameMap, onOpenPerson }: CoverageTableProps) {
   const common = { className: "flex-1 min-h-0", pagination: { pageSize: 25 } };
+  function handleEmployeeRowClick(row: { userId: string | null }) {
+    onOpenPerson(row.userId);
+  }
+  function handleManagerRowClick(row: { managerUserId: string | null }) {
+    onOpenPerson(row.managerUserId);
+  }
   switch (view) {
     case "withoutManager":
       return (
@@ -109,6 +116,7 @@ function CoverageTable({ view, data, canEdit, canReview, memberNameMap }: Covera
           mobileCardBreakpoint="xl"
           mobileCard={withoutManagerCard(canEdit)}
           getRowKey={(row) => row.employmentId}
+          onRowClick={handleEmployeeRowClick}
           emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="Everyone has a manager" description="Every active employee reports to someone or is a declared top-level role." />}
         />
       );
@@ -121,6 +129,7 @@ function CoverageTable({ view, data, canEdit, canReview, memberNameMap }: Covera
           mobileCardBreakpoint="xl"
           mobileCard={fallbackCard(canEdit)}
           getRowKey={(row, index) => `${row.userId ?? "employee"}-${index}`}
+          onRowClick={handleEmployeeRowClick}
           emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="No temporary managers" description="Nobody is waiting on a manager assigned by the onboarding policy." />}
         />
       );
@@ -145,6 +154,7 @@ function CoverageTable({ view, data, canEdit, canReview, memberNameMap }: Covera
           mobileCardBreakpoint="xl"
           mobileCard={inactiveManagerCard(canEdit)}
           getRowKey={(row, index) => `${row.userId ?? "employee"}-${index}`}
+          onRowClick={handleEmployeeRowClick}
           emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="All managers are active" description="No employee reports to an exited, suspended or deactivated manager." />}
         />
       );
@@ -165,6 +175,7 @@ function CoverageTable({ view, data, canEdit, canReview, memberNameMap }: Covera
           data={data.overSpan}
           columns={OVER_SPAN_COLUMNS}
           getRowKey={(row, index) => `${row.managerUserId ?? "manager"}-${index}`}
+          onRowClick={handleManagerRowClick}
           emptyState={<EmptyState className={TABLE_EMPTY_CLASS} title="Spans of control are within limits" description={`No manager has more than ${data.spanOfControlLimit} direct reports.`} />}
         />
       );
@@ -186,6 +197,10 @@ export function ManagerCoveragePage() {
 
   function handleRetry() {
     void refetch();
+  }
+
+  function handleOpenPerson(userId: string | null) {
+    if (userId) router.push(`/hr/employees/${userId}`);
   }
 
   function handleViewChange(value: string) {
@@ -257,7 +272,7 @@ export function ManagerCoveragePage() {
                 </SelectContent>
               </Select>
             </div>
-            <CoverageTable view={view} data={data} canEdit={canEdit} canReview={canReview} memberNameMap={memberNames(cycleMembers?.data)} />
+            <CoverageTable view={view} data={data} canEdit={canEdit} canReview={canReview} memberNameMap={memberNames(cycleMembers?.data)} onOpenPerson={handleOpenPerson} />
           </CardContent>
         </Card>
       )}

@@ -213,6 +213,7 @@ export function CyclesTab() {
   }
 
   return (
+    <>
     <PageState
       resolution={pageState}
       onRetry={handleRetry}
@@ -327,6 +328,8 @@ export function CyclesTab() {
           })}
         </div>
 
+    </div>
+    </PageState>
       <HrSheet open={sheetOpen} onOpenChange={handleSheetOpenChange} title={editCycle ? "Edit Review Cycle" : "Create Review Cycle"} onSubmit={cycleForm.handleSubmit(handleCreate)} submitLabel={editCycle ? "Save Changes" : "Create"} isPending={createCycle.isPending || updateCycle.isPending}>
         <Form {...cycleForm}>
           <FormField
@@ -447,7 +450,6 @@ export function CyclesTab() {
         onConfirm={handleDelete}
         isPending={deleteCycle.isPending}
       />
-    </div>
-    </PageState>
+    </>
   );
 }

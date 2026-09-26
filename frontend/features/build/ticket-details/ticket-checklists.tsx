@@ -12,7 +12,7 @@ import {
 } from "@/hooks/api/build/checklists";
 import { TicketAiGenerateChecklistAction } from "@/features/build/ai/ticket-detail-ai";
 import { ChecklistSection } from "./checklist-section";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 
 interface TicketChecklistsProps {
   projectId: number;
@@ -27,6 +27,7 @@ export function TicketChecklists({
   canUseAI = false,
   generateChecklistDisabledReason,
 }: TicketChecklistsProps) {
+  const accessState = useCanState("build:tickets:view");
   const canUpdate = useCan("build:tickets:update");
   const { data: checklists = [], isLoading } = useChecklists(
     projectId,
@@ -39,6 +40,10 @@ export function TicketChecklists({
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [createChecklist]);
+
+  if (accessState === "denied" || accessState === "loading") {
+    return null;
+  }
 
   if (isLoading) {
     return (

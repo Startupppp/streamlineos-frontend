@@ -31,6 +31,7 @@ import {
 } from "./submission-inbox-filters";
 import { SubmissionBulkToolbar } from "./submission-bulk-toolbar";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
 const PAGE_SIZE = 25;
 
@@ -154,6 +155,23 @@ export function ProjectSubmissionsInbox({
   const handleClearSelection = useCallback(() => {
     setSelected(new Set());
   }, []);
+
+  const handleOpenFocusedSubmission = useCallback(
+    (index: number) => {
+      requestLeave(() => {
+        const row = rows[index];
+        if (row) router.push(`/build/${projectId}/feedbucket/${row.id}`);
+      });
+    },
+    [rows, projectId, router, requestLeave],
+  );
+
+  useBuildListKeyboard({
+    itemCount: rows.length,
+    onOpen: handleOpenFocusedSubmission,
+    onClearSelection: handleClearSelection,
+    enabled: pendingDeleteId === null,
+  });
 
   const handleRequestDelete = useCallback((submissionId: number) => {
     setPendingDeleteId(submissionId);

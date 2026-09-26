@@ -1,7 +1,9 @@
 import "./product-scope-pages.test-harness";
+import { fireEvent } from "@testing-library/react";
 import { ManagedProductsPage } from "./managed-products-page";
 import {
   EMPTY_MANAGED_PRODUCTS_RESULT,
+  mockRouterPush,
   render,
   screen,
   useManagedProducts,
@@ -34,6 +36,26 @@ describe("ManagedProductsPage — usePageState integration (BSN-01-027)", () => 
       "data-permission",
       "build:managed-products:view",
     );
+  });
+
+  it("navigates to product detail on Enter after j selects the first row so keyboard users can open a product without a mouse", () => {
+    const products = [
+      { id: 42, name: "Alpha Service", key: "ALPHA-001", status: "active" as const, ownerId: null, description: null, orgId: "org-1", vision: null, missionStatement: null, targetCustomer: null, differentiators: null, currentPhase: null, targetLaunchDate: null, successMetrics: null, ownerMembershipId: null, deletedAt: null, createdAt: "2025-01-01T00:00:00Z", updatedAt: "2025-01-01T00:00:00Z" },
+    ];
+    useManagedProducts.mockReturnValue({
+      data: { data: products, pagination: { hasMore: false, nextCursor: null, limit: 20 } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+    render(<ManagedProductsPage />);
+
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "Enter" });
+
+    expect(mockRouterPush).toHaveBeenCalledWith("/build/managed-products/42");
   });
 
   it("displays hook data without additional client-side filtering (BSN-FE-MP-001)", () => {

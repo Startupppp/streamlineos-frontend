@@ -45,8 +45,11 @@ import {
 } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { WikiPageCard, WIKI_PAGE_CARD_GRID_CLASS } from "./wiki-page-card";
-import { Badge } from "@/components/ui/badge";
-import { StatusBadge, TrustBadge } from "./kb-collection-badges";
+import {
+  OwnerMissingBadge,
+  StatusBadge,
+  TrustBadge,
+} from "./kb-collection-badges";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import {
@@ -101,7 +104,12 @@ function buildColumns(
     {
       key: "trustState",
       header: "Trust",
-      cell: (row) => <TrustBadge trustState={row.trustState} />,
+      cell: (row) => (
+        <div className="flex flex-wrap items-center gap-1">
+          <TrustBadge trustState={row.trustState} />
+          <OwnerMissingBadge ownerMembershipId={row.ownerMembershipId} />
+        </div>
+      ),
     },
     {
       key: "updatedAt",
@@ -260,14 +268,7 @@ function AllPagesCardGrid({ row, resolveHref }: AllPagesCardGridProps) {
     >
       <StatusBadge status={row.status} />
       <TrustBadge trustState={row.trustState} />
-      {row.ownerMembershipId === null ? (
-        <Badge
-          variant="outline"
-          className="text-micro h-4 px-1.5 text-muted-foreground"
-        >
-          Owner missing
-        </Badge>
-      ) : null}
+      <OwnerMissingBadge ownerMembershipId={row.ownerMembershipId} />
     </WikiPageCard>
   );
 }

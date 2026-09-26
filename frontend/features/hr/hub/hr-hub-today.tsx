@@ -4,7 +4,6 @@ import { HrSectionHeader } from "@/features/hr/shared/hr-ui";
 import type { HrHubViewProps } from "@/hooks/api/hr/hub-types";
 import { OutTodayCard } from "./today/out-today-card";
 import { JoiningSoonCard } from "./today/joining-soon-card";
-import { InterviewsTodayCard } from "./today/interviews-today-card";
 import { CelebrationsCard } from "./today/celebrations-card";
 import { NextHolidayCard } from "./today/next-holiday-card";
 import { AttendanceNowCard } from "./today/attendance-now-card";
@@ -19,7 +18,6 @@ export function HrHubToday({
   const hasAny =
     access.canLeaveCalendar ||
     access.canAnalytics ||
-    access.canInterviews ||
     access.canAttendanceView;
 
   if (!hasAny) return null;
@@ -42,13 +40,6 @@ export function HrHubToday({
         {access.canAnalytics && (
           <JoiningSoonCard
             section={sections?.onboardingStatus}
-            isLoading={isLoading}
-            onRetry={onRetry}
-          />
-        )}
-        {access.canInterviews && (
-          <InterviewsTodayCard
-            section={sections?.interviews}
             isLoading={isLoading}
             onRetry={onRetry}
           />

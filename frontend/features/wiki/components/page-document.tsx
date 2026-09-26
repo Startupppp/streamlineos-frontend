@@ -11,8 +11,7 @@ import {
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { KbAlertCircleIcon, KbImageIcon } from "@/features/wiki/lib/kb-icons";
-import { Button } from "@/components/ui/button";
+import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -38,13 +37,15 @@ import { PageCoverPickerDialog } from "./page-cover-picker";
 import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";
 import PageRightPanel from "./page-right-panel";
-import { PageDocumentTrustHeader } from "./page-document-trust-header";
+import { PageDocumentPropertyActions } from "./page-document-property-actions";
+import { PageDocumentOutline } from "./page-document-outline";
 import {
   normalizePlateValue,
   getPlainText,
   plainTextToPlateValue,
   prependPlateValue,
 } from "@/components/editor/plate/plate-value-convert";
+import "../wiki-document.css";
 
 const PlateDocumentEditor = dynamic(
   () => import("@/components/editor/plate/plate-document-editor"),
@@ -105,6 +106,8 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   const [editorDraft, setEditorDraft] = useState<unknown>(null);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const editorSnapshotRef = useRef<string | null>(null);
   const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
 
   const handleSavePage = useCallback(
@@ -147,6 +150,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
 
   useEffect(() => {
     setEditorDraft(null);
+    editorSnapshotRef.current = null;
   }, [pageId]);
 
   const handleNavigateToPage = useCallback(
@@ -191,8 +195,16 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   }
 
   function handleEditorChange(value: unknown, plainText: string) {
+    const content = withoutPendingUploads(value);
+    const snapshot = `${plainText}\u0000${JSON.stringify(content)}`;
+    if (editorSnapshotRef.current === null) {
+      const loaded = normalizePlateValue(page?.content);
+      editorSnapshotRef.current = `${getPlainText(loaded)}\u0000${JSON.stringify(withoutPendingUploads(loaded))}`;
+    }
+    if (snapshot === editorSnapshotRef.current) return;
+    editorSnapshotRef.current = snapshot;
     setEditorDraft(value);
-    schedule({ content: withoutPendingUploads(value), contentText: plainText });
+    schedule({ content, contentText: plainText });
   }
 
   function applyEditorValue(next: unknown, plainText: string) {
@@ -269,7 +281,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     .filter(Boolean).length;
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="wiki-document flex min-h-full flex-col">
       <PageCover
         coverImage={page.coverImage}
         isEditable={isEditable}
@@ -285,8 +297,8 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
 
       <div className="flex min-w-0 flex-1">
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="sticky top-0 z-40 border-b border-border bg-background">
-            <div className="mx-auto w-full max-w-[46rem] px-4 py-2 sm:px-6">
+          <div className="wiki-document-chrome sticky top-0 z-40 border-b">
+            <div className="mx-auto w-full max-w-[46rem] px-4 py-2.5 sm:px-8">
               <PageDocumentHeader
                 page={page}
                 pageId={pageId}
@@ -305,18 +317,40 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             {isEditable ? (
               <div
                 ref={handleToolbarHost}
-                className="mx-auto w-full max-w-[46rem] px-4 sm:px-6"
+                className="mx-auto w-full max-w-[46rem] border-t border-border/50 px-4 sm:px-8"
               />
             ) : null}
           </div>
 
-          <div className="mx-auto w-full min-w-0 max-w-[46rem] px-4 pb-24 pt-6 sm:px-6">
-            <div className="mb-6 flex items-start gap-2">
-              <PageIconPicker
-                icon={page.icon}
-                isEditable={isEditable}
-                onIconChange={handleIconChange}
-              />
+          <div className="wiki-document-body mx-auto mb-8 w-full min-w-0 max-w-[46rem] flex-1 px-4 py-4 sm:px-8">
+            {conflict ? (
+              <div className="mb-5">
+                <PageEditConflict
+                  conflict={conflict}
+                  isReloading={isReloading}
+                  pendingFields={pendingFields}
+                  onKeepMine={keepLocalEdits}
+                  onDiscardMine={handleDiscardMine}
+                />
+              </div>
+            ) : null}
+
+            {page.isLocked && !canManage ? (
+              <div className="mb-5 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+                <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
+                <span>This page is locked and is read-only.</span>
+              </div>
+            ) : null}
+
+            <div className="group/title mb-2 flex items-center gap-2">
+              {page.icon ? (
+                <PageIconPicker
+                  icon={page.icon}
+                  isEditable={isEditable}
+                  onIconChange={handleIconChange}
+                  variant="inline"
+                />
+              ) : null}
               <textarea
                 ref={titleRef}
                 value={localTitle}
@@ -324,65 +358,40 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
                 onKeyDown={handleTitleKeyDown}
                 onMouseDown={handleTitleMouseDown}
                 placeholder="Untitled"
-                className="min-w-0 flex-1 resize-none overflow-hidden border-0 bg-transparent text-left text-2xl font-semibold leading-tight text-foreground outline-none placeholder:text-muted-foreground sm:text-3xl"
+                className="min-w-0 flex-1 resize-none overflow-hidden border-0 bg-transparent py-0 text-left text-3xl font-semibold leading-tight tracking-tight text-foreground outline-none placeholder:text-muted-foreground"
                 rows={1}
                 style={{ height: "auto" }}
                 readOnly={!isEditable}
                 aria-label="Page title"
               />
-            </div>
-            {isEditable && !page.coverImage ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mb-4 h-8 px-2 text-muted-foreground"
-                onClick={handleOpenCover}
-              >
-                <KbImageIcon className="mr-1.5 h-4 w-4" />
-                Add cover
-              </Button>
-            ) : null}
-
-            {conflict && (
-              <PageEditConflict
-                conflict={conflict}
-                isReloading={isReloading}
-                pendingFields={pendingFields}
-                onKeepMine={keepLocalEdits}
-                onDiscardMine={handleDiscardMine}
+              <PageDocumentPropertyActions
+                icon={page.icon}
+                hasCover={Boolean(page.coverImage)}
+                isEditable={isEditable}
+                onIconChange={handleIconChange}
+                onOpenCover={handleOpenCover}
               />
-            )}
+            </div>
 
-            <PageDocumentTrustHeader
-              status={page.status}
-              trustState={page.trustState}
-              visibility={page.visibility}
-              nextReviewAt={page.nextReviewAt}
-              updatedAt={page.updatedAt}
-              lastEditedById={page.lastEditedById}
-              ownerUserId={page.ownerUserId}
+            <PageDocumentOutline
+              content={editorDraft ?? page.content}
+              containerRef={editorContainerRef}
             />
 
-            {page.isLocked && !canManage && (
-              <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
-                <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
-                <span>This page is locked and is read-only.</span>
-              </div>
-            )}
-
-            <PlateDocumentEditor
-              value={editorDraft ?? page.content ?? undefined}
-              contentKey={`${pageId}:${reloadNonce}`}
-              editable={isEditable}
-              placeholder="Start writing…"
-              onChange={handleEditorChange}
-              fetchMentionUsers={fetchMentionUsers}
-              fetchPageLinks={fetchPageLinks}
-              onNavigateToPage={handleNavigateToPage}
-              uploadFile={isEditable ? handleUploadFile : undefined}
-              toolbarHost={toolbarHost}
-            />
+            <div ref={editorContainerRef} className="min-w-0">
+              <PlateDocumentEditor
+                value={editorDraft ?? page.content ?? undefined}
+                contentKey={`${pageId}:${reloadNonce}`}
+                editable={isEditable}
+                placeholder="Start writing…"
+                onChange={handleEditorChange}
+                fetchMentionUsers={fetchMentionUsers}
+                fetchPageLinks={fetchPageLinks}
+                onNavigateToPage={handleNavigateToPage}
+                uploadFile={isEditable ? handleUploadFile : undefined}
+                toolbarHost={toolbarHost}
+              />
+            </div>
           </div>
         </div>
 

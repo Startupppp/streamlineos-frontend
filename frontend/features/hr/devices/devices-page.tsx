@@ -226,6 +226,7 @@ export function DevicesPage() {
     permission: "hr:biometric:manage",
     isLoading: false,
     isError: false,
+    error: null,
   });
   const [addOpen, setAddOpen] = useState(false);
   const [editDevice, setEditDevice] = useState<TimeDevice | null>(null);

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { ReactNode, SyntheticEvent } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -39,6 +39,12 @@ export function personLink(userId: string | null, name: string | null, fallback:
   );
 }
 
+// Rows open the employee; a control inside a row must not. React events bubble
+// through a popover's portal, so they are stopped at the cell boundary.
+function stopRowActivation(event: SyntheticEvent) {
+  event.stopPropagation();
+}
+
 /**
  * Assigns through the canonical reporting-line PUT (HRM-15), never the profile
  * PATCH. A change past the repeated-change threshold needs a reason this cell
@@ -64,6 +70,7 @@ export function AssignManagerCell({ userId, currentManagerUserId }: { userId: st
   }
 
   return (
+    <span onClick={stopRowActivation} onKeyDown={stopRowActivation}>
     <ManagerCandidatePicker
       value={currentManagerUserId ?? null}
       onChange={handleChange}
@@ -72,6 +79,7 @@ export function AssignManagerCell({ userId, currentManagerUserId }: { userId: st
       disabled={setLine.isPending}
       className="w-56"
     />
+    </span>
   );
 }
 
@@ -159,7 +167,7 @@ export const FALLBACK_ACTION_COLUMN: DataTableColumn<FallbackRow> = {
   header: "Resolve",
   cell: (row) =>
     row.userId ? (
-      <span className="flex flex-wrap items-center gap-2">
+      <span className="flex flex-wrap items-center gap-2" onClick={stopRowActivation} onKeyDown={stopRowActivation}>
         <AssignManagerCell userId={row.userId} currentManagerUserId={row.managerUserId} />
         <KeepFallbackButton userId={row.userId} />
       </span>

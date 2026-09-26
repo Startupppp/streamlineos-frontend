@@ -5,8 +5,6 @@ import {
   useHrAnalytics,
   useHrAttritionAnalytics,
 } from "@/hooks/api/hr/analytics";
-import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
-import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -29,27 +27,25 @@ import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
   Users,
   TrendingDown,
-  Briefcase,
   Activity,
   CalendarDays,
   BarChart3,
 } from "lucide-react";
 import { WorkforceSection } from "@/features/hr/analytics/workforce-section";
-import { RecruitmentSection } from "@/features/hr/analytics/recruitment-section";
 import { AttendanceSection } from "@/features/hr/analytics/attendance-section";
 import { LeaveSection } from "@/features/hr/analytics/leave-section";
 import { AttritionSection } from "@/features/hr/analytics/attrition-section";
 import { CommandCenterSection } from "@/features/hr/analytics/command-center-section";
 
 type DateRange = "month" | "quarter" | "year";
-type SectionTab = "command-center" | "workforce" | "recruitment" | "attendance" | "leaves" | "attrition";
+type SectionTab = "command-center" | "workforce" | "attendance" | "leaves" | "attrition";
 
 const NOW = new Date();
 const CURRENT_YEAR = NOW.getFullYear();
 const CURRENT_MONTH = NOW.getMonth() + 1;
 
 const DATE_RANGE_VALUES: readonly DateRange[] = ["month", "quarter", "year"];
-const SECTION_TAB_VALUES: readonly SectionTab[] = ["command-center", "workforce", "recruitment", "attendance", "leaves", "attrition"];
+const SECTION_TAB_VALUES: readonly SectionTab[] = ["command-center", "workforce", "attendance", "leaves", "attrition"];
 
 function isDateRange(v: string): v is DateRange {
   return DATE_RANGE_VALUES.some((candidate) => candidate === v);
@@ -63,11 +59,9 @@ const SECTION_TABS: Array<{
   value: SectionTab;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  requiredPermission?: "hr:interviews:view";
 }> = [
   { value: "command-center", label: "Command center", icon: BarChart3 },
   { value: "workforce", label: "Workforce", icon: Users },
-  { value: "recruitment", label: "Recruitment", icon: Briefcase, requiredPermission: "hr:interviews:view" },
   { value: "attendance", label: "Attendance", icon: Activity },
   { value: "leaves", label: "Leaves", icon: CalendarDays },
   { value: "attrition", label: "Attrition", icon: TrendingDown },
@@ -83,25 +77,18 @@ interface KpiItem {
 function ExecutiveKPIs({
   totalEmployees,
   attritionRate,
-  openPositions,
   attendanceLogs,
   isLoading,
 }: {
   totalEmployees: number;
   attritionRate: string;
-  openPositions: number | null;
   attendanceLogs: number;
   isLoading: boolean;
 }) {
-  const cols = openPositions === null ? 3 : 4;
   if (isLoading) {
-    return <StatCardGridSkeleton cols={cols} />;
+    return <StatCardGridSkeleton cols={3} />;
   }
 
-  const openPositionsKpi: KpiItem[] =
-    openPositions === null
-      ? []
-      : [{ label: "Open positions", value: openPositions, icon: Briefcase, tone: "amber" }];
   const kpis: KpiItem[] = [
     {
       label: "Total employees",
@@ -115,7 +102,6 @@ function ExecutiveKPIs({
       icon: TrendingDown,
       tone: "red",
     },
-    ...openPositionsKpi,
     {
       label: "Attendance logs",
       value: attendanceLogs,
@@ -125,7 +111,7 @@ function ExecutiveKPIs({
   ];
 
   return (
-    <StatCardGrid cols={cols}>
+    <StatCardGrid cols={3}>
       {kpis.map((item) => (
         <StatCard
           key={item.label}
@@ -179,7 +165,6 @@ export function AnalyticsPageClient() {
     return 1;
   }, [dateRange]);
 
-  const canViewRecruitment = useCan("hr:interviews:view");
   const {
     data,
     isLoading: isAnalyticsLoading,
@@ -188,24 +173,15 @@ export function AnalyticsPageClient() {
     refetch,
   } = useHrAnalytics();
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const { data: recruitmentStats, isLoading: isRecruitmentLoading } =
-    useRecruitmentStats();
   const { data: attritionData, isLoading: isAttritionLoading } =
     useHrAttritionAnalytics();
 
   const isTopLoading =
-    isAnalyticsLoading || isRecruitmentLoading || isAttritionLoading;
+    isAnalyticsLoading || isAttritionLoading;
 
   const totalEmployees = data?.headcount.active ?? 0;
   const attritionRate = attritionData?.attritionRatePercent ?? "0.0";
-  const openPositions = canViewRecruitment ? (recruitmentStats?.openJobs ?? 0) : null;
   const attendanceLogs = data?.attendance.totalLogsThisMonth ?? 0;
-  const visibleTabs = SECTION_TABS.filter(
-    (tab) => tab.requiredPermission === undefined || canViewRecruitment,
-  );
-  const selectedSection = visibleTabs.some((tab) => tab.value === activeSection)
-    ? activeSection
-    : "command-center";
 
   const handleSectionChange = useCallback((v: string) => {
     if (isSectionTab(v)) setActiveSection(v);
@@ -227,7 +203,7 @@ export function AnalyticsPageClient() {
         resolution={pageState}
         onRetry={handleRetry}
         className={CONTENT_FILL_PANEL}
-        loading={<StatCardGridSkeleton cols={4} />}
+        loading={<StatCardGridSkeleton cols={3} />}
         empty={
           <EmptyState
             illustrationPreset="team"
@@ -243,13 +219,12 @@ export function AnalyticsPageClient() {
           <ExecutiveKPIs
             totalEmployees={totalEmployees}
             attritionRate={attritionRate}
-            openPositions={openPositions}
             attendanceLogs={attendanceLogs}
             isLoading={isTopLoading}
           />
 
           <Tabs
-            value={selectedSection}
+            value={activeSection}
             onValueChange={handleSectionChange}
             className="flex min-h-0 flex-1 flex-col gap-4"
           >
@@ -260,7 +235,7 @@ export function AnalyticsPageClient() {
             collapseBelow="xl"
               tabs={
                 <TabsList>
-                  {visibleTabs.map(({ value, label, icon: Icon }) => (
+                  {SECTION_TABS.map(({ value, label, icon: Icon }) => (
                     <TabsTrigger key={value} value={value} className="gap-1.5">
                       <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                       {label}
@@ -292,12 +267,6 @@ export function AnalyticsPageClient() {
                 <TabsContent value="workforce" className="mt-0 flex-none">
                   <WorkforceSection data={data} isLoading={isAnalyticsLoading} />
                 </TabsContent>
-
-                {canViewRecruitment ? (
-                  <TabsContent value="recruitment" className="mt-0 flex-none">
-                    <RecruitmentSection isLoading={isRecruitmentLoading} />
-                  </TabsContent>
-                ) : null}
 
                 <TabsContent value="attendance" className="mt-0 flex-none">
                   <AttendanceSection

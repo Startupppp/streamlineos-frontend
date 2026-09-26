@@ -109,6 +109,18 @@ const OFF_CLIENT_HOOKS = new Map([
     "PERMISSIONED hr:expenses:manage — the request lives in the module-local importExpensesRequest helper (POST /hr/expenses/import); the hook carries the key.",
   ],
   [
+    "usePreviewTicketImport",
+    "PERMISSIONED build:tickets:create — the request lives in the Build import-export client helper (POST /build/{projectId}/import-export/tickets/preview); the hook carries the key.",
+  ],
+  [
+    "useCommitTicketImport",
+    "PERMISSIONED build:tickets:create — the request lives in the Build import-export client helper (POST /build/{projectId}/import-export/tickets); the hook carries the key.",
+  ],
+  [
+    "useExportTickets",
+    "PERMISSIONED build:tickets:view — the request lives in the Build import-export client helper (GET /build/{projectId}/import-export/tickets/export); the hook carries the key.",
+  ],
+  [
     "useUploadFile",
     "IN-SERVICE — the request lives in the module-local uploadFileRequest helper (POST /storage/upload), which is in-service: the upload is authorized by the feature that consumes the returned key.",
   ],

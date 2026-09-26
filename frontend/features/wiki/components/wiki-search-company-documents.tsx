@@ -16,7 +16,6 @@ import { companyDocumentHref } from "@/lib/knowledge-routes";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 
 const GROUP_LIMIT = 10;
-// The server refuses a one-character search; asking would only produce an error the person did nothing to earn.
 const MIN_QUERY_LENGTH = 2;
 
 function DocumentRow({ item }: { item: LinkedDocumentItem }) {
@@ -40,13 +39,6 @@ function DocumentRow({ item }: { item: LinkedDocumentItem }) {
   );
 }
 
-/**
- * Company documents that match a search, as a group of their own beside the page results. It has its own request
- * and its own cursor: two sources' cursors are never merged, so paging one cannot skip or repeat the other. The
- * group is absent while the tenant has not switched search on, absent for a query too short to send, and absent
- * when nothing matches, so a person is never shown a heading with nothing under it. What may be found is decided
- * by the server from the reader's audience; this only asks.
- */
 export function WikiSearchCompanyDocuments({ query }: { query: string }) {
   const flags = useHrKbLinkFlags();
   const words = query.trim();
@@ -59,7 +51,6 @@ export function WikiSearchCompanyDocuments({ query }: { query: string }) {
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   if (!active) return null;
-  // The switch was turned off after the page loaded: the feature is gone, not broken.
   if (isError && isApiError(error) && error.status === 404) return null;
   if (isError)
     return (

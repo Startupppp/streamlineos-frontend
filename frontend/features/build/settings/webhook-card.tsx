@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useCanState } from "@/hooks/api/access";
 
 function DeliveryRow({ delivery }: { delivery: WebhookDelivery }) {
   const statusColor =
@@ -79,6 +80,7 @@ export function WebhookCard({
   onDelete,
   canManage = false,
 }: WebhookCardProps) {
+  const accessState = useCanState("build:manage");
   const [expanded, setExpanded] = useState(false);
   const { data: deliveries = [], isLoading } = useWebhookDeliveries(
     projectId,
@@ -115,6 +117,8 @@ export function WebhookCard({
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [sendTest, webhook.id]);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   return (
     <motion.div

@@ -31,7 +31,7 @@ import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { SubtaskRow } from "./subtask-row";
 import type { ProjectStatusRecord } from "@/types/projects";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 
 interface TicketRelationsProps {
   ticketId: number;
@@ -96,6 +96,7 @@ function RemoveRelationButton({ onClick }: { onClick: () => void }) {
 }
 
 export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
+  const accessState = useCanState("build:tickets:view");
   const canUpdate = useCan("build:tickets:update");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
@@ -159,6 +160,8 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
     },
     {},
   ), [relations]);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   if (isLoading) return null;
 

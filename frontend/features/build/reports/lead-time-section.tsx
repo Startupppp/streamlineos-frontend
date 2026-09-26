@@ -9,6 +9,7 @@ import dynamic from "next/dynamic";
 import { TrendingUp } from "lucide-react";
 import { useLeadTimeReport } from "@/hooks/api/build/reports";
 import { ChartCard } from "./chart-card";
+import { useCanState } from "@/hooks/api/access";
 
 const LeadTimeChart = dynamic(
   () => import("./lead-time-chart").then((m) => ({ default: m.LeadTimeChart })),
@@ -16,10 +17,13 @@ const LeadTimeChart = dynamic(
 );
 
 export function LeadTimeSection({ projectId }: { projectId: number }) {
+  const accessState = useCanState("build:view");
   const { data = [], isLoading, isError, refetch } =
     useLeadTimeReport(projectId);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   return (
     <ChartCard title="Lead Time" icon={TrendingUp}>

@@ -6,7 +6,7 @@ import { join, relative, sep } from "node:path";
  * pages" — and §9's one-directional flow (features -> shared, never
  * feature -> feature).
  *
- * `/hr/recruitment/interviews` broke both for five consecutive audit passes by
+ * `/recruitment/interviews` broke both for five consecutive audit passes by
  * importing `BigCalendarWrapper` out of `features/calendar/**`. This scan is
  * the regression fence: nothing outside `features/calendar/**` may mount the
  * calendar grid, by any route in.

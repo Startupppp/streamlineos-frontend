@@ -31,7 +31,7 @@ export const PRODUCT_HREF_EXCEPTIONS: Readonly<
 > = {
   administration: "/settings",
   documents: "/knowledge/chat",
-  recruitment: "/hr/recruitment",
+  recruitment: "/recruitment",
 };
 
 // Products with no manifest module counterpart (not in any module's productKey set).

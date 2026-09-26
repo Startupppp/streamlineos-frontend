@@ -23,6 +23,10 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
+jest.mock("./reviews-filters", () => ({
+  ReviewsFilters: () => <div data-testid="reviews-filters" />,
+}));
+
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: jest.fn(),
 }));
@@ -141,6 +145,7 @@ function makeReview(overrides: Partial<KbPageReview> = {}): KbPageReview {
     orgId: "org-1",
     pageId: 10,
     pageTitle: "Test Page",
+    pageTrustState: null,
     type: "approval",
     status: "pending",
     isOverdue: false,

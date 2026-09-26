@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion, useReducedMotion } from "framer-motion";
@@ -27,9 +28,14 @@ import {
   useKbSources,
   useUploadKbSource,
   useDeleteKbSource,
+  type KbSourcesParams,
 } from "@/hooks/api/kb/sources";
 import { companyDocumentHref, pageHref } from "@/lib/knowledge-routes";
-import { KbSourcesSheet } from "@/features/wiki/components/kb-sources-sheet";
+import {
+  KbSourcesSheet,
+  type SourceKindFilter,
+  type OwnerFilter,
+} from "@/features/wiki/components/kb-sources-sheet";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";
 import {
@@ -43,8 +49,13 @@ import {
   InsufficientEvidenceBanner,
   OverQuotaBanner,
   DisagreementBanner,
+  CopyAnswerButton,
+  AnswerFeedbackBar,
+  CitationEvidenceList,
   buildKbHistoryRows,
+  questionForAssistantId,
 } from "@/features/wiki/components/kb-chat-parts";
+import type { KbAskCitation } from "@/types/kb";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -52,6 +63,7 @@ interface Pending {
   question: string;
   answer?: string;
   error?: string;
+  citations?: KbAskCitation[];
   hasContext?: boolean;
   disagreement?: { summary: string };
   isQuotaError?: boolean;
@@ -75,6 +87,8 @@ export default function KnowledgeBasePage() {
   const [sourcesSheet, setSourcesSheet] = useState<SourcesSheetState>({ kind: "closed" });
   const [scopeSourceIds, setScopeSourceIds] = useState<number[]>([]);
   const [pendingScopeIds, setPendingScopeIds] = useState<number[]>([]);
+  const [scopeVerifiedOnly, setScopeVerifiedOnly] = useState(false);
+  const [pendingVerifiedOnly, setPendingVerifiedOnly] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -87,6 +101,9 @@ export default function KnowledgeBasePage() {
   const generationRef = useRef(0);
   const initializedRef = useRef(false);
 
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
+
   const ask = useKbAsk();
   const conversationMessages = useKbConversationMessages(activeConversationId, true);
   const { hasNextPage, isFetchingNextPage, fetchNextPage, isLoading } = conversationMessages;
@@ -98,6 +115,17 @@ export default function KnowledgeBasePage() {
   const sourcesQuery = useKbSources();
   const uploadSource = useUploadKbSource();
   const deleteSource = useDeleteKbSource();
+
+  const [scopeKindFilter, setScopeKindFilter] = useState<SourceKindFilter>("all");
+  const [scopeOwnerFilter, setScopeOwnerFilter] = useState<OwnerFilter>("all");
+
+  const scopeFilters: KbSourcesParams = {
+    kind: scopeKindFilter !== "all" ? scopeKindFilter : undefined,
+    createdById: scopeOwnerFilter === "mine" && currentUserId ? currentUserId : undefined,
+  };
+  const hasScopeFilters = scopeFilters.kind !== undefined || scopeFilters.createdById !== undefined;
+  const scopeSourcesQuery = useKbSources(hasScopeFilters ? scopeFilters : undefined);
+  const scopeSources = (scopeSourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
 
   const allConversations = useMemo(
     () => (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations),
@@ -121,6 +149,7 @@ export default function KnowledgeBasePage() {
   );
 
   const rows = useMemo(() => buildKbHistoryRows(persisted), [persisted]);
+  const questionByAssistantId = useMemo(() => questionForAssistantId(persisted), [persisted]);
 
   const loadOlder = useCallback(() => {
     const el = scrollRef.current;
@@ -200,7 +229,10 @@ export default function KnowledgeBasePage() {
       if (generationRef.current === generation)
         setPending((current) => current ? { ...current, answer: (current.answer ?? "") + token } : current);
     }
-    const scopePayload = scopeSourceIds.length > 0 ? { sourceIds: scopeSourceIds } : {};
+    const scopePayload = {
+      ...(scopeSourceIds.length > 0 ? { sourceIds: scopeSourceIds } : {}),
+      ...(scopeVerifiedOnly ? { verifiedOnly: true } : {}),
+    };
     ask.mutate(
       { question: trimmed, conversationId: activeConversationId ?? undefined, onToken: handleToken, ...scopePayload },
       {
@@ -219,9 +251,9 @@ export default function KnowledgeBasePage() {
           if (activeConversationId === null) setConversation(data.conversationId);
           void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
           if (!data.hasContext) {
-            setPending((prev) => prev ? { ...prev, hasContext: false } : prev);
+            setPending((prev) => prev ? { ...prev, hasContext: false, citations: data.citations } : prev);
           } else if (data.disagreement) {
-            setPending((prev) => prev ? { ...prev, hasContext: true, disagreement: data.disagreement } : prev);
+            setPending((prev) => prev ? { ...prev, hasContext: true, disagreement: data.disagreement, citations: data.citations } : prev);
           } else {
             setPending(null);
           }
@@ -299,6 +331,7 @@ export default function KnowledgeBasePage() {
   }
   function handleScopeClick() {
     setPendingScopeIds(scopeSourceIds);
+    setPendingVerifiedOnly(scopeVerifiedOnly);
     setSourcesSheet({ kind: "scope" });
   }
   function handleSourcesSheetOpenChange(open: boolean) {
@@ -307,8 +340,9 @@ export default function KnowledgeBasePage() {
   function handleAddNoteClick() { setSourcesSheet({ kind: "closed" }); setNoteOpen(true); }
 
   function handleScopeSelectionChange(ids: number[]) { setPendingScopeIds(ids); }
-  function handleScopeConfirm() { setScopeSourceIds(pendingScopeIds); setSourcesSheet({ kind: "closed" }); }
-  function handleClearScope() { setScopeSourceIds([]); }
+  function handleScopeVerifiedOnlyChange(v: boolean) { setPendingVerifiedOnly(v); }
+  function handleScopeConfirm() { setScopeSourceIds(pendingScopeIds); setScopeVerifiedOnly(pendingVerifiedOnly); setSourcesSheet({ kind: "closed" }); }
+  function handleClearScope() { setScopeSourceIds([]); setScopeVerifiedOnly(false); }
 
   function makeDeleteHandler(id: number) {
     return function handleDeleteSource() {
@@ -323,7 +357,7 @@ export default function KnowledgeBasePage() {
 
   const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
   const readyCount = sources.filter((s) => s.status === "ready").length;
-  const scopeActive = scopeSourceIds.length > 0;
+  const scopeActive = scopeSourceIds.length > 0 || scopeVerifiedOnly;
 
   return (
     <PageWrapper
@@ -409,7 +443,25 @@ export default function KnowledgeBasePage() {
                       row.type === "sep" ? (
                         <DaySeparator key={row.id} label={row.label} />
                       ) : (
-                        <ChatBubble key={row.message.id} message={row.message} onCitation={handleCitationClick} reduce={Boolean(reduce)} />
+                        <ChatBubble
+                          key={row.message.id}
+                          message={row.message}
+                          onCitation={handleCitationClick}
+                          reduce={Boolean(reduce)}
+                          evidence={
+                            row.message.role === "assistant" && row.message.citations?.length ? (
+                              <CitationEvidenceList citations={row.message.citations} />
+                            ) : undefined
+                          }
+                          actions={
+                            row.message.role === "assistant" && questionByAssistantId.has(row.message.id) ? (
+                              <>
+                                <CopyAnswerButton text={row.message.content} />
+                                <AnswerFeedbackBar question={questionByAssistantId.get(row.message.id) ?? ""} />
+                              </>
+                            ) : undefined
+                          }
+                        />
                       ),
                     )}
                     {pending && (
@@ -423,12 +475,29 @@ export default function KnowledgeBasePage() {
                     )}
                     {pending?.error && !pending.isQuotaError && !ask.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
                     {pending?.hasContext === false && (
-                      <InsufficientEvidenceBanner />
+                      <InsufficientEvidenceBanner question={pending.question} />
                     )}
                     {pending?.disagreement && (
                       <DisagreementBanner summary={pending.disagreement.summary} />
                     )}
-                    {pending?.answer && <ChatBubble message={{ id: "pending-answer", role: "assistant", content: pending.answer }} onCitation={handleCitationClick} reduce={Boolean(reduce)} />}
+                    {pending?.answer && (
+                      <ChatBubble
+                        message={{ id: "pending-answer", role: "assistant", content: pending.answer, citations: pending.citations }}
+                        onCitation={handleCitationClick}
+                        reduce={Boolean(reduce)}
+                        evidence={
+                          pending.citations?.length ? <CitationEvidenceList citations={pending.citations} /> : undefined
+                        }
+                        actions={
+                          !ask.isPending ? (
+                            <>
+                              <CopyAnswerButton text={pending.answer} />
+                              <AnswerFeedbackBar question={pending.question} />
+                            </>
+                          ) : undefined
+                        }
+                      />
+                    )}
                     {ask.isPending && !pending?.answer && <TypingBubble reduce={Boolean(reduce)} />}
                     {(pending?.hasContext === false || pending?.disagreement) && !ask.isPending && (
                       <div className="flex gap-2">
@@ -487,10 +556,17 @@ export default function KnowledgeBasePage() {
           mode="scope"
           open
           onOpenChange={handleSourcesSheetOpenChange}
-          sources={sources}
-          isLoading={sourcesQuery.isLoading}
+          sources={hasScopeFilters ? scopeSources : sources}
+          isLoading={hasScopeFilters ? scopeSourcesQuery.isLoading : sourcesQuery.isLoading}
           selectedIds={pendingScopeIds}
           onSelectionChange={handleScopeSelectionChange}
+          verifiedOnly={pendingVerifiedOnly}
+          onVerifiedOnlyChange={handleScopeVerifiedOnlyChange}
+          currentUserId={currentUserId ?? undefined}
+          kindFilter={scopeKindFilter}
+          onKindFilterChange={setScopeKindFilter}
+          ownerFilter={scopeOwnerFilter}
+          onOwnerFilterChange={setScopeOwnerFilter}
           onConfirm={handleScopeConfirm}
         />
       )}

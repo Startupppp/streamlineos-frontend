@@ -88,6 +88,7 @@ describe("KB ingestion-state sources sheet — accessibility", () => {
   function renderSheet(sources: KbSource[]) {
     return renderWithProviders(
       <KbSourcesSheet
+        mode="manage"
         open
         onOpenChange={jest.fn()}
         sources={sources}

@@ -52,6 +52,12 @@ export const kbPageCollectionResponseSchema = z.object({
           count: z.number().int(),
         }),
       ),
+      owner: z.array(
+        z.object({
+          ownerMembershipId: z.number().int().nullable(),
+          count: z.number().int(),
+        }),
+      ),
     })
     .nullable(),
 });

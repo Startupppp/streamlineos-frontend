@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import type { Variants } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import {
   Popover,
@@ -27,9 +26,12 @@ import {
   PRODUCT_DEFINITIONS,
   getProductFromPathname,
 } from "../sidebar/sidebar-nav-items";
-import { ProductGrid } from "./product-grid";
-import { ICON_STROKE } from "./product-tile";
 import { cn } from "@/lib/utils";
+
+const ProductGrid = dynamic(
+  () => import("./product-grid").then((m) => ({ default: m.ProductGrid })),
+  { ssr: false, loading: () => null },
+);
 
 const HOVER_CLOSE_DELAY_MS = 175;
 
@@ -52,7 +54,6 @@ export function ProductSwitcherMenu({
 }: ProductSwitcherMenuProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const pathname = usePathname();
-  const shouldReduceMotion = useReducedMotion();
   const isMobile = useIsMobile();
 
   const isControlled = controlledOpen !== undefined;
@@ -128,28 +129,6 @@ export function ProductSwitcherMenu({
   const ActiveIcon = activeDefinition?.icon;
   const activeAccent = MODULE_ACCENTS[activeProduct];
 
-  const panelVariants: Variants = shouldReduceMotion
-    ? {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { duration: 0.12 } },
-        exit: { opacity: 0, transition: { duration: 0.1 } },
-      }
-    : {
-        hidden: { opacity: 0, scale: 0.96, y: -4 },
-        visible: {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          transition: { duration: 0.16, ease: "easeOut" },
-        },
-        exit: {
-          opacity: 0,
-          scale: 0.98,
-          y: -2,
-          transition: { duration: 0.12, ease: "easeOut" },
-        },
-      };
-
   const isSidebarVariant = variant === "sidebar";
   const activeLabel = activeDefinition?.label ?? "Modules";
 
@@ -176,7 +155,7 @@ export function ProductSwitcherMenu({
             activeAccent.text,
           )}
         >
-          <ActiveIcon className="h-3 w-3" strokeWidth={ICON_STROKE} />
+          <ActiveIcon className="h-3 w-3" strokeWidth={1.75} />
         </span>
       )}
       <span
@@ -188,10 +167,10 @@ export function ProductSwitcherMenu({
       <ChevronDown
         className={cn(
           "h-3 w-3 shrink-0 text-sidebar-foreground/50",
-          !shouldReduceMotion && "transition-transform duration-150",
-          !shouldReduceMotion && open && "rotate-180",
+          "transition-transform duration-150",
+          open && "rotate-180",
         )}
-        strokeWidth={ICON_STROKE}
+        strokeWidth={1.75}
       />
     </button>
   );
@@ -204,7 +183,7 @@ export function ProductSwitcherMenu({
     scopes,
     effectiveRole,
     onClose: handleClose,
-    shouldReduceMotion,
+    shouldReduceMotion: false,
   };
 
   const drawerContent = (
@@ -214,9 +193,7 @@ export function ProductSwitcherMenu({
         The product modules enabled for this organization. Choosing one moves
         the workspace into it; locked modules are shown but cannot be opened.
       </DrawerDescription>
-      <AnimatePresence>
-        {open && <ProductGrid {...gridProps} />}
-      </AnimatePresence>
+      {open && <ProductGrid {...gridProps} />}
     </DrawerContent>
   );
 
@@ -250,21 +227,11 @@ export function ProductSwitcherMenu({
         onMouseEnter={enableHoverOpen ? handleHoverEnter : undefined}
         onMouseLeave={enableHoverOpen ? handleHoverLeave : undefined}
       >
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              key="product-switcher-panel"
-              variants={panelVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              style={{ transformOrigin: "top left" }}
-              className="w-full rounded-md border bg-popover text-popover-foreground shadow-md p-2"
-            >
-              <ProductGrid {...gridProps} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {open && (
+          <div className="w-full rounded-md border bg-popover text-popover-foreground shadow-md p-2 animate-in fade-in-0 zoom-in-95 duration-150">
+            <ProductGrid {...gridProps} />
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );

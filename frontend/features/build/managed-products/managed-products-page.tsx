@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
@@ -34,6 +35,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import type { NamedUser } from "@/lib/person-display";
 import {
   MANAGED_PRODUCT_TABLE_HEADERS,
@@ -49,14 +51,28 @@ const STATUS_OPTIONS = [
   { value: "archived", label: "Archived" },
 ];
 
+const SORT_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "Default" },
+  { value: "name", label: "Name" },
+  { value: "updated", label: "Last updated" },
+  { value: "status", label: "Status" },
+];
+
 const FILTER_DEFINITIONS = [
   {
     param: "status",
     options: STATUS_OPTIONS.map((option) => option.value),
   },
+  {
+    param: "sort",
+    options: SORT_OPTIONS.map((option) => option.value),
+  },
+  { param: "ownerId" },
 ] as const;
 
 export function ManagedProductsPage() {
+  const router = useRouter();
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const canCreate = useCan("build:managed-products:create");
   const canUpdate = useCan("build:managed-products:update");
   const canDelete = useCan("build:managed-products:delete");
@@ -75,11 +91,18 @@ export function ManagedProductsPage() {
   const [deleteTarget, setDeleteTarget] = useState<ManagedProduct | null>(null);
 
   const statusValue = listFilters.value("status");
+  const sortValue = listFilters.value("sort");
+  const ownerIdValue = listFilters.value("ownerId");
   const { data, isLoading, isError, error, refetch } = useManagedProducts({
     cursor,
     limit: PAGE_SIZE,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     search: listFilters.debouncedSearch.trim() || undefined,
+    ownerId: ownerIdValue || undefined,
+    sort:
+      sortValue && sortValue !== BUILD_FILTER_ALL
+        ? (sortValue as "name" | "updated" | "status")
+        : undefined,
   });
 
   const { data: membersRes } = useOrgMembers(1, 100);
@@ -150,6 +173,11 @@ export function ManagedProductsPage() {
     [listFilters],
   );
 
+  const handleSortChange = useCallback(
+    (value: string) => listFilters.setValue("sort", value),
+    [listFilters],
+  );
+
   const handleOpenCreate = useCallback(() => {
     openCreate();
   }, [openCreate]);
@@ -171,6 +199,28 @@ export function ManagedProductsPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleOpenFocused = useCallback(
+    (index: number) => {
+      const product = displayed[index];
+      if (product) {
+        router.push(`/build/managed-products/${product.id}`);
+      }
+    },
+    [displayed, router],
+  );
+
+  const handleClearKeyboardSelection = useCallback(() => {
+    /* keyboard Esc: nothing to deselect on this page, but the hook requires the callback */
+  }, []);
+
+  useBuildListKeyboard({
+    itemCount: displayed.length,
+    onOpen: handleOpenFocused,
+    onClearSelection: handleClearKeyboardSelection,
+    searchInputRef,
+    enabled: !createOpen && !editTarget && !deleteTarget,
+  });
 
   const handleEditRow = useCallback(
     (row: ManagedProduct) => setEditTarget(row),
@@ -234,6 +284,19 @@ export function ManagedProductsPage() {
                   value={statusValue}
                   onValueChange={handleStatusChange}
                   options={STATUS_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "sort",
+              label: "Sort",
+              active: listFilters.isActive("sort"),
+              control: (
+                <BuildFilterSelect
+                  label="Sort"
+                  value={sortValue}
+                  onValueChange={handleSortChange}
+                  options={SORT_OPTIONS}
                 />
               ),
             },

@@ -53,6 +53,7 @@ const baseProps = {
     {
       id: 1,
       title: "First conversation",
+      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
   ],

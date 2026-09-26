@@ -3,12 +3,6 @@ import { act, renderHook } from "@testing-library/react";
 import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
 import { ApiError } from "@/lib/api-envelope";
 
-/**
- * Three ways the wiki editor silently discarded edits. Each is asserted against
- * what actually reached the save call, not against what the screen showed —
- * `localTitle` kept rendering the dropped rename from local draft state, which
- * is exactly why nobody noticed until a reload.
- */
 
 type SavePayload = PageAutosavePatch & {
   pageId: number;
@@ -61,7 +55,6 @@ async function settle() {
   });
 }
 
-/** Lets an already-dispatched save promise resolve inside act(). */
 async function drain() {
   await act(async () => {});
 }
@@ -119,8 +112,6 @@ describe("wiki autosave — merging successive patches", () => {
       hook.result.current.schedule({ contentText: "typed on 12" });
     });
     act(() => {
-      // Page 13 is opened; its own revision has not arrived yet (`page` is still
-      // loading). Sending 12's would be a made-up precondition.
       hook.rerender({ pageId: 13, contentRevision: undefined });
     });
     act(() => {
@@ -236,7 +227,6 @@ describe("wiki autosave — flushing before the editor goes away", () => {
     await drain();
 
     expect(sent).toHaveLength(1);
-    // Addressed to the page it was typed on, not to the one just opened.
     expect(sent[0]!.pageId).toBe(12);
     expect(sent[0]!.contentText).toBe("typed on page 12");
   });
@@ -364,8 +354,6 @@ describe("wiki autosave — a user must never conflict with their own previous s
     await settle();
     await drain();
 
-    // The refetch the FIRST save's invalidation started finally lands, carrying
-    // the state as of that save — two writes ago.
     await act(async () => {
       hook.rerender({ pageId: 12, contentRevision: 5 });
     });

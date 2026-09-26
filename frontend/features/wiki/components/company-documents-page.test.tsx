@@ -12,7 +12,6 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-// usePageState and PageState are the real ones: a test that stubs them decides the outcome the page is supposed to reach.
 const mockCan = jest.fn<boolean, [string]>();
 const mockAccess = jest.fn();
 jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan(key), useAccess: () => mockAccess() }));
@@ -108,7 +107,6 @@ describe("CompanyDocumentsPage", () => {
 
     expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ status: "unpublished" }), ON);
     expect(screen.getByRole("combobox", { name: "Show entries" })).toBeInTheDocument();
-    // Once as the filter's current value, once as the badge on the row.
     expect(screen.getAllByText("Withdrawn")).toHaveLength(2);
   });
 

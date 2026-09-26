@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { useProject } from "@/hooks/api";
 import {
   useChangeRequestAffectedTickets,
@@ -106,6 +106,7 @@ export function ChangeRequestAffectedTickets({
   changeRequestId,
 }: ChangeRequestAffectedTicketsProps) {
   const canManage = useCan("build:changerequests:manage");
+  const accessState = useCanState("build:changerequests:view");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [pageLimit, setPageLimit] = useState(25);
@@ -122,6 +123,8 @@ export function ChangeRequestAffectedTickets({
   });
   const link = useLinkAffectedTicket(projectId, changeRequestId);
   const unlink = useUnlinkAffectedTicket(projectId, changeRequestId);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   const affectedItems = useMemo(() => data?.data ?? [], [data]);
   const linkedTicketIds = useMemo(

@@ -2,6 +2,7 @@
 
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCanState } from "@/hooks/api/access";
 import { useRoadmapItemSignals } from "@/hooks/api/build/roadmap";
 import { ROADMAP_DELIVERY_SOURCE_LABEL } from "./roadmap-constants";
 
@@ -10,7 +11,12 @@ interface RoadmapDeliveryProgressProps {
 }
 
 export function RoadmapDeliveryProgress({ roadmapItemId }: RoadmapDeliveryProgressProps) {
-  const { data, isLoading, isError } = useRoadmapItemSignals(roadmapItemId);
+  const accessState = useCanState("build:roadmap:view");
+  const { data, isLoading, isError } = useRoadmapItemSignals(roadmapItemId, {
+    enabled: accessState === "granted",
+  });
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   if (isLoading)
     return (

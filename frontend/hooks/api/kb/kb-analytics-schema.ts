@@ -14,19 +14,9 @@ export const kbAnalyticsOverviewContract = z.object({
   aiAnswers: z.number().int(),
   aiNoContext: z.number().int(),
   views: z.number().int(),
+  ticketsDeflected: z.number().int(),
   verifiedPublished: z.number().int(),
   trustScore: z.number(),
-  topArticles: z.array(
-    z.object({
-      id: z.number().int(),
-      title: z.string(),
-      slug: z.string(),
-      spaceId: z.number().int().nullable(),
-      viewCount: z.number().int(),
-      helpfulCount: z.number().int(),
-      notHelpfulCount: z.number().int(),
-    }),
-  ),
 });
 
 export const kbAnalyticsNoResultsContract = z.array(
@@ -36,26 +26,56 @@ export const kbAnalyticsNoResultsContract = z.array(
   }),
 );
 
-export const kbAnalyticsPagesContract = z.array(
-  z.object({
-    id: z.number().int(),
-    title: z.string(),
-    status: z.enum(["draft", "in_review", "published", "archived"]),
-    trustState: z.enum(["unverified", "verified", "verification_expired"]),
-    updatedAt: z.string(),
-    uniqueViewers: z.number().int(),
-    commentCount: z.number().int(),
-    versionCount: z.number().int(),
+export const kbAnalyticsPagesContract = z.object({
+  data: z.array(
+    z.object({
+      id: z.number().int(),
+      title: z.string(),
+      status: z.enum(["draft", "in_review", "published", "archived"]),
+      trustState: z.enum(["unverified", "verified", "verification_expired"]),
+      updatedAt: z.string(),
+      uniqueViewers: z.number().int(),
+      commentCount: z.number().int(),
+      versionCount: z.number().int(),
+    }),
+  ),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
   }),
-);
+});
 
-export const kbAnalyticsGapsContract = z.array(
-  z.object({
-    query: z.string().nullable(),
-    count: z.number().int(),
-    lastOccurredAt: z.string(),
+const kbAnalyticsGapItemContract = z.object({
+  query: z.string().nullable(),
+  count: z.number().int(),
+  lastOccurredAt: z.string(),
+});
+
+export const kbAnalyticsGapsContract = z.object({
+  data: z.array(kbAnalyticsGapItemContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
   }),
-);
+});
+
+export const kbAnalyticsGapRelatedPagesContract = z.object({
+  data: z.array(
+    z.object({
+      id: z.number().int(),
+      title: z.string(),
+      status: z.string(),
+      updatedAt: z.string(),
+    }),
+  ),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
 
 export const kbAnalyticsContentGapsContract = z.array(
   z.object({
@@ -65,3 +85,28 @@ export const kbAnalyticsContentGapsContract = z.array(
     gapKind: z.enum(["search", "ai_no_context"]),
   }),
 );
+
+export const kbAnalyticsCitationReuseContract = z.array(
+  z.object({
+    kind: z.string(),
+    refId: z.number().int(),
+    title: z.string(),
+    reuseCount: z.number().int(),
+  }),
+);
+
+export const kbAnalyticsReviewSlaContract = z.object({
+  decided: z.number().int(),
+  metSla: z.number().int(),
+  slaRate: z.number(),
+  overdueOpen: z.number().int(),
+});
+
+export const kbAnalyticsGapActionContract = z.object({
+  id: z.number().int(),
+  clusterKey: z.string(),
+  status: z.string(),
+  proposedArticleId: z.number().int().nullable(),
+  draftedBy: z.string().nullable(),
+  updatedAt: z.string(),
+});

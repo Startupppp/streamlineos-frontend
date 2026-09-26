@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -8,6 +8,14 @@ import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Tabs,
   TabsContent,
@@ -24,16 +32,22 @@ import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { KB_TEMPLATES, pageHref } from "@/lib/knowledge-routes";
+import { parseEnum } from "@/lib/url-state/use-url-filters";
 import {
   STARTER_TEMPLATES,
+  STARTER_TEMPLATE_CATEGORIES,
   deriveContentText,
 } from "@/features/wiki/lib/starter-templates";
 import { KbLayoutTemplateIcon } from "@/features/wiki/lib/kb-icons";
 import type { StarterTemplate } from "@/features/wiki/lib/starter-templates";
 import { StarterTemplateCard, TemplateCard } from "./template-cards";
+import { TemplatePreviewDialog } from "./template-preview-dialog";
 
 const VALID_TABS = ["starters", "saved"] as const;
 type TemplatesTab = (typeof VALID_TABS)[number];
+
+const ALL_CATEGORIES = "all";
+const CATEGORY_FILTER_VALUES = [ALL_CATEGORIES, ...STARTER_TEMPLATE_CATEGORIES] as const;
 
 function resolveTab(tabParam: string | null): TemplatesTab {
   return VALID_TABS.find((t) => t === tabParam) ?? "starters";
@@ -61,6 +75,12 @@ export default function TemplatesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeTab = resolveTab(searchParams.get("tab"));
+  const activeCategory = parseEnum(searchParams.get("category"), CATEGORY_FILTER_VALUES, ALL_CATEGORIES);
+  const q = searchParams.get("q") ?? "";
+
+  const [searchDraft, setSearchDraft] = useState(q);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const {
     error,
     isError,
@@ -70,7 +90,7 @@ export default function TemplatesPage() {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useKbPageTemplates();
+  } = useKbPageTemplates(q || undefined);
   const canDelete = useCan("kb:templates:manage");
 
   const savedTemplatesState = usePageState({
@@ -80,6 +100,8 @@ export default function TemplatesPage() {
     isEmpty: templates.length === 0,
   });
 
+  const [previewTemplate, setPreviewTemplate] = useState<StarterTemplate | null>(null);
+
   function handleRetryTemplates() {
     void refetchTemplates();
   }
@@ -88,13 +110,41 @@ export default function TemplatesPage() {
     void fetchNextPage();
   }
 
-  function handleTabChange(value: string) {
+  function updateParams(patch: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
-    if (value === "starters") params.delete("tab");
-    else params.set("tab", value);
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === null || value === "") params.delete(key);
+      else params.set(key, value);
+    }
     const qs = params.toString();
     router.replace(qs ? `${KB_TEMPLATES}?${qs}` : KB_TEMPLATES, { scroll: false });
   }
+
+  function handleTabChange(value: string) {
+    updateParams({ tab: value === "starters" ? null : value });
+  }
+
+  function handleCategoryChange(value: string) {
+    updateParams({ category: value === ALL_CATEGORIES ? null : value });
+  }
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setSearchDraft(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      updateParams({ q: value || null });
+    }, 300);
+  }
+
+  function handlePreviewOpenChange(open: boolean) {
+    if (!open) setPreviewTemplate(null);
+  }
+
+  const filteredStarters =
+    activeCategory === ALL_CATEGORIES
+      ? STARTER_TEMPLATES
+      : STARTER_TEMPLATES.filter((t) => t.category === activeCategory);
 
   const createPage = useCreateKbPage();
   const updatePage = useUpdateKbPage();
@@ -122,6 +172,7 @@ export default function TemplatesPage() {
 
   const handleUseStarter = useCallback(
     (template: StarterTemplate) => {
+      setPreviewTemplate(null);
       setPendingTemplateKey(starterTemplateKey(template));
       createPage.mutate(
         { title: template.name },
@@ -151,6 +202,10 @@ export default function TemplatesPage() {
     [createPage, updatePage, router],
   );
 
+  const handlePreviewStarter = useCallback((template: StarterTemplate) => {
+    setPreviewTemplate(template);
+  }, []);
+
   const subtitle =
     activeTab === "saved"
       ? "Templates created from your wiki pages"
@@ -173,12 +228,28 @@ export default function TemplatesPage() {
         </TabsList>
 
         <TabsContent value="starters" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+          <div className="mb-3 flex items-center gap-2">
+            <Select value={activeCategory} onValueChange={handleCategoryChange}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
+                {STARTER_TEMPLATE_CATEGORIES.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {STARTER_TEMPLATES.map((template) => (
+            {filteredStarters.map((template) => (
               <StarterTemplateCard
                 key={template.key}
                 template={template}
                 onUse={handleUseStarter}
+                onPreview={handlePreviewStarter}
                 isPending={pendingTemplateKey === starterTemplateKey(template)}
                 isDisabled={
                   pendingTemplateKey !== null &&
@@ -190,19 +261,42 @@ export default function TemplatesPage() {
         </TabsContent>
 
         <TabsContent value="saved" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+          <div className="mb-3">
+            <Input
+              type="search"
+              placeholder="Search saved templates…"
+              value={searchDraft}
+              onChange={handleSearchChange}
+              className="max-w-sm"
+              aria-label="Search saved templates"
+            />
+          </div>
           <PageState
             resolution={savedTemplatesState}
             onRetry={handleRetryTemplates}
             loading={<TemplatesSkeleton />}
             empty={
-              <EmptyState
-                illustration={
-                  <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
-                }
-                title="No saved templates yet"
-                description="Save a page as a template to reuse its structure across your wiki."
-                className={CONTENT_FILL_PANEL}
-              />
+              q ? (
+                <EmptyState
+                  illustration={
+                    <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
+                  }
+                  title="No saved templates match your search."
+                  filtersActive
+                  filteredTitle="No saved templates match your search."
+                  onClearFilters={() => updateParams({ q: null })}
+                  className={CONTENT_FILL_PANEL}
+                />
+              ) : (
+                <EmptyState
+                  illustration={
+                    <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
+                  }
+                  title="No saved templates yet"
+                  description="Save a page as a template to reuse its structure across your wiki."
+                  className={CONTENT_FILL_PANEL}
+                />
+              )
             }
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -229,6 +323,15 @@ export default function TemplatesPage() {
           </PageState>
         </TabsContent>
       </Tabs>
+
+      {previewTemplate && (
+        <TemplatePreviewDialog
+          template={previewTemplate}
+          onOpenChange={handlePreviewOpenChange}
+          onUse={handleUseStarter}
+          isPending={pendingTemplateKey === starterTemplateKey(previewTemplate)}
+        />
+      )}
     </PageWrapper>
   );
 }

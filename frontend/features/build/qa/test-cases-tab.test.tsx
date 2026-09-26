@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -69,8 +69,9 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: () => null,
 }));
 
+const mockTestCaseSheet = jest.fn((_props: { open: boolean }) => null);
 jest.mock("./test-case-sheet", () => ({
-  TestCaseSheet: () => null,
+  TestCaseSheet: (props: { open: boolean }) => { mockTestCaseSheet(props); return null; },
 }));
 
 jest.mock("./test-case-columns", () => ({
@@ -166,4 +167,15 @@ it("renders the upgrade path the backend sent with a 402 rather than a generic f
     "href",
     "/settings/billing",
   );
+});
+
+it("pressing j then Enter opens the first test case in the edit sheet so keyboard users can inspect it without a mouse", () => {
+  const tc = { id: 42, caseNumber: 1, title: "Login flow", suiteId: null };
+  mockUseTestCases.mockReturnValue(baseQuery({ data: { data: [tc], hasMore: false, nextCursor: null } }));
+  render(<TestCasesTab projectId={1} />);
+  fireEvent.keyDown(document, { key: "j" });
+  fireEvent.keyDown(document, { key: "Enter" });
+  const calls = mockTestCaseSheet.mock.calls;
+  const lastCall = calls[calls.length - 1][0] as { open: boolean };
+  expect(lastCall.open).toBe(true);
 });

@@ -36,7 +36,8 @@ const kbPageBaseContract = z.object({
   nextReviewAt: z.string().nullable(),
   aclRevision: z.number().int(),
   contentRevision: z.number().int(),
-  sourceArticleId: z.number().int().nullable(),
+  legalHold: z.boolean(),
+  legalHoldReason: z.string().nullable(),
 });
 
 export const kbPageContract = kbPageBaseContract;
@@ -134,3 +135,10 @@ export const kbBulkPageResultContract = z.object({
     }),
   ),
 });
+
+export const kbPageTrashPurgeImpactContract = z.object({
+  pageCount: z.number().int(),
+  descendantCount: z.number().int(),
+});
+
+export type KbPageTrashPurgeImpact = z.infer<typeof kbPageTrashPurgeImpactContract>;

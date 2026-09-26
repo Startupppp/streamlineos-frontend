@@ -68,7 +68,7 @@ function extractSlateBlocks(content: unknown[]): ContentBlock[] {
   });
 }
 
-function extractBlocks(
+export function extractBlocks(
   content: Record<string, unknown> | Record<string, unknown>[] | null,
 ): ContentBlock[] {
   if (!content) return [];

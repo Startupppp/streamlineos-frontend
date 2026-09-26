@@ -17,7 +17,7 @@ import type { InboxGroupedVirtualListProps } from "./inbox-grouped-virtual-list"
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toSearchParams } from "@/lib/route-search-params";
 import { normalizeBuildDeepLink } from "@/lib/build/normalize-build-deep-link";
-import { Inbox } from "lucide-react";
+import { EmptyInboxIllustration } from "@/components/illustrations";
 import type { Notification } from "@/types/notifications";
 import type {
   NotificationInboxItem,
@@ -272,9 +272,8 @@ export function InboxShell() {
             {clientFilteredItems.length === 0 ? (
               <EmptyState
                 className="flex-1 min-h-0"
-                illustration={
-                  <Inbox className="h-8 w-8 text-muted-foreground/40" />
-                }
+                // Fill the md illustration box; a 32px icon left a blank gap above the title.
+                illustration={<EmptyInboxIllustration />}
                 title="All caught up"
                 description={emptyStateDescription}
               />

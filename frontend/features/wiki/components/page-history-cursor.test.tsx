@@ -110,10 +110,10 @@ describe("version cursor — last page", () => {
     expect(capturedGetNextPageParam!(page)).toBeUndefined();
   });
 
-  it("(b) getNextPageParam returns undefined when hasMore is false and nextCursor is present", () => {
+  it("(b) nextCursor alone drives paging — a present cursor keeps paging even when hasMore is false", () => {
     render(<VersionsHook />);
-    const page = makePage([], { hasMore: false, nextCursor: undefined });
-    expect(capturedGetNextPageParam!(page)).toBeUndefined();
+    const page = makePage([], { hasMore: false, nextCursor: "cursor-b" });
+    expect(capturedGetNextPageParam!(page)).toBe("cursor-b");
   });
 });
 

@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
   type ComponentType,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -135,6 +136,15 @@ export interface StatCardGridProps {
   children: ReactNode;
   cols?: 2 | 3 | 4 | 5 | 6;
   className?: string;
+  /**
+   * Stack the cards in one column below `sm` instead of scrolling them.
+   *
+   * The row scrolls at every width by default (see below), which on a 390px
+   * screen puts the third card off screen behind a hidden scrollbar. Opt in
+   * where the cards are the page's headline numbers and none of them may be
+   * missed — a scroll a reader does not know to make is a card they never see.
+   */
+  stackOnMobile?: boolean;
 }
 
 export interface StatCardGridSkeletonProps {
@@ -167,6 +177,7 @@ export function StatCardGrid({
   children,
   cols = 4,
   className,
+  stackOnMobile = false,
 }: StatCardGridProps) {
   const childCount = countGridChildren(children);
   const columnCount = childCount > 0 ? childCount : cols;
@@ -181,6 +192,7 @@ export function StatCardGrid({
   }, [children]);
 
   const scrollableWithoutFocus = overflow.scrolls && !hasFocusableChild;
+  const template = `repeat(${columnCount}, minmax(10rem, 1fr))`;
 
   return (
     <div
@@ -197,11 +209,17 @@ export function StatCardGrid({
         "[&>*]:min-w-0 [&>*]:h-full [&>*]:snap-start",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         OVERFLOW_EDGE_FADE_CLASS,
+        // The template has to reach the element as a class, not as an inline
+        // style, or the `sm:` breakpoint below could never win against it.
+        stackOnMobile &&
+          "grid-cols-1 sm:[grid-template-columns:var(--stat-card-grid-template)]",
         className,
       )}
-      style={{
-        gridTemplateColumns: `repeat(${columnCount}, minmax(10rem, 1fr))`,
-      }}
+      style={
+        stackOnMobile
+          ? ({ "--stat-card-grid-template": template } as CSSProperties)
+          : { gridTemplateColumns: template }
+      }
     >
       {children}
     </div>

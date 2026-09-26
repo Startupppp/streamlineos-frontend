@@ -2,6 +2,16 @@ import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export type KbAudience = "internal" | "public" | "mixed";
 
+export type KbSpaceRole = "admin" | "publisher" | "editor" | "commenter" | "viewer";
+
+export const KB_ACCESS_LABELS: Record<KbSpaceRole, string> = {
+  admin: "Admin",
+  publisher: "Publisher",
+  editor: "Editor",
+  commenter: "Commenter",
+  viewer: "Viewer",
+};
+
 export interface KbSpace {
   id: number;
   name: string;
@@ -13,6 +23,10 @@ export interface KbSpace {
   articleCount?: number;
   createdAt: string;
   updatedAt: string;
+  archivedAt?: string | null;
+  pagesOverdueForReview?: number;
+  pagesWithReviewPolicy?: number;
+  viewerSpaceRole?: KbSpaceRole | null;
 }
 
 export interface CreateSpaceInput {
@@ -32,36 +46,35 @@ export interface UpdateSpaceInput {
   isPublicHelpCenter?: boolean;
 }
 
+interface KbAskCitationEvidence {
+  title: string;
+  updatedAt: string;
+  passage?: string;
+  verified?: boolean;
+}
+
 export type KbAskCitation =
-  | {
+  | (KbAskCitationEvidence & {
       kind: "article";
       articleId: number;
-      title: string;
       slug: string;
       spaceId: number | null;
-      updatedAt: string;
-    }
-  | {
+    })
+  | (KbAskCitationEvidence & {
       kind: "page";
       pageId: number;
-      title: string;
       spaceId: number | null;
-      updatedAt: string;
-    }
-  | {
+    })
+  | (KbAskCitationEvidence & {
       kind: "source";
       sourceId: number;
-      title: string;
       spaceId: number | null;
-      updatedAt: string;
-    }
-  | {
+    })
+  | (KbAskCitationEvidence & {
       kind: "document";
       linkedDocumentId: number;
-      title: string;
       spaceId: null;
-      updatedAt: string;
-    };
+    });
 
 export interface KbAskResponse {
   answer: string;
@@ -84,16 +97,6 @@ export interface KbAskInput {
   conversationId?: number;
 }
 
-export interface KbAnalyticsTopArticle {
-  id: number;
-  title: string;
-  slug: string;
-  spaceId: number | null;
-  viewCount: number;
-  helpfulCount: number;
-  notHelpfulCount: number;
-}
-
 export interface KbAnalyticsOverview {
   totalCount: number;
   publishedCount: number;
@@ -108,9 +111,9 @@ export interface KbAnalyticsOverview {
   aiAnswers: number;
   aiNoContext: number;
   views: number;
+  ticketsDeflected: number;
   verifiedPublished: number;
   trustScore: number;
-  topArticles: KbAnalyticsTopArticle[];
 }
 
 export interface KbNoResultRow {
@@ -121,6 +124,21 @@ export interface KbNoResultRow {
 export interface KbAnalyticsRange {
   from?: string;
   to?: string;
+  spaceId?: number;
+}
+
+export interface KbCitationReuseRow {
+  kind: string;
+  refId: number;
+  title: string;
+  reuseCount: number;
+}
+
+export interface KbReviewSla {
+  decided: number;
+  metSla: number;
+  slaRate: number;
+  overdueOpen: number;
 }
 
 export interface KbPageAnalyticsRow {
@@ -138,6 +156,13 @@ export interface KbGapRow {
   query: string | null;
   count: number;
   lastOccurredAt: string;
+}
+
+export interface KbGapRelatedPageRow {
+  id: number;
+  title: string;
+  status: string;
+  updatedAt: string;
 }
 
 export interface KbContentGapRow {
@@ -170,6 +195,10 @@ export interface KbResearchBrief {
   citations: KbResearchBriefCitation[] | null;
   errorMessage: string | null;
   rating: "helpful" | "not_helpful" | null;
+  costCredits: number | null;
+  provider: string | null;
+  model: string | null;
+  approvedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

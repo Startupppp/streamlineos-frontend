@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
 import { MY_WORK_VIEWS } from "./my-work-view";
-import { MyWorkContent } from "./my-work-content";
 import { MyWorkSortControl } from "./my-work-sort-control";
 import { useMyWorkBulk } from "./use-my-work-bulk";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
@@ -48,6 +47,10 @@ const DisplayOptionsPanel = dynamic(
   })),
   { ssr: false },
 );
+const MyWorkContent = dynamic(
+  () => import("./my-work-content").then((m) => ({ default: m.MyWorkContent })),
+  { loading: () => null },
+);
 
 const DISPLAY_STORAGE_ID = -1;
 
@@ -56,7 +59,9 @@ export function MyWorkPage() {
   const requestLeave = useNavigationLeave();
   const searchParams = useSearchParams();
 
-  const activeTab = parseWorkTab(searchParams.get("tab"));
+  const activeTab = parseWorkTab(
+    searchParams.get("relation") ?? searchParams.get("tab"),
+  );
   const activeView = parseMyWorkView(searchParams.get("view"));
 
   const [showGroupingSidebar, setShowGroupingSidebar] = useState(false);
@@ -143,8 +148,15 @@ export function MyWorkPage() {
 
   const handleTabChange = useCallback(
     (value: string) => {
+      const relation =
+        value === "assigned"
+          ? null
+          : value === "subscribed"
+            ? "watching"
+            : value;
       setListParams({
-        tab: value === "assigned" ? null : value,
+        relation,
+        tab: null,
         view: null,
         cursor: null,
       });

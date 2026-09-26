@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { useSetKbPageVisibility } from "@/hooks/api/kb/pages";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
+import { cn } from "@/lib/utils";
 
 type Visibility = "private" | "org" | "public";
 
@@ -29,9 +30,24 @@ const VISIBILITY_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
-  { value: "private", icon: KbLockIcon, label: "Private", description: "Only you can access" },
-  { value: "org", icon: KbBuilding2Icon, label: "Team", description: "Everyone in the organization" },
-  { value: "public", icon: KbGlobeIcon, label: "Public", description: "Anyone with the link" },
+  {
+    value: "private",
+    icon: KbLockIcon,
+    label: "Private",
+    description: "Only you",
+  },
+  {
+    value: "org",
+    icon: KbBuilding2Icon,
+    label: "Team",
+    description: "Org members",
+  },
+  {
+    value: "public",
+    icon: KbGlobeIcon,
+    label: "Public",
+    description: "Anyone with link",
+  },
 ];
 
 interface PageSharePopoverProps {
@@ -50,7 +66,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
     setVisibility.mutate(
       { pageId: page.id, visibility: value },
       {
-        onSuccess: () => toast.success(`Visibility updated`),
+        onSuccess: () => toast.success("Visibility updated"),
         onError: () => toast.error("Failed to update visibility"),
       },
     );
@@ -67,6 +83,8 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const publicUrl = `${origin}/wiki/${page.publicToken ?? ""}`;
+  const showPublicLink =
+    currentVisibility === "public" && Boolean(page.publicToken);
 
   return (
     <ResponsivePopover open={open} onOpenChange={setOpen}>
@@ -81,51 +99,67 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
           <KbShare2Icon className="h-4 w-4" />
         </Button>
       </ResponsivePopoverTrigger>
-      <ResponsivePopoverContent align="end" title="Share" className="w-72 max-w-[85vw] p-0">
-        <div className="px-4 pt-3 pb-1">
-          <p className="text-xs font-semibold text-foreground">Share</p>
-        </div>
-        <div className="px-2 pb-2">
-          {VISIBILITY_OPTIONS.map(({ value, icon: Icon, label, description }) => (
-            <button
-              key={value}
-              type="button"
-              data-visibility={value}
-              className="flex items-center gap-3 w-full rounded-md px-2 py-2 text-left hover:bg-muted transition-colors disabled:opacity-50"
-              onClick={handleVisibilitySelect}
-              disabled={setVisibility.isPending}
-            >
-              <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="flex-1 min-w-0">
-                <span className="block text-label font-medium text-foreground">{label}</span>
-                <span className="block text-xs text-muted-foreground">{description}</span>
-              </span>
-              {currentVisibility === value && (
-                <KbCheckIcon className="h-4 w-4 shrink-0 text-primary" />
-              )}
-            </button>
-          ))}
-        </div>
-        {currentVisibility === "public" && page.publicToken && (
-          <>
-            <div className="h-px bg-border mx-4" />
-            <div className="px-4 py-3">
-              <div className="flex items-center gap-2 rounded-md border border-border bg-muted px-2 py-1.5">
-                <TruncatedText text={publicUrl} className="flex-1 min-w-0 text-xs text-muted-foreground" />
-                <Button
+      <ResponsivePopoverContent
+        align="end"
+        sideOffset={6}
+        title="Share"
+        className="w-56 max-w-[85vw] gap-0 p-1.5"
+      >
+        <div className="flex flex-col gap-0.5">
+          {VISIBILITY_OPTIONS.map(
+            ({ value, icon: Icon, label, description }) => {
+              const selected = currentVisibility === value;
+              return (
+                <button
+                  key={value}
                   type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="px-2 shrink-0 text-xs"
-                  onClick={handleCopyLink}
+                  data-visibility={value}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors",
+                    "hover:bg-muted disabled:opacity-50",
+                    selected && "bg-muted/70",
+                  )}
+                  onClick={handleVisibilitySelect}
+                  disabled={setVisibility.isPending}
                 >
-                  <KbCopyIcon className="h-3 w-3 mr-1" />
-                  Copy
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-medium leading-tight text-foreground">
+                      {label}
+                    </span>
+                    <span className="block text-micro leading-tight text-muted-foreground">
+                      {description}
+                    </span>
+                  </span>
+                  {selected ? (
+                    <KbCheckIcon className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  ) : (
+                    <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  )}
+                </button>
+              );
+            },
+          )}
+        </div>
+
+        {showPublicLink ? (
+          <div className="mt-1 flex items-center gap-1 border-t border-border pt-1.5">
+            <TruncatedText
+              text={publicUrl}
+              className="min-w-0 flex-1 px-1 text-micro text-muted-foreground"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0"
+              onClick={handleCopyLink}
+              aria-label="Copy link"
+            >
+              <KbCopyIcon className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        ) : null}
       </ResponsivePopoverContent>
     </ResponsivePopover>
   );

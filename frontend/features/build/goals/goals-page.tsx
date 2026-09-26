@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Plus,
   Target,
@@ -16,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
-  useGoals,
+  useGoalsPage,
   useGoalStats,
   type GoalListItem,
   type GoalLevel,
@@ -41,6 +42,7 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   GoalCard,
   GoalsListToolbar,
@@ -66,14 +68,24 @@ function GoalsGridSkeleton() {
   );
 }
 
+const GOALS_PAGE_SIZE = 24;
+
 export function GoalsPage() {
   const canManage = useCan("build:goals:manage");
   const listFilters = useBuildListFilters({ filters: GOAL_FILTER_DEFINITIONS });
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
 
+  const [page, setPage] = useState(1);
+  const prevResetKey = useRef(listFilters.resetKey);
+  if (prevResetKey.current !== listFilters.resetKey) {
+    prevResetKey.current = listFilters.resetKey;
+    setPage(1);
+  }
+
   const levelValue = listFilters.value("level");
   const statusValue = listFilters.value("status");
+  const ownerIdValue = listFilters.value("ownerId");
 
   const typedLevel = useMemo(
     () => LEVEL_OPTIONS.find((o) => o.value === levelValue)?.value,
@@ -89,14 +101,19 @@ export function GoalsPage() {
     () => ({
       ...(typedStatus ? { status: typedStatus } : {}),
       ...(typedLevel ? { level: typedLevel } : {}),
+      ...(ownerIdValue !== "all" && ownerIdValue ? { ownerId: ownerIdValue } : {}),
       ...(listFilters.debouncedSearch.trim()
         ? { search: listFilters.debouncedSearch.trim() }
         : {}),
+      page,
+      limit: GOALS_PAGE_SIZE,
     }),
-    [typedStatus, typedLevel, listFilters.debouncedSearch],
+    [typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch, page],
   );
 
-  const { data: goals, isLoading, isError, error, refetch } = useGoals(params);
+  const { data: goalsPage, isLoading, isError, error, refetch } = useGoalsPage(params);
+  const goals = goalsPage?.items ?? null;
+  const totalGoals = goalsPage?.total ?? 0;
   const { data: stats } = useGoalStats();
 
   const grouped = useMemo(() => {
@@ -111,6 +128,14 @@ export function GoalsPage() {
   const handleOpenCreate = useCallback(() => { openCreate(); }, [openCreate]);
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleClearSelection = useCallback(() => {}, []);
+  const handleOpenFocused = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: goals?.length ?? 0,
+    onOpen: handleOpenFocused,
+    onClearSelection: handleClearSelection,
+  });
 
   const pageState = usePageState({
     permission: "build:goals:view",
@@ -242,6 +267,14 @@ export function GoalsPage() {
                     </div>
                   );
                 })}
+                {totalGoals > GOALS_PAGE_SIZE ? (
+                  <TablePagination
+                    page={page}
+                    pageSize={GOALS_PAGE_SIZE}
+                    total={totalGoals}
+                    onPageChange={setPage}
+                  />
+                ) : null}
               </div>
             </PageState>
           </PmSection>

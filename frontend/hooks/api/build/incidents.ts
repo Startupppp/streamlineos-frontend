@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -21,24 +21,35 @@ import type {
 } from "@/hooks/api/build/incidents-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-
 const incidentListContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentListContract),
+  import("@/hooks/api/build/incidents-schema").then(
+    (m) => m.incidentResponseContract,
+  ),
 );
 const incidentRowContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentRowContract),
+  import("@/hooks/api/build/incidents-schema").then(
+    (m) => m.incidentRowContract,
+  ),
 );
 const incidentDetailContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentDetailContract),
+  import("@/hooks/api/build/incidents-schema").then(
+    (m) => m.incidentDetailContract,
+  ),
 );
 const incidentUpdateRowContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentUpdateRowContract),
+  import("@/hooks/api/build/incidents-schema").then(
+    (m) => m.incidentUpdateRowContract,
+  ),
 );
 const incidentDecisionRowContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentDecisionRowContract),
+  import("@/hooks/api/build/incidents-schema").then(
+    (m) => m.incidentDecisionRowContract,
+  ),
 );
 const incidentFollowUpActionRowContract = lazyContract(() =>
-  import("@/hooks/api/build/incidents-schema").then((m) => m.incidentFollowUpActionRowContract),
+  import("@/hooks/api/build/incidents-schema").then(
+    (m) => m.incidentFollowUpActionRowContract,
+  ),
 );
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -63,9 +74,41 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   if (filters?.status) params["status"] = filters.status;
   if (filters?.severity) params["severity"] = filters.severity;
 
-  return useQuery<Incident[]>({
-    queryKey: buildWorkQueryKeys.projects.incidents.list(projectId ?? 0, filters),
-    queryFn: ({ signal }) => apiClient.get<Incident[]>(`/build/${projectId}/incidents`, params, signal, incidentListContract),
+  return useInfiniteQuery({
+    queryKey: buildWorkQueryKeys.projects.incidents.list(
+      projectId ?? 0,
+      filters,
+    ),
+    queryFn: async ({ pageParam, signal }) => {
+      const response = await apiClient.get<
+        | Incident[]
+        | {
+            data: Incident[];
+            pagination: {
+              limit: number;
+              hasMore: boolean;
+              nextCursor: string | null;
+            };
+          }
+      >(
+        `/build/${projectId}/incidents`,
+        pageParam ? { ...params, cursor: pageParam } : params,
+        signal,
+        incidentListContract,
+      );
+      return Array.isArray(response)
+        ? {
+            data: response,
+            pagination: {
+              limit: response.length || 100,
+              hasMore: false,
+              nextCursor: null,
+            },
+          }
+        : response;
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,
     refetchOnWindowFocus: "always",
@@ -75,7 +118,10 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
 export function useIncident(projectId?: number, incidentId?: number) {
   const canView = useCan("build:incidents:view");
   const query = useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.incidents.detail(projectId ?? 0, incidentId ?? 0),
+    queryKey: buildWorkQueryKeys.projects.incidents.detail(
+      projectId ?? 0,
+      incidentId ?? 0,
+    ),
     queryFn: ({ signal, pageParam }) => {
       const params: Record<string, string> = { limit: "100" };
       if (pageParam.updatesCursor !== undefined)
@@ -102,14 +148,14 @@ export function useIncident(projectId?: number, incidentId?: number) {
         return undefined;
       return {
         updatesCursor: pagination.updates.hasMore
-          ? pagination.updates.nextCursor ?? undefined
-          : last.updates.at(-1)?.id ?? 1,
+          ? (pagination.updates.nextCursor ?? undefined)
+          : (last.updates.at(-1)?.id ?? 1),
         decisionsCursor: pagination.decisions.hasMore
-          ? pagination.decisions.nextCursor ?? undefined
-          : last.decisions.at(-1)?.id ?? 1,
+          ? (pagination.decisions.nextCursor ?? undefined)
+          : (last.decisions.at(-1)?.id ?? 1),
         followUpActionsCursor: pagination.followUpActions.hasMore
-          ? pagination.followUpActions.nextCursor ?? undefined
-          : last.followUpActions.at(-1)?.id ?? 1,
+          ? (pagination.followUpActions.nextCursor ?? undefined)
+          : (last.followUpActions.at(-1)?.id ?? 1),
       };
     },
     enabled: canView && !!projectId && !!incidentId,
@@ -140,10 +186,20 @@ export function useCreateIncident() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:incidents:manage", {
     mutationKey: ["projects", "incidents", "create"],
-    mutationFn: ({ projectId, ...data }: CreateIncidentInput & { projectId: number }) =>
-      apiClient.post<Incident>(`/build/${projectId}/incidents`, data, undefined, incidentRowContract),
+    mutationFn: ({
+      projectId,
+      ...data
+    }: CreateIncidentInput & { projectId: number }) =>
+      apiClient.post<Incident>(
+        `/build/${projectId}/incidents`,
+        data,
+        undefined,
+        incidentRowContract,
+      ),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId),
+      });
     },
   });
 }
@@ -157,11 +213,21 @@ export function useUpdateIncident() {
       incidentId,
       ...data
     }: UpdateIncidentInput & { projectId: number; incidentId: number }) =>
-      apiClient.patch<Incident>(`/build/${projectId}/incidents/${incidentId}`, data, undefined, incidentRowContract),
+      apiClient.patch<Incident>(
+        `/build/${projectId}/incidents/${incidentId}`,
+        data,
+        undefined,
+        incidentRowContract,
+      ),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
       qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
+        queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId),
+      });
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(
+          vars.projectId,
+          vars.incidentId,
+        ),
       });
     },
   });
@@ -171,10 +237,23 @@ export function useDeleteIncident() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:incidents:manage", {
     mutationKey: ["projects", "incidents", "delete"],
-    mutationFn: ({ projectId, incidentId }: { projectId: number; incidentId: number }) =>
-      apiClient.delete<void>(`/build/${projectId}/incidents/${incidentId}`, undefined, undefined, noContentContract),
+    mutationFn: ({
+      projectId,
+      incidentId,
+    }: {
+      projectId: number;
+      incidentId: number;
+    }) =>
+      apiClient.delete<void>(
+        `/build/${projectId}/incidents/${incidentId}`,
+        undefined,
+        undefined,
+        noContentContract,
+      ),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId),
+      });
     },
   });
 }
@@ -196,9 +275,14 @@ export function useAddIncidentUpdate() {
       ),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(
+          vars.projectId,
+          vars.incidentId,
+        ),
       });
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId),
+      });
     },
   });
 }
@@ -220,7 +304,10 @@ export function useAddIncidentDecision() {
       ),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(
+          vars.projectId,
+          vars.incidentId,
+        ),
       });
     },
   });
@@ -234,7 +321,10 @@ export function useAddIncidentFollowUpAction() {
       projectId,
       incidentId,
       ...data
-    }: CreateIncidentFollowUpActionInput & { projectId: number; incidentId: number }) =>
+    }: CreateIncidentFollowUpActionInput & {
+      projectId: number;
+      incidentId: number;
+    }) =>
       apiClient.post<IncidentFollowUpAction>(
         `/build/${projectId}/incidents/${incidentId}/follow-ups`,
         data,
@@ -243,7 +333,10 @@ export function useAddIncidentFollowUpAction() {
       ),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(
+          vars.projectId,
+          vars.incidentId,
+        ),
       });
     },
   });
@@ -271,7 +364,10 @@ export function useUpdateIncidentFollowUpAction() {
       ),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(
+          vars.projectId,
+          vars.incidentId,
+        ),
       });
     },
   });

@@ -187,9 +187,11 @@ export default function ServiceDeliveryPage() {
                 {showOps ? "Prioritized queue" : "My open items"} ({items.length})
               </p>
               <div className="flex gap-2 text-micro text-muted-foreground">
-                <Link href="/hr/cases" className="underline underline-offset-2">
-                  Cases
-                </Link>
+                {canOps && (
+                  <Link href="/hr/cases" className="underline underline-offset-2">
+                    Cases
+                  </Link>
+                )}
                 {canSafety && (
                   <Link href="/hr/safety" className="underline underline-offset-2">
                     Safety

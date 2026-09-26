@@ -20,7 +20,7 @@ import {
   PmStaggerList,
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import {
   useAutomations,
   useCreateAutomation,
@@ -38,6 +38,7 @@ interface AutomationsPageProps {
 }
 
 export function AutomationsPage({ projectId }: AutomationsPageProps) {
+  const accessState = useCanState("build:view");
   const canManage = useCan("build:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingAutomation, setEditingAutomation] = useState<ProjectAutomation | null>(null);
@@ -156,6 +157,10 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
   const handleAppendAction = useCallback(() => {
     appendAction({ type: "set_status", value: "" });
   }, [appendAction]);
+
+  if (accessState === "denied" || accessState === "loading") {
+    return null;
+  }
 
   return (
     <PageWrapper

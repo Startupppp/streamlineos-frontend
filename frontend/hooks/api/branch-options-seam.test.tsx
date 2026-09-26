@@ -38,7 +38,7 @@ const CONSUMERS = [
   },
   {
     name: "recruitment job form",
-    path: "features/hr/recruitment/jobs/create-job-form/job-basics-sections.tsx",
+    path: "features/recruitment/jobs/create-job-form/job-basics-sections.tsx",
   },
 ];
 

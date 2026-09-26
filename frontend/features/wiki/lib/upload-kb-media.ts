@@ -64,22 +64,6 @@ function getValidationError(file: File): string | null {
   return `Unsupported file type: ${file.type || 'unknown'}`;
 }
 
-/**
- * One idempotency key per FILE, not per attempt, released only on success.
- *
- * `POST /kb/media` is `@Idempotent`. `api-client` mints a fallback key per HTTP call so
- * the route never 400s, but a key minted per attempt is a request id wearing the wrong
- * name and makes the backend's replay inert: every retry uploads a second R2 object under
- * a fresh storage key (the `(org_id, file_key)` conflict target can never match a retry),
- * and for a document against a page it pays for a second extract and embed batch. Both
- * call sites — the editor's drop handler and the cover picker — are user-retryable after a
- * timeout, which is exactly the case the fence exists for.
- *
- * `use-idempotent-operation.ts` is the hook form of this and cannot be used here:
- * `uploadKbMedia` is a plain function called from an editor callback, not a component. The
- * key is therefore held module-scoped against the file's own identity, which is stable
- * across retries of the same upload and different for a different file.
- */
 const mediaUploadKeys = new Map<string, string>();
 
 function uploadSignature(file: File, pageId?: number): string {

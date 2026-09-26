@@ -32,6 +32,9 @@ jest.mock("@/hooks/api/build/advanced", () => ({
   useUpdateWorkspaceView: () => ({ mutate: mockUpdateView }),
   useDeleteWorkspaceView: () => ({ mutate: mockDeleteView }),
 }));
+jest.mock("@/hooks/api/access", () => ({
+  useCanState: () => "granted",
+}));
 
 beforeEach(() => {
   jest.clearAllMocks();

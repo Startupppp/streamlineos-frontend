@@ -2,12 +2,20 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { CalendarDays } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { useHrLeaveApprovals } from "@/hooks/api/hr";
 import { getUserDisplayName } from "@/lib/person-display";
-import { formatDateRange } from "@/features/hr/workflows/leave-approval-row-format";
+import {
+  approvalRouteTargetLabel,
+  formatDateRange,
+} from "@/features/hr/workflows/leave-approval-row-format";
+import {
+  LeaveDecisionButtons,
+  useLeaveDecisions,
+} from "@/features/hr/leaves/components/leave-decision-controls";
 
 /**
  * HRMS-E2E-013. `/hr/approvals` said "No pending approvals. You are all caught
@@ -33,6 +41,10 @@ import { formatDateRange } from "@/features/hr/workflows/leave-approval-row-form
  */
 export function PendingLeaveApprovals() {
   const { data, isLoading, isError } = useHrLeaveApprovals({ status: "PENDING", limit: 50 });
+  const { data: session } = useSession();
+  // V-044. The same hook Leave > Approvals uses, so approving here runs the
+  // same mutation through the same dialogs.
+  const { onProcess, processingId, decisionDialogs } = useLeaveDecisions();
 
   const pending = useMemo(
     () => (data?.pages ?? []).flatMap((page) => page.data),
@@ -65,13 +77,17 @@ export function PendingLeaveApprovals() {
         </Badge>
       </div>
       <ul className="divide-y divide-border/60">
-        {pending.map((request) => (
-          <li key={request.id}>
-            <Link
-              href="/hr/leaves"
-              className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        {pending.map((request) => {
+          const routedTo = approvalRouteTargetLabel(request.approvalRoute);
+          return (
+            <li
+              key={request.id}
+              className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/40"
             >
-              <div className="min-w-0">
+              <Link
+                href="/hr/leaves"
+                className="min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
                 <p className="truncate text-sm font-medium text-foreground">
                   {getUserDisplayName(request.user)}
                 </p>
@@ -80,14 +96,25 @@ export function PendingLeaveApprovals() {
                   {formatDateRange(request.startDate, request.endDate)}
                   {request.isHalfDay ? " (half day)" : ""}
                 </p>
+                {routedTo ? (
+                  <p className="truncate text-dense text-muted-foreground">
+                    {routedTo}
+                  </p>
+                ) : null}
+              </Link>
+              <div className="flex shrink-0 items-center gap-2">
+                <LeaveDecisionButtons
+                  request={request}
+                  currentUserId={session?.user?.id}
+                  processingId={processingId}
+                  onProcess={onProcess}
+                />
               </div>
-              <Badge variant="outline" className="shrink-0 text-micro">
-                Pending
-              </Badge>
-            </Link>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
+      {decisionDialogs}
     </section>
   );
 }

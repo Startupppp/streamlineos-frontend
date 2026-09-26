@@ -20,12 +20,16 @@ import {
 } from "@/components/ui/select";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { useKbPageFullSearch } from "@/hooks/api/kb/search";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { useHrKbLinkFlags } from "@/hooks/api/kb/hr-link-config";
 import { WikiSearchCompanyDocuments } from "@/features/wiki/components/wiki-search-company-documents";
 import { pageHref } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { SearchSnippetText } from "@/features/wiki/lib/search-snippet-text";
-import { TrustBadge, StatusBadge } from "@/features/wiki/components/kb-collection-badges";
+import {
+  TrustBadge,
+  StatusBadge,
+} from "@/features/wiki/components/kb-collection-badges";
 import { cn } from "@/lib/utils";
 import type { KbPageFullSearchItem } from "@/hooks/api/kb/kb-search-schema";
 
@@ -34,6 +38,19 @@ const STATUS_OPTIONS = [
   { value: "in_review", label: "In review" },
   { value: "published", label: "Published" },
   { value: "archived", label: "Archived" },
+] as const;
+
+const TYPE_OPTIONS = [
+  { value: "note", label: "Note" },
+  { value: "sop", label: "SOP" },
+  { value: "policy", label: "Policy" },
+  { value: "support_article", label: "Support article" },
+  { value: "troubleshooting", label: "Troubleshooting" },
+  { value: "decision_record", label: "Decision record" },
+  { value: "meeting_notes", label: "Meeting notes" },
+  { value: "runbook", label: "Runbook" },
+  { value: "project_brief", label: "Project brief" },
+  { value: "playbook", label: "Playbook" },
 ] as const;
 
 const VIEW_VALUES = ["list", "card"] as const;
@@ -85,7 +102,11 @@ interface SearchResultCardProps {
   onFocus: () => void;
 }
 
-function SearchResultCard({ item, refCallback, onFocus }: SearchResultCardProps) {
+function SearchResultCard({
+  item,
+  refCallback,
+  onFocus,
+}: SearchResultCardProps) {
   return (
     <Link
       ref={refCallback}
@@ -118,9 +139,21 @@ export default function WikiSearchPage() {
   const searchParams = useSearchParams();
   const hrDocumentSearch = useHrKbLinkFlags().search;
   const { update } = useUrlFilters();
+  const { data: spacesData } = useKbSpaces({ limit: 100 });
+  const spacesById = new Map((spacesData?.data ?? []).map((s) => [s.id, s.name]));
 
   const q = searchParams.get("q") ?? "";
   const status = searchParams.get("status") ?? undefined;
+  const type = searchParams.get("type") ?? undefined;
+  const verifiedParam = searchParams.get("verified");
+  const verified =
+    verifiedParam === "verified"
+      ? true
+      : verifiedParam === "unverified"
+        ? false
+        : undefined;
+  const spaceParam = searchParams.get("space");
+  const spaceId = spaceParam !== null ? parseInt(spaceParam, 10) : undefined;
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
 
   const [inputValue, setInputValue] = useState(q);
@@ -140,14 +173,45 @@ export default function WikiSearchPage() {
     [update],
   );
 
-  const { data, isLoading, isError, error, refetch } = useKbPageFullSearch(
-    { q, status, facets: true },
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useKbPageFullSearch(
+    {
+      q,
+      status,
+      type,
+      ...(spaceId !== undefined && !Number.isNaN(spaceId) ? { spaceId } : {}),
+      ...(verified === undefined ? {} : { verified }),
+      facets: true,
+    },
     { enabled: q.trim().length > 0 },
   );
 
-  const items = data?.items ?? [];
-  const hasFilters = !!status;
+  const items = data?.pages.flatMap((page) => page.items) ?? [];
+  const hasFilters = !!status || !!type || verified !== undefined || spaceId !== undefined;
   const queryActive = q.trim().length > 0;
+
+  const bottomSentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const sentinel = bottomSentinelRef.current;
+    if (!sentinel || !hasNextPage || isFetchingNextPage) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) void fetchNextPage();
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const pageState = usePageState({
     permission: "kb:pages:view",
@@ -178,16 +242,45 @@ export default function WikiSearchPage() {
   );
 
   const handleClearFilters = useCallback(() => {
-    update({ status: null });
+    update({ status: null, type: null, verified: null, space: null });
   }, [update]);
+
+  const handleSpaceChange = useCallback(
+    (value: string) => {
+      update({ space: value === "all" ? null : value });
+    },
+    [update],
+  );
+
+  const handleClearSpace = useCallback(() => {
+    update({ space: null });
+  }, [update]);
+
+  const handleVerifiedChange = useCallback(
+    (value: string) => {
+      update({ verified: value === "all" ? null : value });
+    },
+    [update],
+  );
 
   const handleClearStatus = useCallback(() => {
     update({ status: null });
   }, [update]);
 
+  const handleClearType = useCallback(() => {
+    update({ type: null });
+  }, [update]);
+
   const handleStatusChange = useCallback(
     (value: string) => {
       update({ status: value === "all" ? null : value });
+    },
+    [update],
+  );
+
+  const handleTypeChange = useCallback(
+    (value: string) => {
+      update({ type: value === "all" ? null : value });
     },
     [update],
   );
@@ -199,7 +292,16 @@ export default function WikiSearchPage() {
     [update],
   );
 
-  const facetStatusCounts = data?.facets?.status ?? [];
+  const facetStatusCounts = data?.pages[0]?.facets?.status ?? [];
+  const facetTypeCounts = data?.pages[0]?.facets?.type ?? [];
+  const facetVerifiedCounts = data?.pages[0]?.facets?.verified ?? [];
+  const facetSpaceCounts = data?.pages[0]?.facets?.space ?? [];
+  const verifiedCount = facetVerifiedCounts.find(
+    (f) => f.value === "verified",
+  )?.count;
+  const unverifiedCount = facetVerifiedCounts
+    .filter((f) => f.value !== "verified")
+    .reduce((total, f) => total + f.count, 0);
 
   return (
     <PageWrapper title="Search">
@@ -220,17 +322,16 @@ export default function WikiSearchPage() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <Select
-              value={status ?? "all"}
-              onValueChange={handleStatusChange}
-            >
+            <Select value={status ?? "all"} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-9 w-40">
                 <SelectValue placeholder="Any status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Any status</SelectItem>
                 {STATUS_OPTIONS.map((opt) => {
-                  const facet = facetStatusCounts.find((f) => f.value === opt.value);
+                  const facet = facetStatusCounts.find(
+                    (f) => f.value === opt.value,
+                  );
                   return (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
@@ -240,6 +341,69 @@ export default function WikiSearchPage() {
                 })}
               </SelectContent>
             </Select>
+            <Select value={type ?? "all"} onValueChange={handleTypeChange}>
+              <SelectTrigger className="h-9 w-40">
+                <SelectValue placeholder="Any type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any type</SelectItem>
+                {TYPE_OPTIONS.map((opt) => {
+                  const facet = facetTypeCounts.find(
+                    (f) => f.value === opt.value,
+                  );
+                  return (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                      {facet ? ` (${facet.count})` : ""}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            <Select
+              value={verifiedParam ?? "all"}
+              onValueChange={handleVerifiedChange}
+            >
+              <SelectTrigger className="h-9 w-40">
+                <SelectValue placeholder="Any trust" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any trust</SelectItem>
+                <SelectItem value="verified">
+                  {verifiedCount === undefined
+                    ? "Verified"
+                    : `Verified (${verifiedCount})`}
+                </SelectItem>
+                <SelectItem value="unverified">
+                  {facetVerifiedCounts.length === 0
+                    ? "Not verified"
+                    : `Not verified (${unverifiedCount})`}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            {facetSpaceCounts.length > 0 && (
+              <Select
+                value={spaceId !== undefined ? String(spaceId) : "all"}
+                onValueChange={handleSpaceChange}
+              >
+                <SelectTrigger className="h-9 w-40">
+                  <SelectValue placeholder="Any space" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any space</SelectItem>
+                  {facetSpaceCounts.map((f) => {
+                    const sid = f.spaceId;
+                    if (sid === null) return null;
+                    const name = spacesById.get(sid) ?? `Space ${sid}`;
+                    return (
+                      <SelectItem key={sid} value={String(sid)}>
+                        {`${name} (${f.count})`}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            )}
             <div className="flex rounded-md border border-border">
               <Button
                 type="button"
@@ -276,8 +440,8 @@ export default function WikiSearchPage() {
         {queryActive && !isLoading && items.length > 0 && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>
-              {data?.hasMore
-                ? `Top ${items.length} results`
+              {hasNextPage
+                ? `${items.length}+ results`
                 : `${items.length} result${items.length !== 1 ? "s" : ""}`}
             </span>
             {status && (
@@ -291,6 +455,28 @@ export default function WikiSearchPage() {
                 <X className="size-3" />
               </button>
             )}
+            {type && (
+              <button
+                type="button"
+                onClick={handleClearType}
+                className="flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-xs hover:bg-muted/80"
+                aria-label={`Remove type filter: ${type}`}
+              >
+                {type}
+                <X className="size-3" />
+              </button>
+            )}
+            {spaceId !== undefined && !Number.isNaN(spaceId) && (
+              <button
+                type="button"
+                onClick={handleClearSpace}
+                className="flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-xs hover:bg-muted/80"
+                aria-label={`Remove space filter: ${spacesById.get(spaceId) ?? spaceId}`}
+              >
+                {spacesById.get(spaceId) ?? `Space ${spaceId}`}
+                <X className="size-3" />
+              </button>
+            )}
           </div>
         )}
 
@@ -299,7 +485,13 @@ export default function WikiSearchPage() {
           loading={<SearchSkeleton />}
           empty={
             <EmptyState
-              title={queryActive ? (hrDocumentSearch ? "No pages found" : "No results") : "Search pages"}
+              title={
+                queryActive
+                  ? hrDocumentSearch
+                    ? "No pages found"
+                    : "No results"
+                  : "Search pages"
+              }
               description={
                 queryActive
                   ? "Try a different query or clear your filters."
@@ -346,6 +538,7 @@ export default function WikiSearchPage() {
                   />
                 ),
               )}
+              {hasNextPage && <div ref={bottomSentinelRef} className="h-1" />}
             </div>
           )}
         </PageState>

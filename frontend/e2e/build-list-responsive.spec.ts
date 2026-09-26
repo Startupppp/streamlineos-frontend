@@ -195,7 +195,7 @@ test.describe("Build list responsive contract", () => {
       await expect(scope.locator("table")).toBeHidden();
       const card = scope.locator("[role=button][tabindex='0']").first();
       const cards = scope.getByText("Priya Nair");
-      expect(await cards.count()).toBeGreaterThan(0);
+      await expect(cards.first()).toBeVisible();
       await expect(
         scope.getByRole("button", { name: /^Actions for / }).first(),
       ).toBeVisible();
@@ -252,7 +252,7 @@ test.describe("Build list responsive contract", () => {
       await expect(scope.locator("table")).toBeHidden();
       await expect(scope.getByText("Column 1")).toHaveCount(0);
       const cards = scope.locator("[class*='sm:hidden'] > div");
-      expect(await cards.count()).toBeGreaterThan(0);
+      await expect(cards.first()).toBeVisible();
     });
   });
 

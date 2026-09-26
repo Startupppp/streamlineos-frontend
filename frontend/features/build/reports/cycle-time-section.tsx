@@ -9,6 +9,7 @@ import dynamic from "next/dynamic";
 import { Timer } from "lucide-react";
 import { useCycleTimeReport } from "@/hooks/api/build/reports";
 import { ChartCard } from "./chart-card";
+import { useCanState } from "@/hooks/api/access";
 
 const CycleTimeChart = dynamic(
   () => import("./cycle-time-chart").then((m) => ({ default: m.CycleTimeChart })),
@@ -16,10 +17,13 @@ const CycleTimeChart = dynamic(
 );
 
 export function CycleTimeSection({ projectId }: { projectId: number }) {
+  const accessState = useCanState("build:view");
   const { data = [], isLoading, isError, refetch } =
     useCycleTimeReport(projectId);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   return (
     <ChartCard title="Cycle Time" icon={Timer}>

@@ -246,6 +246,7 @@ export function GoalsTab() {
   const goalsList = Array.isArray(goals) ? goals : [];
 
   return (
+    <>
     <PageState
       resolution={pageState}
       onRetry={handleRetry}
@@ -383,6 +384,8 @@ export function GoalsTab() {
           })}
         </div>
 
+    </div>
+    </PageState>
       <HrSheet
         open={sheetOpen}
         onOpenChange={(open) => {
@@ -416,7 +419,6 @@ export function GoalsTab() {
         onConfirm={handleDelete}
         isPending={deleteGoal.isPending}
       />
-    </div>
-    </PageState>
+    </>
   );
 }

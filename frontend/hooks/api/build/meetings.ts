@@ -24,6 +24,9 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 const meetingListContract = lazyContract(() =>
   import("@/hooks/api/build/meetings-schema").then((m) => m.meetingListContract),
 );
+const meetingResponseContract = lazyContract(() =>
+  import("@/hooks/api/build/meetings-schema").then((m) => m.meetingResponseContract),
+);
 const meetingRowContract = lazyContract(() =>
   import("@/hooks/api/build/meetings-schema").then((m) => m.meetingRowContract),
 );
@@ -73,7 +76,15 @@ export function useMeetings(projectId: number, filters?: MeetingFilters) {
 
   return useQuery<Meeting[]>({
     queryKey: buildWorkQueryKeys.projects.meetings.list(projectId, hasParams ? params : undefined),
-    queryFn: ({ signal }) => apiClient.get<Meeting[]>(`/build/${projectId}/meetings`, hasParams ? params : undefined, signal, meetingListContract),
+    queryFn: async ({ signal }): Promise<Meeting[]> => {
+      const response = await apiClient.get(
+        `/build/${projectId}/meetings`,
+        hasParams ? params : undefined,
+        signal,
+        meetingResponseContract,
+      );
+      return Array.isArray(response) ? response : response.data;
+    },
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });

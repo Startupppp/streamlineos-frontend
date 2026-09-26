@@ -100,7 +100,7 @@ describe("BuildAgentPulse", () => {
     const signal = makeSignal({ type: "comment_draft", title: "Add test coverage" });
     mockUseAgentPulse.mockReturnValue({ data: signal });
     render(<BuildAgentPulse isCollapsed={false} />);
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/build/drafts");
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/build/inbox?view=drafts");
   });
 
   it("shows only the icon in collapsed mode — summary text is absent from the link itself", () => {

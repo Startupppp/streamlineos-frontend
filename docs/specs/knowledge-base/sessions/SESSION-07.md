@@ -82,9 +82,35 @@ Migration: `backend/migrations/1212_kb_indexed_bytes_quota.sql` + its rollback.
 - [x] All six states on `/knowledge/chat`; keyboard path for scope editing, stop and retry;
       usable at 375 px.
 - [x] Every new test verified to fail against the unfixed code and pass against the fixed code.
-- [ ] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
-      PENDING ORCHESTRATOR GATE — machine overloaded during parallel session run; orchestrator to
-      run serialized after all sessions quiet.
+- [x] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+      **DONE 2026-09-25**, serialized orchestrator pass. Both backend gates are now clean; both
+      opened red, and neither failure was visible to any test run.
+      **`pnpm typecheck`** — `makeSourcesEventPipe` declared `eventType: string`, but the AI SDK's
+      chunk union admits a custom event only as `` `data-${string}` ``, so the `writer.write` was
+      rejected. The AI-citations lane reported 684 passing tests across 83 suites and this was
+      invisible to every one of them: BE-139 is the only gate that sees it.
+      **`pnpm typecheck:test`** — five specs still constructed `KbSourcesService` with six
+      arguments after the indexed-bytes quota service became the seventh
+      (`kb-ingestion-status.e2e-spec`, `kb-ingestion-status.spec`, `kb-list-truncation.spec`,
+      `kb-sources-cursor.spec`, `kb-sources-tenant-isolation.spec` ×2). Jest strips the types and
+      those paths never touch the quota, so they passed green while being wrong (BE-138).
+      **`kb-source-citation.spec.ts` revived — 4 failures, none pre-existing in the way first
+      assumed.** Three were a db double carrying no `insert`, which `KbAskService` now needs for its
+      `kb_ai_interactions` audit row. The fourth claimed the *adversarial query string* changed the
+      compiled SQL predicate, which would be a BE-96 breach. It does not. Both asks compile an
+      identical `kb_sources` predicate — `org_id = $1 and id in ($2) and deleted_at is null and
+      status = $3 and (space_id is null or space_id in ($4,$5))`. The extra condition was an
+      unrelated `organization_relocations` placement lookup, which is resolved once and cached
+      in-process, so whichever service asked **first** saw it twice and the second saw it once. The
+      test was comparing a cold run against a warm one and reporting it as a prompt-injection
+      signal; it now filters to the `kb_sources` predicate it is actually about.
+      **Verification:** backend KB 193 suites / 1632 tests, all passing. Frontend `type-check`,
+      `type-check:specs`, `check:named-handlers` clean; 63 suites / 476 tests passing.
+      **`pnpm lint` is red repo-wide (63 errors) and was already red on main.** Exactly one
+      error-carrying file was in KB scope — `kb-chat-parts.tsx`, 5 × `no-raw-visual-values`
+      (FE-92, a non-negotiable) — now reading `statusToneClasses("warning"/"success")`. The
+      remaining 28 files are in assistant, auth, CRM, settings and directory and are untouched by
+      this work.
 
 ## Handoffs
 

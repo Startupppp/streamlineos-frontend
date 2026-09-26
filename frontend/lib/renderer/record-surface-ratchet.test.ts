@@ -90,7 +90,8 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
    * react-hook-form and features/hr/helpdesk/create-ticket-dialog.tsx was
    * deleted, so hr nets +2. The numbers below may still only fall.
    */
-  "hr": 127,
+  "hr": 110, // 127 until 2026-09-25, when Recruitment OS (17) left features/hr
+  "recruitment": 17,
   "inventory": 138, // 96 on the CRM lane; +40 from the inventory lane on merge
   "build": 76,
   "payroll": 54,

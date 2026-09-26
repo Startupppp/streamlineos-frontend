@@ -246,6 +246,7 @@ export function useBuildListUrlState(
     const resolvedProjectIds = singleProjectId ?? projectIds;
     if (resolvedProjectIds) next.projectIds = resolvedProjectIds;
 
+
     const cycleId = searchParams.get("cycleId");
     if (cycleId) next.cycleId = cycleId;
 

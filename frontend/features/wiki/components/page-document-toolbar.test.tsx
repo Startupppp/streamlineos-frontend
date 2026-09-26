@@ -7,7 +7,7 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
-const mockUseCan = jest.fn(() => true);
+const mockUseCan = jest.fn<boolean, [string]>(() => true);
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockUseCan(key),
 }));

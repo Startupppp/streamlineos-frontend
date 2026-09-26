@@ -15,7 +15,7 @@ export const projectsNav: NavGroup[] = [
       { label: "Home", icon: LayoutDashboard, href: "/build/command-center" },
       { label: "Inbox", icon: Inbox, href: "/build/inbox" },
       { label: "My issues", icon: CheckSquare, href: "/build/my-work" },
-      { label: "Drafts", icon: Inbox, href: "/build/drafts" },
+      { label: "Drafts", icon: Inbox, href: "/build/inbox?view=drafts" },
       { label: "All issues", icon: Briefcase, href: "/build/all-work" },
       { label: "Projects", icon: Briefcase, href: "/build", exact: true },
       { label: "Delivery Teams", icon: Users, href: "/build/teams" },

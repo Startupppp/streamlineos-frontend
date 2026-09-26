@@ -8,7 +8,7 @@ import { PageState } from "@/components/shared/page-state";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import type { DataTableSortState } from "@/components/ui/data-table.types";
-import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
+import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";

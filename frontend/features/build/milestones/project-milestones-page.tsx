@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -10,8 +10,16 @@ import { ErrorState } from "@/components/shared/error-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Diamond, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
   useProjectMilestones,
   useDeleteMilestone,
@@ -30,6 +38,22 @@ import {
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
 
+const MILESTONE_PAGE_SIZE = 20;
+
+const MILESTONE_STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "PENDING", label: "Pending" },
+  { value: "ACHIEVED", label: "Achieved" },
+  { value: "MISSED", label: "Missed" },
+] as const;
+
+const MILESTONE_FILTER_DEFINITIONS = [
+  { param: "status", options: MILESTONE_STATUS_OPTIONS.map((o) => o.value) },
+  { param: "ownerId" },
+  { param: "from" },
+  { param: "to" },
+] as const;
+
 function NewMilestoneButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
@@ -46,8 +70,17 @@ interface ProjectMilestonesPageProps {
 
 export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilestonesPageProps) {
   const projectId = Number(projectIdStr);
+  const listFilters = useBuildListFilters({ filters: MILESTONE_FILTER_DEFINITIONS });
+
+  const [page, setPage] = useState(1);
+  const prevResetKey = useRef(listFilters.resetKey);
+  if (prevResetKey.current !== listFilters.resetKey) {
+    prevResetKey.current = listFilters.resetKey;
+    setPage(1);
+  }
+
   const {
-    data: milestones,
+    data: allMilestones,
     isLoading,
     isError,
     error,
@@ -65,11 +98,28 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   const [editTarget, setEditTarget] = useState<ProjectMilestone | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectMilestone | null>(null);
 
-  const total = milestones?.length ?? 0;
-  const achieved = milestones?.filter((m) => m.status === "ACHIEVED").length ?? 0;
-  const pending = milestones?.filter((m) => m.status === "PENDING").length ?? 0;
+  const statusFilterValue = listFilters.value("status");
+  const filtered = useMemo(() => {
+    const list = allMilestones ?? [];
+    let result = list;
+    if (statusFilterValue !== BUILD_FILTER_ALL) {
+      result = result.filter((m) => m.status === statusFilterValue);
+    }
+    const q = listFilters.debouncedSearch.trim().toLowerCase();
+    if (q) result = result.filter((m) => m.name.toLowerCase().includes(q));
+    return result;
+  }, [allMilestones, statusFilterValue, listFilters.debouncedSearch]);
+
+  const milestones = useMemo(
+    () => filtered.slice((page - 1) * MILESTONE_PAGE_SIZE, page * MILESTONE_PAGE_SIZE),
+    [filtered, page],
+  );
+
+  const total = allMilestones?.length ?? 0;
+  const achieved = allMilestones?.filter((m) => m.status === "ACHIEVED").length ?? 0;
+  const pending = allMilestones?.filter((m) => m.status === "PENDING").length ?? 0;
   const overdue =
-    milestones?.filter((m) => {
+    allMilestones?.filter((m) => {
       const d = new Date(m.targetDate);
       return isPast(d) && !isToday(d) && m.status === "PENDING";
     }).length ?? 0;
@@ -98,6 +148,52 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleteTarget, deleteMilestone]);
+
+  const handleClearSelection = useCallback(() => {}, []);
+  const handleOpenByIndex = useCallback(
+    (index: number) => {
+      const m = milestones[index];
+      if (m) handleEditTarget(m);
+    },
+    [milestones, handleEditTarget],
+  );
+  useBuildListKeyboard({
+    itemCount: milestones.length,
+    onOpen: handleOpenByIndex,
+    onClearSelection: handleClearSelection,
+  });
+
+  const handleStatusFilterChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
+  const filterToolbar = (
+    <BuildListToolbar
+      search={{
+        value: listFilters.search,
+        onValueChange: listFilters.setSearch,
+        placeholder: "Search milestones…",
+        label: "Search milestones",
+      }}
+      filters={[
+        {
+          id: "status",
+          label: "Status",
+          active: listFilters.isActive("status"),
+          control: (
+            <BuildFilterSelect
+              label="Status"
+              value={statusFilterValue}
+              onValueChange={handleStatusFilterChange}
+              options={MILESTONE_STATUS_OPTIONS}
+            />
+          ),
+        },
+      ]}
+      onClearAll={listFilters.clearAll}
+    />
+  );
 
   if (
     pageState.kind !== "ready" &&
@@ -156,6 +252,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
       title="Milestones"
       subtitle="Key checkpoints and target dates for this project"
       actions={<NewMilestoneButton onClick={handleOpenCreate} />}
+      filters={filterToolbar}
     >
       <PmPageShell>
           <PmSection index={0} className="shrink-0">
@@ -175,23 +272,39 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
 
           <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
             {milestones && milestones.length > 0 ? (
-              <PmStaggerList className="space-y-2.5" aria-label="Project milestones">
-                {milestones.map((m) => (
-                  <MilestoneCard
-                    key={m.id}
-                    milestone={m}
-                    onEdit={handleEditTarget}
-                    onDelete={handleDeleteTarget}
+              <>
+                <PmStaggerList className="space-y-2.5" aria-label="Project milestones">
+                  {milestones.map((m) => (
+                    <MilestoneCard
+                      key={m.id}
+                      milestone={m}
+                      onEdit={handleEditTarget}
+                      onDelete={handleDeleteTarget}
+                    />
+                  ))}
+                </PmStaggerList>
+                {filtered.length > MILESTONE_PAGE_SIZE ? (
+                  <TablePagination
+                    page={page}
+                    pageSize={MILESTONE_PAGE_SIZE}
+                    total={filtered.length}
+                    onPageChange={setPage}
                   />
-                ))}
-              </PmStaggerList>
+                ) : null}
+              </>
             ) : (
               <EmptyState
                   className={PM_FILL_PANEL}
                   illustrationPreset="projects"
                   title="No milestones yet"
-                  description="Add milestones to track key checkpoints and target dates."
-                  action={{ label: "Add Milestone", onClick: handleOpenCreate }}
+                  description={
+                    listFilters.isFiltered
+                      ? undefined
+                      : "Add milestones to track key checkpoints and target dates."
+                  }
+                  filtersActive={listFilters.isFiltered}
+                  onClearFilters={listFilters.clearAll}
+                  action={listFilters.isFiltered ? undefined : { label: "Add Milestone", onClick: handleOpenCreate }}
                 />
             )}
           </PmSection>

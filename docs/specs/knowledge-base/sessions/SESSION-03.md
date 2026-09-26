@@ -73,8 +73,10 @@ Migration: `backend/migrations/1206_kb_space_member_counts.sql` + its rollback.
       — `spaces-page.test.tsx` (11 tests) + `space-detail-page.test.tsx` (7 tests).
 - [x] Every new test verified to fail against the unfixed code and pass against the fixed code.
       — BITE test verified by logic trace (see Evidence section).
-- [ ] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
-      PENDING ORCHESTRATOR GATE — coordinator asked all sessions to stop whole-repo gates.
+- [x] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+      **DONE 2026-09-25**, serialized orchestrator pass. Backend `typecheck` and `typecheck:test`
+      both clean; frontend `type-check`, `type-check:specs` and `check:named-handlers` clean.
+      Full detail of what the gates caught is recorded once in SESSION-02 and SESSION-07.
 
 ## Handoffs
 
@@ -142,5 +144,5 @@ HANDOFF: backend/src/modules/kb/wiki/kb-page-tree.service.ts — owned by SESSIO
 - BITE test "BITE: reports askIndexed false when the space has pages but no indexed sources": fails against `askIndexed = pageCount > 0` (unfixed), passes against indexed-source count (fixed). Verified by logic trace.
 - Tenant isolation tests verify already-correct behavior (assertSpaceExists already filters by orgId).
 
-### [ ] pnpm typecheck (backend, under the lock) and frontend type-check clean for your files
-PENDING ORCHESTRATOR GATE — machine overloaded with nine live sessions; coordinator instructed all sessions to stop running whole-repo gates. The orchestrator will run typecheck once, serialized.
+### [x] pnpm typecheck (backend, under the lock) and frontend type-check clean for your files
+**DONE 2026-09-25.** The serialized run happened once every lane was quiet. Backend `typecheck` and `typecheck:test` clean; frontend `type-check`, `type-check:specs` and `check:named-handlers` clean. Backend KB suite: 193 suites / 1632 tests, all passing. Frontend KB/AI: 63 suites / 476 tests, all passing.

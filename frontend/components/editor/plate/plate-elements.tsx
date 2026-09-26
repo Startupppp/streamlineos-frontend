@@ -1,11 +1,18 @@
 'use client';
 
 import React from 'react';
-import { PlateElement, PlateLeaf, useReadOnly } from 'platejs/react';
+import Image from 'next/image';
+import { PlateElement, PlateLeaf, useEditorRef, useReadOnly } from 'platejs/react';
 import type { PlateElementProps, PlateLeafProps } from 'platejs/react';
 import type { TElement } from 'platejs';
 import { useTodoListElement, useTodoListElementState } from '@platejs/list/react';
+import { useLinkPreview } from '@/hooks/api/chat-entities';
 import { useEditorPageContext } from './plate-context';
+import {
+  citationSourceState,
+  linkPreviewDisplayTitle,
+  linkPreviewHasMeta,
+} from './plate-citation-link-model';
 import {
   LIST_STYLE_DECIMAL,
   LIST_STYLE_DISC,
@@ -240,6 +247,116 @@ export function CalloutElement({ element, children, ...props }: PlateElementProp
     >
       <span className="text-lg shrink-0 mt-0.5" contentEditable={false}>{icon}</span>
       <div className="flex-1 min-w-0">{children}</div>
+    </PlateElement>
+  );
+}
+
+export function CitationElement({ element, children, ...props }: PlateElementProps) {
+  const editor = useEditorRef();
+  const sourceTitle = (element['sourceTitle'] as string | null) ?? null;
+  const sourceUrl = (element['sourceUrl'] as string | null) ?? null;
+  const state = citationSourceState(sourceTitle, sourceUrl);
+
+  function handleEditSource(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    const nextTitle = window.prompt('Source title:', sourceTitle ?? '');
+    if (nextTitle === null) return;
+    const nextUrl = window.prompt('Source URL (optional):', sourceUrl ?? '');
+    const path = editor.api.findPath(element);
+    if (!path) return;
+    editor.tf.setNodes(
+      { sourceTitle: nextTitle || null, sourceUrl: nextUrl || null } as Partial<TElement>,
+      { at: path },
+    );
+  }
+
+  return (
+    <PlateElement
+      {...props}
+      element={element}
+      className="my-3 rounded-lg border-l-4 border-primary/40 bg-muted/30 pl-4 pr-3 py-3"
+    >
+      <div className="text-sm italic text-foreground">{children}</div>
+      <div
+        contentEditable={false}
+        className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"
+      >
+        {state.hasSource ? (
+          sourceUrl ? (
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground"
+            >
+              {state.display}
+            </a>
+          ) : (
+            <span>{state.display}</span>
+          )
+        ) : (
+          <span className="italic">No source</span>
+        )}
+        <button
+          type="button"
+          onMouseDown={handleEditSource}
+          className="font-medium text-primary hover:underline"
+        >
+          {state.buttonLabel}
+        </button>
+      </div>
+    </PlateElement>
+  );
+}
+
+export function LinkPreviewElement({ element, children, ...props }: PlateElementProps) {
+  const url = (element['url'] as string | null) ?? null;
+  const { data, isLoading } = useLinkPreview(url);
+  const hasMeta = linkPreviewHasMeta(data);
+  const displayTitle = linkPreviewDisplayTitle(data, url);
+
+  return (
+    <PlateElement {...props} element={element} className="my-3">
+      <a
+        href={url ?? undefined}
+        target="_blank"
+        rel="noopener noreferrer"
+        contentEditable={false}
+        className="flex max-w-[420px] gap-3 overflow-hidden rounded-xl border border-border transition-colors hover:bg-muted/40"
+      >
+        {data?.image && (
+          <Image
+            src={data.image}
+            alt={data.title ?? ''}
+            width={64}
+            height={64}
+            unoptimized
+            className="h-16 w-16 shrink-0 object-cover"
+          />
+        )}
+        <div className="min-w-0 flex-1 p-2.5">
+          {isLoading && (
+            <span className="text-xs text-muted-foreground">Loading preview…</span>
+          )}
+          {!isLoading && data?.siteName && (
+            <p className="truncate text-xs font-medium text-muted-foreground">{data.siteName}</p>
+          )}
+          {!isLoading && (
+            <p className="truncate text-sm font-semibold text-foreground">
+              {displayTitle}
+            </p>
+          )}
+          {!isLoading && data?.description && (
+            <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+              {data.description}
+            </p>
+          )}
+          {!isLoading && !hasMeta && (
+            <p className="text-xs text-muted-foreground">No preview available</p>
+          )}
+        </div>
+      </a>
+      {children}
     </PlateElement>
   );
 }

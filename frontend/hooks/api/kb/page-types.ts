@@ -34,7 +34,8 @@ export type KbPage = {
   nextReviewAt: string | null;
   aclRevision: number;
   contentRevision: number;
-  sourceArticleId: number | null;
+  legalHold: boolean;
+  legalHoldReason: string | null;
 };
 
 export type KbPageListItem = Omit<KbPage, "content" | "contentText">;
@@ -109,11 +110,6 @@ type KbPageMetadataPatch = {
   ownerUserId?: string | null;
 };
 
-/**
- * Writing `content` requires the revision it is replacing — the backend refuses a body without
- * one — so an unguarded body write cannot be expressed. Metadata is not gated on someone
- * else's typing, because `contentRevision` tracks the body alone.
- */
 export type UpdateKbPageInput = KbPageMetadataPatch &
   (
     | { content: unknown; expectedContentRevision: number }

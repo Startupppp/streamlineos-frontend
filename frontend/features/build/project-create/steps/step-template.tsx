@@ -7,10 +7,18 @@ import { cn } from "@/lib/utils";
 import { useProjectTemplates } from "@/hooks/api/build/templates";
 import type { StepSharedProps } from "../use-project-create";
 import { activationProps } from "@/lib/keyboard-activation";
+import { useCanState } from "@/hooks/api/access";
 
 export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
+  const accessState = useCanState("build:view");
   const { data: templates, isLoading, isError, refetch } = useProjectTemplates();
-  const templateList = templates ?? [];
+  const templateAccessDenied = accessState === "denied";
+  const templateAccessGranted = accessState === "granted";
+  const templateList = templateAccessDenied
+    ? []
+    : templateAccessGranted
+      ? templates ?? []
+      : [];
 
   function handleSelect(id: number | null) {
     updateDraft({ templateId: id });
@@ -54,7 +62,7 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
         </div>
       )}
 
-      {templateList.length === 0 && (
+      {templateAccessGranted && templateList.length === 0 && (
         <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
           No templates exist yet. Start from scratch below, or create a template first.
         </p>

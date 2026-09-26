@@ -136,7 +136,7 @@ export default function PageDocumentHeader({
           setTemplateName("");
         },
         onError: () => toast.error("Failed to save template"),
-      }
+      },
     );
   }
 
@@ -146,7 +146,7 @@ export default function PageDocumentHeader({
 
   return (
     <>
-      <div className="flex min-w-0 items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <PageDocumentBreadcrumb
           page={page}
           saveState={saveState}
@@ -175,11 +175,13 @@ export default function PageDocumentHeader({
       <PageCommentsSheet
         pageId={pageId}
         open={commentsOpen}
+        content={page.content}
         onOpenChange={setCommentsOpen}
       />
       <PageHistorySheet
         pageId={pageId}
         open={historyOpen}
+        projectId={projectId}
         onOpenChange={setHistoryOpen}
       />
       <MovePageDialog
@@ -189,12 +191,16 @@ export default function PageDocumentHeader({
         onOpenChange={setMoveOpen}
       />
 
-      <AlertDialog open={deleteAlertOpen} onOpenChange={handleDeleteAlertOpenChange}>
+      <AlertDialog
+        open={deleteAlertOpen}
+        onOpenChange={handleDeleteAlertOpenChange}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Move page to trash?</AlertDialogTitle>
             <AlertDialogDescription>
-              This page will be moved to trash. You can restore it from trash later.
+              This page will be moved to trash. You can restore it from trash
+              later.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

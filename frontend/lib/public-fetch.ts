@@ -17,6 +17,7 @@ export const PUBLIC_REVALIDATE_SECS = 60;
 
 export interface PublicOrgInfo {
   name: string;
+  logo: string | null;
 }
 
 export type PublicKbListData = z.infer<typeof publicKbListContract>;

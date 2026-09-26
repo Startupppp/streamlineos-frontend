@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -11,15 +11,40 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { Input } from "@/components/ui/input";
 import {
   useKbAnalyticsOverview,
   useKbNoResults,
   usePageAnalytics,
   useKnowledgeGaps,
+  useGapRelatedPages,
+  useCitationReuse,
+  useReviewSla,
   useCreateKbPage,
+  useAssignGap,
+  useDismissGap,
+  useCreateGapFix,
 } from "@/hooks/api/kb";
+import { useState } from "react";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
+import {
+  ANALYTICS_RANGE_LABELS,
+  ANALYTICS_RANGE_PRESETS,
+  DEFAULT_ANALYTICS_RANGE_PRESET,
+  analyticsRangeFor,
+  analyticsSpaceIdFrom,
+} from "@/features/wiki/lib/analytics-range";
 import { pageHref } from "@/lib/knowledge-routes";
 import {
   KbBarChart2Icon,
@@ -28,6 +53,9 @@ import {
   KbFileTextIcon,
   KbEyeIcon,
   KbPlusIcon,
+  KbClockIcon,
+  KbCheckCircleIcon,
+  KbLink2Icon,
 } from "@/features/wiki/lib/kb-icons";
 import type { KbNoResultRow, KbPageAnalyticsRow, KbGapRow } from "@/types/kb";
 
@@ -108,40 +136,176 @@ const GapTableRow = memo(function GapTableRow({
   row,
   onCreatePage,
   isCreating,
+  isSelected,
+  onSelect,
+  onAssign,
+  isAssigning,
+  onDismiss,
+  isDismissing,
+  onCreateFix,
+  isCreatingFix,
 }: {
   row: KbGapRow;
   onCreatePage: (q: string) => void;
   isCreating: boolean;
+  isSelected: boolean;
+  onSelect: (query: string) => void;
+  onAssign: (query: string, assigneeUserId: string) => void;
+  isAssigning: boolean;
+  onDismiss: (query: string, reason: string) => void;
+  isDismissing: boolean;
+  onCreateFix: (query: string) => void;
+  isCreatingFix: boolean;
 }) {
-  function handleClick() {
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignValue, setAssignValue] = useState("");
+  const [dismissOpen, setDismissOpen] = useState(false);
+  const [dismissValue, setDismissValue] = useState("");
+
+  function handleSelectClick() {
+    if (row.query) onSelect(row.query);
+  }
+  function handleCreatePageClick(e: React.MouseEvent) {
+    e.stopPropagation();
     if (row.query) onCreatePage(row.query);
   }
+  function handleCreateFixClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (row.query) onCreateFix(row.query);
+  }
+  function handleAssignSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (row.query && assignValue.trim()) {
+      onAssign(row.query, assignValue.trim());
+      setAssignOpen(false);
+      setAssignValue("");
+    }
+  }
+  function handleDismissSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (row.query && dismissValue.trim()) {
+      onDismiss(row.query, dismissValue.trim());
+      setDismissOpen(false);
+      setDismissValue("");
+    }
+  }
   return (
-    <div className="flex items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
-      <TruncatedText text={row.query ?? "(empty)"} className="flex-1 text-sm" />
-      <span className="text-xs tabular-nums text-muted-foreground shrink-0">
-        {row.count}
-      </span>
-      <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
-        {new Date(row.lastOccurredAt).toLocaleDateString("en", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })}
-      </span>
-      <Button
-        size="sm"
-        variant="ghost"
-        className="px-2 text-xs gap-1 shrink-0"
-        onClick={handleClick}
-        disabled={isCreating || !row.query}
+    <div>
+      <div
+        className={`flex items-center gap-3 px-3 py-2 transition-colors cursor-pointer ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}
+        onClick={handleSelectClick}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isSelected}
+        aria-label={`Gap: ${row.query ?? "(empty)"}`}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleSelectClick(); }}
       >
-        <KbPlusIcon className="h-3 w-3" />
-        Create page
-      </Button>
+        <TruncatedText text={row.query ?? "(empty)"} className="flex-1 text-sm" />
+        <span className="text-xs tabular-nums text-muted-foreground shrink-0">
+          {row.count}
+        </span>
+        <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
+          {new Date(row.lastOccurredAt).toLocaleDateString("en", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </span>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="px-2 text-xs gap-1 shrink-0"
+          onClick={(e) => { e.stopPropagation(); setAssignOpen((o) => !o); setDismissOpen(false); }}
+          disabled={!row.query}
+          type="button"
+          aria-label="Assign gap owner"
+        >
+          Assign
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="px-2 text-xs gap-1 shrink-0"
+          onClick={(e) => { e.stopPropagation(); setDismissOpen((o) => !o); setAssignOpen(false); }}
+          disabled={!row.query}
+          type="button"
+          aria-label="Dismiss gap"
+        >
+          Dismiss
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="px-2 text-xs gap-1 shrink-0"
+          onClick={handleCreateFixClick}
+          disabled={isCreatingFix || !row.query}
+          type="button"
+          aria-label="Create fix page for gap"
+        >
+          <KbPlusIcon className="h-3 w-3" />
+          Fix
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="px-2 text-xs gap-1 shrink-0"
+          onClick={handleCreatePageClick}
+          disabled={isCreating || !row.query}
+          type="button"
+        >
+          <KbPlusIcon className="h-3 w-3" />
+          Page
+        </Button>
+      </div>
+      {assignOpen && (
+        <form
+          onSubmit={handleAssignSubmit}
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-t border-border/40"
+        >
+          <Input
+            className="h-7 text-xs flex-1"
+            placeholder="Assignee user ID"
+            value={assignValue}
+            onChange={(e) => setAssignValue(e.target.value)}
+            autoFocus
+          />
+          <Button size="sm" type="submit" disabled={isAssigning || !assignValue.trim()} className="h-7 px-2 text-xs">
+            Assign
+          </Button>
+          <Button size="sm" type="button" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setAssignOpen(false); setAssignValue(""); }}>
+            Cancel
+          </Button>
+        </form>
+      )}
+      {dismissOpen && (
+        <form
+          onSubmit={handleDismissSubmit}
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-t border-border/40"
+        >
+          <Input
+            className="h-7 text-xs flex-1"
+            placeholder="Reason for dismissal"
+            value={dismissValue}
+            onChange={(e) => setDismissValue(e.target.value)}
+            autoFocus
+          />
+          <Button size="sm" type="submit" disabled={isDismissing || !dismissValue.trim()} className="h-7 px-2 text-xs">
+            Dismiss
+          </Button>
+          <Button size="sm" type="button" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setDismissOpen(false); setDismissValue(""); }}>
+            Cancel
+          </Button>
+        </form>
+      )}
     </div>
   );
 });
+
+const ALL_SPACES_VALUE = "all";
 
 function formatRatioAsPercent(ratio: number): string {
   if (!Number.isFinite(ratio)) return "0%";
@@ -151,7 +315,7 @@ function formatRatioAsPercent(ratio: number): string {
 function AnalyticsSkeleton() {
   return (
     <div className="space-y-4">
-      <StatCardGridSkeleton cols={5} count={5} />
+      <StatCardGridSkeleton cols={6} count={6} />
       {Array.from({ length: 3 }).map((_, s) => (
         <div key={s} className="space-y-2">
           <Skeleton className="h-4 w-36" />
@@ -165,15 +329,98 @@ function AnalyticsSkeleton() {
 }
 
 export default function KnowledgeAnalyticsPage() {
+  const searchParams = useSearchParams();
+  const { update: updateFilters } = useUrlFilters();
+
+  const rangePreset = parseEnum<typeof ANALYTICS_RANGE_PRESETS>(
+    searchParams.get("range"),
+    ANALYTICS_RANGE_PRESETS,
+    DEFAULT_ANALYTICS_RANGE_PRESET,
+  );
+  const spaceId = analyticsSpaceIdFrom(searchParams.get("space"));
+  const staleOnly = searchParams.get("stale") === "1";
+  const range = analyticsRangeFor(rangePreset, new Date());
+  const isFiltered =
+    rangePreset !== DEFAULT_ANALYTICS_RANGE_PRESET ||
+    spaceId !== undefined ||
+    staleOnly;
+
+  const [selectedGapQuery, setSelectedGapQuery] = useState<string | undefined>(undefined);
+
+  const { data: spacesPage } = useKbSpaces();
+  const spaces = spacesPage?.data ?? [];
+
   const { data: overview, isLoading: overviewLoading, isError: overviewError, error: overviewQueryError, refetch: refetchOverview } =
-    useKbAnalyticsOverview();
+    useKbAnalyticsOverview(spaceId !== undefined ? { ...range, spaceId } : range);
   const { data: noResults = [], isLoading: noResultsLoading, isError: noResultsError, refetch: refetchNoResults } =
-    useKbNoResults();
-  const { data: pageAnalytics = [], isLoading: pagesLoading, isError: pagesError, refetch: refetchPages } =
-    usePageAnalytics();
-  const { data: gaps = [], isLoading: gapsLoading, isError: gapsError, refetch: refetchGaps } = useKnowledgeGaps();
+    useKbNoResults(range);
+  const {
+    data: pageAnalytics = [],
+    isLoading: pagesLoading,
+    isError: pagesError,
+    refetch: refetchPages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = usePageAnalytics(
+    staleOnly ? { spaceId, staleOnly: true } : { spaceId },
+  );
+  const {
+    gaps = [],
+    isLoading: gapsLoading,
+    isError: gapsError,
+    refetch: refetchGaps,
+    fetchNextPage: fetchNextGaps,
+    hasNextPage: hasNextGaps,
+    isFetchingNextPage: isFetchingNextGaps,
+  } = useKnowledgeGaps(range);
+  const { data: citationReuse } = useCitationReuse(range);
+  const { data: reviewSla } = useReviewSla(range);
+  const {
+    pages: relatedPages = [],
+    isLoading: relatedPagesLoading,
+    fetchNextPage: fetchNextRelated,
+    hasNextPage: hasNextRelated,
+    isFetchingNextPage: isFetchingNextRelated,
+  } = useGapRelatedPages(selectedGapQuery);
+
   const createPage = useCreateKbPage();
+  const assignGap = useAssignGap();
+  const dismissGap = useDismissGap();
+  const createGapFix = useCreateGapFix();
   const router = useRouter();
+
+  function handleLoadMorePages() {
+    void fetchNextPage();
+  }
+
+  function handleLoadMoreGaps() {
+    void fetchNextGaps();
+  }
+
+  function handleLoadMoreRelated() {
+    void fetchNextRelated();
+  }
+
+  function handleGapRowSelect(query: string) {
+    setSelectedGapQuery((prev) => (prev === query ? undefined : query));
+  }
+
+  function handleRangeChange(value: string) {
+    updateFilters({ range: value });
+  }
+
+  function handleSpaceChange(value: string) {
+    updateFilters({ space: value === ALL_SPACES_VALUE ? null : value });
+  }
+
+  function handleStaleOnlyToggle() {
+    updateFilters({ stale: staleOnly ? null : "1" });
+  }
+
+  function handleClearFilters() {
+    updateFilters({ range: null, space: null, stale: null });
+  }
 
   function handleRetry() {
     void refetchOverview();
@@ -191,6 +438,18 @@ export default function KnowledgeAnalyticsPage() {
         },
       },
     );
+  }
+
+  function handleAssignGap(query: string, assigneeUserId: string) {
+    assignGap.mutate({ query, assigneeUserId });
+  }
+
+  function handleDismissGap(query: string, reason: string) {
+    dismissGap.mutate({ query, reason });
+  }
+
+  function handleCreateGapFix(query: string) {
+    createGapFix.mutate({ query });
   }
 
   const pageState = usePageState({
@@ -217,14 +476,60 @@ export default function KnowledgeAnalyticsPage() {
           />
         }
       >
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Select value={rangePreset} onValueChange={handleRangeChange}>
+          <SelectTrigger className="w-44" aria-label="Date range">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ANALYTICS_RANGE_PRESETS.map((preset) => (
+              <SelectItem key={preset} value={preset}>
+                {ANALYTICS_RANGE_LABELS[preset]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={spaceId === undefined ? ALL_SPACES_VALUE : String(spaceId)}
+          onValueChange={handleSpaceChange}
+        >
+          <SelectTrigger className="w-52" aria-label="Space">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_SPACES_VALUE}>All spaces</SelectItem>
+            {spaces.map((space) => (
+              <SelectItem key={space.id} value={String(space.id)}>
+                {space.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant={staleOnly ? "default" : "outline"}
+          size="sm"
+          aria-pressed={staleOnly}
+          onClick={handleStaleOnlyToggle}
+          className="gap-1"
+        >
+          <KbClockIcon className="h-3.5 w-3.5" />
+          Stale high-use only
+        </Button>
+        {isFiltered ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleClearFilters}
+          >
+            Clear filters
+          </Button>
+        ) : null}
+      </div>
+
       {overview ? (
       <StatCardGrid cols={5} className="mb-4">
-        <StatCard
-          label="Help centre articles"
-          value={overview.totalCount}
-          icon={KbFileTextIcon}
-          tone="default"
-        />
         <StatCard
           label="Article views"
           value={overview.totalViews}
@@ -238,8 +543,8 @@ export default function KnowledgeAnalyticsPage() {
           tone="violet"
         />
         <StatCard
-          label="Helpful votes"
-          value={overview.helpfulUp}
+          label="Helpful ratio"
+          value={formatRatioAsPercent(overview.helpfulRatio)}
           icon={KbThumbsUpIcon}
           tone="emerald"
         />
@@ -249,8 +554,35 @@ export default function KnowledgeAnalyticsPage() {
           icon={KbBarChart2Icon}
           tone="amber"
         />
+        <StatCard
+          label="Tickets deflected"
+          value={overview.ticketsDeflected}
+          icon={KbCheckCircleIcon}
+          tone="emerald"
+        />
       </StatCardGrid>
       ) : null}
+
+      {(reviewSla || citationReuse) && (
+      <StatCardGrid cols={2} className="mb-4">
+        {reviewSla ? (
+          <StatCard
+            label="Review SLA met"
+            value={formatRatioAsPercent(reviewSla.slaRate)}
+            icon={KbClockIcon}
+            tone="amber"
+          />
+        ) : null}
+        {citationReuse ? (
+          <StatCard
+            label="Reused citations"
+            value={citationReuse.length}
+            icon={KbLink2Icon}
+            tone="violet"
+          />
+        ) : null}
+      </StatCardGrid>
+      )}
 
       <div className="space-y-4">
         <section className="space-y-2">
@@ -269,8 +601,16 @@ export default function KnowledgeAnalyticsPage() {
               illustration={
                 <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
               }
-              title="No zero-result searches"
-              description="All recent searches returned at least one result."
+              title={
+                isFiltered
+                  ? "No searches match these filters"
+                  : "No zero-result searches"
+              }
+              description={
+                isFiltered
+                  ? "Widen the window or clear the filters to see zero-result searches."
+                  : "All recent searches returned at least one result."
+              }
               compact
             />
           ) : (
@@ -307,8 +647,14 @@ export default function KnowledgeAnalyticsPage() {
               illustration={
                 <KbFileTextIcon className="h-6 w-6 text-muted-foreground" />
               }
-              title="No page data yet"
-              description="Page view data will appear here once users start reading pages."
+              title={
+                isFiltered ? "No pages match these filters" : "No page data yet"
+              }
+              description={
+                isFiltered
+                  ? "Widen the window, pick another space, or clear the filters."
+                  : "Page view data will appear here once users start reading pages."
+              }
               compact
             />
           ) : (
@@ -339,6 +685,12 @@ export default function KnowledgeAnalyticsPage() {
               {pageAnalytics.map((row) => (
                 <PageAnalyticsTableRow key={row.id} row={row} />
               ))}
+              <InfiniteScrollSentinel
+                hasNextPage={!!hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={handleLoadMorePages}
+                label="Load more pages"
+              />
             </div>
           )}
         </section>
@@ -365,8 +717,14 @@ export default function KnowledgeAnalyticsPage() {
               illustration={
                 <KbSearchIcon className="h-6 w-6 text-muted-foreground" />
               }
-              title="No knowledge gaps"
-              description="All searches are finding relevant content."
+              title={
+                isFiltered ? "No gaps match these filters" : "No knowledge gaps"
+              }
+              description={
+                isFiltered
+                  ? "Widen the window or clear the filters to see knowledge gaps."
+                  : "All searches are finding relevant content."
+              }
               compact
             />
           ) : (
@@ -386,13 +744,65 @@ export default function KnowledgeAnalyticsPage() {
                 </span>
               </div>
               {gaps.map((row, i) => (
-                <GapTableRow
-                  key={i}
-                  row={row}
-                  onCreatePage={handleCreatePageFromGap}
-                  isCreating={createPage.isPending}
-                />
+                <div key={i}>
+                  <GapTableRow
+                    row={row}
+                    onCreatePage={handleCreatePageFromGap}
+                    isCreating={createPage.isPending}
+                    isSelected={selectedGapQuery === row.query}
+                    onSelect={handleGapRowSelect}
+                    onAssign={handleAssignGap}
+                    isAssigning={assignGap.isPending}
+                    onDismiss={handleDismissGap}
+                    isDismissing={dismissGap.isPending}
+                    onCreateFix={handleCreateGapFix}
+                    isCreatingFix={createGapFix.isPending}
+                  />
+                  {selectedGapQuery === row.query && (
+                    <div className="px-3 py-2 bg-muted/30 border-t border-border/40">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">
+                        Pages containing this query
+                      </p>
+                      {relatedPagesLoading ? (
+                        <div className="space-y-1">
+                          {Array.from({ length: 3 }).map((_, s) => (
+                            <Skeleton key={s} className="h-7 w-full rounded" />
+                          ))}
+                        </div>
+                      ) : relatedPages.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic">
+                          No existing pages mention this query.
+                        </p>
+                      ) : (
+                        <div className="space-y-1">
+                          {relatedPages.map((page) => (
+                            <Link
+                              key={page.id}
+                              href={pageHref(page.id)}
+                              className="flex items-center gap-2 text-xs text-foreground hover:underline py-0.5"
+                            >
+                              <KbFileTextIcon className="h-3 w-3 text-muted-foreground shrink-0" />
+                              {page.title || "Untitled"}
+                            </Link>
+                          ))}
+                          <InfiniteScrollSentinel
+                            hasNextPage={!!hasNextRelated}
+                            isFetchingNextPage={isFetchingNextRelated}
+                            onLoadMore={handleLoadMoreRelated}
+                            label="Load more related pages"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               ))}
+              <InfiniteScrollSentinel
+                hasNextPage={!!hasNextGaps}
+                isFetchingNextPage={isFetchingNextGaps}
+                onLoadMore={handleLoadMoreGaps}
+                label="Load more gaps"
+              />
             </div>
           )}
         </section>

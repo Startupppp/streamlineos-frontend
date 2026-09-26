@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   useClientVisibility,
   useUpdateTicketVisibility,
@@ -31,7 +32,12 @@ import { cn } from "@/lib/utils";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 
-type VisibilityTab = "tickets" | "milestones";
+const VISIBILITY_TABS = ["tickets", "milestones"] as const;
+type VisibilityTab = (typeof VISIBILITY_TABS)[number];
+
+function isVisibilityTab(value: string | null): value is VisibilityTab {
+  return VISIBILITY_TABS.includes(value as VisibilityTab);
+}
 
 interface ClientVisibilityPageProps {
   projectId: number;
@@ -103,7 +109,12 @@ function MilestoneRow({
 
 export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
   const { data, isLoading, isError, error, refetch } = useClientVisibility(projectId);
-  const [activeTab, setActiveTab] = useState<VisibilityTab>("tickets");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const sectionParam = searchParams.get("section");
+  const activeTab: VisibilityTab = isVisibilityTab(sectionParam) ? sectionParam : "tickets";
 
   const pageState = usePageState({
     permission: "build:clientvisibility:manage",
@@ -115,16 +126,23 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
   const ticketCount = data?.tickets.length ?? 0;
   const milestoneCount = data?.milestones.length ?? 0;
 
-  const VISIBILITY_TABS = ["tickets", "milestones"] as const;
+  const handleTabChange = useCallback(
+    (value: string) => {
+      if (!isVisibilityTab(value)) return;
+      const next = new URLSearchParams(searchParams.toString());
+      if (value === "tickets") {
+        next.delete("section");
+      } else {
+        next.set("section", value);
+      }
+      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    },
+    [searchParams, router, pathname],
+  );
 
-  function handleTabChange(value: string) {
-    const found = VISIBILITY_TABS.find((t) => t === value);
-    if (found) setActiveTab(found);
-  }
-
-  function handleRetry() {
+  const handleRetry = useCallback(() => {
     void refetch();
-  }
+  }, [refetch]);
 
   const visibilitySkeleton = (
     <div className="flex flex-col gap-2">

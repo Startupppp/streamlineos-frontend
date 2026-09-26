@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useCallback, useState, type UIEvent } from "react";
+import dynamic from "next/dynamic";
 import { format, subDays } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
 import { Briefcase, CheckSquare, AlertCircle } from "lucide-react";
@@ -17,7 +18,6 @@ import {
   useInfiniteAllWork,
 } from "@/hooks/api/build/all-work";
 import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette";
-import { ProjectCreateWizard } from "@/features/build/project-create/project-create-wizard";
 import { QuickCreateMenu, PinnedNav } from "./command-center-actions";
 import {
   PmPageShell,
@@ -40,6 +40,14 @@ import {
 } from "./command-center-constants";
 import { MyIssuesPanel } from "./command-center-my-issues-panel";
 import { ProjectsPanel } from "./command-center-projects-panel";
+
+const ProjectCreateWizard = dynamic(
+  () =>
+    import("@/features/build/project-create/project-create-wizard").then(
+      (m) => m.ProjectCreateWizard,
+    ),
+  { ssr: false },
+);
 
 export function resolveProjectsStatValue(count: number, hasMore: boolean): string | number {
   if (hasMore) return `${count}+`;

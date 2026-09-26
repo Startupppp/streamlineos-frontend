@@ -124,7 +124,7 @@ export function FindExpertPage() {
       state={pageState}
       onRetry={handleRetry}
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-3">
+      <div className="flex shrink-0 flex-col gap-3">
         <form onSubmit={handleSearch} className="flex gap-2 max-w-lg">
           <SearchInput
             value={query}
@@ -173,7 +173,7 @@ export function FindExpertPage() {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4 flex min-h-0 flex-1 flex-col">
         {!activeParams.skill ? (
           <EmptyState
             illustration={<EmptyPersonIllustration className="h-40 w-40" />}

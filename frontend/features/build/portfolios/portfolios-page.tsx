@@ -28,12 +28,12 @@ import type {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { PORTFOLIO_FILTER_DEFINITIONS, PortfoliosToolbar } from "./portfolios-toolbar";
 import type { NamedUser } from "@/lib/person-display";
 import {
   PORTFOLIO_TABLE_HEADERS,
@@ -43,24 +43,9 @@ import {
 
 const PAGE_SIZE = 20;
 
-const STATUS_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "All statuses" },
-  { value: "active", label: "Active" },
-  { value: "on_hold", label: "On hold" },
-  { value: "completed", label: "Completed" },
-  { value: "archived", label: "Archived" },
-];
-
-const FILTER_DEFINITIONS = [
-  {
-    param: "status",
-    options: STATUS_OPTIONS.map((option) => option.value),
-  },
-] as const;
-
 export function PortfoliosPage() {
   const canManage = useCan("build:portfolios:manage");
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const listFilters = useBuildListFilters({ filters: PORTFOLIO_FILTER_DEFINITIONS });
   const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
     listFilters.resetKey,
   );
@@ -74,14 +59,26 @@ export function PortfoliosPage() {
   const [deleteTarget, setDeleteTarget] = useState<Portfolio | null>(null);
 
   const statusValue = listFilters.value("status");
+  const healthValue = listFilters.value("health");
+  const ownerIdValue = listFilters.value("ownerId");
+  const sortValue = listFilters.value("sort");
+
   const { data, isLoading, isError, error, refetch } = usePortfolios({
     cursor,
     limit: PAGE_SIZE,
     search: listFilters.debouncedSearch.trim() || undefined,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
+    health: healthValue !== BUILD_FILTER_ALL ? healthValue : undefined,
+    ownerId: ownerIdValue !== BUILD_FILTER_ALL ? ownerIdValue : undefined,
+    sort: sortValue !== BUILD_FILTER_ALL ? sortValue : undefined,
   });
   const { data: membersRes } = useOrgMembers(1, 100);
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
+
+  const ownerOptions = useMemo(
+    () => members.map((m) => ({ value: m.userId, label: m.name ?? m.email })),
+    [members],
+  );
 
   const createPortfolio = useCreatePortfolio();
   const updatePortfolio = useUpdatePortfolio();
@@ -144,11 +141,6 @@ export function PortfoliosPage() {
     });
   }, [deletePortfolio, deleteTarget]);
 
-  const handleStatusChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-
   const handleOpenCreate = useCallback(() => {
     openCreate();
   }, [openCreate]);
@@ -176,6 +168,20 @@ export function PortfoliosPage() {
     (row: Portfolio) => setDeleteTarget(row),
     [],
   );
+
+  const handleClearSelection = useCallback(() => {}, []);
+  const handleOpenByIndex = useCallback(
+    (index: number) => {
+      const row = displayed[index];
+      if (row) handleEditRow(row);
+    },
+    [displayed, handleEditRow],
+  );
+  useBuildListKeyboard({
+    itemCount: displayed.length,
+    onOpen: handleOpenByIndex,
+    onClearSelection: handleClearSelection,
+  });
 
   const handleNextPage = useCallback(() => {
     goNext(data?.pagination.nextCursor);
@@ -210,30 +216,7 @@ export function PortfoliosPage() {
       title="Portfolios"
       subtitle="Group related projects into portfolios"
       filters={
-        <BuildListToolbar
-          search={{
-            value: listFilters.search,
-            onValueChange: listFilters.setSearch,
-            placeholder: "Search portfolios…",
-            label: "Search portfolios",
-          }}
-          filters={[
-            {
-              id: "status",
-              label: "Status",
-              active: listFilters.isActive("status"),
-              control: (
-                <BuildFilterSelect
-                  label="Status"
-                  value={statusValue}
-                  onValueChange={handleStatusChange}
-                  options={STATUS_OPTIONS}
-                />
-              ),
-            },
-          ]}
-          onClearAll={listFilters.clearAll}
-        />
+        <PortfoliosToolbar listFilters={listFilters} ownerOptions={ownerOptions} />
       }
       actions={
         <BuildHeaderActions

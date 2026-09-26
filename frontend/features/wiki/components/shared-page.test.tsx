@@ -13,6 +13,9 @@ jest.mock("@/hooks/api/kb/page-collection", () => ({
 
 jest.mock("@/hooks/api/kb", () => ({
   useKbSpaces: jest.fn(() => ({ data: [], isLoading: false, isError: false })),
+  useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -258,5 +261,37 @@ describe("SharedPage — flash fix and server-side filtering", () => {
     expect(useKbPageCollection).toHaveBeenCalledWith(
       expect.not.objectContaining({ owner: "me" }),
     );
+  });
+
+  it("shows the access-lost recovery state, not the first-empty state, once a previously visible share disappears", () => {
+    useKbPageCollection.mockReturnValue({
+      data: {
+        data: [makeSharedItem()],
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
+        facets: null,
+      },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { rerender } = render(<SharedPage />);
+    expect(screen.getByText("Handbook")).toBeInTheDocument();
+
+    useKbPageCollection.mockReturnValue({
+      data: { data: [], pagination: { limit: 50, hasMore: false, nextCursor: null }, facets: null },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    rerender(<SharedPage />);
+
+    expect(screen.getByText("Your access may have changed")).toBeInTheDocument();
+    expect(screen.queryByText("Nothing shared with you")).not.toBeInTheDocument();
   });
 });

@@ -4,19 +4,36 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
-import { PmPageShell, PmSection, PM_FILL_SECTION } from "@/components/pm-chrome";
-import { InboxList } from "./inbox-list";
+import {
+  PmPageShell,
+  PmSection,
+  PM_FILL_SECTION,
+} from "@/components/pm-chrome";
 import { useInboxUrlState } from "./use-inbox-url-state";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
-import type { Notification, NotificationSection, NotificationCategory } from "@/types/notifications";
+import type {
+  Notification,
+  NotificationSection,
+  NotificationCategory,
+} from "@/types/notifications";
 import { cn } from "@/lib/utils";
 
 const InboxPreviewPane = dynamic(
-  () => import("./inbox-preview-pane").then((m) => ({ default: m.InboxPreviewPane })),
+  () =>
+    import("./inbox-preview-pane").then((m) => ({
+      default: m.InboxPreviewPane,
+    })),
   { ssr: false },
 );
+const InboxList = dynamic(
+  () => import("./inbox-list").then((m) => ({ default: m.InboxList })),
+  { loading: () => null },
+);
 const InboxDraftsPanel = dynamic(
-  () => import("./inbox-drafts-panel").then((m) => ({ default: m.InboxDraftsPanel })),
+  () =>
+    import("./inbox-drafts-panel").then((m) => ({
+      default: m.InboxDraftsPanel,
+    })),
   { ssr: false },
 );
 
@@ -85,6 +102,7 @@ export function InboxPage() {
       q={urlState.q}
       type={urlState.type}
       projectId={urlState.projectId}
+      cursor={urlState.cursor}
       selectionDismissed={selectionDismissed}
       onSelect={handleSelect}
       onClearSelection={handleAutoClearSelection}
@@ -122,7 +140,7 @@ export function InboxPage() {
               {listPane}
             </div>
 
-            {(isDesktopShell || hasSelection) ? (
+            {isDesktopShell || hasSelection ? (
               <div
                 className={cn(
                   "min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden",
@@ -135,7 +153,10 @@ export function InboxPage() {
                 />
               </div>
             ) : (
-              <div className="hidden lg:flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden" aria-hidden />
+              <div
+                className="hidden lg:flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden"
+                aria-hidden
+              />
             )}
           </div>
         </PmSection>

@@ -21,6 +21,10 @@ jest.mock("@/hooks/api/build/milestones", () => ({
   useProjectMilestones: () => ({ data: [] }),
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCanState: () => "granted",
+}));
+
 const ROW_HEIGHT = 40;
 const HEADER_HEIGHT = 40;
 const TOTAL = 500;
