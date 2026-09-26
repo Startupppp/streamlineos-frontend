@@ -63,19 +63,23 @@ export const portalChangeRequestItemContract = z.object({
 
 export const portalChangeRequestListContract = z.array(portalChangeRequestItemContract);
 
+const ticketVisibilityItemContract = z.object({
+  id: z.number().int(),
+  ticketNumber: z.number().int(),
+  title: z.string(),
+  type: z.string(),
+  clientVisible: z.boolean(),
+});
+
+const milestoneVisibilityItemContract = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  clientVisible: z.boolean(),
+});
+
 export const visibilitySummaryContract = z.object({
-  tickets: z.array(z.object({
-    id: z.number().int(),
-    ticketNumber: z.number().int(),
-    title: z.string(),
-    type: z.string(),
-    clientVisible: z.boolean(),
-  })),
-  milestones: z.array(z.object({
-    id: z.number().int(),
-    name: z.string(),
-    clientVisible: z.boolean(),
-  })),
+  tickets: cursorPageContract(ticketVisibilityItemContract),
+  milestones: cursorPageContract(milestoneVisibilityItemContract),
 });
 
 export const toggleVisibilityContract = z

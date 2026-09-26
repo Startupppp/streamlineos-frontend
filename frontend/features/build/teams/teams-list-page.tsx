@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
@@ -27,10 +27,12 @@ import type {
   UpdateTeamInput,
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListFilters, BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import {
   TEAM_TABLE_HEADERS,
   TeamMobileCard,
@@ -39,14 +41,18 @@ import {
 
 const PAGE_SIZE = 50;
 
-const FILTER_DEFINITIONS = [] as const;
+const FILTER_DEFINITIONS = [{ param: "leadId" }, { param: "memberId" }] as const;
 
 export function TeamsListPage() {
   const router = useRouter();
   const canCreate = useCan("build:teams:create");
   const canManage = useCan("build:teams:manage");
+  const isOnline = useOnlineStatus();
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS, withSearch: true });
+  const leadIdFilter = listFilters.value("leadId");
+  const memberIdFilter = listFilters.value("memberId");
   const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
     listFilters.resetKey,
   );
@@ -63,6 +69,8 @@ export function TeamsListPage() {
     cursor,
     pageSize: PAGE_SIZE,
     search: listFilters.debouncedSearch.trim() || undefined,
+    leadId: leadIdFilter !== BUILD_FILTER_ALL ? leadIdFilter : undefined,
+    memberId: memberIdFilter !== BUILD_FILTER_ALL ? memberIdFilter : undefined,
   });
   const createTeam = useCreateProjectTeam();
   const updateTeam = useUpdateProjectTeam();
@@ -111,9 +119,17 @@ export function TeamsListPage() {
         toast.success("Team deleted");
         setDeleteTarget(null);
       },
-      onError: (e) => toast.error(getErrorMessage(e)),
+      onError: (e) => {
+        if (isApiError(e) && e.status === 409) {
+          toast.info("Team was modified by someone else. Refreshing…");
+          void refetch();
+          setDeleteTarget(null);
+          return;
+        }
+        toast.error(getErrorMessage(e));
+      },
     });
-  }, [deleteTarget, deleteTeam]);
+  }, [deleteTarget, deleteTeam, refetch]);
 
   const handleOpenCreate = useCallback(() => {
     openCreate();
@@ -165,7 +181,9 @@ export function TeamsListPage() {
   useBuildListKeyboard({
     itemCount: teams.length,
     onOpen: handleKeyboardOpen,
+    onCreate: canCreate ? handleOpenCreate : undefined,
     onClearSelection: handleKeyboardClear,
+    searchInputRef: searchRef,
     enabled: !isLoading,
   });
 
@@ -202,8 +220,9 @@ export function TeamsListPage() {
             onValueChange: listFilters.setSearch,
             placeholder: "Search teams…",
             label: "Search teams",
+            inputRef: searchRef,
           }}
-          onClearAll={listFilters.clearAll}
+          onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
         />
       }
       actions={
@@ -237,19 +256,24 @@ export function TeamsListPage() {
               />
             }
             empty={
-              <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="projects"
-                title="No teams yet"
-                description="Create a team to group members and track work together."
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
-                action={
-                  canCreate
-                    ? { label: "New team", onClick: handleOpenCreate }
-                    : undefined
-                }
-              />
+              !isOnline ? (
+                <EmptyState
+                  className={PM_FILL_PANEL}
+                  illustrationPreset="projects"
+                  title="You are offline"
+                  description="Reconnect to see the latest teams."
+                />
+              ) : (
+                <EmptyState
+                  className={PM_FILL_PANEL}
+                  illustrationPreset="projects"
+                  title="No teams yet"
+                  description="Create a team to group members and track work together."
+                  filtersActive={listFilters.isFiltered}
+                  onClearFilters={listFilters.clearAll}
+                  action={canCreate ? { label: "New team", onClick: handleOpenCreate } : undefined}
+                />
+              )
             }
             onRetry={handleRetry}
             className={PM_FILL_PANEL}

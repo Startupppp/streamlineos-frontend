@@ -41,6 +41,9 @@ export const GOVERNANCE_PAGE_SIZE = 100;
 
 interface ListFilters {
   status?: string;
+  probability?: string;
+  impact?: string;
+  ownerId?: string;
   cursor?: number;
 }
 
@@ -48,6 +51,9 @@ export function useProjectRisks(projectId: number, filters?: ListFilters) {
   const canView = useCan("build:risks:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.probability) params["probability"] = filters.probability;
+  if (filters?.impact) params["impact"] = filters.impact;
+  if (filters?.ownerId) params["ownerId"] = filters.ownerId;
   if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
 
   return useQuery<IdCursorPage<Risk>>({
@@ -114,6 +120,7 @@ export function useProjectDecisions(projectId: number, filters?: ListFilters) {
   const canView = useCan("build:decisions:view");
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.ownerId) params["ownerId"] = filters.ownerId;
   if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
 
   return useQuery<IdCursorPage<Decision>>({

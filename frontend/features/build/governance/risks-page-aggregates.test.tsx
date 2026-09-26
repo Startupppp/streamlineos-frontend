@@ -273,7 +273,7 @@ describe("RisksPage aggregates and matrix describe the whole register, not the a
     render(<RisksPage projectId={10} />);
 
     const user = userEvent.setup();
-    await user.selectOptions(screen.getByTestId("status-filter"), "closed");
+    await user.selectOptions(screen.getAllByTestId("status-filter")[0], "closed");
 
     expect(screen.getByText("Open: 1")).toBeInTheDocument();
     expect(screen.getByText("High / Critical: 1")).toBeInTheDocument();
@@ -284,7 +284,7 @@ describe("RisksPage aggregates and matrix describe the whole register, not the a
     render(<RisksPage projectId={10} />);
 
     const user = userEvent.setup();
-    await user.selectOptions(screen.getByTestId("status-filter"), "closed");
+    await user.selectOptions(screen.getAllByTestId("status-filter")[0], "closed");
 
     expect(
       screen.getByRole("button", { name: "high probability, high impact: 1 open risk" }),
@@ -295,7 +295,7 @@ describe("RisksPage aggregates and matrix describe the whole register, not the a
     render(<RisksPage projectId={10} />);
 
     const user = userEvent.setup();
-    await user.selectOptions(screen.getByTestId("status-filter"), "closed");
+    await user.selectOptions(screen.getAllByTestId("status-filter")[0], "closed");
 
     for (const call of mockUseProjectRiskStats.mock.calls) {
       expect(call).toEqual([10]);

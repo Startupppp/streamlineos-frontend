@@ -3,10 +3,12 @@
 import { useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
-  useClientVisibility,
+  useClientVisibilityTicketsInfinite,
+  useClientVisibilityMilestonesInfinite,
   useUpdateTicketVisibility,
   useUpdateMilestoneVisibility,
 } from "@/hooks/api/build/client-portal";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -108,7 +110,6 @@ function MilestoneRow({
 }
 
 export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
-  const { data, isLoading, isError, error, refetch } = useClientVisibility(projectId);
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -116,15 +117,20 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
   const sectionParam = searchParams.get("section");
   const activeTab: VisibilityTab = isVisibilityTab(sectionParam) ? sectionParam : "tickets";
 
+  const ticketsQuery = useClientVisibilityTicketsInfinite(projectId);
+  const milestonesQuery = useClientVisibilityMilestonesInfinite(projectId);
+
+  const activeQuery = activeTab === "tickets" ? ticketsQuery : milestonesQuery;
+
   const pageState = usePageState({
     permission: "build:clientvisibility:manage",
-    isLoading,
-    isError,
-    error,
+    isLoading: activeQuery.isLoading,
+    isError: activeQuery.isError,
+    error: activeQuery.error,
   });
 
-  const ticketCount = data?.tickets.length ?? 0;
-  const milestoneCount = data?.milestones.length ?? 0;
+  const ticketCount = ticketsQuery.items.length;
+  const milestoneCount = milestonesQuery.items.length;
 
   const handleTabChange = useCallback(
     (value: string) => {
@@ -141,8 +147,8 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
   );
 
   const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+    void activeQuery.refetch();
+  }, [activeQuery]);
 
   const visibilitySkeleton = (
     <div className="flex flex-col gap-2">
@@ -201,7 +207,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
               />
 
               <TabsContent value="tickets" className="mt-0 flex min-h-0 flex-1 flex-col">
-                {(data?.tickets ?? []).length === 0 ? (
+                {!ticketsQuery.isLoading && ticketsQuery.items.length === 0 ? (
                   <EmptyState
                     illustrationPreset="ticket"
                     title="No tickets"
@@ -218,16 +224,22 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
                       <span className="w-10 shrink-0 text-right">Visible</span>
                     </div>
                     <ScrollArea fill hideScrollbar>
-                      {data?.tickets.map((ticket) => (
+                      {ticketsQuery.items.map((ticket) => (
                         <TicketRow key={ticket.id} ticket={ticket} projectId={projectId} />
                       ))}
+                      <InfiniteScrollSentinel
+                        hasNextPage={ticketsQuery.hasMore}
+                        isFetchingNextPage={ticketsQuery.isFetchingNextPage}
+                        onLoadMore={() => void ticketsQuery.fetchNextPage()}
+                        label="Load more tickets"
+                      />
                     </ScrollArea>
                   </PmPanel>
                 )}
               </TabsContent>
 
               <TabsContent value="milestones" className="mt-0 flex min-h-0 flex-1 flex-col">
-                {(data?.milestones ?? []).length === 0 ? (
+                {!milestonesQuery.isLoading && milestonesQuery.items.length === 0 ? (
                   <EmptyState
                     illustrationPreset="calendar"
                     title="No milestones"
@@ -242,13 +254,19 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
                       <span className="w-10 shrink-0 text-right">Visible</span>
                     </div>
                     <ScrollArea fill hideScrollbar>
-                      {data?.milestones.map((milestone) => (
+                      {milestonesQuery.items.map((milestone) => (
                         <MilestoneRow
                           key={milestone.id}
                           milestone={milestone}
                           projectId={projectId}
                         />
                       ))}
+                      <InfiniteScrollSentinel
+                        hasNextPage={milestonesQuery.hasMore}
+                        isFetchingNextPage={milestonesQuery.isFetchingNextPage}
+                        onLoadMore={() => void milestonesQuery.fetchNextPage()}
+                        label="Load more milestones"
+                      />
                     </ScrollArea>
                   </PmPanel>
                 )}

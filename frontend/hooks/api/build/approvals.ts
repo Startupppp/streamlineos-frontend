@@ -39,12 +39,15 @@ const notificationCountContract = lazyContract(() =>
 interface ApprovalFilters {
   status?: string;
   entityType?: string;
+  actorId?: string;
 }
 
 interface InboxFilters {
   status?: string;
   type?: string;
   q?: string;
+  from?: string;
+  to?: string;
 }
 
 type ApprovalInboxPage = {
@@ -85,7 +88,7 @@ function removeInboxApproval(
 export function useApprovalInbox(filters?: InboxFilters) {
   const canView = useCan("build:approvals:view");
   const activeFilters: InboxFilters | undefined =
-    filters && (filters.status || filters.type || filters.q) ? filters : undefined;
+    filters && (filters.status || filters.type || filters.q || filters.from || filters.to) ? filters : undefined;
   return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.approvals.inbox(activeFilters),
     queryFn: async ({ pageParam, signal }) => {
@@ -94,6 +97,8 @@ export function useApprovalInbox(filters?: InboxFilters) {
       if (activeFilters?.status) params["status"] = activeFilters.status;
       if (activeFilters?.type) params["type"] = activeFilters.type;
       if (activeFilters?.q) params["q"] = activeFilters.q;
+      if (activeFilters?.from) params["from"] = activeFilters.from;
+      if (activeFilters?.to) params["to"] = activeFilters.to;
       return normalizeApprovalPage(await apiClient.get(
         "/build/approvals/inbox",
         Object.keys(params).length > 0 ? params : undefined,
@@ -135,6 +140,7 @@ export function useProjectApprovals(projectId: number, filters?: ApprovalFilters
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
   if (filters?.entityType) params["entityType"] = filters.entityType;
+  if (filters?.actorId) params["approverId"] = filters.actorId;
 
   return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.approvals.list(

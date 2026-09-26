@@ -1,4 +1,4 @@
-import { viewRowContract, viewListContract } from "./workspace-schema";
+import { viewRowContract, viewPageContract } from "./workspace-schema";
 
 const validViewRow = {
   id: 1,
@@ -97,23 +97,32 @@ describe("viewRowContract (BLD-X-BE-SETTINGS-VIEWS-001)", () => {
   });
 });
 
-describe("viewListContract (BLD-X-BE-SETTINGS-VIEWS-002)", () => {
-  it("accepts an empty array", () => {
-    expect(viewListContract.safeParse([]).success).toBe(true);
+describe("viewPageContract (BLD-X-BE-SETTINGS-VIEWS-002)", () => {
+  const validPage = {
+    data: [validViewRow],
+    pagination: { limit: 25, hasMore: false, nextCursor: null },
+  };
+
+  it("accepts a valid cursor page", () => {
+    expect(viewPageContract.safeParse(validPage).success).toBe(true);
   });
 
-  it("accepts an array with a valid view row", () => {
-    expect(viewListContract.safeParse([validViewRow]).success).toBe(true);
+  it("accepts an empty data array", () => {
+    expect(viewPageContract.safeParse({ ...validPage, data: [] }).success).toBe(true);
   });
 
-  it("rejects a non-array", () => {
-    expect(viewListContract.safeParse(validViewRow).success).toBe(false);
+  it("rejects a bare array — must be a cursor page envelope", () => {
+    expect(viewPageContract.safeParse([validViewRow]).success).toBe(false);
   });
 
-  it("rejects an array containing a row with an unknown layoutType", () => {
+  it("rejects a page with unknown layoutType inside data", () => {
     expect(
-      viewListContract.safeParse([{ ...validViewRow, layoutType: "KANBAN" }]).success
+      viewPageContract.safeParse({ ...validPage, data: [{ ...validViewRow, layoutType: "KANBAN" }] }).success
     ).toBe(false);
+  });
+
+  it("rejects a page missing the pagination envelope", () => {
+    expect(viewPageContract.safeParse({ data: [validViewRow] }).success).toBe(false);
   });
 });
 

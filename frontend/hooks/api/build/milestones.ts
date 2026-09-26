@@ -45,6 +45,8 @@ interface MilestoneListQuery {
   limit?: number;
   status?: "PENDING" | "ACHIEVED" | "MISSED";
   q?: string;
+  from?: string;
+  to?: string;
 }
 
 function milestoneKey(projectId: number, query?: MilestoneListQuery) {

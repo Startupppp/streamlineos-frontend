@@ -98,10 +98,10 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 ## Acceptance criteria
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
-- [ ] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
-- [ ] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
-  BLOCKED — nothing to bound yet: disposition is ADD and `features/build/settings/project-settings-portal-page.tsx` is a 58-line EmptyState placeholder with no data hook and no list.
-- [ ] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
+- [x] The page satisfies the stated user job and success metric without duplicating another module owner.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
+  - Implemented 2026-09-26: `GET /build/:projectId/client-visibility` now accepts `ticketCursor`, `milestoneCursor`, `limit`. `client-visibility.service.ts:getVisibilitySummary` uses `buildCursorPage` for both tickets (`keysetAfterIntValue(ticketNumber, id)` ascending) and milestones (`gt(id, pos.id)` ascending). Response shape changed from `{tickets:[], milestones:[]}` to `{tickets: CursorPage, milestones: CursorPage}`. `useClientVisibility` accepts cursor params. `project-settings-portal-page.tsx` uses two `useCursorPager` hooks and `TablePagination mode="cursor"` for each section. Tests: 52 passing in 6 client-portal suites.
+- [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.

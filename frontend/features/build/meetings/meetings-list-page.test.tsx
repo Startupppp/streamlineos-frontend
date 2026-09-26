@@ -167,11 +167,14 @@ const ACCESS_DENIED = {
 
 function baseMeetingsResult(overrides = {}) {
   return {
-    data: [],
+    data: { pages: [], pageParams: [] },
     isLoading: false,
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
     ...overrides,
   };
 }

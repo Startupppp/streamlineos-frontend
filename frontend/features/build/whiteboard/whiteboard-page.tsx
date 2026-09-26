@@ -28,6 +28,7 @@ import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 const BOARDS_COLLAPSED_KEY = "streamlineos:whiteboard:boards-collapsed";
 
@@ -164,12 +165,20 @@ export function WhiteboardPage({
 }: WhiteboardPageProps) {
   const canManage = useCan("build:whiteboards:manage");
   const {
-    data: boards,
+    data: whiteboardPages,
     isLoading,
     isError,
     error,
     refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
   } = useWhiteboards(projectId);
+  const boards = useMemo(
+    () => whiteboardPages?.pages.flatMap((p) => p.data) ?? [],
+    [whiteboardPages],
+  );
+  const handleLoadMoreBoards = useCallback(() => { void fetchNextPage(); }, [fetchNextPage]);
   const pageState = usePageState({
     permission: "build:view",
     isLoading,
@@ -400,6 +409,12 @@ export function WhiteboardPage({
                       />
                     ))}
                   </ul>
+                  <InfiniteScrollSentinel
+                    hasNextPage={hasNextPage ?? false}
+                    isFetchingNextPage={isFetchingNextPage}
+                    onLoadMore={handleLoadMoreBoards}
+                    label="Load more boards"
+                  />
                 </ScrollArea>
               </PmPanel>
             ) : null}

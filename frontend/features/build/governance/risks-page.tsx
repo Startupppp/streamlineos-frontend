@@ -63,10 +63,32 @@ const STATUS_OPTIONS = [
   { value: "closed", label: "Closed" },
 ];
 
+const PROBABILITY_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All probabilities" },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+];
+
+const IMPACT_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All impacts" },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+];
+
 const FILTER_DEFINITIONS = [
   {
     param: "status",
     options: STATUS_OPTIONS.map((o) => o.value),
+  },
+  {
+    param: "probability",
+    options: ["low", "medium", "high"] as const,
+  },
+  {
+    param: "impact",
+    options: ["low", "medium", "high"] as const,
   },
 ] as const;
 
@@ -91,10 +113,14 @@ export function RisksPage({ projectId }: RisksPageProps) {
   );
 
   const statusValue = listFilters.value("status");
+  const probabilityValue = listFilters.value("probability");
+  const impactValue = listFilters.value("impact");
   const { data, isLoading, isError, error, refetch } = useProjectRisks(
     projectId,
     {
       status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
+      probability: probabilityValue !== BUILD_FILTER_ALL ? probabilityValue : undefined,
+      impact: impactValue !== BUILD_FILTER_ALL ? impactValue : undefined,
       cursor: cursor === undefined ? undefined : Number(cursor),
     },
   );
@@ -197,6 +223,16 @@ export function RisksPage({ projectId }: RisksPageProps) {
 
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
+  const handleProbabilityChange = useCallback(
+    (value: string) => listFilters.setValue("probability", value),
+    [listFilters],
+  );
+
+  const handleImpactChange = useCallback(
+    (value: string) => listFilters.setValue("impact", value),
     [listFilters],
   );
 
@@ -332,6 +368,32 @@ export function RisksPage({ projectId }: RisksPageProps) {
                   value={statusValue}
                   onValueChange={handleStatusChange}
                   options={STATUS_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "probability",
+              label: "Probability",
+              active: listFilters.isActive("probability"),
+              control: (
+                <BuildFilterSelect
+                  label="Probability"
+                  value={probabilityValue}
+                  onValueChange={handleProbabilityChange}
+                  options={PROBABILITY_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "impact",
+              label: "Impact",
+              active: listFilters.isActive("impact"),
+              control: (
+                <BuildFilterSelect
+                  label="Impact"
+                  value={impactValue}
+                  onValueChange={handleImpactChange}
+                  options={IMPACT_OPTIONS}
                 />
               ),
             },

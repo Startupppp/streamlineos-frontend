@@ -24,7 +24,7 @@ import { RequestApprovalSheet } from "./request-approval-sheet";
 import { RequestApprovalMenuButton } from "./approvals-toolbar";
 import { ApprovalBulkActionBar } from "./approval-bulk-action-bar";
 import { ApprovalsFilterBar } from "./approvals-filter-bar";
-import { useApprovalsColumns } from "./use-approvals-columns";
+import { useApprovalsColumns, APPROVALS_TABLE_HEADERS } from "./use-approvals-columns";
 import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import {
@@ -47,16 +47,6 @@ import {
   PM_FILL_PANEL,
 } from "@/components/pm-chrome";
 
-const APPROVALS_TABLE_HEADERS = [
-  "Type",
-  "Title",
-  "Approver",
-  "Level",
-  "Due",
-  "Status",
-  "Actions",
-] as const;
-
 const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
   "requested",
   "pending",
@@ -70,6 +60,7 @@ const APPROVAL_STATUS_VALUES: ApprovalStatus[] = [
 const FILTER_DEFINITIONS = [
   { param: "status", options: STATUS_OPTIONS.map((o) => o.value) },
   { param: "entityType", options: ENTITY_OPTIONS.map((o) => o.value) },
+  { param: "actorId" },
 ] as const;
 
 interface ProjectApprovalsPageProps {
@@ -102,6 +93,7 @@ export function ProjectApprovalsPage({
 
   const statusValue = listFilters.value("status");
   const entityTypeValue = listFilters.value("entityType");
+  const actorIdValue = listFilters.value("actorId");
 
   const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useProjectApprovals(
     projectId,
@@ -109,6 +101,7 @@ export function ProjectApprovalsPage({
       status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
       entityType:
         entityTypeValue !== BUILD_FILTER_ALL ? entityTypeValue : undefined,
+      actorId: actorIdValue !== BUILD_FILTER_ALL ? actorIdValue : undefined,
     },
   );
   const { data: membersRes } = useOrgMembers(1, 100);
@@ -122,6 +115,17 @@ export function ProjectApprovalsPage({
   const decideApproval = useDecideApproval(projectId);
   const updateApproval = useUpdateApproval(projectId);
   const deleteApproval = useDeleteApproval(projectId);
+
+  const approverOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All approvers" },
+      ...members.map((m) => ({
+        value: m.userId,
+        label: m.name ?? m.email,
+      })),
+    ],
+    [members],
+  );
 
   const memberName = useCallback(
     (userId: string | null): string => {
@@ -304,6 +308,11 @@ export function ProjectApprovalsPage({
     [listFilters],
   );
 
+  const handleActorIdChange = useCallback(
+    (value: string) => listFilters.setValue("actorId", value),
+    [listFilters],
+  );
+
   const columns = useApprovalsColumns({
     canDecide,
     canManage,
@@ -352,10 +361,14 @@ export function ProjectApprovalsPage({
         <ApprovalsFilterBar
           statusValue={statusValue}
           entityTypeValue={entityTypeValue}
+          actorIdValue={actorIdValue}
+          approverOptions={approverOptions}
           isStatusActive={listFilters.isActive("status")}
           isEntityTypeActive={listFilters.isActive("entityType")}
+          isActorIdActive={listFilters.isActive("actorId")}
           onStatusChange={handleStatusChange}
           onEntityTypeChange={handleEntityTypeChange}
+          onActorIdChange={handleActorIdChange}
           onClearAll={listFilters.clearAll}
         />
       }

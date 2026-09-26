@@ -28,7 +28,7 @@ jest.mock("date-fns", () => mockInboxModules.dateFnsModule);
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 jest.mock("@/lib/utils", () => mockInboxModules.utilsModule);
 jest.mock("@/components/ui/data-table", () => mockInboxModules.dataTableModule);
-jest.mock("./submission-bulk-toolbar", () => mockInboxModules.bulkToolbarModule);
+jest.mock("@/components/shared/submission-bulk-toolbar", () => mockInboxModules.bulkToolbarModule);
 jest.mock("@/components/ui/search-input", () => mockInboxModules.searchInputModule);
 jest.mock("@/components/ui/user-combobox", () => mockInboxModules.userComboboxModule);
 jest.mock("@/components/ui/empty-state", () => mockInboxModules.emptyStateModule);
@@ -140,6 +140,21 @@ describe("ProjectSubmissionsInbox — every filter is sent to the server, none a
   it("omits search when the URL carries none", () => {
     renderWithParams("status=open", 7);
     expect(lastQueryArgs().search).toBeUndefined();
+  });
+
+  it("sends duplicate=true to the server so callers can filter to submissions that share a title", () => {
+    renderWithParams("duplicate=true", 8);
+    expect(lastQueryArgs()).toMatchObject({ widgetId: 8, duplicate: "true" });
+  });
+
+  it("sends duplicate=false to the server so callers can filter out known-duplicate titles", () => {
+    renderWithParams("duplicate=false", 8);
+    expect(lastQueryArgs()).toMatchObject({ widgetId: 8, duplicate: "false" });
+  });
+
+  it("omits duplicate when the URL carries none so all submissions are returned unfiltered", () => {
+    renderWithParams("status=open", 8);
+    expect(lastQueryArgs().duplicate).toBeUndefined();
   });
 
   it("writes the owner filter into the URL rather than holding it in component state", () => {

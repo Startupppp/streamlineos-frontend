@@ -99,7 +99,9 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+  - Measured 2026-09-26: URL-backed filters and `from`/`to` date range via `useBuildListFilters` with `gte`/`lte` applied server-side in `projects-releases.service.ts`; `useBuildListKeyboard` wired for `/`, `j/k`, `Enter`, `Esc`, `c`, `e`, with `?` served globally by `use-keyboard-shortcuts.ts:60`; selection state plus `handleBulkStatusChange` and a bulk strip; `ReleaseEditButton` replaced by a `ReleaseRowActions` dropdown used by both the table row and `ReleaseMobileCard`. 7/7 suite.
+  - Conflict state is the one unmet requirement and is scoped out under [CCG-1](./99-cross-cutting-gaps.md): no backend endpoint supports `If-Match` or a version lock, so a version comparison has no fact to render.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.

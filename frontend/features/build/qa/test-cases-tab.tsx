@@ -32,7 +32,25 @@ import { QaBulkActionBar } from "./qa-bulk-action-bar";
 
 const CASE_PAGE_SIZE = 50;
 
-const FILTER_DEFINITIONS = [{ param: "suite" }] as const;
+const PRIORITY_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All priorities" },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+];
+
+const AUTOMATION_STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All automation" },
+  { value: "manual", label: "Manual" },
+  { value: "automated", label: "Automated" },
+  { value: "planned", label: "Planned" },
+];
+
+const FILTER_DEFINITIONS = [
+  { param: "suite" },
+  { param: "priority", options: ["low", "medium", "high"] as const },
+  { param: "automationStatus", options: ["manual", "automated", "planned"] as const },
+] as const;
 
 function NewCaseButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -62,9 +80,13 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
   );
 
   const suiteValue = listFilters.value("suite");
+  const priorityValue = listFilters.value("priority");
+  const automationStatusValue = listFilters.value("automationStatus");
   const queryFilters = {
     q: listFilters.debouncedSearch || undefined,
     suiteId: suiteValue !== BUILD_FILTER_ALL ? Number(suiteValue) : undefined,
+    priority: priorityValue !== BUILD_FILTER_ALL ? priorityValue : undefined,
+    automationStatus: automationStatusValue !== BUILD_FILTER_ALL ? automationStatusValue : undefined,
     cursor: cursor !== undefined ? Number(cursor) : undefined,
   };
 
@@ -127,6 +149,16 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
 
   const handleSuiteChange = useCallback(
     (value: string) => listFilters.setValue("suite", value),
+    [listFilters],
+  );
+
+  const handlePriorityChange = useCallback(
+    (value: string) => listFilters.setValue("priority", value),
+    [listFilters],
+  );
+
+  const handleAutomationStatusChange = useCallback(
+    (value: string) => listFilters.setValue("automationStatus", value),
     [listFilters],
   );
 
@@ -202,6 +234,32 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
                   value={suiteValue}
                   onValueChange={handleSuiteChange}
                   options={suiteOptions}
+                />
+              ),
+            },
+            {
+              id: "priority",
+              label: "Priority",
+              active: listFilters.isActive("priority"),
+              control: (
+                <BuildFilterSelect
+                  label="Priority"
+                  value={priorityValue}
+                  onValueChange={handlePriorityChange}
+                  options={PRIORITY_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "automationStatus",
+              label: "Automation",
+              active: listFilters.isActive("automationStatus"),
+              control: (
+                <BuildFilterSelect
+                  label="Automation"
+                  value={automationStatusValue}
+                  onValueChange={handleAutomationStatusChange}
+                  options={AUTOMATION_STATUS_OPTIONS}
                 />
               ),
             },

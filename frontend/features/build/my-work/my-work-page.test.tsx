@@ -244,6 +244,44 @@ describe("MyWorkPage — URL param round-trips", () => {
     );
     expect(call?.[0]).toMatchObject({ cursor: "abc123" });
   });
+
+  it("relation=created enables the created-tab query and disables the assigned-tab query", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("relation=created");
+    render(<MyWorkPage />);
+    const createdCall = mockUseAllWork.mock.calls.find(
+      ([f]: [{ scope?: string }]) => f?.scope === "created",
+    );
+    expect(createdCall?.[0]).toMatchObject({ scope: "created" });
+    expect(createdCall?.[1]?.enabled).toBe(true);
+    const assignedCall = mockUseAllWork.mock.calls.find(
+      ([f]: [{ scope?: string }]) => f?.scope === "mine",
+    );
+    expect(assignedCall?.[1]?.enabled).toBe(false);
+  });
+
+  it("relation=subscribed enables the subscribed-tab query with scope: subscribed", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("relation=subscribed");
+    render(<MyWorkPage />);
+    const subscribedCall = mockUseAllWork.mock.calls.find(
+      ([f]: [{ scope?: string }]) => f?.scope === "subscribed",
+    );
+    expect(subscribedCall?.[0]).toMatchObject({ scope: "subscribed" });
+    expect(subscribedCall?.[1]?.enabled).toBe(true);
+    const assignedCall = mockUseAllWork.mock.calls.find(
+      ([f]: [{ scope?: string }]) => f?.scope === "mine",
+    );
+    expect(assignedCall?.[1]?.enabled).toBe(false);
+  });
+
+  it("legacy tab=watching is normalised to relation=subscribed so old deep-links keep working", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("tab=watching");
+    render(<MyWorkPage />);
+    const subscribedCall = mockUseAllWork.mock.calls.find(
+      ([f]: [{ scope?: string }]) => f?.scope === "subscribed",
+    );
+    expect(subscribedCall?.[0]).toMatchObject({ scope: "subscribed" });
+    expect(subscribedCall?.[1]?.enabled).toBe(true);
+  });
 });
 
 describe("MyWorkPage — state renders the correct surface", () => {

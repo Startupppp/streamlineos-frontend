@@ -34,15 +34,8 @@ const DEC_STATUS_STYLE: Record<string, string> = {
     "text-status-warning-ink-strong border-status-warning-rule bg-status-warning-surface",
 };
 
-export const DECISION_TABLE_HEADERS = [
-  "ID",
-  "Title",
-  "Status",
-  "Owner",
-  "Decided",
-  "Revisit",
-  "Actions",
-] as const;
+import { DECISION_TABLE_HEADERS } from "./decisions-table-headers";
+export { DECISION_TABLE_HEADERS };
 
 export type DecisionOwnerLookup = (userId: string | null) => NamedUser | null;
 export type DecisionMemberNameLookup = (userId: string | null) => string;

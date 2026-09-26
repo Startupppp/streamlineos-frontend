@@ -61,3 +61,18 @@ export const managedProductInsightsContract = z.object({
 });
 
 export type ManagedProductInsights = z.infer<typeof managedProductInsightsContract>;
+
+export const managedProductBulkResultContract = z.object({
+  requested: z.number().int(),
+  succeeded: z.number().int(),
+  skipped: z.number().int(),
+  results: z.array(
+    z.object({
+      id: z.number().int(),
+      outcome: z.enum(["updated", "skipped"]),
+      reason: z.string().nullable(),
+    }),
+  ),
+});
+
+export type ManagedProductBulkResult = z.infer<typeof managedProductBulkResultContract>;

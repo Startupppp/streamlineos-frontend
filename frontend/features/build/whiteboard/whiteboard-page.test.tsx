@@ -21,11 +21,27 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("@/hooks/api/build", () => ({
-  useWhiteboards: jest.fn().mockReturnValue({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() }),
+  useWhiteboards: jest.fn().mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
+  }),
   useWhiteboard: jest.fn().mockReturnValue({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() }),
   useCreateWhiteboard: jest.fn().mockReturnValue({ mutate: jest.fn(), isPending: false }),
   useDeleteWhiteboard: jest.fn().mockReturnValue({ mutate: jest.fn(), isPending: false }),
   useUpdateWhiteboard: jest.fn().mockReturnValue({ mutateAsync: jest.fn(), mutate: jest.fn() }),
+}));
+
+jest.mock("@/components/ui/infinite-scroll-sentinel", () => ({
+  InfiniteScrollSentinel: () => null,
+}));
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: () => null,
 }));
 
 jest.mock("next/dynamic", () => () => null);

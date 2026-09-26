@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
@@ -8,6 +8,9 @@ import { useBulkUpdateTickets, useCycles, useDeleteCycle, useProjectBoardTickets
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
@@ -46,6 +49,10 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   const [completionMoveTo, setCompletionMoveTo] = useState<"backlog" | "next">("backlog");
   const [deleteTarget, setDeleteTarget] = useState<Cycle | null>(null);
   const canManage = useCan("build:cycles:manage");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const listFilters = useBuildListFilters({
+    filters: [{ param: "status" }, { param: "from" }, { param: "to" }],
+  });
   const { error, refetch, isError, isLoading, data: cycles } = useCycles(projectId);
   const { data: tickets = [] } = useProjectBoardTickets(projectId);
   const updateCycle = useUpdateCycle();
@@ -57,9 +64,34 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     isLoading,
     permission: "build:cycles:view",
   });
-  const activeCycles = cycles?.filter((cycle) => cycle.status === "active") ?? [];
-  const upcomingCycles = cycles?.filter((cycle) => cycle.status === "draft") ?? [];
-  const completedCycles = cycles?.filter((cycle) => cycle.status === "completed") ?? [];
+
+  const filteredCycles = useMemo(() => {
+    const q = listFilters.debouncedSearch.toLowerCase();
+    const statusFilter = listFilters.value("status");
+    const fromFilter = listFilters.value("from");
+    const toFilter = listFilters.value("to");
+    const from = fromFilter !== BUILD_FILTER_ALL ? fromFilter : null;
+    const to = toFilter !== BUILD_FILTER_ALL ? toFilter : null;
+    return (cycles ?? []).filter((cycle) => {
+      if (q && !cycle.name.toLowerCase().includes(q)) return false;
+      if (statusFilter !== BUILD_FILTER_ALL && cycle.status !== statusFilter) return false;
+      if (from && cycle.endDate < from) return false;
+      if (to && cycle.startDate > to) return false;
+      return true;
+    });
+  }, [cycles, listFilters]);
+
+  useBuildListKeyboard({
+    itemCount: filteredCycles.length,
+    onOpen: useCallback((_i: number) => {}, []),
+    onClearSelection: useCallback(() => {}, []),
+    enabled: pageState.kind === "ready",
+    searchInputRef,
+  });
+
+  const activeCycles = filteredCycles.filter((cycle) => cycle.status === "active");
+  const upcomingCycles = filteredCycles.filter((cycle) => cycle.status === "draft");
+  const completedCycles = filteredCycles.filter((cycle) => cycle.status === "completed");
   const hasCycles = activeCycles.length > 0 || upcomingCycles.length > 0 || completedCycles.length > 0;
 
   const router = useRouter();
@@ -226,6 +258,17 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
           New Cycle
         </AnimatedIconButton>
       ) : undefined}
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search cycles",
+            inputRef: searchInputRef,
+          }}
+          onClearAll={listFilters.clearAll}
+        />
+      }
     >
       {hasCycles ? (
         <div className="flex flex-1 min-h-0 flex-col gap-6">

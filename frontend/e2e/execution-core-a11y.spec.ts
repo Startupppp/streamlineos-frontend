@@ -164,4 +164,46 @@ test.describe("Execution core — responsive and a11y contract", () => {
       },
     );
   });
+
+  test.describe("reduced motion — skeleton animation", () => {
+    test(
+      "skeleton shimmers animate when no reduced-motion preference is set",
+      async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: "no-preference" });
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(
+          page.getByRole("heading", { name: "Execution core surfaces" }),
+        ).toBeVisible();
+
+        const scope = page.locator('[data-case-frame="kanban-board-loading"]');
+        const skeleton = scope.locator('[data-testid="gallery-loading-skeleton"]');
+        await expect(skeleton).toBeVisible();
+        const animationName = await skeleton.evaluate(
+          (el) => getComputedStyle(el).animationName,
+        );
+        expect(animationName).not.toBe("none");
+      },
+    );
+
+    test(
+      "skeleton shimmers stop animating when prefers-reduced-motion is reduce",
+      async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: "reduce" });
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        await expect(
+          page.getByRole("heading", { name: "Execution core surfaces" }),
+        ).toBeVisible();
+
+        const scope = page.locator('[data-case-frame="kanban-board-loading"]');
+        const skeleton = scope.locator('[data-testid="gallery-loading-skeleton"]');
+        await expect(skeleton).toBeVisible();
+        const animationName = await skeleton.evaluate(
+          (el) => getComputedStyle(el).animationName,
+        );
+        expect(animationName).toBe("none");
+      },
+    );
+  });
 });

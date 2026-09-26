@@ -19,7 +19,10 @@ import {
 } from "@/components/ui/select";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { useAllWork, useProjects } from "@/hooks/api/build";
+import { useProjectTeams } from "@/hooks/api/build/teams";
+import { useManagedProducts } from "@/hooks/api/build/managed-products";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { useOrgCustomStates } from "@/hooks/api/build/custom-states";
@@ -64,6 +67,8 @@ export function AllWorkPage() {
     view,
     scopeMine,
     filters,
+    productIdFilter,
+    teamIdFilter,
     grouping,
     sortField,
     sortDirection,
@@ -81,6 +86,26 @@ export function AllWorkPage() {
     limit: 100,
   });
   const { data: orgStates } = useOrgCustomStates();
+  const { data: teamsData } = useProjectTeams({ pageSize: 100 });
+  const { data: productsData } = useManagedProducts({ limit: 100 });
+
+  const teamOptions = useMemo(
+    () => [{ value: "", label: "All teams" }, ...(teamsData?.data ?? []).map((t) => ({ value: String(t.id), label: t.name }))],
+    [teamsData],
+  );
+  const productOptions = useMemo(
+    () => [{ value: "", label: "All products" }, ...(productsData?.data ?? []).map((p) => ({ value: String(p.id), label: p.name }))],
+    [productsData],
+  );
+
+  const handleTeamFilter = useCallback(
+    (value: string) => setListParams({ teamId: value || null, cursor: null }),
+    [setListParams],
+  );
+  const handleProductFilter = useCallback(
+    (value: string) => setListParams({ productId: value || null, cursor: null }),
+    [setListParams],
+  );
 
   const tickets = useMemo(() => data?.data ?? [], [data]);
   const loadedCount = tickets.length;
@@ -329,6 +354,26 @@ export function AllWorkPage() {
                 showTypeFilter
                 showAssigneeFilter
                 statuses={orgStates}
+                trailing={
+                  <>
+                    {teamOptions.length > 1 && (
+                      <BuildFilterSelect
+                        label="Team"
+                        value={teamIdFilter ?? ""}
+                        onValueChange={handleTeamFilter}
+                        options={teamOptions}
+                      />
+                    )}
+                    {productOptions.length > 1 && (
+                      <BuildFilterSelect
+                        label="Product"
+                        value={productIdFilter ?? ""}
+                        onValueChange={handleProductFilter}
+                        options={productOptions}
+                      />
+                    )}
+                  </>
+                }
               />
             }
           />

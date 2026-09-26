@@ -16,13 +16,21 @@ import { UserCombobox } from "@/components/ui/user-combobox";
 import { useCan } from "@/hooks/api/access";
 import { useBulkMutateFeedbucketSubmissions } from "@/hooks/api/feedbucket";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ALL_STATUSES, STATUS_LABELS } from "./submission-inbox-columns";
 import type {
   BulkFeedbucketSubmissionsResult,
   FeedbucketBulkAction,
   FeedbucketSubmissionFilters,
   FeedbucketSubmissionPriority,
+  FeedbucketSubmissionStatus,
 } from "@/types/feedbucket";
+
+const ALL_STATUSES: FeedbucketSubmissionStatus[] = ["open", "in_progress", "resolved", "archived"];
+const STATUS_LABELS: Record<FeedbucketSubmissionStatus, string> = {
+  open: "Open",
+  in_progress: "In Progress",
+  resolved: "Resolved",
+  archived: "Archived",
+};
 
 const PRIORITIES: FeedbucketSubmissionPriority[] = ["low", "medium", "high", "urgent"];
 

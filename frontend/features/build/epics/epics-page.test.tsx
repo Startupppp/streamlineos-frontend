@@ -10,6 +10,7 @@ jest.mock("@/hooks/api/build", () => ({
   useCreateTicket: jest.fn(),
   useBulkUpdateTickets: jest.fn(),
   useCycles: jest.fn(),
+  useProjectMembers: jest.fn(() => ({ data: [] })),
 }));
 
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({

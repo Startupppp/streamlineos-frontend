@@ -22,8 +22,8 @@ const moduleListContract = lazyContract(() =>
 const moduleRowContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.moduleRowContract),
 );
-const viewListContract = lazyContract(() =>
-  import("@/hooks/api/build/workspace-schema").then((m) => m.viewListContract),
+const viewPageContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.viewPageContract),
 );
 const viewRowContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.viewRowContract),
@@ -222,12 +222,14 @@ export function useCreateModule(options?: Parameters<typeof useMutation>[0]) {
 
 export function useViews(
   projectId: number,
-  options?: Omit<UseQueryOptions<ProjectView[]>, "queryKey" | "queryFn" | "enabled">
+  params?: { cursor?: string | null },
+  options?: Omit<UseQueryOptions<{ data: ProjectView[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>, "queryKey" | "queryFn" | "enabled">
 ) {
   const canView = useCan("build:view");
-  return useQuery<ProjectView[]>({
-    queryKey: buildWorkQueryKeys.projects.views(projectId),
-    queryFn: ({ signal }) => apiClient.get<ProjectView[]>(`/build/${projectId}/views`, undefined, signal, viewListContract),
+  const cursor = params?.cursor ?? undefined;
+  return useQuery<{ data: ProjectView[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>({
+    queryKey: buildWorkQueryKeys.projects.views(projectId, cursor),
+    queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/views`, cursor ? { cursor } : undefined, signal, viewPageContract),
     staleTime: 60_000,
     ...options,
     enabled: canView && !!projectId,

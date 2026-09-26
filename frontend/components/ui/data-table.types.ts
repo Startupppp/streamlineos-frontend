@@ -87,7 +87,7 @@ export interface DataTableProps<T> {
   getRowKey: (row: T, index: number) => string | number;
   onRowClick?: (row: T) => void;
   selection?: {
-    selected: Set<string | number>;
+    selected: ReadonlySet<string | number>;
     onChange: (sel: Set<string | number>) => void;
     isRowSelectable?: (row: T) => boolean;
     /**

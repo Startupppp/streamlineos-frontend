@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api";
-import { useCycles, useProjectBoardTickets, useBulkUpdateTickets } from "@/hooks/api/build";
+import { useCycles, useProjectBoardTickets, useBulkUpdateTickets, useProjectMembers } from "@/hooks/api/build";
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
 import { ListView } from "@/features/build/views/list-view";
@@ -35,6 +35,7 @@ import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { toBulkPriority } from "@/features/build/shared/bulk-priority";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
@@ -59,7 +60,9 @@ export function CycleDetailPage({
   const searchParams = useSearchParams();
   const view = parseViewType(searchParams.get("view"));
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const listFilters = useBuildListFilters();
+  const listFilters = useBuildListFilters({
+    filters: [{ param: "status" }, { param: "from" }, { param: "to" }],
+  });
 
   const [displayOptions, setDisplayOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
@@ -71,6 +74,26 @@ export function CycleDetailPage({
   const handleBulkStatus = useCallback((v: string) => {
     bulkUpdate.mutate(
       { ticketIds: [...selectedIds].map(Number), status: v },
+      { onSuccess: () => { setSelectedIds(new Set()); toast.success("Updated"); }, onError: (e) => toast.error(getErrorMessage(e)) },
+    );
+  }, [bulkUpdate, selectedIds]);
+  const handleBulkPriority = useCallback((v: string) => {
+    const priority = toBulkPriority(v);
+    if (!priority) return;
+    bulkUpdate.mutate(
+      { ticketIds: [...selectedIds].map(Number), priority },
+      { onSuccess: () => { setSelectedIds(new Set()); toast.success("Updated"); }, onError: (e) => toast.error(getErrorMessage(e)) },
+    );
+  }, [bulkUpdate, selectedIds]);
+  const handleBulkAssignee = useCallback((v: string) => {
+    bulkUpdate.mutate(
+      { ticketIds: [...selectedIds].map(Number), assigneeId: v || undefined },
+      { onSuccess: () => { setSelectedIds(new Set()); toast.success("Updated"); }, onError: (e) => toast.error(getErrorMessage(e)) },
+    );
+  }, [bulkUpdate, selectedIds]);
+  const handleBulkCycle = useCallback((v: string) => {
+    bulkUpdate.mutate(
+      { ticketIds: [...selectedIds].map(Number), cycleId: parseInt(v) || null },
       { onSuccess: () => { setSelectedIds(new Set()); toast.success("Updated"); }, onError: (e) => toast.error(getErrorMessage(e)) },
     );
   }, [bulkUpdate, selectedIds]);
@@ -96,6 +119,7 @@ export function CycleDetailPage({
     error: cyclesError,
     refetch: refetchCycles,
   } = useCycles(projectId);
+  const { data: members } = useProjectMembers(projectId);
   // The board this page renders reads column counts keyed only on projectId.
   // Warming it here keeps it off the far side of the loading guard.
   useTicketColumnCounts(projectId);
@@ -183,15 +207,21 @@ export function CycleDetailPage({
 
   const q = listFilters.debouncedSearch.toLowerCase();
   const statusFilter = listFilters.value("status");
+  const fromFilter = listFilters.value("from");
+  const toFilter = listFilters.value("to");
+  const dueDateFrom = fromFilter !== "all" ? fromFilter : null;
+  const dueDateTo = toFilter !== "all" ? toFilter : null;
   const cycleTickets = useMemo(
     () =>
       allTickets.filter(
         (t) =>
           t.cycleId === cycleId &&
           (!q || t.title.toLowerCase().includes(q)) &&
-          (!statusFilter || statusFilter === "all" || t.status === statusFilter),
+          (!statusFilter || statusFilter === "all" || t.status === statusFilter) &&
+          (!dueDateFrom || (t.dueDate != null && t.dueDate >= dueDateFrom)) &&
+          (!dueDateTo || (t.dueDate != null && t.dueDate <= dueDateTo)),
       ),
-    [allTickets, cycleId, q, statusFilter],
+    [allTickets, cycleId, q, statusFilter, dueDateFrom, dueDateTo],
   );
 
   const handleTicketSelect = useCallback(
@@ -337,7 +367,7 @@ export function CycleDetailPage({
             {view === "list" && (
               <div className="h-full min-h-0 overflow-y-auto pb-2 pt-0">
                 {canUpdate && selectedIds.size > 0 && (
-                  <BulkActionBar selectedCount={selectedIds.size} members={[]} cycles={cycles ?? []} statuses={statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkStatus} onBulkAssignee={handleBulkStatus} onBulkCycle={handleBulkStatus} onClear={handleClearSelection} />
+                  <BulkActionBar selectedCount={selectedIds.size} members={members ?? []} cycles={cycles ?? []} statuses={statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkPriority} onBulkAssignee={handleBulkAssignee} onBulkCycle={handleBulkCycle} onClear={handleClearSelection} />
                 )}
                 <ListView
                   tickets={cycleTickets}

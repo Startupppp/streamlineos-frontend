@@ -56,9 +56,11 @@ jest.mock("@/components/shared/page-state", () => ({
   PageState: ({
     resolution,
     loading,
+    children,
   }: {
     resolution: { kind: string };
     loading: React.ReactNode;
+    children?: React.ReactNode;
   }) => {
     if (resolution.kind === "loading") return <>{loading}</>;
     if (
@@ -68,7 +70,7 @@ jest.mock("@/components/shared/page-state", () => ({
       resolution.kind === "module-denied"
     )
       return <div role="status">Access Restricted</div>;
-    return <div>{resolution.kind}</div>;
+    return <>{children}</>;
   },
 }));
 
@@ -87,31 +89,45 @@ jest.mock("@/hooks/api/use-page-state", () => ({
     mockUsePageState(...args),
 }));
 
-const mockUseClientVisibility = jest.fn();
+const mockUseTicketsInfinite = jest.fn();
+const mockUseMilestonesInfinite = jest.fn();
 const mockUseUpdateTicketVisibility = jest.fn();
 const mockUseUpdateMilestoneVisibility = jest.fn();
 
+const emptyInfiniteQuery = () => ({
+  items: [],
+  hasMore: false,
+  isLoading: false,
+  isError: false,
+  error: undefined,
+  isFetchingNextPage: false,
+  fetchNextPage: jest.fn(),
+  refetch: jest.fn(),
+});
+
 jest.mock("@/hooks/api/build/client-portal", () => ({
-  useClientVisibility: (...args: [number]) => mockUseClientVisibility(...args),
+  useClientVisibilityTicketsInfinite: (...args: [number]) => mockUseTicketsInfinite(...args),
+  useClientVisibilityMilestonesInfinite: (...args: [number]) => mockUseMilestonesInfinite(...args),
   useUpdateTicketVisibility: (...args: [number]) =>
     mockUseUpdateTicketVisibility(...args),
   useUpdateMilestoneVisibility: (...args: [number]) =>
     mockUseUpdateMilestoneVisibility(...args),
 }));
 
+const mockInfiniteScrollSentinel = jest.fn(() => null);
+jest.mock("@/components/ui/infinite-scroll-sentinel", () => ({
+  InfiniteScrollSentinel: (props: Record<string, unknown>) => mockInfiniteScrollSentinel(props),
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
-  mockUseClientVisibility.mockReturnValue({
-    data: undefined,
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-  });
+  mockUseTicketsInfinite.mockReturnValue(emptyInfiniteQuery());
+  mockUseMilestonesInfinite.mockReturnValue(emptyInfiniteQuery());
   mockUseUpdateTicketVisibility.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseUpdateMilestoneVisibility.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseCan.mockReturnValue(false);
   mockUsePageState.mockReturnValue({ kind: "loading" });
+  mockInfiniteScrollSentinel.mockReturnValue(null);
 });
 
 describe("AP-9: ClientVisibilityPage must resolve through usePageState not a bare boolean useCan gate", () => {
@@ -139,13 +155,8 @@ describe("AP-9: ClientVisibilityPage must resolve through usePageState not a bar
   it("renders visibility content when usePageState resolves to ready with permission held", () => {
     mockUseCan.mockReturnValue(true);
     mockUsePageState.mockReturnValue({ kind: "ready" });
-    mockUseClientVisibility.mockReturnValue({
-      data: { tickets: [], milestones: [] },
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
+    mockUseTicketsInfinite.mockReturnValue({ ...emptyInfiniteQuery() });
+    mockUseMilestonesInfinite.mockReturnValue({ ...emptyInfiniteQuery() });
 
     render(<ClientVisibilityPage projectId={1} />);
 
@@ -154,18 +165,59 @@ describe("AP-9: ClientVisibilityPage must resolve through usePageState not a bar
 
   it("passes permission build:clientvisibility:manage to usePageState so the correct gate is evaluated", () => {
     mockUsePageState.mockReturnValue({ kind: "ready" });
-    mockUseClientVisibility.mockReturnValue({
-      data: { tickets: [], milestones: [] },
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
+    mockUseTicketsInfinite.mockReturnValue({ ...emptyInfiniteQuery() });
+    mockUseMilestonesInfinite.mockReturnValue({ ...emptyInfiniteQuery() });
 
     render(<ClientVisibilityPage projectId={1} />);
 
     expect(mockUsePageState).toHaveBeenCalledWith(
       expect.objectContaining({ permission: "build:clientvisibility:manage" }),
+    );
+  });
+});
+
+describe("C4: ClientVisibilityPage uses IntersectionObserver sentinel so lists are bounded at 10k items", () => {
+  it("renders InfiniteScrollSentinel for tickets so the DOM is bounded as more pages are fetched", () => {
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    const fetchNextPage = jest.fn();
+    mockUseTicketsInfinite.mockReturnValue({
+      ...emptyInfiniteQuery(),
+      items: [{ id: 1, ticketNumber: 1, title: "T1", type: "bug", clientVisible: false }],
+      hasMore: true,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+    mockUseMilestonesInfinite.mockReturnValue(emptyInfiniteQuery());
+
+    render(<ClientVisibilityPage projectId={1} />);
+
+    expect(mockInfiniteScrollSentinel).toHaveBeenCalledWith(
+      expect.objectContaining({ hasNextPage: true }),
+    );
+  });
+
+  it("passes hasNextPage=false to InfiniteScrollSentinel when hasMore is false so the sentinel does not trigger spurious fetches", () => {
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    const fetchNextPage = jest.fn();
+    mockUseTicketsInfinite.mockReturnValue({
+      ...emptyInfiniteQuery(),
+      items: [{ id: 1, ticketNumber: 1, title: "T1", type: "bug", clientVisible: false }],
+      hasMore: false,
+      isFetchingNextPage: false,
+      fetchNextPage,
+    });
+    mockUseMilestonesInfinite.mockReturnValue(emptyInfiniteQuery());
+
+    render(<ClientVisibilityPage projectId={1} />);
+
+    const sentinelCalls = mockInfiniteScrollSentinel.mock.calls;
+    const ticketSentinelCall = sentinelCalls.find(
+      ([props]: [Record<string, unknown>]) =>
+        (props as { label?: string }).label === "Load more tickets",
+    );
+    expect(ticketSentinelCall).toBeDefined();
+    expect(ticketSentinelCall![0]).toEqual(
+      expect.objectContaining({ hasNextPage: false }),
     );
   });
 });

@@ -47,6 +47,15 @@ const mockUseOrgCustomStates = jest.fn<{ data: OrgStates }, []>(() => ({ data: C
 jest.mock("@/hooks/api/build/custom-states", () => ({
   useOrgCustomStates: () => mockUseOrgCustomStates(),
 }));
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: () => ({ data: undefined }),
+}));
+jest.mock("@/hooks/api/build/managed-products", () => ({
+  useManagedProducts: () => ({ data: undefined }),
+}));
+jest.mock("@/features/build/shared/build-filter-select", () => ({
+  BuildFilterSelect: () => null,
+}));
 
 interface FilterBarProps {
   statuses?: OrgStates;
@@ -64,6 +73,8 @@ jest.mock("./use-all-work-filters", () => ({
     view: "list" as const,
     scopeMine: false,
     filters: {},
+    productIdFilter: null,
+    teamIdFilter: null,
     grouping: "project" as BuildListGrouping,
     sortField: "rank",
     sortDirection: "desc",

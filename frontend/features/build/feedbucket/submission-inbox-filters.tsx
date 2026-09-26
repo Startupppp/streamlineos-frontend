@@ -27,6 +27,7 @@ export interface SubmissionInboxFilterValues {
   status: FeedbucketSubmissionStatus | null;
   type: FeedbucketSubmissionType | null;
   linked: "linked" | "unlinked" | null;
+  duplicate: "true" | "false" | null;
   assigneeId: string | null;
   search: string | null;
   from: string | null;

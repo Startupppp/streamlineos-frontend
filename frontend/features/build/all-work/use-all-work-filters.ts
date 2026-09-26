@@ -21,6 +21,8 @@ interface UseAllWorkFiltersReturn {
   view: AllWorkView;
   scopeMine: boolean;
   filters: AllWorkFilters;
+  productIdFilter: string | null;
+  teamIdFilter: string | null;
   grouping: BuildListGrouping;
   sortField: BuildListSortField;
   sortDirection: BuildListSortDirection;
@@ -38,6 +40,8 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
   const searchParams = useSearchParams();
   const scopeMine = searchParams.get("scope") === "mine";
   const view = parseView(searchParams.get("view"));
+  const productIdParam = searchParams.get("productId");
+  const teamIdParam = searchParams.get("teamId");
 
   const {
     filters: baseFilters,
@@ -58,6 +62,8 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
   const filters: AllWorkFilters = {
     ...baseFilters,
     ...(scopeMine ? { scope: "mine" as const } : {}),
+    ...(productIdParam ? { managedProductId: Number(productIdParam) } : {}),
+    ...(teamIdParam ? { teamId: Number(teamIdParam) } : {}),
   };
 
   const handleViewChange = useCallback(
@@ -73,7 +79,7 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
   }, [scopeMine, setListParams]);
 
   const handleClearFilters = useCallback(() => {
-    const cleared: Record<string, string | null> = { scope: null, cursor: null };
+    const cleared: Record<string, string | null> = { scope: null, cursor: null, productId: null, teamId: null };
     for (const param of BUILD_LIST_FILTER_PARAMS) cleared[param] = null;
     setListParams(cleared);
   }, [setListParams]);
@@ -82,11 +88,13 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
     view,
     scopeMine,
     filters,
+    productIdFilter: productIdParam,
+    teamIdFilter: teamIdParam,
     grouping,
     sortField,
     sortDirection,
     cursor,
-    hasActiveFilters: hasActiveFilters || scopeMine,
+    hasActiveFilters: hasActiveFilters || scopeMine || !!productIdParam || !!teamIdParam,
     isPending,
     handleViewChange,
     handleScopeToggle,

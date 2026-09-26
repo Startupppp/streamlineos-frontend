@@ -99,7 +99,8 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+  BE: `listTeamsQuerySchema` extended with `leadId` and `memberId` (UUID, strict); `TeamsService.listTeams` applies EXISTS subqueries for both; FE: `useProjectTeams` passes both params; `TeamsListPage` reads them from URL via `useBuildListFilters` with `FILTER_DEFINITIONS`; `useBuildListKeyboard` receives `searchInputRef` and `onCreate`; 409 conflict branch calls `refetch()` + `toast.info`; offline branch shows "You are offline" empty state. All verified: `features/build/teams/teams-list-page.test.tsx` 20/20 pass.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.

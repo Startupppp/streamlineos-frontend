@@ -59,6 +59,9 @@ const FILTER_DEFINITIONS = [
     param: "status",
     options: STATUS_OPTIONS.map((o) => o.value),
   },
+  {
+    param: "ownerId",
+  },
 ] as const;
 
 interface DecisionsPageProps {
@@ -78,10 +81,12 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   );
 
   const statusValue = listFilters.value("status");
+  const ownerIdValue = listFilters.value("ownerId");
   const { data, isLoading, isError, error, refetch } = useProjectDecisions(
     projectId,
     {
       status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
+      ownerId: ownerIdValue !== BUILD_FILTER_ALL ? ownerIdValue : undefined,
       cursor: cursor === undefined ? undefined : Number(cursor),
     },
   );
@@ -92,6 +97,17 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     isError,
     error,
   });
+
+  const ownerOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "All owners" },
+      ...members.map((m) => ({
+        value: m.id as string,
+        label: (m.name ?? m.email) as string,
+      })),
+    ],
+    [members],
+  );
 
   const createDecision = useCreateDecision(projectId);
   const updateDecision = useUpdateDecision(projectId);
@@ -166,6 +182,11 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
 
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
+  const handleOwnerChange = useCallback(
+    (value: string) => listFilters.setValue("ownerId", value),
     [listFilters],
   );
 
@@ -258,6 +279,19 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
                   value={statusValue}
                   onValueChange={handleStatusChange}
                   options={STATUS_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "ownerId",
+              label: "Owner",
+              active: listFilters.isActive("ownerId"),
+              control: (
+                <BuildFilterSelect
+                  label="Owner"
+                  value={ownerIdValue}
+                  onValueChange={handleOwnerChange}
+                  options={ownerOptions}
                 />
               ),
             },

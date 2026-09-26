@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -9,6 +10,8 @@ import type {
   ClientPortalProject,
   ClientPortalOverview,
   ClientVisibilitySummary,
+  ClientVisibilityTicket,
+  ClientVisibilityMilestone,
   CreateChangeRequestInput,
   PortalChangeRequest,
 } from "@/types/projects";
@@ -85,15 +88,86 @@ export function useSubmitPortalChangeRequest(projectId: number) {
   });
 }
 
-export function useClientVisibility(projectId: number) {
+export function useClientVisibility(
+  projectId: number,
+  params?: { ticketCursor?: string | null; milestoneCursor?: string | null },
+) {
   const canManage = useCan("build:clientvisibility:manage");
+  const ticketCursor = params?.ticketCursor ?? undefined;
+  const milestoneCursor = params?.milestoneCursor ?? undefined;
+  const query: Record<string, string> = {};
+  if (ticketCursor) query.ticketCursor = ticketCursor;
+  if (milestoneCursor) query.milestoneCursor = milestoneCursor;
   return useQuery<ClientVisibilitySummary>({
-    queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId),
+    queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId, ticketCursor, milestoneCursor),
     queryFn: ({ signal }) =>
-      apiClient.get<ClientVisibilitySummary>(`/build/${projectId}/client-visibility`, undefined, signal, visibilitySummaryContract),
+      apiClient.get<ClientVisibilitySummary>(
+        `/build/${projectId}/client-visibility`,
+        Object.keys(query).length > 0 ? query : undefined,
+        signal,
+        visibilitySummaryContract,
+      ),
     enabled: canManage && !!projectId,
     staleTime: 30_000,
   });
+}
+
+export function useClientVisibilityTicketsInfinite(projectId: number) {
+  const canManage = useCan("build:clientvisibility:manage");
+  const query = useInfiniteQuery({
+    queryKey: [
+      ...buildWorkQueryKeys.projects.clientPortal.visibility(projectId),
+      "tickets-infinite",
+    ] as const,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<ClientVisibilitySummary>(
+        `/build/${projectId}/client-visibility`,
+        pageParam ? { ticketCursor: pageParam } : undefined,
+        signal,
+        visibilitySummaryContract,
+      ),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.tickets.pagination.nextCursor ?? undefined,
+    enabled: canManage && !!projectId,
+    staleTime: 30_000,
+  });
+  const items = useMemo<ClientVisibilityTicket[]>(
+    () => query.data?.pages.flatMap((p) => p.tickets.data) ?? [],
+    [query.data],
+  );
+  const hasMore =
+    query.data?.pages.at(-1)?.tickets.pagination.hasMore ?? false;
+  return { ...query, items, hasMore };
+}
+
+export function useClientVisibilityMilestonesInfinite(projectId: number) {
+  const canManage = useCan("build:clientvisibility:manage");
+  const query = useInfiniteQuery({
+    queryKey: [
+      ...buildWorkQueryKeys.projects.clientPortal.visibility(projectId),
+      "milestones-infinite",
+    ] as const,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<ClientVisibilitySummary>(
+        `/build/${projectId}/client-visibility`,
+        pageParam ? { milestoneCursor: pageParam } : undefined,
+        signal,
+        visibilitySummaryContract,
+      ),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.milestones.pagination.nextCursor ?? undefined,
+    enabled: canManage && !!projectId,
+    staleTime: 30_000,
+  });
+  const items = useMemo<ClientVisibilityMilestone[]>(
+    () => query.data?.pages.flatMap((p) => p.milestones.data) ?? [],
+    [query.data],
+  );
+  const hasMore =
+    query.data?.pages.at(-1)?.milestones.pagination.hasMore ?? false;
+  return { ...query, items, hasMore };
 }
 
 export function useUpdateTicketVisibility(projectId: number) {
@@ -107,23 +181,6 @@ export function useUpdateTicketVisibility(projectId: number) {
         undefined,
         toggleVisibilityContract,
       ),
-    onMutate: async ({ ticketId, clientVisible }) => {
-      const key = buildWorkQueryKeys.projects.clientPortal.visibility(projectId);
-      await qc.cancelQueries({ queryKey: key });
-      const prev = qc.getQueryData<ClientVisibilitySummary>(key);
-      if (prev) {
-        qc.setQueryData<ClientVisibilitySummary>(key, {
-          ...prev,
-          tickets: prev.tickets.map((t) => (t.id === ticketId ? { ...t, clientVisible } : t)),
-        });
-      }
-      return { prev };
-    },
-    onError: (_, _vars, ctx) => {
-      if (ctx?.prev) {
-        qc.setQueryData(buildWorkQueryKeys.projects.clientPortal.visibility(projectId), ctx.prev);
-      }
-    },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId) });
     },
@@ -141,23 +198,6 @@ export function useUpdateMilestoneVisibility(projectId: number) {
         undefined,
         toggleVisibilityContract,
       ),
-    onMutate: async ({ milestoneId, clientVisible }) => {
-      const key = buildWorkQueryKeys.projects.clientPortal.visibility(projectId);
-      await qc.cancelQueries({ queryKey: key });
-      const prev = qc.getQueryData<ClientVisibilitySummary>(key);
-      if (prev) {
-        qc.setQueryData<ClientVisibilitySummary>(key, {
-          ...prev,
-          milestones: prev.milestones.map((m) => (m.id === milestoneId ? { ...m, clientVisible } : m)),
-        });
-      }
-      return { prev };
-    },
-    onError: (_, _vars, ctx) => {
-      if (ctx?.prev) {
-        qc.setQueryData(buildWorkQueryKeys.projects.clientPortal.visibility(projectId), ctx.prev);
-      }
-    },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId) });
     },

@@ -49,6 +49,15 @@ jest.mock("@/hooks/api/build", () => ({
 jest.mock("@/hooks/api/build/custom-states", () => ({
   useOrgCustomStates: () => ({ data: undefined }),
 }));
+jest.mock("@/hooks/api/build/teams", () => ({
+  useProjectTeams: () => ({ data: undefined }),
+}));
+jest.mock("@/hooks/api/build/managed-products", () => ({
+  useManagedProducts: () => ({ data: undefined }),
+}));
+jest.mock("@/features/build/shared/build-filter-select", () => ({
+  BuildFilterSelect: () => null,
+}));
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => true,
 }));
@@ -60,6 +69,8 @@ jest.mock("./use-all-work-filters", () => ({
     view: "list" as const,
     scopeMine: false,
     filters: {},
+    productIdFilter: null,
+    teamIdFilter: null,
     grouping: "project" as BuildListGrouping,
     sortField: "rank",
     sortDirection: "desc",

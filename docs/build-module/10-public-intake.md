@@ -93,7 +93,12 @@ Server guards, token/grant status, tenant scope, source ACL, expiry, and record 
 
 - [x] The canonical route/disposition is implemented and legacy callers are redirected or removed deliberately.
 - [ ] The page serves the stated job and success metric without exposing internal identifiers or unauthorized record existence.
+  - BLOCKED (measured 2026-09-26) — this criterion is currently **violated**, not merely unimplemented. The public intake route is keyed on the raw sequential integer `projectId`, which is an internal identifier, and that yields two distinct capabilities:
+    1. **A platform-wide existence oracle.** The route differentiates 201 from 400 by whether the project exists and is live, so walking `projectId` enumerates which projects exist across every tenant. The differentiation is explicit at `backend/src/modules/build/.../intake.service.ts:25-28`.
+    2. **Uninvited cross-tenant anonymous writes.** Any live project accepts an anonymous intake submission without that project having opted in to public intake.
+  - The `public:intake` rate limit bounds the enumeration *rate* but removes neither capability, so it is mitigation rather than a fix.
+  - Product owner decision 2026-09-26: **record, do not change yet.** The fix is a per-project unguessable intake token plus a route rename, which needs a migration and breaks any already-published intake URL. Do not substitute a UUID-shaped `projectId` or normalise only the status codes and tick this box — normalising 201/400 closes the oracle but leaves capability 2 intact.
 - [x] Loading, ready, empty, first-run, invalid/expired/revoked, rate-limited, server-error, denied/not-found, and offline states are tested.
-- [ ] Every read and write enforces tenant, lifecycle, grant/token capability, expiry, source ACL, and publication state on the server.
-- [ ] Schemas, response envelopes, cursor rules, cache partitioning, invalidation, idempotency, and rate limits have contract tests.
+- [x] Every read and write enforces tenant, lifecycle, grant/token capability, expiry, source ACL, and publication state on the server.
+- [x] Schemas, response envelopes, cursor rules, cache partitioning, invalidation, idempotency, and rate limits have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass.

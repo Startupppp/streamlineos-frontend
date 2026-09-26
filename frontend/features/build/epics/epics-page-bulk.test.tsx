@@ -10,6 +10,7 @@ jest.mock("@/hooks/api/build", () => ({
   useCreateTicket: jest.fn(),
   useBulkUpdateTickets: jest.fn(),
   useCycles: jest.fn(),
+  useProjectMembers: jest.fn(() => ({ data: [] })),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -43,7 +44,27 @@ jest.mock("@/features/build/shared/build-list-toolbar", () => ({
   BuildListToolbar: () => <div data-testid="build-list-toolbar" />,
 }));
 jest.mock("@/features/build/shared/bulk-action-bar", () => ({
-  BulkActionBar: ({ selectedCount }: { selectedCount: number }) => <div data-testid="bulk-action-bar">{selectedCount}</div>,
+  BulkActionBar: ({
+    selectedCount,
+    onBulkStatus,
+    onBulkPriority,
+    onBulkAssignee,
+    onBulkCycle,
+  }: {
+    selectedCount: number;
+    onBulkStatus?: (v: string) => void;
+    onBulkPriority?: (v: string) => void;
+    onBulkAssignee?: (v: string) => void;
+    onBulkCycle?: (v: string) => void;
+  }) => (
+    <div data-testid="bulk-action-bar">
+      {selectedCount}
+      <button type="button" data-testid="bulk-status-btn" onClick={() => onBulkStatus?.("IN_PROGRESS")}>Status</button>
+      <button type="button" data-testid="bulk-priority-btn" onClick={() => onBulkPriority?.("HIGH")}>Priority</button>
+      <button type="button" data-testid="bulk-assignee-btn" onClick={() => onBulkAssignee?.("user-2")}>Assignee</button>
+      <button type="button" data-testid="bulk-cycle-btn" onClick={() => onBulkCycle?.("5")}>Cycle</button>
+    </div>
+  ),
 }));
 jest.mock("framer-motion", () => ({
   motion: { div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => <div {...rest}>{children}</div> },
@@ -132,7 +153,7 @@ it("BulkActionBar appears with selected count when a row checkbox is checked", a
 
   const bar = screen.getByTestId("bulk-action-bar");
   expect(bar).toBeInTheDocument();
-  expect(bar.textContent).toBe("1");
+  expect(bar.textContent).toContain("1");
 });
 
 it("BulkActionBar count increments when a second checkbox is checked", async () => {
@@ -142,7 +163,7 @@ it("BulkActionBar count increments when a second checkbox is checked", async () 
   await act(async () => { fireEvent.click(checkboxes[0]); });
   await act(async () => { fireEvent.click(checkboxes[1]); });
 
-  expect(screen.getByTestId("bulk-action-bar").textContent).toBe("2");
+  expect(screen.getByTestId("bulk-action-bar").textContent).toContain("2");
 });
 
 it("BulkActionBar calls useBulkUpdateTickets mutate when a status bulk action fires", async () => {
@@ -154,5 +175,43 @@ it("BulkActionBar calls useBulkUpdateTickets mutate when a status bulk action fi
   const checkboxes = screen.getAllByRole("checkbox");
   await act(async () => { fireEvent.click(checkboxes[0]); });
 
-  expect(bulkMutate).not.toHaveBeenCalled();
+  expect(screen.getByTestId("bulk-action-bar")).toBeInTheDocument();
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-status-btn")); });
+
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [1], status: "IN_PROGRESS" },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
+});
+
+it("BulkActionBar calls useBulkUpdateTickets mutate with priority when a priority bulk action fires", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ ...makeMutation(), mutate: bulkMutate });
+
+  await act(async () => { render(<EpicsPage params={params} />); });
+
+  const checkboxes = screen.getAllByRole("checkbox");
+  await act(async () => { fireEvent.click(checkboxes[0]); });
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-priority-btn")); });
+
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [1], priority: "HIGH" },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
+});
+
+it("BulkActionBar calls useBulkUpdateTickets mutate with assigneeId when an assignee bulk action fires", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ ...makeMutation(), mutate: bulkMutate });
+
+  await act(async () => { render(<EpicsPage params={params} />); });
+
+  const checkboxes = screen.getAllByRole("checkbox");
+  await act(async () => { fireEvent.click(checkboxes[0]); });
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-assignee-btn")); });
+
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [1], assigneeId: "user-2" },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
 });

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { CycleDetailPage } from "./cycle-detail-page";
 
 jest.mock("@/hooks/api", () => ({
@@ -9,10 +9,28 @@ jest.mock("@/hooks/api/build", () => ({
   useCycles: jest.fn(),
   useProjectBoardTickets: jest.fn(),
   useBulkUpdateTickets: jest.fn(),
+  useProjectMembers: jest.fn(() => ({ data: [] })),
 }));
 
 jest.mock("@/features/build/shared/bulk-action-bar", () => ({
-  BulkActionBar: () => <div data-testid="bulk-action-bar" />,
+  BulkActionBar: ({
+    onBulkStatus,
+    onBulkPriority,
+    onBulkAssignee,
+    onBulkCycle,
+  }: {
+    onBulkStatus?: (v: string) => void;
+    onBulkPriority?: (v: string) => void;
+    onBulkAssignee?: (v: string) => void;
+    onBulkCycle?: (v: string) => void;
+  }) => (
+    <div data-testid="bulk-action-bar">
+      <button type="button" data-testid="bulk-status-btn" onClick={() => onBulkStatus?.("DONE")}>Status</button>
+      <button type="button" data-testid="bulk-priority-btn" onClick={() => onBulkPriority?.("HIGH")}>Priority</button>
+      <button type="button" data-testid="bulk-assignee-btn" onClick={() => onBulkAssignee?.("user-1")}>Assignee</button>
+      <button type="button" data-testid="bulk-cycle-btn" onClick={() => onBulkCycle?.("3")}>Cycle</button>
+    </div>
+  ),
 }));
 
 jest.mock("@/hooks/api/build/ticket-queries", () => ({
@@ -95,7 +113,25 @@ jest.mock("@/features/build/views/kanban-board", () => ({
 }));
 
 jest.mock("@/features/build/views/list-view", () => ({
-  ListView: () => <div data-testid="list-view" />,
+  ListView: ({
+    tickets,
+    selection,
+  }: {
+    tickets?: Array<{ id: number; title: string }>;
+    selection?: { onChange: (ids: Set<string | number>) => void };
+  }) => (
+    <div data-testid="list-view">
+      {tickets?.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          role="checkbox"
+          aria-label={`Select ticket ${t.id}`}
+          onClick={() => selection?.onChange(new Set([t.id]))}
+        />
+      ))}
+    </div>
+  ),
 }));
 
 jest.mock("@/features/build/views/view-switcher", () => ({
@@ -279,5 +315,78 @@ it("keyboard is disabled on board view and enabled on list view", () => {
   render(<CycleDetailPage projectId="1" cycleId="5" />);
   const listArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
   expect(listArgs?.enabled).toBe(true);
+});
+
+it("from filter narrows cycleTickets to only tickets with dueDate on or after the from value, reflected in keyboard itemCount", () => {
+  mockUseBuildListFilters.mockReturnValue({
+    search: "", debouncedSearch: "", cursor: null,
+    setSearch: jest.fn(), setCursor: jest.fn(), clearAll: jest.fn(),
+    resetKey: "", value: jest.fn((k: string) => k === "from" ? "2026-09-15" : "all"),
+    setValue: jest.fn(), activeCount: 1, isFiltered: true,
+  });
+  mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({
+    data: [
+      { ...makeTicket(10, "Before", "TODO"), dueDate: "2026-09-10" },
+      { ...makeTicket(11, "After", "TODO"), dueDate: "2026-09-20" },
+    ],
+  }));
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  const calls = mockUseBuildListKeyboard.mock.calls;
+  const lastArgs = calls[calls.length - 1]?.[0];
+  expect(lastArgs?.itemCount).toBe(1);
+});
+
+it("to filter narrows cycleTickets to only tickets with dueDate on or before the to value", () => {
+  mockUseBuildListFilters.mockReturnValue({
+    search: "", debouncedSearch: "", cursor: null,
+    setSearch: jest.fn(), setCursor: jest.fn(), clearAll: jest.fn(),
+    resetKey: "", value: jest.fn((k: string) => k === "to" ? "2026-09-15" : "all"),
+    setValue: jest.fn(), activeCount: 1, isFiltered: true,
+  });
+  mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({
+    data: [
+      { ...makeTicket(12, "Before", "TODO"), dueDate: "2026-09-10" },
+      { ...makeTicket(13, "After", "TODO"), dueDate: "2026-09-20" },
+    ],
+  }));
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  const calls = mockUseBuildListKeyboard.mock.calls;
+  const lastArgs = calls[calls.length - 1]?.[0];
+  expect(lastArgs?.itemCount).toBe(1);
+});
+
+it("selecting a list-view ticket then clicking bulk-status invokes useBulkUpdateTickets mutate with status", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+  mockParseViewType.mockReturnValue("list");
+  mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({
+    data: [makeTicket(20, "Ticket X")],
+  }));
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  const checkbox = screen.getByRole("checkbox", { name: /select/i });
+  await act(async () => { fireEvent.click(checkbox); });
+  expect(screen.getByTestId("bulk-action-bar")).toBeInTheDocument();
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-status-btn")); });
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [20], status: "DONE" },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
+});
+
+it("selecting a list-view ticket then clicking bulk-priority invokes useBulkUpdateTickets mutate with priority", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+  mockParseViewType.mockReturnValue("list");
+  mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({
+    data: [makeTicket(21, "Ticket Y")],
+  }));
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  const checkbox = screen.getByRole("checkbox", { name: /select/i });
+  await act(async () => { fireEvent.click(checkbox); });
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-priority-btn")); });
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [21], priority: "HIGH" },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
 });
 

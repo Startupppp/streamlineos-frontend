@@ -43,6 +43,45 @@ Verified: `npx jest features/build/shared/build-list-toolbar` → 2 suites, 24 t
 
 ---
 
+## R-4: Promote `SubmissionBulkToolbar` to `components/shared`
+
+**File:** `frontend/features/build/feedbucket/submission-bulk-toolbar.tsx`
+**Requestor:** Lane 3
+**Reason:** `ProductFeedbackPage` (managed-products feature) is the second consumer of `SubmissionBulkToolbar`. FE-60 requires promotion to `components/shared` on the second consumer. A direct import from `features/build/managed-products` into `features/build/feedbucket` would violate FE-61 (no feature→feature import). Promoting the component unlocks bulk row-selection in `ProductFeedbackPage` and closes the final resolvable gap in `10-managed-products-product-feedback.md` C3 (except `duplicate`, which remains unservable).
+
+**Change:**
+1. Move `frontend/features/build/feedbucket/submission-bulk-toolbar.tsx` to `frontend/components/shared/submission-bulk-toolbar.tsx`
+2. Update every importer: `project-submissions-inbox.tsx` (currently the only consumer)
+3. Add a row to `UI-KIT.md` per FE-62 — **pending drain** (UI-KIT.md is shared; apply at drain)
+4. After the move, `ProductFeedbackPage` may import from `@/components/shared/submission-bulk-toolbar`
+
+**UI-KIT.md row (pending — apply at drain):**
+```
+| `SubmissionBulkToolbar` | `@/components/shared/submission-bulk-toolbar` | Bulk status/priority/assign/delete bar for a feedbucket submission selection. Props: `selectedIds: number[]`, `filters: FeedbucketSubmissionFilters`, `onClearSelection: () => void`. Shows when `selectedIds.length > 0`; cap at 100 enforced client-side. |
+```
+
+---
+
+## R-5: `roadmapListQuerySchema` — add `horizon` field
+
+**File:** `backend/src/modules/build/core/dto/roadmap.schemas.ts`
+**Requestor:** Lane 3
+**Reason:** `product-roadmap-page.tsx` exposes a Horizon filter UI (Now / Next / Later) that tracks the selected value in the URL via `useBuildListFilters`. The frontend cannot forward the value to the API because `roadmapListQuerySchema` has `.strict()` and does not include `horizon` — any request with `horizon` in the query string returns 400. The filter chip is visible and operable by users but silently does nothing at the API level.
+
+**Change:** Add `horizon: z.enum(["now", "next", "later"]).optional()` to `roadmapListQuerySchema`. Wire `horizon` filter in `roadmap.service.ts` as an equality predicate on `roadmap_items.horizon`. Once merged, `product-roadmap-page.tsx` can include `horizon` in the filters memo.
+
+---
+
+## R-6: `listGoalsQuerySchema` — add `health` and `due` fields
+
+**File:** `backend/src/modules/goals/dto/goal.schemas.ts`
+**Requestor:** Lane 3
+**Reason:** The spec (`10-managed-products-product-goals.md`) lists `health` and `due` as deep-linkable query params. `listSchema` has `.strict()` and does not include these fields, so forwarding them would return 400. The frontend product-goals-page cannot implement these filters until the backend accepts them.
+
+**Change:** Add `health: z.enum(["on_track","at_risk","off_track"]).optional()` and `due: z.enum(["overdue","this_week","this_month"]).optional()` to `listSchema`. Wire as SQL predicates in the goals service. `scope` is also listed in the spec — assess whether it already exists or needs the same treatment.
+
+---
+
 ## R-3: `feedbucket_submissions` — add `duplicate` detection column (backend)
 
 **File:** `backend/src/modules/feedbucket/` + a migration in range 1250–1254

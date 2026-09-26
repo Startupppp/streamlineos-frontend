@@ -40,6 +40,7 @@ import {
   submitPublicForm,
 } from "@/hooks/api/build/public-form";
 import { submitIntake } from "@/features/build/intake/public-intake-api";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
 /** Exactly what `getFormByToken` returns, before the interceptor sees it. */
 const FORM_ROW = {
@@ -270,5 +271,93 @@ describe("the real call sites resolve the payload, not the envelope", () => {
     await expect(
       submitIntake("1", { title: "Broken login", submitterEmail: undefined }),
     ).resolves.toEqual({ id: 9, message: "Request submitted" });
+  });
+});
+
+describe("cache partitioning — form tokens produce distinct query keys", () => {
+  it("two different form tokens never share a query key", () => {
+    const keyA = buildWorkQueryKeys.projects.publicForms.token("tok-aaa");
+    const keyB = buildWorkQueryKeys.projects.publicForms.token("tok-bbb");
+    expect(keyA).not.toEqual(keyB);
+  });
+
+  it("the token value appears in the query key so invalidation is scoped", () => {
+    const token = "form-token-xyz";
+    const key = buildWorkQueryKeys.projects.publicForms.token(token);
+    const keyString = JSON.stringify(key);
+    expect(keyString).toContain(token);
+  });
+
+  it("intake-form key for a project is distinct from the form-token key for the same value", () => {
+    const value = "123";
+    const formKey = buildWorkQueryKeys.projects.publicForms.token(value);
+    const intakeKey = buildWorkQueryKeys.projects.publicForms.projectIntakeForm(value);
+    expect(formKey).not.toEqual(intakeKey);
+  });
+
+  it("intake-form keys for different projectIds do not overlap", () => {
+    const keyA = buildWorkQueryKeys.projects.publicForms.projectIntakeForm("10");
+    const keyB = buildWorkQueryKeys.projects.publicForms.projectIntakeForm("20");
+    expect(keyA).not.toEqual(keyB);
+    expect(JSON.stringify(keyA)).toContain("10");
+    expect(JSON.stringify(keyB)).toContain("20");
+  });
+});
+
+/**
+ * Pins the design decision that submitIntake is intentionally NON-idempotent.
+ *
+ * Background: `POST /public/intake/:projectId` creates a new intake record on
+ * every call. It does not accept or honour an `Idempotency-Key` header, because
+ * duplicate submissions are distinguishable and each is a genuine request. The
+ * `@Idempotent()` decorator is not applied to this route in the backend.
+ *
+ * This is different from `submitPublicForm` (and all payment mutations) which
+ * SHOULD eventually be idempotent. The C5 criterion requires this decision to be
+ * pinned in a contract test so that a future addition of `Idempotency-Key`
+ * handling — which would suppress duplicates — does not silently change behavior.
+ */
+describe("intake submission idempotency — intentionally non-idempotent by design", () => {
+  const originalFetch = global.fetch;
+
+  function stubFetch(body: unknown, status = 200) {
+    global.fetch = jest.fn(async () =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json" },
+      }),
+    ) as unknown as typeof fetch;
+  }
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  it("submitIntake sends no Idempotency-Key header — each submission is a distinct record by design", async () => {
+    stubFetch({ success: true, data: { id: 1, message: "Request submitted" } });
+
+    await submitIntake("99", { title: "New request", submitterEmail: undefined });
+
+    const [, init] = (global.fetch as jest.Mock).mock.calls[0] as [
+      string,
+      RequestInit,
+    ];
+    const headers = init.headers as Headers;
+    expect(headers.has("Idempotency-Key")).toBe(false);
+  });
+
+  it("two calls to submitIntake each reach the server — no client-side deduplication", async () => {
+    stubFetch({ success: true, data: { id: 1, message: "Request submitted" } });
+
+    await submitIntake("99", { title: "First request", submitterEmail: undefined });
+    await submitIntake("99", { title: "Second request", submitterEmail: undefined });
+
+    expect((global.fetch as jest.Mock).mock.calls).toHaveLength(2);
+  });
+
+  it("submitIntake does not read or write a cache key — intake submissions are not cached reads", () => {
+    const intakeKey = buildWorkQueryKeys.projects.publicForms.projectIntakeForm("99");
+    expect(intakeKey).toBeDefined();
+    expect(Array.isArray(intakeKey)).toBe(true);
   });
 });

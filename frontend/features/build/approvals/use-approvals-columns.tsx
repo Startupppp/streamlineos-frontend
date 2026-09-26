@@ -89,6 +89,9 @@ function ApprovalsActionsCell({
   );
 }
 
+import { APPROVALS_TABLE_HEADERS } from "./approvals-table-headers";
+export { APPROVALS_TABLE_HEADERS };
+
 export function useApprovalsColumns({
   canDecide,
   canManage,

@@ -278,7 +278,7 @@ test.describe("Build list responsive contract", () => {
     test("the loading skeleton announces the real column names", async ({ page }) => {
       const scope = frame(page, "loading");
       for (const header of ["Key", "Name", "Status", "Owner", "Progress", "Target"]) {
-        await expect(scope.getByRole("columnheader", { name: header })).toBeVisible();
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
       }
       await expect(scope.getByText("Column 1")).toHaveCount(0);
     });

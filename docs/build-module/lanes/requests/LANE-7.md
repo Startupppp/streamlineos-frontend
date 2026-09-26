@@ -103,6 +103,17 @@ in the settings set.
 
 ---
 
+## Round 4 Request: Backend cursor pagination for project views
+
+File: `backend/src/modules/build/execution/workspace.service.ts` (backend — separate repo, not Lane 7 territory)
+
+`ViewsService.listViews` at line ~258 does a raw `SELECT * FROM project_views` with no LIMIT or cursor. As saved views scale with member count, this endpoint should accept `cursor` and `limit` query params following BE-25. The frontend `useViews` hook at `hooks/api/build/advanced.ts:223` can be updated to use a cursor envelope once the backend supports it.
+
+**Impact:** Without this, `GET /build/:projectId/views` returns all views unbounded. The frontend now uses client-side pagination (`PAGE_SIZE = 25`) as a DOM-bounding stopgap, but the initial network fetch is still potentially large.
+
+**Request:** Add cursor pagination to `ViewsController.listViews` and `ViewsService.listViews` at `backend/src/modules/build/execution/workspace.controller.ts:178` and `workspace.service.ts:256`. Follow the pattern in `GET /build/:projectId/modules` (already paginated via `moduleListQuerySchema`).
+
+---
 
 ## 1. Route manifest registrations (build-route-manifest.ts)
 
@@ -142,3 +153,27 @@ Add prefix-match entries for:
 - `/build/[projectId]/settings/portal` → `build:clientvisibility:manage`
 
 The existing `/build/[projectId]/settings` wildcard entry with `build:update` already covers agents, fields, integrations, iterations, retention, views, automations, and workflow.
+
+---
+
+## Gallery route page request (Round 7)
+
+File: `frontend/app/(public)/design-system/settings/page.tsx` (request-only — shared territory)
+
+Create this file with the standard dev-only gallery pattern:
+
+```tsx
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { SettingsGallery } from "@/features/build/settings/settings-gallery";
+
+export const metadata: Metadata = {
+  title: "Settings surfaces",
+  robots: { index: false, follow: false },
+};
+
+export default function SettingsGalleryPage() {
+  if (process.env.NODE_ENV === "production") notFound();
+  return <SettingsGallery />;
+}
+```

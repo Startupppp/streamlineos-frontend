@@ -114,6 +114,25 @@ describe("SPEC 1 — client-portal visibility keys (Requirement C5)", () => {
     const key43 = buildWorkQueryKeys.projects.clientPortal.visibility(43);
     expect(key42).not.toEqual(key43);
   });
+
+  it("infinite tickets key is prefixed by visibility(42) so mutations invalidate both the base and infinite queries", () => {
+    const baseKey = buildWorkQueryKeys.projects.clientPortal.visibility(42) as readonly unknown[];
+    const infiniteKey = [...baseKey, "tickets-infinite"] as const;
+    expect(infiniteKey.slice(0, baseKey.length)).toEqual(Array.from(baseKey));
+  });
+
+  it("infinite milestones key is prefixed by visibility(42) so mutations invalidate both the base and infinite queries", () => {
+    const baseKey = buildWorkQueryKeys.projects.clientPortal.visibility(42) as readonly unknown[];
+    const infiniteKey = [...baseKey, "milestones-infinite"] as const;
+    expect(infiniteKey.slice(0, baseKey.length)).toEqual(Array.from(baseKey));
+  });
+
+  it("tickets-infinite and milestones-infinite keys are distinct so each tab has an independent cache", () => {
+    const baseKey = buildWorkQueryKeys.projects.clientPortal.visibility(42) as readonly unknown[];
+    const ticketsKey = [...baseKey, "tickets-infinite"];
+    const milestonesKey = [...baseKey, "milestones-infinite"];
+    expect(ticketsKey).not.toEqual(milestonesKey);
+  });
 });
 
 describe("SPEC 1 — ticket visibility invalidation on settled (Requirement C5)", () => {

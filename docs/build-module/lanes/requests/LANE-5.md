@@ -139,3 +139,21 @@ dimensions in the key, different filter combinations share the same cache entry.
 `hooks/api/build/project-updates.ts` can use the same pattern as `change-requests.ts` (pass
 `activeFilters` as the second arg). Until then, the current workaround uses the base key (no filter
 dimension) so the URL state is wired but cache is not yet filter-segmented.
+
+---
+
+## R6 — portal-access.schemas.ts: add `from`/`to` and `grantId` filter params to listGrantsQuerySchema
+
+**File:** `backend/src/modules/portal/access/dto/portal-access.schemas.ts`
+
+**Change:** Extend `listGrantsQuerySchema` (the DTO for `GET /portal-access/grants`) to include:
+
+```ts
+grantId: z.string().optional(),
+from: z.string().datetime().optional(),
+to: z.string().datetime().optional(),
+```
+
+`grantId` filters to a single grant by its `projectClientGrantId`. `from`/`to` filter by `grantedAt` (or `expiresAt` — choose the column that matches the spec intent for the date range). The existing `state` param covers `status`; `cursor` is already present.
+
+**Reason:** `10-project-client-portal.md` URL state section specifies `grantId`, `status`, `from`, `to`, `cursor`. `status` maps to the existing `state` param and `cursor` is already there. `grantId` and `from`/`to` have no current backing. Without these axes on the backend schema, the frontend cannot wire the URL params to a real predicate, and C3 on `10-project-client-portal.md` cannot be ticked. The portal-access module is outside Lane 5 territory; this request delegates the backend change to the owning lane.

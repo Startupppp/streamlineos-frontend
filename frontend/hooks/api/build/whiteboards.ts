@@ -1,12 +1,16 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
+const whiteboardResponseContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardResponseContract),
+);
 const whiteboardListContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.whiteboardListContract),
 );
@@ -98,9 +102,25 @@ export interface SetWhiteboardSharesInput {
 
 export function useWhiteboards(projectId: number) {
   const canView = useCan("build:view");
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId),
-    queryFn: ({ signal }) => apiClient.get<WhiteboardSummary[]>(`/build/${projectId}/whiteboards`, undefined, signal, whiteboardListContract),
+    queryFn: async ({ pageParam, signal }) => {
+      const params: Record<string, string> = {};
+      if (pageParam !== undefined) params["cursor"] = pageParam;
+      const response = await apiClient.get<
+        WhiteboardSummary[] | { data: WhiteboardSummary[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }
+      >(
+        `/build/${projectId}/whiteboards`,
+        Object.keys(params).length > 0 ? params : undefined,
+        signal,
+        whiteboardResponseContract,
+      );
+      return Array.isArray(response)
+        ? { data: response, pagination: { limit: response.length || 100, hasMore: false, nextCursor: null } }
+        : response;
+    },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 30_000,
   });

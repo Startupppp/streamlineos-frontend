@@ -24,6 +24,8 @@ interface ReleaseListQuery {
   limit?: number;
   status?: "draft" | "released" | "archived";
   q?: string;
+  from?: string;
+  to?: string;
 }
 
 function releaseKey(projectId: number, query?: ReleaseListQuery) {

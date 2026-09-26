@@ -134,14 +134,17 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     (h) => h === searchParams.get("filterHealth"),
   );
   const filterLead = searchParams.get("filterLead") ?? undefined;
+  const filterManagerId = searchParams.get("managerId") ?? filterLead;
+  const filterProductId = searchParams.get("productId");
+  const filterClientId = searchParams.get("clientId") ?? undefined;
 
   const activeFilters: ProjectActiveFilters = useMemo(
     () => ({
       ...(filterStatus ? { status: filterStatus } : {}),
       ...(filterHealth ? { health: filterHealth } : {}),
-      ...(filterLead ? { lead: filterLead } : {}),
+      ...(filterManagerId ? { lead: filterManagerId } : {}),
     }),
-    [filterStatus, filterHealth, filterLead],
+    [filterStatus, filterHealth, filterManagerId],
   );
 
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -173,8 +176,11 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     updateParams({
       q: null,
       filterLead: null,
+      managerId: null,
       filterStatus: null,
       filterHealth: null,
+      productId: null,
+      clientId: null,
     });
   }, [updateParams]);
 
@@ -193,7 +199,11 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     limit: viewMode === "grid" ? 12 : 25,
     search: debouncedSearch || undefined,
     status: activeFilters.status,
-    ...(managedProductId !== undefined ? { managedProductId } : {}),
+    ...(managedProductId !== undefined
+      ? { managedProductId }
+      : filterProductId
+        ? { managedProductId: Number(filterProductId) }
+        : {}),
   });
 
   const pageState = usePageState({
@@ -227,7 +237,10 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
   }, [allProjects, activeFilters, prefs, activeGroup]);
 
   const hasFiltersOrSearch =
-    Boolean(debouncedSearch) || Object.values(activeFilters).some(Boolean);
+    Boolean(debouncedSearch) ||
+    Object.values(activeFilters).some(Boolean) ||
+    Boolean(filterProductId) ||
+    Boolean(filterClientId);
   const filtersActive = hasFiltersOrSearch || activeGroup !== null;
 
   const handleKeyboardOpenProject = useCallback(

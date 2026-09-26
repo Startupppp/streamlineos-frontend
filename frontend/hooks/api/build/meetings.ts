@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -74,17 +75,23 @@ export function useMeetings(projectId: number, filters?: MeetingFilters) {
   if (filters?.hasUnresolvedActionItems === true) params["hasUnresolvedActionItems"] = "true";
   const hasParams = Object.keys(params).length > 0;
 
-  return useQuery<Meeting[]>({
+  return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.meetings.list(projectId, hasParams ? params : undefined),
-    queryFn: async ({ signal }): Promise<Meeting[]> => {
-      const response = await apiClient.get(
+    queryFn: async ({ pageParam, signal }) => {
+      const allParams: Record<string, string> = hasParams ? { ...params } : {};
+      if (pageParam !== undefined) allParams["cursor"] = pageParam;
+      const response = await apiClient.get<Meeting[] | { data: Meeting[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
         `/build/${projectId}/meetings`,
-        hasParams ? params : undefined,
+        Object.keys(allParams).length > 0 ? allParams : undefined,
         signal,
         meetingResponseContract,
       );
-      return Array.isArray(response) ? response : response.data;
+      return Array.isArray(response)
+        ? { data: response, pagination: { limit: response.length || 100, hasMore: false, nextCursor: null } }
+        : response;
     },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });

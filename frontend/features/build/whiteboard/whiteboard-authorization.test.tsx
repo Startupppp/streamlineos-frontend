@@ -40,20 +40,32 @@ jest.mock("@/hooks/api/entitlements", () => ({
 
 jest.mock("@/hooks/api/build", () => ({
   useWhiteboards: () => ({
-    data: [
-      {
-        id: 1,
-        name: "Test Board",
-        elementCount: 0,
-        visibility: "project",
-        createdBy: null,
-        updatedAt: null,
-      },
-    ],
+    data: {
+      pages: [
+        {
+          data: [
+            {
+              id: 1,
+              name: "Test Board",
+              elementCount: 0,
+              visibility: "project",
+              createdBy: null,
+              updatedAt: null,
+            },
+          ],
+          hasMore: false,
+          nextCursor: null,
+        },
+      ],
+      pageParams: [undefined],
+    },
     isLoading: false,
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
   }),
   useWhiteboard: () => ({
     data: {

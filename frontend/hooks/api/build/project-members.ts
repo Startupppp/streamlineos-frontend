@@ -11,17 +11,18 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { z } from "zod";
-import type { projectMemberRowContract } from "@/hooks/api/build/build-project-schema";
+import type { projectMemberPageContract, projectMemberRowContract } from "@/hooks/api/build/build-project-schema";
 import type {
   AddProjectMemberInput,
   ProjectMemberRecord,
 } from "@/types/projects";
 
 type ProjectMemberRow = z.infer<typeof projectMemberRowContract>;
+type ProjectMemberPage = z.infer<typeof projectMemberPageContract>;
 
-const memberListLazy = lazyContract(() =>
+const memberPageLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then(
-    (m) => m.projectMemberListContract,
+    (m) => m.projectMemberPageContract,
   ),
 );
 const memberRowLazy = lazyContract(() =>
@@ -37,21 +38,23 @@ const memberRoleLazy = lazyContract(() =>
 
 export function useProjectMembers(
   projectId: number,
+  params?: { cursor?: string | null },
   options?: Omit<
-    UseQueryOptions<ProjectMemberRecord[]>,
+    UseQueryOptions<ProjectMemberPage>,
     "queryKey" | "queryFn"
   >,
 ) {
   const canView = useCan("build:view");
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
-  return useQuery<ProjectMemberRecord[]>({
-    queryKey: buildWorkQueryKeys.projects.members(projectId),
+  const cursor = params?.cursor ?? undefined;
+  return useQuery<ProjectMemberPage>({
+    queryKey: buildWorkQueryKeys.projects.members(projectId, cursor),
     queryFn: ({ signal }) =>
-      apiClient.get<ProjectMemberRecord[]>(
+      apiClient.get<ProjectMemberPage>(
         `/build/${projectId}/members`,
-        undefined,
+        cursor ? { cursor } : undefined,
         signal,
-        memberListLazy,
+        memberPageLazy,
       ),
     staleTime: 30_000,
     ...restOptions,

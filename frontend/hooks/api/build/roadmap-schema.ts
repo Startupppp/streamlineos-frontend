@@ -175,8 +175,11 @@ export const templateRowContract = z.object({
 
 export const templateListContract = z.object({
   data: z.array(templateRowContract),
-  hasMore: z.boolean(),
-  nextCursor: z.number().int().nullable(),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
 });
 
 export const applyTemplateResultContract = z.object({

@@ -28,6 +28,30 @@ jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: undefined }),
 }));
 
+jest.mock("@tanstack/react-query", () => ({
+  ...jest.requireActual("@tanstack/react-query"),
+  useQueryClient: () => ({ invalidateQueries: jest.fn() }),
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => true,
+}));
+
+jest.mock("@/components/ui/date-range-picker", () => ({
+  DateRangePicker: () => null,
+}));
+
+jest.mock("@/lib/query-keys/build-work", () => ({
+  buildWorkQueryKeys: {
+    projects: {
+      approvals: {
+        inbox: () => ["approvals", "inbox"],
+        inboxCount: () => ["approvals", "inbox", "count"],
+      },
+    },
+  },
+}));
+
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn() }),
   usePathname: () => "/build/approvals",

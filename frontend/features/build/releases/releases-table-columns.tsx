@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, type MouseEvent } from "react";
-import { Pencil } from "lucide-react";
+import { useCallback } from "react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { TABLE_TITLE_CELL, TEXT_FLEX_CHILD } from "@/lib/text-overflow";
@@ -11,7 +13,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { Release } from "@/hooks/api/build/releases";
 import { format } from "date-fns";
-import { STATUS_CONFIG, DeleteReleaseButton } from "./releases-page-parts";
+import { STATUS_CONFIG } from "./releases-page-parts";
 
 export const RELEASES_TABLE_HEADERS = [
   "Name",
@@ -36,30 +38,30 @@ export function ReleaseStatusBadge({ status }: { status: Release["status"] }) {
   );
 }
 
-function ReleaseEditButton({
+function ReleaseRowActions({
   release,
   onEdit,
+  onDelete,
 }: {
   release: Release;
   onEdit: (r: Release) => void;
+  onDelete: (r: Release) => void;
 }) {
-  const handleClick = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-      onEdit(release);
-    },
-    [release, onEdit],
-  );
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const handleEdit = useCallback(() => onEdit(release), [release, onEdit]);
+  const handleDelete = useCallback(() => onDelete(release), [release, onDelete]);
   return (
-    <Button
-      size="icon"
-      variant="ghost"
-      className="w-7"
-      onClick={handleClick}
-      aria-label={`Edit ${release.name}`}
-    >
-      <Pencil className="h-3 w-3" />
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="w-7" aria-label={`Actions for ${release.name}`} {...hoverHandlers}>
+          <EllipsisIcon ref={iconRef} size={14} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -116,8 +118,7 @@ export function buildReleasesColumns({
       cell: (r) =>
         canManage ? (
           <div className="flex items-center justify-end gap-0.5">
-            <ReleaseEditButton release={r} onEdit={onEdit} />
-            <DeleteReleaseButton onClick={() => onDelete(r)} />
+            <ReleaseRowActions release={r} onEdit={onEdit} onDelete={onDelete} />
           </div>
         ) : null,
       className: "w-20",
@@ -147,8 +148,7 @@ export function ReleaseMobileCard({
       actions={
         canManage ? (
           <div className="flex items-center gap-0.5">
-            <ReleaseEditButton release={release} onEdit={onEdit} />
-            <DeleteReleaseButton onClick={() => onDelete(release)} />
+            <ReleaseRowActions release={release} onEdit={onEdit} onDelete={onDelete} />
           </div>
         ) : null
       }

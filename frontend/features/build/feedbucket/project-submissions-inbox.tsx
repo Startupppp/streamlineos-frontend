@@ -29,13 +29,13 @@ import {
   SubmissionInboxFilters,
   type SubmissionInboxFilterValues,
 } from "./submission-inbox-filters";
-import { SubmissionBulkToolbar } from "./submission-bulk-toolbar";
+import { SubmissionBulkToolbar } from "@/components/shared/submission-bulk-toolbar";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
 const PAGE_SIZE = 25;
 
-const FILTER_PARAMS = ["status", "type", "linked", "assigneeId", "search", "from", "to"] as const;
+const FILTER_PARAMS = ["status", "type", "linked", "duplicate", "assigneeId", "search", "from", "to"] as const;
 
 interface ProjectSubmissionsInboxProps {
   widgetId: number;
@@ -72,6 +72,10 @@ export function ProjectSubmissionsInbox({
           linkedParam === "linked" || linkedParam === "unlinked"
             ? linkedParam
             : null,
+        duplicate: (() => {
+          const v = searchParams.get("duplicate");
+          return v === "true" || v === "false" ? v : null;
+        })(),
         assigneeId: searchParams.get("assigneeId"),
         search: searchParams.get("search"),
         from: searchParams.get("from"),
@@ -89,6 +93,7 @@ export function ProjectSubmissionsInbox({
       ...(filterValues.status ? { status: filterValues.status } : {}),
       ...(filterValues.type ? { type: filterValues.type } : {}),
       ...(filterValues.linked ? { linked: filterValues.linked } : {}),
+      ...(filterValues.duplicate ? { duplicate: filterValues.duplicate } : {}),
       ...(filterValues.assigneeId ? { assigneeId: filterValues.assigneeId } : {}),
       ...(filterValues.search ? { search: filterValues.search } : {}),
       ...(filterValues.from ? { from: filterValues.from } : {}),

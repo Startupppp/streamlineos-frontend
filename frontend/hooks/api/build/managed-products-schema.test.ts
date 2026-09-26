@@ -1,5 +1,9 @@
 import { ZodError } from "zod";
-import { managedProductInsightsContract, managedProductRowContract } from "./managed-products-schema";
+import {
+  managedProductBulkResultContract,
+  managedProductInsightsContract,
+  managedProductRowContract,
+} from "./managed-products-schema";
 
 function baseRow(status: string) {
   return {
@@ -37,6 +41,32 @@ it("rejects a status outside managedProductStatusEnum instead of accepting any s
 it("parses a list row that carries status, matching the .returning() response the backend sends", () => {
   const row = managedProductRowContract.parse(baseRow("active"));
   expect(row.status).toBe("active");
+});
+
+it("parses a bulk result with updated and skipped outcomes matching the backend BulkManagedProductsResult shape", () => {
+  const result = managedProductBulkResultContract.parse({
+    requested: 3,
+    succeeded: 2,
+    skipped: 1,
+    results: [
+      { id: 1, outcome: "updated", reason: null },
+      { id: 2, outcome: "updated", reason: null },
+      { id: 3, outcome: "skipped", reason: "not_found_or_filtered" },
+    ],
+  });
+  expect(result.succeeded).toBe(2);
+  expect(result.results[2]?.outcome).toBe("skipped");
+});
+
+it("rejects a bulk result item with an unknown outcome", () => {
+  expect(() =>
+    managedProductBulkResultContract.parse({
+      requested: 1,
+      succeeded: 0,
+      skipped: 1,
+      results: [{ id: 1, outcome: "error", reason: null }],
+    }),
+  ).toThrow(ZodError);
 });
 
 it("parses roadmap and feedback outcome aggregates from managed-product insights", () => {

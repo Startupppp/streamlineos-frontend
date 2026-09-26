@@ -15,6 +15,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Combobox } from "@/components/ui/combobox";
 import { MeetingFormSheet } from "./meeting-form-sheet";
 import { NewMeetingButton, MEETING_TEMPLATES, type MeetingTemplate } from "./new-meeting-button";
@@ -110,7 +111,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     [cycles],
   );
 
-  const { data, isLoading, isError, error, refetch } = useMeetings(projectId, {
+  const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useMeetings(projectId, {
     type: typeValue !== BUILD_FILTER_ALL ? typeValue : undefined,
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     dateFilter:
@@ -123,15 +124,19 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     hasUnresolvedActionItems: actionItemValue === "unresolved" ? true : undefined,
   });
 
-  const { data: upcomingMeetings } = useMeetings(projectId, {
+  const { data: upcomingData } = useMeetings(projectId, {
     dateFilter: "upcoming",
     status: "scheduled",
   });
 
+  const upcomingMeetings = useMemo(
+    () => upcomingData?.pages.flatMap((p) => p.data) ?? [],
+    [upcomingData],
+  );
+
   const nextMeeting = useMemo(() => {
-    const list = upcomingMeetings ?? [];
-    if (list.length === 0) return null;
-    return list.reduce<Meeting | null>((nearest, m) => {
+    if (upcomingMeetings.length === 0) return null;
+    return upcomingMeetings.reduce<Meeting | null>((nearest, m) => {
       if (!m.scheduledAt) return nearest;
       if (!nearest || !nearest.scheduledAt) return m;
       return new Date(m.scheduledAt) < new Date(nearest.scheduledAt) ? m : nearest;
@@ -140,14 +145,18 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
 
   const createMeeting = useCreateMeeting(projectId);
 
+  const meetings = useMemo(
+    () => data?.pages.flatMap((p) => p.data) ?? [],
+    [data],
+  );
+
   const displayed = useMemo(() => {
-    const meetings = data ?? [];
     const q = listFilters.debouncedSearch.trim().toLowerCase();
     if (!q) return meetings;
     return meetings.filter(
       (m) => m.title.toLowerCase().includes(q) || `mtg-${m.meetingNumber}`.includes(q),
     );
-  }, [data, listFilters.debouncedSearch]);
+  }, [meetings, listFilters.debouncedSearch]);
 
   const handleOpenSheet = useCallback(() => {
     setSelectedTemplate(null);
@@ -197,6 +206,10 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   const handleTypeChange = useCallback(
     (value: string) => listFilters.setValue("type", value),
@@ -432,6 +445,12 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
               minWidth="1020px"
               mobileCard={renderMobileCard}
               pagination={{ pageSize: 25 }}
+            />
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage ?? false}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+              label="Load more meetings"
             />
           </PageState>
         </PmSection>

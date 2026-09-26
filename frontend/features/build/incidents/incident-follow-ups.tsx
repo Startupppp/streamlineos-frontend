@@ -34,6 +34,8 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import { DataTable } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@/components/ui/data-table";
 import {
   useAddIncidentFollowUpAction,
   useUpdateIncidentFollowUpAction,
@@ -46,6 +48,16 @@ import type { IncidentFollowUpAction, IncidentFollowUpStatus } from "@/hooks/api
 import type { ProjectMemberRecord } from "@/types/projects";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import { formatShortDate } from "@/lib/date-utils";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { IncidentFollowUpBulkBar } from "./incident-follow-up-bulk-bar";
+
+function isIncidentFollowUpStatus(value: string): value is IncidentFollowUpStatus {
+  return Object.hasOwn(FOLLOW_UP_STATUS_LABELS, value);
+}
 
 const FOLLOW_UP_STATUS_LABELS: Record<IncidentFollowUpStatus, string> = {
   open: "Open",
@@ -68,34 +80,43 @@ const FOLLOW_UP_STATUSES: IncidentFollowUpStatus[] = [
   "cancelled",
 ];
 
+const STATUS_FILTER_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "open", label: "Open" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "done", label: "Done" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+const STATUS_FILTER_DEFINITIONS = [
+  { param: "followUpStatus", options: ["open", "in_progress", "done", "cancelled"] as const },
+] as const;
+
 export function unresolvedFollowUpCount(actions: IncidentFollowUpAction[]): number {
   return actions.filter((a) => a.status === "open" || a.status === "in_progress").length;
 }
 
-const FollowUpRow = memo(function FollowUpRow({
+function FollowUpStatusCell({
+  action,
   projectId,
   incidentId,
-  action,
   canManage,
-  members,
 }: {
+  action: IncidentFollowUpAction;
   projectId: number;
   incidentId: number;
-  action: IncidentFollowUpAction;
   canManage: boolean;
-  members: ProjectMemberRecord[];
 }) {
   const updateAction = useUpdateIncidentFollowUpAction();
-  const [editOpen, setEditOpen] = useState(false);
-  const owner = members.find((member) => member.id === action.ownerId);
 
   function handleStatusChange(next: string) {
+    if (!isIncidentFollowUpStatus(next)) return;
     updateAction.mutate(
       {
         projectId,
         incidentId,
         followUpActionId: action.id,
-        status: FOLLOW_UP_STATUSES.find((s) => s === next),
+        status: next,
       },
       {
         onSuccess: () => toast.success("Follow-up updated"),
@@ -104,64 +125,142 @@ const FollowUpRow = memo(function FollowUpRow({
     );
   }
 
+  if (!canManage) {
+    return (
+      <Badge variant="outline" className={`text-micro ${FOLLOW_UP_STATUS_STYLES[action.status]}`}>
+        {FOLLOW_UP_STATUS_LABELS[action.status]}
+      </Badge>
+    );
+  }
+
   return (
-    <div className="flex items-start justify-between gap-3 border-l-2 border-border py-0.5 pl-3">
-      <div className="min-w-0 space-y-0.5">
-        <p className="text-xs text-foreground">{action.title}</p>
-        {action.description ? (
-          <p className="whitespace-pre-wrap text-micro text-muted-foreground">
-            {action.description}
-          </p>
-        ) : null}
-        <p className="text-micro text-muted-foreground">
-          {owner?.name ?? owner?.email ?? (action.ownerId ? "Former member" : "Unassigned")}
-          {action.dueAt
-            ? ` · due ${formatShortDate(action.dueAt)}`
-            : ""}
-        </p>
-      </div>
-      {canManage ? (
-        <div className="flex shrink-0 items-center gap-1">
-          <Button
-            type="button"
-            size="icon-sm"
-            variant="ghost"
-            aria-label={`Edit ${action.title}`}
-            title="Edit follow-up"
-            onClick={() => setEditOpen(true)}
-          >
-            <Pencil className="size-3.5" />
-          </Button>
-          <div className="w-36">
-            <Select value={action.status} onValueChange={handleStatusChange}>
-              <SelectTrigger aria-label={`Status for ${action.title}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FOLLOW_UP_STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {FOLLOW_UP_STATUS_LABELS[s]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <EditFollowUpDialog
-            projectId={projectId}
-            incidentId={incidentId}
-            action={action}
-            open={editOpen}
-            onOpenChange={setEditOpen}
-          />
-        </div>
-      ) : (
-        <Badge variant="outline" className={`text-micro ${FOLLOW_UP_STATUS_STYLES[action.status]}`}>
-          {FOLLOW_UP_STATUS_LABELS[action.status]}
-        </Badge>
-      )}
+    <div className="w-32">
+      <Select value={action.status} onValueChange={handleStatusChange}>
+        <SelectTrigger aria-label={`Status for ${action.title}`}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {FOLLOW_UP_STATUSES.map((s) => (
+            <SelectItem key={s} value={s}>
+              {FOLLOW_UP_STATUS_LABELS[s]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
-});
+}
+
+function FollowUpActionsCell({
+  action,
+  canManage,
+  projectId,
+  incidentId,
+}: {
+  action: IncidentFollowUpAction;
+  canManage: boolean;
+  projectId: number;
+  incidentId: number;
+}) {
+  const [editOpen, setEditOpen] = useState(false);
+
+  if (!canManage) return null;
+
+  return (
+    <>
+      <Button
+        type="button"
+        size="icon-sm"
+        variant="ghost"
+        aria-label={`Edit ${action.title}`}
+        title="Edit follow-up"
+        onClick={() => setEditOpen(true)}
+      >
+        <Pencil className="size-3.5" />
+      </Button>
+      <EditFollowUpDialog
+        projectId={projectId}
+        incidentId={incidentId}
+        action={action}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
+    </>
+  );
+}
+
+function buildFollowUpColumns(options: {
+  projectId: number;
+  incidentId: number;
+  canManage: boolean;
+  members: ProjectMemberRecord[];
+}): DataTableColumn<IncidentFollowUpAction>[] {
+  const { projectId, incidentId, canManage, members } = options;
+  return [
+    {
+      key: "title",
+      header: "Action",
+      cell: (row) => (
+        <div className="min-w-0 space-y-0.5">
+          <p className="text-xs text-foreground">{row.title}</p>
+          {row.description ? (
+            <p className="text-micro text-muted-foreground">{row.description}</p>
+          ) : null}
+        </div>
+      ),
+    },
+    {
+      key: "owner",
+      header: "Owner",
+      className: "w-[120px]",
+      cell: (row) => {
+        const owner = members.find((m) => m.id === row.ownerId);
+        return (
+          <span className="text-xs text-muted-foreground">
+            {owner?.name ?? owner?.email ?? (row.ownerId ? "Former member" : "Unassigned")}
+          </span>
+        );
+      },
+    },
+    {
+      key: "dueAt",
+      header: "Due",
+      className: "w-[90px]",
+      cell: (row) => (
+        <span className="text-xs text-muted-foreground">
+          {row.dueAt ? formatShortDate(row.dueAt) : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      className: "w-[150px]",
+      cell: (row) => (
+        <FollowUpStatusCell
+          action={row}
+          projectId={projectId}
+          incidentId={incidentId}
+          canManage={canManage}
+        />
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      headerClassName: "sr-only",
+      className: "w-[40px]",
+      cell: (row) => (
+        <FollowUpActionsCell
+          action={row}
+          canManage={canManage}
+          projectId={projectId}
+          incidentId={incidentId}
+        />
+      ),
+    },
+  ];
+}
 
 function EditFollowUpDialog({
   projectId,
@@ -385,15 +484,26 @@ export function IncidentFollowUps({
   canManage: boolean;
   members: ProjectMemberRecord[];
 }) {
-  const sorted = useMemo(
-    () => [...actions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [actions],
-  );
+  const listFilters = useBuildListFilters({ filters: STATUS_FILTER_DEFINITIONS, withSearch: false });
+  const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
+
+  const filtered = useMemo(() => {
+    const statusFilter = listFilters.value("followUpStatus");
+    const sorted = [...actions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    if (statusFilter === BUILD_FILTER_ALL) return sorted;
+    return sorted.filter((a) => a.status === statusFilter);
+  }, [actions, listFilters]);
+
   const unresolved = unresolvedFollowUpCount(actions);
+
+  const columns = useMemo(
+    () => buildFollowUpColumns({ projectId, incidentId, canManage, members }),
+    [projectId, incidentId, canManage, members],
+  );
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
           Follow-up actions
         </p>
@@ -402,22 +512,45 @@ export function IncidentFollowUps({
             {unresolved} unresolved
           </Badge>
         ) : null}
+        <BuildFilterSelect
+          filterId="followUpStatus"
+          label="Status"
+          value={listFilters.value("followUpStatus")}
+          options={STATUS_FILTER_OPTIONS}
+          isActive={listFilters.isActive("followUpStatus")}
+          onChange={(v) => listFilters.setValue("followUpStatus", v)}
+        />
       </div>
 
-      {sorted.length === 0 && (
-        <p className="text-xs italic text-muted-foreground">No follow-up actions yet.</p>
-      )}
-
-      {sorted.map((a) => (
-        <FollowUpRow
-          key={a.id}
+      {selectedIds.size > 0 ? (
+        <IncidentFollowUpBulkBar
           projectId={projectId}
           incidentId={incidentId}
-          action={a}
-          canManage={canManage}
-          members={members}
+          selectedIds={selectedIds}
+          onClear={() => setSelectedIds(new Set())}
         />
-      ))}
+      ) : null}
+
+      {filtered.length === 0 ? (
+        <p className="text-xs italic text-muted-foreground">
+          {listFilters.isFiltered ? "No follow-up actions match the current filter." : "No follow-up actions yet."}
+        </p>
+      ) : (
+        <DataTable
+          data={filtered}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          selection={
+            canManage
+              ? {
+                  selected: selectedIds,
+                  onChange: setSelectedIds,
+                  getRowLabel: (row) => row.title,
+                }
+              : undefined
+          }
+        />
+      )}
 
       {canManage && <AddFollowUpForm projectId={projectId} incidentId={incidentId} />}
     </div>

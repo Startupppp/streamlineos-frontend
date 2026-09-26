@@ -144,14 +144,24 @@ export function useManagedProduct(
   });
 }
 
-export function useManagedProductInsights(managedProductId: number) {
+export interface ManagedProductInsightsParams {
+  range?: "7d" | "30d" | "90d";
+}
+
+export function useManagedProductInsights(managedProductId: number, params?: ManagedProductInsightsParams) {
   const canView = useCan("build:managed-products:view");
+  const queryParams: Record<string, string> = {};
+  if (params?.range) queryParams["range"] = params.range;
+  const hasFilters = Object.keys(queryParams).length > 0;
   return useQuery<ManagedProductInsights>({
-    queryKey: buildWorkQueryKeys.projects.managedProducts.insights(managedProductId),
+    queryKey: buildWorkQueryKeys.projects.managedProducts.insights(
+      managedProductId,
+      hasFilters ? queryParams : undefined,
+    ),
     queryFn: ({ signal }) =>
       apiClient.get<ManagedProductInsights>(
         `/build/managed-products/${managedProductId}/insights`,
-        undefined,
+        hasFilters ? queryParams : undefined,
         signal,
         managedProductInsightsContractLazy,
       ),
@@ -216,6 +226,28 @@ export function useDeleteManagedProduct() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.scopeDirectory.all });
+    },
+  });
+}
+
+export interface BulkUpdateManagedProductsInput {
+  ids: number[];
+  action: "update_status";
+  status: "active" | "archived";
+}
+
+const managedProductBulkResultContractLazy = lazyContract(() =>
+  import("@/hooks/api/build/managed-products-schema").then((m) => m.managedProductBulkResultContract),
+);
+
+export function useBulkUpdateManagedProducts() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:managed-products:update", {
+    mutationKey: ["projects", "managed-products", "bulk"],
+    mutationFn: (input: BulkUpdateManagedProductsInput) =>
+      apiClient.post("/build/managed-products/bulk", input, undefined, managedProductBulkResultContractLazy),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.managedProducts.list() });
     },
   });
 }

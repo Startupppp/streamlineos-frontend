@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
@@ -29,6 +30,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CircleCheckIcon } from "@animateicons/react/lucide";
@@ -39,13 +41,21 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PmStaggerList,
   PM_FILL_PANEL,
   PM_PANEL,
 } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { buildResultColumns, RESULT_TABLE_HEADERS } from "./result-columns";
 import { ResultRow } from "./result-row";
-import type { TestRunStatus, TestRunCounts } from "@/types/projects";
+import { RunResultBulkActionBar } from "./run-result-bulk-action-bar";
+import { useUpdateTestResult } from "@/hooks/api/build/qa";
+import type { TestRunStatus, TestRunCounts, TestRunResult } from "@/types/projects";
 
 const STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",
@@ -60,6 +70,19 @@ const STATUS_LABELS: Record<string, string> = {
   completed: "Completed",
   aborted: "Aborted",
 };
+
+const RESULT_STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "not_run", label: "Not Run" },
+  { value: "passed", label: "Passed" },
+  { value: "failed", label: "Failed" },
+  { value: "blocked", label: "Blocked" },
+  { value: "skipped", label: "Skipped" },
+];
+
+const RESULT_FILTER_DEFINITIONS = [
+  { param: "status", options: ["not_run", "passed", "failed", "blocked", "skipped"] as const },
+] as const;
 
 function ProgressBar({ counts }: { counts: TestRunCounts }) {
   if (counts.total === 0) return null;
@@ -110,9 +133,17 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   const { data: run, isLoading, isError, error, refetch } = useTestRunDetail(projectId, runId);
   const updateRun = useUpdateTestRun();
   const createBugFromResult = useCreateBugFromResult();
+  const updateResult = useUpdateTestResult();
+
+  const listFilters = useBuildListFilters({ filters: RESULT_FILTER_DEFINITIONS });
+  const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
 
   const [bugSheetOpen, setBugSheetOpen] = useState(false);
   const [bugResultId, setBugResultId] = useState<number | null>(null);
+
+  const [notesSheetOpen, setNotesSheetOpen] = useState(false);
+  const [notesResult, setNotesResult] = useState<TestRunResult | null>(null);
+  const [notesValue, setNotesValue] = useState("");
 
   const bugForm = useForm<CreateBugFromResultFormValues>({
     resolver: zodResolver(createBugFromResultSchema),
@@ -142,6 +173,32 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     setBugSheetOpen(true);
   }, [run, bugForm]);
 
+  const handleOpenNotes = useCallback((result: TestRunResult) => {
+    setNotesResult(result);
+    setNotesValue(result.notes ?? "");
+    setNotesSheetOpen(true);
+  }, []);
+
+  const handleSaveNotes = useCallback(() => {
+    if (!notesResult) return;
+    updateResult.mutate(
+      {
+        projectId,
+        runId,
+        resultId: notesResult.id,
+        status: notesResult.status,
+        notes: notesValue || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Notes saved");
+          setNotesSheetOpen(false);
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }, [notesResult, notesValue, projectId, runId, updateResult]);
+
   const handleSubmitBug = useCallback((values: CreateBugFromResultFormValues) => {
     if (!bugResultId) return;
     createBugFromResult.mutate(
@@ -160,6 +217,33 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const filteredResults = useMemo(() => {
+    const allResults = run?.results ?? [];
+    const statusFilter = listFilters.value("status");
+    const q = listFilters.debouncedSearch.toLowerCase();
+    return allResults.filter((r) => {
+      if (statusFilter !== BUILD_FILTER_ALL && r.status !== statusFilter) return false;
+      if (q && !r.testCase?.title.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [run?.results, listFilters]);
+
+  const columns = useMemo(
+    () =>
+      buildResultColumns({
+        projectId,
+        canExecute,
+        canCreateBug,
+        onCreateBug: handleOpenCreateBug,
+        onOpenNotes: handleOpenNotes,
+      }),
+    [projectId, canExecute, canCreateBug, handleOpenCreateBug, handleOpenNotes],
+  );
 
   const pageState = usePageState({ permission: "build:qa:view", isLoading, isError, error });
 
@@ -235,29 +319,100 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-          {results.length === 0 ? (
+          <BuildListToolbar
+            search={listFilters.search}
+            onSearchChange={listFilters.setSearch}
+            searchPlaceholder="Search test cases…"
+          >
+            <BuildFilterSelect
+              filterId="status"
+              label="Status"
+              value={listFilters.value("status")}
+              options={RESULT_STATUS_OPTIONS}
+              isActive={listFilters.isActive("status")}
+              onChange={(v) => listFilters.setValue("status", v)}
+            />
+          </BuildListToolbar>
+
+          {selectedIds.size > 0 ? (
+            <RunResultBulkActionBar
+              projectId={projectId}
+              runId={runId}
+              selectedIds={selectedIds}
+              onClear={handleClearSelection}
+            />
+          ) : null}
+
+          {filteredResults.length === 0 ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="ticket"
-                title="No test results"
-                description="No test cases were added to this run."
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="ticket"
+              title={listFilters.isFiltered ? "No results match the current filters" : "No test results"}
+              description={listFilters.isFiltered ? "Try clearing the filters." : "No test cases were added to this run."}
+            />
           ) : (
-            <PmStaggerList className="space-y-2">
-              {results.map((result) => (
+            <DataTable
+              data={filteredResults}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              selection={{
+                selected: selectedIds,
+                onChange: setSelectedIds,
+                getRowLabel: (row) => row.testCase?.title ?? `Result ${row.id}`,
+              }}
+              mobileCard={(result) => (
                 <ResultRow
-                  key={result.id}
                   result={result}
                   projectId={projectId}
                   canExecute={canExecute}
                   canCreateBug={canCreateBug}
                   onCreateBug={handleOpenCreateBug}
                 />
-              ))}
-            </PmStaggerList>
+              )}
+            />
           )}
         </PmSection>
       </PmPageShell>
+
+      <Sheet open={notesSheetOpen} onOpenChange={setNotesSheetOpen}>
+        <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">
+          <SheetHeader className="shrink-0 border-b px-5 py-4">
+            <SheetTitle>
+              {notesResult?.testCase
+                ? `Notes for TC-${notesResult.testCase.caseNumber}`
+                : "Execution Notes"}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex min-h-0 flex-1 flex-col p-5">
+            <Textarea
+              value={notesValue}
+              onChange={(e) => setNotesValue(e.target.value)}
+              placeholder="Add execution notes…"
+              className="min-h-[120px] resize-none text-dense"
+              disabled={!canExecute}
+            />
+          </div>
+          <SheetFooter className="flex shrink-0 gap-2 border-t px-5 py-3">
+            <SheetClose asChild>
+              <Button type="button" variant="outline" size="sm" className="text-dense">
+                Cancel
+              </Button>
+            </SheetClose>
+            {canExecute ? (
+              <LoadingButton
+                type="button"
+                size="sm"
+                className="text-dense"
+                isPending={updateResult.isPending}
+                loadingText="Saving…"
+                onClick={handleSaveNotes}
+              >
+                Save
+              </LoadingButton>
+            ) : null}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <Sheet open={bugSheetOpen} onOpenChange={setBugSheetOpen}>
         <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">

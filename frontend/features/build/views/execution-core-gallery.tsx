@@ -211,7 +211,7 @@ function KanbanLoadingCase() {
             <div key={i} className="w-64 rounded-xl border bg-muted/50 p-3">
               <Skeleton className="mb-2 h-4 w-24" />
               {[1, 2, 3].map((j) => (
-                <Skeleton key={j} className="mb-2 h-14 rounded-xl" />
+                <Skeleton key={j} className="mb-2 h-14 rounded-xl" {...(i === 1 && j === 1 ? { 'data-testid': 'gallery-loading-skeleton' } : {})} />
               ))}
             </div>
           ))}

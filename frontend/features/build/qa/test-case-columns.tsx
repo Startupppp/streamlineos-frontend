@@ -49,14 +49,8 @@ function PriorityBadge({ priority }: { priority: string }) {
   );
 }
 
-export const TEST_CASE_TABLE_HEADERS = [
-  "ID",
-  "Title",
-  "Priority",
-  "Automation",
-  "Component",
-  "Actions",
-] as const;
+import { TEST_CASE_TABLE_HEADERS } from "./test-case-headers";
+export { TEST_CASE_TABLE_HEADERS };
 
 interface TestCaseActionsProps {
   testCase: TestCase;

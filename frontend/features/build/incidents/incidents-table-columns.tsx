@@ -20,16 +20,8 @@ import type { Incident } from "@/hooks/api/build/incidents-schema";
 import type { OrgMember } from "@/hooks/api/organization";
 import { getSlaState } from "./sla";
 
-export const INCIDENTS_TABLE_HEADERS = [
-  "ID",
-  "Title",
-  "Severity",
-  "Status",
-  "SLA",
-  "Owner",
-  "Detected",
-  "Actions",
-] as const;
+import { INCIDENTS_TABLE_HEADERS } from "./incidents-table-headers";
+export { INCIDENTS_TABLE_HEADERS };
 
 const SEVERITY_STYLES: Record<string, string> = {
   critical: "text-status-danger-ink-strong border-status-danger-rule bg-status-danger-surface",

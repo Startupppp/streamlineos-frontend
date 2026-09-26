@@ -10,6 +10,7 @@ import {
   useProjectBoardTickets,
   useBulkUpdateTickets,
   useCycles,
+  useProjectMembers,
 } from "@/hooks/api/build";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build";
 import { CreateEpicDialog } from "@/features/build/epics/create-epic-dialog";
@@ -50,6 +51,7 @@ export function EpicsPage({ params }: PageProps) {
   const { data: project, isLoading: projectLoading, isError: projectFailed, error: projectError, refetch: refetchProject } = useProject(projectId);
   const { data: boardTickets, isLoading: ticketsLoading, isError: ticketsFailed, error: ticketsError, refetch: refetchTickets } = useProjectBoardTickets(projectId);
   const { data: cycles } = useCycles(projectId);
+  const { data: members } = useProjectMembers(projectId);
   const isLoading = projectLoading || ticketsLoading;
   const loadError = projectError ?? ticketsError;
 
@@ -158,7 +160,7 @@ export function EpicsPage({ params }: PageProps) {
           {canUpdate && selectedIds.size > 0 && (
             <BulkActionBar
               selectedCount={selectedIds.size}
-              members={[]}
+              members={members ?? []}
               cycles={cycles ?? []}
               statuses={project?.statuses}
               projectId={projectId}

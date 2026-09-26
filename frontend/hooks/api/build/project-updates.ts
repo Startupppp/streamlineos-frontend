@@ -54,16 +54,25 @@ export function useProjectUpdates(
   filters?: ProjectUpdatesFilters,
 ) {
   const canView = useCan("build:updates:view");
+
+  const activeFilters: ProjectUpdatesFilters = {};
+  if (filters?.authorId) activeFilters.authorId = filters.authorId;
+  if (filters?.from) activeFilters.from = filters.from;
+  if (filters?.to) activeFilters.to = filters.to;
+
   const query = useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.updates.list(projectId, filters),
+    queryKey: buildWorkQueryKeys.projects.updates.list(
+      projectId,
+      Object.keys(activeFilters).length > 0 ? activeFilters : undefined,
+    ),
     queryFn: ({ signal, pageParam }) =>
       apiClient.get<ProjectUpdatePage>(
         `/build/${projectId}/updates`,
         {
           ...(pageParam !== undefined ? { cursor: pageParam } : {}),
-          ...(filters?.authorId ? { authorId: filters.authorId } : {}),
-          ...(filters?.from ? { from: filters.from } : {}),
-          ...(filters?.to ? { to: filters.to } : {}),
+          ...(activeFilters.authorId ? { authorId: activeFilters.authorId } : {}),
+          ...(activeFilters.from ? { from: activeFilters.from } : {}),
+          ...(activeFilters.to ? { to: activeFilters.to } : {}),
         },
         signal,
         updatePageContract,

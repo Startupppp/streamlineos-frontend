@@ -1,4 +1,9 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { RISK_TABLE_HEADERS } from "../features/build/governance/risks-table-headers";
+import { TEST_CASE_TABLE_HEADERS } from "../features/build/qa/test-case-headers";
+import { INCIDENTS_TABLE_HEADERS } from "../features/build/incidents/incidents-table-headers";
+import { DECISION_TABLE_HEADERS } from "../features/build/governance/decisions-table-headers";
+import { APPROVALS_TABLE_HEADERS } from "../features/build/approvals/approvals-table-headers";
 
 const GALLERY = "/design-system/governance-qa";
 const EVIDENCE_DIR = "test-results/governance-qa-evidence";
@@ -12,8 +17,14 @@ const VIEWPORTS = [
 const CASES = [
   "governance-risks",
   "qa-test-cases",
+  "incidents",
+  "decisions",
+  "approvals",
   "loading-governance",
   "loading-qa",
+  "loading-incidents",
+  "loading-decisions",
+  "loading-approvals",
   "empty-governance",
   "error-governance",
 ] as const;
@@ -92,10 +103,10 @@ test.describe("Governance & QA responsive contract", () => {
       const table = scope.getByRole("table");
       await expect(table).toBeVisible();
       await expect(
-        scope.getByRole("columnheader", { name: "Title" }),
+        scope.getByRole("columnheader", { name: "Title", exact: true }),
       ).toBeVisible();
       await expect(
-        scope.getByRole("columnheader", { name: "Status" }),
+        scope.getByRole("columnheader", { name: "Status", exact: true }),
       ).toBeVisible();
     });
 
@@ -104,40 +115,69 @@ test.describe("Governance & QA responsive contract", () => {
       const table = scope.getByRole("table");
       await expect(table).toBeVisible();
       await expect(
-        scope.getByRole("columnheader", { name: "Priority" }),
+        scope.getByRole("columnheader", { name: "Priority", exact: true }),
       ).toBeVisible();
       await expect(
-        scope.getByRole("columnheader", { name: "Automation" }),
+        scope.getByRole("columnheader", { name: "Automation", exact: true }),
       ).toBeVisible();
+    });
+
+    test("the incidents table exposes a table role with the correct column headers", async ({ page }) => {
+      const scope = frame(page, "incidents");
+      const table = scope.getByRole("table");
+      await expect(table).toBeVisible();
+      await expect(scope.getByRole("columnheader", { name: "Severity", exact: true })).toBeVisible();
+      await expect(scope.getByRole("columnheader", { name: "SLA", exact: true })).toBeVisible();
+    });
+
+    test("the decisions table exposes a table role with the correct column headers", async ({ page }) => {
+      const scope = frame(page, "decisions");
+      const table = scope.getByRole("table");
+      await expect(table).toBeVisible();
+      await expect(scope.getByRole("columnheader", { name: "Status", exact: true })).toBeVisible();
+      await expect(scope.getByRole("columnheader", { name: "Decided", exact: true })).toBeVisible();
+    });
+
+    test("the approvals table exposes a table role with the correct column headers", async ({ page }) => {
+      const scope = frame(page, "approvals");
+      const table = scope.getByRole("table");
+      await expect(table).toBeVisible();
+      await expect(scope.getByRole("columnheader", { name: "Type", exact: true })).toBeVisible();
+      await expect(scope.getByRole("columnheader", { name: "Approver", exact: true })).toBeVisible();
+    });
+
+    test("the loading-incidents skeleton announces the same headers as INCIDENTS_TABLE_HEADERS", async ({ page }) => {
+      const scope = frame(page, "loading-incidents");
+      for (const header of INCIDENTS_TABLE_HEADERS) {
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
+      }
+    });
+
+    test("the loading-decisions skeleton announces the same headers as DECISION_TABLE_HEADERS", async ({ page }) => {
+      const scope = frame(page, "loading-decisions");
+      for (const header of DECISION_TABLE_HEADERS) {
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
+      }
+    });
+
+    test("the loading-approvals skeleton announces the same headers as APPROVALS_TABLE_HEADERS", async ({ page }) => {
+      const scope = frame(page, "loading-approvals");
+      for (const header of APPROVALS_TABLE_HEADERS) {
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
+      }
     });
 
     test("the loading skeleton announces the same governance columns as RISK_TABLE_HEADERS", async ({ page }) => {
       const scope = frame(page, "loading-governance");
-      for (const header of [
-        "ID",
-        "Title",
-        "Probability",
-        "Impact",
-        "Severity",
-        "Owner",
-        "Status",
-        "Actions",
-      ]) {
-        await expect(scope.getByRole("columnheader", { name: header })).toBeVisible();
+      for (const header of RISK_TABLE_HEADERS) {
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
       }
     });
 
     test("the loading skeleton announces the same QA columns as TEST_CASE_TABLE_HEADERS", async ({ page }) => {
       const scope = frame(page, "loading-qa");
-      for (const header of [
-        "ID",
-        "Title",
-        "Priority",
-        "Automation",
-        "Component",
-        "Actions",
-      ]) {
-        await expect(scope.getByRole("columnheader", { name: header })).toBeVisible();
+      for (const header of TEST_CASE_TABLE_HEADERS) {
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
       }
     });
 

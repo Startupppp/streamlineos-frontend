@@ -208,3 +208,42 @@ describe("SPEC 6 — invitation mutation key (Requirement C5)", () => {
     expect(expectedKey[1]).toBe("accept-invitation");
   });
 });
+
+describe("SPEC 6 — acceptInvitationResponseSchema (Requirement C5)", () => {
+  let schema: typeof import("./portal-auth-schema").acceptInvitationResponseSchema;
+
+  beforeAll(async () => {
+    const mod = await import("./portal-auth-schema");
+    schema = mod.acceptInvitationResponseSchema;
+  });
+
+  it("accepts a valid response with token and expiresAt strings", () => {
+    const result = schema.safeParse({ token: "jwt.abc.def", expiresAt: "2025-12-31T00:00:00.000Z" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a response where token is missing", () => {
+    const result = schema.safeParse({ expiresAt: "2025-12-31T00:00:00.000Z" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a response where expiresAt is missing", () => {
+    const result = schema.safeParse({ token: "jwt.abc.def" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a response where token is not a string", () => {
+    const result = schema.safeParse({ token: 12345, expiresAt: "2025-12-31T00:00:00.000Z" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an empty object — both required fields are absent", () => {
+    const result = schema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a null response — callers must receive a valid object not null", () => {
+    const result = schema.safeParse(null);
+    expect(result.success).toBe(false);
+  });
+});

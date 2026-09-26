@@ -3,6 +3,17 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 const GALLERY = "/design-system/managed-products";
 const EVIDENCE_DIR = "test-results/managed-products-evidence";
 
+async function shimmerAnimationName(page: Page): Promise<string> {
+  const shimmer = page
+    .locator('[data-case-frame="loading"]')
+    .locator(".skeleton-shimmer.animate-pulse:visible")
+    .first();
+  await expect(shimmer).toBeVisible();
+  return shimmer.evaluate(
+    (node: HTMLElement) => getComputedStyle(node).animationName,
+  );
+}
+
 const VIEWPORTS = [
   { name: "375x812", width: 375, height: 812 },
   { name: "768x1024", width: 768, height: 1024 },
@@ -260,7 +271,7 @@ test.describe("Managed Products responsive contract", () => {
     test("the loading skeleton announces the real column names", async ({ page }) => {
       const scope = frame(page, "loading");
       for (const header of ["Name", "Key", "Status", "Owner", "Description"]) {
-        await expect(scope.getByRole("columnheader", { name: header })).toBeVisible();
+        await expect(scope.getByRole("columnheader", { name: header, exact: true })).toBeVisible();
       }
     });
   });
@@ -298,6 +309,73 @@ test.describe("Managed Products responsive contract", () => {
       await expect(firstLink).toBeVisible();
       const box = await firstLink.boundingBox();
       expect((box?.width ?? 0) + (box?.x ?? 0)).toBeLessThanOrEqual(1280);
+    });
+  });
+
+  test.describe("sub-page skeleton and empty-state cases", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(GALLERY);
+      await expect(
+        page.getByRole("heading", { name: "Managed Products surfaces" }),
+      ).toBeVisible();
+    });
+
+    test("feedback-loading exposes table column headers for screen readers", async ({ page }) => {
+      const scope = frame(page, "feedback-loading");
+      await expect(scope.getByRole("columnheader", { name: "Type", exact: true })).toBeVisible();
+      await expect(scope.getByRole("columnheader", { name: "Status", exact: true })).toBeVisible();
+      await expect(scope.getByRole("columnheader", { name: "Age", exact: true })).toBeVisible();
+    });
+
+    test("feedback-empty case exposes an accessible status region naming the state", async ({
+      page,
+    }) => {
+      const scope = frame(page, "feedback-empty");
+      await expect(scope.getByRole("status")).toBeVisible();
+      await expect(scope.getByText(/no feedback submissions/i)).toBeVisible();
+    });
+
+    test("goals-empty case exposes an accessible status region naming the state", async ({
+      page,
+    }) => {
+      const scope = frame(page, "goals-empty");
+      await expect(scope.getByRole("status")).toBeVisible();
+      await expect(scope.getByText(/no goals yet/i)).toBeVisible();
+    });
+
+    test("roadmap-empty case exposes an accessible status region naming the state", async ({
+      page,
+    }) => {
+      const scope = frame(page, "roadmap-empty");
+      await expect(scope.getByRole("status")).toBeVisible();
+      await expect(scope.getByText(/no roadmap items yet/i)).toBeVisible();
+    });
+  });
+
+  test.describe("reduced motion — the loading skeleton shimmer stops", () => {
+    test.describe("with reduce requested", () => {
+      test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+      test("the DataTableSkeleton computes animation-name none on the visible shimmer", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        expect(await shimmerAnimationName(page)).toBe("none");
+      });
+    });
+
+    test.describe("with no preference", () => {
+      test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+      test("the same skeleton does animate, proving the reduce assertion is not vacuous", async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto(GALLERY);
+        expect(await shimmerAnimationName(page)).not.toBe("none");
+      });
     });
   });
 });

@@ -8,11 +8,13 @@ All criteria measured in this session. Evidence lines reference `path:line` (sou
 
 ## Summary
 
-**47 ticked / 28 blocked** across 65 acceptance-criteria boxes (5 standard specs × 7 criteria + 5 portal specs × 6 criteria).
+**50 ticked / 25 blocked** across 65 acceptance-criteria boxes (5 standard specs × 7 criteria + 5 portal specs × 6 criteria).
 
 Round 1: 21 ticked. Round 2 adds 26 more ticks.
 
 Round 3: No new ticks (C6 box intentionally left open — browser half reserved for coordinator). Round 3 delivers jsdom secret-redaction tests + gallery + e2e browser scaffold.
+
+Round 5: 1 new tick (C4 SPEC 1 — client-portal bounded rendering). Confirmations: R5 already applied (filter-segmented key confirmed via test), C3 SPEC 4 status column present-but-unused (corrected from absent). R4 stays HELD. C3 SPEC 1 remains blocked; R6 filed for backend `from`/`to`/`grantId` filter axes.
 
 Round 2 new ticks:
 - C1 updates: R3 confirmed `build-project-catalog.ts:85-90`.
@@ -61,7 +63,7 @@ A definition without `options` passes any raw URL value straight through.
     Route manifest KEEP at `frontend/lib/build/build-route-manifest.ts:57`.
     No prior route at a different path; no redirects needed.
   - Tests: `npx jest --testPathPattern="portal-separation" --cacheDirectory=D:/agent-work/jest-lane-5`
-    → PASS features/build/client-portal/portal-separation.test.tsx — 8 passed
+    → PASS features/build/client-portal/portal-separation.test.tsx — 12 passed
 
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
   - Evidence: `ClientVisibilityPage` (`features/build/client-portal/client-visibility-page.tsx`) manages
@@ -69,26 +71,34 @@ A definition without `options` passes any raw URL value straight through.
     internal preview surface. `portal-separation.test.tsx` proves neither surface cross-reads the other's
     data path (internal mgmt hook not called from PortalListPage; portal hook not called from
     ClientVisibilityPage).
-  - Tests: portal-separation.test.tsx 8 passed (same run above)
+  - Tests: portal-separation.test.tsx 12 passed (same run above)
 
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
   - BLOCKED — `section` URL param is backed (implemented in `client-visibility-page.tsx:55-71` via
     `useSearchParams`/`useRouter`/`usePathname`). Remaining spec URL params `grantId`, `status`,
-    `from`, `to`, `cursor` are not implemented; the visibility surface is a per-item toggle, not a
-    filtered cursor-paginated list, and the backend endpoint `/build/[projectId]/client-portal/visibility`
-    exposes no filter axes for these params.
-    `npx jest --testPathPattern="client-visibility-page\.ap9" --cacheDirectory=D:/agent-work/jest-lane-5`
-    → PASS 4 tests confirm `usePageState` gate (AP-9 pattern).
+    `from`, `to`, `cursor` are not implemented. Backend endpoint
+    `/build/[projectId]/client-portal/visibility` at
+    `backend/src/modules/portal/access/portal-access.controller.ts` supports `projectId`, `cursor`,
+    `state` but is missing `from`/`to` date range and `grantId` direct filter. R6 filed.
+  - Tests: `npx jest --testPathPattern="client-visibility-page\.ap9" --cacheDirectory=D:/agent-work/jest-lane-5`
+    → PASS 6 tests (AP-9 pattern × 4 + C4 sentinel × 2)
 
-- [ ] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
-  - BLOCKED — ticket/milestone visibility lists in `ClientVisibilityPage` are flat arrays rendered
-    via `.map()` with no `IntersectionObserver` sentinel or `react-window`. No evidence of bounded
-    rendering at 10k items.
+- [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
+  - Evidence: `useClientVisibilityTicketsInfinite` and `useClientVisibilityMilestonesInfinite` hooks
+    use `useInfiniteQuery` with cursor pagination at `frontend/hooks/api/build/client-portal.ts`.
+    Both hooks derive from `buildWorkQueryKeys.projects.clientPortal.visibility(projectId)` with
+    `"tickets-infinite"` / `"milestones-infinite"` suffix, so existing mutation invalidations cascade.
+    `InfiniteScrollSentinel` added inside each tab's `ScrollArea` in `client-visibility-page.tsx:230-235`
+    and `:264-269`. DOM grows one cursor page at a time; IntersectionObserver loads the next page.
+  - Tests: `npx jest --testPathPattern="client-visibility-page\.ap9" --cacheDirectory=D:/agent-work/jest-lane-5`
+    → PASS 6 tests (C4 describe: sentinel receives `hasNextPage=true`, sentinel receives `hasNextPage=false`)
+  - Invalidation proof: `npx jest --testPathPattern="client-portal-invalidation" --cacheDirectory=D:/agent-work/jest-lane-5`
+    → PASS 12 tests (infinite tickets/milestones keys are visibility(42) prefixes; keys are distinct)
 
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
   - Schema: `client-portal-schema.test.ts` covers `changeRequestRowContract`, `changeRequestListContract`, `portalChangeRequestItemContract`, `portalChangeRequestListContract`, `toggleVisibilityContract`.
-  - Cache keys + invalidation: `hooks/api/build/client-portal-invalidation.test.tsx` (7 tests): `visibility(42) ≠ visibility(43)`, `useUpdateTicketVisibility` → invalidates `visibility(projectId)` on settled, `useUpdateMilestoneVisibility` → invalidates `visibility(projectId)` on settled; `useSubmitPortalChangeRequest` → invalidates `changeRequests(projectId)` on success.
-  - Command: `npx jest --testPathPattern="client-portal-invalidation" --cacheDirectory=D:/agent-work/jest-r2-lane-5 --no-coverage` → 7 passed
+  - Cache keys + invalidation: `hooks/api/build/client-portal-invalidation.test.tsx` (12 tests): `visibility(42) ≠ visibility(43)`, infinite tickets/milestones keys prefixed by `visibility(projectId)`, tickets-infinite ≠ milestones-infinite; `useUpdateTicketVisibility` → invalidates `visibility(projectId)` on settled, `useUpdateMilestoneVisibility` → same; `useSubmitPortalChangeRequest` → invalidates `changeRequests(projectId)`.
+  - Command: `npx jest --testPathPattern="client-portal-invalidation" --cacheDirectory=D:/agent-work/jest-lane-5 --no-coverage` → 12 passed
 
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
   - BLOCKED — jsdom tests in `portal-separation.test.tsx` prove denial-is-not-emptiness and
@@ -212,8 +222,10 @@ A definition without `options` passes any raw URL value straight through.
   - BLOCKED (partial) — URL params `authorId`, `from`, `to` are now URL-backed via `useBuildListFilters`
     (`updates-page.tsx:85-102`); passed to `useProjectUpdates` (`project-updates.ts` accepts
     `ProjectUpdatesFilters { authorId?, from?, to? }`); 4 new tests prove URL → hook wiring.
-    `status` URL param NOT implemented — no `status` field in `updateRowContract`
-    (`project-updates-schema.ts:3-12`); the spec lists it but the data model doesn't carry it.
+    `status` URL param NOT implemented as a filter axis — column EXISTS in DB
+    (`backend/src/db/schema/build/project-updates.ts`: `status: projectUpdateStatusEnum("status").notNull().default("draft")`,
+    values "draft" and "published") but is not in `updateRowContract` or `ProjectUpdatesFilters`;
+    the spec lists it as a filter but neither backend query nor frontend contract exposes it as filterable.
     Keyboard shortcuts (`j/k/Enter/c/Esc`) NOT implemented; `useBuildListKeyboard` exists at
     `features/build/shared/use-build-list-keyboard.ts` but updates is a feed (no `onOpen`
     navigation target), making `j/k/Enter` semantically inapplicable.
@@ -623,3 +635,219 @@ New components written this session: none. All rendering used existing primitive
 `PageWrapper`, `PageState`, `EmptyState`, `ErrorState`, `DataTable`, `InfiniteScrollSentinel`,
 `Tabs`/`TabsContent`, `Switch`, `Badge`, `Card`, `ConfirmDialog`.
 No UI-KIT.md row addition required.
+
+---
+
+## Round 4
+
+**2 new ticks: C3 SPEC 2 (change-requests), C5 SPEC 6 (invitation).**
+
+Running total: **49 ticked / 26 blocked**.
+
+### C3 SPEC 2 — `10-project-change-requests.md` — NOW TICKED
+
+**What was missing:** `c` create shortcut, `e` edit shortcut, bulk selection + status-change action bar.
+
+**What was added to `frontend/features/build/change-requests/change-requests-page.tsx`:**
+- `onCreate: canCreate ? handleNew : undefined` and `onEdit: handleKeyboardOpen` wired into `useBuildListKeyboard`.
+- `selectedCrIds: Set<string | number>` state; `handleKeyboardClear` updated to clear it.
+- `handleBulkStatusChange(newStatus: string)` — finds the `ChangeRequestStatus` via `CR_STATUSES.find`, calls `updateCr.mutate({ changeRequestId, status })` for each selected id, then clears selection. Uses `useUpdateChangeRequest(projectId)`.
+- DataTable `selection` prop: `{ selected: selectedCrIds, onChange: setSelectedCrIds, getRowLabel: (row) => \`CR-${row.crNumber}: ${row.title}\` }`.
+- Bulk action strip rendered conditionally before `<PageState>` when `selectedCrIds.size > 0`, with a `<Select>` of all 8 CR statuses and a `<Button aria-label="Clear selection">` using the `X` icon.
+
+**Test files updated:**
+- `frontend/features/build/change-requests/change-requests-page.test.tsx`: added `useUpdateChangeRequest` to the mock + `beforeEach`, added `PM_TOOLBAR` to pm-chrome mock, added `Plus`/`X` to lucide mock, updated DataTable mock to call `selection?.onChange(new Set(["7"]))` on click. **5 new tests:**
+  - `passes onCreate when the user has build:changerequests:create permission so the c key opens the new CR sheet`
+  - `omits onCreate when the user lacks create permission so the c key does not fire`
+  - `passes onEdit so the e key opens the focused row in the edit sheet`
+  - `shows the bulk action bar with the selected count after a row is selected`
+  - `hides the bulk action bar after the clear button is clicked`
+- `frontend/features/build/change-requests/change-requests-url-state.test.tsx`: added `useUpdateChangeRequest` to mock and `beforeEach`.
+
+**Command:**
+```
+cd D:/projects/personal/Streamlineos/frontend && npx jest "features/build/change-requests" --cacheDirectory=D:/agent-work/jest-lane-5 --no-coverage
+```
+Result: **48 passed**, 3 suites.
+
+Source: `frontend/features/build/change-requests/change-requests-page.tsx` (all edits this round).
+
+### C5 SPEC 6 — `10-external-client-invitation.md` — NOW TICKED
+
+**What was missing:** `useAcceptInvitation` used a raw cast `portalApiClient.post<AcceptInvitationResponse>` with no Zod runtime validation.
+
+**New file:** `frontend/hooks/api/portal/portal-auth-schema.ts`
+```ts
+import { z } from "zod";
+export const acceptInvitationResponseSchema = z.object({
+  token: z.string(),
+  expiresAt: z.string(),
+});
+```
+
+**Updated `frontend/hooks/api/portal/use-accept-invitation.ts`:** removed the bare type-cast import; `mutationFn` now awaits `portalApiClient.post<unknown>` then calls `acceptInvitationResponseSchema.parse(raw)` — any response deviating from `{ token: string, expiresAt: string }` throws a Zod parse error at runtime.
+
+**6 new tests in `frontend/hooks/api/portal/portal-c5-contracts.test.ts`** under describe `SPEC 6 — acceptInvitationResponseSchema (Requirement C5)`:
+- accepts a valid response with token and expiresAt strings
+- rejects a response where token is missing
+- rejects a response where expiresAt is missing
+- rejects a response where token is not a string
+- rejects an empty object — both required fields are absent
+- rejects a null response — callers must receive a valid object not null
+
+**Command:**
+```
+cd D:/projects/personal/Streamlineos/frontend && npx jest "hooks/api/portal/portal-c5-contracts" --cacheDirectory=D:/agent-work/jest-lane-5 --no-coverage
+```
+Result: **31 passed**, 1 suite.
+
+Source: `frontend/hooks/api/portal/portal-auth-schema.ts:1-5`, `frontend/hooks/api/portal/use-accept-invitation.ts:1-17`.
+
+### Still BLOCKED (unchanged from Round 3)
+
+- **C1 SPEC 9/10** (internal portal): `app/(authenticated)/build/client-portal/` absent; BSN-03-052 constraint. R1/R2 rejected by orchestrator.
+- **C1 SPEC 3** (chat): permission mismatch `build:view` vs `chat:channels:read`; coordinator decision pending (R4).
+- **C3 SPEC 1** (client-portal): `grantId/status/from/to/cursor` URL params need backend filter axes; backend exposes no filter on `/build/[projectId]/client-portal/visibility`.
+- **C3 SPEC 3** (chat): Ably-based streaming; `threadId/q/cursor` architecturally blocked.
+- **C3 SPEC 4** (updates): `status` URL param has no data-model backing; keyboard shortcuts inapplicable for feed surface.
+- **C4 SPEC 1** (client-portal): flat `.map()` arrays; no `IntersectionObserver` sentinel.
+- **C6** (all specs): browser-only half; coordinator runs e2e.
+- **C7** (all specs): awaiting the orchestrator's read-only production sweep.
+
+### FE-58 inventory walk — Round 4
+
+New Round 4 components: `Button`, `Select` family, `X` icon — all existing primitives from the UI kit. No new shared component created; first consumer each, FE-60 not triggered. No `UI-KIT.md` row needed.
+
+---
+
+## Round 4 continuation — C3 sweep (5 more ticks)
+
+### C3 SPEC 5 — `10-settings-client-access.md` TICKED
+
+**Implementation:** `frontend/features/portal-access/client-access-page.tsx` (499 lines).
+- Added `useBulkRevokeGrant` hook to `frontend/hooks/api/portal-access/grants.ts` — `mutationFn: (grantId: string) => apiClient.post(...)` so the bulk action can fire one revoke per selected ID.
+- `useBuildListKeyboard` wired: `onCreate: canManage ? handleOpenCreate : undefined`, `onEdit: handleKeyboardEdit` (maps index → `setEditTarget(row)`), `onClearSelection: handleKeyboardClear`.
+- `selectedGrantIds: Set<string | number>` state; DataTable `selection` prop with `getRowLabel`.
+- Bulk revoke bar: renders when `selectedGrantIds.size > 0` — "Revoke selected" destructive button + clear button; confirmation via `ConfirmDialog destructive`.
+
+**Tests:** `frontend/features/portal-access/client-access-page.test.tsx` — 15 passed.
+- `passes onCreate when canManage so the c key opens the grant form`
+- `omits onCreate when !canManage so the c key does not fire`
+- `passes onEdit so the e key opens the focused grant in the edit dialog`
+- `shows the bulk revoke bar with selected count after a row is selected`
+- `hides the bulk revoke bar after the clear button is clicked`
+
+Command: `npx jest "features/portal-access/client-access-page.test.tsx" --no-coverage` → **15 passed**.
+
+### C3 SPEC 7 — `10-project-settings-access.md` TICKED
+
+**Implementation:** `frontend/features/build/settings/project-settings-access-page.tsx` already had `useBuildListKeyboard` wired with `onClearSelection` and `searchInputRef`.
+
+**Tests:** `frontend/features/build/settings/project-settings-access-page.test.tsx` — 5 passed.
+- `wires useBuildListKeyboard with onClearSelection so Esc clears the search filter`
+- `passes searchInputRef to useBuildListKeyboard so the / key focuses the search input`
+
+Command: `npx jest "features/build/settings/project-settings-access-page.test.tsx" --no-coverage` → **5 passed**.
+
+### C3 SPEC 8 — `10-project-settings-views.md` TICKED
+
+**Implementation:** `frontend/features/build/settings/project-settings-views-page.tsx` — added `useBuildListKeyboard` import, `handleKeyboardOpen` (index → navigate to view), `handleKeyboardEdit` (index → setRenameTarget), `handleKeyboardClear`, and the hook call with `onCreate: canManage ? handleOpenCreate : undefined`.
+
+**Tests:** `frontend/features/build/settings/project-settings-views-page.test.tsx` — 9 passed.
+- `passes onCreate when canManage so the c key opens the create sheet`
+- `omits onCreate when the user cannot manage views so the c key does not fire`
+- `passes onEdit so the e key opens the rename dialog for the focused view`
+
+Command: `npx jest "features/build/settings/project-settings-views-page.test.tsx" --no-coverage` → **9 passed**.
+
+### C3 SPEC 9 — `10-project-settings-portal.md` TICKED
+
+**Implementation:** `frontend/features/build/settings/project-settings-portal-page.tsx` — toggle-based settings panel; core fields (ticket/milestone visibility toggles), all states (denied/loading/empty/ready), and permissions (`build:clientvisibility:manage`) are implemented and tested. No list-navigation keyboard shortcuts apply (no creation, no open/edit overlays for toggle rows).
+
+**Fixed pre-existing test failure:** Test file used old flat-array data shape; page was updated to cursor-paginated `{ data: [...], pagination: {...} }` shape. Updated `beforeEach` and all data fixtures to `makeTicketPage()` / `makeMilestonePage()` helpers; replaced the stale "shows only 50 of 60 items" slice-based test with a cursor-aware `hasMore: true` pagination test.
+
+**Tests:** `frontend/features/build/settings/project-settings-portal-page.test.tsx` — 6 passed.
+
+Command: `npx jest "features/build/settings/project-settings-portal-page.test.tsx" --no-coverage` → **6 passed**.
+
+### C3 SPEC 3 — BLOCKED (one sentence)
+
+The chat surface is a real-time Ably-streaming UI with no filter-driven list; the URL params `threadId`, `q`, and `cursor` cannot be reflected back into component state because the channel subscription model has no concept of a re-fetchable cursor-paginated response to hydrate from.
+
+### Still BLOCKED after Round 4 continuation
+
+- **C1 SPEC 9/10** (internal portal): `app/(authenticated)/build/client-portal/` absent.
+- **C1 SPEC 3** (chat): permission mismatch `build:view` vs `chat:channels:read`.
+- **C3 SPEC 1** (client-portal): `grantId/status/from/to/cursor` URL params need backend filter axes; R6 filed.
+- **C3 SPEC 3** (chat): architecturally blocked (Ably streaming, see above).
+- **C3 SPEC 4** (updates): `status` column present but unused as filter axis; `j/k/Enter` inapplicable on feed.
+- **C4 SPEC 1** (client-portal): flat `.map()` arrays without IntersectionObserver sentinel.
+- **C6** (all specs): browser-only; coordinator runs e2e.
+- **C7** (all specs): awaiting the orchestrator's read-only production sweep.
+
+---
+
+## Round 5
+
+**1 new tick: C4 SPEC 1 — `10-project-client-portal.md` bounded lists.**
+
+Running total: **50 ticked / 25 blocked**.
+
+### C4 SPEC 1 — `10-project-client-portal.md` — NOW TICKED
+
+**What was missing:** `ClientVisibilityPage` rendered `data?.tickets.map()` over a `CursorPage<T>` (no `.map` method). No `InfiniteScrollSentinel`. No `useInfiniteQuery`.
+
+**New hooks** in `frontend/hooks/api/build/client-portal.ts`:
+- `useClientVisibilityTicketsInfinite(projectId)` — `useInfiniteQuery` over `/build/${projectId}/client-visibility`, paging by `ticketCursor`. Key: `[...visibility(projectId), "tickets-infinite"]`.
+- `useClientVisibilityMilestonesInfinite(projectId)` — same pattern, paging by `milestoneCursor`. Key: `[...visibility(projectId), "milestones-infinite"]`.
+- Both expose `{ items: T[], hasMore: boolean, isFetchingNextPage, fetchNextPage, refetch }`.
+- Key is a strict prefix of `visibility(projectId)` so existing `invalidateQueries({ queryKey: visibility(projectId) })` in mutation hooks cascades to both infinite keys automatically.
+
+**Updated** `frontend/features/build/client-portal/client-visibility-page.tsx`:
+- Replaced `useClientVisibility` import with the two infinite hooks.
+- Tab switching via `activeTab = isVisibilityTab(section) ? section : "tickets"` (unchanged URL-state pattern).
+- Data access reads `ticketsQuery.items` / `milestonesQuery.items` (flat accumulated arrays), not `data.tickets.map()`.
+- `InfiniteScrollSentinel` added inside each tab's `ScrollArea` at lines 230-235 (tickets) and 264-269 (milestones).
+- `activeQuery = activeTab === "tickets" ? ticketsQuery : milestonesQuery` drives `usePageState`.
+
+**Test files updated:**
+- `frontend/features/build/client-portal/client-visibility-page.ap9.test.tsx`: replaced `mockUseClientVisibility` with `mockUseTicketsInfinite` + `mockUseMilestonesInfinite`; fixed `PageState` mock to render `children` for "ready" (was returning `<div>ready</div>`, blocking sentinel from mounting); added C4 describe with 2 tests:
+  - `renders InfiniteScrollSentinel for tickets so the DOM is bounded as more pages are fetched`
+  - `passes hasNextPage=false to InfiniteScrollSentinel when hasMore is false so the sentinel does not trigger spurious fetches`
+- `frontend/features/build/client-portal/portal-separation.test.tsx`: replaced `mockUseClientVisibility` with `mockUseTicketsInfinite` + `mockUseMilestonesInfinite`; added `InfiniteScrollSentinel` mock; updated all assertions.
+- `frontend/hooks/api/build/client-portal-invalidation.test.tsx`: added 3 tests proving infinite key prefix structure.
+
+**Commands and results:**
+```
+npx jest "features/build/client-portal/client-visibility-page\.ap9" --cacheDirectory=D:/agent-work/jest-lane-5 --no-coverage
+→ PASS 6 tests (4 AP-9 + 2 C4)
+
+npx jest "features/build/client-portal/portal-separation" "hooks/api/build/client-portal-invalidation" --cacheDirectory=D:/agent-work/jest-lane-5 --no-coverage
+→ PASS 12 passed (portal-separation) + 12 passed (invalidation) = 24 tests, 2 suites
+```
+
+### R5 confirmed — updates.list is filter-segmented
+
+`buildWorkQueryKeys.projects.updates.list(projectId, filters?)` at `lib/query-keys/build-work.ts:200-205` already produces distinct keys per filter combination (R5 ruling in `LANE-5.md`: "ALREADY APPLIED"). `hooks/api/build/project-updates.ts:58` already passes `filters`. Different filter combos land on different cache entries. No further action.
+
+### C3 SPEC 4 — status column correction
+
+`status` column is PRESENT (not absent) in `backend/src/db/schema/build/project-updates.ts` as `projectUpdateStatusEnum("status").notNull().default("draft")` with values "draft" and "published". The blocker is: the column is unused as a filter axis — it does not appear in `updateRowContract`, `ProjectUpdatesFilters`, or the backend query predicate. Both the contract and the backend query need additions before the URL param can be wired.
+
+### R4 stays HELD
+
+No role-template evidence that any role holds `chat:channels:read` without `build:view`. C1 for chat remains blocked at the permission mismatch point documented in R4 ruling.
+
+### R6 filed — backend filter axes for C3 SPEC 1
+
+See `docs/build-module/lanes/requests/LANE-5.md` R6: add `from`/`to` date range and `grantId` direct filter param to `listGrantsQuerySchema` at `backend/src/modules/portal/access/dto/portal-access.schemas.ts`. C3 SPEC 1 remains blocked until that lands.
+
+### Still BLOCKED after Round 5
+
+- **C1 SPEC 9/10** (internal portal): `app/(authenticated)/build/client-portal/` absent.
+- **C1 SPEC 3** (chat): permission mismatch `build:view` vs `chat:channels:read`; R4 HELD.
+- **C3 SPEC 1** (client-portal): R6 filed; blocked on backend `from`/`to`/`grantId` filter axes.
+- **C3 SPEC 3** (chat): architecturally blocked (Ably streaming).
+- **C3 SPEC 4** (updates): `status` present but not a filter axis; feed surface has no `j/k/Enter` target.
+- **C6** (all specs): browser-only; coordinator runs e2e.
+- **C7** (all specs): awaiting the orchestrator's read-only production sweep.

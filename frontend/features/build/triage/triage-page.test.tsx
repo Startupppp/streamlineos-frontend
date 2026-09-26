@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { TriagePage } from "./triage-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -102,10 +102,29 @@ jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
 
 jest.mock("@/hooks/api/build", () => ({
   useBulkUpdateTickets: jest.fn(),
+  useProjectMembers: jest.fn(() => ({ data: [] })),
+  useCycles: jest.fn(() => ({ data: [] })),
 }));
 
 jest.mock("@/features/build/shared/bulk-action-bar", () => ({
-  BulkActionBar: () => <div data-testid="bulk-action-bar" />,
+  BulkActionBar: ({
+    onBulkStatus,
+    onBulkPriority,
+    onBulkAssignee,
+    onBulkCycle,
+  }: {
+    onBulkStatus?: (v: string) => void;
+    onBulkPriority?: (v: string) => void;
+    onBulkAssignee?: (v: string) => void;
+    onBulkCycle?: (v: string) => void;
+  }) => (
+    <div data-testid="bulk-action-bar">
+      <button type="button" data-testid="bulk-status-btn" onClick={() => onBulkStatus?.("IN_PROGRESS")}>Status</button>
+      <button type="button" data-testid="bulk-priority-btn" onClick={() => onBulkPriority?.("HIGH")}>Priority</button>
+      <button type="button" data-testid="bulk-assignee-btn" onClick={() => onBulkAssignee?.("user-1")}>Assignee</button>
+      <button type="button" data-testid="bulk-cycle-btn" onClick={() => onBulkCycle?.("2")}>Cycle</button>
+    </div>
+  ),
 }));
 
 jest.mock("@/components/shared/format-ticket-key", () => ({
@@ -274,4 +293,79 @@ it("renders a checkbox per row when the user has build:tickets:update permission
   const { container } = render(<TriagePage projectId={1} />);
   const checkbox = container.querySelector('button[role="checkbox"], input[type="checkbox"]');
   expect(checkbox).toBeInTheDocument();
+});
+
+const SUBMISSION = {
+  id: 99, orgId: "org-1", projectId: 1, title: "Bug: button broken",
+  type: "BUG", status: "TRIAGE", priority: "HIGH", ticketNumber: 99,
+  epicId: null, reporterId: "user-1", points: null, storyPoints: null,
+  link: null, rank: "1000", parentTicketId: null, originalEstimate: null,
+  timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null,
+  sequenceId: "PROJ-99", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
+};
+
+it("selecting a row then clicking bulk-status invokes useBulkUpdateTickets mutate with status and the selected ticket id", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+  );
+  const { container } = render(<TriagePage projectId={1} />);
+  const checkbox = container.querySelector('button[role="checkbox"], input[type="checkbox"]');
+  expect(checkbox).toBeInTheDocument();
+  await act(async () => { fireEvent.click(checkbox!); });
+  expect(screen.getByTestId("bulk-action-bar")).toBeInTheDocument();
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-status-btn")); });
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [99], status: "IN_PROGRESS" },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
+});
+
+it("selecting a row then clicking bulk-priority invokes useBulkUpdateTickets mutate with priority and the selected ticket id", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+  );
+  const { container } = render(<TriagePage projectId={1} />);
+  const checkbox = container.querySelector('button[role="checkbox"], input[type="checkbox"]');
+  await act(async () => { fireEvent.click(checkbox!); });
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-priority-btn")); });
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [99], priority: "HIGH" },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
+});
+
+it("selecting a row then clicking bulk-assignee invokes useBulkUpdateTickets mutate with assigneeId and the selected ticket id", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+  );
+  const { container } = render(<TriagePage projectId={1} />);
+  const checkbox = container.querySelector('button[role="checkbox"], input[type="checkbox"]');
+  await act(async () => { fireEvent.click(checkbox!); });
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-assignee-btn")); });
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [99], assigneeId: "user-1" },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
+});
+
+it("selecting a row then clicking bulk-cycle invokes useBulkUpdateTickets mutate with cycleId and the selected ticket id", async () => {
+  const bulkMutate = jest.fn();
+  mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [SUBMISSION], pagination: { hasMore: false } } }),
+  );
+  const { container } = render(<TriagePage projectId={1} />);
+  const checkbox = container.querySelector('button[role="checkbox"], input[type="checkbox"]');
+  await act(async () => { fireEvent.click(checkbox!); });
+  await act(async () => { fireEvent.click(screen.getByTestId("bulk-cycle-btn")); });
+  expect(bulkMutate).toHaveBeenCalledWith(
+    { ticketIds: [99], cycleId: 2 },
+    expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+  );
 });

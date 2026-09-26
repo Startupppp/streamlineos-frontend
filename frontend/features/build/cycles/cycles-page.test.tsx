@@ -64,10 +64,11 @@ jest.mock("next/link", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title, actions }: { children: React.ReactNode; title?: string; actions?: React.ReactNode }) => (
+  PageWrapper: ({ children, title, actions, filters }: { children: React.ReactNode; title?: string; actions?: React.ReactNode; filters?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
       {actions}
+      {filters}
       {children}
     </div>
   ),
@@ -137,6 +138,14 @@ jest.mock("@/components/ui/empty-state", () => ({
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: () => <div data-testid="build-list-toolbar" />,
+}));
+
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: jest.fn(),
 }));
 
 jest.mock("@animateicons/react/lucide", () => ({
@@ -351,5 +360,39 @@ describe("CyclesPage — cycle lifecycle actions", () => {
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Complete" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+  });
+});
+
+describe("CyclesPage — q search filter narrows displayed cycles", () => {
+  const CYCLE_A = { id: 1, name: "Alpha sprint", status: "active" as const, startDate: "2026-09-01", endDate: "2026-09-14", progress: 50, completedItems: 2, totalItems: 4 };
+  const CYCLE_B = { id: 2, name: "Beta sprint", status: "draft" as const, startDate: "2026-10-01", endDate: "2026-10-14", progress: 0, completedItems: 0, totalItems: 0 };
+
+  it("renders both cycles when no search term is set", () => {
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_A, CYCLE_B] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByText("Alpha sprint")).toBeInTheDocument();
+    expect(screen.getByText("Beta sprint")).toBeInTheDocument();
+  });
+
+  it("hides cycles whose names do not match the q param and shows matching cycles", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("q=Alpha");
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_A, CYCLE_B] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByText("Alpha sprint")).toBeInTheDocument();
+    expect(screen.queryByText("Beta sprint")).not.toBeInTheDocument();
+  });
+
+  it("shows the BuildListToolbar so the search field is reachable via keyboard", () => {
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByTestId("build-list-toolbar")).toBeInTheDocument();
+  });
+
+  it("hides cycles with status=draft when status filter is set to active", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("status=active");
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_A, CYCLE_B] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByText("Alpha sprint")).toBeInTheDocument();
+    expect(screen.queryByText("Beta sprint")).not.toBeInTheDocument();
   });
 });

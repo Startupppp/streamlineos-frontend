@@ -99,8 +99,9 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
-- [ ] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
+  - Implemented 2026-09-26: `GET /build/:projectId/members` now accepts `cursor` + `limit`. `projects-members.service.ts:listMembers` uses `buildCursorPage` with `keysetAfterId(joinedAt, membershipId)` ascending keyset. `useProjectMembers` accepts `{cursor}` and returns `CursorPage<ProjectMember>`. Contract: `projectMemberPageContract = cursorPageContract(projectMemberSchema)`. `project-member-roles-section.tsx` uses `useCursorPager` + `TablePagination mode="cursor"`. Tests: 19 passing in `project-members-schema.test.ts`.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.

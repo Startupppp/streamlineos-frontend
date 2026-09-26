@@ -8,7 +8,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const templateListContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.templateListContract),
@@ -60,15 +60,25 @@ interface ApplyProjectTemplateInput {
   endDate?: string;
 }
 
-const TEMPLATES_KEY = buildWorkQueryKeys.projects.templates();
+export interface TemplateFilters {
+  q?: string;
+  category?: string;
+  sort?: string;
+}
 
-export function useProjectTemplates() {
+export function useProjectTemplates(filters?: TemplateFilters) {
   const canView = useCan("build:view");
+  const q = filters?.q;
+  const category = filters?.category;
+  const sort = filters?.sort;
   return useInfiniteQuery({
-    queryKey: TEMPLATES_KEY,
+    queryKey: [...buildWorkQueryKeys.projects.templates(), { q, category, sort }],
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, string> = {};
-      if (pageParam !== undefined) params["cursor"] = String(pageParam);
+      if (pageParam !== undefined) params["cursor"] = pageParam;
+      if (q) params["q"] = q;
+      if (category) params["category"] = category;
+      if (sort) params["sort"] = sort;
       return apiClient.get(
         "/build/templates",
         Object.keys(params).length > 0 ? params : undefined,
@@ -76,8 +86,8 @@ export function useProjectTemplates() {
         templateListContract,
       );
     },
-    initialPageParam: NO_ID_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView,
     staleTime: 60_000,
   });

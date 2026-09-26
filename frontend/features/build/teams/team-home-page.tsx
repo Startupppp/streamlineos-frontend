@@ -405,7 +405,7 @@ export function TeamHomePage({ teamId }: Props) {
               />
             </PmPanel>
           ) : (
-            <PmPanel>
+            <PmPanel role="list" aria-label="Team members">
               {pageMembers.map((member) => {
                 const displayName = getUserDisplayName({
                   firstName: member.firstName,
@@ -418,7 +418,7 @@ export function TeamHomePage({ teamId }: Props) {
                   email: member.email,
                 });
                 return (
-                  <div key={member.id} className={PM_ROW}>
+                  <div key={member.id} role="listitem" className={PM_ROW}>
                     <Avatar className="h-7 w-7 shrink-0">
                       <AvatarImage src={resolveImageUrl(member.image)} />
                       <AvatarFallback className="text-micro">{initials}</AvatarFallback>

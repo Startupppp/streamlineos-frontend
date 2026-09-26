@@ -49,16 +49,8 @@ const STATUS_STYLE: Record<string, string> = {
     "text-status-success-ink-strong border-status-success-rule bg-status-success-surface",
 };
 
-export const RISK_TABLE_HEADERS = [
-  "ID",
-  "Title",
-  "Probability",
-  "Impact",
-  "Severity",
-  "Owner",
-  "Status",
-  "Actions",
-] as const;
+import { RISK_TABLE_HEADERS } from "./risks-table-headers";
+export { RISK_TABLE_HEADERS };
 
 export type RiskOwnerLookup = (userId: string | null) => NamedUser | null;
 export type RiskMemberNameLookup = (userId: string | null) => string;

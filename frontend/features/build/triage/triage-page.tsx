@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useProject, useTickets, useUpdateTicket } from "@/hooks/api";
-import { useBulkUpdateTickets } from "@/hooks/api/build";
+import { useBulkUpdateTickets, useCycles, useProjectMembers, type BulkUpdateTicketsInput } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,9 +24,10 @@ import { TriageRow } from "./triage-row";
 import type { Ticket } from "@/types/projects";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { toBulkPriority } from "@/features/build/shared/bulk-priority";
 
 const TRIAGE_STATUS = "TODO";
 const ACCEPT_STATUS = "IN_PROGRESS";
@@ -52,12 +53,16 @@ interface TriagePageProps {
 export function TriagePage({ projectId }: TriagePageProps) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
-  const listFilters = useBuildListFilters();
+  const listFilters = useBuildListFilters({
+    filters: [{ param: "status" }],
+  });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [storedTrail, setStoredTrail] = useState<(string | null)[]>([null]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const canUpdate = useCan("build:tickets:update");
   const bulkUpdate = useBulkUpdateTickets(projectId);
+  const { data: members } = useProjectMembers(projectId);
+  const { data: cycles } = useCycles(projectId);
   const cursorTrail = useMemo(
     () =>
       storedTrail[storedTrail.length - 1] === listFilters.cursor
@@ -69,6 +74,8 @@ export function TriagePage({ projectId }: TriagePageProps) {
   const hasPrevious = cursorTrail.length > 1;
   const triageOwner = listFilters.value("ownerId") || undefined;
   const triageSort = (listFilters.value("sort") as "created" | "updated" | "priority" | "dueDate" | undefined) || "created";
+  const urlStatus = listFilters.value("status");
+  const triageStatus = urlStatus === BUILD_FILTER_ALL ? TRIAGE_STATUS : urlStatus;
   const {
     data: ticketPage,
     isLoading: ticketsLoading,
@@ -78,7 +85,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
   } = useTickets(projectId, {
     search: listFilters.debouncedSearch || undefined,
     cursor,
-    status: TRIAGE_STATUS,
+    status: triageStatus,
     limit: PAGE_LIMIT,
     orderBy: triageSort,
     orderDir: "asc",
@@ -202,12 +209,15 @@ export function TriagePage({ projectId }: TriagePageProps) {
   const handleToggleSelect = useCallback((id: number) => {
     setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }, []);
-  const handleBulkStatus = useCallback((status: string) => {
-    bulkUpdate.mutate(
-      { ticketIds: [...selectedIds], status },
-      { onSuccess: () => { setSelectedIds(new Set()); toast.success("Updated"); }, onError: (e) => toast.error(getErrorMessage(e)) },
-    );
-  }, [bulkUpdate, selectedIds]);
+  const handleBulkUpdate = useCallback(
+    (update: Partial<Pick<BulkUpdateTicketsInput, "status" | "priority" | "assigneeId" | "cycleId">>) =>
+      bulkUpdate.mutate({ ticketIds: [...selectedIds], ...update }, { onSuccess: () => { setSelectedIds(new Set()); toast.success("Updated"); }, onError: (e) => toast.error(getErrorMessage(e)) }),
+    [bulkUpdate, selectedIds],
+  );
+  const handleBulkStatus = useCallback((v: string) => handleBulkUpdate({ status: v }), [handleBulkUpdate]);
+  const handleBulkPriority = useCallback((v: string) => { const p = toBulkPriority(v); if (p) handleBulkUpdate({ priority: p }); }, [handleBulkUpdate]);
+  const handleBulkAssignee = useCallback((v: string) => handleBulkUpdate({ assigneeId: v || undefined }), [handleBulkUpdate]);
+  const handleBulkCycle = useCallback((v: string) => handleBulkUpdate({ cycleId: parseInt(v) || null }), [handleBulkUpdate]);
   const { focusedIndex: triageFocusedIndex } = useBuildListKeyboard({
     itemCount: tickets.length,
     onOpen: handleOpenTicketByIndex,
@@ -254,7 +264,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
           ) : (
             <PmSection index={0}>
               {canUpdate && selectedIds.size > 0 && (
-                <BulkActionBar selectedCount={selectedIds.size} members={[]} cycles={[]} statuses={project?.statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkStatus} onBulkAssignee={handleBulkStatus} onBulkCycle={handleBulkStatus} onClear={handleClearTriageKeyboard} />
+                <BulkActionBar selectedCount={selectedIds.size} members={members ?? []} cycles={cycles ?? []} statuses={project?.statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkPriority} onBulkAssignee={handleBulkAssignee} onBulkCycle={handleBulkCycle} onClear={handleClearTriageKeyboard} />
               )}
               <PmStaggerList className="flex flex-col gap-2.5">
                 {tickets.map((ticket, index) => (

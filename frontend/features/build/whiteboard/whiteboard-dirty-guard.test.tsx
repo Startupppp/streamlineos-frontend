@@ -16,7 +16,15 @@ jest.mock("./use-whiteboard-autosave", () => ({
 }));
 
 jest.mock("@/hooks/api/build", () => ({
-  useWhiteboards: () => ({ data: [], isLoading: false, isError: false, refetch: jest.fn() }),
+  useWhiteboards: () => ({
+    data: { pages: [{ data: [], hasMore: false, nextCursor: null }], pageParams: [undefined] },
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
+  }),
   useWhiteboard: () => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() }),
   useCreateWhiteboard: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteWhiteboard: () => ({ mutate: jest.fn(), isPending: false }),

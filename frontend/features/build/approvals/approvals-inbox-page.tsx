@@ -3,12 +3,16 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Clock, ListChecks } from "lucide-react";
 import { toast } from "sonner";
-import { isApiError } from "@/lib/api-envelope";
+import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { useApprovalInbox, useDecideApproval } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   StatCard,
@@ -17,7 +21,9 @@ import {
 } from "@/components/ui/stat-card";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DecideDialog } from "./decide-dialog";
+import { ApprovalBulkActionBar } from "./approval-bulk-action-bar";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
@@ -36,14 +42,22 @@ import {
   ApprovalsInboxMobileCard,
 } from "./approvals-inbox-columns";
 
+const approvalDecideContract = lazyContract(() =>
+  import("@/hooks/api/build/approvals-schema").then((m) => m.approvalRowContract),
+);
+
 const FILTER_DEFINITIONS = [
   { param: "status", options: STATUS_OPTIONS.map((o) => o.value) },
   { param: "type", options: ENTITY_OPTIONS.map((o) => o.value) },
+  { param: "from" },
+  { param: "to" },
 ] as const;
 
 export function ApprovalsInboxPage() {
   const canDecide = useCan("build:approvals:decide");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
 
   const listFilters = useBuildListFilters({
     filters: FILTER_DEFINITIONS,
@@ -52,6 +66,8 @@ export function ApprovalsInboxPage() {
 
   const statusFilter = listFilters.value("status");
   const typeFilter = listFilters.value("type");
+  const fromFilter = listFilters.value("from");
+  const toFilter = listFilters.value("to");
   const searchDisplay = listFilters.search;
   const searchParam = listFilters.debouncedSearch;
 
@@ -68,6 +84,8 @@ export function ApprovalsInboxPage() {
     status: statusFilter !== BUILD_FILTER_ALL ? statusFilter : undefined,
     type: typeFilter !== BUILD_FILTER_ALL ? typeFilter : undefined,
     q: searchParam || undefined,
+    from: fromFilter !== BUILD_FILTER_ALL ? fromFilter : undefined,
+    to: toFilter !== BUILD_FILTER_ALL ? toFilter : undefined,
   });
   const items = useMemo(
     () => data?.pages.flatMap((page) => page.data) ?? [],
@@ -78,6 +96,8 @@ export function ApprovalsInboxPage() {
 
   const [decideTarget, setDecideTarget] = useState<DecideTarget | null>(null);
   const decideApproval = useDecideApproval(decideTarget?.projectId ?? 0);
+  const [selection, setSelection] = useState<Set<string | number>>(new Set());
+  const [isBulkPending, setIsBulkPending] = useState(false);
 
   const pending = useMemo(
     () =>
@@ -170,6 +190,43 @@ export function ApprovalsInboxPage() {
     [listFilters],
   );
 
+  const handleDateRangeChange = useCallback(
+    (range: { from: string; to: string }) => {
+      listFilters.setValue("from", range.from);
+      listFilters.setValue("to", range.to);
+    },
+    [listFilters],
+  );
+
+  const handleClearSelection = useCallback(() => setSelection(new Set()), []);
+
+  const handleBulkCancel = useCallback(() => {
+    const selectedItems = items.filter((item) =>
+      selection.has(`${item.projectId}-${item.id}`),
+    );
+    if (selectedItems.length === 0) return;
+    setIsBulkPending(true);
+    Promise.allSettled(
+      selectedItems.map((item) =>
+        apiClient.patch(
+          `/build/${item.projectId}/approvals/${item.id}/decide`,
+          { status: "cancelled" },
+          undefined,
+          approvalDecideContract,
+        ),
+      ),
+    ).then((results) => {
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.length - succeeded;
+      if (succeeded > 0) {
+        toast.success(`${succeeded} approval${succeeded === 1 ? "" : "s"} cancelled`);
+        setSelection(new Set());
+        queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.approvals.inbox() });
+      }
+      if (failed > 0) toast.error(`${failed} could not be cancelled — try again`);
+    }).finally(() => setIsBulkPending(false));
+  }, [items, selection, queryClient]);
+
   const columns = useMemo(
     () =>
       buildApprovalsInboxColumns({
@@ -247,6 +304,18 @@ export function ApprovalsInboxPage() {
                 />
               ),
             },
+            {
+              id: "dateRange",
+              label: "Date",
+              active: listFilters.isActive("from") || listFilters.isActive("to"),
+              control: (
+                <DateRangePicker
+                  from={fromFilter || undefined}
+                  to={toFilter || undefined}
+                  onChange={handleDateRangeChange}
+                />
+              ),
+            },
           ]}
           search={{ value: searchDisplay, onValueChange: listFilters.setSearch, placeholder: "Search approvals…", inputRef: searchInputRef }}
           onClearAll={listFilters.clearAll}
@@ -278,6 +347,17 @@ export function ApprovalsInboxPage() {
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+          {!isOnline && (
+            <p className="text-sm text-muted-foreground px-4 py-2 bg-muted/50 rounded-md mb-2">
+              You're offline — results may not be up to date
+            </p>
+          )}
+          <ApprovalBulkActionBar
+            selectedCount={selection.size}
+            isPending={isBulkPending}
+            onCancelSelected={handleBulkCancel}
+            onClear={handleClearSelection}
+          />
           <PageState
             resolution={pageState}
             loading={
@@ -305,6 +385,11 @@ export function ApprovalsInboxPage() {
               data={filteredItems}
               columns={columns}
               getRowKey={(row) => `${row.projectId}-${row.id}`}
+              selection={{
+                selected: selection,
+                onChange: setSelection,
+                getRowLabel: (row) => row.title,
+              }}
               pagination={{
                 mode: "cursor",
                 pageSize: 25,

@@ -24,7 +24,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound } from "next/navigation";
 import type { ViewType } from "@/features/build/views/view-switcher";
-import { useCanState } from "@/hooks/api/access";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -34,7 +35,6 @@ interface PageProps {
 export function ProjectBoardPage({ params, defaultView }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
-  const accessState = useCanState("build:view");
   const {
     data,
     isLoading: projectLoading,
@@ -185,7 +185,12 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     [handleBulkUpdate],
   );
 
-  if (accessState === "denied" || accessState === "loading") return null;
+  const resolution = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError: projectError,
+    error: projectErrorValue,
+  });
 
   if (isLoading) {
     return (
@@ -204,6 +209,16 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         error={projectErrorValue}
         onRetry={handleRetryProject}
       />
+    );
+  }
+
+  if (resolution.kind !== "ready") {
+    return (
+      <PageWrapper title="Board" noInternalScroll>
+        <PageState resolution={resolution} loading={<KanbanBoardSkeleton />}>
+          {null}
+        </PageState>
+      </PageWrapper>
     );
   }
 

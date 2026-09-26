@@ -84,46 +84,44 @@ describe("templateRowContract — shape matches the backend template projection"
   });
 });
 
-describe("templateListContract — idCursorPage envelope wrapping templateRowContract", () => {
+describe("templateListContract — cursor-page envelope wrapping templateRowContract", () => {
   it("parses an empty page", () => {
     const result = templateListContract.parse({
       data: [],
-      hasMore: false,
-      nextCursor: null,
+      pagination: { limit: 50, hasMore: false, nextCursor: null },
     });
     expect(result.data).toHaveLength(0);
-    expect(result.hasMore).toBe(false);
-    expect(result.nextCursor).toBeNull();
+    expect(result.pagination.hasMore).toBe(false);
+    expect(result.pagination.nextCursor).toBeNull();
   });
 
-  it("parses a page with two templates and a nextCursor", () => {
+  it("parses a page with two templates and an opaque string nextCursor", () => {
+    const cursor = "dGVzdA==";
     const result = templateListContract.parse({
       data: [
         KNOWN_GOOD_TEMPLATE,
         { ...KNOWN_GOOD_TEMPLATE, id: 2, name: "Bug triage template" },
       ],
-      hasMore: true,
-      nextCursor: 2,
+      pagination: { limit: 50, hasMore: true, nextCursor: cursor },
     });
     expect(result.data).toHaveLength(2);
     expect(result.data[1].name).toBe("Bug triage template");
-    expect(result.hasMore).toBe(true);
-    expect(result.nextCursor).toBe(2);
+    expect(result.pagination.hasMore).toBe(true);
+    expect(result.pagination.nextCursor).toBe(cursor);
   });
 
   it("parses a last page with null nextCursor", () => {
     const result = templateListContract.parse({
       data: [KNOWN_GOOD_TEMPLATE],
-      hasMore: false,
-      nextCursor: null,
+      pagination: { limit: 50, hasMore: false, nextCursor: null },
     });
-    expect(result.hasMore).toBe(false);
-    expect(result.nextCursor).toBeNull();
+    expect(result.pagination.hasMore).toBe(false);
+    expect(result.pagination.nextCursor).toBeNull();
   });
 
-  it("rejects a payload missing the hasMore field", () => {
+  it("rejects a payload missing the pagination field", () => {
     expect(() =>
-      templateListContract.parse({ data: [], nextCursor: null }),
+      templateListContract.parse({ data: [] }),
     ).toThrow(ZodError);
   });
 
@@ -131,8 +129,7 @@ describe("templateListContract — idCursorPage envelope wrapping templateRowCon
     expect(() =>
       templateListContract.parse({
         data: [{ id: "not-a-number", name: "x" }],
-        hasMore: false,
-        nextCursor: null,
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
       }),
     ).toThrow(ZodError);
   });
