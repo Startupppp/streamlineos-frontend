@@ -229,6 +229,8 @@ export interface AllWorkFilters extends TicketFilters {
   projectIds?: string;
   excludeStatus?: string;
   scope?: "all" | "mine" | "created" | "subscribed";
+  teamId?: number;
+  managedProductId?: number;
 }
 
 export interface AllWorkTicketLabel {

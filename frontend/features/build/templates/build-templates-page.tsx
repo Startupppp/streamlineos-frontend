@@ -7,7 +7,6 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -24,15 +23,41 @@ import { TemplateCard } from "@/features/build/templates/template-card";
 import { CreateTemplateSheet } from "@/features/build/templates/create-template-sheet";
 import { ApplyTemplateDialog } from "@/features/build/templates/apply-template-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import {
+  useBuildListFilters,
+  BUILD_FILTER_ALL,
+} from "@/features/build/shared/use-build-list-filters";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { TemplatesGridSkeleton } from "./templates-grid-skeleton";
 import {
   PmPageShell,
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
-  PM_PANEL,
 } from "@/components/pm-chrome";
-import { cn } from "@/lib/utils";
+
+const CATEGORY_OPTIONS = [
+  { value: "GENERAL", label: "General" },
+  { value: "ENGINEERING", label: "Engineering" },
+  { value: "MARKETING", label: "Marketing" },
+  { value: "OPERATIONS", label: "Operations" },
+  { value: "DESIGN", label: "Design" },
+  { value: "SALES", label: "Sales" },
+] as const;
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "name", label: "A – Z" },
+] as const;
+
+const FILTER_DEFINITIONS = [
+  { param: "category", options: CATEGORY_OPTIONS.map((o) => o.value) },
+  { param: "sort", options: SORT_OPTIONS.map((o) => o.value) },
+] as const;
 
 function NewTemplateButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -43,33 +68,17 @@ function NewTemplateButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-export function TemplatesGridSkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 9 }).map((_, i) => (
-        <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
-          <div className="flex items-start justify-between gap-2">
-            <div className="space-y-1.5">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-48" />
-            </div>
-            <Skeleton className="h-5 w-16 rounded-full" />
-          </div>
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-3/4" />
-          <div className="flex gap-2 pt-1">
-            <Skeleton className="flex-1" />
-            <Skeleton className="h-8 w-8" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export function BuildTemplatesPage() {
   const canManage = useCan("build:manage");
+  const isOnline = useOnlineStatus();
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS, withSearch: true });
+  const categoryFilter = listFilters.value("category");
+  const sortFilter = listFilters.value("sort");
+  const searchDisplay = listFilters.search;
+  const debouncedSearch = listFilters.debouncedSearch;
+
   const {
     data: templatePages,
     isLoading,
@@ -79,12 +88,15 @@ export function BuildTemplatesPage() {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useProjectTemplates();
+  } = useProjectTemplates({
+    q: debouncedSearch || undefined,
+    category: categoryFilter !== BUILD_FILTER_ALL ? categoryFilter : undefined,
+    sort: sortFilter !== BUILD_FILTER_ALL ? sortFilter : undefined,
+  });
   const deleteTemplate = useDeleteProjectTemplate();
   const [createOpen, setCreateOpen] = useState(false);
   const [applyTarget, setApplyTarget] = useState<ProjectTemplate | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectTemplate | null>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   const templates = useMemo(
     () => templatePages?.pages.flatMap((p) => p.data) ?? [],
@@ -103,6 +115,14 @@ export function BuildTemplatesPage() {
   const handleApplyTarget = useCallback((t: ProjectTemplate) => setApplyTarget(t), []);
   const handleCloseApply = useCallback(() => setApplyTarget(null), []);
   const handleDeleteTarget = useCallback((t: ProjectTemplate) => setDeleteTarget(t), []);
+  const handleCategoryChange = useCallback(
+    (value: string) => listFilters.setValue("category", value),
+    [listFilters],
+  );
+  const handleSortChange = useCallback(
+    (value: string) => listFilters.setValue("sort", value),
+    [listFilters],
+  );
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
@@ -115,6 +135,7 @@ export function BuildTemplatesPage() {
   useBuildListKeyboard({
     itemCount: templates.length,
     onOpen: handleKeyboardOpen,
+    onCreate: canManage ? handleOpenCreate : undefined,
     onClearSelection: handleKeyboardClear,
     searchInputRef: searchRef,
     enabled: pageState.kind === "ready",
@@ -131,9 +152,17 @@ export function BuildTemplatesPage() {
         toast.success("Template deleted");
         setDeleteTarget(null);
       },
-      onError: (e) => toast.error(getErrorMessage(e)),
+      onError: (e) => {
+        if (isApiError(e) && e.status === 409) {
+          toast.info("Template was already modified. Refreshing…");
+          void refetch();
+          setDeleteTarget(null);
+          return;
+        }
+        toast.error(getErrorMessage(e));
+      },
     });
-  }, [deleteTarget, deleteTemplate]);
+  }, [deleteTarget, deleteTemplate, refetch]);
 
   function handleRetry() {
     void refetch();
@@ -182,6 +211,45 @@ export function BuildTemplatesPage() {
         title="Templates"
         subtitle="Reusable project structures to bootstrap new work"
         actions={canManage ? <NewTemplateButton onClick={handleOpenCreate} /> : undefined}
+        filters={
+          <BuildListToolbar
+            search={{
+              value: searchDisplay,
+              onValueChange: listFilters.setSearch,
+              placeholder: "Search templates…",
+              inputRef: searchRef,
+            }}
+            filters={[
+              {
+                id: "category",
+                label: "Category",
+                active: listFilters.isActive("category"),
+                control: (
+                  <BuildFilterSelect
+                    label="Category"
+                    value={categoryFilter}
+                    onValueChange={handleCategoryChange}
+                    options={CATEGORY_OPTIONS}
+                  />
+                ),
+              },
+              {
+                id: "sort",
+                label: "Sort",
+                active: listFilters.isActive("sort"),
+                control: (
+                  <BuildFilterSelect
+                    label="Sort"
+                    value={sortFilter}
+                    onValueChange={handleSortChange}
+                    options={SORT_OPTIONS}
+                  />
+                ),
+              },
+            ]}
+            onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
+          />
+        }
       >
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
@@ -209,6 +277,13 @@ export function BuildTemplatesPage() {
                   label="Load more templates"
                 />
               </>
+            ) : !isOnline ? (
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustrationPreset="projects"
+                title="You are offline"
+                description="Showing cached data. Reconnect to see the latest templates."
+              />
             ) : (
               <EmptyState
                 className={PM_FILL_PANEL}

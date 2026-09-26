@@ -34,7 +34,7 @@ interface ProductRoadmapPageProps {
   managedProductId: number;
 }
 
-function RoadmapSkeleton() {
+export function RoadmapSkeleton() {
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
       {Array.from({ length: 4 }).map((_, i) => (
@@ -63,9 +63,17 @@ const ROADMAP_HORIZON_OPTS = [
   { value: "later", label: "Later" },
 ];
 
+const ROADMAP_SORT_OPTS = [
+  { value: BUILD_FILTER_ALL, label: "Default order" },
+  { value: "updated_at", label: "Last updated" },
+  { value: "created_at", label: "Created" },
+  { value: "title", label: "Title A–Z" },
+];
+
 const ROADMAP_FILTER_DEFS = [
   { param: "status", options: ROADMAP_STATUS_OPTS.map((o) => o.value) },
   { param: "horizon" },
+  { param: "sort", options: ROADMAP_SORT_OPTS.map((o) => o.value) },
 ] as const;
 
 export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps) {
@@ -75,6 +83,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
 
   const statusValue = listFilters.value("status");
   const horizonValue = listFilters.value("horizon");
+  const sortValue = listFilters.value("sort");
 
   const typedStatus = useMemo(
     () => (statusValue && statusValue !== BUILD_FILTER_ALL ? (statusValue as RoadmapStatus) : undefined),
@@ -87,9 +96,10 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
       ...(typedStatus ? { status: typedStatus } : {}),
       ...(horizonValue && horizonValue !== BUILD_FILTER_ALL ? { horizon: horizonValue } : {}),
       ...(listFilters.debouncedSearch.trim() ? { search: listFilters.debouncedSearch.trim() } : {}),
+      ...(sortValue && sortValue !== BUILD_FILTER_ALL ? { sort: sortValue } : {}),
       cursor: pager.cursor,
     }),
-    [managedProductId, typedStatus, horizonValue, listFilters.debouncedSearch, pager.cursor],
+    [managedProductId, typedStatus, horizonValue, sortValue, listFilters.debouncedSearch, pager.cursor],
   );
 
   const { data, isLoading, isError, error, refetch } = useRoadmapItems(filters);
@@ -152,6 +162,10 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
     (value: string) => listFilters.setValue("horizon", value),
     [listFilters],
   );
+  const handleSortChange = useCallback(
+    (value: string) => listFilters.setValue("sort", value),
+    [listFilters],
+  );
   const handleCloseEdit = useCallback(() => { setEditTarget(null); }, []);
 
   const handleDeleteOpenChange = useCallback((open: boolean) => {
@@ -202,6 +216,19 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
                   value={horizonValue}
                   onValueChange={handleHorizonChange}
                   options={ROADMAP_HORIZON_OPTS}
+                />
+              ),
+            },
+            {
+              id: "sort",
+              label: "Sort",
+              active: listFilters.isActive("sort"),
+              control: (
+                <BuildFilterSelect
+                  label="Sort"
+                  value={sortValue}
+                  onValueChange={handleSortChange}
+                  options={ROADMAP_SORT_OPTS}
                 />
               ),
             },

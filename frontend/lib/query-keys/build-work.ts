@@ -27,10 +27,12 @@ export const buildWorkQueryKeys = {
         : ([...base, "projects", "subtasks", { ticketId }, projectId] as const),
     ticketSearch: (searchQuery: string) =>
       [...base, "projects", "search", "tickets", searchQuery] as const,
-    members: (projectId?: number) =>
+    members: (projectId?: number, cursor?: string) =>
       projectId === undefined
         ? ([...base, "projects", "members"] as const)
-        : ([...base, "projects", "members", projectId] as const),
+        : cursor
+          ? ([...base, "projects", "members", projectId, cursor] as const)
+          : ([...base, "projects", "members", projectId] as const),
     labels: (projectId?: number) =>
       projectId === undefined
         ? ([...base, "projects", "labels"] as const)
@@ -45,8 +47,10 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "cycles", projectId] as const,
     modules: (projectId: number) =>
       [...base, "projects", "modules", projectId] as const,
-    views: (projectId: number) =>
-      [...base, "projects", "views", projectId] as const,
+    views: (projectId: number, cursor?: string) =>
+      cursor
+        ? ([...base, "projects", "views", projectId, cursor] as const)
+        : ([...base, "projects", "views", projectId] as const),
     customFields: (projectId: number) =>
       [...base, "projects", projectId, "custom-fields"] as const,
     ticketCustomFieldValues: (projectId: number, ticketId: number) =>
@@ -133,8 +137,10 @@ export const buildWorkQueryKeys = {
         [...base, "projects", "portal", projectId, "overview"] as const,
       changeRequests: (projectId: number) =>
         [...base, "projects", "portal", projectId, "change-requests"] as const,
-      visibility: (projectId: number) =>
-        [...base, "projects", projectId, "client-visibility"] as const,
+      visibility: (projectId: number, ticketCursor?: string, milestoneCursor?: string) =>
+        ticketCursor || milestoneCursor
+          ? ([...base, "projects", projectId, "client-visibility", ticketCursor ?? null, milestoneCursor ?? null] as const)
+          : ([...base, "projects", projectId, "client-visibility"] as const),
     },
     scopeDirectory: {
       all: [...base, "projects", "scope-directory"] as const,
@@ -260,8 +266,10 @@ export const buildWorkQueryKeys = {
         [...base, "projects", "managed-products", "list", filters, "infinite"] as const,
       detail: (managedProductId: number) =>
         [...base, "projects", "managed-products", "detail", managedProductId] as const,
-      insights: (managedProductId: number) =>
-        [...base, "projects", "managed-products", "insights", managedProductId] as const,
+      insights: (managedProductId: number, filters?: QueryKeyParams) =>
+        filters === undefined
+          ? ([...base, "projects", "managed-products", "insights", managedProductId] as const)
+          : ([...base, "projects", "managed-products", "insights", managedProductId, filters] as const),
     },
     workflow: {
       transitions: (projectId: number) =>

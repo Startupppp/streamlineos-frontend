@@ -2,11 +2,45 @@ import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FeedbucketSubmissionDetail } from "./feedbucket-submission-detail";
 
+const mockUsePageState = jest.fn();
 const mockUseFeedbucketSubmission = jest.fn();
 const mockUseUpdateFeedbucketSubmission = jest.fn();
 const mockUseDeleteFeedbucketSubmission = jest.fn();
 const mockUseDeleteFeedbucketSubmissionMedia = jest.fn();
 const mockUseCan = jest.fn();
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: (...args: unknown[]) => mockUsePageState(...args),
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    resolution,
+    children,
+    loading,
+    empty,
+    onRetry,
+  }: {
+    resolution: { kind: string; permission?: string };
+    children?: React.ReactNode;
+    loading?: React.ReactNode;
+    empty?: React.ReactNode;
+    onRetry?: () => void;
+  }) => {
+    if (resolution?.kind === "loading") return loading ?? null;
+    if (resolution?.kind === "denied")
+      return (
+        <div
+          data-testid="no-permission"
+          data-permission={resolution.permission}
+        />
+      );
+    if (resolution?.kind === "error")
+      return <button onClick={onRetry}>retry</button>;
+    if (resolution?.kind === "empty") return empty ?? null;
+    return <>{children}</>;
+  },
+}));
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -175,6 +209,7 @@ function makeSubmission(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUsePageState.mockReturnValue({ kind: "ready" });
   mockUseCan.mockReturnValue(false);
   mockUseUpdateFeedbucketSubmission.mockReturnValue({
     mutateAsync: jest.fn(),
@@ -195,6 +230,7 @@ function renderDetail(submissionData: unknown) {
     data: submissionData,
     isLoading: false,
     isError: false,
+    error: null,
     refetch: jest.fn(),
   });
   return render(
@@ -330,5 +366,38 @@ describe("FeedbucketSubmissionDetail — linked ticket project resolution", () =
 
       expect(aiPanelLinkedTicketId()).toBe(String(TICKET_ID));
     });
+  });
+});
+
+describe("FeedbucketSubmissionDetail — usePageState integration (FE-40/FE-41/FE-49)", () => {
+  it("calls usePageState with feedbucket:submissions:view permission and passes error so 402 is classified correctly", () => {
+    renderDetail(makeSubmission());
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        permission: "feedbucket:submissions:view",
+        error: null,
+      }),
+    );
+  });
+
+  it("renders denied state when usePageState returns denied", () => {
+    mockUsePageState.mockReturnValue({
+      kind: "denied",
+      permission: "feedbucket:submissions:view",
+    });
+    renderDetail(makeSubmission());
+    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+  });
+
+  it("passes feedbucket:submissions:view as the permission key in denied resolution so NoPermissionState knows what was denied", () => {
+    mockUsePageState.mockReturnValue({
+      kind: "denied",
+      permission: "feedbucket:submissions:view",
+    });
+    renderDetail(makeSubmission());
+    expect(screen.getByTestId("no-permission")).toHaveAttribute(
+      "data-permission",
+      "feedbucket:submissions:view",
+    );
   });
 });

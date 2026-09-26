@@ -2,11 +2,14 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { X } from "lucide-react";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-import { useProjectClientGrants, useRevokeGrant } from "@/hooks/api/portal-access/grants";
+import { useProjectClientGrants, useRevokeGrant, useBulkRevokeGrant } from "@/hooks/api/portal-access/grants";
 import { useCan } from "@/hooks/api/access";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { PM_TOOLBAR } from "@/components/pm-chrome";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -170,6 +173,8 @@ export function ClientAccessPage() {
   const canManage = useCan("build:clientvisibility:manage");
 
   const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
+  const [selectedGrantIds, setSelectedGrantIds] = useState<Set<string | number>>(new Set());
+  const [bulkRevokeOpen, setBulkRevokeOpen] = useState(false);
   const { q, state: grantState, permission, hasActiveFilters, setFilter } = useClientAccessUrlState();
 
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
@@ -195,6 +200,30 @@ export function ClientAccessPage() {
   const filteredRows = data?.data ?? [];
   const pagination = data?.pagination;
   const isFiltered = hasActiveFilters;
+
+  const bulkRevoke = useBulkRevokeGrant();
+
+  const handleKeyboardClear = useCallback(() => setSelectedGrantIds(new Set()), []);
+
+  const handleKeyboardEdit = useCallback(
+    (index: number) => {
+      const row = filteredRows[index];
+      if (row) setEditTarget(row);
+    },
+    [filteredRows],
+  );
+
+  const handleBulkRevokeConfirm = useCallback(() => setBulkRevokeOpen(true), []);
+
+  const handleBulkRevoke = useCallback(() => {
+    setBulkRevokeOpen(false);
+    selectedGrantIds.forEach((id) => {
+      bulkRevoke.mutate(String(id), {
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    });
+    setSelectedGrantIds(new Set());
+  }, [selectedGrantIds, bulkRevoke]);
 
   function handleSearchChange(value: string) {
     setFilter("q", value);
@@ -237,6 +266,15 @@ export function ClientAccessPage() {
     const nextCursor = pagination?.nextCursor;
     if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }
+
+  useBuildListKeyboard({
+    itemCount: filteredRows.length,
+    onOpen: handleKeyboardEdit,
+    onCreate: canManage ? handleOpenCreate : undefined,
+    onEdit: handleKeyboardEdit,
+    onClearSelection: handleKeyboardClear,
+    enabled: pageState.kind === "ready",
+  });
 
   const columns: DataTableColumn<ProjectClientGrant>[] = [
     {
@@ -379,12 +417,30 @@ export function ClientAccessPage() {
               />
             ) : (
               <>
+                {selectedGrantIds.size > 0 && (
+                  <div className={cn(PM_TOOLBAR, "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2")}>
+                    <span className="text-sm font-medium">{selectedGrantIds.size} selected</span>
+                    <div className="flex items-center gap-2">
+                      <Button variant="destructive" size="sm" onClick={handleBulkRevokeConfirm}>
+                        Revoke selected
+                      </Button>
+                      <Button variant="ghost" size="sm" aria-label="Clear selection" onClick={handleKeyboardClear}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <DataTable
                   data={filteredRows}
                   columns={columns}
                   getRowKey={(row) => row.projectClientGrantId}
                   minWidth="680px"
                   className={CONTENT_FILL_PANEL}
+                  selection={{
+                    selected: selectedGrantIds,
+                    onChange: setSelectedGrantIds,
+                    getRowLabel: (row) => `Grant ${truncateId(row.projectClientGrantId)}`,
+                  }}
                 />
                 {pagination && (cursorHistory.length > 1 || pagination.hasMore) ? (
                   <CursorPageControls
@@ -423,6 +479,19 @@ export function ClientAccessPage() {
         <RevokeGrantDialog
           grant={revokeTarget}
           onOpenChange={handleRevokeDialogChange}
+        />
+      )}
+
+      {bulkRevokeOpen && (
+        <ConfirmDialog
+          open={bulkRevokeOpen}
+          onOpenChange={setBulkRevokeOpen}
+          title="Revoke selected grants?"
+          description={`This will revoke access for ${selectedGrantIds.size} client grant${selectedGrantIds.size === 1 ? "" : "s"}. This cannot be undone.`}
+          confirmLabel="Revoke"
+          destructive
+          isPending={bulkRevoke.isPending}
+          onConfirm={handleBulkRevoke}
         />
       )}
     </PageWrapper>

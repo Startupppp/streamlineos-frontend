@@ -86,9 +86,26 @@ export const STATUS_FILTER_OPTIONS = [
   { value: "archived", label: "Archived" },
 ];
 
+export const LINKED_FILTER_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All" },
+  { value: "linked", label: "Linked to ticket" },
+  { value: "unlinked", label: "Not linked" },
+];
+
+export const DUPLICATE_FILTER_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All submissions" },
+  { value: "true", label: "Duplicates only" },
+  { value: "false", label: "Not duplicates" },
+];
+
 export const FILTER_DEFINITIONS = [
   { param: "type", options: [...TYPE_OPTIONS] },
   { param: "status", options: [...STATUS_OPTIONS_VALUES] },
+  { param: "linked", options: ["linked", "unlinked"] as const },
+  { param: "assigneeId" },
+  { param: "duplicate", options: ["true", "false"] as const },
+  { param: "from" },
+  { param: "to" },
 ] as const;
 
 export const FEEDBACK_SKELETON_HEADERS = ["", "Type", "Message", "Status", "Age"] as const;

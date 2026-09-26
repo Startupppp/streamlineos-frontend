@@ -42,6 +42,7 @@ import {
   ManagedProductMobileCard,
   buildManagedProductColumns,
 } from "./managed-product-table-columns";
+import { ManagedProductBulkToolbar } from "./managed-product-bulk-toolbar";
 
 const PAGE_SIZE = 20;
 
@@ -89,6 +90,7 @@ export function ManagedProductsPage() {
   } = useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ManagedProduct | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ManagedProduct | null>(null);
+  const [selected, setSelected] = useState<Set<string | number>>(new Set());
 
   const statusValue = listFilters.value("status");
   const sortValue = listFilters.value("sort");
@@ -211,7 +213,7 @@ export function ManagedProductsPage() {
   );
 
   const handleClearKeyboardSelection = useCallback(() => {
-    /* keyboard Esc: nothing to deselect on this page, but the hook requires the callback */
+    setSelected(new Set());
   }, []);
 
   const handleEditFocused = useCallback(
@@ -220,6 +222,11 @@ export function ManagedProductsPage() {
       if (product) setEditTarget(product);
     },
     [displayed],
+  );
+
+  const selectedIds = useMemo(
+    () => [...selected].map(Number).filter((id) => Number.isFinite(id)),
+    [selected],
   );
 
   useBuildListKeyboard({
@@ -362,6 +369,12 @@ export function ManagedProductsPage() {
             onRetry={handleRetry}
             className={PM_FILL_PANEL}
           >
+            {selectedIds.length > 0 && (
+              <ManagedProductBulkToolbar
+                selectedIds={selectedIds}
+                onClearSelection={handleClearKeyboardSelection}
+              />
+            )}
             <DataTable
               data={displayed}
               columns={columns}
@@ -369,6 +382,15 @@ export function ManagedProductsPage() {
               minWidth="720px"
               mobileCard={renderMobileCard}
               className={PM_FILL_PANEL}
+              selection={
+                canUpdate
+                  ? {
+                      selected,
+                      onChange: setSelected,
+                      getRowLabel: (row: ManagedProduct) => row.name,
+                    }
+                  : undefined
+              }
               pagination={{
                 mode: "cursor",
                 pageSize: PAGE_SIZE,

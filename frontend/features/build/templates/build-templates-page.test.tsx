@@ -39,14 +39,17 @@ jest.mock("@/components/ui/page-wrapper", () => ({
     children,
     title,
     actions,
+    filters,
   }: {
     children: React.ReactNode;
     title?: string;
     actions?: React.ReactNode;
+    filters?: React.ReactNode;
   }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
       {actions}
+      {filters}
       {children}
     </div>
   ),
@@ -109,9 +112,47 @@ jest.mock("./apply-template-dialog", () => ({
   ApplyTemplateDialog: () => null,
 }));
 
+jest.mock("./templates-grid-skeleton", () => ({
+  TemplatesGridSkeleton: () => <div data-testid="templates-skeleton" />,
+}));
+
 const mockUseBuildListKeyboard = jest.fn();
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (args: unknown) => mockUseBuildListKeyboard(args),
+}));
+
+const mockListFiltersState = {
+  search: "",
+  debouncedSearch: "",
+  cursor: null,
+  setSearch: jest.fn(),
+  setCursor: jest.fn(),
+  value: jest.fn((_param: string) => "all"),
+  isActive: jest.fn((_param: string) => false),
+  setValue: jest.fn(),
+  clearAll: jest.fn(),
+  activeCount: 0,
+  isFiltered: false,
+  resetKey: "0",
+  isPending: false,
+};
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: () => mockListFiltersState,
+  BUILD_FILTER_ALL: "all",
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: ({ search }: { search?: { value: string; inputRef?: React.RefObject<HTMLInputElement | null> } }) =>
+    search ? <input type="search" ref={search.inputRef} aria-label="Search templates" /> : null,
+}));
+
+jest.mock("@/features/build/shared/build-filter-select", () => ({
+  BuildFilterSelect: () => null,
+}));
+
+const mockUseOnlineStatus = jest.fn(() => true);
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
 }));
 
 import { useProjectTemplates, useDeleteProjectTemplate } from "@/hooks/api/build";
@@ -159,6 +200,10 @@ beforeEach(() => {
   mockUseProjectTemplates.mockReturnValue(baseQueryResult({ data: templatePages([]) }));
   mockUseDeleteProjectTemplate.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseBuildListKeyboard.mockReset();
+  mockListFiltersState.value.mockReturnValue("all");
+  mockListFiltersState.isActive.mockReturnValue(false);
+  mockListFiltersState.setSearch.mockReset();
+  mockUseOnlineStatus.mockReturnValue(true);
 });
 
 it("shows a skeleton while the access snapshot is in flight, not an empty or denied state", () => {
@@ -229,4 +274,31 @@ it("opens the apply dialog via onOpen callback so Enter on a focused template ap
   const [call] = mockUseBuildListKeyboard.mock.calls;
   const { onOpen } = call[0] as { onOpen: (index: number) => void };
   onOpen(0);
+});
+
+it("renders a search input via BuildListToolbar so the / shortcut has a reachable DOM target", () => {
+  render(<BuildTemplatesPage />);
+  expect(screen.getByRole("searchbox", { name: /search templates/i })).toBeInTheDocument();
+});
+
+it("wires onCreate to the keyboard hook so c creates a new template when build:manage is granted", () => {
+  render(<BuildTemplatesPage />);
+  const [call] = mockUseBuildListKeyboard.mock.calls;
+  const { onCreate } = call[0] as { onCreate?: () => void };
+  expect(typeof onCreate).toBe("function");
+});
+
+it("omits onCreate from the keyboard hook when the user lacks build:manage", () => {
+  mockUseCan.mockImplementation((key: string) => key !== "build:manage");
+  render(<BuildTemplatesPage />);
+  const [call] = mockUseBuildListKeyboard.mock.calls;
+  const { onCreate } = call[0] as { onCreate?: () => void };
+  expect(onCreate).toBeUndefined();
+});
+
+it("shows an offline empty state instead of the no-templates empty state when the device is offline", () => {
+  mockUseOnlineStatus.mockReturnValue(false);
+  render(<BuildTemplatesPage />);
+  expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
+  expect(screen.queryByText(/no templates yet/i)).not.toBeInTheDocument();
 });

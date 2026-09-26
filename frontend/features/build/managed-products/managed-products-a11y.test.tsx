@@ -1,15 +1,40 @@
 import "./product-scope-pages.test-harness";
 import { render, screen } from "./product-scope-pages.test-harness";
+
+jest.mock("@/components/ui/user-combobox", () => ({
+  UserCombobox: ({ value }: { value: string }) => (
+    <div data-testid="user-combobox" data-value={value} />
+  ),
+}));
+
+jest.mock("@/components/ui/date-range-picker", () => ({
+  DateRangePicker: ({ from, to }: { from?: string; to?: string }) => (
+    <div data-testid="date-range-picker" data-from={from ?? ""} data-to={to ?? ""} />
+  ),
+}));
+
+jest.mock("@/components/shared/submission-bulk-toolbar", () => ({
+  SubmissionBulkToolbar: ({ selectedIds }: { selectedIds: number[] }) =>
+    selectedIds.length > 0 ? <div>{selectedIds.length} selected</div> : null,
+  BULK_SELECTION_CAP: 100,
+}));
 import { render as plainRender, fireEvent } from "@testing-library/react";
 import { ManagedProductsPage } from "./managed-products-page";
 import { ProductGoalsPage } from "./product-goals-page";
+import { ProductFeedbackPage } from "./product-feedback-page";
+import { ProductInsightsPage } from "./product-insights-page";
+import { ProductRoadmapPage } from "./product-roadmap-page";
 import { ProductRowActions } from "./managed-product-table-columns";
 import {
   EMPTY_MANAGED_PRODUCTS_RESULT,
+  EMPTY_FEEDBUCKET_RESULT,
   EMPTY_GOALS_PAGE_RESULT,
   useGoalsPage,
+  useFeedbucketSubmissions,
+  useManagedProductInsights,
   useManagedProducts,
   usePageState,
+  useRoadmapItems,
 } from "./product-scope-pages.test-harness";
 import type { ManagedProduct } from "@/types/projects";
 
@@ -156,5 +181,86 @@ describe("Product Goals page — C6 jsdom a11y reduced-motion (BSN-A11Y-GOALS-01
       "build:goals:view",
     );
     expect(screen.queryByText(/no goals yet/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("Product Feedback page — C6 jsdom a11y (BSN-A11Y-FB-01)", () => {
+  beforeEach(() => {
+    useFeedbucketSubmissions.mockReturnValue(EMPTY_FEEDBUCKET_RESULT);
+  });
+
+  it("access-denied state carries feedbucket permission key so screen readers report the correct gate (BSN-A11Y-FB-01)", () => {
+    usePageState.mockReturnValue({ kind: "denied", permission: "feedbucket:submissions:view" });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    const denied = screen.getByTestId("no-permission");
+    expect(denied).toBeInTheDocument();
+    expect(denied).toHaveAttribute("data-permission", "feedbucket:submissions:view");
+  });
+
+  it("access-denied state does not render an empty-state variant so denial is distinguishable from no-results (BSN-A11Y-FB-02)", () => {
+    usePageState.mockReturnValue({ kind: "denied", permission: "feedbucket:submissions:view" });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  });
+
+  it("error state is distinct from denied so a backend failure is not misread as an access problem (BSN-A11Y-FB-03)", () => {
+    usePageState.mockReturnValue({ kind: "error", error: new Error("timeout") });
+    render(<ProductFeedbackPage managedProductId={7} />);
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+    expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+  });
+});
+
+describe("Product Insights page — C6 jsdom a11y (BSN-A11Y-INS-01)", () => {
+  beforeEach(() => {
+    useManagedProductInsights.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+  });
+
+  it("access-denied state carries the managed-products permission key so screen readers report the correct gate (BSN-A11Y-INS-01)", () => {
+    usePageState.mockReturnValue({ kind: "denied", permission: "build:managed-products:view" });
+    render(<ProductInsightsPage managedProductId={7} />);
+    const denied = screen.getByTestId("no-permission");
+    expect(denied).toBeInTheDocument();
+    expect(denied).toHaveAttribute("data-permission", "build:managed-products:view");
+  });
+
+  it("error state is distinct from denied so a 500 is not misread as an access problem (BSN-A11Y-INS-02)", () => {
+    usePageState.mockReturnValue({ kind: "error", error: new Error("failed") });
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+    expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+  });
+});
+
+describe("Product Roadmap page — C6 jsdom a11y (BSN-A11Y-RM-01)", () => {
+  beforeEach(() => {
+    useRoadmapItems.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+  });
+
+  it("access-denied state carries the roadmap permission key so screen readers report the correct gate (BSN-A11Y-RM-01)", () => {
+    usePageState.mockReturnValue({ kind: "denied", permission: "build:roadmap:view" });
+    render(<ProductRoadmapPage managedProductId={7} />);
+    const denied = screen.getByTestId("no-permission");
+    expect(denied).toBeInTheDocument();
+    expect(denied).toHaveAttribute("data-permission", "build:roadmap:view");
+  });
+
+  it("error state is distinct from denied so a server failure is not misread as an access problem (BSN-A11Y-RM-02)", () => {
+    usePageState.mockReturnValue({ kind: "error", error: new Error("timeout") });
+    render(<ProductRoadmapPage managedProductId={7} />);
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+    expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
   });
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
 import { BarChart2, CheckCircle2, FolderOpen, Inbox, LayoutGrid, MessageSquare, ThumbsUp } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -7,13 +8,42 @@ import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { useManagedProductInsights } from "@/hooks/api/build/managed-products";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+
+const RANGE_OPTIONS = [
+  { label: "All time", value: "all" },
+  { label: "Last 7 days", value: "7d" },
+  { label: "Last 30 days", value: "30d" },
+  { label: "Last 90 days", value: "90d" },
+];
+
+const INSIGHTS_FILTER_DEFINITIONS = [
+  { param: "range" },
+] as const;
 
 interface ProductInsightsPageProps {
   managedProductId: number;
 }
 
 export function ProductInsightsPage({ managedProductId }: ProductInsightsPageProps) {
-  const { data, isLoading, isError, error, refetch } = useManagedProductInsights(managedProductId);
+  const listFilters = useBuildListFilters({ filters: INSIGHTS_FILTER_DEFINITIONS, withSearch: false });
+  const rangeValue = listFilters.value("range");
+
+  const typedRange = useMemo(
+    () => (rangeValue === "7d" || rangeValue === "30d" || rangeValue === "90d" ? rangeValue : undefined),
+    [rangeValue],
+  );
+
+  const handleRangeChange = useCallback(
+    (value: string) => listFilters.setValue("range", value),
+    [listFilters],
+  );
+
+  const { data, isLoading, isError, error, refetch } = useManagedProductInsights(managedProductId, {
+    range: typedRange,
+  });
 
   const resolution = usePageState({
     permission: "build:managed-products:view",
@@ -30,6 +60,26 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
     <PageWrapper
       title="Insights"
       subtitle="Aggregated activity for this product"
+      filters={
+        <BuildListToolbar
+          filters={[
+            {
+              id: "range",
+              label: "Range",
+              active: listFilters.isActive("range"),
+              control: (
+                <BuildFilterSelect
+                  label="Range"
+                  value={rangeValue}
+                  onValueChange={handleRangeChange}
+                  options={RANGE_OPTIONS}
+                />
+              ),
+            },
+          ]}
+          onClearAll={listFilters.clearAll}
+        />
+      }
     >
       <PmPageShell>
         <PmSection index={0} className="shrink-0">

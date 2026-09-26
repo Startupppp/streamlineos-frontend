@@ -33,7 +33,7 @@ import {
   PM_PANEL,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   GoalCard,
@@ -49,7 +49,7 @@ interface ProductGoalsPageProps {
 const PAGE_SIZE = 20;
 const CREATE_ACTION = { id: "create", label: "New Goal", icon: Plus, primary: true as const };
 
-function GoalsSkeleton() {
+export function GoalsSkeleton() {
   return (
     <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -73,6 +73,8 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
 
   const levelValue = listFilters.value("level");
   const statusValue = listFilters.value("status");
+
+  const ownerIdValue = listFilters.value("ownerId");
 
   const typedLevel = useMemo(
     () => LEVEL_OPTIONS.find((o) => o.value === levelValue)?.value,
@@ -99,11 +101,12 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
       limit: PAGE_SIZE,
       ...(typedStatus ? { status: typedStatus } : {}),
       ...(typedLevel ? { level: typedLevel } : {}),
+      ...(ownerIdValue && ownerIdValue !== BUILD_FILTER_ALL ? { ownerId: ownerIdValue } : {}),
       ...(listFilters.debouncedSearch.trim()
         ? { search: listFilters.debouncedSearch.trim() }
         : {}),
     }),
-    [managedProductId, page, typedStatus, typedLevel, listFilters.debouncedSearch],
+    [managedProductId, page, typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch],
   );
 
   const { data: goalsPage, isLoading, isError, error, refetch } = useGoalsPage(params);

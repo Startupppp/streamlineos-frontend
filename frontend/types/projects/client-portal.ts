@@ -58,7 +58,12 @@ export interface ClientVisibilityMilestone {
   clientVisible: boolean;
 }
 
+export interface CursorPage<T> {
+  data: T[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+}
+
 export interface ClientVisibilitySummary {
-  tickets: ClientVisibilityTicket[];
-  milestones: ClientVisibilityMilestone[];
+  tickets: CursorPage<ClientVisibilityTicket>;
+  milestones: CursorPage<ClientVisibilityMilestone>;
 }

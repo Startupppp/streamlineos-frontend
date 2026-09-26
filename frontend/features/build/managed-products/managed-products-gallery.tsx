@@ -18,6 +18,9 @@ import {
   buildManagedProductColumns,
   ManagedProductMobileCard,
 } from "./managed-product-table-columns";
+import { FEEDBACK_SKELETON_HEADERS } from "./product-feedback-columns";
+import { GoalsSkeleton } from "./product-goals-page";
+import { RoadmapSkeleton } from "./product-roadmap-page";
 
 const GALLERY_ROWS: ManagedProduct[] = Array.from({ length: 14 }, (_, i) => ({
   id: i + 1,
@@ -308,6 +311,53 @@ export function ManagedProductsGallery() {
         navActive
         body={<ManagedProductsReadyTable />}
       />
+
+      <GalleryCase id="feedback-loading" title="Feedback — loading skeleton">
+        <DataTableSkeleton
+          rows={8}
+          headers={FEEDBACK_SKELETON_HEADERS}
+          className="flex-1"
+        />
+      </GalleryCase>
+
+      <GalleryCase id="feedback-empty" title="Feedback — empty">
+        <EmptyState
+          className={PM_FILL_PANEL}
+          illustrationPreset="projects"
+          title="No feedback submissions"
+          description="Submissions from widgets linked to this product will appear here."
+        />
+      </GalleryCase>
+
+      <GalleryCase id="goals-loading" title="Goals — loading skeleton">
+        <div className="overflow-y-auto p-4">
+          <GoalsSkeleton />
+        </div>
+      </GalleryCase>
+
+      <GalleryCase id="goals-empty" title="Goals — empty">
+        <EmptyState
+          className={PM_FILL_PANEL}
+          illustrationPreset="projects"
+          title="No goals yet"
+          description="Create goals linked to this product."
+        />
+      </GalleryCase>
+
+      <GalleryCase id="roadmap-loading" title="Roadmap — loading skeleton">
+        <div className="overflow-y-auto p-4">
+          <RoadmapSkeleton />
+        </div>
+      </GalleryCase>
+
+      <GalleryCase id="roadmap-empty" title="Roadmap — empty">
+        <EmptyState
+          className={PM_FILL_PANEL}
+          illustrationPreset="projects"
+          title="No roadmap items yet"
+          description="Add items to plan what this product is working toward."
+        />
+      </GalleryCase>
     </div>
   );
 }

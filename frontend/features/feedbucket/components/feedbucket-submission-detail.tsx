@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ExternalLink } from "lucide-react";
@@ -12,7 +12,6 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
@@ -33,6 +32,8 @@ import type {
 } from "@/types/feedbucket";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 const MEDIA_LABELS: Record<FeedbucketMediaKind, string> = {
   screenshot: "Screenshot",
@@ -183,7 +184,7 @@ export function FeedbucketSubmissionDetail({
   backHref,
 }: FeedbucketSubmissionDetailProps) {
   const router = useRouter();
-  const { data: submission, isLoading, isError, refetch } = useFeedbucketSubmission(submissionId);
+  const { data: submission, isLoading, isError, error, refetch } = useFeedbucketSubmission(submissionId);
   const updateMutation = useUpdateFeedbucketSubmission();
   const canDelete = useCan("feedbucket:submissions:delete");
   const deleteMediaMutation = useDeleteFeedbucketSubmissionMedia();
@@ -192,33 +193,28 @@ export function FeedbucketSubmissionDetail({
   const [pendingMediaKind, setPendingMediaKind] = useState<FeedbucketMediaKind | null>(null);
   const [deleteSubmissionOpen, setDeleteSubmissionOpen] = useState(false);
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        <Skeleton className="h-64 w-full rounded-xl" />
-        <Skeleton className="h-24 w-full rounded-xl" />
-        <Skeleton className="h-32 w-full rounded-xl" />
-      </div>
-    );
-  }
+  const resolution = usePageState({
+    permission: "feedbucket:submissions:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !submission,
+  });
 
-  if (isError) {
-    return <ErrorState description="Failed to load submission." onRetry={refetch} />;
-  }
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && !deleteSubmissionOpen) {
+        router.push(backHref);
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [backHref, deleteSubmissionOpen, router]);
 
-  if (!submission) {
-    return (
-      <EmptyState
-        title="Submission not found"
-        description="This feedback submission was deleted, or the link is out of date."
-      />
-    );
-  }
-
-  const linkedTicketId = convertedTicketId ?? submission.linkedTicketId;
+  const linkedTicketId = convertedTicketId ?? submission?.linkedTicketId ?? null;
   const linkedProjectId =
-    submission.linkedTicket?.projectId ??
-    (convertedTicketId !== null ? undefined : submission.widget?.projectId);
+    submission?.linkedTicket?.projectId ??
+    (convertedTicketId !== null ? undefined : submission?.widget?.projectId);
 
   async function handleStatusChange(value: string) {
     try {
@@ -291,7 +287,25 @@ export function FeedbucketSubmissionDetail({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <PageState
+      resolution={resolution}
+      loading={
+        <div className="flex flex-1 min-h-0 flex-col space-y-4">
+          <Skeleton className="h-64 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-32 w-full rounded-xl" />
+        </div>
+      }
+      empty={
+        <EmptyState
+          title="Submission not found"
+          description="This feedback submission was deleted, or the link is out of date."
+        />
+      }
+      onRetry={refetch}
+    >
+      {submission && (
+      <div className="flex flex-col gap-6">
       {submission.screenshotUrl && (
         <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
           {canDelete ? (
@@ -474,6 +488,8 @@ export function FeedbucketSubmissionDetail({
         keepOpenOnConfirm
         onConfirm={handleConfirmDeleteSubmission}
       />
-    </div>
+      </div>
+      )}
+    </PageState>
   );
 }

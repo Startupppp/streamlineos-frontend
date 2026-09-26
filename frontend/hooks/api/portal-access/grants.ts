@@ -99,3 +99,21 @@ export function useRevokeGrant(projectClientGrantId: string) {
     },
   });
 }
+
+export function useBulkRevokeGrant() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:clientvisibility:manage", {
+    mutationKey: ["portalAccess", "grants", "bulk-revoke"],
+    mutationFn: (grantId: string) =>
+      apiClient.post<ProjectClientGrant>(
+        `/portal-access/grants/${grantId}/revoke`,
+        {},
+        undefined,
+        grantContract,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants() });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portal.all });
+    },
+  });
+}

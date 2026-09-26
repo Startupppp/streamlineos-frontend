@@ -4,10 +4,12 @@ export { render, screen };
 
 export const mockRouterPush = jest.fn();
 
+export const mockUseSearchParams = jest.fn(() => new URLSearchParams());
+
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn(), push: mockRouterPush }),
   usePathname: () => "/build/managed-products/7/goals",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: mockUseSearchParams,
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -63,6 +65,7 @@ jest.mock("@/hooks/api/build", () => ({
   useCreateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeleteManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useBulkUpdateManagedProducts: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({

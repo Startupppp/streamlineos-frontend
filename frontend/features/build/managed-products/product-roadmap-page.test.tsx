@@ -33,4 +33,10 @@ describe("ProductRoadmapPage — usePageState integration (BSN-01-027)", () => {
     const [callParams] = useRoadmapItems.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).toMatchObject({ managedProductId: 7 });
   });
+
+  it("does not pass horizon to useRoadmapItems because the backend roadmapListQuerySchema rejects it with .strict() (BSN-RM-001)", () => {
+    render(<ProductRoadmapPage managedProductId={7} />);
+    const [callParams] = useRoadmapItems.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("horizon");
+  });
 });

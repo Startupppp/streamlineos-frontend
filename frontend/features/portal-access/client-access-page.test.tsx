@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ClientAccessPage } from "./client-access-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -7,7 +7,12 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: () => <div data-testid="data-table" />,
+  DataTable: ({ selection }: { selection?: { onChange: (sel: Set<string | number>) => void } }) => (
+    <div
+      data-testid="data-table"
+      onClick={() => selection?.onChange(new Set(["grant-1"]))}
+    />
+  ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
@@ -86,14 +91,31 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
 }));
 
+jest.mock("lucide-react", () => ({
+  ...(jest.requireActual("lucide-react") as object),
+  X: () => <span data-testid="x-icon" />,
+}));
+
+jest.mock("@/components/pm-chrome", () => ({
+  PM_TOOLBAR: "",
+}));
+
+const mockUseBuildListKeyboard = jest.fn();
+
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+}));
+
 const mockUseProjectClientGrants = jest.fn();
 const mockUseRevokeGrant = jest.fn();
+const mockUseBulkRevokeGrant = jest.fn();
 const mockUseAccess = jest.fn();
 const mockUseCan = jest.fn<boolean, [string]>(() => false);
 
 jest.mock("@/hooks/api/portal-access/grants", () => ({
   useProjectClientGrants: (...args: unknown[]) => mockUseProjectClientGrants(...args),
   useRevokeGrant: (...args: unknown[]) => mockUseRevokeGrant(...args),
+  useBulkRevokeGrant: (...args: unknown[]) => mockUseBulkRevokeGrant(...args),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -185,6 +207,8 @@ beforeEach(() => {
     baseQueryResult({ data: emptyGrantsPage }),
   );
   mockUseRevokeGrant.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseBulkRevokeGrant.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });
 
 describe("ClientAccessPage — page state correctness", () => {
@@ -328,5 +352,74 @@ describe("ClientAccessPage — URL filter wiring", () => {
     );
     render(<ClientAccessPage />);
     expect(screen.getByTestId("data-table")).toBeInTheDocument();
+  });
+});
+
+const oneGrantPage = {
+  data: [
+    {
+      projectClientGrantId: "grant-1",
+      partyContactId: "contact-1",
+      contactFirstName: "Alice",
+      contactLastName: "Smith",
+      projectId: 42,
+      portalMembershipId: "membership-1",
+      status: "ACTIVE" as const,
+      canViewMilestones: true,
+      canViewTasks: false,
+      canViewAttachments: false,
+      canViewComments: false,
+      canSubmitChangeRequests: false,
+    },
+  ],
+  pagination: { hasMore: false, nextCursor: undefined },
+};
+
+describe("ClientAccessPage — keyboard shortcuts (Requirement C3)", () => {
+  it("passes onCreate when the user has build:clientvisibility:manage permission so the c key opens the grant form", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: oneGrantPage }));
+    render(<ClientAccessPage />);
+    const call = mockUseBuildListKeyboard.mock.calls.find(
+      ([opts]: [{ onCreate?: () => void }]) => opts.onCreate !== undefined,
+    );
+    expect(call).toBeDefined();
+  });
+
+  it("omits onCreate when the user lacks build:clientvisibility:manage permission so the c key does not open the form", () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: emptyGrantsPage }));
+    render(<ClientAccessPage />);
+    const lastCall = mockUseBuildListKeyboard.mock.calls.at(-1) as [{ onCreate?: () => void }];
+    expect(lastCall?.[0]?.onCreate).toBeUndefined();
+  });
+
+  it("passes onEdit so the e key opens the focused grant in the edit dialog", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: oneGrantPage }));
+    render(<ClientAccessPage />);
+    const lastCall = mockUseBuildListKeyboard.mock.calls.at(-1) as [{ onEdit?: (index: number) => void }];
+    expect(lastCall?.[0]?.onEdit).toBeDefined();
+  });
+});
+
+describe("ClientAccessPage — bulk revoke selection (Requirement C3)", () => {
+  it("shows the bulk revoke bar with selected count after a row is selected", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: oneGrantPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByTestId("data-table"));
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /revoke selected/i })).toBeInTheDocument();
+  });
+
+  it("hides the bulk revoke bar after the clear button is clicked", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQueryResult({ data: oneGrantPage }));
+    render(<ClientAccessPage />);
+    fireEvent.click(screen.getByTestId("data-table"));
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /clear selection/i }));
+    expect(screen.queryByText("1 selected")).not.toBeInTheDocument();
   });
 });
