@@ -3,7 +3,7 @@ import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import { ChangeRequestAffectedTickets } from "./change-request-affected-tickets";
 
 let mockCanManage = true;
-let mockAccessState = "allowed";
+let mockPageStateResolution: { kind: string; error?: unknown } = { kind: "ready" };
 let mockAffectedTicketsResult: {
   data: { data: unknown[]; pagination: { hasMore: boolean } } | undefined;
   isLoading: boolean;
@@ -31,7 +31,10 @@ jest.mock("@/hooks/api", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanManage,
-  useCanState: () => mockAccessState,
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => mockPageStateResolution,
 }));
 
 jest.mock("@/hooks/common/use-debounce", () => ({
@@ -70,7 +73,7 @@ const mockUseTicketSearch = jest.mocked(useTicketSearch);
 beforeEach(() => {
   jest.clearAllMocks();
   mockCanManage = true;
-  mockAccessState = "allowed";
+  mockPageStateResolution = { kind: "ready" };
   mockAffectedTicketsResult = { data: { data: [], pagination: { hasMore: false } }, isLoading: false };
 });
 
@@ -89,15 +92,15 @@ it("shows an empty state when no tickets are linked", () => {
 });
 
 it("renders nothing while the access snapshot is still loading, so the empty state is never shown as a false negative", () => {
-  mockAccessState = "loading";
+  mockPageStateResolution = { kind: "loading" };
 
   render(<ChangeRequestAffectedTickets projectId={1} changeRequestId={7} />);
 
   expect(screen.queryByText("No affected tickets yet.")).not.toBeInTheDocument();
 });
 
-it("renders nothing when the viewer is denied change-request view, rather than an empty state", () => {
-  mockAccessState = "denied";
+it("does not show the empty state when the viewer is denied change-request view", () => {
+  mockPageStateResolution = { kind: "denied" };
 
   render(<ChangeRequestAffectedTickets projectId={1} changeRequestId={7} />);
 
@@ -230,8 +233,9 @@ it("filters out a candidate that is already linked", () => {
   expect(screen.getByText("No tickets found.")).toBeInTheDocument();
 });
 
-it("shows an inline retry instead of a false empty state when the affected-tickets read fails", () => {
+it("shows a retry instead of a false empty state when the affected-tickets read fails", () => {
   const refetch = jest.fn();
+  mockPageStateResolution = { kind: "error", error: new Error("Not a project member.") };
   mockAffectedTicketsResult = {
     data: undefined,
     isLoading: false,
@@ -242,8 +246,8 @@ it("shows an inline retry instead of a false empty state when the affected-ticke
 
   render(<ChangeRequestAffectedTickets projectId={1} changeRequestId={7} />);
 
-  expect(screen.getByText("Couldn't load affected tickets")).toBeInTheDocument();
   expect(screen.queryByText("No affected tickets yet.")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: "Try again" }));
   expect(refetch).toHaveBeenCalledTimes(1);

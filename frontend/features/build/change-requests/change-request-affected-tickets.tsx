@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { useProject } from "@/hooks/api";
 import {
   useChangeRequestAffectedTickets,
@@ -33,7 +35,6 @@ import { Badge } from "@/components/ui/badge";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-import { ErrorState } from "@/components/shared/error-state";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import type { ChangeRequestAffectedItem } from "@/types/projects";
 
@@ -106,7 +107,6 @@ export function ChangeRequestAffectedTickets({
   changeRequestId,
 }: ChangeRequestAffectedTicketsProps) {
   const canManage = useCan("build:changerequests:manage");
-  const accessState = useCanState("build:changerequests:view");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [pageLimit, setPageLimit] = useState(25);
@@ -124,13 +124,19 @@ export function ChangeRequestAffectedTickets({
   const link = useLinkAffectedTicket(projectId, changeRequestId);
   const unlink = useUnlinkAffectedTicket(projectId, changeRequestId);
 
-  if (accessState === "denied" || accessState === "loading") return null;
-
   const affectedItems = useMemo(() => data?.data ?? [], [data]);
   const linkedTicketIds = useMemo(
     () => new Set(affectedItems.map((item) => item.ticketId)),
     [affectedItems],
   );
+
+  const resolution = usePageState({
+    permission: "build:changerequests:view",
+    isLoading,
+    isError,
+    error,
+  });
+
   const candidates = (searchResults ?? []).filter(
     (t) => t.projectId === projectId && !linkedTicketIds.has(t.id),
   );
@@ -163,20 +169,8 @@ export function ChangeRequestAffectedTickets({
     setPageLimit((prev) => Math.min(prev + 25, 100));
   }
 
-  if (isLoading) return null;
-
-  if (isError) {
-    return (
-      <ErrorState
-        compact
-        title="Couldn't load affected tickets"
-        description={getErrorMessage(error)}
-        onRetry={handleRetry}
-      />
-    );
-  }
-
   return (
+    <PageState resolution={resolution} loading={null} onRetry={handleRetry} compact>
     <div>
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
@@ -254,5 +248,6 @@ export function ChangeRequestAffectedTickets({
         </div>
       )}
     </div>
+    </PageState>
   );
 }

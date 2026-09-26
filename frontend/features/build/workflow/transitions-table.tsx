@@ -113,12 +113,20 @@ export function TransitionsTable({
 
   const transitions = externalTransitions ?? (ownTransitions ?? []);
   const isLoading = externalIsLoading !== undefined ? externalIsLoading : ownIsLoading;
+  const isError = externalTransitions === undefined ? ownIsError : false;
+  const error = externalTransitions === undefined ? ownError : undefined;
   const sheetOpen = externalSheetOpen !== undefined ? externalSheetOpen : internalSheetOpen;
   const editTarget = externalEditTarget !== undefined ? externalEditTarget : internalEditTarget;
   const setSheetOpen = onSheetOpenChange ?? setInternalSheetOpen;
   const setEditTarget = onEditTargetChange ?? setInternalEditTarget;
 
-  if (accessState === "denied" || accessState === "loading") return null;
+  const resolution = usePageState({
+    permission: "build:workflow:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: transitions.length === 0,
+  });
 
   const statusMap = new Map(statuses.map((s) => [s.id, s.name]));
 
@@ -170,6 +178,10 @@ export function TransitionsTable({
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   function handleSheetOpenChange(open: boolean) {
@@ -303,27 +315,31 @@ export function TransitionsTable({
         {canManage ? <AddTransitionButton onClick={handleAddClick} /> : null}
       </div>
 
-      {isLoading ? (
-        <DataTableSkeleton rows={12} headers={TRANSITION_TABLE_HEADERS} className="px-4 pb-4" mobileCards />
-      ) : (transitions ?? []).length === 0 ? (
-        <EmptyState
-          illustrationPreset="projects"
-          compact
-          title="No transitions defined"
-          description="All status changes are currently unrestricted. Add a transition to enforce your workflow."
-          action={canManage ? { label: "Add transition", onClick: handleAddClick } : undefined}
-          className="px-4 pb-4"
-        />
-      ) : (
+      <PageState
+        resolution={resolution}
+        loading={<DataTableSkeleton rows={12} headers={TRANSITION_TABLE_HEADERS} className="px-4 pb-4" mobileCards />}
+        empty={
+          <EmptyState
+            illustrationPreset="projects"
+            compact
+            title="No transitions defined"
+            description="All status changes are currently unrestricted. Add a transition to enforce your workflow."
+            action={canManage ? { label: "Add transition", onClick: handleAddClick } : undefined}
+            className="px-4 pb-4"
+          />
+        }
+        onRetry={handleRetry}
+        compact
+      >
         <DataTable
-          data={transitions ?? []}
+          data={transitions}
           columns={columns}
           getRowKey={(row) => row.id}
           minWidth="680px"
           className="border-0"
           mobileCard={renderTransitionMobileCard}
         />
-      )}
+      </PageState>
 
       <TransitionFormSheet
         open={sheetOpen}
