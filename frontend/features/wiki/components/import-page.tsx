@@ -16,7 +16,8 @@ import {
   TabsTrigger,
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   useImportKbPages,
   useKbImportJob,
@@ -48,6 +49,8 @@ function resolveTab(tabParam: string | null): ImportExportTab {
 export default function ImportPage() {
   const canImport = useCan("kb:pages:import");
   const canExport = useCan("kb:pages:export");
+  const importAccess = useCanState("kb:pages:import");
+  const exportAccess = useCanState("kb:pages:export");
   const importMutation = useImportKbPages();
   const cancelMutation = useCancelImportJob();
   const dryRunMutation = useDryRunImport();
@@ -277,14 +280,11 @@ export default function ImportPage() {
     router.replace(qs ? `${KB_IMPORT}?${qs}` : KB_IMPORT, { scroll: false });
   }
 
-  if (!canImport && !canExport) {
+  if (importAccess === "denied" && exportAccess === "denied") {
     return (
       <PageWrapper title="Import & Export">
-        <EmptyState
-          illustration={
-            <KbUploadIcon className="w-8 text-muted-foreground" />
-          }
-          title="Access denied"
+        <NoPermissionState
+          permission="kb:pages:import"
           description="You don't have permission to import or export pages. Ask an admin to grant kb:pages:import or kb:pages:export."
         />
       </PageWrapper>
@@ -352,8 +352,12 @@ export default function ImportPage() {
         className="flex min-h-0 flex-1 flex-col gap-4"
       >
         <TabsList>
-          {canImport ? <TabsTrigger value="import">Import</TabsTrigger> : null}
-          {canExport ? <TabsTrigger value="export">Export</TabsTrigger> : null}
+          {importAccess === "denied" ? null : (
+            <TabsTrigger value="import">Import</TabsTrigger>
+          )}
+          {exportAccess === "denied" ? null : (
+            <TabsTrigger value="export">Export</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="import" className={TABS_CONTENT_PAGE_BODY_CLASS}>

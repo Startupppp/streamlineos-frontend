@@ -12,12 +12,18 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: string) => grantedPermissions.includes(permission),
+  useCanState: (permission: string) =>
+    grantedPermissions.includes(permission) ? "granted" : "denied",
   usePermissionGate: (permission: string) => ({
     permission,
     allowed: grantedPermissions.includes(permission),
     denied: !grantedPermissions.includes(permission),
     pending: false,
   }),
+}));
+
+jest.mock("@/hooks/api/kb/pages", () => ({
+  useKbPageTreeInfinite: () => ({ data: undefined, isLoading: false, hasNextPage: false, fetchNextPage: jest.fn() }),
 }));
 
 jest.mock("@/hooks/api/kb/spaces", () => ({
@@ -39,6 +45,9 @@ const emptyJobList = {
 
 jest.mock("@/hooks/api/kb", () => ({
   useImportKbPages: () => ({ mutate: jest.fn(), isPending: false }),
+  useKbImportJob: () => ({ data: undefined }),
+  useCancelImportJob: () => ({ mutate: jest.fn(), isPending: false }),
+  useDryRunImport: () => ({ mutate: jest.fn(), isPending: false, data: undefined, reset: jest.fn() }),
   useKbImportJobs: () => emptyJobList,
   useKbExportJobs: () => emptyJobList,
 }));
@@ -85,12 +94,16 @@ describe("Import and Export tabs are gated separately", () => {
     expect(screen.queryByRole("tab", { name: /^export$/i })).not.toBeInTheDocument();
   });
 
-  it("denies the whole page only when the user holds neither permission", () => {
+  it("denies the whole page as a permission state, not an empty state, only when the user holds neither permission", () => {
     grantedPermissions = [];
 
     render(<ImportPage />);
 
-    expect(screen.getByText(/access denied/i)).toBeInTheDocument();
+    expect(screen.getByText(/access restricted/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/permission to import or export pages/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
   });
 
   it("ignores a tab URL param the user cannot use and lands on one they can", () => {

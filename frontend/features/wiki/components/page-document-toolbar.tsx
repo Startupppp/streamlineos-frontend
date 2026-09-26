@@ -30,7 +30,7 @@ import { exportKbPage } from "@/features/wiki/lib/export-page";
 import {
   resolveKbPageActions,
   groupKbPageActions,
-  type KbPageActionId,
+  toKbPageActionId,
 } from "@/features/wiki/lib/page-action-descriptors";
 
 interface PageDocumentToolbarProps {
@@ -142,7 +142,7 @@ export function PageDocumentToolbar({
   function handleMenuSelect(event: Event) {
     const target = event.currentTarget;
     if (!(target instanceof HTMLElement)) return;
-    const id = target.dataset.actionId as KbPageActionId | undefined;
+    const id = toKbPageActionId(target.dataset.actionId);
     if (!id) return;
     switch (id) {
       case "comments": onOpenComments(); break;

@@ -9,6 +9,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select,
   SelectContent,
@@ -219,9 +220,22 @@ interface BulkRepairDialogProps {
   onClose: () => void;
 }
 
+const REPAIR_ACTIONS = [
+  { value: "request_review", label: "Request review" },
+  { value: "assign_owner", label: "Assign owner" },
+  { value: "mark_needs_content", label: "Mark needs content" },
+] as const;
+
+type RepairAction = (typeof REPAIR_ACTIONS)[number]["value"];
+
 function BulkRepairDialog({ selectedIds, activeSignal, onClose }: BulkRepairDialogProps) {
   const bulkRepair = useBulkRepairHealthItems();
-  const [repairAction, setRepairAction] = useState<"assign_owner" | "request_review" | "mark_needs_content">("request_review");
+  const [repairAction, setRepairAction] = useState<RepairAction>("request_review");
+
+  function handleRepairActionChange(value: string) {
+    const next = REPAIR_ACTIONS.find((action) => action.value === value);
+    if (next) setRepairAction(next.value);
+  }
 
   function handleConfirm() {
     bulkRepair.mutate(
@@ -247,36 +261,33 @@ function BulkRepairDialog({ selectedIds, activeSignal, onClose }: BulkRepairDial
         </h2>
         <Select
           value={repairAction}
-          onValueChange={(v) => setRepairAction(v as typeof repairAction)}
+          onValueChange={handleRepairActionChange}
         >
           <SelectTrigger className="w-full h-8 text-xs" aria-label="Repair action">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="request_review" className="text-xs">
-              Request review
-            </SelectItem>
-            <SelectItem value="assign_owner" className="text-xs">
-              Assign owner
-            </SelectItem>
-            <SelectItem value="mark_needs_content" className="text-xs">
-              Mark needs content
-            </SelectItem>
+            {REPAIR_ACTIONS.map((action) => (
+              <SelectItem key={action.value} value={action.value} className="text-xs">
+                {action.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <div className="flex items-center gap-2 justify-end pt-2">
           <Button type="button" variant="outline" size="sm" className="text-xs h-7" onClick={onClose}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="button"
             size="sm"
             className="text-xs h-7"
             onClick={handleConfirm}
-            disabled={bulkRepair.isPending}
+            isPending={bulkRepair.isPending}
+            loadingText="Repairing…"
           >
-            {bulkRepair.isPending ? "Repairing…" : "Confirm"}
-          </Button>
+            Confirm
+          </LoadingButton>
         </div>
       </div>
     </div>
@@ -341,15 +352,17 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
           className="w-full h-8 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Due date"
         />
-        <Button
+        <LoadingButton
           type="button"
           size="sm"
           className="w-full text-xs h-7"
           onClick={handleAssign}
-          disabled={assign.isPending || !membershipId}
+          disabled={!membershipId}
+          isPending={assign.isPending}
+          loadingText="Saving…"
         >
-          {assign.isPending ? "Saving…" : "Save"}
-        </Button>
+          Save
+        </LoadingButton>
       </PopoverContent>
     </Popover>
   );

@@ -61,7 +61,10 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
   const currentVisibility: Visibility = page.visibility ?? "private";
 
   function handleVisibilitySelect(e: React.MouseEvent<HTMLButtonElement>) {
-    const value = e.currentTarget.dataset.visibility as Visibility | undefined;
+    const selectedVisibility = e.currentTarget.dataset.visibility;
+    const value = VISIBILITY_OPTIONS.find(
+      (option) => option.value === selectedVisibility,
+    )?.value;
     if (!value || value === currentVisibility) return;
     setVisibility.mutate(
       { pageId: page.id, visibility: value },

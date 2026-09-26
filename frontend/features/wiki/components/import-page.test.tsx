@@ -12,6 +12,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useCanState: () => "granted",
   usePermissionGate: (permission: string) => ({
     permission,
     allowed: true,
@@ -20,12 +21,19 @@ jest.mock("@/hooks/api/access", () => ({
   }),
 }));
 
+jest.mock("@/hooks/api/kb/pages", () => ({
+  useKbPageTreeInfinite: () => ({ data: undefined, isLoading: false, hasNextPage: false, fetchNextPage: jest.fn() }),
+}));
+
 jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: () => ({ data: { data: [], pagination: { limit: 50, hasMore: false, nextCursor: null } } }),
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
   useImportKbPages: () => ({ mutate: jest.fn(), isPending: false }),
+  useKbImportJob: () => ({ data: undefined }),
+  useCancelImportJob: () => ({ mutate: jest.fn(), isPending: false }),
+  useDryRunImport: () => ({ mutate: jest.fn(), isPending: false, data: undefined, reset: jest.fn() }),
   useKbImportJobs: () => ({
     data: [],
     isLoading: false,

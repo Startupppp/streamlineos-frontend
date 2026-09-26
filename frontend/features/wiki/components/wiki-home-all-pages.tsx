@@ -57,7 +57,7 @@ import {
   groupKbPageActions,
   type KbPageActionCapabilities,
   type KbPageActionSubject,
-  type KbPageActionId,
+  toKbPageActionId,
 } from "@/features/wiki/lib/page-action-descriptors";
 import { KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
 
@@ -182,7 +182,7 @@ function AllPagesItemMenu({ page, resolveHref }: AllPagesItemMenuProps) {
   function handleSelect(event: Event) {
     const target = event.currentTarget;
     if (!(target instanceof HTMLElement)) return;
-    const actionId = target.dataset.actionId as KbPageActionId | undefined;
+    const actionId = toKbPageActionId(target.dataset.actionId);
     if (!actionId) return;
     if (actionId === "favorite") {
       toggleFavorite.mutate(

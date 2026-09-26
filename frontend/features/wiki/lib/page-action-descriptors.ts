@@ -247,6 +247,12 @@ const KB_PAGE_ACTION_DEFINITIONS: readonly KbPageActionDefinition[] = [
 export const KB_PAGE_ACTION_IDS: readonly KbPageActionId[] =
   KB_PAGE_ACTION_DEFINITIONS.map((definition) => definition.id);
 
+export function toKbPageActionId(
+  value: string | undefined,
+): KbPageActionId | undefined {
+  return KB_PAGE_ACTION_IDS.find((actionId) => actionId === value);
+}
+
 function resolveAction(
   definition: KbPageActionDefinition,
   subject: KbPageActionSubject,
