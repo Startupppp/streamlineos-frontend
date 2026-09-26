@@ -1,9 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 const mockUseAccess = jest.fn();
 const mockUseCan = jest.fn();
 const mockUseBuildMembers = jest.fn();
+const mockUseBuildListKeyboard = jest.fn(() => ({
+  focusedIndex: null,
+  setFocusedIndex: jest.fn(),
+}));
+const mockUseOnlineStatus = jest.fn(() => true);
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn() }),
@@ -62,6 +67,19 @@ jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
 
 jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => String(e),
+}));
+
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+}));
+
+jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({

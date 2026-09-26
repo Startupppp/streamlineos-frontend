@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import type { ProjectTeamMember } from "@/types/projects";
 import { TeamHomePage } from "./team-home-page";
@@ -21,6 +21,44 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockUseCan(key),
   useCanState: jest.fn(() => "granted"),
 }));
+
+const mockUseOnlineStatus = jest.fn<boolean, []>(() => true);
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockUseOnlineStatus(),
+}));
+
+const mockUseBuildListFilters = jest.fn();
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: (opts: unknown) => mockUseBuildListFilters(opts),
+  BUILD_FILTER_ALL: "all",
+}));
+
+jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
+}));
+
+jest.mock("@/components/ui/search-input", () => ({
+  SearchInput: React.forwardRef<HTMLInputElement, object>((_props, _ref) => (
+    <div data-testid="member-search-input" />
+  )),
+}));
+
+const DEFAULT_FILTERS_STATE = {
+  search: "",
+  debouncedSearch: "",
+  cursor: null,
+  setSearch: jest.fn(),
+  setCursor: jest.fn(),
+  value: jest.fn((_param: string) => "all"),
+  isActive: jest.fn(() => false),
+  setValue: jest.fn(),
+  clearAll: jest.fn(),
+  activeCount: 0,
+  isFiltered: false,
+  resetKey: "",
+  isPending: false,
+};
 
 const BASE_TEAM = {
   id: 1,
@@ -244,6 +282,11 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockPush.mockReset();
   mockUseCan.mockReturnValue(false);
+  mockUseOnlineStatus.mockReturnValue(true);
+  mockUseBuildListFilters.mockReturnValue({
+    ...DEFAULT_FILTERS_STATE,
+    value: jest.fn((_param: string) => "all"),
+  });
   mockTeamResult = {
     data: undefined,
     isLoading: false,
@@ -599,5 +642,119 @@ describe("TeamHomePage — remove member button visibility (BLD-X-FE-TEAMS-DETAI
     mockUseCan.mockReturnValue(true);
     render(<TeamHomePage teamId={1} />);
     expect(screen.queryByText("lead")).not.toBeInTheDocument();
+  });
+});
+
+describe("TeamHomePage — offline state (BLD-X-FE-TEAMS-DETAIL-012)", () => {
+  beforeEach(() => {
+    mockTeamResult = { ...mockTeamResult, data: { ...BASE_TEAM } };
+    mockMembersResult = {
+      data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+      isLoading: false,
+    };
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+  });
+
+  it("shows 'You are offline' when offline and no members are loaded — paired with online test below", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.getByText("You are offline")).toBeInTheDocument();
+    expect(screen.queryByText("No members yet")).not.toBeInTheDocument();
+  });
+
+  it("shows 'No members yet' when online and no members — paired with offline test above", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.getByText("No members yet")).toBeInTheDocument();
+    expect(screen.queryByText("You are offline")).not.toBeInTheDocument();
+  });
+});
+
+describe("TeamHomePage — shortcut help dialog (BLD-X-FE-TEAMS-DETAIL-013)", () => {
+  beforeEach(() => {
+    mockTeamResult = { ...mockTeamResult, data: { ...BASE_TEAM } };
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+  });
+
+  it("passes onShortcutHelp to useBuildListKeyboard so the ? key can open the help overlay", () => {
+    render(<TeamHomePage teamId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
+    );
+  });
+
+  it("ShortcutHelpDialog is not shown on initial render — paired with the open test below", () => {
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("calling the onShortcutHelp callback opens ShortcutHelpDialog — confirms the state wiring is live", async () => {
+    render(<TeamHomePage teamId={1} />);
+    const capturedOptions = mockUseBuildListKeyboard.mock.calls[0][0] as { onShortcutHelp: () => void };
+    expect(typeof capturedOptions.onShortcutHelp).toBe("function");
+    await act(async () => {
+      capturedOptions.onShortcutHelp();
+    });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
+  });
+});
+
+describe("TeamHomePage — URL filter params q, leadId, memberId (BLD-X-FE-TEAMS-DETAIL-014)", () => {
+  beforeEach(() => {
+    mockTeamResult = { ...mockTeamResult, data: { ...BASE_TEAM } };
+    mockMembersResult = {
+      data: {
+        data: [MEMBER_A, MEMBER_B],
+        pagination: { limit: 25, hasMore: false, nextCursor: null },
+      },
+      isLoading: false,
+    };
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+  });
+
+  it("useBuildListFilters is initialized with withSearch:true and leadId/memberId filter definitions so URL params are managed", () => {
+    render(<TeamHomePage teamId={1} />);
+    expect(mockUseBuildListFilters).toHaveBeenCalledWith(
+      expect.objectContaining({ withSearch: true }),
+    );
+    const opts = mockUseBuildListFilters.mock.calls[0][0] as { filters?: Array<{ param: string }> };
+    const paramNames = (opts.filters ?? []).map((f) => f.param);
+    expect(paramNames).toContain("leadId");
+    expect(paramNames).toContain("memberId");
+  });
+
+  it("q search filters displayed members by email — param reaches the rendered list and is not dropped", () => {
+    mockUseBuildListFilters.mockReturnValue({
+      ...DEFAULT_FILTERS_STATE,
+      search: "alice",
+      debouncedSearch: "alice",
+      value: jest.fn((_param: string) => "all"),
+      resetKey: "q=alice",
+    });
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.getAllByText("alice@example.com").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryAllByText("bob@example.com")).toHaveLength(0);
+  });
+
+  it("leadId filter shows only the matching member — param reaches the rendered list and is not dropped", () => {
+    mockUseBuildListFilters.mockReturnValue({
+      ...DEFAULT_FILTERS_STATE,
+      value: jest.fn((param: string) => (param === "leadId" ? MEMBER_A.userId : "all")),
+      resetKey: `leadId=${MEMBER_A.userId}`,
+    });
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.getAllByText("alice@example.com").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryAllByText("bob@example.com")).toHaveLength(0);
+  });
+
+  it("memberId filter shows only the matching member — param reaches the rendered list and is not dropped", () => {
+    mockUseBuildListFilters.mockReturnValue({
+      ...DEFAULT_FILTERS_STATE,
+      value: jest.fn((param: string) => (param === "memberId" ? MEMBER_B.userId : "all")),
+      resetKey: `memberId=${MEMBER_B.userId}`,
+    });
+    render(<TeamHomePage teamId={1} />);
+    expect(screen.queryAllByText("alice@example.com")).toHaveLength(0);
+    expect(screen.getAllByText("bob@example.com").length).toBeGreaterThanOrEqual(1);
   });
 });

@@ -532,6 +532,7 @@ export function TeamHomePage({ teamId }: Props) {
         isPending={deleteTeam.isPending}
         onConfirm={handleDeleteConfirm}
       />
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
     </PageWrapper>
   );
 }

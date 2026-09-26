@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -36,6 +36,9 @@ import { BuildHeaderActions } from "@/features/build/shared/build-header-actions
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 
 const MEMBER_TABLE_HEADERS = ["Name", "Role", "Added", "Actions"] as const;
@@ -45,6 +48,9 @@ export function MembersPage() {
     useState<DisplayProps>(loadDisplayProps);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<BuildMember | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const isOnline = useOnlineStatus();
 
   const listFilters = useBuildListFilters({ searchParam: "search" });
   const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
@@ -114,6 +120,20 @@ export function MembersPage() {
     goNext(data?.pagination.nextCursor);
   }, [data, goNext]);
 
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+  const handleKeyboardOpen = useCallback((_index: number) => {}, []);
+  const handleKeyboardClearSelection = useCallback(() => setRemoveTarget(null), []);
+
+  useBuildListKeyboard({
+    itemCount: members.length,
+    onOpen: handleKeyboardOpen,
+    onCreate: handleOpenAddDialog,
+    onClearSelection: handleKeyboardClearSelection,
+    onShortcutHelp: handleShortcutHelp,
+    searchInputRef,
+    enabled: !isLoading,
+  });
+
   const columns = useMembersColumns({
     displayProps,
     canManage,
@@ -181,6 +201,7 @@ export function MembersPage() {
               onValueChange: listFilters.setSearch,
               placeholder: "Search members…",
               label: "Search members",
+              inputRef: searchInputRef,
             }}
             trailing={
               <>
@@ -207,6 +228,14 @@ export function MembersPage() {
                 />
               }
               empty={
+                !isOnline ? (
+                  <EmptyState
+                    className={PM_FILL_PANEL}
+                    illustrationPreset="team"
+                    title="You are offline"
+                    description="Reconnect to see the latest member list."
+                  />
+                ) : (
                 <EmptyState
                   className={PM_FILL_PANEL}
                   illustrationPreset="team"
@@ -226,6 +255,7 @@ export function MembersPage() {
                       : undefined
                   }
                 />
+                )
               }
               onRetry={handleRetry}
               className={PM_FILL_PANEL}
@@ -267,6 +297,11 @@ export function MembersPage() {
         destructive
         isPending={removeMember.isPending}
         onConfirm={handleRemoveConfirm}
+      />
+
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
       />
     </>
   );

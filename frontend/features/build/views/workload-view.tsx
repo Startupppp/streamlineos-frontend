@@ -496,4 +496,9 @@ export const WorkloadView = memo(function WorkloadView({
                 )}
               </motion.div>
             )}
-          
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});

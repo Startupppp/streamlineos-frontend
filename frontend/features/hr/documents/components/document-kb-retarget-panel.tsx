@@ -73,6 +73,8 @@ export function DocumentKbRetargetPanel({ documentId, link, documentName }: Docu
     [documentId, documentName, form, link, retarget],
   );
 
+  if (!canPublish) return null;
+
   return (
     <>
       <Button type="button" variant="outline" onClick={handleOpen}>

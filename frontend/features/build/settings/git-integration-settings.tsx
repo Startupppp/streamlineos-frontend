@@ -1,13 +1,15 @@
 ﻿"use client";
 
 import type { ReactNode } from "react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Bot, ExternalLink, GitBranch } from "lucide-react";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -97,6 +99,8 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
   const searchParams = useSearchParams();
   const isOnline = useOnlineStatus();
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const listFilters = useBuildListFilters({ searchParam: "search" });
   const {
     data: connections,
     isLoading,
@@ -206,14 +210,25 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
   );
 
   const connectionsList = connections?.data ?? [];
+  const filteredConnections = listFilters.debouncedSearch
+    ? connectionsList.filter((c) => {
+        const q = listFilters.debouncedSearch.toLowerCase();
+        return (
+          c.repoUrl.toLowerCase().includes(q) ||
+          (c.repoName !== null && c.repoName.toLowerCase().includes(q))
+        );
+      })
+    : connectionsList;
+
   const handleOpenConnection = useCallback((_index: number) => {}, []);
   const handleClearConnectionSelection = useCallback(() => setDeleteId(null), []);
   useBuildListKeyboard({
-    itemCount: connectionsList.length,
+    itemCount: filteredConnections.length,
     onOpen: handleOpenConnection,
     onCreate: isOnline ? handleOpenDialog : undefined,
     onClearSelection: handleClearConnectionSelection,
     onShortcutHelp: handleShortcutHelp,
+    searchInputRef,
     enabled: !isLoading && !isError,
   });
 
@@ -248,6 +263,16 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
             </TabsList>
 
             <TabsContent value="connections" className="mt-0">
+              <BuildListToolbar
+                className="mb-4"
+                search={{
+                  value: listFilters.search,
+                  onValueChange: listFilters.setSearch,
+                  placeholder: "Search connections…",
+                  inputRef: searchInputRef,
+                }}
+                onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
+              />
               {isLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -270,7 +295,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                   description="There was a problem loading your Git connections."
                   onRetry={handleRetry}
                 />
-              ) : connectionsList.length === 0 ? (
+              ) : filteredConnections.length === 0 ? (
                 !isOnline ? (
                   <EmptyState
                     className={PM_FILL_PANEL}
@@ -282,14 +307,16 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                   <EmptyState
                     className={PM_FILL_PANEL}
                     illustration={<EmptyDevicesIllustration />}
-                    title="No repositories connected"
-                    description="Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."
-                    action={{ label: "Add connection", onClick: handleOpenDialog }}
+                    title={listFilters.isFiltered ? "No matching connections" : "No repositories connected"}
+                    description={listFilters.isFiltered ? undefined : "Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."}
+                    filtersActive={listFilters.isFiltered}
+                    onClearFilters={listFilters.isFiltered ? listFilters.clearAll : undefined}
+                    action={!listFilters.isFiltered ? { label: "Add connection", onClick: handleOpenDialog } : undefined}
                   />
                 )
               ) : (
                 <PmStaggerList className="space-y-3">
-                  {connectionsList.map((connection) => (
+                  {filteredConnections.map((connection) => (
                     <ConnectionRow
                       key={connection.id}
                       connection={connection}
