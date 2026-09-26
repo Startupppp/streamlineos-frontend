@@ -108,7 +108,7 @@ jest.mock("@/components/ui/empty-state", () => ({
   EmptyState: () => <div data-testid="empty-state" />,
 }));
 
-jest.mock("@/features/build/backlog/bulk-action-bar", () => ({
+jest.mock("@/features/build/shared/bulk-action-bar", () => ({
   BulkActionBar: () => null,
 }));
 

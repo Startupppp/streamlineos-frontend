@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
+import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { useAllWork, useProjects } from "@/hooks/api/build";
 import { usePageState } from "@/hooks/api/use-page-state";

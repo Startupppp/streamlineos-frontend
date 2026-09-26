@@ -43,6 +43,7 @@ import {
   sortProjects,
 } from "@/features/build/project-list/project-list-shaping";
 import { buildListSearchParams } from "@/features/build/shared/use-build-list-url-state";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
 export { filterVisibleProjects };
 
@@ -228,6 +229,25 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
   const hasFiltersOrSearch =
     Boolean(debouncedSearch) || Object.values(activeFilters).some(Boolean);
   const filtersActive = hasFiltersOrSearch || activeGroup !== null;
+
+  const handleKeyboardOpenProject = useCallback(
+    (index: number) => {
+      const project = visibleProjects[index];
+      if (project) router.push(`/build/${project.id}`);
+    },
+    [visibleProjects, router],
+  );
+
+  const handleKeyboardClearProject = useCallback(() => {
+    setManualCreateOpen(false);
+  }, []);
+
+  useBuildListKeyboard({
+    itemCount: visibleProjects.length,
+    onOpen: handleKeyboardOpenProject,
+    onClearSelection: handleKeyboardClearProject,
+    enabled: pageState.kind === "ready",
+  });
 
   const headerActions = useMemo(() => {
     const actions = [];

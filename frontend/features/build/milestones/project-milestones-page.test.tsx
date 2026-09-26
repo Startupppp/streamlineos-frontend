@@ -1,6 +1,16 @@
 import { render, screen } from "@testing-library/react";
 import { ProjectMilestonesPage } from "./project-milestones-page";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn() }),
+  usePathname: () => "/build/1/milestones",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+jest.mock("@/hooks/common/use-debounce", () => ({
+  useDebouncedValue: (v: string) => v,
+}));
+
 jest.mock("@/hooks/api/build", () => ({
   useProjectMilestones: jest.fn(),
   useDeleteMilestone: jest.fn(),

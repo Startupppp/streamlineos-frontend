@@ -32,6 +32,7 @@ import { PmPanel, PM_TOOLBAR } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { useCanState } from "@/hooks/api/access";
 
 const MONTHS = [
   "January",
@@ -104,6 +105,7 @@ export function GanttView({
   onTicketClick,
   onCreateTicket,
 }: GanttViewProps) {
+  const accessState = useCanState("build:view");
   const router = useRouter();
   const requestLeave = useNavigationLeave();
   const [weekOffset, setWeekOffset] = useState(0);
@@ -259,6 +261,8 @@ export function GanttView({
   const bodyHeight = svgHeight - headerHeight;
   const svgWidth = labelWidth + days.length * dayWidth;
   const titleMax = labelWidth < 180 ? 12 : 25;
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">

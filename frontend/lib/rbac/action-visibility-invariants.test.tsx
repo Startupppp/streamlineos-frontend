@@ -10,7 +10,7 @@ import {
   useRotateWebhookSecret,
 } from "@/hooks/api/webhooks";
 import { InlineGroupCreate } from "@/features/build/views/list-view-group-create";
-import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
+import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
 import { DEFAULT_DISPLAY_OPTIONS } from "@/features/build/views/display-options-panel";
 import { INITIAL_FILTERS } from "@/features/build/views/workload-types";

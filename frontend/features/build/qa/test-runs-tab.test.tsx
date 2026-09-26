@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api-envelope";
 import type { TestRun } from "@/types/projects";
@@ -98,16 +98,18 @@ import { TestRunsTab } from "./test-runs-tab";
 import { testRunListPageContract } from "@/hooks/api/build/qa-schema";
 
 const mockReplace = jest.fn();
+const mockRouterPush = jest.fn();
 let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mockReplace, push: jest.fn(), refresh: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace, push: mockRouterPush, refresh: jest.fn() }),
   usePathname: () => "/build",
   useSearchParams: () => mockSearchParams,
 }));
 
 beforeEach(() => {
   mockReplace.mockClear();
+  mockRouterPush.mockClear();
   mockSearchParams = new URLSearchParams();
 });
 
@@ -197,4 +199,24 @@ it("falls back to a readable label instead of rendering blank text for a run sta
   render(<TestRunsTab projectId={1} />);
   expect(screen.getByText("in review")).toBeInTheDocument();
   expect(screen.queryByText("undefined")).not.toBeInTheDocument();
+});
+
+it("pressing j then Enter navigates to the first run's detail page so keyboard users can drill in without a mouse", () => {
+  const run = {
+    id: 99,
+    runNumber: 3,
+    name: "Smoke suite",
+    status: "not_started" as const,
+    environment: "Staging",
+    passCount: 0,
+    failCount: 0,
+    blockedCount: 0,
+    notRunCount: 5,
+    skippedCount: 0,
+  };
+  mockUseTestRuns.mockReturnValue(baseQuery({ data: { data: [run], hasMore: false, nextCursor: null } }));
+  render(<TestRunsTab projectId={7} />);
+  fireEvent.keyDown(document, { key: "j" });
+  fireEvent.keyDown(document, { key: "Enter" });
+  expect(mockRouterPush).toHaveBeenCalledWith("/build/7/qa/runs/99");
 });

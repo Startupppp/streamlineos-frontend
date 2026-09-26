@@ -45,3 +45,26 @@
 **Change:** Confirm or add `project-chat` nav destination pointing to `/build/[projectId]/chat` with `requiredPermission: "chat:channels:read"`.
 
 **Reason:** Needed to satisfy the route census for `10-project-chat.md` C1.
+
+---
+
+## R5 — build-work.ts: extend updates.list key factory to accept a params object
+
+**File:** `frontend/lib/query-keys/build-work.ts`
+
+**Change:** Update `updates.list` signature to match `changeRequests.list`:
+
+```ts
+updates: {
+  list: (projectId: number, params?: QueryKeyParams) =>
+    params === undefined
+      ? ([...base, "projects", projectId, "updates"] as const)
+      : ([...base, "projects", projectId, "updates", params] as const),
+},
+```
+
+**Reason:** `useProjectUpdates` now accepts `{ authorId?, from?, to? }` filter params. Without filter
+dimensions in the key, different filter combinations share the same cache entry. After this change,
+`hooks/api/build/project-updates.ts` can use the same pattern as `change-requests.ts` (pass
+`activeFilters` as the second arg). Until then, the current workaround uses the base key (no filter
+dimension) so the URL state is wired but cache is not yet filter-segmented.

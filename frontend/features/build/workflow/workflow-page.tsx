@@ -3,9 +3,10 @@
 import { useCallback } from "react";
 import { useCustomStates } from "@/hooks/api/build/custom-states";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import {
   PmPageShell,
@@ -33,10 +34,17 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
     data: statuses,
     isLoading,
     isError,
+    error,
     refetch,
   } = useCustomStates(projectId);
 
-  const noStatuses = !isLoading && !isError && (statuses ?? []).length === 0;
+  const pageState = usePageState({
+    permission: "build:workflow:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !isLoading && !isError && (statuses ?? []).length === 0,
+  });
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -48,26 +56,30 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
       subtitle="Configure allowed status transitions and WIP limits."
     >
       <PmPageShell>
-        {isLoading ? (
-          <div className="flex min-h-0 flex-1 flex-col space-y-4">
-            <DataTableSkeleton rows={12} headers={WIP_TABLE_HEADERS} className="flex-1" />
-            <DataTableSkeleton
-              rows={12}
-              headers={TRANSITION_TABLE_HEADERS}
-              className="flex-1"
-            />
-          </div>
-        ) : isError ? (
-          <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
-        ) : noStatuses ? (
-          <EmptyState
+        <PageState
+          resolution={pageState}
+          loading={
+            <div className="flex min-h-0 flex-1 flex-col space-y-4">
+              <DataTableSkeleton rows={12} headers={WIP_TABLE_HEADERS} className="flex-1" />
+              <DataTableSkeleton
+                rows={12}
+                headers={TRANSITION_TABLE_HEADERS}
+                className="flex-1"
+              />
+            </div>
+          }
+          empty={
+            <EmptyState
               className={PM_FILL_PANEL}
               illustrationPreset="projects"
               title="No statuses configured"
               description="Add custom statuses in project settings before setting up workflow transitions."
               action={{ label: "Go to Settings", href: `/build/${projectId}/settings` }}
             />
-        ) : (
+          }
+          onRetry={handleRetry}
+          className="flex min-h-0 flex-1 flex-col"
+        >
           <div className="flex flex-1 min-h-0 flex-col gap-4">
             <PmSection index={0}>
               <h2 className={`mb-1 text-sm font-semibold ${TEXT_ONE_LINE}`}>
@@ -94,7 +106,7 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
               </PmPanel>
             </PmSection>
           </div>
-        )}
+        </PageState>
       </PmPageShell>
     </PageWrapper>
   );

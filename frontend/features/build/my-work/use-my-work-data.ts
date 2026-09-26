@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { isPast, isToday, parseISO } from "date-fns";
+import { addDays, format, isPast, isToday, parseISO } from "date-fns";
 import { useAllWork } from "@/hooks/api/build/all-work";
 import type { AllWorkTicket } from "@/types/projects";
 import {
@@ -14,12 +14,20 @@ import { parseMyWorkView } from "./my-work-view";
 import { mapAllWorkTicketToKanban, buildTicketMetaMap } from "./map-all-work-ticket";
 import type { DueBucket } from "./my-work-rows";
 
-export type WorkTab = "assigned" | "created" | "subscribed" | "activity";
+export type WorkTab =
+  | "assigned"
+  | "created"
+  | "subscribed"
+  | "overdue"
+  | "due-soon"
+  | "activity";
 
 export const WORK_TABS: readonly WorkTab[] = [
   "assigned",
   "created",
   "subscribed",
+  "overdue",
+  "due-soon",
   "activity",
 ];
 
@@ -27,12 +35,14 @@ export const TAB_CONFIG: Record<WorkTab, { label: string }> = {
   assigned: { label: "Assigned" },
   created: { label: "Created" },
   subscribed: { label: "Subscribed" },
+  overdue: { label: "Overdue" },
+  "due-soon": { label: "Due Soon" },
   activity: { label: "Activity" },
 };
 
 export function parseWorkTab(value: string | null): WorkTab {
-  if (value === "created" || value === "subscribed" || value === "activity")
-    return value;
+  if (value === "created" || value === "overdue" || value === "due-soon" || value === "activity") return value;
+  if (value === "subscribed" || value === "watching") return "subscribed";
   return "assigned";
 }
 
@@ -41,6 +51,8 @@ function tabToDefaultSort(tab: WorkTab): {
   dir: BuildListSortDirection;
 } {
   if (tab === "created") return { field: "created", dir: "desc" };
+  if (tab === "overdue") return { field: "dueDate", dir: "asc" };
+  if (tab === "due-soon") return { field: "dueDate", dir: "asc" };
   if (tab === "subscribed" || tab === "activity")
     return { field: "updated", dir: "desc" };
   return { field: "rank", dir: "desc" };
@@ -112,6 +124,28 @@ export function useMyWorkData({
     () => ({ ...baseFilters, scope: "subscribed" as const }),
     [baseFilters],
   );
+  const overdueFilters = useMemo(
+    () => ({
+      ...baseFilters,
+      scope: "mine" as const,
+      dueDateTo: format(new Date(), "yyyy-MM-dd"),
+      excludeStatus: "DONE,CANCELLED",
+    }),
+    [baseFilters],
+  );
+  const dueSoonFilters = useMemo(
+    () => {
+      const today = new Date();
+      return {
+        ...baseFilters,
+        scope: "mine" as const,
+        dueDateFrom: format(today, "yyyy-MM-dd"),
+        dueDateTo: format(addDays(today, 7), "yyyy-MM-dd"),
+        excludeStatus: "DONE,CANCELLED",
+      };
+    },
+    [baseFilters],
+  );
   const activityFilters = useMemo(
     () => ({ ...baseFilters, scope: "mine" as const }),
     [baseFilters],
@@ -139,6 +173,20 @@ export function useMyWorkData({
     refetch: refetchSubscribed,
   } = useAllWork(subscribedFilters, { enabled: activeTab === "subscribed" });
   const {
+    data: overdueData,
+    isLoading: overdueLoading,
+    isError: overdueError,
+    error: overdueFailure,
+    refetch: refetchOverdue,
+  } = useAllWork(overdueFilters, { enabled: activeTab === "overdue" });
+  const {
+    data: dueSoonData,
+    isLoading: dueSoonLoading,
+    isError: dueSoonError,
+    error: dueSoonFailure,
+    refetch: refetchDueSoon,
+  } = useAllWork(dueSoonFilters, { enabled: activeTab === "due-soon" });
+  const {
     data: activityData,
     isLoading: activityLoading,
     isError: activityError,
@@ -152,8 +200,12 @@ export function useMyWorkData({
       : activeTab === "created"
         ? createdLoading
         : activeTab === "subscribed"
-          ? subscribedLoading
-          : activityLoading;
+        ? subscribedLoading
+        : activeTab === "overdue"
+          ? overdueLoading
+        : activeTab === "due-soon"
+          ? dueSoonLoading
+        : activityLoading;
 
   const isError =
     activeTab === "assigned"
@@ -161,8 +213,12 @@ export function useMyWorkData({
       : activeTab === "created"
         ? createdError
         : activeTab === "subscribed"
-          ? subscribedError
-          : activityError;
+        ? subscribedError
+        : activeTab === "overdue"
+          ? overdueError
+        : activeTab === "due-soon"
+          ? dueSoonError
+        : activityError;
 
   const error =
     activeTab === "assigned"
@@ -170,8 +226,12 @@ export function useMyWorkData({
       : activeTab === "created"
         ? createdFailure
         : activeTab === "subscribed"
-          ? subscribedFailure
-          : activityFailure;
+        ? subscribedFailure
+        : activeTab === "overdue"
+          ? overdueFailure
+        : activeTab === "due-soon"
+          ? dueSoonFailure
+        : activityFailure;
 
   const activeData =
     activeTab === "assigned"
@@ -179,19 +239,27 @@ export function useMyWorkData({
       : activeTab === "created"
         ? createdData
         : activeTab === "subscribed"
-          ? subscribedData
-          : activityData;
+        ? subscribedData
+        : activeTab === "overdue"
+          ? overdueData
+        : activeTab === "due-soon"
+          ? dueSoonData
+        : activityData;
 
   const handleRetry = useCallback(() => {
     if (activeTab === "assigned") void refetchAssigned();
     else if (activeTab === "created") void refetchCreated();
     else if (activeTab === "subscribed") void refetchSubscribed();
+    else if (activeTab === "overdue") void refetchOverdue();
+    else if (activeTab === "due-soon") void refetchDueSoon();
     else void refetchActivity();
   }, [
     activeTab,
     refetchAssigned,
     refetchCreated,
     refetchSubscribed,
+    refetchOverdue,
+    refetchDueSoon,
     refetchActivity,
   ]);
 
@@ -206,12 +274,11 @@ export function useMyWorkData({
   }, [activeData]);
 
   const dueBuckets = useMemo(() => {
-    if (activeTab !== "assigned" || activeView !== "list") return null;
+    if ((activeTab !== "assigned" && activeTab !== "overdue") || activeView !== "list") return null;
     if (!activeData?.data) return null;
     return toDueBucketMap(activeData.data);
   }, [activeTab, activeView, activeData]);
 
-  const showViewSwitcher = activeTab === "assigned";
   const showBucketList = activeTab === "assigned" && activeView === "list";
   const isEmpty =
     !isLoading &&
@@ -223,7 +290,11 @@ export function useMyWorkData({
       ? "No tickets created by you"
       : activeTab === "subscribed"
         ? "No subscribed tickets"
-        : activeTab === "activity"
+      : activeTab === "overdue"
+        ? "No overdue tickets"
+      : activeTab === "due-soon"
+        ? "Nothing due soon"
+      : activeTab === "activity"
           ? "No recently updated tickets"
           : "Nothing assigned to you";
 
@@ -232,7 +303,11 @@ export function useMyWorkData({
       ? "Tickets you reported or created across all projects will appear here."
       : activeTab === "subscribed"
         ? "Tickets you are watching will appear here."
-        : activeTab === "activity"
+      : activeTab === "overdue"
+        ? "Tickets past their due date that are still open will appear here."
+      : activeTab === "due-soon"
+        ? "Open tickets due today or within the next seven days will appear here."
+      : activeTab === "activity"
           ? "Your recently updated assigned tickets will appear here."
           : "Tickets assigned to you across all projects will appear here.";
 
@@ -256,8 +331,9 @@ export function useMyWorkData({
     kanbanTickets,
     ticketMeta,
     dueBuckets,
-    showViewSwitcher,
-    showBucketList,
+    showViewSwitcher:
+      activeTab === "assigned" || activeTab === "overdue" || activeTab === "due-soon",
+    showBucketList: activeTab === "assigned" && activeView === "list",
     emptyTitle,
     emptyDescription,
   };

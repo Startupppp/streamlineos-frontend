@@ -98,9 +98,9 @@ beforeEach(() => {
 });
 
 describe("InboxPage", () => {
-  it("renders the inbox list panel", () => {
+  it("renders the inbox list panel", async () => {
     render(<InboxPage />);
-    return waitFor(() => expect(screen.getByTestId("inbox-list")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId("inbox-list")).toBeInTheDocument());
   });
 
   it("passes null as the selected notification id initially", async () => {

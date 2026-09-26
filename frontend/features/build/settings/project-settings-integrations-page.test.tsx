@@ -18,7 +18,11 @@ jest.mock("@/hooks/api/use-page-state", () => ({
 }));
 
 jest.mock("@/features/build/settings/git-integration-settings", () => ({
-  GitIntegrationSettings: () => <div data-testid="git-integration-settings" />,
+  ProjectsGitIntegrationSettings: () => <div data-testid="git-integration-settings" />,
+}));
+
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: () => ({ focusedIndex: null, setFocusedIndex: jest.fn() }),
 }));
 
 jest.mock("@/components/pm-chrome", () => ({

@@ -59,7 +59,9 @@ export function MyWorkPage() {
   const requestLeave = useNavigationLeave();
   const searchParams = useSearchParams();
 
-  const activeTab = parseWorkTab(searchParams.get("tab"));
+  const activeTab = parseWorkTab(
+    searchParams.get("relation") ?? searchParams.get("tab"),
+  );
   const activeView = parseMyWorkView(searchParams.get("view"));
 
   const [showGroupingSidebar, setShowGroupingSidebar] = useState(false);
@@ -146,8 +148,15 @@ export function MyWorkPage() {
 
   const handleTabChange = useCallback(
     (value: string) => {
+      const relation =
+        value === "assigned"
+          ? null
+          : value === "subscribed"
+            ? "watching"
+            : value;
       setListParams({
-        tab: value === "assigned" ? null : value,
+        relation,
+        tab: null,
         view: null,
         cursor: null,
       });

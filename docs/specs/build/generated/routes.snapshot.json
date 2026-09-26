@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-23T06:28:41.663Z",
+  "generatedAt": "2026-09-25T19:06:37.355Z",
   "source": "frontend/app",
-  "count": 74,
+  "count": 83,
   "routes": [
     {
       "path": "/accept-invitation",
@@ -137,12 +137,48 @@
       "file": "frontend/app/(authenticated)/build/[projectId]/settings/page.tsx"
     },
     {
+      "path": "/build/{projectId}/settings/access",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/access/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/agents",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/agents/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/agents/credentials",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/agents/credentials/page.tsx"
+    },
+    {
       "path": "/build/{projectId}/settings/automations",
       "file": "frontend/app/(authenticated)/build/[projectId]/settings/automations/page.tsx"
     },
     {
+      "path": "/build/{projectId}/settings/fields",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/fields/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/integrations",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/integrations/page.tsx"
+    },
+    {
       "path": "/build/{projectId}/settings/integrations/webhooks",
       "file": "frontend/app/(authenticated)/build/[projectId]/settings/integrations/webhooks/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/iterations",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/iterations/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/portal",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/portal/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/retention",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/retention/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/settings/views",
+      "file": "frontend/app/(authenticated)/build/[projectId]/settings/views/page.tsx"
     },
     {
       "path": "/build/{projectId}/settings/workflow",

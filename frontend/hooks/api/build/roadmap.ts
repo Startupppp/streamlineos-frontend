@@ -85,6 +85,10 @@ interface RoadmapItemFilters {
   cursor?: string;
   limit?: number;
   managedProductId?: number;
+  projectId?: number;
+  horizon?: string;
+  ownerId?: string;
+  sort?: string;
 }
 
 interface CreateRoadmapItemInput {
@@ -171,6 +175,7 @@ interface UpdateChangelogEntryInput {
 
 interface PublicRoadmapBoard {
   orgName: string | null;
+  orgSlug: string | null;
   roadmap: {
     planned: PublicRoadmapItem[];
     in_progress: PublicRoadmapItem[];

@@ -106,6 +106,24 @@ describe("useInfiniteNotifications — category param wiring", () => {
     expect(params).toMatchObject({ category: "PROJECTS" });
   });
 
+  it("starts the request at the cursor supplied by a deep-linked URL", async () => {
+    const client = makeClient();
+    const apiClient = apiClientMock();
+    apiClient.get.mockResolvedValue([]);
+
+    renderHook(() => useInfiniteNotifications({ initialCursor: 42 }), {
+      wrapper: wrapper(client),
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    const [, params] = apiClient.get.mock.calls[0] as [unknown, Record<string, string>];
+    expect(params).toMatchObject({ cursor: "42" });
+    expect(params).not.toHaveProperty("initialCursor");
+  });
+
   it("does not include category in the request when not provided", async () => {
     const client = makeClient();
     const apiClient = apiClientMock();

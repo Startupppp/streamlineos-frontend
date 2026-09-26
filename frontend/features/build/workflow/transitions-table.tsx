@@ -10,7 +10,7 @@ import {
   useUpdateTransition,
   useDeleteTransition,
 } from "@/hooks/api/build/workflow";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -85,6 +85,7 @@ export const TRANSITION_TABLE_HEADERS = [
 
 export function TransitionsTable({ projectId, statuses }: TransitionsTableProps) {
   const canManage = useCan("build:workflow:manage");
+  const accessState = useCanState("build:workflow:view");
   const { data: transitions, isLoading } = useWorkflowTransitions(projectId);
   const createTransition = useCreateTransition(projectId);
   const updateTransition = useUpdateTransition(projectId);
@@ -93,6 +94,8 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<WorkflowTransition | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<WorkflowTransition | null>(null);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   const statusMap = new Map(statuses.map((s) => [s.id, s.name]));
 

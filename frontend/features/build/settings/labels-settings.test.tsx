@@ -3,10 +3,12 @@ import type { AccessState } from "@/lib/rbac/gate";
 import { LabelsSettings } from "./labels-settings";
 
 let mockAccessState: AccessState = "denied";
+let mockViewAccessState: AccessState = "granted";
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: string) => permission === "build:manage" && mockAccessState === "granted",
-  useCanState: (_permission: string): AccessState => mockAccessState,
+  useCanState: (permission: string): AccessState =>
+    permission === "build:view" ? mockViewAccessState : mockAccessState,
 }));
 
 jest.mock("@/hooks/api/build/labels", () => ({
@@ -27,6 +29,7 @@ jest.mock("@/hooks/api/build/labels", () => ({
 
 beforeEach(() => {
   mockAccessState = "denied";
+  mockViewAccessState = "granted";
 });
 
 describe("LabelsSettings — build:manage gates", () => {

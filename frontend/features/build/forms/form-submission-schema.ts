@@ -25,6 +25,7 @@ export const publicFormDefinitionContract = z.object({
   description: z.string().nullable(),
   type: z.string(),
   fields: z.array(formFieldContract),
+  publicToken: z.string().nullable().optional(),
 });
 
 export type PublicFormDefinition = z.infer<typeof publicFormDefinitionContract>;

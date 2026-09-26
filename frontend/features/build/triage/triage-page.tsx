@@ -21,6 +21,7 @@ import type { Ticket } from "@/types/projects";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { TablePagination } from "@/components/ui/table-pagination";
 
 const TRIAGE_STATUS = "TODO";
@@ -179,6 +180,21 @@ export function TriagePage({ projectId }: TriagePageProps) {
     void refetch();
   }, [refetch]);
 
+  const handleOpenTicketByIndex = useCallback(
+    (index: number) => {
+      const ticket = tickets[index];
+      if (ticket) handleOpen(ticket);
+    },
+    [tickets, handleOpen],
+  );
+  const handleClearTriageKeyboard = useCallback(() => {}, []);
+  const { focusedIndex: triageFocusedIndex } = useBuildListKeyboard({
+    itemCount: tickets.length,
+    onOpen: handleOpenTicketByIndex,
+    onClearSelection: handleClearTriageKeyboard,
+    enabled: isReady,
+  });
+
   return (
     <PageWrapper
       title="Triage"
@@ -216,7 +232,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
           ) : (
             <PmSection index={0}>
               <PmStaggerList className="flex flex-col gap-2.5">
-                {tickets.map((ticket) => (
+                {tickets.map((ticket, index) => (
                   <TriageRow
                     key={ticket.id}
                     ticket={ticket}
@@ -226,7 +242,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
                     onAccept={handleAccept}
                     onDecline={handleDecline}
                     onOpen={handleOpen}
-                    isSelected={false}
+                    isSelected={triageFocusedIndex === index}
                   />
                 ))}
               </PmStaggerList>

@@ -2,6 +2,15 @@ import { render, screen } from "@testing-library/react";
 import { UpdatesPage } from "./updates-page";
 import { ApiError } from "@/lib/api-envelope";
 
+const mockReplace = jest.fn();
+const mockSearchParamsGet = jest.fn((key: string): string | null => null);
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace }),
+  useSearchParams: () => ({ get: mockSearchParamsGet, toString: () => "" }),
+  usePathname: () => "/build/1/updates",
+}));
+
 jest.mock("@/hooks/api/build/project-updates", () => ({
   useProjectUpdates: jest.fn(),
   useCreateProjectUpdate: jest.fn(),
@@ -97,6 +106,7 @@ beforeEach(() => {
   mockUseProjectUpdates.mockReturnValue(baseQueryResult());
   mockUseCreateProjectUpdate.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseDeleteProjectUpdate.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockSearchParamsGet.mockReturnValue(null);
 });
 
 it("renders denied state when build:updates:view is not in the access snapshot", () => {
@@ -184,4 +194,48 @@ it("renders the plan upgrade link the backend sent with a 402 MODULE_NOT_ENABLED
   render(<UpdatesPage projectId={1} />);
   expect(screen.queryByText("Retry")).not.toBeInTheDocument();
   expect(screen.getByRole("link", { name: /view plans/i })).toHaveAttribute("href", "/settings/billing");
+});
+
+describe("URL-backed filter state — authorId, from, to wired to useProjectUpdates", () => {
+  it("passes authorId from the URL to useProjectUpdates when the param is present so filters are server-side not client-side", () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "authorId" ? "42" : null,
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ authorId: "42" }),
+    );
+  });
+
+  it("passes from from the URL to useProjectUpdates when the param is present", () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "from" ? "2026-01-01" : null,
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ from: "2026-01-01" }),
+    );
+  });
+
+  it("passes to from the URL to useProjectUpdates when the param is present", () => {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "to" ? "2026-09-30" : null,
+    );
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ to: "2026-09-30" }),
+    );
+  });
+
+  it("passes undefined for absent params so the hook does not send empty filter strings to the API", () => {
+    mockSearchParamsGet.mockReturnValue(null);
+    render(<UpdatesPage projectId={1} />);
+    expect(mockUseProjectUpdates).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ authorId: undefined, from: undefined, to: undefined }),
+    );
+  });
 });

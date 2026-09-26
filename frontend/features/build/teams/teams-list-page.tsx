@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
@@ -12,6 +13,7 @@ import {
 } from "@/hooks/api/build/teams";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -40,6 +42,7 @@ const PAGE_SIZE = 50;
 const FILTER_DEFINITIONS = [] as const;
 
 export function TeamsListPage() {
+  const router = useRouter();
   const canCreate = useCan("build:teams:create");
   const canManage = useCan("build:teams:manage");
 
@@ -146,6 +149,25 @@ export function TeamsListPage() {
   const handleNextPage = useCallback(() => {
     goNext(data?.pagination.nextCursor);
   }, [data, goNext]);
+
+  const handleKeyboardOpen = useCallback(
+    (index: number) => {
+      const team = teams[index];
+      if (team) router.push(`/build/teams/${team.id}`);
+    },
+    [teams, router],
+  );
+
+  const handleKeyboardClear = useCallback(() => {
+    setEditTarget(null);
+  }, []);
+
+  useBuildListKeyboard({
+    itemCount: teams.length,
+    onOpen: handleKeyboardOpen,
+    onClearSelection: handleKeyboardClear,
+    enabled: !isLoading,
+  });
 
   const columns = useMemo(
     () =>

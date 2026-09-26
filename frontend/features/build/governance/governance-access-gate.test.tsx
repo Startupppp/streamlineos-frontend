@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 const mockUseAccess = jest.fn();
@@ -138,8 +138,9 @@ jest.mock("./risk-form-sheet", () => ({
   RiskFormSheet: () => null,
 }));
 
+const mockDecisionFormSheet = jest.fn((_props: { open: boolean }) => null);
 jest.mock("./decision-form-sheet", () => ({
-  DecisionFormSheet: () => null,
+  DecisionFormSheet: (props: { open: boolean }) => { mockDecisionFormSheet(props); return null; },
 }));
 
 jest.mock("@/components/ui/truncated-text", () => ({
@@ -251,5 +252,20 @@ describe("DecisionsPage — access is three-valued, not a boolean", () => {
 
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).toBeNull();
+  });
+
+  it("pressing j then Enter opens the first decision's edit sheet so keyboard users can edit without a mouse", () => {
+    const decision = { id: 77, decisionNumber: 1, title: "Use microservices" };
+    mockUseProjectDecisions.mockReturnValue({
+      ...idleQuery(),
+      data: { data: [decision], hasMore: false, nextCursor: null },
+    });
+
+    render(<DecisionsPage projectId={1} />);
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "Enter" });
+    const calls = mockDecisionFormSheet.mock.calls;
+    const lastCall = calls[calls.length - 1][0] as { open: boolean };
+    expect(lastCall.open).toBe(true);
   });
 });

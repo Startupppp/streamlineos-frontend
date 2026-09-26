@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import type { Risk } from "@/types/projects";
@@ -169,8 +169,9 @@ jest.mock("@/components/ui/dropdown-menu", () => ({
   DropdownMenuItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
+const mockRiskFormSheet = jest.fn((_props: { open: boolean }) => null);
 jest.mock("./risk-form-sheet", () => ({
-  RiskFormSheet: () => null,
+  RiskFormSheet: (props: { open: boolean }) => { mockRiskFormSheet(props); return null; },
 }));
 
 jest.mock("@/components/ui/truncated-text", () => ({
@@ -299,5 +300,14 @@ describe("RisksPage aggregates and matrix describe the whole register, not the a
     for (const call of mockUseProjectRiskStats.mock.calls) {
       expect(call).toEqual([10]);
     }
+  });
+
+  it("pressing j then Enter opens the first risk's edit sheet so keyboard users can edit without a mouse", () => {
+    render(<RisksPage projectId={10} />);
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "Enter" });
+    const calls = mockRiskFormSheet.mock.calls;
+    const lastCall = calls[calls.length - 1][0] as { open: boolean };
+    expect(lastCall.open).toBe(true);
   });
 });

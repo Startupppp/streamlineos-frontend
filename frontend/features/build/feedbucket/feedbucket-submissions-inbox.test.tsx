@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import * as mockInboxModules from "./inbox-test-mocks";
 import { ProjectSubmissionsInbox } from "./project-submissions-inbox";
 
@@ -172,5 +172,19 @@ describe("ProjectSubmissionsInbox — selection gating", () => {
     renderWithRows();
 
     expect(screen.queryByTestId("bulk-toolbar")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectSubmissionsInbox — keyboard shortcuts", () => {
+  it("navigates to submission detail on Enter after j selects the first row so keyboard users can open a submission without a mouse", () => {
+    mockUseFeedbucketSubmissions.mockReturnValue(
+      baseInboxQueryResult({ data: makeCursorPage([SAMPLE_SUBMISSION_ROW]) }),
+    );
+    render(<ProjectSubmissionsInbox widgetId={1} projectId={7} />);
+
+    fireEvent.keyDown(document, { key: "j" });
+    fireEvent.keyDown(document, { key: "Enter" });
+
+    expect(mockRouterPush).toHaveBeenCalledWith("/build/7/feedbucket/1");
   });
 });

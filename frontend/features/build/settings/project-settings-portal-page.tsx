@@ -11,7 +11,9 @@ interface ProjectSettingsPortalPageProps {
   projectId: number;
 }
 
-export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPageProps) {
+export function ProjectSettingsPortalPage({
+  projectId,
+}: ProjectSettingsPortalPageProps) {
   const pageState = usePageState({
     permission: "build:clientvisibility:manage",
     isLoading: false,
@@ -40,12 +42,15 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
               illustrationPreset="projects"
               title="Portal settings"
               description="Configure which milestones, updates, and files are visible to external clients through the client portal."
-              action={{ label: "Go to client portal", href: `/build/${projectId}/client-portal` }}
+              action={{
+                label: "Go to client portal",
+                href: `/build/${projectId}/client-portal`,
+              }}
             />
           }
           className="flex-1"
         >
-          <PmSection index={0} className="flex-1" />
+          {null}
         </PageState>
       </PmPageShell>
     </PageWrapper>

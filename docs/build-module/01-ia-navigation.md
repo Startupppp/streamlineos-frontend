@@ -98,7 +98,7 @@
 
 ## Complete existing-page inventory
 
-This table preserves the original 2026-09-21 route decisions while pointing every removed alias at its live owner. The current authenticated Build census is 65 physical pages and 65 `KEEP` entries in `frontend/lib/build/build-route-manifest.ts`. Rows marked **EXECUTED** are redirect-only compatibility paths, not page contracts. Each live route links to its canonical interaction, state, permission, component, API, gap, and acceptance contract.
+This table preserves the original 2026-09-21 route decisions while pointing every removed alias at its live owner. The current authenticated Build census is 74 physical pages and 74 `KEEP` entries in `frontend/lib/build/build-route-manifest.ts`. Rows marked **EXECUTED** are redirect-only compatibility paths, not page contracts. Each live route links to its canonical interaction, state, permission, component, API, gap, and acceptance contract.
 
 | Route | Purpose | Primary persona | Decision | Rationale |
 |---|---|---|---|---|

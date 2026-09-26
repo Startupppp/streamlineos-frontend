@@ -19,6 +19,7 @@ import { useVelocityReport, useBurnupReport } from "@/hooks/api/build/reports";
 import { format } from "date-fns";
 import { ChartCard } from "./chart-card";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCanState } from "@/hooks/api/access";
 
 const BurnupChart = dynamic(
   () => import("./burnup-chart").then((m) => ({ default: m.BurnupChart })),
@@ -26,6 +27,7 @@ const BurnupChart = dynamic(
 );
 
 export function BurnupSection({ projectId }: { projectId: number }) {
+  const accessState = useCanState("build:view");
   const velocity = useVelocityReport(projectId);
   const [cycleId, setCycleId] = useState<number | undefined>(undefined);
 
@@ -38,6 +40,8 @@ export function BurnupSection({ projectId }: { projectId: number }) {
     projectId,
     selectedCycleId,
   );
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   const handleRetry = useCallback(() => Promise.all([velocity.refetch(), refetch()]), [velocity.refetch, refetch]);
 

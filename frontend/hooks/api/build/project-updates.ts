@@ -39,14 +39,25 @@ export interface CreateProjectUpdateInput {
   body: string;
 }
 
-export function useProjectUpdates(projectId: number) {
+export interface ProjectUpdatesFilters {
+  authorId?: string;
+  from?: string;
+  to?: string;
+}
+
+export function useProjectUpdates(projectId: number, filters?: ProjectUpdatesFilters) {
   const canView = useCan("build:updates:view");
   const query = useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.updates.list(projectId),
     queryFn: ({ signal, pageParam }) =>
       apiClient.get<ProjectUpdatePage>(
         `/build/${projectId}/updates`,
-        pageParam !== undefined ? { cursor: pageParam } : {},
+        {
+          ...(pageParam !== undefined ? { cursor: pageParam } : {}),
+          ...(filters?.authorId ? { authorId: filters.authorId } : {}),
+          ...(filters?.from ? { from: filters.from } : {}),
+          ...(filters?.to ? { to: filters.to } : {}),
+        },
         signal,
         updatePageContract,
       ),

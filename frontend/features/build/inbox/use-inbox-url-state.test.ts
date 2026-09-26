@@ -47,7 +47,15 @@ describe("useInboxUrlState — param round-trips", () => {
   it("reads cursor from the URL", () => {
     mockSearchParams = new URLSearchParams("cursor=42");
     const { result } = renderHook(() => useInboxUrlState());
-    expect(result.current.cursor).toBe("42");
+    expect(result.current.cursor).toBe(42);
+  });
+
+  it("ignores a malformed or non-positive cursor", () => {
+    for (const value of ["0", "-1", "1.5", "not-a-cursor"]) {
+      mockSearchParams = new URLSearchParams(`cursor=${value}`);
+      const { result } = renderHook(() => useInboxUrlState());
+      expect(result.current.cursor).toBeNull();
+    }
   });
 
   it("setParams with section clears cursor", () => {

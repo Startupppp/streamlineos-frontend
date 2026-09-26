@@ -44,7 +44,7 @@ export function ProjectSettingsIterationsPage({ projectId: _projectId }: Project
           }
           className="flex-1"
         >
-          <PmSection index={0} className="flex-1" />
+          <PmSection index={0} className="flex-1">{null}</PmSection>
         </PageState>
       </PmPageShell>
     </PageWrapper>

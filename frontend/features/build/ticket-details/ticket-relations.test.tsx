@@ -3,6 +3,7 @@ import { useProjectBoardTickets } from "@/hooks/api/build";
 import { TicketRelations } from "./ticket-relations";
 
 let mockCanUpdate = true;
+let mockAccessState: "granted" | "denied" | "loading" = "granted";
 let mockRelationsResult: {
   data: unknown[];
   isLoading: boolean;
@@ -24,6 +25,7 @@ jest.mock("@/hooks/api", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanUpdate,
+  useCanState: () => mockAccessState,
 }));
 
 jest.mock("@/components/ui/responsive-popover", () => ({
@@ -51,7 +53,17 @@ const mockUseProjectBoardTickets = jest.mocked(useProjectBoardTickets);
 beforeEach(() => {
   jest.clearAllMocks();
   mockCanUpdate = true;
+  mockAccessState = "granted";
   mockRelationsResult = { data: [], isLoading: false };
+});
+
+it("does not render an empty relation state while ticket access is denied", () => {
+  mockAccessState = "denied";
+
+  render(<TicketRelations ticketId={10} projectId={42} />);
+
+  expect(screen.queryByText("No relations yet.")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Add" })).not.toBeInTheDocument();
 });
 
 it("does not load or offer relation mutations to a read-only member", () => {

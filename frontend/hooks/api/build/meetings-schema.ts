@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 const meetingRowContract = z.object({
   id: z.number().int(),
@@ -29,6 +30,10 @@ export const meetingListItemContract = meetingRowContract.extend({
 });
 
 export const meetingListContract = z.array(meetingListItemContract);
+
+export const meetingPageContract = cursorPageContract(meetingListItemContract);
+
+export const meetingResponseContract = z.union([meetingPageContract, meetingListContract]);
 
 export { meetingRowContract };
 

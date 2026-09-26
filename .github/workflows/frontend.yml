@@ -318,6 +318,10 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: PM Workspace removal stays complete
+        if: ${{ !cancelled() }}
+        run: pnpm run check:pm-workspace-removal:self-test && pnpm run check:pm-workspace-removal
+
       # 2026-09-03 (ticket 35) — MEASURED: this step exited 1 in a frontend-only
       # checkout ("3 failed, 15 passed"), and as the FIRST step of this job it
       # would have skipped all 26 gate steps below it. 35b moved the gates out

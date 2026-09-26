@@ -13,7 +13,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import {
   useOrgLabels,
   useCreateLabel,
@@ -176,6 +176,7 @@ function LabelListRow({
 }
 
 export function LabelsSettings() {
+  const accessState = useCanState("build:view");
   const canManage = useCan("build:manage");
   const reduceMotion = useReducedMotion();
   const [showForm, setShowForm] = useState(false);
@@ -262,6 +263,8 @@ export function LabelsSettings() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   if (isLoading) {
     return (

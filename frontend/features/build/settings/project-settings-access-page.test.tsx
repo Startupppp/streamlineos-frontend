@@ -27,6 +27,32 @@ jest.mock("@/features/build/settings/team-roster-section", () => ({
   TeamRosterSection: () => <div data-testid="team-roster-section" />,
 }));
 
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: () => ({
+    search: "",
+    debouncedSearch: "",
+    cursor: null,
+    setSearch: jest.fn(),
+    setCursor: jest.fn(),
+    value: () => "all",
+    isActive: () => false,
+    setValue: jest.fn(),
+    clearAll: jest.fn(),
+    activeCount: 0,
+    isFiltered: false,
+    resetKey: "",
+    isPending: false,
+  }),
+}));
+
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: () => ({ focusedIndex: null, setFocusedIndex: jest.fn() }),
+}));
+
+jest.mock("@/features/build/shared/build-list-toolbar", () => ({
+  BuildListToolbar: () => null,
+}));
+
 jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmPanel: ({ children, className }: { children: React.ReactNode; className?: string }) => (

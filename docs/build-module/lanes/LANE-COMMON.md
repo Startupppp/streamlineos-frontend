@@ -25,6 +25,74 @@ it. The orchestrator owns every commit.
 - `frontend/` and `backend/` each have their own `package.json`, lockfile and `node_modules`.
   There is no workspace root. The `check:*` gates live in `frontend/package.json`.
 
+## 1b. The house rule files are binding — read them before your first edit
+
+These are not background reading. They are the repo's own rules and they outrank anything in this
+document except the git ban.
+
+| File | Read before touching |
+|---|---|
+| `frontend/CLAUDE.md` | any frontend file (257 lines: routing, data layer, page state, structure, forms, URL state, design system, performance, testing, non-negotiables, definition of done, anti-patterns) |
+| `frontend/UI-KIT.md` | any component work — this is the **import index** you check *first* |
+| `backend/CLAUDE.md` | any backend file (259 lines: modules & layering, validation & contracts, routes & guards, schema, migrations, tenancy & RLS, side effects, security, RBAC, caching, performance, testing) |
+
+Do not skim them. Each ends with a **Non-negotiables** list that blocks a PR and a
+**Definition of Done** you are expected to satisfy per task.
+
+## 1c. Create nothing you can extend — and put it where it belongs
+
+The default is **use the existing file**. A new file is the exception and needs a reason you can
+state in one line. The repo's own rules on this, quoted:
+
+- **FE-58** — *"Check the inventory before writing anything: `UI-KIT.md` → the feature barrel →
+  `components/shared` → `components/ui`."* Walk all four, in that order, before you write a
+  component. Record in your status file that you walked it.
+- **FE-59** — *"Extend the existing primitive. A component duplicating one is a defect — there is
+  exactly one `DataTable`, one `TablePagination`, one `LoadingButton`, one `AiActionsMenu`, one
+  editor per class of surface."*
+- **FE-60** — promote to `components/shared` (or `components/ui` for a primitive) **on the second
+  consumer**, and update every importer. Not on the first, not speculatively. Promotion touches
+  shared territory, so it is a **request**, not an edit.
+- **FE-126 / BE-143** — *"Delete pass-through wrappers; never write one."* If a function's whole
+  body forwards the same arguments to one other exported function, it has no reason to exist —
+  delete it and point callers at the callee. If it is a file's only export, the file goes too. The
+  one exemption: a function wrapping a **module-private** `Set`/`Map`/regex/array is encapsulation
+  and stays.
+- **BE-24 / anti-pattern table** — a private constant duplicating an exported one is a defect.
+  Import the export.
+
+**Placement.** If a file is already in the wrong place, move it to the right one rather than
+working around it — and update every importer in the same change.
+
+- **FE-64** — feature code lives in `features/<feature>/{components,lib,hooks}/`. `app/` holds
+  route files **only**; `_components/` and `_lib/` inside `app/` are **banned**.
+- **FE-56** — pages compose, they don't implement. A route `page.tsx` fetches and composes; UI
+  lives in the feature. (gate: `check:route-thinness`)
+- **FE-65** — import a feature through its barrel `index.ts`, max ~3–4 folders deep.
+- **FE-66** — kebab-case filenames with a PascalCase symbol inside; hooks `use-*.ts` → `useX`;
+  server fetch helpers `get-*`; Zod schemas `*-schema.ts`.
+- **FE-57** — keep files under 500 lines; 300+ is ratcheted and **both counts may only shrink**.
+  If your change would push a file over, that is the signal to split it properly — not to append.
+- **FE-62** — adding or extending a shared component requires a `UI-KIT.md` row **in the same
+  change**. `UI-KIT.md` is shared: that row is a request.
+- A move is not a delete-and-recreate. Preserve the file's content and history; do not drop tests,
+  and do not delete a ticket or spec file for any reason.
+
+## 1d. The import graph must stay acyclic
+
+- **FE-61** — *never* import feature → feature. If Lane N's feature needs Lane M's code, that is
+  the shared layer or a request — never a direct cross-feature import. This is also how two lanes
+  create a cycle without either one seeing it.
+- **FE-72 / BE-10** — keep the import graph acyclic; never hide a cycle behind `forwardRef`.
+- Gates: `check:cycles`, `check:feature-cycles`, `check:import-direction`. The current baseline is
+  clean — `check:feature-cycles` passes across 46 features and 5,700 resolved imports, so **any**
+  cycle the orchestrator finds at drain is yours or another lane's, introduced today.
+- You may not run the gates (§5). So prevent cycles structurally instead: before adding an import,
+  ask whether the target already imports your module, directly or through its barrel. A barrel
+  `index.ts` re-export is the usual hiding place — check the barrel, not just the leaf.
+- Extracting shared code **upward** into a layer both sides already depend on is the fix. Adding a
+  back-import is never the fix.
+
 ## 2. Exclusive territory
 
 Your brief lists the files and directories you own. **Edit nothing outside them.**

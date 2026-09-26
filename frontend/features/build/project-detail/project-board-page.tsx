@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound } from "next/navigation";
 import type { ViewType } from "@/features/build/views/view-switcher";
+import { useCanState } from "@/hooks/api/access";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -33,6 +34,7 @@ interface PageProps {
 export function ProjectBoardPage({ params, defaultView }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
+  const accessState = useCanState("build:view");
   const {
     data,
     isLoading: projectLoading,
@@ -182,6 +184,8 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     (parentTicketId: number | null) => handleBulkUpdate({ parentTicketId }),
     [handleBulkUpdate],
   );
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   if (isLoading) {
     return (

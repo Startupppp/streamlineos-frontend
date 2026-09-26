@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   Tabs,
   TabsContent,
@@ -33,6 +34,13 @@ type RoadmapTabValue = "roadmap" | "feedback" | "changelog";
 
 const FILTER_DEFINITIONS = [
   { param: "tab", options: ["roadmap", "feedback", "changelog"] },
+  { param: "scope" },
+  { param: "productId" },
+  { param: "projectId" },
+  { param: "status" },
+  { param: "horizon" },
+  { param: "ownerId" },
+  { param: "sort" },
 ] as const;
 
 export function RoadmapListPage() {
@@ -65,6 +73,19 @@ export function RoadmapListPage() {
   const handleChangelogCreateOpenChange = useCallback((open: boolean) => {
     setChangelogCreateOpen(open);
   }, []);
+
+  const statusValue = listFilters.value("status");
+  const ownerIdValue = listFilters.value("ownerId");
+  const horizonValue = listFilters.value("horizon");
+  const sortValue = listFilters.value("sort");
+
+  const handleClearSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: 0,
+    onOpen: handleClearSelection,
+    onClearSelection: handleClearSelection,
+    enabled: activeTab === "roadmap",
+  });
 
   const showSearch = activeTab === "roadmap" || activeTab === "feedback";
 
@@ -149,6 +170,10 @@ export function RoadmapListPage() {
                   onCursorChange={listFilters.setCursor}
                   createOpen={roadmapCreateOpen}
                   onCreateOpenChange={handleRoadmapCreateOpenChange}
+                  status={statusValue !== "all" ? statusValue : undefined}
+                  horizon={horizonValue !== "all" ? horizonValue : undefined}
+                  ownerId={ownerIdValue !== "all" ? ownerIdValue : undefined}
+                  sort={sortValue !== "all" ? sortValue : undefined}
                 />
               </TabsContent>
               <TabsContent

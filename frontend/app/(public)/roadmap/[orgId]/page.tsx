@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ArrowBigUp, Loader2, MessageSquarePlus, Sparkles, Megaphone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -278,8 +278,15 @@ function FeedbackForm({ orgId, voterKey }: { orgId: string; voterKey: string | n
 export default function PublicRoadmapPage() {
   const params = useParams<{ orgId: string }>();
   const orgId = params.orgId;
+  const router = useRouter();
   const voterKey = useVoterKey();
   const { data, isLoading, isError, refetch } = usePublicRoadmap(orgId);
+
+  useEffect(() => {
+    if (data?.orgSlug && orgId !== data.orgSlug) {
+      router.replace(`/roadmap/${data.orgSlug}`, { scroll: false });
+    }
+  }, [data?.orgSlug, orgId, router]);
   const vote = usePublicVote(orgId);
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
 

@@ -39,6 +39,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   DECISION_TABLE_HEADERS,
   buildDecisionColumns,
@@ -169,6 +170,18 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   );
 
   const handleNewDecision = useCallback(() => setSheetOpen(true), []);
+
+  const handleOpenFocused = useCallback(
+    (index: number) => { setEditDecision(allDecisions[index]); setSheetOpen(true); },
+    [allDecisions],
+  );
+  const handleClearKeyboardSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: allDecisions.length,
+    onOpen: handleOpenFocused,
+    onClearSelection: handleClearKeyboardSelection,
+    enabled: !sheetOpen && !deleteTarget,
+  });
 
   const handleRetry = useCallback(() => {
     void refetch();

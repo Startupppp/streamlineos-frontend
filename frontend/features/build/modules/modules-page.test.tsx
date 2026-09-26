@@ -121,13 +121,19 @@ jest.mock("@/lib/date-constraints", () => ({
   planningEndPickerProps: jest.fn(() => ({ fromDate: undefined, fromYear: 2020, toYear: 2030 })),
 }));
 
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
+}));
+
 import { useModulePages, useCreateModule } from "@/hooks/api/build";
 import { useCan, useAccess } from "@/hooks/api/access";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
 const mockUseModulePages = useModulePages as jest.Mock;
 const mockUseCreateModule = useCreateModule as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
+const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
@@ -175,6 +181,7 @@ beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseCreateModule.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });
 
 it("renders NoPermissionState when build:view is denied, not an empty-success state", () => {
@@ -266,4 +273,15 @@ it("shows the correct stat counts from module list", () => {
   expect(cards.find((c) => c.textContent?.includes("In Progress: 1"))).toBeTruthy();
   expect(cards.find((c) => c.textContent?.includes("Completed: 1"))).toBeTruthy();
   expect(cards.find((c) => c.textContent?.includes("Planned: 1"))).toBeTruthy();
+});
+
+it("enables keyboard navigation bound to the module count when modules are present and access is granted", () => {
+  mockUseModulePages.mockReturnValue(
+    basePages({ data: { pages: [{ data: [MODULE_ROW] }] } }),
+  );
+  render(<ModulesPage projectId={7} />);
+  const calls = mockUseBuildListKeyboard.mock.calls;
+  const lastArgs = calls[calls.length - 1]?.[0];
+  expect(lastArgs?.enabled).toBe(true);
+  expect(lastArgs?.itemCount).toBe(1);
 });

@@ -40,6 +40,7 @@ interface InboxListProps {
   q: string | null;
   type?: NotificationCategory | null;
   projectId?: number | null;
+  cursor?: number | null;
   selectionDismissed?: boolean;
   onSelect: (notification: Notification) => void;
   onClearSelection?: () => void;
@@ -59,6 +60,7 @@ export function InboxList({
   q,
   type = null,
   projectId = null,
+  cursor = null,
   selectionDismissed = false,
   onSelect,
   onClearSelection,
@@ -77,7 +79,7 @@ export function InboxList({
   const bulk = useInboxBulkActions();
 
   const { data, isPending, isError, error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
-    useInfiniteNotifications({ section, sourceModule: "build", search: q ?? undefined, category: type ?? undefined, projectId: projectId ?? undefined, limit: INBOX_FETCH_PAGE_SIZE });
+    useInfiniteNotifications({ section, sourceModule: "build", search: q ?? undefined, category: type ?? undefined, projectId: projectId ?? undefined, limit: INBOX_FETCH_PAGE_SIZE, initialCursor: cursor });
 
   const [pagesShown, setPagesShown] = React.useState(1);
   const [selectedIds, setSelectedIds] = React.useState<Set<number>>(new Set());

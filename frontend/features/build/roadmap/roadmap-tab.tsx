@@ -7,6 +7,12 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
+import type { RoadmapStatus } from "@/types/projects/roadmap";
+
+const ROADMAP_STATUSES: readonly RoadmapStatus[] = ["planned", "in_progress", "completed", "cancelled"];
+function toRoadmapStatus(s: string): RoadmapStatus | undefined {
+  return ROADMAP_STATUSES.find((v) => v === s);
+}
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
@@ -22,6 +28,11 @@ interface RoadmapTabProps {
   onCursorChange?: (cursor: string | null) => void;
   createOpen?: boolean;
   onCreateOpenChange?: (open: boolean) => void;
+  status?: string;
+  projectId?: number;
+  horizon?: string;
+  ownerId?: string;
+  sort?: string;
 }
 
 function RoadmapBoardSkeleton() {
@@ -44,10 +55,21 @@ export function RoadmapTab({
   onCursorChange = () => {},
   createOpen,
   onCreateOpenChange,
+  status,
+  projectId,
+  horizon,
+  ownerId,
+  sort,
 }: RoadmapTabProps) {
-  const { data, isLoading, isError, error, refetch } = useRoadmapItems(
-      search.trim() ? { search: search.trim(), cursor: cursor ?? undefined } : { cursor: cursor ?? undefined },
-  );
+  const { data, isLoading, isError, error, refetch } = useRoadmapItems({
+    ...(search.trim() ? { search: search.trim() } : {}),
+    cursor: cursor ?? undefined,
+    ...(status ? { status: toRoadmapStatus(status) } : {}),
+    ...(projectId !== undefined ? { projectId } : {}),
+    ...(horizon ? { horizon } : {}),
+    ...(ownerId ? { ownerId } : {}),
+    ...(sort ? { sort } : {}),
+  });
   const deleteItem = useDeleteRoadmapItem();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ScorableRoadmapItem | null>(null);

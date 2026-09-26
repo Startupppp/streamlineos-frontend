@@ -87,7 +87,13 @@ jest.mock("@/components/ui/skeleton", () => ({
 }));
 
 jest.mock("./triage-row", () => ({
-  TriageRow: () => <div data-testid="triage-row" />,
+  TriageRow: ({ isSelected }: { isSelected?: boolean }) => (
+    <div data-testid="triage-row" data-selected={String(isSelected)} />
+  ),
+}));
+
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 
 jest.mock("@/components/shared/format-ticket-key", () => ({
@@ -96,12 +102,14 @@ jest.mock("@/components/shared/format-ticket-key", () => ({
 
 import { useProject, useTickets, useUpdateTicket } from "@/hooks/api";
 import { useCan, useAccess } from "@/hooks/api/access";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
 const mockUseProject = useProject as jest.Mock;
 const mockUseTickets = useTickets as jest.Mock;
 const mockUseUpdateTicket = useUpdateTicket as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
+const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:tickets:view": "all" }, modules: {} },
@@ -132,6 +140,7 @@ beforeEach(() => {
     baseTicketsResult({ data: { data: [], pagination: { hasMore: false } } }),
   );
   mockUseUpdateTicket.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });
 
 it("shows a skeleton while the access snapshot is in flight, not an empty or denied state", () => {
@@ -170,4 +179,67 @@ it("shows the denial view, not an empty submissions list, when the user lacks bu
   expect(screen.getByText(/access restricted/i)).toBeInTheDocument();
   expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   expect(screen.queryByText(/nothing to triage/i)).not.toBeInTheDocument();
+});
+
+it("renders the error state with the backend message on query failure, preserving the request context", () => {
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({
+      isError: true,
+      error: new Error("Could not connect to build service"),
+    }),
+  );
+  render(<TriagePage projectId={1} />);
+  const errorEl = screen.getByTestId("error-state");
+  expect(errorEl.textContent).toContain("Could not connect to build service");
+  expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+});
+
+it("renders an empty state when there are no submissions, so triage-empty is distinguishable from a denied state", () => {
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({
+      data: { data: [], pagination: { hasMore: false } },
+    }),
+  );
+  render(<TriagePage projectId={1} />);
+  expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+});
+
+it("renders triage rows when submissions are present, confirming the ready state renders content", () => {
+  const submission = {
+    id: 99, orgId: "org-1", projectId: 1, title: "Bug: button broken",
+    type: "BUG", status: "TRIAGE", priority: "HIGH", ticketNumber: 99,
+    epicId: null, reporterId: "user-1", points: null, storyPoints: null,
+    link: null, rank: "1000", parentTicketId: null, originalEstimate: null,
+    timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null,
+    sequenceId: "PROJ-99", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
+  };
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({
+      data: { data: [submission], pagination: { hasMore: false } },
+    }),
+  );
+  render(<TriagePage projectId={1} />);
+  expect(screen.getByTestId("triage-row")).toBeInTheDocument();
+  expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+});
+
+it("wires useBuildListKeyboard enabled only when triage is in the ready state, not during loading or denial", () => {
+  const submission = {
+    id: 99, orgId: "org-1", projectId: 1, title: "Bug: button broken",
+    type: "BUG", status: "TRIAGE", priority: "HIGH", ticketNumber: 99,
+    epicId: null, reporterId: "user-1", points: null, storyPoints: null,
+    link: null, rank: "1000", parentTicketId: null, originalEstimate: null,
+    timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null,
+    sequenceId: "PROJ-99", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
+  };
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [submission], pagination: { hasMore: false } } }),
+  );
+  render(<TriagePage projectId={1} />);
+  const calls = mockUseBuildListKeyboard.mock.calls;
+  const lastArgs = calls[calls.length - 1]?.[0];
+  expect(lastArgs?.enabled).toBe(true);
+  expect(typeof lastArgs?.onOpen).toBe("function");
+  expect(lastArgs?.itemCount).toBe(1);
 });

@@ -28,6 +28,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ChangeRequestSheet } from "./change-request-sheet";
 import { CR_STATUSES, CR_STATUS_LABELS } from "./change-request-schema";
 import {
@@ -141,6 +142,23 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleKeyboardOpen = useCallback(
+    (index: number) => {
+      const cr = crs[index];
+      if (cr) handleEdit(cr);
+    },
+    [crs, handleEdit],
+  );
+
+  const handleKeyboardClear = useCallback(() => {}, []);
+
+  useBuildListKeyboard({
+    itemCount: crs.length,
+    onOpen: handleKeyboardOpen,
+    onClearSelection: handleKeyboardClear,
+    enabled: pageState.kind === "ready",
+  });
 
   const handleStatusChange = useCallback(
     (value: string) => listFilters.setValue("status", value),

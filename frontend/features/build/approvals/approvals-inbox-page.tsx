@@ -23,6 +23,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { STATUS_OPTIONS } from "./approvals-constants";
 import type { ApprovalInboxItem, DecideApprovalInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -164,6 +165,25 @@ export function ApprovalsInboxPage() {
     ),
     [ownerOf],
   );
+
+  const handleKeyboardOpen = useCallback(
+    (index: number) => {
+      const item = filteredItems[index];
+      if (item && canDecide) handleDecideClick(item);
+    },
+    [filteredItems, canDecide, handleDecideClick],
+  );
+
+  const handleKeyboardClear = useCallback(() => {
+    setDecideTarget(null);
+  }, []);
+
+  useBuildListKeyboard({
+    itemCount: filteredItems.length,
+    onOpen: handleKeyboardOpen,
+    onClearSelection: handleKeyboardClear,
+    enabled: !isLoading,
+  });
 
   const pageState = usePageState({
     permission: "build:approvals:view",

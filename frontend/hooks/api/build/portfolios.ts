@@ -37,6 +37,9 @@ interface ListFilters {
   limit?: number;
   search?: string;
   status?: string;
+  ownerId?: string;
+  health?: string;
+  sort?: string;
 }
 
 export function usePortfolios(filters?: ListFilters) {
@@ -46,6 +49,9 @@ export function usePortfolios(filters?: ListFilters) {
   if (filters?.limit) params["limit"] = String(filters.limit);
   if (filters?.search) params["q"] = filters.search;
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.ownerId) params["ownerId"] = filters.ownerId;
+  if (filters?.health) params["health"] = filters.health;
+  if (filters?.sort) params["sort"] = filters.sort;
   return useQuery<PortfoliosPage>({
     queryKey: buildWorkQueryKeys.projects.portfolios.list(Object.keys(params).length > 0 ? params : undefined),
     queryFn: ({ signal }) => apiClient.get<PortfoliosPage>("/build/portfolios", params, signal, portfolioPageContract),
