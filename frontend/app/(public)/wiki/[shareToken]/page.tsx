@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { cache, type CSSProperties } from "react";
 import { format } from "date-fns";
 import { PublicPageContentLoader } from "@/features/wiki/components/public-page-content-loader";
-import { BACKEND_URL } from "@/lib/backend-url";
-import { withCorrelation } from "@/lib/observability/with-correlation";
+import { publicGetNoStore } from "@/lib/public-fetch";
+import { publicWikiPageContract } from "@/lib/public-schema";
 import { rewritePublicMediaUrls } from "@/features/wiki/lib/rewrite-public-media-urls";
 
 export const dynamic = "force-dynamic";
@@ -36,52 +36,9 @@ function getCoverStyle(coverImage: string | null): CSSProperties {
   };
 }
 
-type PublicWikiData = {
-  title: string;
-  icon: string | null;
-  coverImage: string | null;
-  content: Record<string, unknown> | Record<string, unknown>[] | null;
-  updatedAt: string;
-};
-
-function extractData(raw: unknown): PublicWikiData | null {
-  if (typeof raw !== "object" || raw === null) return null;
-  const obj = raw as Record<string, unknown>;
-  const candidate: unknown =
-    obj.success === true && typeof obj.data === "object" && obj.data !== null
-      ? obj.data
-      : raw;
-  if (typeof candidate !== "object" || candidate === null) return null;
-  const d = candidate as Record<string, unknown>;
-  if (typeof d.title !== "string") return null;
-  return {
-    title: d.title,
-    icon: typeof d.icon === "string" ? d.icon : null,
-    coverImage: typeof d.coverImage === "string" ? d.coverImage : null,
-    content: Array.isArray(d.content)
-      ? (d.content as Record<string, unknown>[])
-      : typeof d.content === "object" && d.content !== null
-        ? (d.content as Record<string, unknown>)
-        : null,
-    updatedAt:
-      typeof d.updatedAt === "string" ? d.updatedAt : new Date().toISOString(),
-  };
-}
-
 const fetchPageData = cache(
-  async (shareToken: string): Promise<PublicWikiData | null> => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/public/wiki/${shareToken}`, {
-        cache: "no-store",
-        headers: withCorrelation(new Headers()),
-      });
-      if (!res.ok) return null;
-      const raw: unknown = await res.json();
-      return extractData(raw);
-    } catch {
-      return null;
-    }
-  },
+  async (shareToken: string) =>
+    publicGetNoStore(`/public/wiki/${shareToken}`, undefined, publicWikiPageContract),
 );
 
 type Props = { params: Promise<{ shareToken: string }> };
@@ -131,9 +88,11 @@ export default async function PublicWikiPage({ params }: Props) {
             {data.title || "Untitled"}
           </h1>
         </div>
-        <p className="text-xs text-muted-foreground mb-8">
-          Last updated {format(new Date(data.updatedAt), "MMM d, yyyy")}
-        </p>
+        {data.updatedAt && (
+          <p className="text-xs text-muted-foreground mb-8">
+            Last updated {format(new Date(data.updatedAt), "MMM d, yyyy")}
+          </p>
+        )}
         <PublicPageContentLoader content={brokerContent} />
       </div>
     </main>

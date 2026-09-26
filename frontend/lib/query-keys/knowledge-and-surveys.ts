@@ -117,6 +117,20 @@ export const knowledgeAndSurveysQueryKeys = {
       [...base, "kb", "contentHealthCounts"] as const,
     contentHealthTrend: () =>
       [...base, "kb", "contentHealthTrend"] as const,
+    contentHealthEvidence: (pageId: number | null, kind: string | null) =>
+      [...base, "kb", "contentHealthEvidence", pageId, kind] as const,
+    wikiPageStats: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "wikiPageStats"] as const)
+        : ([...base, "kb", "wikiPageStats", params] as const),
+    wikiStalePages: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "wikiStalePages"] as const)
+        : ([...base, "kb", "wikiStalePages", params] as const),
+    wikiContributors: (params?: QueryKeyParams) =>
+      params === undefined
+        ? ([...base, "kb", "wikiContributors"] as const)
+        : ([...base, "kb", "wikiContributors", params] as const),
   },
 
   roadmap: {

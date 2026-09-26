@@ -297,7 +297,9 @@ export function useWikiPageStats(params?: WikiAnalyticsParams) {
   const canViewAnalytics = useCan("kb:analytics:view");
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
-    queryKey: ["knowledge", "kb", "wikiPageStats", queryParams] as const,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.wikiPageStats(
+      Object.keys(queryParams).length > 0 ? queryParams : undefined,
+    ),
     queryFn: ({ signal }) =>
       apiClient.get("/kb/wiki/analytics/page-stats", queryParams, signal, wikiPageStatsContract),
     staleTime: 5 * 60_000,
@@ -309,7 +311,9 @@ export function useWikiStalePages(params?: WikiAnalyticsParams) {
   const canViewAnalytics = useCan("kb:analytics:view");
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
-    queryKey: ["knowledge", "kb", "wikiStalePages", queryParams] as const,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.wikiStalePages(
+      Object.keys(queryParams).length > 0 ? queryParams : undefined,
+    ),
     queryFn: ({ signal }) =>
       apiClient.get("/kb/wiki/analytics/stale-pages", queryParams, signal, wikiStalePagesContract),
     staleTime: 5 * 60_000,
@@ -321,7 +325,9 @@ export function useWikiContributors(params?: WikiAnalyticsParams) {
   const canViewAnalytics = useCan("kb:analytics:view");
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
-    queryKey: ["knowledge", "kb", "wikiContributors", queryParams] as const,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.wikiContributors(
+      Object.keys(queryParams).length > 0 ? queryParams : undefined,
+    ),
     queryFn: ({ signal }) =>
       apiClient.get("/kb/wiki/analytics/contributors", queryParams, signal, wikiContributorsContract),
     staleTime: 5 * 60_000,

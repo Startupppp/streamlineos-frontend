@@ -130,7 +130,7 @@ const evidenceContract = lazyContract(() =>
 export function useContentHealthEvidence(pageId: number | null, kind: ContentHealthSignalType | null) {
   const canManage = useCan("kb:pages:manage");
   return useQuery({
-    queryKey: ["knowledge", "kb", "contentHealthEvidence", pageId, kind] as const,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthEvidence(pageId, kind),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/kb/wiki/content-health/signals/evidence",

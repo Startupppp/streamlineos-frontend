@@ -31,8 +31,8 @@ export const kbAnalyticsPagesContract = z.object({
     z.object({
       id: z.number().int(),
       title: z.string(),
-      status: z.enum(["draft", "in_review", "published", "archived"]),
-      trustState: z.enum(["unverified", "verified", "verification_expired"]),
+      status: z.string(),
+      trustState: z.string(),
       updatedAt: z.string(),
       uniqueViewers: z.number().int(),
       commentCount: z.number().int(),

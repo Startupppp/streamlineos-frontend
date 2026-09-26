@@ -193,14 +193,22 @@ export const publicKbListContract = z.object({
       id: z.number().int(),
       name: z.string(),
       slug: z.string(),
+      description: z.string().nullable(),
+      icon: z.string().nullable(),
+      sortOrder: z.number().int(),
     }),
   ),
   articles: z.array(
     z.object({
       id: z.number().int(),
+      categoryId: z.number().int().nullable(),
       title: z.string(),
       slug: z.string(),
       excerpt: z.string().nullable(),
+      views: z.number().int().nullable(),
+      helpfulCount: z.number().int().nullable(),
+      notHelpfulCount: z.number().int().nullable(),
+      tags: z.array(z.string()),
       publishedAt: z.string().nullable(),
     }),
   ),
@@ -217,12 +225,29 @@ export const publicKbArticleContract = z.object({
   slug: z.string(),
   content: z.string().nullable(),
   excerpt: z.string().nullable(),
+  categoryId: z.number().int().nullable(),
+  categoryName: z.string().nullable(),
+  categorySlug: z.string().nullable(),
   seoTitle: z.string().nullable(),
   seoDescription: z.string().nullable(),
-  categoryName: z.string().nullable(),
   tags: z.array(z.string()),
   views: z.number().int(),
+  helpfulCount: z.number().int().nullable(),
+  notHelpfulCount: z.number().int().nullable(),
   publishedAt: z.string().nullable(),
+  updatedAt: z.string().nullable(),
+});
+
+export const publicWikiPageContract = z.object({
+  title: z.string(),
+  icon: z.string().nullable(),
+  coverImage: z.string().nullable(),
+  content: z
+    .union([
+      z.record(z.string(), z.unknown()),
+      z.array(z.record(z.string(), z.unknown())),
+    ])
+    .nullable(),
   updatedAt: z.string().nullable(),
 });
 

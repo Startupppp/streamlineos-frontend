@@ -2,6 +2,7 @@ import type { z } from "zod";
 import type {
   publicKbListContract,
   publicKbArticleContract,
+  publicWikiPageContract,
   publicApplicationStatusContract,
   publicOfferDetailContract,
   publicReferrerPortalContract,
@@ -23,6 +24,8 @@ export interface PublicOrgInfo {
 export type PublicKbListData = z.infer<typeof publicKbListContract>;
 
 export type PublicKbArticle = z.infer<typeof publicKbArticleContract>;
+
+export type PublicWikiPage = z.infer<typeof publicWikiPageContract>;
 
 export async function publicGet<T>(
   path: string,
