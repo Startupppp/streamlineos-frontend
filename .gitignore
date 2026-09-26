@@ -12,3 +12,6 @@ frontend/.scratch/
 architecture-refactor/audit-2026-09-09/logs
 
 /backend/dist-verify
+
+# Agent tooling scratch state
+.omc/

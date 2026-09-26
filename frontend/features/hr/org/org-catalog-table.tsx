@@ -3,15 +3,14 @@
 import { useState, useCallback, useMemo } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
-import { Card, CardContent } from "@/components/ui/card";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Pencil, Trash2, Plus } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { Pencil, Trash2 } from "lucide-react";
+import { EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   DropdownMenu,
@@ -27,10 +26,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { cn } from "@/lib/utils";
 import type { StateIllustrationPreset } from "@/components/illustrations/state-illustration";
 import type { OrgCatalogInput } from "@/types/hr/core";
 
@@ -46,6 +46,8 @@ interface OrgCatalogTableProps<T extends CatalogItem> {
   items: T[] | undefined;
   isLoading: boolean;
   isError: boolean;
+  /** Passed through to `getErrorMessage`, so the failure names itself (FE-41). */
+  error?: unknown;
   onRetry: () => void;
   canManage: boolean;
   onCreate: (catalog: OrgCatalogInput) => Promise<unknown>;
@@ -194,11 +196,63 @@ function UpsertSheet({
   );
 }
 
+function getCatalogRowKey(item: CatalogItem): number {
+  return item.id;
+}
+
+/**
+ * A row's own component so the edit and delete handlers are named rather than
+ * arrows closed over the row inside a `cell` callback (FE-69).
+ */
+function CatalogRowActions<T extends CatalogItem>({
+  item,
+  onEdit,
+  onDelete,
+}: {
+  item: T;
+  onEdit: (item: T) => void;
+  onDelete: (item: T) => void;
+}) {
+  function handleEditClick() {
+    onEdit(item);
+  }
+
+  function handleDeleteClick() {
+    onDelete(item);
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <AnimatedIconButton
+          icon={EllipsisIcon}
+          variant="ghost"
+          size="icon"
+          className="shrink-0"
+          aria-label={`Actions for ${item.name}`}
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-32">
+        <DropdownMenuItem className="cursor-pointer gap-2 text-xs" onClick={handleEditClick}>
+          <Pencil className="h-3 w-3" /> Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer gap-2 text-xs text-destructive focus:text-destructive"
+          onClick={handleDeleteClick}
+        >
+          <Trash2 className="h-3 w-3" /> Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function OrgCatalogTable<T extends CatalogItem>({
   title,
   items,
   isLoading,
   isError,
+  error,
   onRetry,
   canManage,
   onCreate,
@@ -248,15 +302,68 @@ export function OrgCatalogTable<T extends CatalogItem>({
     if (!open) setEditing(null);
   }, []);
 
+  const handleClearFilters = useCallback(() => setSearch(""), []);
+
   const filtered = (items ?? []).filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase()),
   );
+  const filtersActive = search.trim().length > 0;
+
+  /**
+   * Ticket 05. Position Control is the reference for this surface, so the rows
+   * are a `DataTable` with the same toolbar shape (filter, count, one primary
+   * action on the right) rather than the bespoke divided card this used to
+   * render. The table also bounds what is mounted: the catalog reads are
+   * unpaginated, and the old `filtered.map` mounted every row (FE-112).
+   */
+  const columns: DataTableColumn<T>[] = useMemo(() => {
+    const base: DataTableColumn<T>[] = [
+      {
+        key: "name",
+        header: "Name",
+        className: TABLE_TITLE_CELL,
+        sortable: true,
+        cell: (item) => (
+          <span className={cn("text-sm font-medium", TEXT_ONE_LINE)} title={item.name}>
+            {item.name}
+          </span>
+        ),
+      },
+      {
+        key: "code",
+        header: "Code",
+        headerClassName: "w-[120px]",
+        className: "font-mono text-xs text-muted-foreground",
+        sortable: true,
+        cell: (item) => item.code ?? "—",
+      },
+      ...extraColumns.map((extraColumn) => ({
+        key: `extra-${extraColumn.label}`,
+        header: extraColumn.label,
+        className: "text-xs text-muted-foreground",
+        cell: extraColumn.render,
+      })),
+    ];
+
+    if (!canManage) return base;
+    return [
+      ...base,
+      {
+        key: "actions",
+        header: "",
+        headerClassName: "w-[52px]",
+        cell: (item) => (
+          <CatalogRowActions item={item} onEdit={handleEdit} onDelete={handleDeleteClick} />
+        ),
+      },
+    ];
+  }, [canManage, extraColumns, handleEdit, handleDeleteClick]);
 
   if (isLoading) {
     return (
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, skeletonIndex) => (
-          <Skeleton key={skeletonIndex} className="h-10 w-full rounded-lg" />
+      <div className="space-y-3">
+        {Array.from({ length: 12 }).map((_, skeletonIndex) => (
+          <Skeleton key={skeletonIndex} className="h-12 w-full rounded-lg" />
         ))}
       </div>
     );
@@ -265,8 +372,9 @@ export function OrgCatalogTable<T extends CatalogItem>({
   if (isError) {
     return (
       <ErrorState
-        title={`Failed to load ${title.toLowerCase()}s`}
-        description="Something went wrong. Please try again."
+        className="flex-1"
+        title={`Couldn't load ${title.toLowerCase()}s`}
+        description={getErrorMessage(error)}
         onRetry={onRetry}
       />
     );
@@ -274,94 +382,56 @@ export function OrgCatalogTable<T extends CatalogItem>({
 
   return (
     <>
-      <div className="flex items-center gap-2 mb-3">
-        <SearchInput className="flex-1"
+      <div className="mb-4 flex items-center gap-3">
+        <SearchInput
           value={search}
           onValueChange={handleSearch}
-          placeholder={`Search ${title.toLowerCase()}s...`}
+          placeholder={`Search ${title.toLowerCase()}s…`}
+          aria-label={`Search ${title.toLowerCase()}s`}
         />
-        {canManage && (
-          <Button size="sm" className="gap-1.5" onClick={handleCreate}>
-            <Plus className="h-3.5 w-3.5" />
-            Add {title}
-          </Button>
-        )}
+        <p className="whitespace-nowrap text-sm text-muted-foreground">
+          {filtered.length} {filtered.length === 1 ? title.toLowerCase() : `${title.toLowerCase()}s`}
+        </p>
+        {canManage ? (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            size="sm"
+            className="ml-auto"
+            onClick={handleCreate}
+          >
+            Add {title.toLowerCase()}
+          </AnimatedIconButton>
+        ) : null}
       </div>
-
-      {filtered.length === 0 ? (
-        <EmptyState
-          illustrationPreset={illustrationPreset}
-          title={`No ${title.toLowerCase()}s found`}
-          description={
-            search
-              ? "Try a different search term."
-              : `Create your first ${title.toLowerCase()} to get started.`
-          }
-          action={
-            canManage
-              ? { label: `Add first ${title.toLowerCase()}`, onClick: handleCreate }
-              : undefined
-          }
-          compact
-        />
-      ) : (
-        <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-card overflow-hidden">
-          <CardContent className="p-0">
-            <div className="divide-y divide-border">
-              {filtered.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <TruncatedText text={item.name} className="text-sm font-medium" />
-                    {item.code && (
-                      <p className="text-dense text-muted-foreground font-mono">
-                        {item.code}
-                      </p>
-                    )}
-                  </div>
-                  {extraColumns.map((extraColumn, columnIndex) => (
-                    <div
-                      key={columnIndex}
-                      className="shrink-0 text-xs text-muted-foreground"
-                    >
-                      {extraColumn.render(item)}
-                    </div>
-                  ))}
-                  {canManage && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <AnimatedIconButton
-                          icon={EllipsisIcon}
-                          variant="ghost"
-                          size="icon"
-                          className="shrink-0"
-                          aria-label={`Actions for ${item.name}`}
-                        />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-32">
-                        <DropdownMenuItem
-                          className="text-xs gap-2 cursor-pointer"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <Pencil className="h-3 w-3" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-xs gap-2 cursor-pointer text-destructive focus:text-destructive"
-                          onClick={() => handleDeleteClick(item)}
-                        >
-                          <Trash2 className="h-3 w-3" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <DataTable<T>
+        className="min-h-0 flex-1"
+        columns={columns}
+        data={filtered}
+        getRowKey={getCatalogRowKey}
+        pagination={{ pageSize: 20 }}
+        emptyState={
+          <EmptyState
+            illustrationPreset={illustrationPreset}
+            illustrationSize="md"
+            title={`No ${title.toLowerCase()}s yet`}
+            description={
+              filtersActive
+                ? undefined
+                : `Create your first ${title.toLowerCase()} to get started.`
+            }
+            filtersActive={filtersActive}
+            onClearFilters={handleClearFilters}
+            action={
+              !filtersActive && canManage
+                ? { label: `Add ${title.toLowerCase()}`, onClick: handleCreate }
+                : undefined
+            }
+            compact
+          />
+        }
+      />
 
       <ConfirmDialog
         open={pendingDelete !== null}

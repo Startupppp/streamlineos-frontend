@@ -178,7 +178,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         run: async () => {
           const result = await attritionRiskMutation.mutateAsync(employee.id);
           return {
-            text: `Risk level: ${result.riskLevel} (${result.attritionRiskScore}/100)\n\nReasoning: ${result.reasoning}\n\nRisk factors:\n${result.riskFactors.map((f) => "• " + f).join("\n")}\n\nRetention actions:\n${result.retentionActions.map((a) => "• " + a).join("\n")}\n\n⚠ Advisory only. This is an AI estimate — all people decisions require human judgment.`,
+            text: `Risk level: ${result.riskLevel} (${result.attritionRiskScore}/100)\n\nReasoning: ${result.reasoning}\n\nRisk factors:\n${result.riskFactors.map((f) => "• " + f).join("\n")}\n\nRetention actions:\n${result.retentionActions.map((a) => "• " + a).join("\n")}`,
+            advisory:
+              "Advisory only. This is an AI estimate — all people decisions require human judgment.",
           };
         },
       },

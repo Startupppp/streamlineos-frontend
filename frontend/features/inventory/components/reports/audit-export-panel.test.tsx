@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { renderWithProviders } from "@/test-utils";
 import { AuditExportPanel } from "./audit-export-panel";
@@ -62,7 +62,7 @@ function renderWith(
   mockUseCan.mockReturnValue(canExport);
   mockUseJobs.mockReturnValue({
     data: undefined,
-    isLoading: false,
+    isPending: false,
     isError: false,
     error: null,
     refetch: jest.fn(),
@@ -103,19 +103,22 @@ describe("evidence export", () => {
     expect(screen.queryByText(/No evidence has been exported/i)).not.toBeInTheDocument();
   });
 
-  it("says a settling job is settling, not ready", () => {
-    renderWith({
-      data: {
-        items: [job({ status: "PENDING", checksum: null, settledAt: null })],
-        total: 1,
-        page: 1,
-        totalPages: 1,
-      },
-    });
+  it.each(["PENDING", "VALIDATING", "RUNNING"] as const)(
+    "says a %s job is settling and shows no download button",
+    (status) => {
+      renderWith({
+        data: {
+          items: [job({ status, checksum: null, settledAt: null })],
+          total: 1,
+          page: 1,
+          totalPages: 1,
+        },
+      });
 
-    expect(screen.getByText("Settling")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Download/i })).not.toBeInTheDocument();
-  });
+      expect(screen.getByText("Settling")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Download/i })).not.toBeInTheDocument();
+    },
+  );
 
   it("names the reason a failed job failed", () => {
     renderWith({
@@ -148,7 +151,11 @@ describe("evidence export", () => {
       },
     );
 
-    // Nothing is verified until a reader asks, so the row renders first.
-    expect(screen.getByRole("button", { name: /Verify/i })).toBeInTheDocument();
+    // Nothing is verified until a reader asks — click to trigger the check.
+    fireEvent.click(screen.getByRole("button", { name: /Verify/i }));
+
+    expect(
+      screen.getByText(/no longer reproduces its recorded checksum/i),
+    ).toBeInTheDocument();
   });
 });

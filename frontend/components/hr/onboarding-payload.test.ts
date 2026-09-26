@@ -54,3 +54,51 @@ describe("buildOnboardEmployeePayload", () => {
     expect(buildOnboardEmployeePayload(base).email).toBe("a@b.test");
   });
 });
+
+describe("buildOnboardEmployeePayload — reporting managers (HRM-15)", () => {
+  const ref = { userId: "u-m", name: "Maya", email: null, designation: null, state: "active" as const };
+
+  it("omits a blank primary manager so the backend applies the policy", () => {
+    const payload = buildOnboardEmployeePayload({
+      ...base,
+      reportingManagerUserId: "",
+      secondaryManagers: [],
+      policyDefaultPrimary: { userId: "u-d", name: "Dana Default" },
+    });
+    expect(payload).not.toHaveProperty("reportingManagerUserId");
+    expect(payload).not.toHaveProperty("secondaryManagers");
+    expect(payload).not.toHaveProperty("policyDefaultPrimary");
+  });
+
+  it("sends the chosen managers and never the display refs", () => {
+    const payload = buildOnboardEmployeePayload({
+      ...base,
+      reportingManagerUserId: "u-m",
+      reportingManagerRef: ref,
+      secondaryManagers: [
+        { managerUserId: "u-s", label: " Project ", managerRef: ref },
+        { managerUserId: "u-t", label: "" },
+        { managerUserId: "" },
+      ],
+    });
+    expect(payload).toMatchObject({
+      reportingManagerUserId: "u-m",
+      secondaryManagers: [{ managerUserId: "u-s", label: "Project" }, { managerUserId: "u-t" }],
+    });
+    expect(payload).not.toHaveProperty("reportingManagerRef");
+    expect(JSON.stringify(payload)).not.toContain("managerRef");
+  });
+
+  it("sends no manager at all for a top-level role", () => {
+    const payload = buildOnboardEmployeePayload({
+      ...base,
+      topLevelRole: true,
+      topLevelRoleReason: "Founder",
+      reportingManagerUserId: "u-m",
+      secondaryManagers: [{ managerUserId: "u-s" }],
+    });
+    expect(payload).not.toHaveProperty("reportingManagerUserId");
+    expect(payload).not.toHaveProperty("secondaryManagers");
+    expect(payload).toMatchObject({ topLevelRole: true, topLevelRoleReason: "Founder" });
+  });
+});

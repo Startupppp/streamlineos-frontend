@@ -6,24 +6,12 @@ import { Mail, Building2, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl, cn } from "@/lib/utils";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { EmployeeListItem } from "@/types/hr";
 
 interface EmployeeCardProps {
   employee: EmployeeListItem;
   department: string | null;
-}
-
-function employeeDisplayName(emp: EmployeeListItem): string {
-  if (emp.firstName && emp.lastName) return `${emp.firstName} ${emp.lastName}`;
-  return emp.name?.trim() || "—";
-}
-
-function employeeInitials(emp: EmployeeListItem): string {
-  const first = emp.firstName?.trim()?.[0];
-  const last = emp.lastName?.trim()?.[0];
-  if (first && last) return `${first}${last}`.toUpperCase();
-  const fromName = emp.name?.trim()?.[0];
-  return (fromName ?? "?").toUpperCase();
 }
 
 /**
@@ -37,8 +25,9 @@ export const EmployeeCard = memo(function EmployeeCard({
   employee: emp,
   department,
 }: EmployeeCardProps) {
-  const displayName = employeeDisplayName(emp);
-  const initials = employeeInitials(emp);
+  // Ticket 07: one name policy for the card, the table, the export and the PDF.
+  const displayName = getUserDisplayName(emp);
+  const initials = getUserInitials(emp);
   const designation = emp.designation?.trim() || null;
   const employeeId = emp.employeeId?.trim() || null;
   // PROVISIONAL (product default E-4): an account exists from the moment an

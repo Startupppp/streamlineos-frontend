@@ -4,6 +4,7 @@ import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SettingsProfile } from "@/features/settings/settings-profile";
 import { SettingsSecuritySection } from "@/features/settings/settings-security-section";
+import { MyReportingLineSection } from "@/features/settings/reporting-line/my-reporting-line-section";
 import { prefetchAccountSettings } from "@/lib/prefetch/settings-account";
 
 export default async function SettingsPage() {
@@ -26,6 +27,8 @@ export default async function SettingsPage() {
           </div>
           <SettingsProfile />
         </section>
+
+        <MyReportingLineSection />
 
         <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-sm">
           <div>

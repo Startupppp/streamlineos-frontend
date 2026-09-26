@@ -15,6 +15,10 @@ jest.mock("@/hooks/api/hr/import-export", () => ({
   useHrImportJob: () => ({ data: undefined, isLoading: false, isError: false, error: null }),
 }));
 
+jest.mock("@/components/hr/reporting-lines/policy-missing-banner", () => ({
+  PolicyMissingBanner: ({ context }: { context: string }) => <div data-testid="policy-banner">{context}</div>,
+}));
+
 const previewed = importJob({ status: "previewed", totalRows: 2, validRows: 2, errorRows: 0 });
 
 function commitReturns(result: HrImportJob) {
@@ -86,5 +90,20 @@ describe("ImportWizardSheet — after a commit", () => {
     render(<ImportWizardSheet open onOpenChange={jest.fn()} entity="assets" entityLabel="Assets" columns={["name"]} />);
 
     expect(screen.queryByText(/must be the work email/i)).not.toBeInTheDocument();
+  });
+
+  it("warns about a missing manager policy and explains manager columns on an employees import", () => {
+    render(<ImportWizardSheet open onOpenChange={jest.fn()} entity="employees" entityLabel="Employees" columns={["email", "primaryManagerEmail"]} />);
+
+    expect(screen.getByTestId("policy-banner")).toHaveTextContent("file");
+    expect(screen.getByText("primaryManagerEmail")).toBeInTheDocument();
+    expect(screen.getByText(/a blank manager column changes nothing/i)).toBeInTheDocument();
+  });
+
+  it("shows neither for an import that carries no reporting line", () => {
+    render(<ImportWizardSheet open onOpenChange={jest.fn()} entity="assets" entityLabel="Assets" columns={["name"]} />);
+
+    expect(screen.queryByTestId("policy-banner")).not.toBeInTheDocument();
+    expect(screen.queryByText(/blank manager column/i)).not.toBeInTheDocument();
   });
 });

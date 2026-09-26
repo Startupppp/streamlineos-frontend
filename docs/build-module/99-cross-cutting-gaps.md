@@ -64,3 +64,42 @@ measured; do not tick the box from four of six.
 
 **Orchestrator-only.** It needs a minted session bound to a real unrevoked `user_sessions` row and a
 read-only production query. Lanes must not attempt it.
+
+## CCG-3 — the acceptance specs are green but cover four of C6's six checks
+
+Measured 2026-09-26, after the full serial Playwright drain: **all ten specs pass** — build-list 
+28/28 governance-qa, 39/39 managed-products, 36/36 planning-surfaces, 9/9 settings, 9/9 teams-team,
+plus content-intake, execution-core, org-work and portals.
+
+Passing is not the same as covering. C6 names six checks, and the galleries currently exercise four:
+
+| C6 check | Status |
+|---|---|
+| 375 px mobile | Covered by every spec |
+| Screen-reader (roles, accessible names) | Covered by every spec |
+| Reduced motion | Missing in `teams-team`, `content-intake`, `build-list-responsive` |
+| Keyboard | **Missing entirely in `settings` and `planning-surfaces`** |
+| High-density desktop | **Missing everywhere — all ten specs cap at 1280×800** |
+| Secret redaction | Only `content-intake` asserts anything token-shaped |
+
+So C6 is unmet on all 83 pages, and it is unmet for the *same* three reasons on nearly all of them.
+Do not tick C6 because a spec is green; the spec does not yet ask two of the six questions.
+
+Closing it is mechanical, not architectural:
+
+1. Add a viewport above 1280 to each spec's viewport table. "High-density desktop" means both a wider
+   viewport and `deviceScaleFactor` > 1 — a 1440/1920 run at scale 2 catches the layout break and the
+   asset/measurement break, which a wider viewport alone does not.
+2. Add a keyboard block to `settings` and `planning-surfaces`: `/` reaches the real search input,
+   `Tab` order follows visual order, `Esc` closes an overlay.
+3. Add the reduced-motion pair to the three specs missing it — **both halves**, because framer-motion
+   12 animates through the Web Animations API, so assert the CSS-driven surface
+   (`globals.css:700-708` disables `.skeleton-shimmer.animate-pulse`) with a `:visible` locator.
+4. Assert redaction only where a secret exists — portal/public token surfaces. On an internal
+   authenticated page there is no token to leak, and a test that asserts its absence proves nothing.
+
+Two traps already paid for on this criterion, both of which made a spec prove less than it read:
+`getByRole(..., { name })` is a case-insensitive **substring** match, so `{ name: "ID" }` also matched
+"Decided" and needed `exact: true` at all 22 call sites; and a `getByText` for a stat label matched
+the identically-worded status badge beside it, which needs scoping to `[data-slot="stat-card-grid"]`
+rather than `.first()`.

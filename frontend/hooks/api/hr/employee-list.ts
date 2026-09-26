@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -155,6 +155,15 @@ export function useInfiniteHrEmployees(
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
+    /**
+     * The directory's search is debounced, so the key still changes whenever a
+     * query settles. Without this the list unmounts to a skeleton on every
+     * change and the page height collapses under the user; with it the previous
+     * result stays put (`isFetching` dims it) until the new one arrives, and a
+     * superseded request is cancelled through the `signal` above rather than
+     * being allowed to land late.
+     */
+    placeholderData: keepPreviousData,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
 }
@@ -167,6 +176,9 @@ export function useHrEmployeeCounts(params: HrEmployeeCountsParams) {
     queryFn: ({ signal }) =>
       apiClient.get<HrEmployeeCounts>("/hr/employees/counts", params, signal, employeeCountsLazy),
     staleTime: 2 * 60_000,
+    // Same key churn as the list: hold the last counts rather than dropping the
+    // stat tiles to skeletons on every settled search.
+    placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
   });
 }
