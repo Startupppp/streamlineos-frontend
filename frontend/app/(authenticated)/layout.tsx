@@ -3,16 +3,16 @@ import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { HydrationBoundary } from "@tanstack/react-query";
 
+import { LayoutClient } from "../../components/layout/layout-client";
 import { resolveWizardGate } from "../../lib/wizard-gate";
-import { requireSession } from "../../lib/rbac/require-permission";
-import { getServerAccess } from "../../lib/rbac/get-server-access";
 import { prefetchAccess } from "../../lib/prefetch/access";
 import { resolveShellVariant } from "../../lib/shell-variant";
-import { LayoutClient } from "./layout-client";
-import { GlobalCreateTicketDialog } from "../../features/build/tickets/global-create-ticket-dialog";
+import { requireSession } from "../../lib/rbac/require-permission";
+import { getServerAccess } from "../../lib/rbac/get-server-access";
 import { AppThemeScript } from "../../components/theme/app-theme-script";
 import { AppThemeProvider } from "../../components/theme/app-theme-provider";
 import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
+import { GlobalCreateTicketDialog } from "../../features/build/tickets/global-create-ticket-dialog";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },

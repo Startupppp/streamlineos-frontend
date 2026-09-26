@@ -90,18 +90,17 @@ export function DashboardShell({
   const isPortalRoute = isPortalChromelessPath(route);
 
   useRouteFocus();
+  usePushSubscription(userId);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     useState(defaultCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
   const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false);
-  const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
-  const [welcomeToastActive, setWelcomeToastActive] = useState(false);
   const [enhancementsReady, setEnhancementsReady] = useState(false);
+  const [welcomeToastActive, setWelcomeToastActive] = useState(false);
+  const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
+  const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
 
-  const { hideSidebar, showSidebarToggle, navGroups } =
-    useProductSidebarVisibility();
   const {
     data: access,
     error: accessErr,
@@ -109,7 +108,8 @@ export function DashboardShell({
     refetch: refetchAccess,
     isLoading: accessLoading,
   } = useAccess();
-  usePushSubscription(userId);
+  const { hideSidebar, showSidebarToggle, navGroups } =
+    useProductSidebarVisibility();
 
   const rafIdRef = useRef<number | null>(null);
 
