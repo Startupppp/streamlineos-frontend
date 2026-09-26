@@ -67,11 +67,11 @@ export function AuditExportPanel() {
           className={cn(
             "inline-flex items-center rounded-md border px-2 py-0.5 text-dense font-medium",
             statusToneClasses(
-              row.status === "READY" ? "success" : row.status === "FAILED" ? "danger" : "info",
+              row.status === "COMPLETED" ? "success" : row.status === "FAILED" ? "danger" : "info",
             ),
           )}
         >
-          {row.status === "READY"
+          {row.status === "COMPLETED"
             ? "Ready"
             : row.status === "FAILED"
               ? (row.failureReason ?? "Failed")
@@ -123,7 +123,7 @@ export function AuditExportPanel() {
       headerClassName: "w-44",
       className: "w-44",
       cell: (row) =>
-        row.status === "READY" ? (
+        row.status === "COMPLETED" ? (
           <div className="flex gap-1">
             <Button variant="outline" size="sm" className="h-7" onClick={() => handleDownload(row)}>
               <Download className="mr-1 h-3 w-3" aria-hidden="true" />

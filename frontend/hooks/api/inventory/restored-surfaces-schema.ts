@@ -138,7 +138,7 @@ export const feedbackSummaryContract = z.object({
 
 export const auditExportJobContract = z.object({
   id: z.number().int(),
-  status: z.enum(["PENDING", "READY", "FAILED"]),
+  status: z.enum(["PENDING", "VALIDATING", "RUNNING", "COMPLETED", "FAILED"]),
   schemaVersion: z.number().int(),
   evidenceVersion: z.string(),
   sections: z.array(z.string()),

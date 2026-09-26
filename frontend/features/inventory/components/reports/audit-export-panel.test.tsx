@@ -33,7 +33,7 @@ jest.mock("@/hooks/api/inventory/audit-export", () => ({
 function job(overrides: Partial<AuditExportJob> = {}): AuditExportJob {
   return {
     id: 4,
-    status: "READY",
+    status: "COMPLETED",
     schemaVersion: 1,
     evidenceVersion: "L9001.A4400",
     sections: ["ledger", "audit_events"],

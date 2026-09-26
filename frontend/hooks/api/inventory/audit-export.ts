@@ -6,6 +6,8 @@ import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { lazyContract } from "@/lib/api-envelope";
+import type { z } from "zod";
+import type { auditExportJobContract } from "./restored-surfaces-schema";
 const auditExportPageResponse = lazyContract(() =>
   import("./restored-surfaces-schema").then((m) => m.auditExportPageContract),
 );
@@ -30,28 +32,8 @@ const auditExportVerificationResponse = lazyContract(() =>
  * still matches.
  */
 
-export type AuditExportStatus = "PENDING" | "READY" | "FAILED";
-
-export interface AuditExportJob {
-  id: number;
-  status: AuditExportStatus;
-  schemaVersion: number;
-  evidenceVersion: string;
-  sections: string[];
-  scopeWarehouseIds: number[] | null;
-  filterFrom: string | null;
-  filterTo: string | null;
-  ledgerRowCount: number | null;
-  auditRowCount: number | null;
-  checksumAlgorithm: string;
-  checksum: string | null;
-  byteLength: number | null;
-  settledAt: string | null;
-  failureReason: string | null;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type AuditExportJob = z.infer<typeof auditExportJobContract>;
+export type AuditExportStatus = AuditExportJob["status"];
 
 export interface AuditExportVerification {
   jobId: number;
