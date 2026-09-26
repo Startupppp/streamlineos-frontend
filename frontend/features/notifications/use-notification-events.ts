@@ -105,7 +105,8 @@ function showIncoming(
 ): void {
   if (notification.priority === "LOW") return;
   const openLink = () => {
-    if (notification.link) router.push(normalizeBuildDeepLink(notification.link));
+    if (notification.link)
+      router.push(normalizeBuildDeepLink(notification.link));
   };
   toast(notification.title, {
     description: notification.message,
@@ -159,8 +160,11 @@ function openStream(
           invalidate();
           showIncoming(notification, routerRef.current);
         },
-        () => {
-          retryCount = 0;
+        {
+          onOpen: () => {
+            retryCount = 0;
+          },
+          onCountChanged: invalidate,
         },
       );
       scheduleRetry();

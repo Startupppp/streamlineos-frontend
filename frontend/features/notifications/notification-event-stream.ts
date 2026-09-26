@@ -18,23 +18,23 @@ const frameSchema = z.object({
 
 export type IncomingNotification = z.infer<typeof notificationSchema>;
 
+export interface NotificationStreamHandlers {
+  onOpen?: () => void;
+  onCountChanged?: () => void;
+}
+
 export async function consumeNotificationStream(
   url: string,
   token: string,
   signal: AbortSignal,
   onNotification: (notification: IncomingNotification) => void,
-  /**
-   * Fired once the stream is established, before any frame arrives. The caller
-   * resets its reconnect backoff here rather than on the first notification: most
-   * healthy connections are quiet for hours, so resetting on arrival meant a
-   * working stream still carried forward every earlier failure.
-   */
-  onOpen?: () => void,
+  { onOpen, onCountChanged }: NotificationStreamHandlers = {},
 ): Promise<void> {
   const headers = withCorrelation(new Headers({ Accept: "text/event-stream" }));
   headers.set("Authorization", `Bearer ${token}`);
   const response = await fetch(url, { headers, signal });
-  if (!response.ok || !response.body) throw new Error("Notification stream unavailable");
+  if (!response.ok || !response.body)
+    throw new Error("Notification stream unavailable");
   onOpen?.();
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = "";
@@ -45,11 +45,19 @@ export async function consumeNotificationStream(
     const frames = buffer.split(/\n\n/);
     buffer = frames.pop() ?? "";
     for (const frame of frames) {
-      const data = frame.split("\n").find((line) => line.startsWith("data:"))?.slice(5).trim();
+      const data = frame
+        .split("\n")
+        .find((line) => line.startsWith("data:"))
+        ?.slice(5)
+        .trim();
       if (!data) continue;
       const parsed = frameSchema.safeParse(JSON.parse(data));
-      if (parsed.success && parsed.data.type === "notification" && parsed.data.notification)
-        onNotification(parsed.data.notification);
+      if (!parsed.success) continue;
+      if (parsed.data.type === "notification") {
+        if (parsed.data.notification) onNotification(parsed.data.notification);
+        continue;
+      }
+      if (parsed.data.type === "count_changed") onCountChanged?.();
     }
   }
 }

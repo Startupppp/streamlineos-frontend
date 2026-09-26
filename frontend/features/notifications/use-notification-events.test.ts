@@ -101,8 +101,8 @@ describe("useNotificationEvents — a single failure must not end the stream", (
     );
 
     let opened = 0;
-    consume.mockImplementation((_url, _token, _signal, _onNotification, onOpen) => {
-      onOpen?.();
+    consume.mockImplementation((_url, _token, _signal, _onNotification, handlers) => {
+      handlers?.onOpen?.();
       opened += 1;
       return neverEnding();
     });
@@ -113,7 +113,7 @@ describe("useNotificationEvents — a single failure must not end the stream", (
     // The reset signal is the point: a quiet but healthy connection must clear the
     // failure count, or five quiet reconnects over a day exhaust the budget.
     expect(consume.mock.calls[0]).toHaveLength(5);
-    expect(typeof consume.mock.calls[0]?.[4]).toBe("function");
+    expect(typeof consume.mock.calls[0]?.[4]?.onOpen).toBe("function");
   });
 
   it("keeps retrying past MAX_RETRIES — the ceiling is on the delay, not the attempts", async () => {
