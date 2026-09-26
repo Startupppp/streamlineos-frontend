@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CATEGORIES, isValidOtherLabel } from "./reimbursement-status";
+import { reimbursementAmountStringSchema } from "@/lib/validation/reimbursement-amount";
 
 export const REIMBURSEMENT_MIN_AMOUNT = 1;
 export const REIMBURSEMENT_MAX_AMOUNT = 999999;
@@ -8,13 +9,7 @@ export const reimbursementSchema = z
   .object({
     category: z.string().refine((value) => CATEGORIES.includes(value), "Choose a category"),
     customCategory: z.string().trim().transform((value) => value.replace(/\s+/g, " ")),
-    amount: z
-      .string()
-      .trim()
-      .min(1, { message: "Amount is required", abort: true })
-      .refine((value) => Number.isFinite(Number(value)), { message: "Amount must be a number", abort: true })
-      .refine((value) => Number(value) >= REIMBURSEMENT_MIN_AMOUNT, { message: `Amount must be at least ₹${REIMBURSEMENT_MIN_AMOUNT}`, abort: true })
-      .refine((value) => Number(value) <= REIMBURSEMENT_MAX_AMOUNT, "Amount must be at most ₹9,99,999"),
+    amount: reimbursementAmountStringSchema,
     description: z.string().trim().max(1000, "Description must be 1000 characters or fewer"),
   })
   .superRefine((values, ctx) => {

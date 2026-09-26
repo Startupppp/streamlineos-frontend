@@ -41,7 +41,7 @@ export function ChatShell({
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { sidebarCollapsed } = useChatSidebarCollapse();
+  const { sidebarCollapsed, handleToggleSidebar } = useChatSidebarCollapse();
 
   const handleSelectChannel = useCallback(
     (channelId: number) => {
@@ -68,6 +68,7 @@ export function ChatShell({
           autoFocusSearch={autoFocusSearch}
           onSearchFocused={onSearchFocused}
           isCollapsed={sidebarCollapsed}
+          onToggleSidebar={handleToggleSidebar}
           onStartCall={onStartCall}
           onOpenSettings={onOpenSettings}
         />

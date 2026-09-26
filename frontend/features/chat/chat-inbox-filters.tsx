@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type KeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
 import {
   CHAT_INBOX_FILTERS,
@@ -36,7 +36,7 @@ export function ChatInboxFilters({ value, counts, onChange }: ChatInboxFiltersPr
   }, [value]);
 
   const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLDivElement>) => {
+    (event: KeyboardEvent<HTMLDivElement>) => {
       const index = CHAT_INBOX_FILTERS.indexOf(value);
       const nextIndex =
         event.key === "ArrowRight" || event.key === "ArrowDown"

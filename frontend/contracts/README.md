@@ -54,6 +54,54 @@ pnpm -C frontend check:permission-catalog
 
 Read it from a spec through `@/test-utils/permission-catalog` (`backendPermissionNames`, `delegableModuleIds`, `memberDefaultPermissions`, `ownerOnlyOperations`), never by walking to a sibling checkout.
 
+## db-enums.generated.ts
+
+Every `pgEnum` declared under `backend/src/db/schema/**` — 466 of them — as the literal member list Postgres will accept for that column. Vendored for the same reason `openapi.json` is, and hash-gated the same way.
+
+**Why it exists.** `check:contract-parity` compares the frontend contract against the backend contract, so it is structurally blind to this whole defect class:
+
+- a column typed `z.string()` on the backend passes parity against *any* frontend enum, because `string` is a superset of every member list;
+- two hand-written copies that are wrong in the same way agree with each other.
+
+Measured 2026-09-26: the backend typed `notification.category` as `z.string()` while the frontend hand-wrote the 19-member `notification_category` list **three times, each copy missing `ACCOUNTING`**. Parity was green. An `ACCOUNTING` notification threw `ApiContractError` and took the whole notification list down.
+
+It is a pure function of the schema sources — no timestamp, no git SHA, enum names sorted — so "byte-for-byte identical" is a meaningful claim and a regeneration with no schema change is a no-op diff.
+
+**Use it instead of hand-writing the list again:**
+
+```ts
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
+
+category: z.enum(DB_ENUMS.notification_category),
+```
+
+`DB_ENUMS` is `as const`, so the arrays are readonly tuples and `z.enum` keeps the literal types. `DbEnumName` and `DbEnumMember<N>` are exported for deriving a TS union without restating the members.
+
+**To re-vendor after a backend `pgEnum` change:**
+
+```bash
+pnpm -C backend generate:db-enums     # rewrites backend/src/db/enums.generated.ts
+pnpm -C frontend generate:db-enums    # copies it here; needs the backend checked out
+```
+
+The frontend script copies rather than re-deriving, on purpose: two parsers of the same schema can disagree, a byte comparison cannot.
+
+**Gates.** Two rules, the first needing nothing but this repository:
+
+1. **Well-formed** — the module exists, declares `DB_ENUMS ... as const`, and holds at least 400 entries. A truncated or empty artifact cannot satisfy this, so an empty sweep cannot pass.
+2. **Byte-identical to the backend's copy** — needs the backend beside this repo; otherwise reported NOT RUN and the run ends INCONCLUSIVE (exit 2), which does not mask rule 1.
+
+```bash
+pnpm -C frontend check:db-enums-vendor:self-test   # 9 assertions over synthetic inputs
+pnpm -C frontend check:db-enums-vendor
+pnpm -C backend  check:db-enums                    # the backend file still matches the schema
+pnpm -C backend  check:db-enums:self-test          # 14 parser assertions
+```
+
+The backend gate and the vendor gate answer different questions and both are needed: `check:db-enums` catches a `pgEnum` edit that was never regenerated, `check:db-enums-vendor` catches a regeneration that was never re-vendored.
+
+`*.generated.ts` is excluded from `check:over-300` in both repos and from the backend's `check:file-sizes`, for the reason `.d.ts` already is: those ratchets push authored code towards a responsibility seam, and machine-written output has none to find. `check:file-sizes` here already excludes `contracts/` wholesale.
+
 ## __fixtures__/
 
 `timesheets-fixture.json` — a hand-crafted subset of real timesheets operations (derived from `backend/src/modules/timesheets/**/*.controller.ts` and their `dto/*.schemas.ts`). Used by `--use-fixture` to demonstrate drift rules against request body schemas. It is a partial contract — not all paths are present — so running against it produces path violations and may produce stale-baseline warnings for entries that only appear in the real contract.

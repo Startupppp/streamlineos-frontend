@@ -31,8 +31,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -90,7 +89,6 @@ export function compareSources(a, b) {
 }
 
 function runSelfTest() {
-  const dir = join(tmpdir(), `db-enums-vendor-test-${Date.now()}`);
   const cases = [];
   const assert = (description, passes) => cases.push({ description, passes });
 
@@ -98,9 +96,7 @@ function runSelfTest() {
     `export const DB_ENUMS = {\n${entries.map((n) => `  ${n}: ["A"],`).join("\n")}\n} as const;\n`;
   const four = wellFormed(["a", "b", "c", "d"]);
 
-  try {
-    mkdirSync(dir, { recursive: true });
-
+  {
     assert("a module with enough enums is well-formed", checkWellFormed(four, 4).ok);
     assert(
       "a module below the floor is a violation, so a truncated write cannot read as a pass",
@@ -140,8 +136,6 @@ function runSelfTest() {
     for (const f of failures) console.error(`FAIL self-test FAILED: ${f.description}`);
     if (failures.length > 0) process.exit(1);
     console.log(`\nAll ${cases.length} self-test cases passed — check-db-enums-vendor is live.`);
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
   }
   process.exit(0);
 }

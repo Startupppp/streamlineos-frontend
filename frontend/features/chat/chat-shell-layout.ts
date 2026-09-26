@@ -1,5 +1,5 @@
 const CHAT_PANE_CHROME =
-  "relative z-0 shrink-0 flex-col overflow-hidden border-r border-border/40 bg-card/50 transition-[width] duration-300 ease-in-out";
+  "relative z-0 shrink-0 flex-col overflow-visible border-r border-border/40 bg-card/50 transition-[width] duration-300 ease-in-out";
 
 function paneWidthClassName(isCollapsed: boolean): string {
   return isCollapsed ? "lg:w-[3.5rem]" : "lg:w-[340px]";

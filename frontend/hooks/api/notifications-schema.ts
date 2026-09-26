@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 import { idCursorPageContract } from "@/hooks/api/id-cursor-page-schema";
 
 /**
@@ -12,13 +13,9 @@ const notificationItemContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   userId: z.string().nullable(),
-  type: z.enum(["INFO", "SUCCESS", "WARNING", "ERROR"]),
-  priority: z.enum(["LOW", "NORMAL", "HIGH", "CRITICAL"]),
-  category: z.enum([
-    "SECURITY", "CRM", "HRMS", "BILLING", "AI", "PROJECTS", "WORKFLOW",
-    "MARKETING", "SYSTEM", "CHAT", "PAYROLL", "RECRUITMENT", "KNOWLEDGE",
-    "SIGN", "INVENTORY", "SURVEYS", "CALENDAR", "SUPPORT",
-  ]),
+  type: z.enum(DB_ENUMS.notification_type),
+  priority: z.enum(DB_ENUMS.notification_priority),
+  category: z.enum(DB_ENUMS.notification_category),
   sourceModule: z.string().nullable(),
   eventKey: z.string().nullable().optional(),
   entityType: z.string().nullable().optional(),
@@ -72,8 +69,8 @@ export const notificationAckContract = z.object({ success: z.literal(true) }).st
 export const notificationProviderContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
-  channel: z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP", "WEBHOOK"]),
-  provider: z.enum(["SMTP", "TWILIO", "META_WHATSAPP", "WEBHOOK", "WEB_PUSH", "INTERNAL", "SANDBOX"]),
+  channel: z.enum(DB_ENUMS.notification_channel),
+  provider: z.enum(DB_ENUMS.notification_provider),
   displayName: z.string(),
   enabled: z.boolean(),
   sandboxMode: z.boolean(),
@@ -99,9 +96,9 @@ export const notificationProviderTestContract = z.object({
   providerMessageId: z.string().nullable(),
 });
 
-const notificationChannelEnum = z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP", "WEBHOOK"]);
-const notificationPriorityEnum = z.enum(["LOW", "NORMAL", "HIGH", "CRITICAL"]);
-const notificationTypeEnum = z.enum(["INFO", "SUCCESS", "WARNING", "ERROR"]);
+const notificationChannelEnum = z.enum(DB_ENUMS.notification_channel);
+const notificationPriorityEnum = z.enum(DB_ENUMS.notification_priority);
+const notificationTypeEnum = z.enum(DB_ENUMS.notification_type);
 
 const notificationEventDefinitionBase = z.object({
   eventKey: z.string(),
@@ -116,7 +113,7 @@ const notificationEventDefinitionBase = z.object({
   mandatory: z.boolean(),
   userConfigurable: z.boolean(),
   adminConfigurable: z.boolean(),
-  quietHoursBehavior: z.enum(["respect", "bypass_if_high", "always_bypass"]),
+  quietHoursBehavior: z.enum(DB_ENUMS.notification_quiet_hours_behavior),
   dedupeWindowSeconds: z.number().int(),
   rateLimitWindowSeconds: z.number().int(),
   rateLimitMax: z.number().int(),
@@ -140,7 +137,7 @@ const policyOverrideSchema = z.object({
 const notificationPolicyBase = z.object({
   id: z.number().int(),
   orgId: z.string(),
-  scopeType: z.enum(["ORG", "ROLE", "DEPARTMENT", "TEAM", "PROJECT"]),
+  scopeType: z.enum(DB_ENUMS.notification_policy_scope),
   scopeId: z.string().nullable(),
   defaultChannels: z.array(notificationChannelEnum),
   eventOverrides: z.record(z.string(), policyOverrideSchema),
@@ -182,7 +179,7 @@ export const notificationPreferenceContract = z.object({
   inherited: z
     .object({ defaultChannels: z.array(z.string()), canUserOverride: z.boolean() })
     .optional(),
-  availableChannels: z.array(z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP"])).optional(),
+  availableChannels: z.array(z.enum(DB_ENUMS.notification_channel)).optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
@@ -229,12 +226,8 @@ export const notificationTemplateContract = z.object({
   orgId: z.string(),
   templateKey: z.string(),
   name: z.string(),
-  channel: z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP", "WEBHOOK"]),
-  category: z.enum([
-    "SECURITY", "CRM", "HRMS", "BILLING", "AI", "PROJECTS", "WORKFLOW",
-    "MARKETING", "SYSTEM", "CHAT", "PAYROLL", "RECRUITMENT", "KNOWLEDGE",
-    "SIGN", "INVENTORY", "SURVEYS", "CALENDAR", "SUPPORT",
-  ]),
+  channel: z.enum(DB_ENUMS.notification_channel),
+  category: z.enum(DB_ENUMS.notification_category),
   locale: z.string(),
   subject: z.string().nullable(),
   body: z.string(),
@@ -282,14 +275,10 @@ export const broadcastRowContract = z.object({
   message: z.string(),
   type: notificationTypeEnum,
   priority: notificationPriorityEnum,
-  category: z.enum([
-    "SECURITY", "CRM", "HRMS", "BILLING", "AI", "PROJECTS", "WORKFLOW",
-    "MARKETING", "SYSTEM", "CHAT", "PAYROLL", "RECRUITMENT", "KNOWLEDGE",
-    "SIGN", "INVENTORY", "SURVEYS", "CALENDAR", "SUPPORT",
-  ]),
+  category: z.enum(DB_ENUMS.notification_category),
   channels: z.array(z.string()),
   audience: broadcastAudienceSchema,
-  status: z.enum(["DRAFT", "SCHEDULED", "QUEUED", "SENDING", "SENT", "CANCELLED", "FAILED"]),
+  status: z.enum(DB_ENUMS.broadcast_status),
   scheduledAt: z.string().nullable(),
   sentAt: z.string().nullable(),
   recipientCount: z.number().int(),

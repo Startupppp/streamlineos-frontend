@@ -19,7 +19,9 @@ import { ChannelSectionList } from "./channel-section-list";
 import { ChatOverlayFallback } from "./chat-lazy-fallbacks";
 import { ChannelCompactRail } from "./channel-compact-rail";
 import { ChannelSidebarHeader } from "./channel-sidebar-header";
+import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
 import { ChannelInboxSections } from "./channel-inbox-sections";
+import { ChannelSidebarSearchResults } from "./channel-sidebar-search-results";
 import { handleConversationListKeyDown } from "./chat-inbox-keys";
 import {
   channelMatchesInboxFilter,
@@ -28,22 +30,34 @@ import {
   withChatInboxFilter,
   type ChatInboxFilter,
 } from "./chat-inbox-filter";
+import type { ChatSearchScope } from "./chat-search-scope";
 
 const NewDMDialog = dynamic(
   () => import("./new-dm-dialog").then((m) => ({ default: m.NewDMDialog })),
-  { ssr: false, loading: () => <ChatOverlayFallback label="Loading new message" /> },
+  {
+    ssr: false,
+    loading: () => <ChatOverlayFallback label="Loading new message" />,
+  },
 );
 
 const NewGroupDialog = dynamic(
   () =>
     import("./new-group-dialog").then((m) => ({ default: m.NewGroupDialog })),
-  { ssr: false, loading: () => <ChatOverlayFallback label="Loading new channel" /> },
+  {
+    ssr: false,
+    loading: () => <ChatOverlayFallback label="Loading new channel" />,
+  },
 );
 
 const ChatSearchDialog = dynamic(
   () =>
-    import("./chat-search-dialog").then((m) => ({ default: m.ChatSearchDialog })),
-  { ssr: false, loading: () => <ChatOverlayFallback label="Loading chat search" /> },
+    import("./chat-search-dialog").then((m) => ({
+      default: m.ChatSearchDialog,
+    })),
+  {
+    ssr: false,
+    loading: () => <ChatOverlayFallback label="Loading chat search" />,
+  },
 );
 
 interface ChannelSidebarProps {
@@ -53,6 +67,7 @@ interface ChannelSidebarProps {
   autoFocusSearch?: boolean;
   onSearchFocused?: () => void;
   isCollapsed?: boolean;
+  onToggleSidebar?: () => void;
   onStartCall?: (channelId: number, type: "huddle") => void;
   onOpenSettings?: (channelId: number) => void;
 }
@@ -64,6 +79,7 @@ export function ChannelSidebar({
   autoFocusSearch,
   onSearchFocused,
   isCollapsed = false,
+  onToggleSidebar,
   onStartCall,
   onOpenSettings,
 }: ChannelSidebarProps) {
@@ -95,42 +111,79 @@ export function ChannelSidebar({
   const [newDMOpen, setNewDMOpen] = useState(false);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [chatSearchOpen, setChatSearchOpen] = useState(false);
+  const [searchScope, setSearchScope] = useState<ChatSearchScope>("messages");
+  const [searchFocused, setSearchFocused] = useState(false);
   const [dmsCollapsed, setDmsCollapsed] = useState(false);
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
   const [publicCollapsed, setPublicCollapsed] = useState(false);
   const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
+  const handleSearchChange = useCallback(
+    (value: string) => setSearch(value),
+    [],
+  );
   const handleClearSearch = useCallback(() => setSearch(""), []);
+  const handleSearchScopeChange = useCallback((scope: ChatSearchScope) => {
+    setSearchScope(scope);
+  }, []);
+  const handleSearchFocusChange = useCallback((focused: boolean) => {
+    setSearchFocused(focused);
+    if (!focused) setSearchScope("messages");
+  }, []);
   const handleInboxFilterChange = useCallback(
     (filter: ChatInboxFilter) => {
-      const query = withChatInboxFilter(new URLSearchParams(searchParams.toString()), filter);
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      const query = withChatInboxFilter(
+        new URLSearchParams(searchParams.toString()),
+        filter,
+      );
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
     },
     [pathname, router, searchParams],
   );
   const handleClearFilters = useCallback(() => {
     setSearch("");
-    const query = withChatInboxFilter(new URLSearchParams(searchParams.toString()), "all");
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    const query = withChatInboxFilter(
+      new URLSearchParams(searchParams.toString()),
+      "all",
+    );
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
   }, [pathname, router, searchParams]);
   const handleRetryChannels = useCallback(() => {
     refetchChannels();
   }, [refetchChannels]);
-  const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
+  const handleToggleGroups = useCallback(
+    () => setGroupsCollapsed((p) => !p),
+    [],
+  );
   const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
-  const handleTogglePublic = useCallback(() => setPublicCollapsed((p) => !p), []);
-  const handleToggleFavorites = useCallback(() => setFavoritesCollapsed((p) => !p), []);
+  const handleTogglePublic = useCallback(
+    () => setPublicCollapsed((p) => !p),
+    [],
+  );
+  const handleToggleFavorites = useCallback(
+    () => setFavoritesCollapsed((p) => !p),
+    [],
+  );
   const handleOpenArchived = useCallback(() => setShowArchived(true), []);
   const handleCloseArchived = useCallback(() => {
     setShowArchived(false);
     setSearch("");
   }, []);
-  const handleOpenBrowse = useCallback(() => router.push("/chat/channels"), [router]);
+  const handleOpenBrowse = useCallback(
+    () => router.push("/chat/channels"),
+    [router],
+  );
   const handleOpenChatSearch = useCallback(() => setChatSearchOpen(true), []);
   const handleOpenNewDM = useCallback(() => setNewDMOpen(true), []);
   const handleOpenNewGroup = useCallback(() => setNewGroupOpen(true), []);
+
+  const showScopedSearch =
+    searchFocused && !showArchived && searchScope !== "messages";
 
   useEffect(() => {
     if (autoFocusSearch && searchInputRef.current) {
@@ -147,7 +200,7 @@ export function ChannelSidebar({
 
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
-    [onlineUsers]
+    [onlineUsers],
   );
 
   const filteredChannels = useMemo(() => {
@@ -156,7 +209,7 @@ export function ChannelSidebar({
     return channels.filter(
       (ch) =>
         ch.name.toLowerCase().includes(q) ||
-        ch.lastMessage?.content?.toLowerCase().includes(q)
+        ch.lastMessage?.content?.toLowerCase().includes(q),
     );
   }, [channels, search]);
 
@@ -176,7 +229,10 @@ export function ChannelSidebar({
   );
 
   const visibleChannels = useMemo(
-    () => filteredChannels.filter((channel) => channelMatchesInboxFilter(channel, inboxFilter)),
+    () =>
+      filteredChannels.filter((channel) =>
+        channelMatchesInboxFilter(channel, inboxFilter),
+      ),
     [filteredChannels, inboxFilter],
   );
 
@@ -192,40 +248,59 @@ export function ChannelSidebar({
 
   const favorites = useMemo(
     () =>
-      visibleChannels.filter((c) =>
-        c.members?.find((m) => m.user?.id === currentUserId)?.isFavorite,
+      visibleChannels.filter(
+        (c) => c.members?.find((m) => m.user?.id === currentUserId)?.isFavorite,
       ),
     [visibleChannels, currentUserId],
   );
 
-  const favoriteIds = useMemo(() => new Set(favorites.map((c) => c.id)), [favorites]);
+  const favoriteIds = useMemo(
+    () => new Set(favorites.map((c) => c.id)),
+    [favorites],
+  );
 
   const dms = useMemo(
-    () => visibleChannels.filter((c) => c.type === "DIRECT" && !favoriteIds.has(c.id)),
-    [visibleChannels, favoriteIds]
+    () =>
+      visibleChannels.filter(
+        (c) => c.type === "DIRECT" && !favoriteIds.has(c.id),
+      ),
+    [visibleChannels, favoriteIds],
   );
 
   const groups = useMemo(
     () =>
       visibleChannels.filter(
-        (c) => (c.type === "GROUP" || c.type === "PRIVATE") && !favoriteIds.has(c.id),
+        (c) =>
+          (c.type === "GROUP" || c.type === "PRIVATE") &&
+          !favoriteIds.has(c.id),
       ),
-    [visibleChannels, favoriteIds]
+    [visibleChannels, favoriteIds],
   );
 
   const publicChannels = useMemo(
-    () => visibleChannels.filter((c) => c.type === "PUBLIC" && !favoriteIds.has(c.id)),
-    [visibleChannels, favoriteIds]
+    () =>
+      visibleChannels.filter(
+        (c) => c.type === "PUBLIC" && !favoriteIds.has(c.id),
+      ),
+    [visibleChannels, favoriteIds],
   );
 
   const compactChannels = useMemo(
     () => [...favorites, ...publicChannels, ...groups, ...dms],
-    [favorites, publicChannels, groups, dms]
+    [favorites, publicChannels, groups, dms],
   );
 
   return (
     <TooltipProvider>
-      <div className="relative flex flex-col h-full overflow-visible">
+      <div className="relative flex h-full flex-col overflow-visible">
+        {!isCollapsed && onToggleSidebar ? (
+          <ChannelSidebarCollapseButton
+            isCollapsed={false}
+            onToggle={onToggleSidebar}
+            className="absolute top-14 right-0 z-30 translate-x-1/2 border border-border/40 bg-card shadow-sm"
+          />
+        ) : null}
+
         <ChannelSidebarHeader
           isCollapsed={isCollapsed}
           onlineUserCount={onlineUsers?.length ?? 0}
@@ -235,11 +310,12 @@ export function ChannelSidebar({
           onInboxFilter={handleInboxFilterChange}
           search={search}
           showArchived={showArchived}
+          searchScope={searchScope}
           searchInputRef={searchInputRef}
           onSearchChange={handleSearchChange}
           onClearSearch={handleClearSearch}
-          onOpenChatSearch={handleOpenChatSearch}
-          onOpenBrowse={handleOpenBrowse}
+          onSearchScopeChange={handleSearchScopeChange}
+          onSearchFocusChange={handleSearchFocusChange}
           onOpenNewDM={handleOpenNewDM}
           onOpenNewGroup={handleOpenNewGroup}
         />
@@ -250,9 +326,12 @@ export function ChannelSidebar({
           onBrowseOpen={handleOpenBrowse}
           onNewDMOpen={handleOpenNewDM}
           onNewGroupOpen={handleOpenNewGroup}
+          onToggleSidebar={onToggleSidebar}
         />
 
-        <ScrollArea className={cn("flex-1", isCollapsed ? "px-2 lg:px-1" : "px-2")}>
+        <ScrollArea
+          className={cn("flex-1", isCollapsed ? "px-2 lg:px-1" : "px-2")}
+        >
           {!canReadChannels ? (
             <NoPermissionState
               compact
@@ -270,11 +349,21 @@ export function ChannelSidebar({
             />
           ) : isLoading && !showArchived ? (
             <div className="space-y-2 p-3" aria-busy="true">
-              <span role="status" className="sr-only">Loading conversations…</span>
+              <span role="status" className="sr-only">
+                Loading conversations…
+              </span>
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex min-h-14 items-center gap-3 px-2 py-2">
+                <div
+                  key={i}
+                  className="flex min-h-14 items-center gap-3 px-2 py-2"
+                >
                   <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className={cn("flex-1 space-y-1.5", isCollapsed && "lg:hidden")}>
+                  <div
+                    className={cn(
+                      "flex-1 space-y-1.5",
+                      isCollapsed && "lg:hidden",
+                    )}
+                  >
                     <Skeleton className="h-3.5 w-24" />
                     <Skeleton className="h-3 w-36" />
                   </div>
@@ -283,8 +372,10 @@ export function ChannelSidebar({
             </div>
           ) : (
             <div onKeyDown={handleConversationListKeyDown}>
-              <p className="sr-only">Use the arrow keys to move between conversations.</p>
-              <div className={cn("hidden py-1", isCollapsed && "lg:block")}>
+              <p className="sr-only">
+                Use the arrow keys to move between conversations.
+              </p>
+              <div className={cn("hidden pb-1", isCollapsed && "lg:block")}>
                 <ChannelSectionList
                   channels={compactChannels}
                   label="Conversations"
@@ -296,44 +387,60 @@ export function ChannelSidebar({
                   onSelectChannel={onSelectChannel}
                 />
               </div>
-              <ChannelInboxSections
-                inboxFilter={inboxFilter}
-                search={search}
-                isCollapsed={isCollapsed}
-                showArchived={showArchived}
-                favorites={favorites}
-                publicChannels={publicChannels}
-                groups={groups}
-                dms={dms}
-                favoritesCollapsed={favoritesCollapsed}
-                publicCollapsed={publicCollapsed}
-                groupsCollapsed={groupsCollapsed}
-                dmsCollapsed={dmsCollapsed}
-                onToggleFavorites={handleToggleFavorites}
-                onTogglePublic={handleTogglePublic}
-                onToggleGroups={handleToggleGroups}
-                onToggleDMs={handleToggleDMs}
-                archivedChannels={filteredArchivedChannels}
-                archivedUnreadCount={archivedUnreadCount}
-                isArchivedLoading={isArchivedLoading}
-                hasMoreArchived={hasMoreArchived}
-                isLoadingMoreArchived={isLoadingMoreArchived}
-                onLoadMoreArchived={loadMoreArchived}
-                onOpenArchived={handleOpenArchived}
-                onCloseArchived={handleCloseArchived}
-                activeChannelId={activeChannelId}
-                currentUserId={currentUserId}
-                onlineUserIds={onlineUserIds}
-                onSelectChannel={onSelectChannel}
-                onStartCall={onStartCall}
-                onOpenSettings={onOpenSettings}
-                visibleCount={visibleChannels.length}
-                hasMoreChannels={hasMoreChannels}
-                channelsTruncated={channelsTruncated}
-                isLoadingMoreChannels={isLoadingMoreChannels}
-                onLoadMoreChannels={loadMoreChannels}
-                onClearFilters={handleClearFilters}
-              />
+              {showScopedSearch ? (
+                <div className={cn("pb-1", isCollapsed && "lg:hidden")}>
+                  <ChannelSidebarSearchResults
+                    scope={searchScope}
+                    search={search}
+                    channels={channels}
+                    activeChannelId={activeChannelId}
+                    currentUserId={currentUserId}
+                    onlineUserIds={onlineUserIds}
+                    onSelectChannel={onSelectChannel}
+                    onStartCall={onStartCall}
+                    onOpenSettings={onOpenSettings}
+                  />
+                </div>
+              ) : (
+                <ChannelInboxSections
+                  inboxFilter={inboxFilter}
+                  search={search}
+                  isCollapsed={isCollapsed}
+                  showArchived={showArchived}
+                  favorites={favorites}
+                  publicChannels={publicChannels}
+                  groups={groups}
+                  dms={dms}
+                  favoritesCollapsed={favoritesCollapsed}
+                  publicCollapsed={publicCollapsed}
+                  groupsCollapsed={groupsCollapsed}
+                  dmsCollapsed={dmsCollapsed}
+                  onToggleFavorites={handleToggleFavorites}
+                  onTogglePublic={handleTogglePublic}
+                  onToggleGroups={handleToggleGroups}
+                  onToggleDMs={handleToggleDMs}
+                  archivedChannels={filteredArchivedChannels}
+                  archivedUnreadCount={archivedUnreadCount}
+                  isArchivedLoading={isArchivedLoading}
+                  hasMoreArchived={hasMoreArchived}
+                  isLoadingMoreArchived={isLoadingMoreArchived}
+                  onLoadMoreArchived={loadMoreArchived}
+                  onOpenArchived={handleOpenArchived}
+                  onCloseArchived={handleCloseArchived}
+                  activeChannelId={activeChannelId}
+                  currentUserId={currentUserId}
+                  onlineUserIds={onlineUserIds}
+                  onSelectChannel={onSelectChannel}
+                  onStartCall={onStartCall}
+                  onOpenSettings={onOpenSettings}
+                  visibleCount={visibleChannels.length}
+                  hasMoreChannels={hasMoreChannels}
+                  channelsTruncated={channelsTruncated}
+                  isLoadingMoreChannels={isLoadingMoreChannels}
+                  onLoadMoreChannels={loadMoreChannels}
+                  onClearFilters={handleClearFilters}
+                />
+              )}
             </div>
           )}
         </ScrollArea>

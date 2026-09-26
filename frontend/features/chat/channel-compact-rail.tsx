@@ -13,6 +13,7 @@ import {
   UsersIcon,
 } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
+import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
 
 const RAIL_ICON_SIZE = 14;
 
@@ -48,6 +49,7 @@ interface ChannelCompactRailProps {
   onBrowseOpen: () => void;
   onNewDMOpen: () => void;
   onNewGroupOpen: () => void;
+  onToggleSidebar?: () => void;
 }
 
 export function ChannelCompactRail({
@@ -56,6 +58,7 @@ export function ChannelCompactRail({
   onBrowseOpen,
   onNewDMOpen,
   onNewGroupOpen,
+  onToggleSidebar,
 }: ChannelCompactRailProps) {
   return (
     <div
@@ -64,6 +67,13 @@ export function ChannelCompactRail({
         isCollapsed && "lg:flex",
       )}
     >
+      {onToggleSidebar ? (
+        <ChannelSidebarCollapseButton
+          isCollapsed
+          onToggle={onToggleSidebar}
+          className="mb-1"
+        />
+      ) : null}
       <div className="flex flex-col items-center gap-0.5">
         <CompactRailButton
           label="Search"

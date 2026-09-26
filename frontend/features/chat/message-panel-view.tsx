@@ -152,10 +152,10 @@ export function MessagePanelView({
           <button
             type="button"
             onClick={onBack}
-            className="rounded-lg p-1.5 hover:bg-muted/50 lg:hidden"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
             aria-label="Back to channels"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-5" />
           </button>
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="relative shrink-0">

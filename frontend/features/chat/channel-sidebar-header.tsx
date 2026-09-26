@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { SearchInput } from "@/components/ui/search-input";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
@@ -9,15 +9,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PlusIcon, SearchIcon } from "@animateicons/react/lucide";
+import { ChevronDownIcon, ChevronUpIcon, PlusIcon } from "@animateicons/react/lucide";
 import { MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatInboxFilters } from "./chat-inbox-filters";
+import { ChannelSidebarSearchScopes } from "./channel-sidebar-search-scopes";
 import {
   formatInboxSummary,
   type ChatInboxFilter,
   type ChatInboxFilterCounts,
 } from "./chat-inbox-filter";
+import type { ChatSearchScope } from "./chat-search-scope";
 
 interface ChannelSidebarHeaderProps {
   isCollapsed: boolean;
@@ -27,11 +29,12 @@ interface ChannelSidebarHeaderProps {
   showArchived: boolean;
   inboxFilter: ChatInboxFilter;
   inboxCounts: ChatInboxFilterCounts;
+  searchScope: ChatSearchScope;
   onInboxFilter: (filter: ChatInboxFilter) => void;
   onSearchChange: (value: string) => void;
   onClearSearch: () => void;
-  onOpenChatSearch: () => void;
-  onOpenBrowse: () => void;
+  onSearchScopeChange: (scope: ChatSearchScope) => void;
+  onSearchFocusChange: (focused: boolean) => void;
   onOpenNewDM: () => void;
   onOpenNewGroup: () => void;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
@@ -45,17 +48,46 @@ export function ChannelSidebarHeader({
   showArchived,
   inboxFilter,
   inboxCounts,
+  searchScope,
   onInboxFilter,
   onSearchChange,
   onClearSearch,
-  onOpenChatSearch,
-  onOpenBrowse,
+  onSearchScopeChange,
+  onSearchFocusChange,
   onOpenNewDM,
   onOpenNewGroup,
   searchInputRef,
 }: ChannelSidebarHeaderProps) {
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchGroupRef = useRef<HTMLDivElement>(null);
+
+  const handleToggleHeader = useCallback(() => {
+    setHeaderCollapsed((prev) => !prev);
+  }, []);
+
+  const handleSearchFocus = useCallback(() => {
+    setSearchFocused(true);
+    onSearchFocusChange(true);
+  }, [onSearchFocusChange]);
+
+  const handleSearchGroupBlur = useCallback(
+    (event: React.FocusEvent<HTMLDivElement>) => {
+      const next = event.relatedTarget;
+      if (next instanceof Node && searchGroupRef.current?.contains(next)) return;
+      setSearchFocused(false);
+      onSearchFocusChange(false);
+    },
+    [onSearchFocusChange],
+  );
+
   return (
-    <div className={cn("flex flex-col gap-2 px-3 pt-2 pb-2 sm:px-4", isCollapsed && "lg:hidden")}>
+    <div
+      className={cn(
+        "flex flex-col gap-2 px-3 pt-2 pb-2 sm:px-4",
+        isCollapsed && "lg:hidden",
+      )}
+    >
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-sm">
@@ -68,15 +100,7 @@ export function ChannelSidebarHeader({
             </p>
           </div>
         </div>
-        <div className="hidden items-center gap-1 lg:flex">
-          <AnimatedIconButton
-            icon={SearchIcon}
-            iconSize={16}
-            variant="ghost"
-            size="icon"
-            onClick={onOpenChatSearch}
-            aria-label="Search messages"
-          />
+        <div className="flex shrink-0 items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <AnimatedIconButton icon={PlusIcon} iconSize={16} size="sm">
@@ -86,29 +110,62 @@ export function ChannelSidebarHeader({
             <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem onSelect={onOpenNewDM}>New message</DropdownMenuItem>
               <DropdownMenuItem onSelect={onOpenNewGroup}>New channel</DropdownMenuItem>
-              <DropdownMenuItem onSelect={onOpenBrowse}>Browse channels</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <button
+            type="button"
+            onClick={handleToggleHeader}
+            aria-label={headerCollapsed ? "Expand header" : "Collapse header"}
+            aria-expanded={!headerCollapsed}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            {headerCollapsed ? (
+              <ChevronDownIcon size={16} aria-hidden="true" />
+            ) : (
+              <ChevronUpIcon size={16} aria-hidden="true" />
+            )}
+          </button>
         </div>
       </div>
 
-      <SearchInput
-        ref={searchInputRef}
-        fill
-        placeholder={showArchived ? "Search archived chats..." : "Search conversations..."}
-        value={search}
-        onValueChange={onSearchChange}
-        onClear={onClearSearch}
-        aria-label={showArchived ? "Search archived chats" : "Search conversations"}
-        inputClassName="rounded-lg border-border/30 bg-muted/30 placeholder:text-muted-foreground"
-      />
+      {!headerCollapsed && (
+        <>
+          <div
+            ref={searchGroupRef}
+            className="flex flex-col gap-2"
+            onBlur={handleSearchGroupBlur}
+          >
+            <SearchInput
+              ref={searchInputRef}
+              fill
+              placeholder={
+                showArchived ? "Search archived chats..." : "Search conversations..."
+              }
+              value={search}
+              onValueChange={onSearchChange}
+              onClear={onClearSearch}
+              onFocus={handleSearchFocus}
+              aria-label={
+                showArchived ? "Search archived chats" : "Search conversations"
+              }
+              inputClassName="rounded-lg border-border/30 bg-muted/30 placeholder:text-muted-foreground"
+            />
+            {searchFocused && !showArchived && (
+              <ChannelSidebarSearchScopes
+                value={searchScope}
+                onChange={onSearchScopeChange}
+              />
+            )}
+          </div>
 
-      {!showArchived && (
-        <ChatInboxFilters
-          value={inboxFilter}
-          counts={inboxCounts}
-          onChange={onInboxFilter}
-        />
+          {!showArchived && (
+            <ChatInboxFilters
+              value={inboxFilter}
+              counts={inboxCounts}
+              onChange={onInboxFilter}
+            />
+          )}
+        </>
       )}
     </div>
   );

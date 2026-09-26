@@ -251,6 +251,7 @@ export function ChatHomePage() {
             autoFocusSearch={showSearchFocus}
             onSearchFocused={handleSearchFocused}
             isCollapsed={sidebarCollapsed}
+            onToggleSidebar={handleToggleSidebar}
             onStartCall={handleStartCallFromSidebar}
             onOpenSettings={handleOpenChannelSettings}
           />

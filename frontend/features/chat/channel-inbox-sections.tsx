@@ -96,6 +96,7 @@ export function ChannelInboxSections({
   onClearFilters,
 }: ChannelInboxSectionsProps) {
   const filtersActive = Boolean(search) || inboxFilter !== "all";
+  const useAccordions = inboxFilter === "all" || inboxFilter === "unread";
   const listProps = {
     activeChannelId,
     currentUserId,
@@ -126,80 +127,92 @@ export function ChannelInboxSections({
     );
   }
 
+  const flatChannels = [...favorites, ...publicChannels, ...groups, ...dms];
+
   return (
-    <div className={cn("py-1", isCollapsed && "lg:hidden")}>
+    <div className={cn("pb-1", isCollapsed && "lg:hidden")}>
       {visibleCount > 0 && (
         <p className="sr-only" role="status">
           {inboxStatusLabel(inboxFilter, visibleCount, Boolean(search))}
         </p>
       )}
 
-      {favorites.length > 0 && (
-        <ChannelSidebarSection
-          title="Favorites"
-          count={unreadIn(favorites)}
-          collapsed={favoritesCollapsed}
-          onToggle={onToggleFavorites}
-          icon={<Star className="h-3 w-3 fill-amber-400 text-status-warning-ink" />}
-        >
-          <ChannelSectionList channels={favorites} label="Favorites" {...listProps} />
-        </ChannelSidebarSection>
-      )}
-
-      {!search && inboxFilter === "all" && archivedChannels.length > 0 && (
-        <button
-          type="button"
-          onClick={onOpenArchived}
-          className="mb-1 flex min-h-14 w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-muted/40"
-        >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/60">
-            <Archive className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <span className="flex-1 text-label font-medium text-foreground">Archived</span>
-          {archivedUnreadCount > 0 && (
-            <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1 font-mono text-micro font-bold tabular-nums text-primary-foreground">
-              {archivedUnreadCount > 99 ? "99+" : archivedUnreadCount}
-            </span>
+      {useAccordions ? (
+        <>
+          {favorites.length > 0 && (
+            <ChannelSidebarSection
+              title="Favorites"
+              count={unreadIn(favorites)}
+              collapsed={favoritesCollapsed}
+              onToggle={onToggleFavorites}
+              icon={<Star className="h-3 w-3 fill-amber-400 text-status-warning-ink" />}
+            >
+              <ChannelSectionList channels={favorites} label="Favorites" {...listProps} />
+            </ChannelSidebarSection>
           )}
-        </button>
-      )}
 
-      {publicChannels.length > 0 && (
-        <ChannelSidebarSection
-          title="Public channels"
-          count={unreadIn(publicChannels)}
-          collapsed={publicCollapsed}
-          onToggle={onTogglePublic}
-        >
-          <ChannelSectionList
-            channels={publicChannels}
-            label="Public channels"
-            {...listProps}
-          />
-        </ChannelSidebarSection>
-      )}
+          {!search && inboxFilter === "all" && archivedChannels.length > 0 && (
+            <button
+              type="button"
+              onClick={onOpenArchived}
+              className="mb-1 flex min-h-14 w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-muted/40"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/60">
+                <Archive className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <span className="flex-1 text-label font-medium text-foreground">Archived</span>
+              {archivedUnreadCount > 0 && (
+                <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1 font-mono text-micro font-bold tabular-nums text-primary-foreground">
+                  {archivedUnreadCount > 99 ? "99+" : archivedUnreadCount}
+                </span>
+              )}
+            </button>
+          )}
 
-      {groups.length > 0 && (
-        <ChannelSidebarSection
-          title="Groups"
-          count={unreadIn(groups)}
-          collapsed={groupsCollapsed}
-          onToggle={onToggleGroups}
-        >
-          <ChannelSectionList channels={groups} label="Groups" {...listProps} />
-        </ChannelSidebarSection>
-      )}
+          {publicChannels.length > 0 && (
+            <ChannelSidebarSection
+              title="Public channels"
+              count={unreadIn(publicChannels)}
+              collapsed={publicCollapsed}
+              onToggle={onTogglePublic}
+            >
+              <ChannelSectionList
+                channels={publicChannels}
+                label="Public channels"
+                {...listProps}
+              />
+            </ChannelSidebarSection>
+          )}
 
-      {dms.length > 0 && (
-        <ChannelSidebarSection
-          title="Direct messages"
-          count={unreadIn(dms)}
-          collapsed={dmsCollapsed}
-          onToggle={onToggleDMs}
-        >
-          <ChannelSectionList channels={dms} label="Direct messages" {...listProps} />
-        </ChannelSidebarSection>
-      )}
+          {groups.length > 0 && (
+            <ChannelSidebarSection
+              title="Groups"
+              count={unreadIn(groups)}
+              collapsed={groupsCollapsed}
+              onToggle={onToggleGroups}
+            >
+              <ChannelSectionList channels={groups} label="Groups" {...listProps} />
+            </ChannelSidebarSection>
+          )}
+
+          {dms.length > 0 && (
+            <ChannelSidebarSection
+              title="Direct messages"
+              count={unreadIn(dms)}
+              collapsed={dmsCollapsed}
+              onToggle={onToggleDMs}
+            >
+              <ChannelSectionList channels={dms} label="Direct messages" {...listProps} />
+            </ChannelSidebarSection>
+          )}
+        </>
+      ) : flatChannels.length > 0 ? (
+        <ChannelSectionList
+          channels={flatChannels}
+          label={inboxFilter === "direct" ? "Direct messages" : "Channels"}
+          {...listProps}
+        />
+      ) : null}
 
       {visibleCount === 0 && !hasMoreChannels && (
         <EmptyState

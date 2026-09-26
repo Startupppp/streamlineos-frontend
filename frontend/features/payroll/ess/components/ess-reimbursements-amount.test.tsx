@@ -32,10 +32,10 @@ describe("the reimbursement Amount field", () => {
   beforeEach(() => mutateAsync.mockReset());
 
   it.each([
-    ["-1", /greater than 0/i],
-    ["0", /greater than 0/i],
+    ["-1", /at least ₹1/i],
+    ["0", /at least ₹1/i],
     ["", /Amount is required/i],
-    ["1000000", /cannot exceed/i],
+    ["1000000", /at most/i],
     ["1.005", /2 decimal places/i],
   ])("rejects %p inline and submits nothing", async (amount, message) => {
     await fillAndSubmit(amount);
@@ -54,12 +54,12 @@ describe("the reimbursement Amount field", () => {
     await fillAndSubmit("-1");
 
     const amount = screen.getByLabelText(/Amount/);
-    const message = await screen.findByText(/greater than 0/i);
+    const message = await screen.findByText(/at least ₹1/i);
     expect(amount).toHaveAttribute("aria-invalid", "true");
     expect(amount.getAttribute("aria-describedby")).toContain(message.id);
   });
 
-  it.each(["1", "250.50", "999999", "0.01"])(
+  it.each(["1", "250.50", "999999"])(
     "accepts %p",
     (amount) => {
       expect(
@@ -67,4 +67,8 @@ describe("the reimbursement Amount field", () => {
       ).toBe(true);
     },
   );
+
+  it("rejects '0.01' because the floor is now ₹1, matching the HR route that writes the same decimal(15,2) column", () => {
+    expect(reimbursementSchema.shape.amount.safeParse("0.01").success).toBe(false);
+  });
 });

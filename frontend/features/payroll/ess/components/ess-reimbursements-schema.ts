@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { reimbursementAmountStringSchema } from "@/lib/validation/reimbursement-amount";
 
 export const CLAIM_CATEGORIES = [
   "Travel",
@@ -27,27 +28,7 @@ export const MAX_CLAIM_AMOUNT = 999999;
  */
 export const reimbursementSchema = z.object({
   category: z.string().min(1, "Select a category"),
-  amount: z
-    .string()
-    .min(1, "Amount is required")
-    .refine(
-      (v) => Number.isFinite(parseFloat(v)),
-      "Enter an amount in numbers",
-    )
-    .refine(
-      (v) => parseFloat(v) > 0,
-      "Amount must be greater than 0",
-    )
-    .refine(
-      (v) => parseFloat(v) <= MAX_CLAIM_AMOUNT,
-      `Amount cannot exceed ₹${MAX_CLAIM_AMOUNT.toLocaleString("en-IN")}`,
-    )
-    .refine(
-      // Read the decimals off the string: `1.005 * 100` is 100.49999999999999
-      // in binary floating point, so the same check on the number says two.
-      (v) => /^\s*\d+(\.\d{1,2})?\s*$/.test(v),
-      "Amount can have at most 2 decimal places",
-    ),
+  amount: reimbursementAmountStringSchema,
   description: z.string().min(1, "Description is required").max(500),
   payrollMonth: z.string().min(1, "Payroll month is required"),
 });
