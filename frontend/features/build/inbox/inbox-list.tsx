@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyInboxIllustration } from "@/components/illustrations";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -168,7 +169,7 @@ export function InboxList({
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border-l border-border scrollbar-hide">
         <PageState resolution={pageState} loading={<div className="flex min-h-full flex-col"><InboxListSkeleton /></div>} onRetry={handleRetry} compact className="min-h-full w-full flex-1"
           empty={hasNextPage || !isOnline ? <div /> : (
-            <EmptyState illustrationPreset="mail" title={emptyTitle} description={emptyDesc} filtersActive={hasActiveFilters} filteredTitle="No matching notifications" onClearFilters={hasActiveFilters ? onClearFilters : undefined} compact className="min-h-full w-full flex-1 rounded-lg border-dashed p-4" />
+            <EmptyState illustration={<EmptyInboxIllustration />} title={emptyTitle} description={emptyDesc} filtersActive={hasActiveFilters} filteredTitle="No matching notifications" onClearFilters={hasActiveFilters ? onClearFilters : undefined} compact className="min-h-full w-full flex-1 rounded-lg border-dashed p-4" />
           )}
         >
           <div>
