@@ -212,7 +212,7 @@ export default function TrashPage() {
           )}
         </>
       )}
-      {canPurge && pageCount > 0 && selectedCount === 0 && (
+      {canPurge && canManageSettings && pageCount > 0 && selectedCount === 0 && (
         <Button
           type="button"
           variant="outline"

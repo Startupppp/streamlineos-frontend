@@ -4,6 +4,7 @@ import { GoalsPage } from "./goals-page";
 
 jest.mock("@/hooks/api/goals", () => ({
   useGoals: jest.fn(),
+  useGoalsPage: jest.fn(),
   useGoalStats: jest.fn(),
 }));
 
@@ -163,10 +164,11 @@ jest.mock("@/components/ui/truncated-text", () => ({
   TruncatedText: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 
-import { useGoals, useGoalStats } from "@/hooks/api/goals";
+import { useGoals, useGoalsPage, useGoalStats } from "@/hooks/api/goals";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseGoals = useGoals as jest.Mock;
+const mockUseGoalsPage = useGoalsPage as jest.Mock;
 const mockUseGoalStats = useGoalStats as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
@@ -199,12 +201,19 @@ beforeEach(() => {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseGoals.mockReturnValue({ data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+  mockUseGoalsPage.mockReturnValue({
+    data: { items: [], page: 1, pageSize: 24, total: 0, totalPages: 0 },
+    isLoading: false,
+    isError: false,
+    error: undefined,
+    refetch: jest.fn(),
+  });
   mockUseGoalStats.mockReturnValue({ data: undefined });
 });
 
 it("shows skeleton not empty state while access snapshot is still in flight because useGatedQuery disables the query until snapshot lands", () => {
   mockUseAccess.mockReturnValue(ACCESS_LOADING);
-  mockUseGoals.mockReturnValue(disabledQueryResult());
+  mockUseGoalsPage.mockReturnValue(disabledQueryResult());
 
   render(<GoalsPage />);
 
@@ -214,7 +223,7 @@ it("shows skeleton not empty state while access snapshot is still in flight beca
 
 it("shows NoPermissionState not empty state when build:goals:view is denied", () => {
   mockUseAccess.mockReturnValue(ACCESS_DENIED);
-  mockUseGoals.mockReturnValue(disabledQueryResult());
+  mockUseGoalsPage.mockReturnValue(disabledQueryResult());
 
   render(<GoalsPage />);
 

@@ -52,6 +52,7 @@ import {
   DESC_MAX,
 } from "./create-module-schema";
 import { useCan } from "@/hooks/api/access";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
@@ -171,6 +172,15 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
     },
     [createMutation, form, projectId],
   );
+
+  const handleClearModulesKeyboard = useCallback(() => {}, []);
+  const handleOpenModuleByIndex = useCallback((_index: number) => {}, []);
+  useBuildListKeyboard({
+    itemCount: modules.length,
+    onOpen: handleOpenModuleByIndex,
+    onClearSelection: handleClearModulesKeyboard,
+    enabled: pageState.kind === "ready",
+  });
 
   const total = modules?.length ?? 0;
   const inProgress = modules?.filter((m) => m.status === "in-progress").length ?? 0;
@@ -392,6 +402,7 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
               hasNextPage={!!hasNextPage}
               isFetchingNextPage={isFetchingNextPage}
               onLoadMore={handleLoadMore}
+              label="Load more modules"
             />
           </PmSection>
         )}

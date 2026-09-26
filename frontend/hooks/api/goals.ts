@@ -67,6 +67,8 @@ interface GoalsParams {
   projectId?: number;
   managedProductId?: number;
   search?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface KeyResultInput {

@@ -41,7 +41,7 @@ jest.mock("./workload-view", () => ({
   },
 }));
 
-jest.mock("@/features/build/backlog/bulk-action-bar", () => ({
+jest.mock("@/features/build/shared/bulk-action-bar", () => ({
   BulkActionBar: () => null,
 }));
 

@@ -102,6 +102,7 @@ export function InboxPage() {
       q={urlState.q}
       type={urlState.type}
       projectId={urlState.projectId}
+      cursor={urlState.cursor}
       selectionDismissed={selectionDismissed}
       onSelect={handleSelect}
       onClearSelection={handleAutoClearSelection}

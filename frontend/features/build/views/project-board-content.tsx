@@ -9,7 +9,7 @@ import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel
 import { TableView } from "./table-view";
 import { GanttView } from "./gantt-view";
 import { WorkloadView } from "./workload-view";
-import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
+import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { SearchX, WifiOff } from "lucide-react";

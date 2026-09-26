@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { useTestRuns, useDeleteTestRun } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
@@ -28,6 +29,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { TestRunSheet } from "./test-run-sheet";
 
 const RUN_PAGE_SIZE = 50;
@@ -154,6 +156,7 @@ interface TestRunsTabProps {
 }
 
 export function TestRunsTab({ projectId }: TestRunsTabProps) {
+  const router = useRouter();
   const canManage = useCan("build:qa:manage");
   const listFilters = useBuildListFilters({
     filters: FILTER_DEFINITIONS,
@@ -225,6 +228,18 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     (value: string) => listFilters.setValue("status", value),
     [listFilters],
   );
+
+  const handleOpenFocused = useCallback(
+    (index: number) => { router.push(`/build/${projectId}/qa/runs/${runs[index].id}`); },
+    [runs, projectId, router],
+  );
+  const handleClearKeyboardSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: runs.length,
+    onOpen: handleOpenFocused,
+    onClearSelection: handleClearKeyboardSelection,
+    enabled: !sheetOpen && !deleteTarget,
+  });
 
   const pageState = usePageState({
     permission: "build:qa:view",

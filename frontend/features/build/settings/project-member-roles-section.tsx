@@ -15,7 +15,7 @@ import {
   useProjectMembers,
   useUpdateProjectMemberRole,
 } from "@/hooks/api/build";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { ErrorState } from "@/components/shared/error-state";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectMemberRecord } from "@/types/projects";
@@ -114,6 +114,7 @@ interface ProjectMemberRolesSectionProps {
 export function ProjectMemberRolesSection({
   projectId,
 }: ProjectMemberRolesSectionProps) {
+  const accessState = useCanState("build:view");
   const canManage = useCan("build:manage");
   const {
     data: members,
@@ -122,6 +123,8 @@ export function ProjectMemberRolesSection({
     error,
     refetch,
   } = useProjectMembers(projectId);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   if (isLoading) {
     return (

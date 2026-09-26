@@ -73,7 +73,6 @@ interface WikiSidebarNavProps {
   canViewAnalytics: boolean;
   canViewReviews: boolean;
   canManageContent: boolean;
-  /** HR documents in the knowledge base are switched on for this tenant. */
   showCompanyDocuments?: boolean;
 }
 

@@ -7,12 +7,12 @@
 ## Purpose
 
 This manifest is the current-to-final route authority for Build. It inventories
-all 74 current Build-owned routes: 65 authenticated Build pages, five internal
+all 83 current Build-owned routes: 74 authenticated Build pages, five internal
 or external portal pages, and four public Build pages. Detailed UX and data
 contracts live in BLD-02C through BLD-02F.
 
 The generated census at `docs/specs/build/generated/routes.snapshot.json` is
-authoritative and currently reports 74 routes. The count reflects the approved
+authoritative and currently reports 83 routes. The count reflects the approved
 dead-surface removal and the retained `/portal`, `/portal/{projectId}`, and
 public collaboration routes recorded in
 `docs/build-module/DEAD-BUILD-SURFACE-INVENTORY.md`.
@@ -182,7 +182,7 @@ routes. It excludes REMOVE rows and CONSOLIDATE source routes. The PM Workspace
 removal drops 9 routes (`PG-WS-001` through `PG-WS-009`) and 1 ADD route
 (former `PG-ADD-004`, workspace settings). The generated census at
 `docs/specs/build/generated/routes.snapshot.json` is
-authoritative after those decisions and currently reports 74 live Build routes.
+authoritative after those decisions and currently reports 83 live Build routes.
 
 ## Explicit Non-Pages
 

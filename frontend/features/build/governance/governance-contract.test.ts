@@ -1,4 +1,10 @@
-import { riskRowContract, riskPageContract, riskStatsContract, decisionRowContract } from "@/hooks/api/build/governance-schema";
+import {
+  riskRowContract,
+  riskPageContract,
+  riskStatsContract,
+  decisionRowContract,
+  decisionPageContract,
+} from "@/hooks/api/build/governance-schema";
 
 const BASE_RISK_ROW = {
   id: 1,
@@ -150,5 +156,39 @@ describe("decisionRowContract status matches the decision_status Postgres enum",
     expect(
       decisionRowContract.safeParse({ ...BASE_DECISION_ROW, status: "Proposed" }).success,
     ).toBe(false);
+  });
+});
+
+describe("decisionPageContract is the keyset page envelope the backend now returns", () => {
+  it("parses a page carrying the rows, the hasMore flag and a numeric nextCursor", () => {
+    const result = decisionPageContract.safeParse({
+      data: [BASE_DECISION_ROW],
+      hasMore: true,
+      nextCursor: 7,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a null nextCursor on the last page, so the infinite scroll sentinel knows to stop", () => {
+    const result = decisionPageContract.safeParse({
+      data: [BASE_DECISION_ROW],
+      hasMore: false,
+      nextCursor: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects the old bare array so a backend regression to the unpaginated shape fails loudly instead of rendering an empty log", () => {
+    const result = decisionPageContract.safeParse([BASE_DECISION_ROW]);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a page missing hasMore so an absent pagination flag cannot silently prevent the next page from loading", () => {
+    const { hasMore: _hasMore, ...withoutHasMore } = {
+      data: [BASE_DECISION_ROW],
+      hasMore: false,
+      nextCursor: null,
+    };
+    expect(decisionPageContract.safeParse(withoutHasMore).success).toBe(false);
   });
 });

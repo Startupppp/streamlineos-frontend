@@ -11,7 +11,7 @@ import {
   useUpdateProjectCustomField,
   useDeleteProjectCustomField,
 } from "@/hooks/api/build/custom-fields";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import {
   Form,
   FormField,
@@ -231,6 +231,7 @@ interface CustomFieldsSettingsProps {
 }
 
 export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
+  const accessState = useCanState("build:view");
   const canManage = useCan("build:manage");
   const [showForm, setShowForm] = useState(false);
   const [editingField, setEditingField] = useState<CustomFieldItem | null>(null);
@@ -336,6 +337,8 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   return (
     <div className="space-y-3">

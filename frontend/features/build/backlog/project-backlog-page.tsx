@@ -34,7 +34,7 @@ const BACKLOG_TABLE_HEADERS = [
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
+import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import type { Ticket } from "@/types/projects";
 import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";

@@ -31,7 +31,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import {
   useWebhooks,
   useCreateWebhook,
@@ -93,6 +93,7 @@ export function ProjectWebhooksPage({
   projectId: projectIdStr,
 }: ProjectWebhooksPageProps) {
   const projectId = parseInt(projectIdStr);
+  const accessState = useCanState("build:manage");
   const canManage = useCan("build:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -152,6 +153,8 @@ export function ProjectWebhooksPage({
   }, [form]);
 
   const handleShowForm = useCallback(() => setSheetOpen(true), []);
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   return (
     <PageWrapper

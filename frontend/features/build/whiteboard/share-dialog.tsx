@@ -30,6 +30,7 @@ import {
   type WhiteboardShareRole,
 } from "@/hooks/api/build";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { useCanState } from "@/hooks/api/access";
 
 const VISIBILITY_OPTIONS: { value: WhiteboardVisibility; label: string; icon: typeof Lock; desc: string }[] = [
   { value: "private", label: "Private", icon: Lock, desc: "Only you and invited people" },
@@ -64,6 +65,7 @@ interface ShareDialogProps {
 }
 
 export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: ShareDialogProps) {
+  const accessState = useCanState("build:view");
   const { data: session } = useSession();
   const currentUserId = session?.user.id;
   const sharing = whiteboard.sharing;
@@ -148,6 +150,8 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
   }
   function handleCancelReset() { setConfirmReset(false); }
   function handleBeginReset() { setConfirmReset(true); }
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   if (!sharing) return null;
 

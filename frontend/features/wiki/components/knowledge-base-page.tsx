@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion, useReducedMotion } from "framer-motion";
@@ -27,9 +28,14 @@ import {
   useKbSources,
   useUploadKbSource,
   useDeleteKbSource,
+  type KbSourcesParams,
 } from "@/hooks/api/kb/sources";
 import { companyDocumentHref, pageHref } from "@/lib/knowledge-routes";
-import { KbSourcesSheet } from "@/features/wiki/components/kb-sources-sheet";
+import {
+  KbSourcesSheet,
+  type SourceKindFilter,
+  type OwnerFilter,
+} from "@/features/wiki/components/kb-sources-sheet";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";
 import {
@@ -95,6 +101,9 @@ export default function KnowledgeBasePage() {
   const generationRef = useRef(0);
   const initializedRef = useRef(false);
 
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
+
   const ask = useKbAsk();
   const conversationMessages = useKbConversationMessages(activeConversationId, true);
   const { hasNextPage, isFetchingNextPage, fetchNextPage, isLoading } = conversationMessages;
@@ -106,6 +115,17 @@ export default function KnowledgeBasePage() {
   const sourcesQuery = useKbSources();
   const uploadSource = useUploadKbSource();
   const deleteSource = useDeleteKbSource();
+
+  const [scopeKindFilter, setScopeKindFilter] = useState<SourceKindFilter>("all");
+  const [scopeOwnerFilter, setScopeOwnerFilter] = useState<OwnerFilter>("all");
+
+  const scopeFilters: KbSourcesParams = {
+    kind: scopeKindFilter !== "all" ? scopeKindFilter : undefined,
+    createdById: scopeOwnerFilter === "mine" && currentUserId ? currentUserId : undefined,
+  };
+  const hasScopeFilters = scopeFilters.kind !== undefined || scopeFilters.createdById !== undefined;
+  const scopeSourcesQuery = useKbSources(hasScopeFilters ? scopeFilters : undefined);
+  const scopeSources = (scopeSourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
 
   const allConversations = useMemo(
     () => (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations),
@@ -536,12 +556,17 @@ export default function KnowledgeBasePage() {
           mode="scope"
           open
           onOpenChange={handleSourcesSheetOpenChange}
-          sources={sources}
-          isLoading={sourcesQuery.isLoading}
+          sources={hasScopeFilters ? scopeSources : sources}
+          isLoading={hasScopeFilters ? scopeSourcesQuery.isLoading : sourcesQuery.isLoading}
           selectedIds={pendingScopeIds}
           onSelectionChange={handleScopeSelectionChange}
           verifiedOnly={pendingVerifiedOnly}
           onVerifiedOnlyChange={handleScopeVerifiedOnlyChange}
+          currentUserId={currentUserId ?? undefined}
+          kindFilter={scopeKindFilter}
+          onKindFilterChange={setScopeKindFilter}
+          ownerFilter={scopeOwnerFilter}
+          onOwnerFilterChange={setScopeOwnerFilter}
           onConfirm={handleScopeConfirm}
         />
       )}

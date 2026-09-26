@@ -185,7 +185,7 @@ export const publicVendorPortalContract = z.object({
   ),
 });
 
-export const publicOrgNameContract = z.object({ name: z.string() });
+export const publicOrgNameContract = z.object({ name: z.string(), logo: z.string().nullable() });
 
 export const publicKbListContract = z.object({
   categories: z.array(
@@ -223,6 +223,7 @@ export const publicKbArticleContract = z.object({
   tags: z.array(z.string()),
   views: z.number().int(),
   publishedAt: z.string().nullable(),
+  updatedAt: z.string().nullable(),
 });
 
 export const publicKbFeedbackContract = z.object({

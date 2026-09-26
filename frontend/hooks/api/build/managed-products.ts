@@ -40,16 +40,20 @@ interface ListManagedProductsParams {
   cursor?: string;
   status?: string;
   search?: string;
+  ownerId?: string;
+  sort?: "name" | "updated" | "status";
 }
 
 export function useManagedProducts(params?: ListManagedProductsParams) {
   const canView = useCan("build:managed-products:view");
   const queryParams: Record<string, string> = {};
-  
+
   if (params?.cursor) queryParams["cursor"] = params.cursor;
   if (params?.status) queryParams["status"] = params.status;
   if (params?.search) queryParams["search"] = params.search;
   if (params?.limit) queryParams["limit"] = String(params.limit);
+  if (params?.ownerId) queryParams["ownerId"] = params.ownerId;
+  if (params?.sort) queryParams["sort"] = params.sort;
 
   return useQuery<ManagedProductsPage>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.list(
@@ -101,6 +105,8 @@ export function useInfiniteManagedProducts(
   if (params.status) queryParams["status"] = params.status;
   if (params.search) queryParams["search"] = params.search;
   if (params.limit) queryParams["limit"] = String(params.limit);
+  if (params.ownerId) queryParams["ownerId"] = params.ownerId;
+  if (params.sort) queryParams["sort"] = params.sort;
 
   return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.managedProducts.listInfinite(queryParams),

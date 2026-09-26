@@ -40,13 +40,19 @@ function parseProjectId(raw: string | null): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+function parseCursor(raw: string | null): number | null {
+  if (raw === null) return null;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 export interface InboxUrlState {
   view: InboxView;
   section: NotificationSection;
   q: string | null;
   type: NotificationCategory | null;
   projectId: number | null;
-  cursor: string | null;
+  cursor: number | null;
   hasActiveFilters: boolean;
   isPending: boolean;
   setParams: (updates: Record<string, string | null>) => void;
@@ -64,7 +70,7 @@ export function useInboxUrlState(): InboxUrlState {
   const q = searchParams.get("q");
   const type = parseType(searchParams.get("type"));
   const projectId = parseProjectId(searchParams.get("project"));
-  const cursor = searchParams.get("cursor");
+  const cursor = parseCursor(searchParams.get("cursor"));
 
   const replaceWith = useCallback(
     (next: URLSearchParams) => {

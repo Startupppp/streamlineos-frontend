@@ -66,12 +66,6 @@ const COLUMNS: DataTableColumn<LinkedDocumentItem>[] = [
   },
 ];
 
-/**
- * The company documents HR has shared into the knowledge base, for the person reading. Each row is marked as an
- * HR document: it is a pointer at a file HR owns, not a wiki page. Publishers can also list the entries that are no
- * longer live (withdrawn, or whose source was removed); everyone else only ever sees what they may open, and the
- * server decides that, not this page.
- */
 export default function CompanyDocumentsPage() {
   const searchParams = useSearchParams();
   const { update } = useUrlFilters();
@@ -89,7 +83,6 @@ export default function CompanyDocumentsPage() {
   );
   const rows = useMemo(() => data?.data ?? [], [data]);
   const isEmpty = linkOff || (data !== undefined && rows.length === 0);
-  // A disabled query reports isLoading false, so the switch's own loading is added by hand.
   const pageState = usePageState({
     permission: "kb:pages:view",
     isLoading: isLoading || configLoading,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -9,6 +10,9 @@ import { ProjectMemberRolesSection } from "@/features/build/settings/project-mem
 import { TeamRosterSection } from "@/features/build/settings/team-roster-section";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
 const MEMBER_HEADERS = ["Name", "Role", "Added", "Actions"] as const;
 
@@ -17,6 +21,19 @@ interface ProjectSettingsAccessPageProps {
 }
 
 export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPageProps) {
+  const listFilters = useBuildListFilters({ withSearch: true });
+
+  const handleKeyboardOpen = useCallback((_index: number) => {}, []);
+  const handleKeyboardClear = useCallback(() => {
+    listFilters.clearAll();
+  }, [listFilters]);
+
+  useBuildListKeyboard({
+    itemCount: 0,
+    onOpen: handleKeyboardOpen,
+    onClearSelection: handleKeyboardClear,
+  });
+
   const pageState = usePageState({
     permission: "build:members:view",
     isLoading: false,
@@ -25,7 +42,20 @@ export function ProjectSettingsAccessPage({ projectId }: ProjectSettingsAccessPa
   });
 
   return (
-    <PageWrapper title="Access" subtitle="Manage project membership and roles">
+    <PageWrapper
+      title="Access"
+      subtitle="Manage project membership and roles"
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search members…",
+          }}
+          onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
+        />
+      }
+    >
       <PmPageShell>
         <PageState
           resolution={pageState}

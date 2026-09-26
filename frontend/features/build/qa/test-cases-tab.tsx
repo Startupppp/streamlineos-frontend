@@ -21,6 +21,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   TEST_CASE_TABLE_HEADERS,
   buildTestCaseColumns,
@@ -126,6 +127,18 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     (value: string) => listFilters.setValue("suite", value),
     [listFilters],
   );
+
+  const handleOpenFocused = useCallback(
+    (index: number) => { handleEdit(cases[index]); },
+    [cases, handleEdit],
+  );
+  const handleClearKeyboardSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: cases.length,
+    onOpen: handleOpenFocused,
+    onClearSelection: handleClearKeyboardSelection,
+    enabled: !sheetOpen && !deleteTarget,
+  });
 
   const pageState = usePageState({
     permission: "build:qa:view",

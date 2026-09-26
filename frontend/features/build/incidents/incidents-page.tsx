@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Siren } from "lucide-react";
 import { toast } from "sonner";
 import { useIncidents, useDeleteIncident } from "@/hooks/api/build/incidents";
@@ -25,6 +26,7 @@ import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   INCIDENTS_TABLE_HEADERS,
   IncidentMobileCard,
@@ -74,6 +76,7 @@ interface IncidentsPageProps {
 }
 
 export function IncidentsPage({ projectId }: IncidentsPageProps) {
+  const router = useRouter();
   const canManage = useCan("build:incidents:manage");
 
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
@@ -179,6 +182,18 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     (value: string) => listFilters.setValue("severity", value),
     [listFilters],
   );
+
+  const handleOpenFocused = useCallback(
+    (index: number) => { router.push(`/build/${projectId}/incidents/${all[index].id}`); },
+    [all, projectId, router],
+  );
+  const handleClearKeyboardSelection = useCallback(() => {}, []);
+  useBuildListKeyboard({
+    itemCount: all.length,
+    onOpen: handleOpenFocused,
+    onClearSelection: handleClearKeyboardSelection,
+    enabled: !sheetOpen && !deleteTarget,
+  });
 
   const columns = useMemo(
     () =>

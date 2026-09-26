@@ -213,6 +213,7 @@ const publicChangelogEntrySchema = z.object({
 
 export const publicRoadmapBoardContract = z.object({
   orgName: z.string().nullable(),
+  orgSlug: z.string().nullable(),
   roadmap: z.object({
     planned: z.array(publicRoadmapItemSchema),
     in_progress: z.array(publicRoadmapItemSchema),

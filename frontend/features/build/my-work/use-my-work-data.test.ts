@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { useMyWorkData } from "./use-my-work-data";
+import { parseWorkTab, useMyWorkData } from "./use-my-work-data";
 import { useAllWork } from "@/hooks/api/build/all-work";
 
 const mockReplace = jest.fn();
@@ -57,6 +57,17 @@ describe("useMyWorkData Due Dates filter", () => {
   });
 });
 
+describe("parseWorkTab relation aliases", () => {
+  it("accepts the canonical watching relation and maps it to subscribed work", () => {
+    expect(parseWorkTab("watching")).toBe("subscribed");
+  });
+
+  it("keeps legacy tab values working", () => {
+    expect(parseWorkTab("tab-value-that-is-not-valid")).toBe("assigned");
+    expect(parseWorkTab("created")).toBe("created");
+  });
+});
+
 describe("useMyWorkData legacy cycle deep links", () => {
   beforeEach(() => {
     mockedUseAllWork.mockClear();
@@ -90,5 +101,48 @@ describe("useMyWorkData legacy cycle deep links", () => {
     );
 
     expect(mineCall?.[0]).not.toHaveProperty("cycleId");
+  });
+});
+
+describe("useMyWorkData overdue relation", () => {
+  beforeEach(() => {
+    mockedUseAllWork.mockClear();
+  });
+
+  it("uses the personal scope with a due-date cutoff and open-status exclusion", () => {
+    renderHook(() => useMyWorkData({ activeTab: "overdue", activeView: "list" }));
+
+    const overdueCall = mockedUseAllWork.mock.calls.find(
+      ([filters, options]) =>
+        filters?.scope === "mine" && options?.enabled === true && filters?.excludeStatus,
+    );
+
+    expect(overdueCall?.[0]).toMatchObject({
+      scope: "mine",
+      excludeStatus: "DONE,CANCELLED",
+    });
+    expect(overdueCall?.[0].dueDateTo).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe("useMyWorkData due-soon relation", () => {
+  beforeEach(() => {
+    mockedUseAllWork.mockClear();
+  });
+
+  it("uses a seven-day open-work date window", () => {
+    renderHook(() => useMyWorkData({ activeTab: "due-soon", activeView: "list" }));
+
+    const dueSoonCall = mockedUseAllWork.mock.calls.find(
+      ([filters, options]) =>
+        filters?.scope === "mine" && options?.enabled === true && filters?.dueDateFrom,
+    );
+
+    expect(dueSoonCall?.[0]).toMatchObject({
+      scope: "mine",
+      excludeStatus: "DONE,CANCELLED",
+    });
+    expect(dueSoonCall?.[0].dueDateFrom).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(dueSoonCall?.[0].dueDateTo).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });

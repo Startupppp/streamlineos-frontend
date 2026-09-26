@@ -22,12 +22,28 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   RELEASES_TABLE_HEADERS,
   ReleaseMobileCard,
   buildReleasesColumns,
 } from "./releases-table-columns";
+
+const RELEASE_STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "draft", label: "Draft" },
+  { value: "released", label: "Released" },
+  { value: "archived", label: "Archived" },
+] as const;
+
+const RELEASE_FILTER_DEFINITIONS = [
+  { param: "status", options: RELEASE_STATUS_OPTIONS.map((o) => o.value) },
+] as const;
 
 interface ReleasesPageProps {
   projectId: number;
@@ -52,18 +68,24 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   const canManage = useCan("build:manage");
   const deleteRelease = useDeleteRelease(projectId);
 
-  const listFilters = useBuildListFilters();
+  const listFilters = useBuildListFilters({ filters: RELEASE_FILTER_DEFINITIONS });
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Release | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Release | null>(null);
 
   const search = listFilters.debouncedSearch.trim().toLowerCase();
+  const statusFilterValue = listFilters.value("status");
+
   const displayed = useMemo(() => {
     const list = releases ?? [];
-    if (!search) return list;
-    return list.filter((r) => r.name.toLowerCase().includes(search));
-  }, [releases, search]);
+    let result = list;
+    if (statusFilterValue !== BUILD_FILTER_ALL) {
+      result = result.filter((r) => r.status === statusFilterValue);
+    }
+    if (search) result = result.filter((r) => r.name.toLowerCase().includes(search));
+    return result;
+  }, [releases, search, statusFilterValue]);
 
   const stats = useMemo(() => {
     const list = releases ?? [];
@@ -111,6 +133,25 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     void refetch();
   }, [refetch]);
 
+  const handleStatusFilterChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
+  const handleClearSelection = useCallback(() => {}, []);
+  const handleOpenByIndex = useCallback(
+    (index: number) => {
+      const row = displayed[index];
+      if (row) handleOpenEdit(row);
+    },
+    [displayed, handleOpenEdit],
+  );
+  useBuildListKeyboard({
+    itemCount: displayed.length,
+    onOpen: handleOpenByIndex,
+    onClearSelection: handleClearSelection,
+  });
+
   const columns = useMemo(
     () =>
       buildReleasesColumns({
@@ -145,6 +186,21 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             placeholder: "Search releases…",
             label: "Search releases",
           }}
+          filters={[
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={statusFilterValue}
+                  onValueChange={handleStatusFilterChange}
+                  options={RELEASE_STATUS_OPTIONS}
+                />
+              ),
+            },
+          ]}
           onClearAll={listFilters.clearAll}
         />
       }

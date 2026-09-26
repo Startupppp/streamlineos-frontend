@@ -14,9 +14,10 @@ import {
   useUpdateProjectTeamMemberRole,
 } from "@/hooks/api/build/teams";
 import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -179,7 +180,7 @@ export function TeamHomePage({ teamId }: Props) {
     if (role) setAddMemberRole(role);
   }
 
-  const { data, isLoading, isError, refetch } = useProjectTeam(teamId);
+  const { data, isLoading, isError, error, refetch } = useProjectTeam(teamId);
   const updateTeam = useUpdateProjectTeam();
   const deleteTeam = useDeleteProjectTeam();
   const addMember = useAddProjectTeamMember(teamId);
@@ -250,20 +251,44 @@ export function TeamHomePage({ teamId }: Props) {
     setDeleteOpen(true);
   }
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Team" backHref="/build/teams">
-        <DetailSkeleton />
-      </PageWrapper>
-    );
-  }
+  const pageState = usePageState({
+    permission: "build:teams:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !data,
+  });
 
-  if (isError || !data) {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper title="Team" backHref="/build/teams">
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <ErrorState className="flex-1" onRetry={handleRetry} />
+            <PageState
+              resolution={pageState}
+              loading={<DetailSkeleton />}
+              onRetry={handleRetry}
+              className="flex-1"
+            >
+              {null}
+            </PageState>
+          </PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (!data) {
+    return (
+      <PageWrapper title="Team" backHref="/build/teams">
+        <PmPageShell>
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+            <EmptyState
+              className="flex-1"
+              illustrationPreset="projects"
+              title="Team not found"
+              description="This team may have been deleted."
+            />
           </PmSection>
         </PmPageShell>
       </PageWrapper>

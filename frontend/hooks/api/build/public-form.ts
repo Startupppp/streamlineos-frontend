@@ -99,3 +99,14 @@ export function useSubmitPublicForm(token: string) {
     mutationFn: (payload) => submitPublicForm(token, payload),
   });
 }
+
+export function useProjectIntakeForm(projectId: string) {
+  return useQuery<PublicFormDefinition>({
+    queryKey: buildWorkQueryKeys.projects.publicForms.projectIntakeForm(projectId),
+    queryFn: ({ signal }) =>
+      fetchPublicFormAtPath(`/public/intake/${projectId}/form`, signal),
+    enabled: !!projectId,
+    retry: false,
+    staleTime: 60_000,
+  });
+}

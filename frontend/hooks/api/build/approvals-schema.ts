@@ -1,14 +1,38 @@
 import { z } from "zod";
 
+const APPROVAL_STATUS_VALUES = [
+  "requested",
+  "pending",
+  "approved",
+  "rejected",
+  "changes_requested",
+  "escalated",
+  "cancelled",
+] as const;
+
+const APPROVAL_ENTITY_TYPE_VALUES = [
+  "task",
+  "milestone",
+  "budget",
+  "release",
+  "change_request",
+  "document",
+  "timesheet",
+  "client_approval",
+] as const;
+
+export const approvalStatusSchema = z.enum(APPROVAL_STATUS_VALUES);
+export const approvalEntityTypeSchema = z.enum(APPROVAL_ENTITY_TYPE_VALUES);
+
 export const approvalInboxItemContract = z.object({
   id: z.number().int(),
   projectId: z.number().int().nullable(),
   projectName: z.string().nullable(),
   projectKey: z.string().nullable(),
-  entityType: z.string(),
+  entityType: approvalEntityTypeSchema,
   entityId: z.number().int(),
   title: z.string(),
-  status: z.string(),
+  status: approvalStatusSchema,
   level: z.number().int(),
   dueAt: z.string().nullable(),
   requestedById: z.string().nullable(),
@@ -35,13 +59,13 @@ export const approvalRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   projectId: z.number().int().nullable(),
-  entityType: z.string(),
+  entityType: approvalEntityTypeSchema,
   entityId: z.number().int(),
   title: z.string(),
   reason: z.string().nullable(),
   requestedById: z.string().nullable(),
   approverMembershipId: z.number().int().nullable(),
-  status: z.string(),
+  status: approvalStatusSchema,
   level: z.number().int(),
   dueAt: z.string().nullable(),
   decisionComment: z.string().nullable(),

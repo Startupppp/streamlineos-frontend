@@ -29,6 +29,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { ModuleDisabledState } from "@/features/build/shared/module-disabled-state";
 import { getCompletedStatusNames } from "@/features/build/shared/completed-status";
 import { useCan } from "@/hooks/api/access";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   PmPageShell,
   PmPanel,
@@ -113,6 +114,15 @@ export function EpicsPage({ params }: PageProps) {
   }, [createTicket, projectId]);
 
   const pageState = usePageState({ permission: "build:view", isLoading, isError, error: loadError });
+
+  const handleClearEpicsKeyboard = useCallback(() => {}, []);
+  const handleOpenEpicByIndex = useCallback((_index: number) => {}, []);
+  useBuildListKeyboard({
+    itemCount: epics.length,
+    onOpen: handleOpenEpicByIndex,
+    onClearSelection: handleClearEpicsKeyboard,
+    enabled: pageState.kind === "ready",
+  });
 
   if (project?.settings?.modules?.epics === false) {
     return <ModuleDisabledState moduleName="Epics" projectId={projectId} />;

@@ -9,13 +9,17 @@ import { Route, ChevronRight, AlertTriangle } from "lucide-react";
 import { useCriticalPath } from "@/hooks/api/build/reports";
 import { ChartCard, numberFormatter } from "./chart-card";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCanState } from "@/hooks/api/access";
 
 export function CriticalPathSection({ projectId }: { projectId: number }) {
+  const accessState = useCanState("build:view");
   const { data, isLoading, isError, error, refetch } = useCriticalPath(projectId);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
   const chain = data?.criticalPath ?? [];
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   return (
     <ChartCard title="Critical Path" icon={Route}>

@@ -103,13 +103,18 @@ function lowestNotificationId(page: Notification[]): number | undefined {
   return lowest;
 }
 
+type InfiniteNotificationParams = Omit<NotificationListParams, "cursor"> & {
+  initialCursor?: number | null;
+};
+
 export const useInfiniteNotifications = (
-  params?: Omit<NotificationListParams, "cursor">,
+  params?: InfiniteNotificationParams,
   options?: { enabled?: boolean },
 ) => {
   const { data: session } = useSession();
   const orgId = session?.orgId;
-  const limit = params?.limit ?? 30;
+  const { initialCursor = null, ...requestParams } = params ?? {};
+  const limit = requestParams.limit ?? 30;
 
   // The page stays a bare `Notification[]` here on purpose: the optimistic cache
   // helpers in `notifications-inbox-cache.ts` patch `InfiniteData<Notification[]>`
@@ -118,16 +123,17 @@ export const useInfiniteNotifications = (
   // body would say the same thing.
   return useInfiniteQuery<Notification[], Error>({
     queryKey: platformCoreQueryKeys.notifications.list({
-      ...params,
+      ...requestParams,
+      initialCursor,
       infinite: true,
     }),
-    initialPageParam: NO_ID_CURSOR_YET,
+    initialPageParam: initialCursor ?? NO_ID_CURSOR_YET,
     queryFn: async ({ pageParam, signal }) =>
       (
         await apiClient.get<IdCursorPage<Notification>>(
           "/notifications",
           toStringParams({
-            ...params,
+            ...requestParams,
             limit,
             cursor: pageParam,
           }),

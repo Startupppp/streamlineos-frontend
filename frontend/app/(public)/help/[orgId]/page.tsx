@@ -39,6 +39,7 @@ export default async function PublicHelpCentreLandingPage({ params }: Props) {
     <PublicHelpCentreContent
       orgId={orgId}
       orgName={org.name}
+      orgLogo={org.logo}
       data={data ?? { categories: [], articles: [], pagination: { limit: 20, hasMore: false, nextCursor: null } }}
     />
   );

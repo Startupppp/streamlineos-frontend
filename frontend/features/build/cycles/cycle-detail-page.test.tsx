@@ -168,3 +168,28 @@ it("renders the cycle kanban when data is present and user is permitted", () => 
   render(<CycleDetailPage projectId="1" cycleId="999" />);
   expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
 });
+
+it("renders the loading skeleton when data is being fetched, not denial or empty state", () => {
+  mockUseProject.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: undefined, refetch: jest.fn() });
+  mockUseCycles.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: undefined, refetch: jest.fn() });
+  mockUseProjectBoardTickets.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: undefined, refetch: jest.fn() });
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+});
+
+it("renders the error state with the backend message when the cycles query fails", () => {
+  mockUseCycles.mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isError: true,
+    error: new Error("Failed to load cycle data"),
+    refetch: jest.fn(),
+  });
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  const errorEl = screen.getByTestId("error-state");
+  expect(errorEl.textContent).toContain("Failed to load cycle data");
+  expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+});
+

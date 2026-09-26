@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -8,12 +9,28 @@ import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome";
 import { AgentTokensSection } from "@/features/build/settings/agent-tokens-section";
 import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
 interface ProjectSettingsAgentsPageProps {
   projectId: number;
 }
 
 export function ProjectSettingsAgentsPage({ projectId: _projectId }: ProjectSettingsAgentsPageProps) {
+  const listFilters = useBuildListFilters({ withSearch: true });
+
+  const handleKeyboardOpen = useCallback((_index: number) => {}, []);
+  const handleKeyboardClear = useCallback(() => {
+    listFilters.clearAll();
+  }, [listFilters]);
+
+  useBuildListKeyboard({
+    itemCount: 0,
+    onOpen: handleKeyboardOpen,
+    onClearSelection: handleKeyboardClear,
+  });
+
   const pageState = usePageState({
     permission: "build:update",
     isLoading: false,
@@ -25,6 +42,16 @@ export function ProjectSettingsAgentsPage({ projectId: _projectId }: ProjectSett
     <PageWrapper
       title="Agents"
       subtitle="Configure AI agents and their access to this project"
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search agent tokens…",
+          }}
+          onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
+        />
+      }
     >
       <PmPageShell>
         <PageState

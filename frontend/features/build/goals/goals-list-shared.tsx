@@ -14,6 +14,7 @@ import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import type { GoalLevel, GoalListItem } from "@/hooks/api/goals";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import type { BuildFilterOption } from "@/features/build/shared/build-filter-select";
 import {
   BUILD_FILTER_ALL,
   type BuildListFiltersState,
@@ -33,6 +34,10 @@ export const GOAL_STATUS_FILTER_OPTIONS = [
 export const GOAL_FILTER_DEFINITIONS = [
   { param: "level", options: LEVEL_OPTIONS.map((option) => option.value) },
   { param: "status", options: STATUS_OPTIONS.map((option) => option.value) },
+  { param: "ownerId" },
+  { param: "health" },
+  { param: "due" },
+  { param: "scope" },
 ] as const;
 
 export const GOAL_LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
@@ -101,15 +106,68 @@ export function GoalCard({ goal }: { goal: GoalListItem }) {
   );
 }
 
+interface GoalsListToolbarProps {
+  listFilters: BuildListFiltersState;
+  ownerOptions?: readonly BuildFilterOption[];
+}
+
 export function GoalsListToolbar({
   listFilters,
-}: {
-  listFilters: BuildListFiltersState;
-}) {
+  ownerOptions,
+}: GoalsListToolbarProps) {
   const handleLevelChange = (value: string) =>
     listFilters.setValue("level", value);
   const handleStatusChange = (value: string) =>
     listFilters.setValue("status", value);
+  const handleOwnerChange = (value: string) =>
+    listFilters.setValue("ownerId", value);
+
+  const ownerValue = listFilters.value("ownerId");
+  const resolvedOwnerOptions: readonly BuildFilterOption[] = ownerOptions
+    ? [{ value: BUILD_FILTER_ALL, label: "All owners" }, ...ownerOptions]
+    : [{ value: BUILD_FILTER_ALL, label: "All owners" }];
+
+  const filters = [
+    {
+      id: "level",
+      label: "Level",
+      active: listFilters.isActive("level"),
+      control: (
+        <BuildFilterSelect
+          label="Level"
+          value={listFilters.value("level")}
+          onValueChange={handleLevelChange}
+          options={GOAL_LEVEL_FILTER_OPTIONS}
+        />
+      ),
+    },
+    {
+      id: "status",
+      label: "Status",
+      active: listFilters.isActive("status"),
+      control: (
+        <BuildFilterSelect
+          label="Status"
+          value={listFilters.value("status")}
+          onValueChange={handleStatusChange}
+          options={GOAL_STATUS_FILTER_OPTIONS}
+        />
+      ),
+    },
+    {
+      id: "owner",
+      label: "Owner",
+      active: listFilters.isActive("ownerId"),
+      control: (
+        <BuildFilterSelect
+          label="Owner"
+          value={ownerValue}
+          onValueChange={handleOwnerChange}
+          options={resolvedOwnerOptions}
+        />
+      ),
+    },
+  ] as const;
 
   return (
     <BuildListToolbar
@@ -119,34 +177,7 @@ export function GoalsListToolbar({
         placeholder: "Search goals…",
         label: "Search goals",
       }}
-      filters={[
-        {
-          id: "level",
-          label: "Level",
-          active: listFilters.isActive("level"),
-          control: (
-            <BuildFilterSelect
-              label="Level"
-              value={listFilters.value("level")}
-              onValueChange={handleLevelChange}
-              options={GOAL_LEVEL_FILTER_OPTIONS}
-            />
-          ),
-        },
-        {
-          id: "status",
-          label: "Status",
-          active: listFilters.isActive("status"),
-          control: (
-            <BuildFilterSelect
-              label="Status"
-              value={listFilters.value("status")}
-              onValueChange={handleStatusChange}
-              options={GOAL_STATUS_FILTER_OPTIONS}
-            />
-          ),
-        },
-      ]}
+      filters={filters}
       onClearAll={listFilters.clearAll}
     />
   );

@@ -35,13 +35,6 @@ function keySentOnCall(index: number): string {
   return key;
 }
 
-/**
- * `POST /kb/ask` is `@Idempotent("kb.ask")` and spends credits twice over — an embedding
- * for the query and a full completion for the answer. The fence on the backend is only
- * half the protection: it can only replay a retry that carries the SAME key, and
- * `authedFetch` mints a fallback key per HTTP call, so a hook that sends no key of its
- * own makes every retry a new operation and the fence inert.
- */
 describe("useKbAsk idempotency key", () => {
   beforeEach(() => {
     post.mockReset();
@@ -116,7 +109,6 @@ describe("useKbAsk idempotency key", () => {
     expect(keySentOnCall(1)).not.toBe(firstKey);
   });
 
-  /** An AbortSignal is not part of the question's identity and does not survive JSON.stringify. */
   it("keeps the signal out of the key's signature but still passes it through", async () => {
     post.mockRejectedValue(new Error("network timeout"));
     const { result } = renderHook(() => useKbAsk(), { wrapper });

@@ -18,14 +18,6 @@ interface KbArticleAiActionsProps {
   onApplyImprovement?: (text: string) => void;
 }
 
-/**
- * The three generating actions stream. `AiActionsMenu` already renders a
- * streaming state, a Stop that keeps the partial answer and an unmount abort —
- * it was being handed a buffered `run` that never called `onToken`, so the user
- * watched a skeleton for the whole generation. `improve` declares a 1024-token
- * ceiling, which a buffered call could not reliably deliver inside the client's
- * own cap on non-streaming requests.
- */
 export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleAiActionsProps) {
   const canGenerate = useCan("kb:ai:generate");
   const [askOpen, setAskOpen] = useState(false);

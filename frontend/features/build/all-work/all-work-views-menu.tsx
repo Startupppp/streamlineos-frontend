@@ -3,6 +3,7 @@
 import { useState, useCallback, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useCanState } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
 import {
@@ -100,6 +101,7 @@ export function AllWorkViewsMenu({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
+  const accessState = useCanState("build:view");
   const [, startTransition] = useTransition();
 
   const [open, setOpen] = useState(false);
@@ -115,6 +117,8 @@ export function AllWorkViewsMenu({
   const deleteView = useDeleteWorkspaceView();
 
   const currentUserId = session?.user?.id as string | undefined;
+
+  if (accessState === "denied" || accessState === "loading") return null;
 
   const handleApply = useCallback(
     (view: ProjectView) => {

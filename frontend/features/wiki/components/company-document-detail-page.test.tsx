@@ -6,7 +6,6 @@ import type { LinkedDocumentDetail } from "@/hooks/api/kb/linked-documents";
 import CompanyDocumentDetailPage from "./company-document-detail-page";
 
 
-// usePageState and PageState are the real ones: a test that stubs them decides the outcome the page is supposed to reach.
 const mockCan = jest.fn<boolean, [string]>();
 const mockAccess = jest.fn();
 jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan(key), useAccess: () => mockAccess() }));
@@ -99,7 +98,6 @@ describe("CompanyDocumentDetailPage", () => {
 
     await waitFor(() => expect(mockOpen).toHaveBeenCalledWith(31));
     expect(openSpy).toHaveBeenCalledWith("https://files.example/signed", "_blank", "noopener,noreferrer");
-    // The single-use URL is not left in the mutation's result once the browser has it.
     expect(mockForgetOpen).toHaveBeenCalledTimes(1);
   });
 

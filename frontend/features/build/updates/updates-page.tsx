@@ -11,6 +11,10 @@ import {
 } from "@/hooks/api/build/project-updates";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
+import {
+  useBuildListFilters,
+  BUILD_FILTER_ALL,
+} from "@/features/build/shared/use-build-list-filters";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -78,6 +82,12 @@ function UpdateCard({
   );
 }
 
+const UPDATE_FILTER_DEFINITIONS = [
+  { param: "authorId" },
+  { param: "from" },
+  { param: "to" },
+] as const;
+
 interface UpdatesPageProps {
   projectId: number;
 }
@@ -86,8 +96,17 @@ export function UpdatesPage({ projectId }: UpdatesPageProps) {
   const canManage = useCan("build:updates:manage");
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const listFilters = useBuildListFilters({ filters: UPDATE_FILTER_DEFINITIONS, withSearch: false });
+  const authorId = listFilters.value("authorId");
+  const from = listFilters.value("from");
+  const to = listFilters.value("to");
+
   const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useProjectUpdates(projectId);
+    useProjectUpdates(projectId, {
+      authorId: authorId !== BUILD_FILTER_ALL ? authorId : undefined,
+      from: from !== BUILD_FILTER_ALL ? from : undefined,
+      to: to !== BUILD_FILTER_ALL ? to : undefined,
+    });
   const createUpdate = useCreateProjectUpdate(projectId);
   const deleteUpdate = useDeleteProjectUpdate(projectId);
 

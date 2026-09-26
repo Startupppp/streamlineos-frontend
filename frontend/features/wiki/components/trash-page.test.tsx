@@ -129,9 +129,55 @@ const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
 const { useSearchParams } = jest.requireMock("next/navigation") as {
   useSearchParams: jest.Mock;
 };
+const { useCan } = jest.requireMock("@/hooks/api/access") as {
+  useCan: jest.Mock;
+};
 
 const emptyListResponse = {
   data: [] as KbPageListItem[],
+  pagination: { limit: 50, nextCursor: null, hasMore: false },
+};
+
+const nonEmptyListResponse = {
+  data: [
+    {
+      id: 9,
+      orgId: "org-1",
+      spaceId: null,
+      parentPageId: null,
+      sortOrder: null,
+      projectId: null,
+      title: "Some Page",
+      icon: null,
+      coverImage: null,
+      status: "published",
+      contentType: "note",
+      trustState: "unverified",
+      visibility: "private",
+      publicToken: null,
+      publicSlug: null,
+      isLocked: false,
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+      deletedAt: "2026-06-01T00:00:00Z",
+      createdByMembershipId: null,
+      lastEditedByMembershipId: null,
+      deletedByMembershipId: null,
+      ownerMembershipId: null,
+      verifiedByMembershipId: null,
+      createdById: null,
+      lastEditedById: null,
+      deletedById: null,
+      ownerUserId: null,
+      verifiedById: null,
+      verifiedUntil: null,
+      nextReviewAt: null,
+      aclRevision: 1,
+      contentRevision: 1,
+      legalHold: false,
+      legalHoldReason: null,
+    } as KbPageListItem,
+  ],
   pagination: { limit: 50, nextCursor: null, hasMore: false },
 };
 
@@ -146,6 +192,7 @@ beforeEach(() => {
     refetch: jest.fn(),
   });
   usePageState.mockReturnValue({ kind: "empty" });
+  useCan.mockReturnValue(true);
 });
 
 describe("trash page deleted-by filter", () => {
@@ -357,5 +404,57 @@ describe("trash page legal hold indicator", () => {
     render(<TrashPage />);
 
     expect(screen.queryByLabelText("Legal hold")).not.toBeInTheDocument();
+  });
+});
+
+describe("trash page retention permission split", () => {
+  it("Empty Trash requires kb:settings:manage on top of kb:pages:purge — emptying the trash overrides retention, so it needs the settings permission as well as the purge one", () => {
+    usePageState.mockReturnValue({ kind: "content" });
+    useKbPagesTrash.mockReturnValue({
+      data: nonEmptyListResponse,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    useCan.mockImplementation(
+      (key: string) => key === "kb:settings:manage" || key === "kb:pages:purge",
+    );
+
+    render(<TrashPage />);
+
+    expect(screen.getByRole("button", { name: /empty trash/i })).toBeInTheDocument();
+  });
+
+  it("Empty Trash is hidden when kb:settings:manage is held without kb:pages:purge, because the server enforces the purge key and the button would only earn a 403", () => {
+    usePageState.mockReturnValue({ kind: "content" });
+    useKbPagesTrash.mockReturnValue({
+      data: nonEmptyListResponse,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    useCan.mockImplementation((key: string) => key === "kb:settings:manage");
+
+    render(<TrashPage />);
+
+    expect(screen.queryByRole("button", { name: /empty trash/i })).not.toBeInTheDocument();
+  });
+
+  it("Empty Trash is hidden when kb:settings:manage is absent, even if kb:pages:purge is present", () => {
+    usePageState.mockReturnValue({ kind: "content" });
+    useKbPagesTrash.mockReturnValue({
+      data: nonEmptyListResponse,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    useCan.mockImplementation((key: string) => key === "kb:pages:purge");
+
+    render(<TrashPage />);
+
+    expect(screen.queryByRole("button", { name: /empty trash/i })).not.toBeInTheDocument();
   });
 });
