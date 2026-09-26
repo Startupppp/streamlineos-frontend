@@ -98,6 +98,48 @@ Closing it is mechanical, not architectural:
 4. Assert redaction only where a secret exists — portal/public token surfaces. On an internal
    authenticated page there is no token to leak, and a test that asserts its absence proves nothing.
 
+### Update 2026-09-26 — the four gaps above are written, none are browser-verified
+
+Eight parallel lanes closed items 1–4 in source. Re-measured across all ten specs by counting the
+constructs themselves, not by reading lane reports:
+
+| C6 check | Before | Now |
+|---|---|---|
+| Reduced motion | 3 specs missing; `portals` had 1 unpaired | All ten carry a **paired** assertion |
+| High-density desktop | Missing in all ten | All ten carry a `1920×1080 @ deviceScaleFactor 2` describe |
+| Keyboard | Missing in `settings`, `planning-surfaces` | Present in nine; **absent in `teams-team`** |
+| Secret redaction | `content-intake` only | `portals`, `settings`, `content-intake` |
+
+**The table above this section is now stale and is kept only as the record of what was found.**
+
+Three corrections to it, each of which made something read as covered when it was not:
+
+- It listed `portals` as having reduced-motion coverage. `portals` did carry one `reducedMotion`
+  block, but its body counted `.animate-spin` nodes in a test named "no animated spinner is visible
+  **at rest**" — so the count was always 0 and the loop body never ran. The test could not fail.
+  A reduced-motion assertion must be **paired**: the "reduce" half alone passes when the element is
+  simply absent.
+- `content-intake`'s three redaction assertions only checked absence from `el.textContent`, which a
+  blank frame satisfies. Each is now paired with a positive assertion that the surface rendered.
+- `teams-team-a11y.spec.ts:55` opens a describe named "team member list — **keyboard reachability**
+  at 1280 px" whose two tests assert `[role="listitem"]` count and badge visibility. It presses no
+  key and asserts no focus. The name claims the coverage; the body does not provide it. Root cause is
+  the gallery: `team-home-gallery.tsx:45` hand-rolls the member row as a plain `div` with an Avatar,
+  two spans and a `Badge` — nothing focusable — while the real `team-home-page.tsx:408-450` row
+  carries a `MemberRoleSelect` and a `RemoveMemberButton` whenever `canManage`. The case also renders
+  a `Focused: {name}` `aria-live` region behind a `focused !== null` branch that nothing can set.
+  This is the [[gallery must mount the REAL component]] rule: a lookalike yields both false failures
+  and false passes.
+
+A separate finding that C6 cannot close in a spec: **`.animate-spin` has no `prefers-reduced-motion`
+override in `globals.css`.** Overrides exist at lines 452, 590, 655, 700 and 750, but Tailwind 4's
+spin keeps running for a user who asked for reduced motion. That is an FE-108 violation in shared
+CSS, not a per-page defect, and it is filed rather than patched because it changes every module.
+
+**None of this is browser-verified.** The drain quoted at the top of CCG-3 predates all of it, so the
+pass counts above describe specs that no longer exist in that form. C6 stays unticked on all 83 pages
+until a fresh serial drain, and the rule holds unchanged: do not tick C6 because a spec is green.
+
 Two traps already paid for on this criterion, both of which made a spec prove less than it read:
 `getByRole(..., { name })` is a case-insensitive **substring** match, so `{ name: "ID" }` also matched
 "Decided" and needed `exact: true` at all 22 call sites; and a `getByText` for a stat label matched
