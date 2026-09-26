@@ -34,12 +34,17 @@ import path from "node:path";
  *
  *   features/auth/components/passwordless-signin-form.tsx  (email sign-in step)
  *
- * `frontend/CLAUDE.md` makes `/signin` and `/signup` immutable reference
- * surfaces that the rest of the app conforms to, so rendering one of them
+ * Sign-in is the surface the rest of the app conforms to, so rendering it
  * through the engine is a decision above this file's pay grade — and it is debt
  * rather than a decision, which is why it is counted here instead of being
- * argued into `CRAFTED_BY_DESIGN`. `auth` therefore holds at 2, with
- * `signup-form.tsx` beside it.
+ * argued into `CRAFTED_BY_DESIGN`.
+ *
+ * `auth` fell from 2 to 1 when `signup-form.tsx` was deleted: `/signup`
+ * redirected to `/signin` in both `next.config.ts` and `proxy.ts`, and its
+ * endpoint had been removed, so nothing could reach the form. The claim that
+ * stood here — that `frontend/CLAUDE.md` makes `/signin` and `/signup`
+ * immutable reference surfaces — no longer matches that file, which names
+ * neither route.
  *
  * The numbers below may only fall from here.
  */
@@ -128,7 +133,7 @@ const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
   "module-access": 2,
   "portal-access": 2,
   "workflows": 2,
-  "auth": 2,
+  "auth": 1,
   "blog": 2, // main's blog admin tables, arrived on merge
   "calendar": 1,
   "feedbucket": 1,
