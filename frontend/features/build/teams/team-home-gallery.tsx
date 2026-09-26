@@ -1,68 +1,58 @@
 "use client";
 
-import { useRef, useCallback, useState } from "react";
-import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { PmPageShell, PmPanel, PmSection, PM_ROW } from "@/components/pm-chrome";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MemberRoleSelect, RemoveMemberButton } from "./team-home-page";
+import type { ProjectTeamMember } from "@/types/projects";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 
-interface StubMember {
-  id: number;
-  name: string;
-  email: string;
-  role: "member" | "lead";
-  initials: string;
-}
-
-const STUB_MEMBERS: StubMember[] = [
-  { id: 1, name: "Alice Chen", email: "alice@example.com", role: "lead", initials: "AC" },
-  { id: 2, name: "Bob Smith", email: "bob@example.com", role: "member", initials: "BS" },
-  { id: 3, name: "Carol Davis", email: "carol@example.com", role: "member", initials: "CD" },
+const STUB_MEMBERS: ProjectTeamMember[] = [
+  { id: 1, userId: "1", firstName: "Alice", lastName: "Chen", email: "alice@example.com", role: "lead", image: null },
+  { id: 2, userId: "2", firstName: "Bob", lastName: "Smith", email: "bob@example.com", role: "member", image: null },
+  { id: 3, userId: "3", firstName: "Carol", lastName: "Davis", email: "carol@example.com", role: "member", image: null },
 ];
 
 function TeamMembersKeyboardCase() {
-  const searchRef = useRef<HTMLInputElement>(null);
-  const [focused, setFocused] = useState<number | null>(null);
-
-  const handleKeyboardOpen = useCallback((index: number) => {
-    setFocused(index);
-  }, []);
-
-  const handleKeyboardClear = useCallback(() => {
-    setFocused(null);
-  }, []);
-
-  useBuildListKeyboard({
-    itemCount: STUB_MEMBERS.length,
-    onOpen: handleKeyboardOpen,
-    onClearSelection: handleKeyboardClear,
-    searchInputRef: searchRef,
-    enabled: true,
-  });
+  function handleRoleChange(_memberUserId: string, _role: "member" | "lead") {}
+  function handleRemove(_userId: string) {}
 
   return (
     <section data-case-frame="team-members-keyboard" className="flex min-h-0 flex-col gap-3">
-      {focused !== null ? (
-        <p className="text-xs text-muted-foreground" aria-live="polite">
-          Focused: {STUB_MEMBERS[focused]?.name ?? ""}
-        </p>
-      ) : null}
       <PmPanel role="list" aria-label="Team members">
-        {STUB_MEMBERS.map((member) => (
-          <div key={member.id} role="listitem" className={PM_ROW}>
-            <Avatar className="h-7 w-7 shrink-0">
-              <AvatarFallback className="text-xs">{member.initials}</AvatarFallback>
-            </Avatar>
-            <div className="flex min-w-0 flex-1 flex-col">
-              <span className="truncate text-sm font-medium">{member.name}</span>
-              <span className="text-xs text-muted-foreground">{member.email}</span>
+        {STUB_MEMBERS.map((member) => {
+          const displayName = getUserDisplayName({
+            firstName: member.firstName,
+            lastName: member.lastName,
+            email: member.email,
+          });
+          const initials = getUserInitials({
+            firstName: member.firstName,
+            lastName: member.lastName,
+            email: member.email,
+          });
+          return (
+            <div key={member.userId} role="listitem" className={PM_ROW}>
+              <Avatar className="h-7 w-7 shrink-0">
+                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-medium">{displayName}</span>
+                <span className="text-xs text-muted-foreground">{member.email}</span>
+              </div>
+              <MemberRoleSelect
+                member={member}
+                isPending={false}
+                onRoleChange={handleRoleChange}
+              />
+              <RemoveMemberButton
+                member={member}
+                isPending={false}
+                onRemove={handleRemove}
+              />
             </div>
-            <Badge variant="outline" className="shrink-0 px-1.5 py-0.5 text-xs capitalize">
-              {member.role}
-            </Badge>
-          </div>
-        ))}
+          );
+        })}
       </PmPanel>
     </section>
   );
@@ -96,7 +86,7 @@ export function TeamHomeGallery() {
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Keyboard reachability, screen-reader roles, and responsive layout for the team member list.
-          j/k moves focus · Enter opens member · Esc clears.
+          Tab navigates role select then remove button for each row.
         </p>
       </header>
 

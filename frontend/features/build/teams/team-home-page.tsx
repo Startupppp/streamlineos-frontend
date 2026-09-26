@@ -93,7 +93,7 @@ function AddMemberButton({
   );
 }
 
-function RemoveMemberButton({
+export function RemoveMemberButton({
   member,
   isPending,
   onRemove,
@@ -119,7 +119,7 @@ function RemoveMemberButton({
   );
 }
 
-function MemberRoleSelect({
+export function MemberRoleSelect({
   member,
   isPending,
   onRoleChange,

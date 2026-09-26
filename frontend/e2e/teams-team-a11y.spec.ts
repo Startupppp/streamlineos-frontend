@@ -72,11 +72,39 @@ test.describe("Team detail surfaces — responsive and a11y contract", () => {
     );
 
     test(
-      "member role badge is visible and labelled",
+      "Tab order follows visual row order — role select then remove button for each of the three rows",
       async ({ page }) => {
         const scope = page.locator('[data-case-frame="team-members-keyboard"]');
-        await expect(scope.getByText("lead")).toBeVisible();
-        await expect(scope.getByText("member").first()).toBeVisible();
+        const rows = scope.locator('[role="listitem"]');
+
+        const aliceSelect = rows.nth(0).getByRole("combobox", { name: "Lead", exact: true });
+        await aliceSelect.focus();
+        await expect(aliceSelect).toBeFocused();
+
+        await page.keyboard.press("Tab");
+        await expect(
+          rows.nth(0).getByRole("button", { name: "Remove member", exact: true }),
+        ).toBeFocused();
+
+        await page.keyboard.press("Tab");
+        await expect(
+          rows.nth(1).getByRole("combobox", { name: "Member", exact: true }),
+        ).toBeFocused();
+
+        await page.keyboard.press("Tab");
+        await expect(
+          rows.nth(1).getByRole("button", { name: "Remove member", exact: true }),
+        ).toBeFocused();
+
+        await page.keyboard.press("Tab");
+        await expect(
+          rows.nth(2).getByRole("combobox", { name: "Member", exact: true }),
+        ).toBeFocused();
+
+        await page.keyboard.press("Tab");
+        await expect(
+          rows.nth(2).getByRole("button", { name: "Remove member", exact: true }),
+        ).toBeFocused();
       },
     );
   });
