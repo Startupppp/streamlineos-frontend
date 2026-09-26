@@ -231,7 +231,7 @@ export const publicKbArticleContract = z.object({
   seoTitle: z.string().nullable(),
   seoDescription: z.string().nullable(),
   tags: z.array(z.string()),
-  views: z.number().int(),
+  views: z.number().int().nullable(),
   helpfulCount: z.number().int().nullable(),
   notHelpfulCount: z.number().int().nullable(),
   publishedAt: z.string().nullable(),
