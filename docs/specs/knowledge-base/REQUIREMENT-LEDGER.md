@@ -365,7 +365,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] URL carries `q`, filters, sort, view, cursor; selection, drafts, menus, and dialogs stay local.
 - [x] Every state implemented: loading, ready, first empty, filtered empty, error with retry + request id, denied — plus saving/saved/offline/conflict/stale-access/restore on editing surfaces.
 - [x] Every desktop capability has a mobile (375 px) and keyboard-accessible path; no action is context-menu-only.
-- [ ] No code comments, TODO/FIXME/HACK, commented-out code, or placeholder prose in source files.
+- [x] No code comments, TODO/FIXME/HACK, commented-out code, or placeholder prose in source files.
 
 ## Slices
 
@@ -707,7 +707,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 ### S15 — Content Health (`/knowledge/wiki/manage`)
 
 - [x] `kb_health_items` schema: tenant, page, kind, versioned evidence JSON, impact, state, assignee, due, detected/resolved/dismissed, rule version; unique active `(org_id, page_id, kind, rule_version)`
-- [ ] Impact-ranked inbox with presets: unowned, stale, unverified, empty, broken link, overexposed, duplicate candidate, contradictory claim, overdue review
+- [x] Impact-ranked inbox with presets: unowned, stale, unverified, empty, broken link, overexposed, duplicate candidate, contradictory claim, overdue review
 - [x] Filters; owner/due; reason/explanation; bulk repair; dismiss/snooze with reason; before/after health trend
 - [x] Every item links to evidence and an allowed repair; no automated fix publishes without a human
 - [x] Dismissals expire or record a durable exception
