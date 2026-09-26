@@ -58,20 +58,20 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
       editor.tf.setNodes({ type: 'blockquote' }, { at: blockPath });
       break;
     case 'ul':
-      editor.tf.setNodes({ listStyleType: 'disc', indent: 1 } as Partial<TElement>, { at: blockPath });
+      editor.tf.setNodes({ listStyleType: 'disc', indent: 1 }, { at: blockPath });
       break;
     case 'ol':
-      editor.tf.setNodes({ listStyleType: 'decimal', indent: 1 } as Partial<TElement>, { at: blockPath });
+      editor.tf.setNodes({ listStyleType: 'decimal', indent: 1 }, { at: blockPath });
       break;
     case 'todo':
-      editor.tf.setNodes({ listStyleType: 'todo', indent: 1, checked: false } as Partial<TElement>, { at: blockPath });
+      editor.tf.setNodes({ listStyleType: 'todo', indent: 1, checked: false }, { at: blockPath });
       break;
     case 'code_block':
       editor.tf.setNodes({ type: 'code_block' }, { at: blockPath });
       editor.tf.setNodes({ type: 'code_line' }, { at: [...blockPath, 0] });
       break;
     case 'callout':
-      editor.tf.setNodes({ type: 'callout', icon: '💡' } as Partial<TElement>, { at: blockPath });
+      editor.tf.setNodes({ type: 'callout', icon: '💡' }, { at: blockPath });
       break;
     case 'hr':
       editor.tf.setNodes({ type: 'hr' }, { at: blockPath });
@@ -90,7 +90,7 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
               { type: 'td', children: [{ type: 'p', children: [{ text: '' }] }] },
             ] },
           ],
-        } as TElement,
+        },
         { at: blockPath }
       );
       editor.tf.removeNodes({ at: nextPath });
@@ -99,7 +99,7 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
       const url = window.prompt('Image URL:');
       if (url) {
         editor.tf.insertNodes(
-          { type: 'img', url, children: [{ text: '' }] } as TElement,
+          { type: 'img', url, children: [{ text: '' }] },
           { at: blockPath }
         );
         editor.tf.removeNodes({ at: nextPath });
@@ -111,7 +111,7 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
       break;
     case 'citation':
       editor.tf.setNodes(
-        { type: 'citation', sourceTitle: null, sourceUrl: null } as Partial<TElement>,
+        { type: 'citation', sourceTitle: null, sourceUrl: null },
         { at: blockPath },
       );
       break;
@@ -119,7 +119,7 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
       const url = window.prompt('Link URL:');
       if (url) {
         editor.tf.insertNodes(
-          { type: 'link_preview', url, children: [{ text: '' }] } as TElement,
+          { type: 'link_preview', url, children: [{ text: '' }] },
           { at: blockPath },
         );
         editor.tf.removeNodes({ at: nextPath });

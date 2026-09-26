@@ -150,7 +150,8 @@ export class FeedbucketWidget {
   };
 
   private readonly handleFileSelected = (event: Event): void => {
-    const input = event.target as HTMLInputElement;
+    if (!(event.target instanceof HTMLInputElement)) return;
+    const input = event.target;
     const file = input.files?.[0];
     input.value = "";
     if (!file) return;
@@ -490,9 +491,9 @@ export class FeedbucketWidget {
       ),
     ).filter((el) => {
       if (el.hidden) return false;
-      let node: Element | null = el.parentElement;
+      let node: HTMLElement | null = el.parentElement;
       while (node !== null && node !== this.panel) {
-        if ((node as HTMLElement).hidden) return false;
+        if (node.hidden) return false;
         node = node.parentElement;
       }
       return true;

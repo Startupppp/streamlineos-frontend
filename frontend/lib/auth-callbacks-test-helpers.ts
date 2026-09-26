@@ -80,23 +80,22 @@ export function installTransport(plan: TransportPlan = {}): Transport {
             success: true,
             data: sessionDataPayload(sessionDataOrgId),
           }),
-      } as Response);
+      });
     }
     if (href.includes("/auth/session-exchange")) {
       state.exchangeCalls += 1;
       state.exchangeBodies.push(
         typeof init?.body === "string" ? JSON.parse(init.body) : init?.body,
       );
-      const ok = exchangeStatus >= 200 && exchangeStatus < 300;
       return Promise.resolve({
-        ok,
+        ok: exchangeStatus >= 200 && exchangeStatus < 300,
         status: exchangeStatus,
         json: () =>
           Promise.resolve({
             success: true,
             data: { token: exchangeToken ?? backendJwt(SESSION_A, ORG) },
           }),
-      } as Response);
+      });
     }
     throw new Error(`unexpected fetch in test: ${href}`);
   });
@@ -109,19 +108,17 @@ export function installTransport(plan: TransportPlan = {}): Transport {
 }
 
 export function installMintingTransport(orgIdOf: () => string | null = () => ORG): Transport {
-  const state = installTransport();
-  const fetchMock = globalThis.fetch as unknown as jest.Mock;
+  const state: Transport = { sessionDataCalls: 0, exchangeCalls: 0, exchangeBodies: [] };
   let minted = 0;
-  fetchMock.mockImplementation((url: unknown) => {
+  const fetchMock = jest.fn((url: unknown) => {
     const href = String(url);
     if (href.includes("/auth/session-data/")) {
       state.sessionDataCalls += 1;
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () =>
-          Promise.resolve({ success: true, data: sessionDataPayload(orgIdOf()) }),
-      } as Response);
+        json: () => Promise.resolve({ success: true, data: sessionDataPayload(orgIdOf()) }),
+      });
     }
     state.exchangeCalls += 1;
     minted += 1;
@@ -129,12 +126,10 @@ export function installMintingTransport(orgIdOf: () => string | null = () => ORG
       ok: true,
       status: 200,
       json: () =>
-        Promise.resolve({
-          success: true,
-          data: { token: backendJwt(`mint-${minted}`, orgIdOf()) },
-        }),
-    } as Response);
+        Promise.resolve({ success: true, data: { token: backendJwt(`mint-${minted}`, orgIdOf()) } }),
+    });
   });
+  Object.defineProperty(globalThis, "fetch", { value: fetchMock, configurable: true, writable: true });
   return state;
 }
 

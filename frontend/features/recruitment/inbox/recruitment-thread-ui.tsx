@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { parseEnum } from "@/lib/url-state/use-url-filters";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -120,6 +121,7 @@ export function ComposeBar({
   const [body, setBody] = useState("");
   const [subject, setSubject] = useState("");
   const [channel, setChannel] = useState<MessageChannel>("EMAIL");
+  const MESSAGE_CHANNELS = ["EMAIL", "WHATSAPP", "IN_APP"] as const;
   const send = useSendCandidateMessage();
 
   const handleSend = useCallback(() => {
@@ -149,7 +151,7 @@ export function ComposeBar({
     setSubject(e.target.value);
   }
   function handleChannelChange(v: string) {
-    setChannel(v as MessageChannel);
+    setChannel(parseEnum(v, MESSAGE_CHANNELS, "EMAIL"));
   }
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSend();

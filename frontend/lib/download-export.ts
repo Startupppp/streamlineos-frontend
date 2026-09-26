@@ -85,23 +85,23 @@ export async function downloadExport(
   endpoint: string,
   options: DownloadExportOptions,
 ): Promise<{ filename: string; bytes: number }> {
-  let headers: Headers | null = null;
+  const captured: { headers: Headers | null } = { headers: null };
 
   const blob = await apiClient.download(endpoint, undefined, {
     signal: options.signal,
     onResponseHeaders: (received) => {
-      headers = received;
+      captured.headers = received;
     },
   });
 
-  const contentType = blob.type || (headers as Headers | null)?.get("content-type") || "";
+  const contentType = blob.type || captured.headers?.get("content-type") || "";
   if (NOT_AN_EXPORT.some((pattern) => pattern.test(contentType)))
     throw new NotAnExportError(options.label, contentType.split(";")[0]);
 
   if (blob.size === 0) throw new EmptyExportError(options.label);
 
   const filename =
-    filenameFromDisposition((headers as Headers | null)?.get("content-disposition") ?? null) ??
+    filenameFromDisposition(captured.headers?.get("content-disposition") ?? null) ??
     options.fallbackName;
 
   downloadBlob(blob, filename);

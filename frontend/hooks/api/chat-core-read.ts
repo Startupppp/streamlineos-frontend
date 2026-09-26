@@ -20,7 +20,7 @@ import type {
 } from "@/types/chat";
 import type { ChatOnlineUser } from "@/hooks/api/chat-schema/presence-schema";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
-import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { NO_ID_CURSOR_YET, NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface ChannelListResult<TChannel> {
   channels: TChannel[];
@@ -121,7 +121,7 @@ function useChannelPages<TChannel>({
     queryKey,
     queryFn: ({ pageParam, signal }) =>
       fetchPage(signal, pageParam === null ? undefined : pageParam),
-    initialPageParam: null as string | null,
+    initialPageParam: NULL_CURSOR_YET,
     getNextPageParam: (lastPage: ChannelPage<TChannel>, allPages) =>
       allPages.length >= MAX_CHANNEL_PAGES ? undefined : lastPage.nextCursor,
     staleTime,

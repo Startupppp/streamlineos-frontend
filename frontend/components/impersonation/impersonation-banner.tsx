@@ -14,6 +14,15 @@ interface ImpersonationDetail {
   sessionId?: string | null;
 }
 
+function isImpersonationDetail(v: unknown): v is ImpersonationDetail {
+  return (
+    typeof v === "object" &&
+    v !== null &&
+    "active" in v &&
+    typeof v.active === "boolean"
+  );
+}
+
 export function ImpersonationBanner() {
   const [active, setActive] = useState(() => isImpersonating());
   const [targetUser, setTargetUser] = useState(() => getImpersonationUser());
@@ -23,10 +32,11 @@ export function ImpersonationBanner() {
   useEffect(() => {
     function handleChange(event: Event) {
       if (!(event instanceof CustomEvent)) return;
-      const detail = event.detail as ImpersonationDetail;
-      setActive(detail.active);
-      setTargetUser(detail.active ? (detail.targetUser ?? null) : null);
-      setSessionId(detail.active ? (detail.sessionId ?? null) : null);
+      const raw: unknown = event.detail;
+      if (!isImpersonationDetail(raw)) return;
+      setActive(raw.active);
+      setTargetUser(raw.active ? (raw.targetUser ?? null) : null);
+      setSessionId(raw.active ? (raw.sessionId ?? null) : null);
     }
 
     window.addEventListener("impersonation-change", handleChange);

@@ -251,10 +251,15 @@ export function CalloutElement({ element, children, ...props }: PlateElementProp
   );
 }
 
+function stringProp(element: TElement, key: string): string | null {
+  const value = element[key];
+  return typeof value === 'string' ? value : null;
+}
+
 export function CitationElement({ element, children, ...props }: PlateElementProps) {
   const editor = useEditorRef();
-  const sourceTitle = (element['sourceTitle'] as string | null) ?? null;
-  const sourceUrl = (element['sourceUrl'] as string | null) ?? null;
+  const sourceTitle = stringProp(element, 'sourceTitle');
+  const sourceUrl = stringProp(element, 'sourceUrl');
   const state = citationSourceState(sourceTitle, sourceUrl);
 
   function handleEditSource(e: React.MouseEvent<HTMLButtonElement>) {
@@ -265,7 +270,7 @@ export function CitationElement({ element, children, ...props }: PlateElementPro
     const path = editor.api.findPath(element);
     if (!path) return;
     editor.tf.setNodes(
-      { sourceTitle: nextTitle || null, sourceUrl: nextUrl || null } as Partial<TElement>,
+      { sourceTitle: nextTitle || null, sourceUrl: nextUrl || null },
       { at: path },
     );
   }
@@ -310,7 +315,7 @@ export function CitationElement({ element, children, ...props }: PlateElementPro
 }
 
 export function LinkPreviewElement({ element, children, ...props }: PlateElementProps) {
-  const url = (element['url'] as string | null) ?? null;
+  const url = stringProp(element, 'url');
   const { data, isLoading } = useLinkPreview(url);
   const hasMeta = linkPreviewHasMeta(data);
   const displayTitle = linkPreviewDisplayTitle(data, url);

@@ -110,6 +110,7 @@ export interface FeedbucketSubmissionFilters {
   assigneeId?: string;
   search?: string;
   linked?: "linked" | "unlinked";
+  duplicate?: "true" | "false";
   from?: string;
   to?: string;
 }

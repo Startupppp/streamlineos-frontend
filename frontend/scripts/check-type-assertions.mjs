@@ -262,7 +262,12 @@ const CEILING_LEDGER_PATH = fileURLToPath(new URL("./assertion-ceiling-ledger.js
 // assertions when `unwrapBackend<T>` stopped taking a type parameter and its two
 // call sites narrowed through Zod instead. The tree really is one lower, so the
 // tripwire moves with it rather than reporting a broken counter.
-const CEILING_FLOOR_TOTAL = 498;
+// Lowered 499 -> 458 on 2026-09-26: 41 assertions narrowed at the use site
+// across lib/, hooks/api/, features/hr, features/recruitment, notifications,
+// timesheets, inventory and the Plate editor -- `ElementApi.isElementList` and
+// `ElementApi.isElement` replaced the casts in the value converter, and the
+// eight `as Partial<TElement>` in the combobox were redundant outright.
+const CEILING_FLOOR_TOTAL = 458;
 
 function loadCeilingLedger() {
   try {

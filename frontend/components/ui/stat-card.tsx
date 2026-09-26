@@ -69,10 +69,22 @@ const COLOR_TONE: Partial<Record<StatColor, StatTone>> = {
   purple: "accent",
 };
 
+interface GridTemplateStyle extends CSSProperties {
+  "--stat-card-grid-template": string;
+}
+
+function gridTemplateVar(template: string): GridTemplateStyle {
+  return { "--stat-card-grid-template": template };
+}
+
+function isStatTone(color: StatColor): color is StatTone {
+  return color in TONE_MAP;
+}
+
 function resolveTone(tone?: StatTone, color?: StatColor): StatTone {
   if (tone) return tone;
   if (!color) return "default";
-  if (color in TONE_MAP) return color as StatTone;
+  if (isStatTone(color)) return color;
   return COLOR_TONE[color] ?? "default";
 }
 
@@ -215,7 +227,7 @@ export function StatCardGrid({
       )}
       style={
         stackOnMobile
-          ? ({ "--stat-card-grid-template": template } as CSSProperties)
+          ? gridTemplateVar(template)
           : { gridTemplateColumns: template }
       }
     >

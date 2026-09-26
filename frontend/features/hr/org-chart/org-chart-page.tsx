@@ -272,12 +272,9 @@ function OrgChartCollection({ search }: { search?: string }) {
     );
   }
 
+  const emptyNodes: OrgChartNode[] = [];
   const { owner, topLevel, unassigned } = search
-    ? {
-        owner: query.data.data,
-        topLevel: [] as OrgChartNode[],
-        unassigned: [] as OrgChartNode[],
-      }
+    ? { owner: query.data.data, topLevel: emptyNodes, unassigned: emptyNodes }
     : splitOrgChartRoots(query.data.data);
   const topLevelHeading = topLevelRootsHeading();
   const unassignedHeading = unassignedRootsHeading(

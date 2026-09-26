@@ -31,7 +31,7 @@ function isAccessResponseCache(value: unknown): value is AccessResponse {
   if (typeof value !== "object" || value === null || Array.isArray(value))
     return false;
   if (!("modules" in value)) return false;
-  const modules = (value as { modules: unknown }).modules;
+  const modules = value.modules;
   return (
     typeof modules === "object" && modules !== null && !Array.isArray(modules)
   );

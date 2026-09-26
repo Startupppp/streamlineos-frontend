@@ -283,8 +283,7 @@ export function blankLine(field: FieldSpec): RecordLine {
 function linesFrom(field: FieldSpec, value: unknown): RecordLine[] {
   const rows = Array.isArray(value)
     ? value.map((entry) => {
-        const source =
-          entry !== null && typeof entry === "object" ? (entry as Record<string, unknown>) : {};
+        const source = isRecord(entry) ? entry : {};
         const row: RecordLine = {};
         for (const line of field.lineFields ?? []) {
           const held = source[line.name];
@@ -301,6 +300,10 @@ function linesFrom(field: FieldSpec, value: unknown): RecordLine[] {
   const minimum = field.minLines ?? (field.required ? 1 : 0);
   while (rows.length < minimum) rows.push(blankLine(field));
   return rows;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
 }
 
 export function defaultValuesForLayout(

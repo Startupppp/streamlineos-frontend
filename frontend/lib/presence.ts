@@ -55,18 +55,15 @@ export const PRESENCE_CLEAR_AFTER_LABELS: Record<PresenceClearAfter, string> = {
 
 export const PRESENCE_STATUS_MESSAGE_MAX_LENGTH = 100;
 
+const PRESENCE_CLEAR_AFTER_SET: ReadonlySet<string> = new Set(PRESENCE_CLEAR_AFTER_OPTIONS);
+const PRESENCE_STATUS_SET: ReadonlySet<string> = new Set(PRESENCE_STATUSES);
+
 export function isPresenceClearAfter(value: unknown): value is PresenceClearAfter {
-  return (
-    typeof value === "string" &&
-    (PRESENCE_CLEAR_AFTER_OPTIONS as readonly string[]).includes(value)
-  );
+  return typeof value === "string" && PRESENCE_CLEAR_AFTER_SET.has(value);
 }
 
 export function isPresenceStatus(value: unknown): value is PresenceStatus {
-  return (
-    typeof value === "string" &&
-    (PRESENCE_STATUSES as readonly string[]).includes(value)
-  );
+  return typeof value === "string" && PRESENCE_STATUS_SET.has(value);
 }
 
 export function presenceLabel(value: unknown): string {
