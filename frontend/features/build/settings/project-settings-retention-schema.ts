@@ -4,7 +4,7 @@ export const RETENTION_SECTION_VALUES = ["policy", "holds"] as const;
 export type RetentionSection = (typeof RETENTION_SECTION_VALUES)[number];
 
 function isRetentionSection(v: string): v is RetentionSection {
-  return (RETENTION_SECTION_VALUES as readonly string[]).includes(v);
+  return RETENTION_SECTION_VALUES.some((section) => section === v);
 }
 
 export function parseRetentionSection(raw: string | null): RetentionSection {
@@ -23,12 +23,8 @@ export const RETENTION_DAYS_OPTIONS = [
 export type RetentionDaysOptionValue =
   (typeof RETENTION_DAYS_OPTIONS)[number]["value"];
 
-const RETENTION_DAYS_VALUES = RETENTION_DAYS_OPTIONS.map(
-  (o) => o.value,
-) as number[];
-
 function isRetentionDaysOptionValue(v: number): v is RetentionDaysOptionValue {
-  return RETENTION_DAYS_VALUES.includes(v);
+  return RETENTION_DAYS_OPTIONS.some((option) => option.value === v);
 }
 
 export const retentionDaysOptionSchema = z
