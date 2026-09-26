@@ -374,3 +374,60 @@ The bar does not drop. A gap found in a load-bearing section still blocks C3, an
 separately authorised building the backend work behind those gaps rather than documenting it — so
 `activity`, `capacity`, `lastRunAt`/`lastFailureAt`, `wins`/`risks`/`next`/`citations`, the webhook
 PATCH route and the bulk verbs are being implemented, not excused.
+
+## CCG-7 — three `build` tables run without RLS, and the wave's own migrations sit on one of them
+
+Found while verifying migration 1305, not by looking for it. The verification step reads the host
+table's RLS posture because a new column inherits it, and `build.project_updates` came back with row
+level security **disabled and zero policies**.
+
+A census of the whole schema as `streamline_admin`, 2026-09-26:
+
+| build tables | RLS on, with a policy | RLS off, zero policies |
+|---:|---:|---:|
+| 90 | 87 | 3 |
+
+The three: `project_updates`, `project_attachments`, `managed_product_memberships`.
+
+None is a platform-global table. Each carries a **non-nullable `org_id`**, two of the three also carry
+`project_id` and `deleted_at`, and none appears in `PLATFORM_GLOBAL_TABLES` in
+`src/scripts/db-verify-rls.mjs` — the sanctioned exemption list, which holds only the org row itself
+and the control-plane placement tables that necessarily run before a tenant context exists. These three
+are ordinary tenant tables. They are in scope and non-compliant with BE-74.
+
+Blast radius **today** is small, which is why this is a posture defect rather than an incident:
+`project_updates` 2 rows / 1 org, `project_attachments` 1 row / 1 org,
+`managed_product_memberships` 0 rows. There is no second tenant for a row to leak to yet. That is an
+accident of the production dataset, not a control — the moment a second org writes an update, every
+query that forgets an explicit `org_id` predicate reads across tenants and returns 200.
+
+This is the failure mode BE-74 names exactly: grants arrive via `ALTER DEFAULT PRIVILEGES`, so a table
+with no policy reads org-wide and **fails open silently**. It does not raise `42501`, it does not fail a
+test, and no gate in either repo sees it — `db:verify-rls` is the authority and it is not wired to CI,
+which has been dead since the Actions billing lapse.
+
+### Why it was not fixed in this wave
+
+Enabling a policy is three statements. Doing it safely is not. `ENABLE ROW LEVEL SECURITY` plus
+`tenant_isolation` turns every read that lacks the tenant GUC from "silently wrong" into
+`42501`, and `app.current_org_id()` fails closed by design. Any code path touching these tables
+outside `runInTenantTransaction` — a background sweep, an after-commit hook, a public webhook lookup —
+starts 500ing the moment the policy lands. That audit was not done, and nine agents were concurrently
+editing the services that read `project_updates`.
+
+Applying it blind to production mid-wave trades a latent cross-tenant read for a live outage. The
+ordering is therefore: land the wave, audit every call path against the three tables, then one
+migration per table with its rollback.
+
+### What closing it requires
+
+1. Enumerate every read and write of the three tables and confirm each runs inside a tenant
+   transaction. `after-commit` hooks and `forEachOrg` sweeps are the ones that break.
+2. One migration per table: `ENABLE ROW LEVEL SECURITY` + a `tenant_isolation` policy on
+   `org_id = app.current_org_id()`, matching the 87 compliant siblings.
+3. Verify as `streamline_app` with the GUC set, and again with it absent — the second half is the
+   assertion that matters, and it must observe a denial rather than a row.
+4. Shrink nothing from `PLATFORM_GLOBAL_TABLES`; these three never belonged there.
+
+Until then this entry is the record. It does not block any acceptance box in the Build module — no box
+asserts RLS posture — which is precisely why it needed writing down somewhere that is not a box.
