@@ -1,9 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowBigUp, Loader2, MessageSquarePlus, Sparkles, Megaphone } from "lucide-react";
+import {
+  ArrowBigUp,
+  Loader2,
+  MessageSquarePlus,
+  Sparkles,
+  Megaphone,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +34,10 @@ import {
 
 const VOTER_KEY_STORAGE = "streamlineos:roadmap:voterKey";
 
-const COLUMNS: { key: "planned" | "in_progress" | "completed"; label: string }[] = [
+const COLUMNS: {
+  key: "planned" | "in_progress" | "completed";
+  label: string;
+}[] = [
   { key: "planned", label: "Planned" },
   { key: "in_progress", label: "In Progress" },
   { key: "completed", label: "Completed" },
@@ -40,7 +49,10 @@ const CHANGELOG_TYPE_LABEL: Record<ChangelogType, string> = {
   fix: "Fix",
 };
 
-const CHANGELOG_TYPE_VARIANT: Record<ChangelogType, "default" | "secondary" | "outline"> = {
+const CHANGELOG_TYPE_VARIANT: Record<
+  ChangelogType,
+  "default" | "secondary" | "outline"
+> = {
   feature: "default",
   improvement: "secondary",
   fix: "outline",
@@ -92,19 +104,27 @@ function RoadmapColumnCard({
             className="flex flex-col items-center justify-center rounded-md border px-2 py-1 shrink-0 transition-colors disabled:opacity-60 enabled:hover:border-primary enabled:hover:text-primary"
           >
             <ArrowBigUp className="h-4 w-4" />
-            <span className="text-sm font-semibold tabular-nums">{item.votes}</span>
+            <span className="text-sm font-semibold tabular-nums">
+              {item.votes}
+            </span>
           </button>
           <div className="min-w-0 space-y-1">
             <p className="text-sm font-medium leading-snug">{item.title}</p>
             {item.description && (
-              <p className="text-xs text-muted-foreground line-clamp-3">{item.description}</p>
+              <p className="text-xs text-muted-foreground line-clamp-3">
+                {item.description}
+              </p>
             )}
             <div className="flex flex-wrap items-center gap-1.5">
               {item.targetQuarter && (
-                <Badge variant="outline" className="text-micro">{item.targetQuarter}</Badge>
+                <Badge variant="outline" className="text-micro">
+                  {item.targetQuarter}
+                </Badge>
               )}
               {item.category && (
-                <Badge variant="secondary" className="text-micro">{item.category}</Badge>
+                <Badge variant="secondary" className="text-micro">
+                  {item.category}
+                </Badge>
               )}
             </div>
           </div>
@@ -138,15 +158,21 @@ function FeedbackCard({
             className="flex flex-col items-center justify-center rounded-md border px-2 py-1 shrink-0 transition-colors disabled:opacity-60 enabled:hover:border-primary enabled:hover:text-primary"
           >
             <ArrowBigUp className="h-4 w-4" />
-            <span className="text-sm font-semibold tabular-nums">{post.votes}</span>
+            <span className="text-sm font-semibold tabular-nums">
+              {post.votes}
+            </span>
           </button>
           <div className="min-w-0 space-y-1">
             <p className="text-sm font-medium leading-snug">{post.title}</p>
             {post.description && (
-              <p className="text-xs text-muted-foreground line-clamp-3">{post.description}</p>
+              <p className="text-xs text-muted-foreground line-clamp-3">
+                {post.description}
+              </p>
             )}
             {post.category && (
-              <Badge variant="secondary" className="text-micro">{post.category}</Badge>
+              <Badge variant="secondary" className="text-micro">
+                {post.category}
+              </Badge>
             )}
           </div>
         </div>
@@ -161,15 +187,22 @@ function ChangelogCard({ entry }: { entry: PublicChangelogEntry }) {
       <CardContent className="p-3 space-y-1.5">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-medium">{entry.title}</p>
-          <Badge variant={CHANGELOG_TYPE_VARIANT[entry.type]} className="text-micro">
+          <Badge
+            variant={CHANGELOG_TYPE_VARIANT[entry.type]}
+            className="text-micro"
+          >
             {CHANGELOG_TYPE_LABEL[entry.type]}
           </Badge>
           {entry.version && (
-            <Badge variant="outline" className="text-micro">{entry.version}</Badge>
+            <Badge variant="outline" className="text-micro">
+              {entry.version}
+            </Badge>
           )}
         </div>
         {entry.content && (
-          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{entry.content}</p>
+          <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+            {entry.content}
+          </p>
         )}
         {entry.publishedAt && (
           <p className="text-dense text-muted-foreground">
@@ -181,7 +214,13 @@ function ChangelogCard({ entry }: { entry: PublicChangelogEntry }) {
   );
 }
 
-function FeedbackForm({ orgId, voterKey }: { orgId: string; voterKey: string | null }) {
+function FeedbackForm({
+  orgId,
+  voterKey,
+}: {
+  orgId: string;
+  voterKey: string | null;
+}) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [name, setName] = useState("");
@@ -278,15 +317,8 @@ function FeedbackForm({ orgId, voterKey }: { orgId: string; voterKey: string | n
 export default function PublicRoadmapPage() {
   const params = useParams<{ orgId: string }>();
   const orgId = params.orgId;
-  const router = useRouter();
   const voterKey = useVoterKey();
   const { data, isLoading, isError, refetch } = usePublicRoadmap(orgId);
-
-  useEffect(() => {
-    if (data?.orgSlug && orgId !== data.orgSlug) {
-      router.replace(`/roadmap/${data.orgSlug}`, { scroll: false });
-    }
-  }, [data?.orgSlug, orgId, router]);
   const vote = usePublicVote(orgId);
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
 
@@ -321,8 +353,15 @@ export default function PublicRoadmapPage() {
     [voterKey, vote],
   );
 
-  const handleRoadmapVote = useCallback((id: number) => handleVote("roadmap", id), [handleVote]);
-  const handleFeedbackVote = useCallback((id: number) => handleVote("feedback", id), [handleVote]);
+  const handleRoadmapVote = useCallback(
+    (id: number) => handleVote("roadmap", id),
+    [handleVote],
+  );
+
+  const handleFeedbackVote = useCallback(
+    (id: number) => handleVote("feedback", id),
+    [handleVote],
+  );
 
   return (
     <main className="min-h-dvh surface-soft">
@@ -330,7 +369,9 @@ export default function PublicRoadmapPage() {
         <header className="mb-8 text-center">
           <div className="inline-flex items-center gap-2 text-primary mb-2">
             <Sparkles className="h-5 w-5" />
-            <span className="text-xs font-semibold uppercase tracking-wide">Product Roadmap</span>
+            <span className="text-xs font-semibold uppercase tracking-wide">
+              Product Roadmap
+            </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             {data?.orgName ?? "Roadmap"}
@@ -349,13 +390,19 @@ export default function PublicRoadmapPage() {
             onRetry={() => refetch()}
           />
         ) : !data ? (
-          <EmptyState illustration={<EmptySprintIllustration />} title="No roadmap available" className="flex-1" />
+          <EmptyState
+            illustration={<EmptySprintIllustration />}
+            title="No roadmap available"
+            className="flex-1"
+          />
         ) : (
           <div className="space-y-10">
             <section>
               <div className="grid gap-4 md:grid-cols-3">
                 {COLUMNS.map((col) => {
-                  const items: PublicRoadmapItem[] = grouped ? grouped[col.key] : [];
+                  const items: PublicRoadmapItem[] = grouped
+                    ? grouped[col.key]
+                    : [];
                   return (
                     <div key={col.key} className="space-y-2">
                       <div className="flex items-center justify-between px-1">
@@ -391,7 +438,9 @@ export default function PublicRoadmapPage() {
 
             <div className="grid gap-6 lg:grid-cols-2">
               <section className="space-y-3">
-                <h2 className="text-sm font-semibold text-foreground">Feature requests</h2>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Feature requests
+                </h2>
                 <FeedbackForm orgId={orgId} voterKey={voterKey} />
                 <div className="space-y-2">
                   {data.feedback.length === 0 ? (
@@ -415,11 +464,15 @@ export default function PublicRoadmapPage() {
               <section className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Megaphone className="h-4 w-4 text-primary" />
-                  <h2 className="text-sm font-semibold text-foreground">Changelog</h2>
+                  <h2 className="text-sm font-semibold text-foreground">
+                    Changelog
+                  </h2>
                 </div>
                 <div className="space-y-2">
                   {data.changelog.length === 0 ? (
-                    <p className="text-xs text-muted-foreground px-1">No updates published yet.</p>
+                    <p className="text-xs text-muted-foreground px-1">
+                      No updates published yet.
+                    </p>
                   ) : (
                     data.changelog.map((entry) => (
                       <ChangelogCard key={entry.id} entry={entry} />

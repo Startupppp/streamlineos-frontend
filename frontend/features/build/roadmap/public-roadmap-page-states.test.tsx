@@ -10,7 +10,7 @@ jest.mock("@/hooks/api/build/roadmap", () => ({
 }));
 
 jest.mock("next/navigation", () => ({
-  useParams: () => ({ orgId: "clz4j5abc123xyz" }),
+  useParams: () => ({ orgId: "rm_9fK2xQ7vBnL4tR8sW1yZ3aC6" }),
   useRouter: () => ({ replace: mockReplace }),
 }));
 
@@ -29,7 +29,6 @@ const idleMutation = { mutate: jest.fn(), isPending: false, isSuccess: false, is
 
 const roadmapData = {
   orgName: "Acme Corp",
-  orgSlug: "acme-corp",
   roadmap: {
     planned: [{ id: 1, title: "New dashboard", description: null, status: "planned" as const, category: null, targetQuarter: null, votes: 3 }],
     in_progress: [],
@@ -96,14 +95,18 @@ describe("PublicRoadmapPage — ready state", () => {
   });
 });
 
-describe("PublicRoadmapPage — slug redirect (REQ-2)", () => {
-  it("calls router.replace with the canonical slug URL when the URL param differs from orgSlug", () => {
-    setupWithData({ data: roadmapData });
-    expect(mockReplace).toHaveBeenCalledWith("/roadmap/acme-corp", { scroll: false });
+describe("PublicRoadmapPage — opaque publication addressing", () => {
+  const PUBLIC_HANDLE = "rm_9fK2xQ7vBnL4tR8sW1yZ3aC6";
+
+  it("renders the board without echoing the publication handle into the page", () => {
+    const { container } = setupWithData({ data: roadmapData });
+    expect(screen.getByText("New dashboard")).toBeInTheDocument();
+    expect(container.innerHTML).not.toContain(PUBLIC_HANDLE);
   });
 
-  it("does not redirect if the org has no slug in the response", () => {
-    setupWithData({ data: { ...roadmapData, orgSlug: null } });
+  it("keeps the visitor on the handle they arrived on instead of rewriting it to a guessable slug", () => {
+    setupWithData({ data: roadmapData });
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Acme Corp");
     expect(mockReplace).not.toHaveBeenCalled();
   });
 });

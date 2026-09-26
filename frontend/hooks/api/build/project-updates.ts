@@ -10,10 +10,14 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const updatePageContract = lazyContract(() =>
-  import("@/hooks/api/build/project-updates-schema").then((m) => m.updatePageContract),
+  import("@/hooks/api/build/project-updates-schema").then(
+    (m) => m.updatePageContract,
+  ),
 );
 const updateRowContract = lazyContract(() =>
-  import("@/hooks/api/build/project-updates-schema").then((m) => m.updateRowContract),
+  import("@/hooks/api/build/project-updates-schema").then(
+    (m) => m.updateRowContract,
+  ),
 );
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -45,10 +49,13 @@ export interface ProjectUpdatesFilters {
   to?: string;
 }
 
-export function useProjectUpdates(projectId: number, filters?: ProjectUpdatesFilters) {
+export function useProjectUpdates(
+  projectId: number,
+  filters?: ProjectUpdatesFilters,
+) {
   const canView = useCan("build:updates:view");
   const query = useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.updates.list(projectId),
+    queryKey: buildWorkQueryKeys.projects.updates.list(projectId, filters),
     queryFn: ({ signal, pageParam }) =>
       apiClient.get<ProjectUpdatePage>(
         `/build/${projectId}/updates`,

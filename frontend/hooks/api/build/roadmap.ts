@@ -57,6 +57,14 @@ const publicFeedbackResultContract = lazyContract(() =>
 const roadmapSignalsContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapSignalsContract),
 );
+const roadmapPublicationLazy = lazyContract(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) => m.roadmapPublicationContract),
+);
+
+export interface RoadmapPublication {
+  token: string | null;
+  path: string | null;
+}
 
 export type { CrmAccountTier, RoadmapPrioritization, RoadmapSignals, RoadmapTierWeighting };
 
@@ -175,7 +183,6 @@ interface UpdateChangelogEntryInput {
 
 interface PublicRoadmapBoard {
   orgName: string | null;
-  orgSlug: string | null;
   roadmap: {
     planned: PublicRoadmapItem[];
     in_progress: PublicRoadmapItem[];
@@ -404,5 +411,49 @@ export function useSubmitPublicFeedback(orgId: string) {
         publicFeedbackResultContract,
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId) }),
+  });
+}
+
+export function useRoadmapPublication() {
+  const canView = useCan("build:roadmap:view");
+  return useQuery({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.publication,
+    queryFn: ({ signal }) =>
+      apiClient.get<RoadmapPublication>("/build/roadmap-publication", undefined, signal, roadmapPublicationLazy),
+    enabled: canView,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function usePublishRoadmap() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:roadmap:manage", {
+    mutationKey: ["projects", "roadmap", "publication", "publish"],
+    mutationFn: () =>
+      apiClient.post<RoadmapPublication>("/build/roadmap-publication", {}, undefined, roadmapPublicationLazy),
+    onSuccess: (publication) =>
+      qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.publication, publication),
+  });
+}
+
+export function useRotateRoadmapPublicationToken() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:roadmap:manage", {
+    mutationKey: ["projects", "roadmap", "publication", "rotate"],
+    mutationFn: () =>
+      apiClient.post<RoadmapPublication>("/build/roadmap-publication/rotate", {}, undefined, roadmapPublicationLazy),
+    onSuccess: (publication) =>
+      qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.publication, publication),
+  });
+}
+
+export function useUnpublishRoadmap() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:roadmap:manage", {
+    mutationKey: ["projects", "roadmap", "publication", "unpublish"],
+    mutationFn: () =>
+      apiClient.delete<void>("/build/roadmap-publication", undefined, undefined, noContentLazy),
+    onSuccess: () =>
+      qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.publication, { token: null, path: null }),
   });
 }

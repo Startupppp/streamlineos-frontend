@@ -7,38 +7,13 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import { useCreateEmployeeInviteLink } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { writeToClipboard } from "@/lib/clipboard";
 import { cn } from "@/lib/utils";
 
-/**
- * HRMS-E2E-001b. The second way in.
- *
- * An invitation had exactly one delivery route: an email. When the provider is
- * unconfigured, the domain unverified, or the message silently dropped — QA hit
- * all three symptoms and watched two inboxes stay empty for three minutes —
- * onboarding stopped for the whole organisation, and the only thing on screen
- * said the invitation had been sent.
- *
- * This hands the administrator the link the email would have carried, so the new
- * hire can be let in through whatever channel the two of them already use. The
- * link is the same credential the email carries: single-use, hashed at rest,
- * seven-day expiry, and taking one retires every earlier link for that person —
- * which is also why the clipboard always ends up holding the live one.
- */
 interface CopyInviteLinkButtonProps {
   employeeId: string;
   employeeName: string;
   className?: string;
-}
-
-async function writeToClipboard(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    // Clipboard access is refused in an insecure context and in some embedded
-    // browsers. Showing the link beats swallowing the failure.
-    return false;
-  }
 }
 
 export function CopyInviteLinkButton({

@@ -198,10 +198,10 @@ export const buildWorkQueryKeys = {
         [...base, "projects", projectId, "incidents", incidentId] as const,
     },
     updates: {
-      list: (projectId: number, cursor?: string) =>
-        cursor === undefined
+      list: (projectId: number, filters?: QueryKeyParams) =>
+        filters === undefined
           ? ([...base, "projects", projectId, "updates"] as const)
-          : ([...base, "projects", projectId, "updates", cursor] as const),
+          : ([...base, "projects", projectId, "updates", filters] as const),
     },
     files: {
       list: (projectId: number, cursor?: string) =>

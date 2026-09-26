@@ -140,6 +140,7 @@ export const knowledgeAndSurveysQueryKeys = {
         : ([...base, "roadmap", "changelog", params] as const),
     publicBoard: (orgId: string) =>
       [...base, "roadmap", "publicBoard", orgId] as const,
+    publication: [...base, "roadmap", "publication"] as const,
   },
 
   automations: {

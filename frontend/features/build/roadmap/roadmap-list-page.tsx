@@ -2,9 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
-import { useSession } from "next-auth/react";
-import { ExternalLink, MessageSquare, Megaphone, Plus, Sparkles } from "lucide-react";
+import { MessageSquare, Megaphone, Plus, Sparkles } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
 import { Button } from "@/components/ui/button";
@@ -24,6 +22,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { RoadmapTab } from "@/features/build/roadmap/roadmap-tab";
 import { FeedbackTab } from "@/features/build/roadmap/feedback-tab";
 import { ChangelogTab } from "@/features/build/roadmap/changelog-tab";
+import { RoadmapPublicationActions } from "@/features/build/roadmap/roadmap-publication-actions";
 import {
   PmPageShell,
   PmSection,
@@ -44,8 +43,6 @@ const FILTER_DEFINITIONS = [
 ] as const;
 
 export function RoadmapListPage() {
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? null;
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
   const [roadmapCreateOpen, setRoadmapCreateOpen] = useState(false);
   const [changelogCreateOpen, setChangelogCreateOpen] = useState(false);
@@ -91,14 +88,7 @@ export function RoadmapListPage() {
 
   const actions = (
     <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-      {orgId ? (
-        <Button asChild variant="outline" size="sm" className="min-w-0 flex-1 sm:flex-none">
-          <Link href={`/roadmap/${orgId}`} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="h-3.5 w-3.5" />
-            Public board
-          </Link>
-        </Button>
-      ) : null}
+      <RoadmapPublicationActions />
       {activeTab === "roadmap" ? (
         <Button size="sm" className="min-w-0 flex-1 sm:flex-none" onClick={handleOpenRoadmapCreate}>
           <Plus className="h-3.5 w-3.5" />
@@ -114,8 +104,6 @@ export function RoadmapListPage() {
     </div>
   );
 
-  const hasActions = Boolean(orgId) || activeTab === "roadmap" || activeTab === "changelog";
-
   return (
     <RequireModule module="build">
       <Tabs
@@ -126,7 +114,7 @@ export function RoadmapListPage() {
         <PageWrapper
           title="Roadmap"
           subtitle="Plan publicly, collect feedback and ship a changelog"
-          actions={hasActions ? actions : undefined}
+          actions={actions}
           filters={
             <PageTabsToolbar
               tabsDensity="labeled"

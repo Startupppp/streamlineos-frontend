@@ -213,7 +213,6 @@ const publicChangelogEntrySchema = z.object({
 
 export const publicRoadmapBoardContract = z.object({
   orgName: z.string().nullable(),
-  orgSlug: z.string().nullable(),
   roadmap: z.object({
     planned: z.array(publicRoadmapItemSchema),
     in_progress: z.array(publicRoadmapItemSchema),
@@ -233,4 +232,9 @@ export const publicVoteResultContract = z.object({
 export const publicFeedbackResultContract = z.object({
   id: z.number().int(),
   message: z.string(),
+});
+
+export const roadmapPublicationContract = z.object({
+  token: z.string().nullable(),
+  path: z.string().nullable(),
 });
