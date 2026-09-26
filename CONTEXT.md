@@ -226,6 +226,16 @@ no Space is reachable on its Visibility alone.
 *Avoid*: **collection** and **folder**. A Space is not organisational grouping;
 treating it as such is how the boundary was once removed by accident.
 
+### Audience
+
+The Space's own exposure — `public`, `mixed`, `internal`. It gates *anonymous*
+reach, where Visibility gates authenticated reach, and the two are ANDed: a
+Document that is `visibility = 'public'` inside an `internal` Space is not
+publicly readable.
+
+This is the arm most often forgotten, because a Document reads as public on its
+own row. Anonymous exposure is never decided by the Document alone.
+
 ### Visibility · Accessible
 
 **Visibility** is the column — `private`, `org`, `public`. It is one input.
