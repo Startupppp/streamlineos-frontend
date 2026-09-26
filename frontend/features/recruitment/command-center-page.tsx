@@ -4,7 +4,7 @@ import { useMemo, useCallback } from "react";
 import Link from "next/link";
 import { isToday, isPast } from "date-fns";
 import { useRecruitmentStats, useJobPostings, useInterviews } from "@/hooks/api/hr";
-import { useCandidates, useRecruitmentAnalytics } from "@/hooks/api/hr/recruitment";
+import { useCandidates } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -31,7 +31,6 @@ import {
   MessageSquare,
   UserCheck,
   Clock,
-  TrendingUp,
 } from "lucide-react";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -109,7 +108,6 @@ function QueueSection({
 
 export function RecruitmentCommandCenterPage() {
   const { data: stats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useRecruitmentStats();
-  const { data: analytics } = useRecruitmentAnalytics();
   const { data: openJobs, isLoading: jobsLoading, isError: jobsError } = useJobPostings({ status: "OPEN" });
   const { data: allInterviews, isLoading: interviewsLoading, isError: interviewsError } = useInterviews({ relevant: true });
   const { data: newCandidates, isLoading: candidatesLoading, isError: candidatesError } = useCandidates({ status: "NEW" });
@@ -176,7 +174,7 @@ export function RecruitmentCommandCenterPage() {
         ) : (
           <>
             {statsLoading ? (
-              <StatCardGridSkeleton cols={6} count={analytics ? 7 : 6} />
+              <StatCardGridSkeleton cols={6} count={6} />
             ) : (
               <StatCardGrid cols={6}>
                 <StatCard label="Open Roles" value={stats?.openJobs ?? 0} icon={Layers} tone="default" />
@@ -185,7 +183,6 @@ export function RecruitmentCommandCenterPage() {
                 <StatCard label="Awaiting Feedback" value={overdueFeedback.length} icon={MessageSquare} tone={overdueFeedback.length > 0 ? "amber" : "default"} />
                 <StatCard label="Hired This Month" value={stats?.hiredThisMonth ?? 0} icon={UserCheck} tone="emerald" />
                 <StatCard label="Avg Days to Hire" value={stats?.avgTimeToHireDays ?? "—"} icon={Clock} tone="default" />
-                {analytics && <StatCard label="Hire Rate" value={`${analytics.hireRate}%`} icon={TrendingUp} tone="emerald" />}
               </StatCardGrid>
             )}
 

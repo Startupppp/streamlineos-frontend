@@ -26,7 +26,7 @@ const SOURCE_COLORS = [
 ];
 
 interface RecruitmentAnalyticsChartsProps {
-  funnelData: Array<{ stage: string; count: number; avgDays: number | null }>;
+  funnelData: Array<{ stage: string; count: number }>;
   sourceData: Array<{ source: string; count: number }>;
   isLoading: boolean;
 }
@@ -117,41 +117,6 @@ export function RecruitmentAnalyticsCharts({ funnelData, sourceData, isLoading }
         </CardContent>
       </Card>
 
-      <Card className="border-border bg-card lg:col-span-2">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold">
-            Avg. Days in Each Stage
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <Skeleton className="h-48 w-full" />
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart
-                data={funnelData.filter((f) => f.avgDays !== null)}
-                margin={{ top: 4, right: 8, bottom: 4, left: -10 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  className="stroke-border"
-                />
-                <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} unit="d" />
-                <Tooltip
-                  contentStyle={{ fontSize: 12 }}
-                  formatter={(value) => [`${value}d`, "Avg. Days"]}
-                />
-                <Bar
-                  dataKey="avgDays"
-                  fill="var(--chart-2)"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

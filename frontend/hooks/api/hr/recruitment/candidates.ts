@@ -1,8 +1,7 @@
 "use client";
 
-import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { z } from "zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -22,10 +21,8 @@ import type {
   AtsPipelineResponse,
   CreateCandidateInput,
   UpdateCandidateInput,
-  Interview,
 } from "@/types/hr";
 import type { RejectionDetails } from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
-import type { CandidateSlaRecord, InterviewScorecard } from "./interviews";
 import type { candidateDetailSchema, CandidateErasureResult } from "@/hooks/api/hr/recruitment/candidates-schema";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -91,12 +88,6 @@ const bulkRejectContract = lazyContract(() =>
     (m) => m.candidateBulkRejectResponseSchema,
   ),
 );
-const recruitmentAnalyticsContract = lazyContract(() =>
-  import("@/hooks/api/hr/recruitment/candidates-schema").then(
-    (m) => m.recruitmentAnalyticsSchema,
-  ),
-);
-
 interface AiScoreBreakdown {
   technicalSkills: number;
   experience: number;
@@ -139,19 +130,6 @@ interface BulkRejectResult {
   rejected: number;
   alreadyRejected: number;
   emailsSent: number;
-}
-
-interface RecruitmentFunnelStage {
-  stage: string;
-  count: number;
-  avgDaysInStage: number | null;
-}
-
-export interface RecruitmentAnalytics {
-  funnel: RecruitmentFunnelStage[];
-  hireRate: number;
-  totalCandidates: number;
-  totalHired: number;
 }
 
 const ATS_KANBAN_KEY = humanResourcesQueryKeys.hr.atsKanban();
@@ -511,16 +489,3 @@ export function useBulkRejectCandidates() {
   });
 }
 
-export function useRecruitmentAnalytics() {
-  const canViewRequisitions = useCan("hr:requisitions:view");
-  return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "recruitmentAnalytics"] as const,
-    queryFn: ({ signal }) => apiClient.get<RecruitmentAnalytics>("/hr/recruitment/analytics", undefined, signal, recruitmentAnalyticsContract),
-    staleTime: 2 * 60_000,
-    enabled: canViewRequisitions,
-    // Backend declares GET /hr/recruitment/analytics twice; the windowed handler
-    // (from/to required) wins and 400s this unwindowed read. Kept inline so the
-    // 400 cannot take the command center and analytics pages to the error boundary.
-    ...INLINE_READ_ERROR,
-  });
-}

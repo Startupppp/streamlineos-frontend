@@ -7,7 +7,6 @@ import {
   UserCheck,
   Calendar,
   Clock,
-  Percent,
 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,10 +15,7 @@ import {
   StatCardGrid,
   StatCardGridSkeleton,
 } from "@/components/ui/stat-card";
-import {
-  useRecruitmentStats,
-  useRecruitmentAnalytics,
-} from "@/hooks/api/hr/recruitment";
+import { useRecruitmentStats } from "@/hooks/api/hr/recruitment";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConversionSection } from "@/features/recruitment/analytics/conversion-section";
 
@@ -31,7 +27,6 @@ const RecruitmentAnalyticsCharts = dynamic(
       <div className="grid gap-6 lg:grid-cols-2">
         <Skeleton className="h-[268px] rounded-xl" />
         <Skeleton className="h-[268px] rounded-xl" />
-        <Skeleton className="lg:col-span-2 h-[248px] rounded-xl" />
       </div>
     ),
   },
@@ -61,24 +56,13 @@ export default function RecruitmentAnalyticsPage() {
     isError: statsError,
     refetch: refetchStats,
   } = useRecruitmentStats();
-  const {
-    data: analytics,
-    isLoading: analyticsLoading,
-    refetch: refetchAnalytics,
-  } = useRecruitmentAnalytics();
 
-  // GET /hr/recruitment/analytics is declared twice in the backend and the windowed
-  // handler (from/to required) wins, so this unwindowed read 400s. Its failure must
-  // not blank the stats and the conversion funnel, which read other routes.
-  const isLoading = statsLoading || analyticsLoading;
+  const isLoading = statsLoading;
   const isError = statsError;
-  const hireRate = analytics ? `${analytics.hireRate}%` : "—";
 
   const funnelData = FUNNEL_STAGES.map((stage) => ({
     stage: FUNNEL_LABELS[stage],
     count: stats?.funnel?.[stage] ?? 0,
-    avgDays:
-      analytics?.funnel?.find((f) => f.stage === stage)?.avgDaysInStage ?? null,
   }));
 
   const sourceData = (stats?.sources ?? [])
@@ -88,7 +72,6 @@ export default function RecruitmentAnalyticsPage() {
 
   function handleRetry() {
     void refetchStats();
-    void refetchAnalytics();
   }
 
   return (
@@ -124,7 +107,6 @@ export default function RecruitmentAnalyticsPage() {
               <StatCard
                 label="Hired This Month"
                 value={stats?.hiredThisMonth ?? 0}
-                hint={`${hireRate} hire rate`}
                 icon={UserCheck}
                 tone="emerald"
               />
@@ -140,13 +122,6 @@ export default function RecruitmentAnalyticsPage() {
                 hint="from application to hired"
                 icon={Clock}
                 tone="blue"
-              />
-              <StatCard
-                label="Hire Rate"
-                value={hireRate}
-                hint={analytics ? `${analytics.totalHired} of ${analytics.totalCandidates} hired` : "Unavailable"}
-                icon={Percent}
-                tone="emerald"
               />
             </StatCardGrid>
             <RecruitmentAnalyticsCharts
