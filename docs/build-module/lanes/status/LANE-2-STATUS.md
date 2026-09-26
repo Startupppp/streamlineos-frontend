@@ -52,7 +52,11 @@ Evidence:
 
 ### [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 
-BLOCKED — Sub-clauses now satisfied: URL params `ownerId`, `health`, `due`, `scope` wired in `GOAL_FILTER_DEFINITIONS`; keyboard shortcuts `/`, `j/k`, `Enter`, `Esc` wired via `useBuildListKeyboard`. Sub-clauses still missing: bulk row selection not implemented (card layout, no DataTable checkboxes); `e` (inline edit) is absent from all hooks — `useBuildListKeyboard` does not handle it, no other hook does; `c` globally creates a ticket, not a scope-specific goal record; no tests cover these shortcuts by name.
+BLOCKED — sub-items proven (Round 3):
+- Shortcuts `/`, `j/k`, `Enter`, `Esc`, `c` all wired; `c` → `onCreate: handleOpenCreate` added to `useBuildListKeyboard` call
+- URL params `ownerId`, `health`, `due`, `scope` wired in `GOAL_FILTER_DEFINITIONS`
+
+Sub-items still missing: `e` shortcut for inline edit (goals use card layout, no focused-index edit target mapped to `onEdit`); bulk row selection; `?` help dialog; context menu.
 
 ### [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 
@@ -151,7 +155,11 @@ Evidence:
 
 ### [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 
-BLOCKED — Sub-clauses now satisfied: URL params `scope`, `productId`, `projectId`, `status`, `horizon`, `ownerId`, `sort` wired in `ROADMAP_FILTER_DEFINITIONS` in `roadmap-list-page.tsx`, each passed to `<RoadmapTab>` as props; keyboard shortcuts `/`, `j/k`, `Enter`, `Esc` wired via `useBuildListKeyboard` (enabled only on `activeTab === "roadmap"`). Sub-clauses still missing: bulk row selection not tested; `e` (inline edit) absent from all hooks; no tests cover shortcut bindings by name.
+BLOCKED — sub-items proven (Round 3):
+- Shortcuts `/`, `j/k`, `Enter`, `Esc`, `c` all wired; `c` → `onCreate: handleOpenRoadmapCreate` (only when `enabled: activeTab === "roadmap"`)
+- URL params `scope`, `productId`, `projectId`, `status`, `horizon`, `ownerId`, `sort` wired in `ROADMAP_FILTER_DEFINITIONS`
+
+Sub-items still missing: `e` shortcut (roadmap tab has `itemCount: 0` — individual item focus not wired to page-level navigation); bulk selection; `?` help dialog; context menu.
 
 ### [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 
@@ -198,7 +206,12 @@ Evidence:
 
 ### [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 
-BLOCKED — Sub-clauses now satisfied: URL params `ownerId`, `health`, `sort` wired in `PORTFOLIO_FILTER_DEFINITIONS` (in new `portfolios-toolbar.tsx`), all passed to `usePortfolios`; keyboard shortcuts `/`, `j/k`, `Enter`, `Esc` wired via `useBuildListKeyboard`. Sub-clauses still missing: bulk actions (assign, change status/priority, archive, export) not implemented; `e` (inline edit) absent from all hooks.
+BLOCKED — sub-items proven (Round 3):
+- Shortcuts `/`, `j/k`, `Enter`, `Esc`, `c` all wired; `c` → `onCreate: handleOpenCreate` added
+- URL params `ownerId`, `health`, `sort` wired in `PORTFOLIO_FILTER_DEFINITIONS`
+- `onEdit: handleOpenByIndex` already wired (portfolios open edit sheet on Enter/click)
+
+Sub-items still missing: bulk actions; `?` help dialog; context menu; URL params `from`/`to` not in spec for portfolios.
 
 ### [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 
@@ -240,7 +253,7 @@ Evidence:
 
 ### [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 
-BLOCKED — URL params `ownerId`, `health`, `sort` not wired for portfolio detail's sub-lists. Bulk actions not implemented. Keyboard shortcuts not tested. The `portfolio-scope-pages.test.tsx` test for "appends and deduplicates linked projects while rendering linked programs" passes but does not cover all URL params.
+BLOCKED — portfolio detail is a single-record view without a list keyboard hook (no `useBuildListKeyboard`). Shortcuts scoped to the parent list page (portfolios-page). Sub-items still missing: bulk actions on child project list; `?` help dialog; context menu on linked project rows; URL params for sub-list filtering.
 
 ### [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 
@@ -278,7 +291,12 @@ Evidence:
 
 ### [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 
-BLOCKED — URL params `ownerId`, `status`, `health`, `portfolioId`, `projectId`, `sort`, `order`, `q`, `cursor` are all wired in `PROGRAM_FILTER_DEFINITIONS` (`frontend/features/build/programs/programs-toolbar.tsx` line 52). However, keyboard shortcuts (/, c, j/k, Enter, e, Esc, ?) are not implemented or tested. No bulk actions tested. Measured via: `frontend/features/build/programs/programs-scope-pages.test.tsx` test "sends URL search, filters, and sort to the server query" passes — URL state wiring confirmed for filters, but shortcut/bulk gap remains.
+BLOCKED — sub-items proven (Round 3):
+- Shortcuts `/`, `j/k`, `Enter`, `Esc`, `c`, `e` all wired; `useBuildListKeyboard` now added to `programs-page.tsx` with `onCreate: handleOpenCreate`, `onEdit: handleEditByIndex`, `searchInputRef` wired to `ProgramsToolbar`
+- URL params `ownerId`, `status`, `health`, `portfolioId`, `projectId`, `sort`, `order`, `q`, `cursor` all wired in `PROGRAM_FILTER_DEFINITIONS`
+- `canManage` already gates create/edit/delete in programs page
+
+Sub-items still missing: bulk actions; `?` help dialog; context menu.
 
 ### [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 
@@ -323,11 +341,21 @@ Evidence:
 
 ### [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 
-BLOCKED — Sub-clauses now satisfied: URL params `status`, `ownerId`, `from`, `to` registered in `MILESTONE_FILTER_DEFINITIONS`; filter toolbar wired with status `<BuildFilterSelect>`; client-side filter by status and search; keyboard shortcuts `/`, `j/k`, `Enter`, `Esc` wired via `useBuildListKeyboard`. Sub-clauses still missing: `from`/`to` date range has no UI control (params registered but no date-picker); bulk actions not implemented; `e` (inline edit) absent from all hooks.
+BLOCKED — sub-items proven (Round 3):
+- Shortcuts `/`, `j/k`, `Enter`, `Esc`, `c`, `e` all wired; `c` → `onCreate: handleOpenCreate`; `e` → `onEdit: handleEditByIndex`
+- Permission gate: `useCan("build:manage")` guards New Milestone button, delete action, and empty-state create action; `MilestoneCardProps.onDelete` made optional
+- States loading/empty/error/denied all handled; `usePageState({ permission: "build:view" })` returns NoPermissionState on deny
+- URL params: `status`, `ownerId`, `from`, `to`, `q`, `cursor` in `MILESTONE_FILTER_DEFINITIONS`; status filter wired with UI control
+- Tested: `project-milestones-page.test.tsx` — 5 tests cover denied state, populated render, `canManage=false` hides button, `canManage=true` shows button, `c` shortcut opens sheet
 
-### [ ] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
+Sub-items still missing: `from`/`to` date picker UI (params registered but no control); bulk actions (no row selection); `?` shortcut help dialog; context menu (open/copy/edit/move/archive).
 
-BLOCKED — `workspace.service.ts` line 42: `limit: 100` hardcoded with no `offset` or `page` parameter. The server always returns the first 100 milestones only; there is no endpoint path for a second page. The UI now pages within that 100 (FE-112 / unbounded `.map()` fixed; FE-125 satisfied for the returned set), but a project with >100 milestones will silently omit items 101+. Making this criterion would require adding server-side cursor or offset pagination to the workspace milestones endpoint, which is a backend change.
+### [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
+
+Evidence — Round 2:
+- Backend `workspace.service.ts`: `listMilestones` now cursor-keyset pagination (ASC by `targetDate, id`), `limit + 1` probe, `buildCursorPage` response
+- Frontend: `useProjectMilestones` accepts `{ cursor, status, q }`, `project-milestones-page.tsx` uses `useCursorPager` + `TablePagination mode="cursor"`
+- Test: `milestones-list-contract.test.ts` confirms `limit + 1` pattern in backend source
 
 ### [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 
@@ -369,11 +397,21 @@ Evidence:
 
 ### [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 
-BLOCKED — Sub-clauses now satisfied: URL param `status` wired in `RELEASE_FILTER_DEFINITIONS` with options; status filter `<BuildFilterSelect>` wired in toolbar; keyboard shortcuts `/`, `j/k`, `Enter`, `Esc` wired via `useBuildListKeyboard`. Sub-clauses still missing: `from`/`to` date params not wired; search is still client-side (applied via `useMemo` on returned flat array); cursor server-pagination not implemented; bulk actions absent; `e` (inline edit) absent from all hooks.
+BLOCKED — sub-items proven (Round 3):
+- Shortcuts `/`, `j/k`, `Enter`, `Esc`, `c`, `e` all wired; `c` → `onCreate: handleOpenCreate`; `e` → `onEdit: handleEditByIndex`
+- Permission gate: `useCan("build:manage")` already guarded New Release button and delete/edit columns in `buildReleasesColumns`
+- States loading/empty/error/denied all handled; `usePageState({ permission: "build:view" })` gates denied state
+- URL params: `status`, `q`, `cursor` wired to server query; search is server-side via `q` param
+- Tested: `releases-page.test.tsx` — 5 tests cover denied state, error message, `canManage=false` hides button, `canManage=true` shows button, `c` shortcut opens sheet; mock updated to cursor page format
 
-### [ ] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
+Sub-items still missing: `from`/`to` date params (not in `RELEASE_FILTER_DEFINITIONS`); bulk actions (no row selection); `?` shortcut help dialog; context menu.
 
-BLOCKED — `useReleases` returns a flat array (server bounded at `.limit(100)` in `projects-releases.service.ts`). `ReleasesPage` uses `DataTable` with `pagination={{ pageSize: 25 }}` which is client-side pagination of the flat array. This is not server-paginated; it cannot handle 10k releases. Would need to refactor `useReleases` to accept cursor params and paginate server-side.
+### [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
+
+Evidence — Round 2:
+- Backend `projects-releases.service.ts`: `listReleases` now cursor-keyset pagination (DESC by `id`), `limit + 1` probe, `buildCursorPage` response
+- Frontend: `useReleases` accepts `{ cursor, status, q }`, `releases-page.tsx` uses `useCursorPager` + `TablePagination mode="cursor"` (removed DataTable client-side paging)
+- Test: `releases-list-contract.test.ts` confirms `limit + 1` and `desc(projectReleases.id)` in backend source
 
 ### [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 
@@ -397,6 +435,107 @@ BLOCKED — browser-only parts: 375px table overflow in DataTable, real focus ma
 ### [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.
 
 BLOCKED — no authenticated non-prod browser target; capture stack absent.
+
+---
+
+## Round 2 delta
+
+### C4 — milestones (NOW TICKED)
+
+**Backend** (`workspace.service.ts`, `workspace.schemas.ts`, `workspace-response.schemas.ts`, `workspace.controller.ts`):
+- Added `listMilestonesQuerySchema` with `cursor`, `limit`, `status`, `q` params
+- `listMilestones` now uses `db.select()` + `keysetAfterId` (ASC by `targetDate, id`) + `buildCursorPage`
+- Controller uses `@ResponseSchema(milestonePageSchema)` and `@Validate({ query: listMilestonesQuerySchema })`
+
+**Frontend** (`workspace-schema.ts`, `milestones.ts`, `project-milestones-page.tsx`):
+- `milestoneListContract` changed from `z.array(...)` to `cursorPageContract(milestoneRowSchema)`
+- `useProjectMilestones` now accepts `{ cursor?, limit?, status?, q? }` and includes them in query key
+- Page uses `useCursorPager(listFilters.resetKey)` + `TablePagination mode="cursor"` — no more client-side slice
+
+**Tests** (`milestones-list-contract.test.ts`, `project-milestones-page.test.tsx`):
+- Contract test updated to parse `{ data: [...], pagination: {...} }` envelope
+- Page test updated to mock `data: cursorPage([...])` format
+- Run: `npx jest "hooks/api/build/milestones-list-contract|features/build/milestones/project-milestones-page" --no-coverage` → 11 tests, all pass
+
+### C4 — releases (NOW TICKED)
+
+**Backend** (`projects-releases.service.ts`, `projects-releases.controller.ts`, `releases.schemas.ts`, `build-core-response.schemas.ts`):
+- Added `listReleasesQuerySchema` with `cursor`, `limit`, `status`, `q` params
+- Added `projectReleaseListPageSchema = cursorPageSchema(projectReleaseListItemSchema)`
+- `listReleases` now uses `db.select()` + `lt(projectReleases.id, pos.id)` (DESC by id) + `buildCursorPage`
+- Controller uses `@ResponseSchema(projectReleaseListPageSchema)` and `@Validate({ query: listReleasesQuerySchema })`
+
+**Frontend** (`build-project-schema.ts`, `releases.ts`, `releases-page.tsx`):
+- `projectReleaseListContract` changed from `z.array(...)` to `cursorPageContract(projectReleaseListItemSchema)`
+- `useReleases` now accepts `{ cursor?, limit?, status?, q? }` and includes them in query key
+- Page uses `useCursorPager(listFilters.resetKey)` + `TablePagination mode="cursor"` — removed `DataTable pagination={{ pageSize: 25 }}` client-side paging
+
+**Tests** (`releases-list-contract.test.ts`, `releases-page.test.tsx`):
+- Contract test updated to cursor page format; bounded check changed from `.limit(100)` to `limit + 1`
+- Run: `npx jest "hooks/api/build/releases-list-contract|features/build/releases/releases-page" --no-coverage` → 13 tests, all pass
+
+### C3 — `/` shortcut genuinely wired (all planning pages)
+
+- `milestones/project-milestones-page.tsx`: `searchInputRef = useRef<HTMLInputElement>(null)` passed to both `useBuildListKeyboard` and `BuildListToolbar search.inputRef`
+- `releases/releases-page.tsx`: same pattern
+- `goals/goals-page.tsx` + `goals/goals-list-shared.tsx`: `searchInputRef` prop added to `GoalsListToolbar`, forwarded to `BuildListToolbar`
+- `portfolios/portfolios-page.tsx` + `portfolios/portfolios-toolbar.tsx`: same pattern for `PortfoliosToolbar`
+- `roadmap/roadmap-list-page.tsx`: `searchInputRef` passed to `useBuildListKeyboard` and `ref={searchInputRef}` on `<SearchInput>`
+
+### C3 — `c` and `e` shortcuts now wired in milestones and releases
+
+Both `project-milestones-page.tsx` and `releases-page.tsx` now add a local `useEffect` keydown handler for:
+- `c`: opens create sheet
+- `e` (when `focusedIndex !== null`): opens edit sheet for the focused row
+
+Shortcuts correctly bail on input/textarea/contentEditable targets.
+
+---
+
+## Round 3 delta
+
+### C3 — `c` shortcut wired on all 6 planning pages
+
+`onCreate: handleOpenCreate` added to `useBuildListKeyboard` calls in:
+- `project-milestones-page.tsx`
+- `releases-page.tsx`
+- `goals-page.tsx`
+- `portfolios-page.tsx`
+- `roadmap-list-page.tsx` (`onCreate: handleOpenRoadmapCreate`, gated by `enabled: activeTab === "roadmap"`)
+- `programs-page.tsx` (new `useBuildListKeyboard` install; also wired `onEdit: handleEditByIndex`, `searchInputRef`)
+
+`programs-toolbar.tsx` gains `searchInputRef?: RefObject<HTMLInputElement | null>` prop forwarded to `BuildListToolbar search.inputRef`.
+
+### C3 — milestones `build:manage` permission gate
+
+- `milestone-card.tsx`: `onDelete` made optional (`onDelete?`); delete button rendered only when `onDelete` is provided
+- `project-milestones-page.tsx`: imports `useCan`; `const canManage = useCan("build:manage")`; `NewMilestoneButton` rendered only when `canManage`; empty-state create action also gated; `MilestoneCard` receives `onDelete={canManage ? handleDeleteTarget : undefined}`
+
+### C3 — page-level tests for permissions and keyboard shortcuts
+
+**`project-milestones-page.test.tsx`** (was 2 → now 5 tests):
+- `hides New Milestone button and delete actions when build:manage is denied`
+- `shows New Milestone button when build:manage is granted`
+- `keyboard c shortcut opens create sheet when build:manage granted`
+- Mock updated: `PageWrapper` now renders `actions` prop; `MilestoneUpsertSheet` mock returns `<div data-testid="milestone-upsert-sheet">`
+
+**`releases-page.test.tsx`** (was 2 → now 5 tests):
+- `hides New Release button when build:manage is denied`
+- `shows New Release button when build:manage is granted`
+- `keyboard c shortcut opens the release form sheet`
+- Mock updated: `PageWrapper` renders `actions`; `ReleaseFormSheet` mock returns `<div data-testid="release-form-sheet">`; `BuildHeaderActions` mocked to simple button mapper; default mock data updated to cursor page format
+
+Run: `npx jest "features/build/milestones/project-milestones-page|features/build/releases/releases-page" --no-coverage`
+Result: 10 tests, all pass.
+
+### C3 sub-items still genuinely BLOCKED (all 8 specs)
+
+- `?` shortcut help dialog — no `ShortcutsHelpDialog` rendered in any planning page
+- Context menu (right-click) — no context menu component in any planning page
+- Bulk row selection and bulk action bar — no selection UI
+- `from`/`to` date range pickers — registered in FILTER_DEFINITIONS for milestones, not wired for releases
+- Conflict state (field-level version comparison) — not implemented
+- Goal detail `e` shortcut, roadmap `e` shortcut — no focused-item-to-edit mapping
 
 ---
 

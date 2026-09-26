@@ -419,3 +419,91 @@ All code written is inert without a migration or is purely additive test/impleme
 New file `frontend/hooks/api/build/managed-products.test.ts`:
 - Imports from `@tanstack/react-query` (library), `@testing-library/react` (test util), `@/components/providers/query-provider` (provider layer), `@/lib/query-keys/build-work` (lib layer), `@/types/projects` (types), `./managed-products` (same directory — not a cross-feature import)
 - No feature→feature imports; no cycle introduced ✓
+
+---
+
+## Round 2
+
+### Evidence record
+
+**Test runs (all using npx jest --cacheDirectory=D:/agent-work/jest-r2-lane-3):**
+```
+cd frontend && npx jest "features/build/managed-products|features/build/feedbucket|features/build/overview/managed-product" --cacheDirectory=D:/agent-work/jest-r2-lane-3 --no-coverage
+  11 suites, 109 tests PASS
+
+cd frontend && npx jest "features/build/managed-products/managed-products-a11y" --cacheDirectory=D:/agent-work/jest-r2-lane-3 --no-coverage
+  1 suite, 9 tests PASS
+
+cd frontend && npx jest "hooks/api/build/build-revocation-guard" --cacheDirectory=D:/agent-work/jest-r2-lane-3 --no-coverage
+  1 suite, 12 tests PASS (was 11/12 before build-scope-fallback fix)
+```
+
+**Files written/edited this session:**
+
+| File | Change | Tests |
+|---|---|---|
+| `frontend/features/build/managed-products/product-goals-page.tsx` | Fixed C4: switched from `useGoals` (items only) to `useGoalsPage` (offset pagination); `page` state with React "adjust during render" reset on filter change; `TablePagination mode="offset"`; added `useBuildListKeyboard` + `searchInputRef`; passes `searchInputRef` to `GoalsListToolbar` | `product-goals-page.test.tsx` 6/6 PASS |
+| `frontend/features/build/managed-products/product-goals-page.test.tsx` | Rewrote: asserts `useGoalsPage` called with `{ managedProductId, page: 1, limit: 20 }`, pagination controls render, permission key, denied state | 6/6 PASS |
+| `frontend/features/build/managed-products/product-scope-pages.test-harness.tsx` | Added `useGoalsPage: jest.fn()` to goals mock + `EMPTY_GOALS_PAGE_RESULT`; added `EllipsisIcon: () => <span data-testid="ellipsis-icon" />` to animateicons mock | Used by 6 test files |
+| `frontend/features/build/shared/use-build-list-keyboard.ts` | Added `onEdit?: (index: number) => void` to options interface; added `onEditRef` + `case "e"` keydown handler | — |
+| `frontend/features/build/managed-products/managed-products-page.tsx` | Wired `onEdit: handleEditFocused` in `useBuildListKeyboard`; wired `inputRef: searchInputRef` in `BuildListToolbar search` object | `managed-products-page.test.tsx` PASS |
+| `frontend/features/build/managed-products/managed-product-table-columns.tsx` | Added context menu items to `ProductRowActions`: Open (as `Link` asChild), Copy link (`navigator.clipboard` + toast), Copy key, `DropdownMenuSeparator`, Edit, `DropdownMenuSeparator`, Delete | `managed-products-a11y.test.tsx` BSN-A11Y-MP-01/02/03 PASS |
+| `frontend/features/build/feedbucket/submission-inbox-filters.tsx` | Added `searchInputRef?: RefObject<HTMLInputElement \| null>` prop; wired as `ref` on `SearchInput` | `feedbucket-submissions-inbox.test.tsx` PASS |
+| `frontend/features/build/feedbucket/project-submissions-inbox.tsx` | Added `searchInputRef = useRef<HTMLInputElement \| null>(null)`; passed to `useBuildListKeyboard` and `SubmissionInboxFilters` | — |
+| `frontend/features/build/managed-products/product-roadmap-page.tsx` | Added `ROADMAP_STATUS_OPTS`, `ROADMAP_HORIZON_OPTS`, `ROADMAP_FILTER_DEFS`; switched `useBuildListFilters` to use them; added `searchInputRef` + `useBuildListKeyboard`; toolbar now includes Status/Horizon `BuildFilterSelect` chips and `inputRef` | `product-roadmap-page.test.tsx` PASS |
+| `frontend/features/build/managed-products/managed-products-a11y.test.tsx` | New: 9 C6 jsdom a11y tests — BSN-A11Y-MP-01 (aria-label names product), BSN-A11Y-MP-02 (aria-haspopup=menu), BSN-A11Y-MP-03 (aria-expanded=false), BSN-A11Y-MP-04 (denied≠empty, data-permission attribute), BSN-A11Y-MP-05 (error≠denied), BSN-A11Y-GOALS-01 (GoalCard default motion), BSN-A11Y-GOALS-02 (GoalCard reduced-motion via `useReducedMotion` mock), BSN-A11Y-GOALS-03 (progressbar accessible label), BSN-A11Y-GOALS-04 (goals denied state data-permission) | 9/9 PASS |
+| `frontend/features/build/managed-products/managed-products-gallery.tsx` | New: C6 gallery component; 8 cases (ready, ready-two-actions, loading, empty-true, empty-filtered, error, denied, mobile-nav-clearance); uses real `buildManagedProductColumns` + static stub data | — |
+| `frontend/app/(public)/design-system/managed-products/page.tsx` | New: thin design-system route; `notFound()` in production; imports `ManagedProductsGallery` | — |
+| `frontend/e2e/managed-products-a11y.spec.ts` | New: Playwright spec; 3 viewports (375×812, 768×1024, 1280×800); overflow, 36px control height, denied≠empty, mobile cards, filter-drawer focus-return | Blocked: no non-prod browser target |
+| `frontend/lib/build/build-scope-fallback.ts` | Fixed pre-existing bug: `accessibleParent` not destructured from options; added product-parent recovery branch (`/build/managed-products/${accessibleParent.id}`) | `build-revocation-guard.test.ts` 12/12 PASS (was 11/12) |
+| `frontend/features/build/overview/managed-product-overview-page.tsx` | Added `status`+`updatedAt` to `PageWrapper` subtitle; added Feedback `StatCard` from `feedbackByStatus` sum; `StatCardGrid cols={3}` | `managed-product-overview-page.test.tsx` 11/11 PASS |
+| `frontend/features/build/overview/managed-product-overview-page.test.tsx` | Added BSN-MP-01 (feedback stat card), BSN-MP-02 (status + updated in subtitle) | 11/11 PASS |
+
+### Criteria updates from Round 2
+
+**Spec 4 — product goals — C4: TICKED** (confirmed in spec file at line 103)
+- `product-goals-page.tsx` calls `useGoalsPage({ managedProductId, page, limit: 20, ... })` with server-side offset pagination; `page` state resets on filter change; `TablePagination mode="offset"` renders below goals grid.
+- Test: `product-goals-page.test.tsx` — `useGoalsPage` called with `{ managedProductId, page: 1, limit: 20 }` and pagination controls render — 6/6 PASS.
+
+**Spec 1 — C3 (partial):** `e` shortcut wired (`onEdit` in `useBuildListKeyboard`); context menu added (Open/Copy link/Copy key/Edit/Delete); `/` shortcut wired end-to-end via `searchInputRef`; sort/ownerId URL params backed from Round 1.
+- Remaining genuinely blocked: bulk bar (no backend bulk endpoint for managed products).
+
+**Spec 2 — C3 (partial):** status+updatedAt in subtitle; feedback stat card added.
+- Remaining: keyboard shortcuts n/a (overview = stat cards, no navigable list rows).
+
+**Spec 4 — C3 (partial):** `/` shortcut wired; `searchInputRef` passed to `GoalsListToolbar`.
+- Remaining: scope/ownerId/health/due URL params not in `listGoalsQuerySchema`.
+
+**Spec 7 — C3 (partial):** status+horizon URL params now URL-backed via `ROADMAP_FILTER_DEFS`; `/` shortcut wired.
+- Remaining: scope/productId/ownerId/sort URL params; bulk absent.
+
+**Spec 8 — C3 (partial):** `searchInputRef` forwarded from `SubmissionInboxFilters` to `SearchInput`; `/` shortcut wired end-to-end.
+- Remaining: `duplicate` URL param unservable (backend schema rejects it — no column).
+
+**C6 jsdom half:** 9 tests in `managed-products-a11y.test.tsx` — covers S1 (ProductRowActions ARIA attributes, denied≠empty, error≠denied) and S4 (GoalCard default/reduced-motion, progressbar label, goals denied state). S1 C6 and S4 C6 jsdom halves done.
+- Browser half: gallery + Playwright spec written; 32/33 passed on coordinator's run. One wrong assertion fixed: "search is painted left of and above every other filter" at line 87 now branches on viewport width — at 375px asserts search visible + Filters drawer trigger visible + status chip hidden (correct: toolbar collapses filters into a drawer below md); at 768+ asserts search bounding box leads status filter. Spec is ready for re-run.
+
+**build-scope-fallback.ts (cross-spec):** Pre-existing bug fixed; revocation guard routes correctly to accessible product parent.
+
+### Updated summary table
+
+| Criterion | S1 | S2 | S3 | S4 | S5 | S6 | S7 | S8 | S9 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 Route + census | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 2 User job | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 3 Core + bulk + shortcuts | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| 4 Bounded lists | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 5 Contract tests | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ |
+| 6 A11y (jsdom part) | ✓ | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| 7 Browser evidence | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+
+**Ticked: 37 / 63** (base 34 → +1 S4 C4, +1 S1 C6, +1 S4 C6)
+
+### Remaining open items
+
+1. **C3 bulk** — blocked on all 9 specs (no backend bulk endpoint for managed products; no repeated bulk operation on feedbucket feedback page)
+2. **C3 shortcuts/URL params** — partial gaps: S4 scope/ownerId/health/due not in `listGoalsQuerySchema`; S7 scope/productId/ownerId/sort not URL-backed; S8 `duplicate` param unservable
+3. **C6 browser half** — gallery + Playwright spec written; execution blocked (no non-prod browser target)
+4. **C7** — fully blocked (no authenticated non-prod browser target)
+5. **S6 C3/C5** — contested territory (ProjectsPage)
+6. **C3 S2** — status/updated now shown; keyboard shortcuts n/a (no navigable list rows on an overview = stat cards page)

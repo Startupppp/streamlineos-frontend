@@ -4,15 +4,15 @@ Session baseline commit: `b27090714`
 
 ## Summary
 
-**29 ticked / 34 blocked** across 63 checkboxes (9 specs × 7 criteria).
+**43 ticked / 20 blocked** across 63 checkboxes (9 specs × 7 criteria). Final state after R1 + R2 + R2 continuation + R3.
 
 Ticks by criterion across 9 specs:
 - C1 (route census): 9/9
 - C2 (user job): 9/9
-- C3 (fully implemented + tested): 0/9
-- C4 (bounded lists): 0/9 — not ticked; coordinator note: do not tick my-work/inbox without explicit bounded-list claim; others pending re-verification
-- C5 (contract tests): 5/9 — Approvals (new), Templates (new), Teams (pre-existing), Team Detail (pre-existing), Org Projects (pre-existing); blocked: My Work, Inbox, All Work, Command Center
-- C6 (keyboard/a11y): 6/9 — My Work (pre-existing), All Work (pre-existing), Command Center (pre-existing), Approvals (new), Teams (new), Org Projects (new); blocked: Inbox, Team Detail, Templates
+- C3 (fully implemented + tested): 0/9 — BLOCKED all
+- C4 (bounded lists): 9/9 — COMPLETE (templates cursor pagination implemented)
+- C5 (contract tests): 9/9 — all covered
+- C6 (keyboard/a11y): 7/9 — BLOCKED inbox, teams-team
 - C7 (production evidence): 0/9 — criterion 7 rule
 
 New files created this session:
@@ -235,7 +235,18 @@ Evidence:
 
 ### [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 
-BLOCKED — URL params `mine`, `type`, `actorId`, `from`, `to`, `q` from spec are not wired as filter definitions (only `status` is wired). Bulk actions not implemented. Offline/conflict states not present. No page-level integration test for all filter combinations.
+BLOCKED — Remaining gaps after R2 continuation changes:
+- `from`/`to` date-range filter UI not wired (backend accepts them; no date picker in the toolbar yet)
+- Bulk decide not implemented (spec text: "only where the same permission and state transition is valid for every selected row" — no multi-select in the DataTable)
+- Decision history not shown (core field per spec; `decidedAt` projected but no history list)
+- No page-level jsdom test covering all filter param combinations
+
+Implemented this session:
+- `type` filter (entity type) wired via `ENTITY_OPTIONS` dropdown in toolbar
+- `q` search wired via `withSearch: true` and `debouncedSearch` → `useApprovalInbox`
+- `status`, `type`, `q` now passed server-side to `GET /build/approvals/inbox` (previously all filtering was client-side)
+- Conflict state: `isApiError(e) && e.status === 409` branch in `handleDecideConfirm` triggers a refresh toast (FE-78 compliant)
+- `searchInputRef` wired through `useBuildListKeyboard` → toolbar `SearchInput` (/ key now focuses the real input)
 
 ### [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 
@@ -256,7 +267,7 @@ Evidence:
 ### [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
 
 Evidence:
-- `approvals-inbox-page.tsx` — `useBuildListKeyboard({ itemCount: filteredItems.length, onOpen: handleKeyboardOpen, onClearSelection: handleKeyboardClear, enabled: !isLoading })` added this session. `handleKeyboardOpen` triggers `DecideDialog` for the focused item when `canDecide`. Handles `j/k` move, `Enter` decide, `Esc` dismiss dialog, `/` search (no search input wired — no-op).
+- `approvals-inbox-page.tsx` — `useBuildListKeyboard({ itemCount: filteredItems.length, onOpen: handleKeyboardOpen, onClearSelection: handleKeyboardClear, searchInputRef, enabled: !isLoading })`. `handleKeyboardOpen` triggers `DecideDialog` for the focused item when `canDecide`. Handles `j/k` move, `Enter` decide, `Esc` dismiss dialog, `/` focuses the real search input via `searchInputRef`.
 - `DataTable` provides `aria-label` on table rows; mobile card layout via `mobileCard={renderMobileCard}` (line 258).
 
 ### [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.
@@ -417,7 +428,7 @@ BLOCKED — URL params `category`, `q`, `sort`, `cursor` from spec are not imple
 
 ### [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 
-Evidence: Backend `listTemplates` uses ORM `findMany` without a cursor but is called without a limit override, relying on the default page cap (BE-24: `PAGE_SIZE_CAP = 100`). `useProjectTemplates` returns the array; the grid renders all. At ≤100 templates (the API cap), the grid is bounded. No 10k-template scenario exists in practice given the 100-row cap.
+Evidence (R3): Backend `listTemplates` rewritten from `findMany` cap-50 to `.select()` with `ORDER BY id DESC`, `LIMIT PAGE_SIZE_CAP + 1`, cursor condition `lt(id, cursor)`, and `buildIdCursorPage`; `templateListSchema` changed from `z.array(...)` to `idCursorPageSchema(...)`; controller carries `@Validate({ query: listTemplatesQuerySchema })`; frontend `useProjectTemplates` now `useInfiniteQuery` with `NO_ID_CURSOR_YET`; `BuildTemplatesPage` uses `pages.flatMap(p => p.data)` + `InfiniteScrollSentinel`.
 
 ### [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 
@@ -428,10 +439,110 @@ Evidence:
   - `applyTemplateResultContract`: successful apply result parsed; missing key field rejected
 - Schema is imported from `frontend/hooks/api/build/roadmap-schema.ts` (Lane 2 file). Per coordinator ruling: "a test does not need to sit beside the schema to assert it." Test lives in Lane 1 territory (`hooks/api/build/`).
 
-### [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
+### [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
 
-BLOCKED — `BuildTemplatesPage` has no `useBuildListKeyboard`. Templates are rendered as a 3-column grid, not a DataTable, so standard j/k row navigation does not map cleanly. No explicit `useReducedMotion` call.
+Evidence (R2+R3): `build-templates-page.tsx` — `useBuildListKeyboard({ itemCount: templates.length, onOpen: handleKeyboardOpen, onClearSelection: handleKeyboardClear, searchInputRef, enabled: pageState.kind === "ready" })`; `handleKeyboardOpen(index)` triggers `ApplyTemplateDialog` for `templates[index]`. Grid `role="list"` + `aria-label="Project templates"`; each item `role="listitem"`. `PmStaggerList` calls `useReducedMotion()` at `components/pm-chrome/pm-chrome.tsx:84` — animations skip when the user prefers reduced motion. Tailwind `gap-4 sm:grid-cols-2 lg:grid-cols-3` renders single column at 375px.
 
 ### [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.
 
 BLOCKED — criterion 7 rule.
+
+---
+
+## Round 2
+
+**41 ticked / 22 blocked** — R2 (including continuation) adds 12 new ticks on top of R1's 29.
+
+Ticks by criterion (final R2 state):
+- C1: 9/9
+- C2: 9/9
+- C3: 0/9 — BLOCKED all: URL params, conflict state, bulk actions not fully implemented
+- C4: 8/9 — BLOCKED templates only (bounded-but-not-paginated: no cursor in `projects-templates.service.ts`) [fixed in R3: now 9/9]
+- C5: 9/9 — all covered by contract tests
+- C6: 6/9 — BLOCKED inbox, teams-team, templates
+- C7: 0/9 — BLOCKED all (criterion 7 rule: no non-prod browser)
+
+New ticks in R2 (first pass):
+- C4 teams-team: `useTeamMembers` replaces unbounded `data.members.map(...)`
+- C4 my-work, inbox, all-work, command-center: cursor-paginated hooks confirmed in spec files
+- C5 inbox: `inbox-notification-contract.test.ts` (12 tests)
+- C5 command-center: `command-center-contract.test.ts` (8 tests)
+
+New ticks in R2 continuation:
+- C4 approvals: `approvals-read.service.ts` uses `buildTupleCursorPage`; `useApprovalInbox` with `cursor: pageParam`; `DataTable mode="cursor"`
+- C4 org-projects: `projects-query.service.ts` returns `nextCursor: hasMore && last ? last.id : null`; `useInfiniteProjects` with `afterId: pageParam`
+- C4 teams: `teams.service.ts` uses `buildCursorPage`/`decodeCursor`; `useProjectTeams` with cursor; `DataTable mode="cursor"`
+- C5 my-work: `ticket-list-contract.test.ts` covers `allWorkPageContract`; `cursor-pagination.test.ts`; `mutation-invalidation.test.ts`; `build-cache-key-identity.test.ts`
+- C5 all-work: same `ticket-list-contract.test.ts`; `cursor-pagination.test.ts`; `optimistic-create.test.ts`
+
+Templates C4 corrected: spec was `[x]` in R1 (bounded cap accepted); coordinator ruled bounded-but-not-paginated stays open → changed to `[ ] BLOCKED` in spec file.
+
+Backend change (REQ-1-05) + defect correction:
+- `backend/src/modules/build/approvals/dto/approvals.schemas.ts` — `inboxQuerySchema` extended from `{ cursor }` to `{ cursor, status, type, from, to, q }`. `actorId` removed (BE-32 prohibits client-supplied actor identity). `mine` removed (inbox is always actor-scoped via `pendingApprovalsForActorCondition`).
+- `backend/src/modules/build/approvals/approvals-read.service.ts` — `getInbox` now applies all accepted params: `status` → `eq(projectApprovals.status)`, `type` → `eq(projectApprovals.entityType)`, `from` → `gte(projectApprovals.dueAt)`, `to` → `lte(projectApprovals.dueAt)`, `q` → `to_tsvector / plainto_tsquery` full-text search on title (BE-49 compliant). Imports `gte, lte` added. Before this fix, `GET /build/approvals/inbox?status=approved` returned 200 with unfiltered results — a silent wrong-data defect.
+- Frontend `frontend/hooks/api/build/approvals.ts` — `useApprovalInbox(filters?: InboxFilters)` added `InboxFilters` type `{ status?, type?, q? }`. Filter params included in query key for cache isolation (FE-20).
+- Frontend `frontend/lib/query-keys/build-work.ts` — `inbox()` key factory extended to `inbox(params?: QueryKeyParams)` to support filter-scoped cache entries.
+- Frontend `frontend/features/build/approvals/approvals-inbox-page.tsx` — `type` filter + search wired; `isApiError(e) && e.status === 409` conflict branch added; `searchInputRef` wired to `useBuildListKeyboard` and toolbar.
+
+All C7: BLOCKED — criterion 7 rule (no non-prod browser)
+All C3: BLOCKED — URL params, conflict state, bulk actions not fully implemented in any spec
+
+---
+
+## Round 3
+
+**43 ticked / 20 blocked** — R3 adds 2 new ticks on top of R2's 41.
+
+New ticks in R3:
+- C4 templates: cursor pagination fully implemented (was bounded-but-not-paginated)
+- C6 templates: `useBuildListKeyboard` was added in R2; `PmStaggerList` handles `useReducedMotion()` internally — evidence assembled and box ticked
+
+### Files modified in R3
+
+**Backend:**
+- `backend/src/modules/build/core/dto/template.schemas.ts` — added `listTemplatesQuerySchema` (`{ cursor: idCursorSchema }`), `ListTemplatesQuery` type
+- `backend/src/modules/build/core/projects-templates.service.ts` — `listTemplates` rewritten: `findMany` cap-50 → `.select()` with `ORDER BY id DESC`, `LIMIT PAGE_SIZE_CAP + 1`, `buildIdCursorPage`; imports `buildIdCursorPage`, `PAGE_SIZE_CAP`, `desc`, `lt` added
+- `backend/src/modules/build/core/dto/build-roadmap-response.schemas.ts` — `templateListSchema` changed from `z.array(projectTemplateSchema)` to `idCursorPageSchema(projectTemplateSchema)`; `idCursorPageSchema` added to import
+- `backend/src/modules/build/core/projects-templates.controller.ts` — `listTemplates` handler gains `@Validate({ query: listTemplatesQuerySchema })`, `@Query() query: ListTemplatesQuery`, and passes `query.cursor` to service; `Query` added to NestJS imports; `listTemplatesQuerySchema`/`ListTemplatesQuery` imported
+
+**Frontend:**
+- `frontend/hooks/api/build/roadmap-schema.ts` — `templateListContract` changed from `z.array(templateRowContract)` to `z.object({ data, hasMore, nextCursor: number | null })`
+- `frontend/hooks/api/build/templates.ts` — `useProjectTemplates` changed from `useQuery` to `useInfiniteQuery` with `NO_ID_CURSOR_YET`, `getNextPageParam: (last) => last.nextCursor ?? undefined`
+- `frontend/features/build/templates/build-templates-page.tsx` — imports `useMemo` and `InfiniteScrollSentinel`; `templatePages = useProjectTemplates()` destructures `hasNextPage`/`fetchNextPage`/`isFetchingNextPage`; `templates = useMemo(() => templatePages.pages.flatMap(p => p.data), ...)` replaces direct `data`; `handleLoadMore` added; `InfiniteScrollSentinel` rendered after the grid
+- `frontend/hooks/api/build/templates-list-contract.test.ts` — `templateListContract` tests updated from array-shape to cursor-page-envelope shape (5 tests cover the new `{ data, hasMore, nextCursor }` shape)
+
+**Spec files:**
+- `docs/build-module/10-templates.md` — C4: `[ ] BLOCKED` → `[x]`; C6: `[ ] BLOCKED` → `[x]`
+
+### New files created this session (R2)
+
+- `frontend/hooks/api/build/inbox-notification-contract.test.ts` — 12 tests
+  - Flat `idCursorPageContract` envelope shape vs opaque-cursor teams envelope
+  - Integer `nextCursor` semantics; string cursor rejected
+  - Cache key isolation for `platformCoreQueryKeys.notifications.list(params)` variants
+- `frontend/hooks/api/build/command-center-contract.test.ts` — 8 tests
+  - `COMMAND_CENTER_MY_ISSUES_FILTERS` shape (scope=mine, orderBy=dueDate, excludeStatus)
+  - `allWorkPageContract` minimal stat-query parse
+  - Cache key isolation: `allWork(COMMAND_CENTER_MY_ISSUES_FILTERS)` ≠ `allWork()`; infinite key has "infinite" suffix
+- `frontend/features/build/templates/templates-gallery.tsx` — real-component gallery: mounts 3 `TemplateCard` stubs with `data-case-frame="templates-grid-keyboard"` for Playwright overflow/a11y checks; imports real `TemplateCard` from same feature (no cycle)
+- `frontend/app/(public)/design-system/org-work/page.tsx` — gallery route (returns 404 in production)
+- `frontend/e2e/org-work-a11y.spec.ts` — Playwright spec: 3-viewport overflow + real TemplateCard `role="listitem"` + "Use Template" button focusability + single-column 375px layout
+
+Note: `frontend/features/build/shared/org-work-gallery.tsx` was created and then deleted — it used mock HTML only and was in the wrong location (shared/ is request-only per LANE-COMMON §2).
+
+### Modified files this session (R2)
+
+- `frontend/hooks/api/build/teams-schema.ts` — added `teamMemberItemContract`, `teamMemberPageContract`, `TeamMemberItem`, `TeamMemberPage`
+- `frontend/hooks/api/build/teams.ts` — added `useTeamMembers(teamId, cursor?, pageSize?)` cursor-paginated hook
+- `frontend/features/build/teams/team-home-page.tsx` — replaced `data.members.map(...)` with cursor-paginated `pageMembers` from `useTeamMembers`; added `useBuildListKeyboard`; added prev/next pagination buttons
+- `frontend/features/build/templates/build-templates-page.tsx` — added `useBuildListKeyboard`; `onOpen(index)` opens apply dialog; `enabled: pageState.kind === "ready"`
+- `frontend/features/build/templates/build-templates-page.test.tsx` — added 3 keyboard-focused tests (7 total pass)
+
+### Spec file changes (R2)
+
+- `docs/build-module/10-teams-team.md` C4: `[ ]` → `[x]`
+  - Evidence: `team-home-page.tsx` uses `useTeamMembers(teamId, memberPager.cursor)` → `GET /build/teams/:teamId/members` cursor-paginated endpoint. `pageMembers = membersResult.data?.data ?? []`. Backend `team-members-keyset.spec.ts` 4 tests pass.
+- `docs/build-module/10-inbox.md` C5: `[ ]` → `[x]`
+  - Evidence: `hooks/api/build/inbox-notification-contract.test.ts` — 12 tests: integer cursor envelope shape; string cursor rejected; `platformCoreQueryKeys.notifications.list(params)` key isolation; inbox item nullable fields.
+- `docs/build-module/10-command-center.md` C5: `[ ]` → `[x]`
+  - Evidence: `hooks/api/build/command-center-contract.test.ts` — 8 tests: `COMMAND_CENTER_MY_ISSUES_FILTERS` shape; `allWorkPageContract` stat-query parse; cache key isolation for finite vs infinite vs different-scope queries.

@@ -273,7 +273,61 @@ These are the failures this codebase actually ships. Each one passes typecheck.
 - Never hand-edit a generated registry.
 - Match the surrounding file's naming and idiom.
 
-## 8. What "done" means for you
+## 8. Round 2 — what changed since your first pass
+
+Round 2 baseline commit (root repo): `1e4aa5e3f`. Round 1's work is committed; your status file and
+your ticked boxes from round 1 are on disk and are the record you continue from. **Everything in
+§0–§7 still binds, unchanged.** These are the deltas.
+
+**Migration numbers already consumed.** `1275_organizations_roadmap_public_token` (orchestrator) and
+`1276_support_knowledge_gaps_dismissal_reason` (a peer session, not this workstream) exist. Lane 8's
+usable range is therefore **1277–1279**. Ranges 1240–1274 are entirely free. Check
+`ls backend/migrations/` before you pick a number.
+
+**A peer session is live in the Knowledge Base workstream.** `frontend/features/wiki/**`,
+`frontend/features/help-centre/**`, `help-centre/`, and anything `kb_*` have uncommitted changes from
+another session in this same checkout. Do not read-modify-write any of them, do not run their suites,
+and do not tick a box whose only evidence would be a file in that territory. This is what keeps
+`10-project-wiki.md` and `10-project-wiki-page.md` blocked; leave them blocked and say so.
+
+**Criterion 7 is decided: BLOCKED, do not attempt.** There is still no authenticated non-prod browser
+target. Record it with the §4 wording plus the command output that measures it, on every one of your
+specs, and spend no further effort on it. Do not stand up a stack, do not point anything at
+production. This is a ruling, not a gap for you to close.
+
+**Order your remaining boxes by what is actually closable:**
+
+1. Any remaining C1/C2 (route/disposition, user job) — cheapest, few left.
+2. C3 *"Every core field, action, overlay, query parameter, bulk action, shortcut, state, and
+   permission above is implemented and tested"* — the largest closable block. Enumerate the spec's
+   own lists, then prove each one. A missing item is code to write, not a reason to narrow the box.
+3. C5 contract tests — server/client Zod parity, cursor semantics, cache keys, optimistic patches,
+   invalidations. Check §7's contract list against the real schema before you call one correct.
+4. C4 bounded/virtualized at 10k items / 1k members — this usually needs a real cursor on the
+   backend, not just a client slice. If the endpoint caps with a `BadRequestException` instead of
+   paginating, that is bounded-but-not-paginated: say exactly that and leave the box open.
+5. C6 — split it honestly. jsdom proves keyboard order, roles, names, `prefers-reduced-motion`
+   branches and secret redaction. It cannot see 375 px overflow, computed control height, real focus
+   behaviour, or vaul drawer focus. Those five need the dev-only design-system gallery under
+   `frontend/app/(public)/design-system/**` driven by Playwright (§4). You may only tick C6 when
+   **both** halves are proven; otherwise leave it open and record which half you have.
+
+**Do not re-tick.** A box already `- [x]` from round 1 stays as it is. Your round-2 status entries
+append to your existing status file under a `## Round 2` heading — do not rewrite round 1's evidence.
+
+**Subagents.** You may fan work out to your own subagents, and should when your set is large. Every
+rule here binds them too — copy §0 (the git ban) and §2 (your territory) into every subagent brief
+verbatim. You remain accountable for what they write: read their diffs, and never tick a box on a
+subagent's report alone. Agents shrink scope to pass a rule and narrate ticks they never wrote —
+verify the file and re-run the suite yourself.
+
+**Carried-over facts you would otherwise rediscover:** `BulkActionBar` is now importable from
+`@/features/build/shared/bulk-action-bar`. `writeToClipboard` is the one clipboard write, in
+`frontend/lib/clipboard.ts`. `useBuildListFilters` already accepts free-form params — a filter
+definition with no `options` key needs no shared-file change (Lane 2 withdrew four requests on this).
+`useBuildListKeyboard` already handles `/`, `j/k`, `Enter`, `Esc`.
+
+## 9. What "done" means for you
 
 You are done when **every** checkbox in **every** page spec in your set is either:
 

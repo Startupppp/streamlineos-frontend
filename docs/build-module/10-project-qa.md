@@ -102,5 +102,6 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
+  `frontend/e2e/governance-qa-a11y.spec.ts` — 22/22 passing in Chromium against `/design-system/governance-qa`, which mounts the real `buildTestCaseColumns` and `TestCaseMobileCard` from `features/build/qa/test-case-columns.tsx`. Covers the `qa-test-cases` and `loading-qa` frames: no sideways scroll at 375/768/1280, `table` role with the real `Priority`/`Automation` column headers, skeleton headers equal to `TEST_CASE_TABLE_HEADERS`, and search input keyboard-focusable. Reduced motion is asserted as a pair (reduce ⇒ `animation-name: none`, no-preference ⇒ animates). An earlier draft of this spec asserted `Key`/`Status`/`Assignee` headers that the real test-case table does not define; those assertions only passed against a hand-composed gallery and were corrected.
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.

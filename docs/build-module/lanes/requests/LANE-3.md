@@ -1,5 +1,27 @@
 # Lane 3 — Requests
 
+## ORCHESTRATOR RULING on R-1 (2026-09-26): APPLIED, with a different prop name and placement
+
+Applied as `search.inputRef`, not a top-level `searchInputRef`. A top-level prop would be meaningless
+whenever `search` is absent; `BuildToolbarSearch` already groups every search concern, so the ref
+belongs there beside `value`, `onValueChange`, `placeholder` and `label`.
+
+- `frontend/features/build/shared/build-list-toolbar-layout.ts:16` — `inputRef?: RefObject<HTMLInputElement | null>`
+  on `BuildToolbarSearch`. That type matches `useBuildListKeyboard`'s `searchInputRef` at
+  `use-build-list-keyboard.ts:20` exactly, so it threads through with no cast.
+- `frontend/features/build/shared/build-list-toolbar.tsx:105` — `ref={search.inputRef}` on `SearchInput`.
+  No `forwardRef` was needed: `components/ui/search-input.tsx:26` already forwards to `HTMLInputElement`.
+- `frontend/features/build/shared/build-list-toolbar.test.tsx` — two tests, paired so neither is
+  vacuous: the ref resolves to the same node `getByLabelText` finds and focusing it takes focus, and
+  the toolbar still renders with no ref supplied.
+- `frontend/UI-KIT.md:17` — row extended per FE-62.
+
+Verified: `npx jest features/build/shared/build-list-toolbar` → 2 suites, 24 tests, all pass.
+
+**Call it as `search={{ value, onValueChange, placeholder, inputRef }}`** — not `searchInputRef={...}`.
+
+---
+
 ## R-1: `BuildListToolbar` — expose `searchInputRef` prop
 
 **File:** `frontend/features/build/shared/build-list-toolbar.tsx`

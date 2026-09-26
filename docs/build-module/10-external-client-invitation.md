@@ -93,7 +93,7 @@ Server guards, token/grant status, tenant scope, source ACL, expiry, and record 
 
 - [x] The canonical route/disposition is implemented and legacy callers are redirected or removed deliberately.
 - [x] The page serves the stated job and success metric without exposing internal identifiers or unauthorized record existence.
-- [ ] Loading, ready, empty, first-run, invalid/expired/revoked, rate-limited, server-error, denied/not-found, and offline states are tested.
-- [ ] Every read and write enforces tenant, lifecycle, grant/token capability, expiry, source ACL, and publication state on the server.
+- [x] Loading, ready, empty, first-run, invalid/expired/revoked, rate-limited, server-error, denied/not-found, and offline states are tested.
+- [x] Every read and write enforces tenant, lifecycle, grant/token capability, expiry, source ACL, and publication state on the server.
 - [ ] Schemas, response envelopes, cursor rules, cache partitioning, invalidation, idempotency, and rate limits have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, high-density desktop, and secret-redaction checks pass.

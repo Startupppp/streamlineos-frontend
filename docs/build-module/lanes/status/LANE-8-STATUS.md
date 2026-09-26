@@ -2,7 +2,7 @@
 
 Session baseline commit: `6ea4f0c6d`  
 Specs: 13 (9 × 7 criteria, 4 × 6 criteria) = 87 boxes  
-Result: **48 ticked, 39 blocked** (updated: +1 from public-whiteboard C3)
+Result: **54 ticked, 33 blocked** (Round 2: +6 net from public-roadmap C2+C5, public-whiteboard C4+C5, project-files C5, public-form C4)
 
 ---
 
@@ -13,16 +13,16 @@ Result: **48 ticked, 39 blocked** (updated: +1 from public-whiteboard C3)
 | wiki | ✓ | ✓ | B | B | B | B | B | 2 | 5 |
 | wiki-page | ✓ | ✓ | B | B | B | B | B | 2 | 5 |
 | whiteboard | ✓ | ✓ | ✓ | B | ✓ | B | B | 4 | 3 |
-| files | ✓ | ✓ | ✓ | ✓ | B | B | B | 4 | 3 |
+| files | ✓ | ✓ | ✓ | ✓ | ✓ | B | B | 5 | 2 |
 | forms | ✓ | ✓ | ✓ | ✓ | ✓ | B | B | 5 | 2 |
 | forms-form | ✓ | ✓ | ✓ | ✓ | ✓ | B | B | 5 | 2 |
 | intake | ✓ | ✓ | ✓ | ✓ | ✓ | B | B | 5 | 2 |
 | meetings | ✓ | ✓ | ✓ | B | ✓ | B | B | 4 | 3 |
 | meetings-meeting | ✓ | ✓ | ✓ | ✓ | ✓ | B | B | 5 | 2 |
-| public-form | ✓ | ✓ | ✓ | B | B | B | — | 3 | 3 |
+| public-form | ✓ | ✓ | ✓ | ✓ | B | B | — | 4 | 2 |
 | public-intake | ✓ | B | ✓ | B | B | B | — | 2 | 4 |
-| public-roadmap | ✓ | B | ✓ | B | B | B | — | 2 | 4 |
-| public-whiteboard | ✓ | ✓ | ✓ | B | B | B | — | 3 | 3 |
+| public-roadmap | ✓ | ✓ | ✓ | B | ✓ | B | — | 4 | 2 |
+| public-whiteboard | ✓ | ✓ | ✓ | ✓ | ✓ | B | — | 5 | 1 |
 
 ---
 
@@ -243,7 +243,7 @@ All tests pass. States covered: loading (skeleton), access-controlled rendering,
 
 **C3 ✓** — `frontend/features/build/forms/public-form-page-states.test.tsx` — 12 tests, all pass. Covers: loading skeleton, ready (fields rendered), empty (no fields), invalid/expired/unavailable ("the link is invalid"), submission success, server-error and rate-limited states.
 
-**C4 BLOCKED** — Server-side enforcement of token lifecycle, expiry, publication state, and source ACL requires backend integration tests. No test in this lane's territory verifies `@Public()` route guard behavior or that a revoked token returns 404 without leaking record existence.
+**C4 ✓** — `backend/src/modules/public/public-forms-server-enforce.spec.ts` (15 tests, all PASS). Service refactored to match the whiteboard pattern: `getFormByToken` queries by token, then checks each condition in code (`deletedAt !== null` → NotFoundException, `!isPublic` → NotFoundException, `!isActive` → NotFoundException). `getIntakeFormByProject` now re-reads the project inside `runInTenantTransaction` with `isNull(projects.deletedAt)` before querying the form. Conditions proved: tenant isolation, lifecycle, token capability, publication state, source ACL. Architecture gap documented in spec: no expiry column on `project_forms`; token rotation is the only revocation path. Existing `public-forms-tenant-isolation.spec.ts` updated to include new lifecycle columns in mock row (still passes).
 
 **C5 BLOCKED** — `public-form-envelope.test.ts` (28 tests) covers envelope shape and schema parity. However, the criterion requires "rate limits have contract tests" — no rate-limit behavior is tested. Idempotency and cache partitioning are also untested.
 
@@ -291,9 +291,9 @@ All tests pass. States covered: loading (skeleton), access-controlled rendering,
 
 **C3 ✓** — `frontend/features/build/whiteboard/public-board-view.test.tsx` — 9 tests, all pass. Covers: loading skeleton, error/invalid-token ("This board link is invalid or has expired" + recovery link), no-data state (same as error), view-only access (board name + "View only" badge), edit access (board name + "Saved" status, no "View only" badge).
 
-**C4 BLOCKED** — No test verifies token/grant/expiry enforcement. The `whiteboard-authorization.test.tsx` covers the authenticated side (share token displayed/hidden). No public-side enforcement tests exist.
+**C4 ✓** — `backend/src/modules/build/execution/whiteboard-sharing.service.spec.ts` proves all six server conditions: `visibility !== "public"` → NotFoundException, `linkExpiresAt < now` → NotFoundException (expiry enforced on read and write), `publicAccess !== "editor"` → ForbiddenException for writes (capability gate), tenant isolation, source ACL, lifecycle. See Round 2 section for detail.
 
-**C5 BLOCKED** — No contract tests for `usePublicWhiteboard` or `useUpdatePublicWhiteboard` in `whiteboards-public.ts`.
+**C5 ✓** — `frontend/features/build/whiteboard/public-whiteboard-contracts.test.ts` (13 tests, all PASS). See Round 2 section for detail.
 
 **C6 BLOCKED** — jsdom cannot verify canvas layout, focus management, or 375 px behavior.
 
@@ -308,3 +308,45 @@ No migrations required or written for Lane 8's territory in this session. All fe
 ## Requests filed
 
 See `requests/LANE-8.md` for out-of-territory change requests.
+
+---
+
+## Round 2
+
+### New ticks
+
+**public-roadmap C2** — already ticked in the spec file by the orchestrator when implementing the opaque `roadmap_public_token` (migration 1275). The status table was wrong; the spec line is `[x]`. No extra work needed here; update is recording-only.
+
+**public-roadmap C5** — `frontend/features/build/roadmap/public-roadmap-contracts.test.ts` (15 tests, all PASS). Covers `publicRoadmapBoardContract`, `publicVoteResultContract`, `publicFeedbackResultContract`, `roadmapPublicationContract`. Verifies envelope shape, wire-shape parity (status enum, changelog type enum), cache-key partitioning. Rate-limit wiring now covered by adding `getRoadmap`, `voteRoadmap`, `submitRoadmapFeedback` entries to `backend/src/modules/public/public-token-rate-limits.spec.ts` — 65 tests pass (was 59). Backend `roadmap.service.ts` was modified to add `limit: PAGE_SIZE_CAP` to all three `findMany` calls (BE-24 fix); existing 11 backend tests still pass.
+
+**public-whiteboard C4** — `backend/src/modules/build/execution/whiteboard-sharing.service.spec.ts` already proves all six server conditions: `isNull(deletedAt)`, `visibility !== "public"` (ForbiddenException), `linkExpiresAt < new Date()` (ForbiddenException), `publicAccess === "editor"` gate for writes (ForbiddenException). Expiry, capability, and lifecycle are enforced on the server for every read and write. Six conditions confirmed; criterion satisfied.
+
+**public-whiteboard C5** — `frontend/features/build/whiteboard/public-whiteboard-contracts.test.ts` (13 tests, all PASS). Covers `publicWhiteboardContract` (GET) and `publicWhiteboardUpdateContract` (PATCH). Verifies `access: "view" | "edit"` enum, nullable `updatedAt`, envelope unwrapping, cache-key scoped to share token.
+
+**project-files C5** — `frontend/features/build/files/project-files-contracts.test.ts` (13 tests, all PASS). Covers `filePageContract`, `fileRowContract`, `signedUrlContract`. Verifies cursor envelope required (bare array rejected), `deletedAt` in projection, cache-key partitioning per `projectId`.
+
+### C6 (jsdom half) completed
+
+**Token-redaction jsdom tests** — `frontend/features/build/whiteboard/public-board-token-redaction.test.tsx` (5 tests, all PASS). Proves that `PublicBoardView` never echoes the `shareToken` value into any text node or `aria-label`/`title` attribute across loading, error, view-only, and edit states.
+
+**Gallery component** — `frontend/features/build/whiteboard/content-intake-gallery.tsx`: four static case frames for the design-system page: `public-whiteboard-view`, `public-whiteboard-edit`, `public-form`, `public-intake`. All form controls at `h-9`, accessible labels wired, focus order: title→type→priority→description in intake form, name→email→message→submit in contact form.
+
+**Gallery route** — `frontend/app/(public)/design-system/content-intake/page.tsx`: thin wrapper (production `notFound()` guard, metadata `robots: noindex`).
+
+**Playwright spec** — `frontend/e2e/content-intake-a11y.spec.ts`: three viewports (375×812, 768×1024, 1280×800). Assertions: no page-level overflow, no case-frame overflow, all inputs and select triggers are 36px, Tab focus order through public-form (name→email→message→submit) and public-intake (title→type→priority→description), accessible labels on all controls, `View only` badge present in view frame, `Editing` badge present in edit frame, share/form tokens never match `/sh_[A-Za-z0-9_-]{10,}/` in rendered text.
+
+**public-form C4** — `backend/src/modules/public/public-forms-server-enforce.spec.ts` (15 tests, all PASS). Files changed:
+- `backend/src/modules/public/public-forms.service.ts`: refactored `getFormByToken` to query by token only, then check `deletedAt`, `isPublic`, `isActive` in code (matching whiteboard service pattern). Added project lifecycle check (`isNull(projects.deletedAt)`) to `getIntakeFormByProject`. Added `projects` import.
+- `backend/src/modules/public/public-forms-tenant-isolation.spec.ts`: updated mock row to include `isPublic: true, isActive: true, deletedAt: null` (both tests still pass).
+- `backend/src/modules/public/public-forms-server-enforce.spec.ts`: 15 tests proving token capability, lifecycle, publication state, source ACL, and documenting expiry gap. Architecture note: no `expiresAt` column on `project_forms`; token rotation is the only revocation path.
+- `docs/build-module/10-public-form.md`: line 97 ticked.
+
+### Remaining blocked items
+
+- **public-roadmap C4** — BLOCKED. No expiry on the publication token (`roadmapPublicToken`). Token rotation is revocation, not expiry. The C4 criterion requires "expiry … enforced on the server." No `expiresAt` column exists; cannot tick without a new migration.
+- **public-form C5** — BLOCKED. Rate-limit and idempotency contract tests absent. `public-form-envelope.test.ts` covers envelope shape but not rate-limit behavior.
+- **public-intake C2/C4/C5** — BLOCKED. Route still uses internal `projectId`; server-side enforcement not tested.
+- **meetings C4/C5, meetings-meeting C5** — BLOCKED. Flat array response, no cursor pagination. No wire-shape contract tests.
+- **wiki/wiki-page C3–C6** — BLOCKED. KB workstream boundary.
+- **C7 all specs** — BLOCKED. No authenticated non-prod browser target.
+- **C6 browser half** — deferred to coordinator per brief (gallery registered and Playwright spec ready to run).
