@@ -1,3 +1,4 @@
+import React from "react";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 
@@ -7,8 +8,7 @@ const mockUseCycleTimeReport = jest.fn();
 const mockUseLeadTimeReport = jest.fn();
 const mockUseCfdReport = jest.fn();
 const mockUseCriticalPath = jest.fn();
-const mockUseCan = jest.fn();
-const mockUseCanState = jest.fn();
+const mockUsePageState = jest.fn();
 
 jest.mock("@/hooks/api/build/reports", () => ({
   useVelocityReport: (...args: unknown[]) => mockUseVelocityReport(...args),
@@ -22,9 +22,40 @@ jest.mock("@/hooks/api/build/reports", () => ({
     .mockReturnValue({ mutate: jest.fn(), isPending: false }),
 }));
 
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: (...args: unknown[]) => mockUsePageState(...args),
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    resolution,
+    loading,
+    empty,
+    children,
+  }: {
+    resolution: { kind: string; permission?: string | null };
+    loading: ReactNode;
+    empty?: ReactNode;
+    children: ReactNode;
+  }) => {
+    if (resolution.kind === "loading") return <>{loading}</>;
+    if (resolution.kind === "denied")
+      return (
+        <div
+          data-testid="no-permission"
+          data-permission={resolution.permission ?? ""}
+        />
+      );
+    if (resolution.kind === "error")
+      return <div data-testid="error-state" />;
+    if (resolution.kind === "empty") return <>{empty}</>;
+    return <>{children}</>;
+  },
+}));
+
 jest.mock("@/hooks/api/access", () => ({
-  useCan: (...args: unknown[]) => mockUseCan(...args),
-  useCanState: (...args: unknown[]) => mockUseCanState(...args),
+  useCan: jest.fn(() => true),
+  useCanState: jest.fn(() => "granted"),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -127,6 +158,8 @@ jest.mock("lucide-react", () => ({
   ChevronRight: () => null,
   AlertTriangle: () => null,
   Route: () => null,
+  Layers: () => null,
+  Camera: () => null,
 }));
 
 import { VelocitySection } from "./velocity-section";
@@ -192,8 +225,7 @@ const LEAD_DATA = [
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockUseCan.mockReturnValue(true);
-  mockUseCanState.mockReturnValue("granted");
+  mockUsePageState.mockReturnValue({ kind: "ready" });
   mockUseVelocityReport.mockReturnValue(settled([]));
   mockUseBurnupReport.mockReturnValue(settled([]));
   mockUseCycleTimeReport.mockReturnValue(settled([]));
@@ -203,26 +235,35 @@ beforeEach(() => {
 });
 
 // --------------------------------------------------------------------------
-// VelocitySection — uses LoadingState / ErrorState / EmptyState / VelocityChart
+// VelocitySection — usePageState + PageState integration
 // --------------------------------------------------------------------------
 
 describe("VelocitySection — page states", () => {
+  it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
+    const err = new Error("plan required");
+    mockUseVelocityReport.mockReturnValue(failed("plan required"));
+    render(<VelocitySection projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:view", error: err }),
+    );
+  });
+
   it("renders the loading state while velocity data is in flight", () => {
-    mockUseVelocityReport.mockReturnValue(loading());
+    mockUsePageState.mockReturnValueOnce({ kind: "loading" });
     render(<VelocitySection projectId={1} />);
     expect(screen.getByTestId("loading-state")).toBeInTheDocument();
     expect(screen.queryByTestId("velocity-chart")).not.toBeInTheDocument();
   });
 
-  it("renders the error state when the velocity read fails", () => {
-    mockUseVelocityReport.mockReturnValue(failed());
+  it("renders an error panel when usePageState resolves to error", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "error", error: new Error("timeout") });
     render(<VelocitySection projectId={1} />);
     expect(screen.getByTestId("error-state")).toBeInTheDocument();
     expect(screen.queryByTestId("velocity-chart")).not.toBeInTheDocument();
   });
 
   it("renders the empty state when there are no cycles with velocity data", () => {
-    mockUseVelocityReport.mockReturnValue(settled([]));
+    mockUsePageState.mockReturnValueOnce({ kind: "empty" });
     render(<VelocitySection projectId={1} />);
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.queryByTestId("velocity-chart")).not.toBeInTheDocument();
@@ -234,16 +275,40 @@ describe("VelocitySection — page states", () => {
     expect(screen.getByTestId("velocity-chart")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   });
+
+  it("shows a denied view instead of a blank panel when build:view is denied — FE-40 compliance", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "denied", permission: "build:view" });
+    render(<VelocitySection projectId={1} />);
+    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+  });
 });
 
 // --------------------------------------------------------------------------
-// BurnupSection — uses velocity for the cycle filter + burnup for the series
+// BurnupSection — usePageState covers the two-query combination
 // --------------------------------------------------------------------------
 
 describe("BurnupSection — page states", () => {
+  it("passes build:view permission to usePageState so the denial reason is shown", () => {
+    render(<BurnupSection projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:view" }),
+    );
+  });
+
+  it("renders the loading state while either query is in flight", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "loading" });
+    render(<BurnupSection projectId={1} />);
+    expect(screen.getByTestId("loading-state")).toBeInTheDocument();
+  });
+
+  it("renders an error panel when usePageState resolves to error", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "error", error: new Error("timeout") });
+    render(<BurnupSection projectId={1} />);
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+  });
+
   it("renders the empty state when there are no burnup data points", () => {
-    mockUseVelocityReport.mockReturnValue(settled([]));
-    mockUseBurnupReport.mockReturnValue(settled([]));
+    mockUsePageState.mockReturnValueOnce({ kind: "empty" });
     render(<BurnupSection projectId={1} />);
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.queryByTestId("burnup-chart")).not.toBeInTheDocument();
@@ -256,6 +321,12 @@ describe("BurnupSection — page states", () => {
     expect(screen.getByTestId("burnup-chart")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   });
+
+  it("shows a denied view instead of a blank panel when build:view is denied — FE-40 compliance", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "denied", permission: "build:view" });
+    render(<BurnupSection projectId={1} />);
+    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+  });
 });
 
 // --------------------------------------------------------------------------
@@ -263,22 +334,31 @@ describe("BurnupSection — page states", () => {
 // --------------------------------------------------------------------------
 
 describe("CycleTimeSection — page states", () => {
+  it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
+    const err = new Error("timeout");
+    mockUseCycleTimeReport.mockReturnValue(failed("timeout"));
+    render(<CycleTimeSection projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:view", error: err }),
+    );
+  });
+
   it("renders a skeleton while cycle time data is in flight", () => {
-    mockUseCycleTimeReport.mockReturnValue(loading());
+    mockUsePageState.mockReturnValueOnce({ kind: "loading" });
     render(<CycleTimeSection projectId={1} />);
     expect(screen.getByTestId("skeleton")).toBeInTheDocument();
     expect(screen.queryByTestId("cycle-time-chart")).not.toBeInTheDocument();
   });
 
-  it("renders the error state when the cycle time read fails", () => {
-    mockUseCycleTimeReport.mockReturnValue(failed());
+  it("renders an error panel when usePageState resolves to error", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "error", error: new Error("timeout") });
     render(<CycleTimeSection projectId={1} />);
     expect(screen.getByTestId("error-state")).toBeInTheDocument();
     expect(screen.queryByTestId("cycle-time-chart")).not.toBeInTheDocument();
   });
 
   it("renders the empty state when there are no cycle time points", () => {
-    mockUseCycleTimeReport.mockReturnValue(settled([]));
+    mockUsePageState.mockReturnValueOnce({ kind: "empty" });
     render(<CycleTimeSection projectId={1} />);
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.queryByTestId("cycle-time-chart")).not.toBeInTheDocument();
@@ -290,6 +370,12 @@ describe("CycleTimeSection — page states", () => {
     expect(screen.getByTestId("cycle-time-chart")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   });
+
+  it("shows a denied view instead of a blank panel when build:view is denied — FE-40 compliance", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "denied", permission: "build:view" });
+    render(<CycleTimeSection projectId={1} />);
+    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+  });
 });
 
 // --------------------------------------------------------------------------
@@ -297,22 +383,31 @@ describe("CycleTimeSection — page states", () => {
 // --------------------------------------------------------------------------
 
 describe("LeadTimeSection — page states", () => {
+  it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
+    const err = new Error("timeout");
+    mockUseLeadTimeReport.mockReturnValue(failed("timeout"));
+    render(<LeadTimeSection projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:view", error: err }),
+    );
+  });
+
   it("renders a skeleton while lead time data is in flight", () => {
-    mockUseLeadTimeReport.mockReturnValue(loading());
+    mockUsePageState.mockReturnValueOnce({ kind: "loading" });
     render(<LeadTimeSection projectId={1} />);
     expect(screen.getByTestId("skeleton")).toBeInTheDocument();
     expect(screen.queryByTestId("lead-time-chart")).not.toBeInTheDocument();
   });
 
-  it("renders the error state when the lead time read fails", () => {
-    mockUseLeadTimeReport.mockReturnValue(failed());
+  it("renders an error panel when usePageState resolves to error", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "error", error: new Error("timeout") });
     render(<LeadTimeSection projectId={1} />);
     expect(screen.getByTestId("error-state")).toBeInTheDocument();
     expect(screen.queryByTestId("lead-time-chart")).not.toBeInTheDocument();
   });
 
   it("renders the empty state when there are no lead time points", () => {
-    mockUseLeadTimeReport.mockReturnValue(settled([]));
+    mockUsePageState.mockReturnValueOnce({ kind: "empty" });
     render(<LeadTimeSection projectId={1} />);
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.queryByTestId("lead-time-chart")).not.toBeInTheDocument();
@@ -324,27 +419,44 @@ describe("LeadTimeSection — page states", () => {
     expect(screen.getByTestId("lead-time-chart")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   });
+
+  it("shows a denied view instead of a blank panel when build:view is denied — FE-40 compliance", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "denied", permission: "build:view" });
+    render(<LeadTimeSection projectId={1} />);
+    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+  });
 });
 
 // --------------------------------------------------------------------------
-// CfdSection — uses LoadingState / ErrorState / EmptyState / CfdChart (dynamic)
+// CfdSection — usePageState + PageState integration; capture mutation is an
+// action affordance and is not gated by PageState (it lives in the ChartCard
+// header, not the data panel)
 // --------------------------------------------------------------------------
 
 describe("CfdSection — page states", () => {
+  it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
+    const err = new Error("Network timeout");
+    mockUseCfdReport.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: err, refetch: jest.fn() });
+    render(<CfdSection projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:view", error: err }),
+    );
+  });
+
   it("renders the loading state while CFD data is in flight", () => {
-    mockUseCfdReport.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: null, refetch: jest.fn() });
+    mockUsePageState.mockReturnValueOnce({ kind: "loading" });
     render(<CfdSection projectId={1} />);
     expect(screen.getByTestId("loading-state")).toBeInTheDocument();
   });
 
-  it("renders the error state when the CFD read fails", () => {
-    mockUseCfdReport.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new Error("Network timeout"), refetch: jest.fn() });
+  it("renders an error panel when usePageState resolves to error", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "error", error: new Error("Network timeout") });
     render(<CfdSection projectId={1} />);
     expect(screen.getByTestId("error-state")).toBeInTheDocument();
   });
 
   it("renders the empty state when there are no CFD data points — positive control shows flow history prompt", () => {
-    mockUseCfdReport.mockReturnValue({ data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    mockUsePageState.mockReturnValueOnce({ kind: "empty" });
     render(<CfdSection projectId={1} />);
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.getByText(/no flow history yet/i)).toBeInTheDocument();
@@ -363,15 +475,15 @@ describe("CfdSection — page states", () => {
     expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
   });
 
-  it("returns null when accessState is denied — access gate is honoured", () => {
-    mockUseCanState.mockReturnValue("denied");
-    const { container } = render(<CfdSection projectId={1} />);
-    expect(container).toBeEmptyDOMElement();
+  it("shows a denied view instead of a blank panel when build:view is denied — FE-40 compliance", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "denied", permission: "build:view" });
+    render(<CfdSection projectId={1} />);
+    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
   });
 });
 
 // --------------------------------------------------------------------------
-// CriticalPathSection — uses LoadingState / ErrorState / EmptyState / chain list
+// CriticalPathSection — usePageState + PageState integration
 // --------------------------------------------------------------------------
 
 const CRITICAL_PATH_DATA = {
@@ -386,20 +498,29 @@ const CRITICAL_PATH_DATA = {
 };
 
 describe("CriticalPathSection — page states", () => {
+  it("passes build:view permission and error to usePageState so 402 errors are classified correctly", () => {
+    const err = new Error("Timeout");
+    mockUseCriticalPath.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: err, refetch: jest.fn() });
+    render(<CriticalPathSection projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:view", error: err }),
+    );
+  });
+
   it("renders the loading state while critical path data is in flight", () => {
-    mockUseCriticalPath.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: null, refetch: jest.fn() });
+    mockUsePageState.mockReturnValueOnce({ kind: "loading" });
     render(<CriticalPathSection projectId={1} />);
     expect(screen.getByTestId("loading-state")).toBeInTheDocument();
   });
 
-  it("renders the error state when the critical path read fails", () => {
-    mockUseCriticalPath.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new Error("Timeout"), refetch: jest.fn() });
+  it("renders an error panel when usePageState resolves to error", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "error", error: new Error("Timeout") });
     render(<CriticalPathSection projectId={1} />);
     expect(screen.getByTestId("error-state")).toBeInTheDocument();
   });
 
   it("renders the empty state when there are no dependency chain nodes", () => {
-    mockUseCriticalPath.mockReturnValue({ data: { criticalPath: [], totalDuration: 0, edgeCount: 0, nodeCount: 0, hasCycle: false }, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    mockUsePageState.mockReturnValueOnce({ kind: "empty" });
     render(<CriticalPathSection projectId={1} />);
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.getByText(/no dependency chain yet/i)).toBeInTheDocument();
@@ -413,9 +534,9 @@ describe("CriticalPathSection — page states", () => {
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   });
 
-  it("returns null when accessState is denied — access gate is honoured", () => {
-    mockUseCanState.mockReturnValue("denied");
-    const { container } = render(<CriticalPathSection projectId={1} />);
-    expect(container).toBeEmptyDOMElement();
+  it("shows a denied view instead of a blank panel when build:view is denied — FE-40 compliance", () => {
+    mockUsePageState.mockReturnValueOnce({ kind: "denied", permission: "build:view" });
+    render(<CriticalPathSection projectId={1} />);
+    expect(screen.getByTestId("no-permission")).toBeInTheDocument();
   });
 });

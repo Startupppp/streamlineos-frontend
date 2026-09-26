@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import {
@@ -16,8 +16,9 @@ import {
   useProjectMembers,
   useUpdateProjectMemberRole,
 } from "@/hooks/api/build";
-import { useCan, useCanState } from "@/hooks/api/access";
-import { ErrorState } from "@/components/shared/error-state";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ProjectMemberRecord } from "@/types/projects";
 import { resolveImageUrl } from "@/lib/utils";
@@ -115,7 +116,6 @@ interface ProjectMemberRolesSectionProps {
 export function ProjectMemberRolesSection({
   projectId,
 }: ProjectMemberRolesSectionProps) {
-  const accessState = useCanState("build:view");
   const canManage = useCan("build:manage");
   const pager = useCursorPager();
   const {
@@ -126,65 +126,58 @@ export function ProjectMemberRolesSection({
     refetch,
   } = useProjectMembers(projectId, { cursor: pager.cursor });
 
-  if (accessState === "denied" || accessState === "loading") return null;
+  const resolution = usePageState({ permission: "build:view", isLoading, isError, error });
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2 pt-2">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 py-2 animate-pulse">
-            <div className="h-7 w-7 rounded-full bg-muted shrink-0" />
-            <div className="flex-1 space-y-1">
-              <div className="h-3 w-24 rounded bg-muted" />
-              <div className="h-2.5 w-32 rounded bg-muted" />
-            </div>
-            <div className="h-7 w-[100px] rounded bg-muted" />
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const loadingSkeleton = (
+    <div className="space-y-2 pt-2">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 py-2 animate-pulse">
+          <div className="h-7 w-7 rounded-full bg-muted shrink-0" />
+          <div className="flex-1 space-y-1">
+            <div className="h-3 w-24 rounded bg-muted" />
+            <div className="h-2.5 w-32 rounded bg-muted" />
           </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (isError)
-    return (
-      <ErrorState
-        compact
-        title="Couldn't load member roles"
-        description={getErrorMessage(error)}
-        onRetry={() => void refetch()}
-      />
-    );
+          <div className="h-7 w-[100px] rounded bg-muted" />
+        </div>
+      ))}
+    </div>
+  );
 
   const members = page?.data ?? [];
   const pagination = page?.pagination;
 
-  if (!members.length)
-    return (
-      <p className="text-sm text-muted-foreground py-2">No members yet.</p>
-    );
-
   return (
-    <div>
-      <div className="divide-y divide-border">
-        {members.map((member) => (
-          <MemberRoleRow
-            key={member.id}
-            member={member}
-            projectId={projectId}
-            canManage={canManage}
-          />
-        ))}
-      </div>
-      {(pagination?.hasMore || pager.hasPrevious) ? (
-        <TablePagination
-          mode="cursor"
-          rowCount={members.length}
-          hasMore={pagination?.hasMore ?? false}
-          hasPrevious={pager.hasPrevious}
-          onNext={() => pager.goNext(pagination?.nextCursor)}
-          onPrevious={pager.goPrevious}
-        />
-      ) : null}
-    </div>
+    <PageState resolution={resolution} loading={loadingSkeleton} onRetry={handleRetry} compact>
+      {!members.length ? (
+        <p className="text-sm text-muted-foreground py-2">No members yet.</p>
+      ) : (
+        <div>
+          <div className="divide-y divide-border">
+            {members.map((member) => (
+              <MemberRoleRow
+                key={member.id}
+                member={member}
+                projectId={projectId}
+                canManage={canManage}
+              />
+            ))}
+          </div>
+          {(pagination?.hasMore || pager.hasPrevious) ? (
+            <TablePagination
+              mode="cursor"
+              rowCount={members.length}
+              hasMore={pagination?.hasMore ?? false}
+              hasPrevious={pager.hasPrevious}
+              onNext={() => pager.goNext(pagination?.nextCursor)}
+              onPrevious={pager.goPrevious}
+            />
+          ) : null}
+        </div>
+      )}
+    </PageState>
   );
 }

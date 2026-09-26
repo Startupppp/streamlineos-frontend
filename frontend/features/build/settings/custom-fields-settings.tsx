@@ -11,7 +11,9 @@ import {
   useUpdateProjectCustomField,
   useDeleteProjectCustomField,
 } from "@/hooks/api/build/custom-fields";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import {
   Form,
   FormField,
@@ -33,7 +35,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
 import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { Pencil } from "lucide-react";
@@ -234,7 +235,6 @@ interface CustomFieldsSettingsProps {
 }
 
 export function CustomFieldsSettings({ projectId, search, createRef, editRef }: CustomFieldsSettingsProps) {
-  const accessState = useCanState("build:view");
   const canManage = useCan("build:manage");
   const [showForm, setShowForm] = useState(false);
   const [editingField, setEditingField] = useState<CustomFieldItem | null>(null);
@@ -246,6 +246,8 @@ export function CustomFieldsSettings({ projectId, search, createRef, editRef }: 
     error,
     refetch,
   } = useProjectCustomFields(projectId);
+
+  const resolution = usePageState({ permission: "build:view", isLoading, isError, error });
   const createField = useCreateProjectCustomField(projectId);
   const updateField = useUpdateProjectCustomField(projectId);
   const deleteField = useDeleteProjectCustomField(projectId);
@@ -353,46 +355,39 @@ export function CustomFieldsSettings({ projectId, search, createRef, editRef }: 
     ? fields.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()))
     : fields;
 
-  if (accessState === "denied" || accessState === "loading") return null;
+  const loadingSkeleton = (
+    <div className="space-y-2">
+      <Skeleton className="h-9 w-full" />
+      <Skeleton className="h-9 w-full" />
+    </div>
+  );
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
-        <div className="min-w-0">
-          <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
-            Custom Fields
-          </h3>
-          <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
-            Define additional data fields for tickets in this project.
-          </p>
+    <PageState resolution={resolution} loading={loadingSkeleton} onRetry={handleRetry} compact>
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
+          <div className="min-w-0">
+            <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+              Custom Fields
+            </h3>
+            <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+              Define additional data fields for tickets in this project.
+            </p>
+          </div>
+          {canManage && !showForm ? (
+            <AnimatedIconButton
+              variant="outline"
+              size="sm"
+              onClick={handleShowForm}
+              className="h-7 shrink-0 text-xs gap-1.5"
+              icon={PlusIcon}
+              iconSize={14}
+            >
+              Add Custom Field
+            </AnimatedIconButton>
+          ) : null}
         </div>
-        {canManage && !showForm ? (
-          <AnimatedIconButton
-            variant="outline"
-            size="sm"
-            onClick={handleShowForm}
-            className="h-7 shrink-0 text-xs gap-1.5"
-            icon={PlusIcon}
-            iconSize={14}
-          >
-            Add Custom Field
-          </AnimatedIconButton>
-        ) : null}
-      </div>
 
-      {isLoading ? (
-        <div className="space-y-2">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-        </div>
-      ) : isError ? (
-        <ErrorState
-          compact
-          title="Couldn't load custom fields"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : (
         <div className="space-y-3">
           <AnimatePresence initial={false}>
             {filteredFields.length === 0 && fields.length === 0 && !showForm && (
@@ -458,23 +453,23 @@ export function CustomFieldsSettings({ projectId, search, createRef, editRef }: 
             )}
           </AnimatePresence>
         </div>
-      )}
 
-      {canManage && (
-        <EntityFormDialog<CustomFieldFormValues>
-          open={!!editingField}
-          onOpenChange={handleCloseEdit}
-          title="Edit custom field"
-          resolver={zodResolver(customFieldSchema)}
-          defaultValues={editDefaultValues}
-          onSubmit={handleUpdate}
-          isSubmitting={updateField.isPending}
-          submitLabel="Save changes"
-          resetOnOpen
-        >
-          {(form) => <CustomFieldFormFields form={form} />}
-        </EntityFormDialog>
-      )}
-    </div>
+        {canManage && (
+          <EntityFormDialog<CustomFieldFormValues>
+            open={!!editingField}
+            onOpenChange={handleCloseEdit}
+            title="Edit custom field"
+            resolver={zodResolver(customFieldSchema)}
+            defaultValues={editDefaultValues}
+            onSubmit={handleUpdate}
+            isSubmitting={updateField.isPending}
+            submitLabel="Save changes"
+            resetOnOpen
+          >
+            {(form) => <CustomFieldFormFields form={form} />}
+          </EntityFormDialog>
+        )}
+      </div>
+    </PageState>
   );
 }

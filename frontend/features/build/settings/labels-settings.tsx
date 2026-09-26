@@ -8,12 +8,13 @@ import { LabelCreateForm } from "@/components/labels";
 import { DEFAULT_LABEL_COLOR, resolveLabelColor } from "@/components/labels/label-colors";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import {
   useOrgLabels,
   useCreateLabel,
@@ -176,7 +177,6 @@ function LabelListRow({
 }
 
 export function LabelsSettings() {
-  const accessState = useCanState("build:view");
   const canManage = useCan("build:manage");
   const reduceMotion = useReducedMotion();
   const [showForm, setShowForm] = useState(false);
@@ -196,6 +196,8 @@ export function LabelsSettings() {
   const createLabel = useCreateLabel();
   const updateLabel = useUpdateLabel();
   const deleteLabel = useDeleteLabel();
+
+  const resolution = usePageState({ permission: "build:view", isLoading, isError, error });
 
   const handleCreate = useCallback(() => {
     if (!name.trim()) return;
@@ -264,110 +266,94 @@ export function LabelsSettings() {
     void refetch();
   }, [refetch]);
 
-  if (accessState === "denied" || accessState === "loading") return null;
-
-  if (isLoading) {
-    return (
-      <div>
-        <LabelsHeader showAdd={false} onAdd={handleShowForm} />
-        <div className="space-y-2">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <Skeleton key={index} className="h-11 rounded-xl" />
-          ))}
-        </div>
+  const loadingSkeleton = (
+    <div>
+      <LabelsHeader showAdd={false} onAdd={handleShowForm} />
+      <div className="space-y-2">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <Skeleton key={index} className="h-11 rounded-xl" />
+        ))}
       </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div>
-        <LabelsHeader showAdd={false} onAdd={handleShowForm} />
-        <ErrorState
-          compact
-          title="Couldn't load labels"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div>
-      <LabelsHeader showAdd={canManage && !showForm} onAdd={handleShowForm} />
-      <div className="space-y-2">
-        {labels.length === 0 && !showForm ? (
-          <EmptyState
-            compact
-            illustrationPreset="tasks"
-            title="No labels yet"
-            description="Create a label to start organizing tickets across this organization."
-            action={canManage ? { label: "Add Label", onClick: handleShowForm } : undefined}
-          />
-        ) : null}
-        <AnimatePresence initial={false} mode="popLayout">
-          {labels.map((label, index) => {
-            if (canManage && editingId === label.id) {
-              function handleSaveEdit() {
-                handleUpdate(label);
+    <PageState resolution={resolution} loading={loadingSkeleton} onRetry={handleRetry} compact>
+      <div>
+        <LabelsHeader showAdd={canManage && !showForm} onAdd={handleShowForm} />
+        <div className="space-y-2">
+          {labels.length === 0 && !showForm ? (
+            <EmptyState
+              compact
+              illustrationPreset="tasks"
+              title="No labels yet"
+              description="Create a label to start organizing tickets across this organization."
+              action={canManage ? { label: "Add Label", onClick: handleShowForm } : undefined}
+            />
+          ) : null}
+          <AnimatePresence initial={false} mode="popLayout">
+            {labels.map((label, index) => {
+              if (canManage && editingId === label.id) {
+                function handleSaveEdit() {
+                  handleUpdate(label);
+                }
+
+                return (
+                  <LabelEditRow
+                    key={label.id}
+                    name={editName}
+                    color={editColor}
+                    isPending={updateLabel.isPending}
+                    onNameChange={setEditName}
+                    onColorChange={setEditColor}
+                    onSave={handleSaveEdit}
+                    onCancel={handleCancelEdit}
+                  />
+                );
               }
 
               return (
-                <LabelEditRow
+                <LabelListRow
                   key={label.id}
-                  name={editName}
-                  color={editColor}
-                  isPending={updateLabel.isPending}
-                  onNameChange={setEditName}
-                  onColorChange={setEditColor}
-                  onSave={handleSaveEdit}
-                  onCancel={handleCancelEdit}
+                  label={label}
+                  index={index}
+                  onEdit={handleStartEdit}
+                  onDelete={handleDelete}
+                  canManage={canManage}
                 />
               );
-            }
+            })}
+          </AnimatePresence>
 
-            return (
-              <LabelListRow
-                key={label.id}
-                label={label}
-                index={index}
-                onEdit={handleStartEdit}
-                onDelete={handleDelete}
-                canManage={canManage}
-              />
-            );
-          })}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {canManage && showForm ? (
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
-            >
-              <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-                <LabelCreateForm
-                  name={name}
-                  color={color}
-                  onNameChange={setName}
-                  onColorChange={setColor}
-                  onSubmit={handleCreate}
-                  onCancel={handleCancelForm}
-                  isPending={createLabel.isPending}
-                  submitLabel="Create"
-                  loadingText="Creating…"
-                  showPreview
-                  fullWidthSubmit={false}
-                  autoFocus
-                />
-              </div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
+          <AnimatePresence>
+            {canManage && showForm ? (
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+              >
+                <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+                  <LabelCreateForm
+                    name={name}
+                    color={color}
+                    onNameChange={setName}
+                    onColorChange={setColor}
+                    onSubmit={handleCreate}
+                    onCancel={handleCancelForm}
+                    isPending={createLabel.isPending}
+                    submitLabel="Create"
+                    loadingText="Creating…"
+                    showPreview
+                    fullWidthSubmit={false}
+                    autoFocus
+                  />
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </PageState>
   );
 }

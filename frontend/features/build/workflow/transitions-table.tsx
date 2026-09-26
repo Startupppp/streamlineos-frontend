@@ -10,7 +10,9 @@ import {
   useUpdateTransition,
   useDeleteTransition,
 } from "@/hooks/api/build/workflow";
-import { useCan, useCanState } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -100,8 +102,7 @@ export function TransitionsTable({
   onEditTargetChange,
 }: TransitionsTableProps) {
   const canManage = useCan("build:workflow:manage");
-  const accessState = useCanState("build:workflow:view");
-  const { data: ownTransitions, isLoading: ownIsLoading } = useWorkflowTransitions(projectId);
+  const { data: ownTransitions, isLoading: ownIsLoading, isError: ownIsError, error: ownError, refetch } = useWorkflowTransitions(projectId);
   const createTransition = useCreateTransition(projectId);
   const updateTransition = useUpdateTransition(projectId);
   const deleteTransition = useDeleteTransition(projectId);

@@ -1,45 +1,46 @@
-﻿"use client";
+"use client";
 
 import { useCallback } from "react";
 import { LoadingState } from "@/components/shared/loading-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { Route, ChevronRight, AlertTriangle } from "lucide-react";
 import { useCriticalPath } from "@/hooks/api/build/reports";
 import { ChartCard, numberFormatter } from "./chart-card";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { useCanState } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 export function CriticalPathSection({ projectId }: { projectId: number }) {
-  const accessState = useCanState("build:view");
   const { data, isLoading, isError, error, refetch } = useCriticalPath(projectId);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
 
   const chain = data?.criticalPath ?? [];
 
-  if (accessState === "denied" || accessState === "loading") return null;
+  const resolution = usePageState({
+    permission: "build:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: chain.length === 0,
+  });
 
   return (
     <ChartCard title="Critical Path" icon={Route}>
-      {isLoading ? (
-        <LoadingState variant="cards" rows={2} />
-      ) : isError ? (
-        <ErrorState
-          title="Could not load critical path"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-          compact
-        />
-      ) : chain.length === 0 ? (
-        <EmptyState
-          illustration={<EmptySearchIllustration />}
-          title="No dependency chain yet"
-          description="Add 'blocks' relations between tickets to compute the critical path."
-          compact
-        />
-      ) : (
+      <PageState
+        resolution={resolution}
+        loading={<LoadingState variant="cards" rows={2} />}
+        empty={
+          <EmptyState
+            illustration={<EmptySearchIllustration />}
+            title="No dependency chain yet"
+            description="Add 'blocks' relations between tickets to compute the critical path."
+            compact
+          />
+        }
+        onRetry={handleRetry}
+        compact
+      >
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <span className="font-semibold text-foreground">
@@ -87,7 +88,7 @@ export function CriticalPathSection({ projectId }: { projectId: number }) {
             ))}
           </ol>
         </div>
-      )}
+      </PageState>
     </ChartCard>
   );
 }

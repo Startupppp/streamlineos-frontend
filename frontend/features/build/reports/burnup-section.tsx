@@ -9,7 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/shared/loading-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import dynamic from "next/dynamic";
@@ -18,8 +17,8 @@ import { TrendingUp } from "lucide-react";
 import { useVelocityReport, useBurnupReport } from "@/hooks/api/build/reports";
 import { format } from "date-fns";
 import { ChartCard } from "./chart-card";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { useCanState } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 const BurnupChart = dynamic(
   () => import("./burnup-chart").then((m) => ({ default: m.BurnupChart })),
@@ -27,7 +26,6 @@ const BurnupChart = dynamic(
 );
 
 export function BurnupSection({ projectId }: { projectId: number }) {
-  const accessState = useCanState("build:view");
   const velocity = useVelocityReport(projectId);
   const [cycleId, setCycleId] = useState<number | undefined>(undefined);
 
@@ -41,9 +39,10 @@ export function BurnupSection({ projectId }: { projectId: number }) {
     selectedCycleId,
   );
 
-  if (accessState === "denied" || accessState === "loading") return null;
-
-  const handleRetry = useCallback(() => Promise.all([velocity.refetch(), refetch()]), [velocity.refetch, refetch]);
+  const handleRetry = useCallback(
+    () => Promise.all([velocity.refetch(), refetch()]),
+    [velocity.refetch, refetch],
+  );
 
   const chartData = useMemo(
     () =>
@@ -54,6 +53,14 @@ export function BurnupSection({ projectId }: { projectId: number }) {
       })),
     [data],
   );
+
+  const resolution = usePageState({
+    permission: "build:view",
+    isLoading: velocity.isLoading || isLoading,
+    isError: velocity.isError || isError,
+    error: velocity.error ?? error,
+    isEmpty: cycles.length === 0 || chartData.length === 0,
+  });
 
   function handleCycleChange(value: string) {
     setCycleId(Number(value));
@@ -80,25 +87,22 @@ export function BurnupSection({ projectId }: { projectId: number }) {
 
   return (
     <ChartCard title="Burnup · latest 100 cycles" icon={TrendingUp} actions={cycleSelect}>
-      {velocity.isLoading || isLoading ? (
-        <LoadingState variant="cards" rows={2} />
-      ) : velocity.isError || isError ? (
-        <ErrorState
-          title="Could not load burnup"
-          description={getErrorMessage(velocity.error ?? error)}
-          onRetry={handleRetry}
-          compact
-        />
-      ) : cycles.length === 0 || chartData.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyLeaderboardIllustration />}
-          title="No cycle to chart"
-          description="Burnup tracks completed work against scope across a cycle's date range."
-          compact
-        />
-      ) : (
+      <PageState
+        resolution={resolution}
+        loading={<LoadingState variant="cards" rows={2} />}
+        empty={
+          <EmptyState
+            illustration={<EmptyLeaderboardIllustration />}
+            title="No cycle to chart"
+            description="Burnup tracks completed work against scope across a cycle's date range."
+            compact
+          />
+        }
+        onRetry={handleRetry}
+        compact
+      >
         <BurnupChart data={chartData} />
-      )}
+      </PageState>
     </ChartCard>
   );
 }

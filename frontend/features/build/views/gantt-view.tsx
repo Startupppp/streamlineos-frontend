@@ -32,7 +32,8 @@ import { PmPanel, PM_TOOLBAR } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
-import { useCanState } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 
 const MONTHS = [
   "January",
@@ -105,7 +106,7 @@ export function GanttView({
   onTicketClick,
   onCreateTicket,
 }: GanttViewProps) {
-  const accessState = useCanState("build:view");
+  const resolution = usePageState({ permission: "build:view", isLoading: false, isError: false });
   const router = useRouter();
   const requestLeave = useNavigationLeave();
   const [weekOffset, setWeekOffset] = useState(0);
@@ -263,9 +264,8 @@ export function GanttView({
   const svgWidth = labelWidth + days.length * dayWidth;
   const titleMax = labelWidth < 180 ? 12 : 25;
 
-  if (accessState === "denied" || accessState === "loading") return null;
-
   return (
+    <PageState resolution={resolution} loading={null}>
     <div className="flex h-full min-h-0 flex-col gap-3">
       <div className={cn(PM_TOOLBAR, "gap-2")}>
         <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
@@ -489,5 +489,6 @@ export function GanttView({
         </div>
       ) : null}
     </div>
+    </PageState>
   );
 }

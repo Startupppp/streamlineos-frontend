@@ -43,6 +43,16 @@ describe("ProductInsightsPage — usePageState integration (BSN-01-022)", () => 
 });
 
 describe("ProductInsightsPage — page states (BSN-INS-STATE)", () => {
+  beforeEach(() => {
+    useManagedProductInsights.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+  });
+
   it("shows the loading skeleton when usePageState resolves to loading so layout does not shift on first paint", () => {
     usePageState.mockReturnValue({ kind: "loading" });
     render(<ProductInsightsPage managedProductId={7} />);

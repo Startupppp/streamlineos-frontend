@@ -1,14 +1,35 @@
 import { render, screen } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
+import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { LabelsSettings } from "./labels-settings";
 
 let mockAccessState: AccessState = "denied";
-let mockViewAccessState: AccessState = "granted";
+let mockPageState: PageStateResolution = { kind: "ready" };
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: string) => permission === "build:manage" && mockAccessState === "granted",
-  useCanState: (permission: string): AccessState =>
-    permission === "build:view" ? mockViewAccessState : mockAccessState,
+  useCanState: () => "granted" as const,
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => mockPageState,
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    resolution,
+    children,
+    loading,
+  }: {
+    resolution: { kind: string };
+    children: React.ReactNode;
+    loading?: React.ReactNode;
+  }) => {
+    if (resolution.kind === "loading") return <div data-testid="page-loading">{loading}</div>;
+    if (resolution.kind === "denied") return <div data-testid="page-denied" />;
+    if (resolution.kind === "error") return <div data-testid="page-error" />;
+    return <>{children}</>;
+  },
 }));
 
 jest.mock("@/hooks/api/build/labels", () => ({
@@ -29,7 +50,7 @@ jest.mock("@/hooks/api/build/labels", () => ({
 
 beforeEach(() => {
   mockAccessState = "denied";
-  mockViewAccessState = "granted";
+  mockPageState = { kind: "ready" };
 });
 
 describe("LabelsSettings — build:manage gates", () => {
@@ -77,5 +98,35 @@ describe("LabelsSettings — build:manage gates", () => {
     mockAccessState = "loading";
     render(<LabelsSettings />);
     expect(screen.queryByRole("button", { name: /add label/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("LabelsSettings — page state transitions", () => {
+  it("renders the loading skeleton and not label names while the page state is loading", () => {
+    mockPageState = { kind: "loading" };
+    render(<LabelsSettings />);
+    expect(screen.getByTestId("page-loading")).toBeInTheDocument();
+    expect(screen.queryByText("Bug")).not.toBeInTheDocument();
+  });
+
+  it("renders the denied view and not label names when access is refused", () => {
+    mockPageState = { kind: "denied", permission: "build:view" };
+    render(<LabelsSettings />);
+    expect(screen.getByTestId("page-denied")).toBeInTheDocument();
+    expect(screen.queryByText("Bug")).not.toBeInTheDocument();
+  });
+
+  it("renders the error view and not label names when the data fetch fails", () => {
+    mockPageState = { kind: "error", error: new Error("network failure") };
+    render(<LabelsSettings />);
+    expect(screen.getByTestId("page-error")).toBeInTheDocument();
+    expect(screen.queryByText("Bug")).not.toBeInTheDocument();
+  });
+
+  it("renders label names in the ready state", () => {
+    mockPageState = { kind: "ready" };
+    render(<LabelsSettings />);
+    expect(screen.getByText("Bug")).toBeInTheDocument();
+    expect(screen.getByText("Feature")).toBeInTheDocument();
   });
 });

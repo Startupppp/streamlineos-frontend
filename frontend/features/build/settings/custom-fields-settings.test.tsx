@@ -1,11 +1,12 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AccessState } from "@/lib/rbac/gate";
+import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { CustomFieldsSettings } from "./custom-fields-settings";
 import { customFieldSchema } from "./custom-fields-schema";
 
 let mockAccessState: AccessState = "denied";
-let mockViewAccessState: AccessState = "granted";
+let mockPageState: PageStateResolution = { kind: "ready" };
 const mockUpdateMutate = jest.fn();
 
 const mockPermissionsAsked: string[] = [];
@@ -15,9 +16,27 @@ jest.mock("@/hooks/api/access", () => ({
     mockPermissionsAsked.push(permission);
     return permission === "build:manage" && mockAccessState === "granted";
   },
-  useCanState: (permission: string): AccessState => {
-    mockPermissionsAsked.push(permission);
-    return permission === "build:view" ? mockViewAccessState : mockAccessState;
+  useCanState: () => "granted" as const,
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: () => mockPageState,
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    resolution,
+    children,
+    loading,
+  }: {
+    resolution: { kind: string };
+    children: React.ReactNode;
+    loading?: React.ReactNode;
+  }) => {
+    if (resolution.kind === "loading") return <div data-testid="page-loading">{loading}</div>;
+    if (resolution.kind === "denied") return <div data-testid="page-denied" />;
+    if (resolution.kind === "error") return <div data-testid="page-error" />;
+    return <>{children}</>;
   },
 }));
 
@@ -39,7 +58,7 @@ jest.mock("@/hooks/api/build/custom-fields", () => ({
 
 beforeEach(() => {
   mockAccessState = "denied";
-  mockViewAccessState = "granted";
+  mockPageState = { kind: "ready" };
   mockUpdateMutate.mockReset();
 });
 
@@ -136,7 +155,6 @@ describe("CustomFieldsSettings — edit form submits with changed values", () =>
 describe("CustomFieldsSettings — search filtering", () => {
   beforeEach(() => {
     mockAccessState = "granted";
-    mockViewAccessState = "granted";
   });
 
   it("shows all fields when no search prop is provided", () => {
@@ -161,7 +179,6 @@ describe("CustomFieldsSettings — search filtering", () => {
 describe("CustomFieldsSettings — createRef and editRef imperative handles", () => {
   it("sets createRef.current to the show-form handler so a keyboard shortcut can open the create form", async () => {
     mockAccessState = "granted";
-    mockViewAccessState = "granted";
     const createRef = { current: null as (() => void) | null };
     render(<CustomFieldsSettings projectId={1} createRef={createRef} />);
     expect(typeof createRef.current).toBe("function");
@@ -169,7 +186,6 @@ describe("CustomFieldsSettings — createRef and editRef imperative handles", ()
 
   it("sets editRef.current to the open-edit handler so a keyboard shortcut can open the edit dialog", () => {
     mockAccessState = "granted";
-    mockViewAccessState = "granted";
     const editRef = { current: null as ((f: { id: number; name: string; type: "text"; options?: string[] | null; required?: boolean }) => void) | null };
     render(<CustomFieldsSettings projectId={1} editRef={editRef} />);
     expect(typeof editRef.current).toBe("function");
@@ -188,5 +204,35 @@ describe("customFieldSchema — fieldType carries the domain union, not bare str
 
     for (const fieldType of offered)
       expect(customFieldSchema.safeParse({ fieldName: "Effort", fieldType, options: "" }).success).toBe(true);
+  });
+});
+
+describe("CustomFieldsSettings — page state transitions", () => {
+  it("renders the loading skeleton and not field names while the page state is loading", () => {
+    mockPageState = { kind: "loading" };
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(screen.getByTestId("page-loading")).toBeInTheDocument();
+    expect(screen.queryByText("Story Points")).not.toBeInTheDocument();
+  });
+
+  it("renders the denied view and not field names when access is refused", () => {
+    mockPageState = { kind: "denied", permission: "build:view" };
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(screen.getByTestId("page-denied")).toBeInTheDocument();
+    expect(screen.queryByText("Story Points")).not.toBeInTheDocument();
+  });
+
+  it("renders the error view and not field names when the data fetch fails", () => {
+    mockPageState = { kind: "error", error: new Error("network failure") };
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(screen.getByTestId("page-error")).toBeInTheDocument();
+    expect(screen.queryByText("Story Points")).not.toBeInTheDocument();
+  });
+
+  it("renders field names in the ready state", () => {
+    mockPageState = { kind: "ready" };
+    render(<CustomFieldsSettings projectId={1} />);
+    expect(screen.getByText("Story Points")).toBeInTheDocument();
+    expect(screen.getByText("Priority Label")).toBeInTheDocument();
   });
 });
