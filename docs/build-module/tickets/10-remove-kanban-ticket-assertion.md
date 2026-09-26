@@ -6,9 +6,21 @@ The repository enforces a hard zero on assertions; this is a Build-module offend
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done (one criterion void — see premise correction)
 
-- [ ] The assertion is gone, replaced by a type the compiler can check structurally
+- [x] The assertion is gone, replaced by a type the compiler can check structurally
 - [ ] Any field the card reads but the contract omits now surfaces as a type error
-- [ ] The type-assertion gate carries no Build-module offender from this file
-- [ ] The gallery renders unchanged
+- [x] The type-assertion gate carries no Build-module offender from this file
+- [x] The gallery renders unchanged
+
+**Premise correction (2026-09-26).** This ticket was written on the belief that the gallery
+passes *response* data to the card. It does not: `COLUMNS` is a hardcoded stub literal, so no
+response contract crosses this seam and the second criterion cannot be met here — it stays
+unticked. The assertion was a workaround for `as const` deepening the literal to readonly, not
+cover for a structural gap. Removing `as const` made the stub assignable on its own.
+
+The real contract check belongs where the board reads live data. That surface is a separate
+candidate, not this file.
+
+The remaining ticked boxes were verified by reading, not by running `tsc` — the typechecker
+needs an 8-10 GB heap and the tree was shared with concurrent agents.

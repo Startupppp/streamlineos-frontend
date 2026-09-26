@@ -82,7 +82,7 @@ const COLUMNS = [
   { status: "IN_REVIEW", tickets: [{ ...STUB_TICKET, id: 47, title: "Add stale-while-revalidate for cycles hook", ticketNumber: 47, sequenceId: "PROJ-47", status: "IN_REVIEW" }] },
   { status: "DONE", tickets: [STUB_TICKET_C] },
   { status: "CANCELLED", tickets: [{ ...STUB_TICKET, id: 48, title: "Migrate legacy sort params", ticketNumber: 48, sequenceId: "PROJ-48", status: "CANCELLED", priority: "LOW" }] },
-] as const;
+];
 
 const STUB_FULL_TICKET: Ticket = {
   id: 101,
@@ -223,7 +223,7 @@ function KanbanOverflowCase() {
                 {tickets.map((ticket) => (
                   <KanbanTicketCard
                     key={ticket.id}
-                    ticket={ticket as KanbanTicket}
+                    ticket={ticket}
                     projectId={1}
                     projectKey="PROJ"
                     isDragging={false}
