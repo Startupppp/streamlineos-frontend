@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, ClipboardList, History, SlidersHorizontal, Sliders, FileSearch, LayoutTemplate, Workflow, Plug } from "lucide-react";
+import { LayoutDashboard, FileText, ClipboardList, History, SlidersHorizontal, Sliders, FileSearch, LayoutTemplate, Workflow, Plug, GitBranch } from "lucide-react";
 import type { NavRoute } from "./sidebar-nav-types";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -17,6 +17,7 @@ const HR_SETTINGS_PERMISSIONS: PermissionKey[] = [
   "hr:forms:view",
   "hr:custom-fields:manage",
   "hr:automations:view",
+  "hr:reporting-lines:override",
 ];
 
 
@@ -52,6 +53,12 @@ export const HR_SETTINGS_ROUTES: NavRoute[] = [
             icon: FileText,
             href: "/hr/settings/policies",
             requiredPermission: "hr:policies:view",
+          },
+          {
+            label: "Reporting managers",
+            icon: GitBranch,
+            href: "/hr/settings/reporting-managers",
+            requiredPermission: "hr:reporting-lines:manage",
           },
           {
             label: "Workflows",

@@ -260,7 +260,7 @@ The one screen that owns its scroll. `PageWrapper … noInternalScroll className
 
 **Cards** — `<Card>` primitive (`bg-card text-card-foreground flex flex-col rounded-xl border border-border/70 shadow-noir`) when you need CardHeader/Content/Footer, or a plain panel via `CONTENT_PANEL_SOLID` (`rounded-xl border border-border bg-card shadow-sm`) — import the constant, never retype it. Always `bg-card`, never `bg-white`; translucent fills ≥75% card opacity with ≥70% borders. Clickable cards add `hover:border-primary/40 hover:shadow-md transition-all cursor-pointer`.
 
-**StatCard** — `rounded-lg border border-border bg-card px-3 py-2.5` (~56px): tinted icon square (`h-8 w-8 rounded-md`) left, label `text-[11px] font-medium text-muted-foreground` (no uppercase) + value `text-lg font-semibold tabular-nums` right. `tone`: `default` · `blue` · `emerald` · `amber` · `red` · `violet` (RBAC/privileged); optional `delta`, `hint` (never with `delta`), `href`, `isLoading`. **`StatCardGrid` is always ONE horizontal row:** `repeat(N, minmax(10rem, 1fr))` from child count, `gap-3`, horizontal-scroll container **at every breakpoint** (`overflow-x-auto scrollbar-hide touch-pan-x`) so the ROW scrolls and the PAGE never does. Never `md:overflow-x-visible`, never multi-row, never wrap.
+**StatCard** — `rounded-lg border border-border bg-card px-3 py-2.5` (~56px): tinted icon square (`h-8 w-8 rounded-md`) left, label `text-[11px] font-medium text-muted-foreground` (no uppercase) + value `text-lg font-semibold tabular-nums` right. `tone`: `default` · `blue` · `emerald` · `amber` · `red` · `violet` (RBAC/privileged); optional `delta`, `hint` (never with `delta`; truncates unless `wrapHint`, for a hint that carries data), `href`, `isLoading`. **`StatCardGrid` is always ONE horizontal row:** `repeat(N, minmax(10rem, 1fr))` from child count, `gap-3`, horizontal-scroll container **at every breakpoint** (`overflow-x-auto scrollbar-hide touch-pan-x`) so the ROW scrolls and the PAGE never does. Never `md:overflow-x-visible`, never multi-row, never wrap.
 
 **DataTable** props:
 
@@ -273,6 +273,8 @@ The one screen that owns its scroll. `PageWrapper … noInternalScroll className
 | `selection` | `{ selected: Set<…>; onChange; isRowSelectable? }` — adds the checkbox column |
 | `sortState` | `{ fields; field; direction; onChange }` = **server sort, the only sort there is**; omit it and no header offers to reorder |
 | `mobileCard` | `(row, index) => ReactNode`, replaces the table below `sm` |
+| `mobileCardBreakpoint` | `"sm"` (default) or `"xl"`: where cards give way to the table. Use `"xl"` when a trailing action column clips at 768-1024px with the sidebar open |
+| `scrollRegionLabel` | names the scrolling element and makes it the one keyboard stop (`role="region"`, `tabIndex=0`) for a table wider than its container |
 | `search` / `toolbar` | declared and compiling — **do not pass them** |
 | `onRowClick` · `footer` · `minWidth` · `className` · `rowClassName` | `rowClassName: (row, index) => string` |
 

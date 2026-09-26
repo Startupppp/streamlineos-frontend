@@ -4,23 +4,46 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { Form } from "@/components/ui/form";
-import { onboardEmployeeInputSchema, REPORTS_TO_REQUIRED_MESSAGE } from "@/lib/validation/hr";
+import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { DEFAULT_INVITE_ROLE } from "@/lib/constants/user-invite-roles";
 import { StepEmployment } from "./step-employment";
 
-jest.mock("@/hooks/api/access", () => ({
-  useCan: () => true,
-}));
+let secondaryCap = 0;
+let policyExtra: Record<string, unknown> = {};
 
+jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/hr/reporting-manager-policy", () => ({
+  useReportingManagerPolicy: () => ({ data: { maxSecondaryManagersPerEmployee: secondaryCap, ...policyExtra } }),
+}));
+jest.mock("@/components/hr/reporting-lines/policy-missing-banner", () => ({ PolicyMissingBanner: () => null }));
 jest.mock("@/components/hr/department-combobox", () => ({
   DepartmentCombobox: () => <div data-testid="department-combobox" />,
 }));
 
-jest.mock("@/components/ui/user-combobox", () => ({
-  UserCombobox: ({ onChange, disabled }: { onChange: (value: string) => void; disabled?: boolean }) => (
-    <button type="button" data-testid="reporting-manager-combobox" disabled={disabled} onClick={() => onChange("user-manager")}>
-      pick manager
-    </button>
+const MANAGERS: Record<string, { userId: string; name: string; email: null; designation: string; state: "active" }> = {
+  "user-manager": { userId: "user-manager", name: "Maya Manager", email: null, designation: "Lead", state: "active" },
+  "user-other": { userId: "user-other", name: "Omar Other", email: null, designation: "Architect", state: "active" },
+};
+
+jest.mock("@/components/hr/reporting-lines/manager-candidate-picker", () => ({
+  describeManager: (ref: { designation: string | null }) => ref.designation ?? "",
+  ManagerCandidatePicker: ({
+    id,
+    onChange,
+    disabled,
+  }: {
+    id?: string;
+    onChange: (userId: string | null, ref: unknown) => void;
+    disabled?: boolean;
+  }) => (
+    <span>
+      <button type="button" id={id} role="combobox" disabled={disabled} onClick={() => onChange("user-manager", MANAGERS["user-manager"])}>
+        pick maya
+      </button>
+      <button type="button" disabled={disabled} onClick={() => onChange("user-other", MANAGERS["user-other"])}>
+        pick omar
+      </button>
+    </span>
   ),
 }));
 
@@ -33,7 +56,6 @@ jest.mock("@/components/ui/select", () => ({
 }));
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
-
 type Validity = "unknown" | "valid" | "invalid";
 
 function Harness() {
@@ -54,10 +76,11 @@ function Harness() {
       role: DEFAULT_INVITE_ROLE,
       employeeId: "",
       topLevelRole: false,
+      secondaryManagers: [],
     },
   });
   async function handleValidate() {
-    const ok = await form.trigger(["reportingManagerUserId", "topLevelRole", "topLevelRoleReason"]);
+    const ok = await form.trigger(["reportingManagerUserId", "topLevelRole", "topLevelRoleReason", "secondaryManagers"]);
     setValidity(ok ? "valid" : "invalid");
   }
   return (
@@ -76,33 +99,141 @@ async function expectValidity(expected: Validity) {
   await waitFor(() => expect(screen.getByTestId("validity")).toHaveTextContent(expected));
 }
 
-describe("the Job Details step gates onboarding on a reporting manager", () => {
-  it("refuses to proceed without a manager unless the role is top-level", async () => {
+beforeEach(() => {
+  secondaryCap = 0;
+  policyExtra = {};
+});
+
+describe("Job Details — primary reporting manager (HRM-15 D2)", () => {
+  it("lets onboarding proceed without a manager and says the policy will assign one", async () => {
     render(<Harness />);
-
-    await expectValidity("invalid");
-    expect(screen.getByText(REPORTS_TO_REQUIRED_MESSAGE)).toBeInTheDocument();
-  });
-
-  it("accepts a chosen manager", async () => {
-    render(<Harness />);
-
-    fireEvent.click(screen.getByTestId("reporting-manager-combobox"));
-
+    expect(screen.getByText("Assigned automatically by policy if left blank.")).toBeInTheDocument();
     await expectValidity("valid");
   });
 
-  it("requires a reason for the top-level exception and disables the manager picker", async () => {
+  it("labels the picker with its field label and shows the chosen manager's designation and status", () => {
     render(<Harness />);
+    const picker = screen.getByRole("combobox", { name: "Primary reporting manager" });
+    fireEvent.click(picker);
+    expect(screen.getByText(/Maya Manager · Lead\. Approves this employee's leave/)).toBeInTheDocument();
+  });
+});
+
+describe("Job Details — top-level toggle (HRM-15 D3)", () => {
+  it("disables and clears the manager, and requires a reason", async () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("combobox", { name: "Primary reporting manager" }));
 
     fireEvent.click(screen.getByLabelText("Top-level role — no reporting manager"));
 
-    expect(screen.getByTestId("reporting-manager-combobox")).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: "Primary reporting manager" })).toBeDisabled();
+    // The disabled picker no longer promises a policy assignment.
+    expect(screen.getByText("Not used for a top-level role: this person reports to nobody.")).toBeInTheDocument();
+    expect(screen.queryByText("Assigned automatically by policy if left blank.")).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText("e.g. Founder and chief executive")).toHaveAttribute("aria-required", "true");
     await expectValidity("invalid");
     expect(screen.getByText("Explain why this role has no reporting manager.")).toBeInTheDocument();
 
     fireEvent.change(screen.getByPlaceholderText("e.g. Founder and chief executive"), { target: { value: "Founder" } });
+    await expectValidity("valid");
+  });
 
+  it("re-enables the manager when the toggle is cleared", () => {
+    render(<Harness />);
+    const toggle = screen.getByLabelText("Top-level role — no reporting manager");
+    fireEvent.click(toggle);
+    fireEvent.click(toggle);
+    expect(screen.getByRole("combobox", { name: "Primary reporting manager" })).toBeEnabled();
+    expect(screen.queryByPlaceholderText("e.g. Founder and chief executive")).not.toBeInTheDocument();
+  });
+});
+
+describe("Job Details — additional managers up to the org cap", () => {
+  it("offers none when the cap is 0", () => {
+    render(<Harness />);
+    expect(screen.queryByRole("button", { name: "Add additional manager" })).not.toBeInTheDocument();
+  });
+
+  it("adds rows up to the cap, then stops offering more", () => {
+    secondaryCap = 2;
+    render(<Harness />);
+    const add = () => fireEvent.click(screen.getByRole("button", { name: "Add additional manager" }));
+    add();
+    add();
+    expect(screen.getByText("Additional manager 2")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add additional manager" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Remove additional manager 2" }));
+    expect(screen.getByRole("button", { name: "Add additional manager" })).toBeInTheDocument();
+  });
+
+  it("refuses an additional manager who is already the primary", async () => {
+    secondaryCap = 1;
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("combobox", { name: "Primary reporting manager" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add additional manager" }));
+    fireEvent.click(screen.getAllByRole("combobox")[1] as HTMLElement);
+
+    await expectValidity("invalid");
+    expect(screen.getByText("Already the primary reporting manager.")).toBeInTheDocument();
+  });
+
+  it("moves focus to the new manager picker after Add additional manager", () => {
+    secondaryCap = 1;
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "Add additional manager" }));
+    expect(screen.getByRole("combobox", { name: "Additional manager 1" })).toHaveFocus();
+  });
+});
+
+describe("Job Details — an additional manager the policy would make primary (HRM-15 R3)", () => {
+  const DEFAULT_IS_MAYA = {
+    defaultPrimaryManager: { userId: "user-manager", name: "Maya Manager", email: null, designation: "Lead", state: "active" },
+    defaultPrimaryManagerEligible: true,
+    fallbackOrder: "CONFIGURED_MANAGER_THEN_UPLOADER",
+    actorQualifiesAsFallback: true,
+  };
+  const MESSAGE =
+    "Maya Manager is your organisation's default reporting manager and will be assigned as primary. Pick the primary explicitly or choose a different additional manager.";
+
+  function addMayaAsAdditional() {
+    fireEvent.click(screen.getByRole("button", { name: "Add additional manager" }));
+    fireEvent.click(screen.getByRole("combobox", { name: "Additional manager 1" }));
+  }
+
+  it("flags the field inline, before submit, when the primary is blank and the default is tried first", async () => {
+    secondaryCap = 1;
+    policyExtra = DEFAULT_IS_MAYA;
+    render(<Harness />);
+    addMayaAsAdditional();
+    expect(await screen.findByText(MESSAGE)).toBeInTheDocument();
+    await expectValidity("invalid");
+  });
+
+  it("flags it when the uploader is tried first but does not qualify", async () => {
+    secondaryCap = 1;
+    policyExtra = { ...DEFAULT_IS_MAYA, fallbackOrder: "UPLOADER_THEN_CONFIGURED_MANAGER", actorQualifiesAsFallback: false };
+    render(<Harness />);
+    addMayaAsAdditional();
+    expect(await screen.findByText(MESSAGE)).toBeInTheDocument();
+  });
+
+  it("allows it when the uploader would be assigned instead", async () => {
+    secondaryCap = 1;
+    policyExtra = { ...DEFAULT_IS_MAYA, fallbackOrder: "UPLOADER_THEN_CONFIGURED_MANAGER" };
+    render(<Harness />);
+    addMayaAsAdditional();
+    await expectValidity("valid");
+    expect(screen.queryByText(MESSAGE)).not.toBeInTheDocument();
+  });
+
+  it("clears once the primary is picked explicitly", async () => {
+    secondaryCap = 1;
+    policyExtra = DEFAULT_IS_MAYA;
+    render(<Harness />);
+    addMayaAsAdditional();
+    expect(await screen.findByText(MESSAGE)).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "pick omar" })[0] as HTMLElement);
+    await waitFor(() => expect(screen.queryByText(MESSAGE)).not.toBeInTheDocument());
     await expectValidity("valid");
   });
 });

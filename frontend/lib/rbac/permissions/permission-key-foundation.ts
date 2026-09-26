@@ -231,6 +231,9 @@ export type FoundationPermissionKey =
   | "hr:onboarding:tasks:view"
   | "hr:onboarding:tasks:complete"
   | "hr:onboarding:manage"
+  | "hr:reporting-lines:manage"
+  | "hr:reporting-lines:review"
+  | "hr:reporting-lines:override"
   | "payments:providers:view"
   | "payments:providers:manage"
   | "payments:credentials:manage";

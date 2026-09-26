@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { downloadExport } from "@/lib/download-export";
@@ -9,6 +9,8 @@ import { lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 
 export type HrImportEntity =
   | "employees"
@@ -183,15 +185,24 @@ export function useCreateImportJob() {
   });
 }
 
+/**
+ * The commit is `@Idempotent("hr.import.jobs.commit")` (HRM-15 Addendum 2): one
+ * key per job commit, reused by a retry, released once it completes.
+ */
 export function useCommitImportJob() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation<HrImportJob, Error, { jobId: string }>("hr:import:manage", {
     mutationKey: ["hr", "import", "jobs", "commit"],
     mutationFn: ({ jobId }) =>
-      apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/commit`, {}, undefined, lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobRowContract))),
-    onSuccess: (_, { jobId }) => {
+      apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/commit`, {}, operation.configFor({ jobId }), lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobRowContract))),
+    onSuccess: (job, { jobId }) => {
+      operation.settle();
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJobs() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJob(jobId) });
+      // An employees import writes reporting lines (HRM-15 §7.4).
+      if (job.entity === "employees")
+        void invalidateHrWorkforceQueries(qc, undefined, [humanResourcesQueryKeys.hr.reportingLinesAll()]);
     },
   });
 }

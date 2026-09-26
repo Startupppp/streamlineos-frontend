@@ -8,17 +8,20 @@ function Table({
   className,
   containerClassName,
   containerAriaLabel,
+  containerFocusable = true,
   ...props
 }: React.ComponentProps<"table"> & {
   containerClassName?: string;
   containerAriaLabel?: string;
+  /** False when an outer element scrolls and is the labelled keyboard stop. */
+  containerFocusable?: boolean;
 }) {
   return (
     <div
       data-slot="table-container"
-      role="region"
-      aria-label={containerAriaLabel ?? "Table"}
-      tabIndex={0}
+      role={containerFocusable ? "region" : undefined}
+      aria-label={containerFocusable ? (containerAriaLabel ?? "Table") : undefined}
+      tabIndex={containerFocusable ? 0 : undefined}
       className={cn("relative w-full overflow-x-auto", containerClassName)}
     >
       <table
