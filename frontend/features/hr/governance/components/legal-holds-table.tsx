@@ -158,7 +158,7 @@ export function LegalHoldsTable() {
       )}
       <PageState
         resolution={pageState}
-        loading={<DataTableSkeleton columns={6} className="flex-1" />}
+        loading={<DataTableSkeleton headers={["ID", "Subject", "Status", "Reason", "Placed", ""]} className="flex-1" />}
         onRetry={handleRetry}
         className="flex-1"
       >

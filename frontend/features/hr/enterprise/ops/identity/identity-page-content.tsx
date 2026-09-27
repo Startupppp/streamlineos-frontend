@@ -256,7 +256,7 @@ export function IdentityPageContent() {
           <TabsContent value="provisioning" className="mt-0 flex flex-1 min-h-0 flex-col">
             <PageState
               resolution={provisioningState}
-              loading={<DataTableSkeleton columns={6} className="flex-1" />}
+              loading={<DataTableSkeleton headers={["Employee", "System", "Action", "Trigger", "Status", "Requested"]} className="flex-1" />}
               onRetry={handleRetry}
               className="flex-1"
             >
@@ -296,7 +296,7 @@ export function IdentityPageContent() {
           <TabsContent value="templates" className="mt-0 flex flex-1 min-h-0 flex-col">
             <PageState
               resolution={templatesState}
-              loading={<DataTableSkeleton columns={4} rows={3} className="flex-1" />}
+              loading={<DataTableSkeleton headers={["Template", "Trigger", "Systems", ""]} rows={3} className="flex-1" />}
               onRetry={handleRetry}
               className="flex-1"
             >

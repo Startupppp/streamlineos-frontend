@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { withCorrelation } from "@/lib/observability/with-correlation";
+import { reportError } from "@/lib/observability/error-reporter";
 
 const notificationSchema = z.object({
   id: z.number(),
@@ -51,7 +52,14 @@ export async function consumeNotificationStream(
         ?.slice(5)
         .trim();
       if (!data) continue;
-      const parsed = frameSchema.safeParse(JSON.parse(data));
+      let rawJson: unknown;
+      try {
+        rawJson = JSON.parse(data);
+      } catch (err) {
+        reportError(err);
+        continue;
+      }
+      const parsed = frameSchema.safeParse(rawJson);
       if (!parsed.success) continue;
       if (parsed.data.type === "notification") {
         if (parsed.data.notification) onNotification(parsed.data.notification);

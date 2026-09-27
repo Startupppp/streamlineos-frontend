@@ -195,7 +195,7 @@ export function EventStreamPageContent() {
           </div>
           <PageState
             resolution={eventsState}
-            loading={<DataTableSkeleton columns={5} className="flex-1" />}
+            loading={<DataTableSkeleton headers={["Event", "Entity", "Entity ID", "Actor", "Occurred"]} className="flex-1" />}
             onRetry={handleRetryEvents}
             className="flex-1"
           >

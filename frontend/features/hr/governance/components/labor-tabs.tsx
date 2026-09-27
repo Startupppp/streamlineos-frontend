@@ -286,7 +286,7 @@ export function LaborTabs() {
 
       <PageState
         resolution={pageState}
-        loading={<DataTableSkeleton columns={5} className="flex-1" />}
+        loading={<DataTableSkeleton headers={["User", "Union", "Since", "Status", ""]} className="flex-1" />}
         onRetry={handleRetry}
         className="flex-1"
       >

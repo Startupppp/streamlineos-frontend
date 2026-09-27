@@ -146,7 +146,7 @@ export function AccommodationsPageContent() {
       >
         <PageState
           resolution={pageState}
-          loading={<DataTableSkeleton columns={5} className="flex-1" />}
+          loading={<DataTableSkeleton headers={["Type", "Employee", "Status", "", "Submitted"]} className="flex-1" />}
           onRetry={handleRetry}
           className="flex-1"
         >

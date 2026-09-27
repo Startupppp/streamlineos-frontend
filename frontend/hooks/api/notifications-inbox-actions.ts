@@ -4,8 +4,10 @@ import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import type { UnreadCount } from "@/types/notifications";
 import { useNotificationInboxInvalidation } from "./notifications-shared";
 import {
+  findInLists,
   snapshotAndPatchLists,
   snapshotAndRemoveFromLists,
   snapshotAndRemoveFromListsMulti,
@@ -17,6 +19,7 @@ import {
   applyUnreadDelta,
   beginInboxPatch,
   countUnreadAmong,
+  countsTowardUnreadBadge,
   isUnreadNow,
   restoreInboxSnapshot,
   useNotificationRowPatch,
@@ -66,12 +69,31 @@ export const useDeleteNotification = () => {
   });
 };
 
-export const useUnarchiveNotification = () =>
-  useNotificationRowPatch<number>({
+export const useUnarchiveNotification = () => {
+  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
+  return useMutation<NotificationAck, Error, number, NotifMutationContext>({
     mutationKey: ["notifications", "unarchive"],
-    request: (notificationId) => apiClient.patch<NotificationAck>(`/notifications/${notificationId}/unarchive`, undefined, undefined, notificationAckLazy),
-    patch: (notificationId) => (n) => (n.id === notificationId ? { ...n, archivedAt: null } : n),
+    mutationFn: (notificationId) =>
+      apiClient.patch<NotificationAck>(`/notifications/${notificationId}/unarchive`, undefined, undefined, notificationAckLazy),
+    onMutate: async (notificationId) => {
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const found = findInLists(queryClient, listKey, (n) => n.id === notificationId);
+      const willAddToUnread =
+        found !== undefined && countsTowardUnreadBadge({ ...found, archivedAt: null });
+      const previousLists = snapshotAndPatchLists(queryClient, listKey, (n) =>
+        n.id === notificationId ? { ...n, archivedAt: null } : n,
+      );
+      if (willAddToUnread) {
+        queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
+          old ? { count: old.count + 1 } : old,
+        );
+      }
+      return { previousLists, previousCount };
+    },
+    onError: (_err, _vars, context) => restoreInboxSnapshot(queryClient, context),
+    onSettled: () => invalidateInbox(),
   });
+};
 
 export const usePinNotification = () =>
   useNotificationRowPatch<number>({
@@ -87,16 +109,35 @@ export const useUnpinNotification = () =>
     patch: (notificationId) => (n) => (n.id === notificationId ? { ...n, pinned: false } : n),
   });
 
-export const useSnoozeNotification = () =>
-  useNotificationRowPatch<{ notificationId: number; snoozedUntil: string }>({
+export const useSnoozeNotification = () => {
+  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
+  return useMutation<
+    NotificationAck,
+    Error,
+    { notificationId: number; snoozedUntil: string },
+    NotifMutationContext
+  >({
     mutationKey: ["notifications", "snooze"],
-    request: ({ notificationId, snoozedUntil }) =>
-      apiClient.patch<NotificationAck>(`/notifications/${notificationId}/snooze`, { snoozedUntil }, undefined, notificationAckLazy),
-    patch:
-      ({ notificationId, snoozedUntil }) =>
-      (n) =>
+    mutationFn: ({ notificationId, snoozedUntil }) =>
+      apiClient.patch<NotificationAck>(
+        `/notifications/${notificationId}/snooze`,
+        { snoozedUntil },
+        undefined,
+        notificationAckLazy,
+      ),
+    onMutate: async ({ notificationId, snoozedUntil }) => {
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const cleared = isUnreadNow(queryClient, listKey, notificationId) ? 1 : 0;
+      const previousLists = snapshotAndPatchLists(queryClient, listKey, (n) =>
         n.id === notificationId ? { ...n, snoozedUntil } : n,
+      );
+      applyUnreadDelta(queryClient, unreadKey, cleared);
+      return { previousLists, previousCount };
+    },
+    onError: (_err, _vars, context) => restoreInboxSnapshot(queryClient, context),
+    onSettled: () => invalidateInbox(),
   });
+};
 
 export const useBulkArchive = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();

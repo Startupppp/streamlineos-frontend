@@ -121,7 +121,7 @@ export function EmergencyPageContent() {
       >
         <PageState
           resolution={pageState}
-          loading={<DataTableSkeleton columns={4} className="flex-1" />}
+          loading={<DataTableSkeleton headers={["Event", "Type", "Status", "Created"]} className="flex-1" />}
           onRetry={handleRetry}
           className="flex-1"
         >

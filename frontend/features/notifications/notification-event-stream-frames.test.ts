@@ -138,4 +138,11 @@ describe("notification stream frame dispatch", () => {
       h.onCountChanged.mock.invocationCallOrder[0],
     );
   });
+
+  it("skips a truncated non-JSON frame without tearing down the stream, and still dispatches the next good frame", async () => {
+    const h = handlers();
+    await drain(["data: {not-json}\n\n", frame({ type: "count_changed" })], h);
+    expect(h.onCountChanged).toHaveBeenCalledTimes(1);
+    expect(h.onNotification).not.toHaveBeenCalled();
+  });
 });

@@ -203,7 +203,7 @@ export function DelegationSheet() {
       )}
       <PageState
         resolution={pageState}
-        loading={<DataTableSkeleton columns={5} className="flex-1" />}
+        loading={<DataTableSkeleton headers={["Grantor", "Proxy", "Scope", "Expires", ""]} className="flex-1" />}
         onRetry={handleRetry}
         className="flex-1"
       >
