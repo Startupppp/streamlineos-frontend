@@ -35,6 +35,8 @@ import {
 import type { FeedbucketSubmissionFilters } from "@/types/feedbucket";
 
 const PAGE_SIZE = 25;
+const LINKED_VALUES = ["linked", "unlinked"] as const;
+const DUPLICATE_VALUES = ["true", "false"] as const;
 
 interface ProductFeedbackPageProps {
   managedProductId: number;
@@ -88,7 +90,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
   );
 
   const typedLinked = useMemo(
-    () => (linkedValue === "linked" || linkedValue === "unlinked" ? linkedValue : undefined),
+    () => LINKED_VALUES.find((v) => v === linkedValue),
     [linkedValue],
   );
 
@@ -98,7 +100,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
   );
 
   const typedDuplicate = useMemo(
-    () => (duplicateValue === "true" || duplicateValue === "false" ? duplicateValue : undefined),
+    () => DUPLICATE_VALUES.find((v) => v === duplicateValue),
     [duplicateValue],
   );
 

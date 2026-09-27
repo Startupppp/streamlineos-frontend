@@ -9,6 +9,7 @@ import {
   buildScopeOverviewHref,
   type BuildScope,
 } from "@/lib/build/build-scope";
+import type { ManagedProduct } from "@/types/projects/managed-products";
 import {
   useBuildScopeRecents,
   useBuildScopeStars,
@@ -69,18 +70,20 @@ export function useBuildScopeIdentity(scope: BuildScope): BuildScopeIdentity {
           isArchived: projectQuery.data?.status === "ARCHIVED",
           isInaccessible: isMissingAccess(projectQuery.error),
         };
-      case "product":
+      case "product": {
+        const product: ManagedProduct | null | undefined = productQuery.data;
         return {
           ref: {
             ...base,
             id: String(scope.managedProductId ?? ""),
-            name: productQuery.data?.name ?? (base.name || "Product"),
-            projectKey: productQuery.data?.key ?? base.projectKey,
+            name: product?.name ?? (base.name || "Product"),
+            projectKey: product?.key ?? base.projectKey,
           },
           isLoading: productQuery.isLoading,
-          isArchived: productQuery.data?.status === "archived",
+          isArchived: product?.status === "archived",
           isInaccessible: isMissingAccess(productQuery.error),
         };
+      }
       default:
         return {
           ref: ORGANIZATION_SCOPE_REF,

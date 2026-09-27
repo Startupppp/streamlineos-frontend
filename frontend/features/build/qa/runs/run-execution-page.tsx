@@ -355,19 +355,23 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           <BuildListToolbar
-            search={listFilters.search}
-            onSearchChange={listFilters.setSearch}
-            searchPlaceholder="Search test cases…"
-          >
-            <BuildFilterSelect
-              filterId="status"
-              label="Status"
-              value={listFilters.value("status")}
-              options={RESULT_STATUS_OPTIONS}
-              isActive={listFilters.isActive("status")}
-              onChange={(v) => listFilters.setValue("status", v)}
-            />
-          </BuildListToolbar>
+            search={{ value: listFilters.search, onValueChange: listFilters.setSearch, placeholder: "Search test cases…" }}
+            filters={[
+              {
+                id: "status",
+                label: "Status",
+                control: (
+                  <BuildFilterSelect
+                    label="Status"
+                    value={listFilters.value("status")}
+                    options={RESULT_STATUS_OPTIONS}
+                    onValueChange={(v) => listFilters.setValue("status", v)}
+                  />
+                ),
+                active: listFilters.isActive("status"),
+              },
+            ]}
+          />
 
           {selectedIds.size > 0 ? (
             <RunResultBulkActionBar

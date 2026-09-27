@@ -18,7 +18,7 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
     refetch,
   } = useProjectTemplates();
 
-  const templateList = templatePages?.pages.flatMap((page) => page.data) ?? [];
+  const templateList = templatePages?.pages.flatMap((page) => Array.isArray(page) ? page : page.data) ?? [];
 
   function handleSelect(id: number | null) {
     updateDraft({ templateId: id });

@@ -199,9 +199,11 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
 
   const handleSubmit = useCallback(
     (values: FormValues) => {
+      const triggerEvent = TRIGGER_EVENTS.find((t) => t.value === values.triggerEvent)?.value;
+      if (!triggerEvent) return;
       if (editingAutomation) {
         updateAutomation.mutate(
-          { automationId: editingAutomation.id, ...values },
+          { automationId: editingAutomation.id, ...values, triggerEvent },
           {
             onSuccess: () => {
               setSheetOpen(false);
@@ -211,13 +213,27 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
           },
         );
       } else {
-        createAutomation.mutate(values, {
-          onSuccess: () => {
-            setSheetOpen(false);
-            toast.success("Automation created");
+        createAutomation.mutate(
+          {
+            name: values.name,
+            isActive: values.isActive,
+            triggerEvent,
+            conditions: values.conditions,
+            actions: values.actions,
+            createdBy: null,
+            createdByUser: null,
+            lastRunAt: null,
+            lastFailureAt: null,
+            updatedAt: new Date().toISOString(),
           },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        });
+          {
+            onSuccess: () => {
+              setSheetOpen(false);
+              toast.success("Automation created");
+            },
+            onError: (e) => toast.error(getErrorMessage(e)),
+          },
+        );
       }
     },
     [editingAutomation, createAutomation, updateAutomation],
