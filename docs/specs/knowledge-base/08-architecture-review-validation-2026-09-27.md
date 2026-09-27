@@ -268,6 +268,25 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 
 - [ ] Record retained owner, route contract and callers for each R1-C10 candidate, including public/API consumers and scheduled jobs. Preserve grants/member management, useful verification and required redirects. Verify deregistered routes have no promised consumers, then remove dead controller/service/schema/test files together. Review current help-centre ownership and module registration after the concurrent changes; no wholesale deletion from the old 54-route count.
 
+**Module-registration census, 2026-09-27.** The module-registration half is now measured. KB declares 36 controllers. Six are referenced by **zero** `*.module.ts` anywhere under `backend/src` — not merely outside `modules/kb` — and there are no barrel files, so no spread could hide a registration:
+
+| Unregistered controller | File |
+|---|---|
+| `KbWikiAnalyticsController` | `analytics/kb-wiki-analytics.controller.ts` |
+| `KbArticlesController` | `help-centre/kb-articles.controller.ts` |
+| `KbAuthoringController` | `help-centre/kb-authoring.controller.ts` |
+| `KbCategoriesController` | `help-centre/kb-categories.controller.ts` |
+| `KbCommentsController` | `help-centre/kb-comments.controller.ts` |
+| `KbVerificationController` | `help-centre/kb-verification.controller.ts` |
+
+`kb-help-centre.module.ts:25-31` mounts only `KbArticleAiController`, `KbAiFeedbackController`, `KbFromTicketController`, `KbAnalyticsController` and `KbWidgetController`. Nest mounts nothing else, so these six define no reachable route. This confirms the duplicate-analytics finding: `KbWikiAnalyticsController` is the unreachable one; `help-centre/kb-analytics.controller.ts` is live.
+
+Two consequences, neither of which authorizes deletion:
+- Declaring `@Controller("kb")` does not make a route exist. Any audit item that inferred a route's existence from a controller file must be re-derived from the module arrays.
+- Deregistration did **not** make the underlying services dead. `KbArticlesService` is still injected by `support/kb-gap/support-kb-gap.service.ts`, exactly as `06-code-removal-and-reuse.md` records. The controllers are unreachable; their services are not.
+
+Removal stays blocked under the owner's standing retain-don't-delete rule. Recorded as a census, which is what this item asks for.
+
 ### AV-10 — P1: contracts and reachable UI
 
 - [ ] Verify each migrated envelope through the real HTTP parser and query hook, not a hook mock that already returns an array. Include from-ticket create success/idempotent retry, grants create/list parity, export history and each response projection. Update `selectFlatPages` documentation to describe its actual selected result, and retain raw page metadata where needed.
