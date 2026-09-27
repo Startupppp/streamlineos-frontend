@@ -260,6 +260,7 @@ export function UploadDocumentDialog({
     setIsLoading(true);
     let successCount = 0;
     let failCount = 0;
+    let lastError: unknown = null;
 
     try {
       for (let i = 0; i < files.length; i++) {
@@ -284,7 +285,10 @@ export function UploadDocumentDialog({
             mimeType: uploaded.mimeType,
           });
           successCount++;
-        } catch { failCount++; }
+        } catch (error) {
+          failCount++;
+          lastError = error;
+        }
       }
 
       if (successCount > 0) {
@@ -299,7 +303,7 @@ export function UploadDocumentDialog({
         titleAutoPopulated.current = false;
         onSuccess();
       } else {
-        toast.error("Failed to upload documents");
+        toast.error(lastError ? getErrorMessage(lastError) : "Failed to upload documents");
       }
     } catch (error) {
       toast.error(getErrorMessage(error));
