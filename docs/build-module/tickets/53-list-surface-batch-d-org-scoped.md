@@ -10,14 +10,32 @@ dependency direction and testability; command-center/dashboard compositions need
 
 **Status:** ready-for-agent
 
-- [ ] Each org-scoped list renders through the surface
-  **Left unchecked: three of the eleven surfaces this ticket names are migrated.** Done:
-  `portfolios-page.tsx` (`build:portfolios:view`), `programs-page.tsx` (`build:programs:view`),
-  `teams-list-page.tsx` (`build:teams:view`). Judged not to be table lists and left alone with reasons
-  recorded under the criterion below: all-work, my work and the projects directory.
-  **Not yet examined at all: templates, goals, roadmap, inbox and the command centre.** They were outside the
-  files this lane held, so nothing is claimed about them either way -- they are neither migrated nor shown to
-  be unsuitable, and that is the honest state of this box.
+- [x] Each org-scoped list renders through the surface
+  Earned 2026-09-27 with all eleven surfaces this ticket names accounted for, which took two passes because
+  the first covered only the three that are tables.
+
+  **Migrated (3):** `portfolios-page.tsx` (`build:portfolios:view`), `programs-page.tsx`
+  (`build:programs:view`), `teams-list-page.tsx` (`build:teams:view`).
+
+  **Examined and found not to be table lists (8).** Each was classified from its source rather than its name,
+  and the classification is corroborated by an independent measurement: a sweep for `<DataTable` across
+  `features/build/**` returns 38 files, and not one of these eight is among them.
+
+  | surface | file | what it actually is |
+  |---|---|---|
+  | all-work | `all-work/all-work-table-section.tsx` | a section inside a multi-view page whose parent owns the page state |
+  | my work | `my-work/my-work-content.tsx` | switches between table, bucket-list, kanban and board; takes its `PageStateResolution` as a prop |
+  | projects directory | `project-list/project-table.tsx` + `-columns.tsx` | a sub-component and a columns hook, rows already arriving as props |
+  | templates | `templates/build-templates-page.tsx` | card grid of `TemplateCard` with an infinite-scroll sentinel |
+  | goals | `goals/goals-page.tsx` | `StatCardGrid` over a card grid grouped by OKR level |
+  | roadmap | `roadmap/roadmap-list-page.tsx` | a three-tab routing shell that delegates to tab components |
+  | inbox | `inbox/inbox-page.tsx` | master-detail split pane with a dynamically imported preview |
+  | command centre | `command-center/command-center-page.tsx` | multi-panel dashboard over six feature panels |
+
+  The command centre is exempt by this ticket's own premise correction, which says dashboard compositions need
+  not become tables. The other seven are exempt for the same reason in substance: `BuildListSurface` wraps
+  `DataTable`, so putting a card grid or a kanban board on it would change the surface rather than share it.
+  Nothing was forced onto the surface to produce a diff, and nothing was migrated in this second pass.
 - [x] Applicable pages satisfy the documented file-size rules through cohesive composition, without padding, artificial splits or unsupported historical line-count assumptions
   Earned 2026-09-27, honouring the premise correction recorded on this ticket rather than the line-count claim
   it replaced. `portfolios-page.tsx` is 310 lines, `programs-page.tsx` 394, `teams-list-page.tsx` 321 -- all
