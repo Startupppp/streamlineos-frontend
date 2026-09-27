@@ -72,7 +72,45 @@ not satisfaction of acceptance. Eight ordering tests pass, but two encode that i
     4. Approval source shows cursor error and 0 items when cursor has invalid timestamp string — covers invalid timestamp.
     5. All sources show cursor error, 0 items when cursor string is malformed JSON — covers whole-cursor malformed case.
     Incompatible source state (adapter key no longer exists) is handled gracefully (unused positions are silently ignored — no cross-source confusion). Noted: `decodeInboxCursor` (backward-compat function) still resets on malformed JSON; `parseInboxCursor` is the validated path used in list(). 13 tests pass. -->
-- [ ] Measure the proposed index against the actual multi-status query before adding it: a status column preceding created_at does not automatically supply global created_at order across several status values
+- [x] Measure the proposed index against the actual multi-status query before adding it: a status column preceding created_at does not automatically supply global created_at order across several status values
+  Earned 2026-09-27, and **the measurement refutes the proposed index.** Instrument: PostgreSQL 18.0 at
+  `127.0.0.1:5432`, database `replay2`, cold-replayed from the journal; no production data, no production
+  host. Run as `streamline_app` under the tenant GUC (BE-76), reporting buffers not milliseconds (BE-77).
+  Production `build.project_approvals` holds **0 rows**, so 4,000 were planted with deliberate skew --
+  pending 2,468, approved 727, rejected 490, escalated 315, with 363 soft-deleted spread across all four
+  and timestamps spanning about 103 days. A plan measured on the empty production table would have been
+  worthless.
+  
+  Three candidates, same query, same cursor (`created_at DESC, id DESC`, `status IN (pending, escalated)`):
+  
+  | candidate | sort node | buffers |
+  |---|---|---|
+  | (a) baseline, today's indexes only | **yes** | 506 |
+  | (b) status-leading `(org_id, approver_membership_id, status, created_at DESC, id DESC)` | **yes** | 335 |
+  | (c) order-leading `(org_id, approver_membership_id, created_at DESC, id DESC)` | **no** | 205 |
+  
+  **The box's suspicion is confirmed.** With `status` ahead of `created_at` and two status values, the
+  index yields two disjoint ranges that are each ordered internally but not globally, so the planner adds
+  `Sort  Sort Key: created_at DESC, id DESC  Sort Method: top-N heapsort`. Worse than that: in (b) the
+  planner **did not use the new index at all** -- it chose a `Seq Scan on project_approvals` removing
+  2,649 rows by filter. So the status-leading index would have been added, cost writes on every insert,
+  and never been read.
+  
+  (c) is the one that works: `Index Scan using idx_probe_order_leading`, `Index Cond: ((org_id = ...) AND
+  (approver_membership_id = 15))`, **no sort node**, 205 buffers against the baseline's 506.
+  
+  **Two findings that follow from the same plans and are not this box:**
+  1. Even in (c) the cursor is not pushed into the index: `created_at` and `id` appear in a `Filter` that
+     removes **1,924 rows**, because the `(created_at < ?) OR (created_at = ? AND id < ?)` form is not a
+     range the planner can seek on. Rewriting it row-wise as `(created_at, id) < (?, ?)` would make it an
+     `Index Cond`. Any migration adding the order-leading index should land with that rewrite, or most of
+     its benefit is left on the table.
+  2. `idx_project_approvals_approver_status` at `src/db/schema/build/approvals.ts:50` has **no
+     `WHERE deleted_at IS NULL`** predicate, unlike its sibling at `:49`. That is a BE-51 gap on a
+     soft-deletable table and should be fixed in the same migration.
+  
+  No index was added: the box asks for measurement before adding, and the measurement says the proposal
+  as written should not be added. The probe indexes were created and dropped around each run.
   <!-- 2026-09-27 (lane 10): Cannot earn — requires EXPLAIN (ANALYZE, BUFFERS) as streamline_app with tenant GUC set against production. No non-production database is available. The candidate index and measurement query are already recorded in the ticket body above. -->
 
 - **"The board already does this correctly"** — no component named "board" in the repository carries the ordering-mode-in-cursor pattern. The closest real match is `decodeProgramCursor` in `backend/src/modules/build/portfolios/programs.service.ts:65`, which calls `decodeTupleCursor(cursor, 4)` and rejects when `cursorSort !== sort || cursorOrder !== order`. The pattern is real; the name in the ticket is not. That precedent is a direct route-handler throw and does not apply behind `readSourceWithin`.
