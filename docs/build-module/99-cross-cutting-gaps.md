@@ -3,44 +3,51 @@
 Gaps that block the same acceptance criterion on many pages at once. Recorded here **once** so the
 per-page specs do not carry 74 copies of the same BLOCKED line.
 
-A gap listed here is scoped **out** of the per-page criterion it would otherwise block. C3 may be
-ticked on a page that satisfies every other C3 requirement. Do not re-open a page's box for a gap
-recorded here — fix the gap, then delete its entry.
+A gap recorded here remains part of acceptance unless an explicit, valid product decision removes
+that requirement. A cross-reference avoids duplicate implementation work; it is not proof that a
+page meets its contract. Per the owner's 2026-09-27 instruction, check a box only when the applicable
+implementation is complete, verified and tested. Retain scoped-out decisions as decisions, not
+implemented functionality; reopen any box whose supporting premise has been disproved.
 
 ---
 
-## CCG-1 — No optimistic concurrency anywhere in the backend
+## CCG-1 — Incomplete concurrency coverage and conflict UX
 
 **Blocks:** the `Conflict` state in the **States** section, and the `If-Match` clause in the **API
 and data contract** section, on **74 of the 83** page specs.
 
-**Measured 2026-09-26.** `grep -riE "if-match|ifmatch|etag"` over `backend/src` returns **0 hits** —
-not just in `modules/build`, but in the entire backend. No table carries a `version` column used as
-an optimistic lock. Every `ConflictException` in `modules/build` is a *business* conflict (duplicate
-state, a race on a uniqueness rule), not a version conflict.
+**Corrected 2026-09-27.** The earlier header-only grep missed body-based concurrency control.
+`backend/src/db/schema/build/ticket-core.ts:75` defines `version`;
+`backend/src/modules/build/core/dto/ticket.schemas.ts:173-174` accepts optional
+`expectedUpdatedAt` and `version`; `projects-tickets-update.service.ts:241-249` checks them and
+`:290-296` guards the write against the previously read version. Absence of `If-Match` is not
+absence of optimistic concurrency. These are source observations, not a fresh database test.
 
 So the spec text
 
 > Conflict: show field-level server/current comparison for version conflicts.
 
-has no backend fact to render. A frontend cannot display a version comparison when no endpoint
-returns a version, and a test asserting the conflict state would have to fabricate the 409 — which
-proves the mock, not the product.
+remains a real acceptance requirement for versioned editing. Optional client tokens, incomplete
+writer coverage, response projections and missing client conflict handling must be verified
+separately. A row-level compare-and-swap alone does not prove every editing workflow is protected.
 
-**Scoped out per the product owner's decision (2026-09-26).** C3 closes on pages that satisfy every
-other requirement. This entry is the single tracked record of the gap.
+**Decision correction:** The earlier blanket exemption rested on the false "no version column"
+premise. It cannot justify completing ticket-editing or sibling versioned-mutation C3 criteria.
+The implementation is tracked by tickets 36, 11, 12 and 13; page-level conflict evidence remains open.
 
 **What closing CCG-1 requires:**
 
-1. A migration adding a version column to each versioned build table.
-2. `If-Match` parsed and enforced on every versioned mutation, returning 409 with both the caller's
-   and the server's field values.
+1. Inventory actual versioned entities and every writer; reuse existing columns and verify any
+   new trigger/column migration before dependent code deploys. Do not add a duplicate ticket token.
+2. Expand response/client token coverage before requiring it. Use the existing body-token contract
+   consistently; headers are not mandatory. Return a bounded, authorized current projection on 409.
 3. A conflict surface that shows the field-level comparison, per the States section.
 4. Contract tests on both halves — and the negative must be paired with a positive (FE-122), or the
    409 assertion passes because the control could never fire.
 
-Until then, treat a 409 from a build endpoint as a **business** conflict. Handling one is not
-evidence of conflict-state support.
+Classify 409s by their error code, not the HTTP status alone. Business-rule conflicts and stale
+version conflicts require different handling. Test a successful update and a stale update from
+the same starting version; show that the losing update did not overwrite the winner.
 
 ---
 
@@ -57,7 +64,8 @@ was wrong and should not be reintroduced.
 - **`denied`** — the operator's own account is an org admin and passes every gate. Stubbing
   `/me/access` to fake a denial makes the test prove the stub
   (see `control-gate-test-passes-because-the-control-cannot-render`).
-- **`conflict`** — needs a rejected write, and is blocked by **CCG-1** regardless.
+- **`conflict`** — requires a rejected stale write on an authorized fixture; code/contract gaps are
+  tracked by **CCG-1**. A read-only smoke check cannot verify it, but it is not inherently unreachable.
 
 C7 therefore stays open on pages where all six states are required. Record the states actually
 measured; do not tick the box from four of six.

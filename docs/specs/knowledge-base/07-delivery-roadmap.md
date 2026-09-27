@@ -1,5 +1,16 @@
 # Step 7 — Delivery Roadmap, Release Gates, and Verification
 
+## Current corrective sequence — September 27
+
+Use [AV-01–AV-15](08-architecture-review-validation-2026-09-27.md) before expanding features. Phase durations below are original planning estimates, not remaining-time estimates.
+
+1. Close retrieval integration failures, container-policy inconsistency and held-descendant purge (AV-01/02/07).
+2. Complete atomic writes, scoped retrieval, provenance, tenant-safe query caching and real wire contracts (AV-03/04/05/10).
+3. Finish useful interfaces, compatibility-aware retirement and effective cache/test coverage (AV-08/09/12/14/15).
+4. Capture post-change plans and query/connection budgets, reconcile migrations against the release revision, then operator, restore and load/soak evidence (AV-06/11/13).
+
+Do not deploy a service, replica, CDN or external search engine solely to close a checklist. Deferred capabilities have triggers and prerequisites, not completed checkboxes. Reopened requirements need source revision, tests and required browser/DB/operational artifacts before being checked again. Preserve failed commands as dated evidence until a successful run supersedes them.
+
 ## Delivery rule
 
 Correctness precedes scale optimization; scale proof precedes infrastructure expansion; measured customer need precedes feature breadth. Work is delivered as vertical slices with browser, interface, database, authorization, and operations evidence together.

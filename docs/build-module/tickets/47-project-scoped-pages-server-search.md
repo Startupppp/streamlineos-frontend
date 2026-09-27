@@ -6,7 +6,7 @@ Migrating them is mechanical once ticket 46 has established the contract shape, 
 
 **Blocked by:** 46 — Searching a Build list finds rows the first page does not contain.
 
-**Status:** ready-for-agent
+**Status:** partial — implementation fragments exist; full acceptance remains unverified (audit 2026-09-27)
 
 - [ ] Each list in scope accepts a search term at its read contract and honours it in the query
 - [ ] Every client-side filter block in scope is deleted

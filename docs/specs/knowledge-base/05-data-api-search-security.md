@@ -1,5 +1,17 @@
 # Step 5 — Data, Interface, Search, Security, and Retention Contracts
 
+## September 27 contract corrections
+
+Read [AV-02–AV-07 and AV-12–AV-14](08-architecture-review-validation-2026-09-27.md) alongside this target spec. Schema names are not evidence that values are populated correctly.
+
+- Enforce private-space/project constraints across ordinary visibility, owner and grant branches. Citation presentation cannot authorize provider disclosure. Anonymous/public-token access has a separate interface and never receives authenticated standing invented from request input.
+- Normalize retrieval scope once and apply it to page, article, uploaded-source and passage queries; do not ignore selected space/owner/status filters. Preserve channel failure information even with zero matches.
+- Persist actual content and ACL revisions for retrieved sources. Null revisions do not meet interaction reconstruction requirements.
+- Queries and derived embeddings can be tenant-confidential. Cache keys include tenant, provider/model revision, dimensions, preprocessing version and exact normalized input. Result-cache fingerprints must cover identity, principal ceiling and relevant policy revisions.
+- Purge enforces holds and allowed lifecycle state across the whole affected subtree at execution time. A root-only hold check is insufficient. Atomic guard checks and durable per-store completion are separate acceptance criteria.
+- Share response primitives with minimum list/detail/public projections. Validate real HTTP envelopes. Offset legacy search remains a migration item, not a completed cursor invariant.
+- Retain the application-layer HR metadata PII decision under its threat model. A caller-set GUC is not trusted scan evidence; PostgreSQL privilege controls still matter. Maintenance-write revalidation and separate prompt-injection defenses remain required.
+
 ## Data ownership
 
 `kb_pages` is the canonical editable page record. `kb_articles` remains a temporary help-centre model during migration; new Wiki behavior must not write it. Project pages are `kb_pages` with a project scope, not copied records.

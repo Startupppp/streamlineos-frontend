@@ -8,11 +8,16 @@ A partial unique index on the project keyed to the active status, and an exclusi
 
 **Status:** in-progress
 
-- [x] A second active cycle for the same project is rejected by the database
+**Verified audit 2026-09-27:** Constraint SQL and translation code are authored, not deployment
+evidence. Journal `backend/migrations/meta/_journal.json` contains no 1371 entry. The eight
+translation tests pass, but `cycle-delete-lifecycle-invariant.spec.ts:73` fails against the new
+partial unique index. No database enforcement/race test was run in this audit.
+
+- [ ] A second active cycle for the same project is rejected by the database
   - `backend/src/db/schema/build/core.ts` lines 157–159: `uniqueIndex("uniq_cycles_one_active_per_project").on(table.orgId, table.projectId).where(sql\`${table.status} = 'active' AND ${table.deletedAt} IS NULL\`)`
   - `backend/migrations/1371_cycles_active_and_overlap_constraints.sql` lines 12–14: the corresponding `CREATE UNIQUE INDEX IF NOT EXISTS`
 
-- [x] Overlapping cycle date ranges for the same project are rejected by the database
+- [ ] Overlapping cycle date ranges for the same project are rejected by the database
   - `backend/migrations/1371_cycles_active_and_overlap_constraints.sql` lines 17–32: `ADD CONSTRAINT excl_cycles_no_date_overlap EXCLUDE USING gist (org_id WITH =, project_id WITH =, daterange(start_date, end_date, '[]') WITH &&) WHERE (deleted_at IS NULL)`
   - **Dated note 2026-09-27:** Drizzle-ORM 0.45.2 has no native support for `EXCLUDE USING gist` — the `pg-core` directory contains no exclusion constraint builder. The exclusion constraint is therefore migration-only and cannot be reflected in the schema TypeScript. This is a real limitation of the ORM version, not an oversight.
 
@@ -25,13 +30,14 @@ A partial unique index on the project keyed to the active status, and an exclusi
 - [ ] Existing rows are checked for violations before the constraint is added, and any found are reported rather than silently coerced
   - **Orchestrator task** — survey SQL below.
 
-- [x] The migration is journalled with a rollback authored and a lock timeout set, and is applied before the code relies on it
+- [ ] The migration is journalled with a rollback authored and a lock timeout set, and is applied before the code relies on it
   - Migration: `backend/migrations/1371_cycles_active_and_overlap_constraints.sql` (`SET lock_timeout = '5s'`, precondition DO block, two constraints, postcondition assertions; no statement-breakpoint inside any DO block)
   - Rollback: `backend/migrations/1371_cycles_active_and_overlap_constraints_rollback.sql`
   - Journal entry for orchestrator to add (idx 1121): `{"idx":1121,"version":"7","when":1803093610725,"tag":"1371_cycles_active_and_overlap_constraints","breakpoints":true}`
 
 - [ ] Verified in a rolled-back transaction as the application role
   - **Orchestrator task** — run after migration is applied.
+- [ ] Repair the lifecycle test to recognize the intended live-only unique predicate, then prove concurrent activation and overlapping insertion rejection using database transactions
 
 ---
 

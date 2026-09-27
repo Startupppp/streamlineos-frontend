@@ -8,14 +8,22 @@ The supporting index is a separate, unmeasured question: it covers organisation,
 
 **Blocked by:** None — can start immediately.
 
-**Status:** done
+**Status:** partial — valid-cursor ordering unit tests pass; invalid-cursor handling is incomplete
+
+**Decision correction (2026-09-27):** Silent restart is not rejection and can repeat already
+delivered rows. The choice is not limited to restart versus degraded-source failure: validate the
+decoded source positions in `UnifiedInboxService.list` before entering `readSourceWithin`.
+`dto/unified-inbox.schemas.ts:262` currently resets malformed JSON and accepts arbitrary timestamp
+strings. Reject malformed/incomplete/incompatible cursor state at that boundary, while preserving
+legitimate source-specific positions. The older rationale below describes the implemented fallback,
+not satisfaction of acceptance. Eight ordering tests pass, but two encode that incomplete fallback.
 
 - [x] The identifier-only cursor branch is gone
   — `backend/src/modules/build/approvals/build-approvals-inbox.service.ts` line 23: `if (cursorId === null || cursorAt === null) return undefined;` replaces the two-line guard that previously fell through to `lt(projectApprovals.id, cursorId)` when only `cursorAt` was null.
 
   The same branch was present in `notificationKeyset` in `backend/src/modules/notifications/unified-inbox-sources.ts` line 103 (was `if (cursor.t === null) return lt(notifications.id, cursor.id);`). Fixed in the same turn: merged into `if (cursor === null || cursor.t === null) return undefined;`.
 
-- [x] Every cursor carries enough to express the ordering it belongs to, and a mismatched cursor is rejected rather than silently misapplied
+- [ ] Every cursor carries enough to express the ordering it belongs to, and a mismatched cursor is rejected rather than silently misapplied
   — `approvalInboxKeyset` and `notificationKeyset` both now return `undefined` when the timestamp half of the cursor is absent. `undefined` means no keyset predicate, which restarts from the first page rather than applying an id-only bound to a `(created_at DESC, id DESC)` ordering.
 
   **Decision — silent restart vs. BadRequestException (2026-09-27):** The ticket says "rejected rather than silently misapplied." `decodeProgramCursor` throws `BadRequestException` and that propagates cleanly because `ProgramsService` sits directly under a NestJS route handler. The approval and notification fetch paths are different: both sit inside `readSourceWithin` in `unified-inbox.service.ts` (line 257), which catches all thrown exceptions and converts them to `{ ok: false, error: "source unavailable" }`. A `BadRequestException` thrown from `approvalInboxKeyset` or `notificationKeyset` would never reach the client as a 400 — it would appear as `available: false` on the affected source in a degraded inbox response (`degraded: true`). That is strictly worse: the user loses the approval or notification source entirely for the current page load, with no actionable signal, rather than simply re-seeing rows already delivered. Returning `undefined` on a null-timestamp cursor satisfies "not misapplied" — the broken cursor is not applied to the ordering at all. The silent re-serve from page one is the lesser harm, and the precedent `decodeProgramCursor` uses does not apply across the `readSourceWithin` boundary.
@@ -57,6 +65,9 @@ The supporting index is a separate, unmeasured question: it covers organisation,
 ---
 
 ## Premise corrections (2026-09-27)
+
+- [ ] Add boundary tests for malformed JSON, invalid timestamps, incomplete timestamp/id pairs and incompatible source state; assert an actionable client error without resetting to page one or hiding the source
+- [ ] Measure the proposed index against the actual multi-status query before adding it: a status column preceding created_at does not automatically supply global created_at order across several status values
 
 - **"The board already does this correctly"** — no component named "board" in the repository carries the ordering-mode-in-cursor pattern. The closest real match is `decodeProgramCursor` in `backend/src/modules/build/portfolios/programs.service.ts:65`, which calls `decodeTupleCursor(cursor, 4)` and rejects when `cursorSort !== sort || cursorOrder !== order`. The pattern is real; the name in the ticket is not. That precedent is a direct route-handler throw and does not apply behind `readSourceWithin`.
 

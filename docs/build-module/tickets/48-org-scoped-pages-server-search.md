@@ -4,7 +4,7 @@
 
 **Blocked by:** 46 — Searching a Build list finds rows the first page does not contain. 47 — The project-scoped Build lists search on the server.
 
-**Status:** ready-for-agent
+**Status:** partial — implementation fragments exist; full acceptance remains unverified (audit 2026-09-27)
 
 - [ ] Each org-scoped and managed-product list in scope searches server-side
 - [ ] The filter module's interface requires a consuming seam before it yields a search value

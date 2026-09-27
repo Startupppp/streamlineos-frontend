@@ -10,6 +10,8 @@ It also collapses "no such project" and "no access" into one false, so no caller
 
 **Status:** ready-for-agent
 
+- [ ] Keep list reachability composable in tenant-scoped SQL rather than materializing unbounded project-ID arrays; test owner, manager, direct/team member, inactive member and cross-tenant equivalence for both single-project and list paths
+
 - [ ] The module exposes the assert/resolve shape and the set-returning shape, and no third shape
 - [ ] Its interface distinguishes not-found from denied, and each caller chooses deliberately
 - [ ] A spec covers the branch matrix as a table: owner, active member, inactive member, manager-not-member, team-only, no relationship

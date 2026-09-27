@@ -1,5 +1,4 @@
-import { cn } from "@/lib/utils";
-import { IllustrationImage } from "@/components/illustrations/illustration-image";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface ChartEmptyStateProps {
   message?: string;
@@ -15,18 +14,14 @@ export function ChartEmptyState({
   compact = false,
 }: ChartEmptyStateProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col items-center justify-center text-center",
-        className,
-      )}
-      style={compact ? undefined : { height }}
-    >
-      <IllustrationImage
-        name="empty-chart"
-        className={compact ? "h-20 w-20" : "h-28 w-28"}
-      />
-      <p className="mt-2 text-sm text-muted-foreground">{message}</p>
-    </div>
+    <EmptyState
+      bare
+      compact={compact}
+      illustrationPreset="chart"
+      illustrationSize="sm"
+      description={message}
+      height={compact ? undefined : height}
+      className={className}
+    />
   );
 }

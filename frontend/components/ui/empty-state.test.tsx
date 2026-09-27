@@ -204,3 +204,50 @@ describe("EmptyState — announcement", () => {
     expect(screen.getAllByRole("status")).toHaveLength(1);
   });
 });
+
+describe("EmptyState — bare variant", () => {
+  it("applies the caller-supplied height when bare is true, so a chart can dictate its own pixel height", () => {
+    const { container } = render(<EmptyState bare title="test" height={200} />);
+    expect((container.firstElementChild as HTMLElement).style.height).toBe("200px");
+  });
+
+  it("does not apply any inline height when bare is true and height is omitted", () => {
+    const { container } = render(<EmptyState bare title="test" />);
+    expect((container.firstElementChild as HTMLElement).style.height).toBe("");
+  });
+
+  it("does not contain the min-h-80 class when bare is true, so a caller-dictated height is not overridden", () => {
+    const { container } = render(<EmptyState bare title="test" />);
+    expect(container.firstElementChild).not.toHaveClass("min-h-80");
+  });
+
+  it("still carries min-h-80 when bare is false, proving default callers are unaffected", () => {
+    const { container } = render(<EmptyState title="test" />);
+    expect(container.firstElementChild).toHaveClass("min-h-80");
+  });
+
+  it("does not apply inline height when bare is false, proving caller-supplied height is ignored without bare", () => {
+    const { container } = render(<EmptyState title="test" height={200} />);
+    expect((container.firstElementChild as HTMLElement).style.height).toBe("");
+  });
+});
+
+describe("EmptyState — xs illustration size", () => {
+  it("wraps the illustration in a size-10 box when illustrationSize is xs, matching compact icon containers", () => {
+    render(<EmptyState illustrationSize="xs" title="test" />);
+    const box = screen.getByTestId("state-illustration").parentElement;
+    expect(box).toHaveClass("size-10");
+  });
+
+  it("does not use size-10 when illustrationSize is omitted, proving existing callers are unaffected", () => {
+    render(<EmptyState title="test" />);
+    const box = screen.getByTestId("state-illustration").parentElement;
+    expect(box).not.toHaveClass("size-10");
+  });
+
+  it("wraps the illustration in a size-24 box at the sm default, so compact callers keep their current visual size", () => {
+    render(<EmptyState illustrationSize="sm" title="test" />);
+    const box = screen.getByTestId("state-illustration").parentElement;
+    expect(box).toHaveClass("size-24");
+  });
+});

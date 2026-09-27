@@ -1,7 +1,14 @@
 # Build Module Release Status
 
-**Updated:** 2026-09-26
+**Updated:** 2026-09-27 (architecture audit; older execution evidence retains its original date)
 **Authority:** This is the single release-status document for the Build module. Product contracts remain in the numbered specifications; future competitive work remains in `06-prioritized-backlog.md`.
+
+**2026-09-27 architecture-audit qualification:** The phase table and test/migration results below
+are historical release observations, not a current all-requirements completion verdict. The two
+2026-09-26 architecture reviews produced the remediation backlog in `tickets/`; see
+`tickets/ARCHITECTURE-VERIFICATION-2026-09-27.md` for current code/test evidence and reopened
+criteria. In particular, parent-route smoke checks do not close concurrency, authorization,
+schema-replay, full workflow or scale requirements. Do not report any phase as 100% from this table.
 
 This document tracks the current production-release checklist, not total Build
 product completion. The full normative PRD remains open: the current source
@@ -34,16 +41,18 @@ not prove that the current checkout is deployed.
 
 | Phase | Current state | Evidence |
 |---|---|---|
-| 0. Baseline and control | Complete | Route manifest, route census, this status document, and the durable page specifications are reconciled. |
-| 1. Data and security foundation | Partially verified | Sprint/Cycle and QA Bug contraction is present; authorization census is `VULNERABLE=0`, `NEEDS-REVIEW=0`. The live ledger reports 967 applied rows, 967 journal entries, and zero pending migrations; its integrity check still fails on five unrelated orphaned HR rows (`1187`–`1191`) below the watermark. Build migration `1197` is applied and verified on production RDS. |
-| 2. Core daily workflow | Complete for the current release | My Work, Inbox, All Work, Backlog, Cycles, Triage, Forms, bulk actions, URL state, and focus refresh are implemented and focused-tested. |
-| 3. Planning and product management | Complete for the current release | Roadmap, Goals, Programs, Portfolios, Managed Products, Releases, Milestones, Reports, Analytics, and Workload parent routes passed authenticated browser verification. |
-| 4. Collaboration and external workflows | Complete for the current release | Client Portal, client access, change requests, Feedbucket, forms, approvals, updates, chat, and meetings parent routes passed authenticated browser verification. |
-| 5. Execution and governance | Complete for the current release | QA, incidents, risks, decisions, automations, webhooks, files, wiki, whiteboard, workflow settings, project settings, and integrations parent routes passed authenticated browser verification. |
+| 0. Baseline and control | Needs reconciliation | 2026-09-27 census check fails with 139 stale anchors; historical manifests/status evidence must be reconciled to the current checkout. |
+| 1. Data and security foundation | Partially verified | Historical contraction/application evidence remains below. Current architecture migrations 1371/1372/1373/1374/1377/1378/1380/1381 are absent from the journal; application state was not queried in this audit. Tickets 29/30/36/62-66 remain open or partial. |
+| 2. Core daily workflow | Partially verified | Implementations exist, but filtered-count refresh, assignee pagination, required concurrency tokens and invalid-cursor handling remain incomplete in architecture tickets 05/09/11-13/67. |
+| 3. Planning and product management | Partially verified | Earlier parent-route smoke evidence remains historical. Roadmap timestamp cursors, report invalidation and velocity infinite-query typing/pagination remain open in tickets 04/19/33. |
+| 4. Collaboration and external workflows | Partially verified | Earlier route smoke checks do not close the missing approval picker types or portal parent-visibility checks in tickets 06/35. Browser workflow re-verification remains required after fixes. |
+| 5. Execution and governance | Partially verified | Shared writer/version/effect invariants, status-group contracts and database constraints remain open in tickets 36-45/62-66; one focused cycle lifecycle test fails. |
 | 6. Performance and UX hardening | Partially verified | Fresh build `egn5C-y4teNVJ5D_PFOui` measured all 13 declared route bundles with zero pending measurements and confirmed seven first-load JS breaches, including `/build/inbox` at 610,731 bytes and `/build/my-work` at 645,663 bytes against the 524,288-byte ceiling. Chromium responsive UI coverage passed 31/31 gallery checks at 375px, 768px, and 1280px; the latest rerun is hydration-clean after the SearchInput boundary fix. |
 | 7. Release verification | Partially verified | Authenticated production smoke passed for the ticket-detail route observed in this audit. Migration `1197` is verified; the live migration ledger has zero pending rows but still fails its orphan-row integrity gate, and current deployment identity and the full browser matrix remain open. |
 
-"Complete for the current release" does not mean the aspirational P1/P2 competitor backlog is finished. Those future product investments remain explicitly listed in `06-prioritized-backlog.md`.
+The previously completed phase labels were reopened using the 2026-09-27 architecture evidence.
+Neither that review nor the historical smoke checks certify full phase completion. Future P1/P2
+product investments remain listed in `06-prioritized-backlog.md` in addition to the corrective work.
 
 ## Backend and authorization
 

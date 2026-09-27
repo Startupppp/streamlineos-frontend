@@ -8,7 +8,7 @@ The same pass closes a second hole in the same shape: the epic update path filte
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** partial — implementation fragments exist; full acceptance remains unverified (audit 2026-09-27)
 
 - [ ] Each of the eleven ticket write paths leaves the token higher than it found it, with a test per path
 - [ ] The token moves exactly once per statement — no path double-increments
@@ -16,3 +16,17 @@ The same pass closes a second hole in the same shape: the epic update path filte
 - [ ] The existing conflict behaviour on ticket update is unchanged and its spec still passes
 - [ ] If a trigger is used, its migration is journalled with a rollback authored and is applied before any code depends on it
 - [ ] The mechanism is named in the module's notes as the single place the token is maintained
+
+## Verified remaining work — 2026-09-27
+
+`backend/migrations/1373_tickets_version_trigger.sql` exists but is absent from the journal, while
+`projects-tickets-update.service.ts:290-296` no longer increments the version itself. Deployment
+must not rely on an unapplied trigger. The trigger condition only replaces an unchanged version,
+so a caller-provided lower or arbitrarily higher value bypasses the intended increment.
+
+- [ ] Make the trigger own `NEW.version = OLD.version + 1` unconditionally and verify explicit-version writes cannot decrease or skip the token
+- [ ] Journal, apply and behaviorally verify 1373 before deploying code that removes application increments; record the deployed backend identity and rollback ordering
+- [ ] Re-enumerate actual writers instead of the historical eleven; include `cycles.service.ts:161` unlinking and other writes to deleted rows, with deliberate lifecycle exceptions documented
+
+Epic deleted-row guard unit tests pass, but mocked version results are not evidence that this
+trigger executes. The original five-of-eleven description is historical, not a current census.

@@ -6,9 +6,9 @@ The repository enforces a hard zero on assertions; this is a Build-module offend
 
 **Blocked by:** None — can start immediately.
 
-**Status:** done (one criterion void — see premise correction)
+**Status:** partial — code exists, but acceptance gaps or required verification remain (audit 2026-09-27)
 
-- [x] The assertion is gone, replaced by a type the compiler can check structurally
+- [ ] The assertion is gone, replaced by a type the compiler can check structurally
 - [ ] Any field the card reads but the contract omits now surfaces as a type error
 - [x] The type-assertion gate carries no Build-module offender from this file
 - [x] The gallery renders unchanged

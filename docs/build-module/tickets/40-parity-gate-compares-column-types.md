@@ -12,7 +12,8 @@ The frozen divergence baseline is part of the same problem: stale entries print 
 
 - [ ] The gate reports a divergence when a field's type, enum membership or nullability differs from the column
 - [ ] A self-test constructs each new finding kind and fails without the check
-- [ ] A field absent from both contracts but present on the table is reported
+- [ ] A field required by the declared response projection but absent from both contracts is reported; deliberate private-column omissions and documented transformations remain valid
 - [ ] A schema that validates nothing stops counting as a validated field
 - [ ] The frozen baseline is pruned of entries proven stale and may only shrink from here
 - [ ] The gate's output states what it compares to, so a reader knows what a pass means
+- [ ] The database-to-response mapping is explicit and tested; the gate never forces private, secret or internal database columns into public responses merely for parity

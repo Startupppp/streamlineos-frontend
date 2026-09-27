@@ -8,6 +8,11 @@ Parse the action as an open value; keep the closed set only where it drives disp
 
 **Status:** done
 
+**Verified 2026-09-27:** Current source retains an open action-string contract and display
+fallback. `features/build/tickets/ticket-activity-log.test.tsx` passed all four component tests
+using `node node_modules/jest/bin/jest.js --runInBand --no-cache --runTestsByPath` from frontend.
+This closes the ticket's component/contract scope, not a production-browser claim.
+
 - [x] An activity entry with an unrecognised action renders instead of failing the page
   — `frontend/hooks/api/build/build-tickets-core-schema.ts` line 288: `action: z.string()` (was `ticketActivityActionContract` — a `z.enum`). Any string now passes Zod validation; `ticketActivityPageContract` no longer throws on unknown action values.
 - [x] Known actions still get their specific label and icon

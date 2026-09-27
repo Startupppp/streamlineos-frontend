@@ -8,7 +8,7 @@ One thing the note above does not cover, found later: the compare-and-swap is co
 
 **Blocked by:** 36 — Every ticket write maintains the concurrency token, and no write touches a deleted row.
 
-**Status:** ready-for-agent
+**Status:** partial — ticket read token exists; universal client echo and sibling coverage remain unverified
 
 - [ ] Every mutable Build entity's read response carries its current concurrency token
 - [ ] Every first-party client sends the token it last read on update

@@ -1,7 +1,9 @@
 # Knowledge Base — parallel session partition
 
+> **September 27 review:** this is a historical work partition. Current corrections and acceptance items live in [the architecture validation](../08-architecture-review-validation-2026-09-27.md) and [the requirement ledger](../REQUIREMENT-LEDGER.md). A completed session does not override a reopened requirement. Do not spin up overlapping sessions from this map while another implementation session is using the tree.
+
 Eight sessions. Each owns a disjoint set of files. No two sessions edit the same file.
-Each session closes only when **every** checkbox in its own `SESSION-0N.md` is `[x]` with evidence.
+Each session closes only when **every** checkbox in its own `SESSION-0N.md` is `[x]` with implemented code, full acceptance verification and passing relevant tests. The September 27 audit reopened historical SESSION-01–08 checks as `VERIFY PENDING`; this does not say their code is missing. Historical AUDIT and LEDGER-PATCH reports retain dated evidence/proposals, not current completion authority. Verify against the main ledger before applying any proposed checkmark.
 
 | # | Session | Slice | Primary territory |
 |---|---|---|---|

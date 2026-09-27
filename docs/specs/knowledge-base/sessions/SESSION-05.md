@@ -39,7 +39,7 @@ the old ones. Do not edit `pages.ts`.
 
 ## Todo
 
-- [x] Measure first: read the current history list, diff and restore paths and record with
+- [ ] **VERIFY PENDING:** Measure first: read the current history list, diff and restore paths and record with
       `file:line` exactly what each does today. Confirm the five defects above are still real.
       
       **Evidence:**
@@ -49,7 +49,7 @@ the old ones. Do not edit `pages.ts`.
       - `page-history-page.tsx:80` — state is local `useState`, no URL sync
       - `kb-page-versions.service.ts:124-168` — `restoreVersion` has no audit insert; confirmed no `kb_version_restore_audit` table exists
 
-- [x] Cursor list of versions with actor, timestamp and a change summary — bounded, never an
+- [ ] **VERIFY PENDING:** Cursor list of versions with actor, timestamp and a change summary — bounded, never an
       unbounded revision load.
       
       **Evidence:** `frontend/hooks/api/kb/page-versions.ts:20-50` — `useKbPageVersionsInfinite`
@@ -57,21 +57,21 @@ the old ones. Do not edit `pages.ts`.
       `nextCursor ?? undefined`. Backed by `kb-page-versions.service.ts` capped at 100 rows
       (`PAGE_SIZE_CAP`). Cursor test passes: all 7 assertions green.
 
-- [x] A current-version marker: the live version is unambiguously identified in the list.
+- [ ] **VERIFY PENDING:** A current-version marker: the live version is unambiguously identified in the list.
       
       **Evidence:** `page-history-page.tsx:232-238` — `currentVersionNumber = versions[0]?.versionNumber ?? null`
       (first item in descending-sort list); `page-history-page.tsx:251-259` — renders `<Badge>Current</Badge>`
       when `v.versionNumber === currentVersionNumber`. Test: "marks the highest versionNumber with a
       Current badge" — passes. `page-history-sheet.tsx:52,147-151` — same marker in sheet view.
 
-- [x] Select one **or two** versions. Two selected produces a comparison.
+- [ ] **VERIFY PENDING:** Select one **or two** versions. Two selected produces a comparison.
       
       **Evidence:** `page-history-page.tsx:161-167` — `selectedA` and `selectedB` state, `compareMode`
       boolean toggle. When `compareMode` is true and a version is clicked, it sets `selectedB`.
       `page-history-page.tsx:325-347` — when both selectedA and selectedB have detail data, renders
       `TwoVersionDiffView`. Test: "entering compare mode shows the compare UI hint" — passes.
 
-- [x] Semantic block-level diff: added, removed and changed blocks identified as blocks, with
+- [ ] **VERIFY PENDING:** Semantic block-level diff: added, removed and changed blocks identified as blocks, with
       metadata changes distinguished from content changes. Not a word count, not raw JSON.
       
       **Evidence:** `frontend/features/wiki/lib/version-diff.ts` — full LCS-based block diff returning
@@ -80,7 +80,7 @@ the old ones. Do not edit `pages.ts`.
       adjacent removed+added pairs with >30% similarity into `changed`. Tests: 11/11 pass including
       "merges a removed+added pair with high text similarity into a changed block".
 
-- [x] `?version=` deep link: the URL identifies the selected version(s) and survives reload and
+- [ ] **VERIFY PENDING:** `?version=` deep link: the URL identifies the selected version(s) and survives reload and
       share. Invalid or inaccessible version ids resolve to a recovery state, not a crash.
       
       **Evidence:** `page-history-page.tsx:196-200` — reads `searchParams.get("version")` and
@@ -89,7 +89,7 @@ the old ones. Do not edit `pages.ts`.
       `searchParams` and validates with `Number.isFinite` before passing to component. Invalid ids
       (non-finite, ≤0) are dropped → component starts with no selection (recovery state).
 
-- [x] Restore preview and confirmation before anything is written.
+- [ ] **VERIFY PENDING:** Restore preview and confirmation before anything is written.
       
       **Evidence:** `page-history-page.tsx:374-385` — `ConfirmDialog` with title "Restore version N?"
       and description "The current content will be saved as a new version before restoring."
@@ -97,7 +97,7 @@ the old ones. Do not edit `pages.ts`.
       `page-history-page.tsx:353-369`. Restore button is disabled until a version is loaded
       (`line 323: disabled={detailALoading || !versionADetail?.content || selectedA === currentVersionNumber}`).
 
-- [x] Restore **appends** a new version — it never rewrites history — increments the content
+- [ ] **VERIFY PENDING:** Restore **appends** a new version — it never rewrites history — increments the content
       revision, and reindexes asynchronously outside the database transaction.
       
       **Evidence:** `kb-page-versions.service.ts:126-148` — calls `snapshotIfNeeded` (appends current
@@ -106,7 +106,7 @@ the old ones. Do not edit `pages.ts`.
       guarantees async dispatch after commit). Tests in `kb-page-version-restore-reindex.spec.ts`
       confirm: "emits kb.content.index via OutboxWriter.emit inside the transaction" — passes.
 
-- [x] Restore writes an audit entry naming actor, source version and target page. Add the table or
+- [ ] **VERIFY PENDING:** Restore writes an audit entry naming actor, source version and target page. Add the table or
       column it needs in `1207`, tenant-leading, with a rollback.
       
       **Evidence:** 
@@ -117,7 +117,7 @@ the old ones. Do not edit `pages.ts`.
       - `kb-page-versions.service.ts:155-159` — `await tx.execute(sql\`INSERT INTO "public"."kb_version_restore_audit" ...\`)` inside the restore transaction.
       - New tests "audit entry" in `kb-page-version.service.spec.ts` (lines 122-143): 2/2 pass.
 
-- [x] Remove the raw JSON diff path and any unbounded revision load.
+- [ ] **VERIFY PENDING:** Remove the raw JSON diff path and any unbounded revision load.
       
       **Evidence:** Old `DiffSummary` component (word count + first-char excerpt) replaced entirely.
       `page-history-page.tsx` now uses `BlockDiffView` (semantic block diff) and `TwoVersionDiffView`.
@@ -125,14 +125,14 @@ the old ones. Do not edit `pages.ts`.
       version preview removed from history page. Test: "result does not have wordCountDelta property
       (old API gone)" — passes.
 
-- [x] Tenant-isolation spec: a sibling org's version is never listed, diffable, deep-linkable or
+- [ ] **VERIFY PENDING:** Tenant-isolation spec: a sibling org's version is never listed, diffable, deep-linkable or
       restorable.
       
       **Evidence:** `kb-page-versions-tenant-isolation.spec.ts` — 3 tests: cross-tenant deny throws
       NotFoundException (listVersions), same-tenant allowed, org_id bound in SQL query. All 3 pass
       (confirmed: 4 suites, 24 tests pass).
 
-- [x] Append-only spec still bites after your change — `kb-version-append-only-migration.spec.ts`
+- [ ] **VERIFY PENDING:** Append-only spec still bites after your change — `kb-version-append-only-migration.spec.ts`
       pins an exact two-tag list of baselined splices; keep it exact.
       
       **Evidence:** `kb-version-append-only-migration.spec.ts` unchanged. Migration 1207 is AFTER
@@ -140,7 +140,7 @@ the old ones. Do not edit `pages.ts`.
       `BASELINED_SPLICES_ABOVE_1078 = ["0464a_gl_kernel", "0271a_waitlist_admission"]` list is
       unchanged. Spec passes (confirmed in run: 4 suites, 24 tests pass).
 
-- [x] All six states on the history route, plus the restore path.
+- [ ] **VERIFY PENDING:** All six states on the history route, plus the restore path.
       
       **Evidence:** `page-history-page.test.tsx` covers:
       1. Loading (skeletons): "shows skeletons while the page is loading" ✓
@@ -151,7 +151,7 @@ the old ones. Do not edit `pages.ts`.
       6. Two versions selected (compare): "entering compare mode shows the compare UI hint" ✓
       Restore path: "requires a version to be selected before restore is available" ✓
 
-- [x] Keyboard path for selection, compare and restore; usable at 375 px.
+- [ ] **VERIFY PENDING:** Keyboard path for selection, compare and restore; usable at 375 px.
       
       **Evidence:** `page-history-page.tsx:255` — version buttons have `type="button"` and
       `aria-label` (`aria-label={\`Select version ${v.versionNumber}...\`}`).
@@ -160,7 +160,7 @@ the old ones. Do not edit `pages.ts`.
       FE-117 satisfied. Tests: "version buttons are keyboard accessible (role=button)" and
       "version buttons have aria-label" — both pass.
 
-- [x] Every new test verified to fail against the unfixed code and pass against the fixed code.
+- [ ] **VERIFY PENDING:** Every new test verified to fail against the unfixed code and pass against the fixed code.
       
       **Evidence:**
       
@@ -185,7 +185,7 @@ the old ones. Do not edit `pages.ts`.
       - FAIL (unfixed): `executeMock` not in tx mock; new audit tests would throw "tx.execute is not a function".
       - PASS (fixed): 6/6 pass after `execute` added to tx mock and service updated.
 
-- [x] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+- [ ] **VERIFY PENDING:** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
       
       **PENDING ORCHESTRATOR GATE** — coordinator requested no full typecheck runs while 9 sessions
       are live (machine overload). All targeted tests pass. No `any`, no `as X`, no `@ts-ignore`

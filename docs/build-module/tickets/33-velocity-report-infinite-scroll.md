@@ -6,10 +6,16 @@ Decision already taken: infinite scroll, matching the pattern the board already 
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** partial — infinite-query implementation exists; typing and multi-page behavior remain unverified
 
 - [ ] The report fetches successive pages as the viewer scrolls
-- [ ] The cursor is part of the cache key, so pages do not collide
+- [ ] One infinite-query key preserves ordered pages/pageParams; cursor travels as pageParam and does not fragment the report into separate cache entries
 - [ ] A project with more than 100 cycles displays all of them
 - [ ] Reaching the end is distinguishable from still loading
 - [ ] The keyset page still reports no total, per BE-25
+
+**Audit 2026-09-27:** Five component tests pass with a mocked hook/sentinel, not a 101+ cycle
+scroll. `frontend/hooks/api/build/reports.ts:109` declares the infinite hook result as
+`VelocityPage`, while `velocity-section.tsx:38` reads `.pages`; a focused installed-type probe
+reports TS2339. Fix the result to the correct infinite-data shape and run the actual hook consumer
+typecheck and multi-page test before closing.

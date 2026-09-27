@@ -2,6 +2,12 @@
 
 Concrete key, stale time, invalidation and optimistic-update policy for the Build surfaces this pass audited. Rows marked **today** describe current behaviour; **recommended** is the change.
 
+**2026-09-27 correction:** Unless explicitly reverified below, "today" describes the earlier
+snapshot, not this checkout. This is a policy proposal, not proof of measured latency or correct
+invalidation. Ticket 19 remains open because its previous field-to-report mapping omitted real
+dependencies. Authorize every cache read; share across actors only for identical authorized data
+projections, never merely because two callers have the same organization ID.
+
 Server namespaces follow BE-121: read with `cachedVersioned`, bump with `invalidateNamespace`. Client keys follow FE-19 and FE-20 — the array is tenant-free, the scope lives in the hash via `scopedQueryKeyHashFn`.
 
 ---
@@ -47,7 +53,8 @@ Do not cache before it is paginated (P2-2). An unbounded response is the defect;
 
 ## Client query keys and stale times
 
-Stale times follow the FE-24 ladder. All six report hooks currently sit at `60_000`, which is the standard-entity rung, not the slow-list rung the aggregates belong on.
+Stale times follow the FE-24 ladder. The six report hooks now declare `2 * 60_000`; this source
+change is not proof of a maximum data-age bound or of fresh reports after every mutation.
 
 | Hook | Key today | Recommended key | Stale time |
 |---|---|---|---|
@@ -75,16 +82,21 @@ A ticket write already fans out further than it needs to. The rule is: patch wha
 
 | Mutation | `setQueryData` | `invalidateQueries` |
 |---|---|---|
-| title, description | the ticket detail and its row in every loaded list | nothing |
-| status transition | detail, list row, board column membership, column counts | `projectReports.cycleTime`, `projectReports.leadTime`, `projectReports.cfd` |
+| title, description | detail and rendered list rows; patch matching report labels where the projection is known | affected search counts; critical-path title projection unless patched; account for current burnup updatedAt fallback |
+| status transition | detail, list row, board membership and counts only where patching is exact | cycleTime, leadTime, cfd, velocity and current burnup fallback |
 | assignee | detail, list row | `projects.analytics` only when the board groups by assignee |
 | rank | board order | nothing |
-| story points, estimate | detail, list row | `projectReports.velocity`, `projectReports.burnup` |
+| story points, estimate | detail, list row | velocity, burnup and critical-path projections where the changed field is consumed |
 | cycle membership | detail, list row, both cycles' membership lists | `projectReports.velocity`, `projectReports.burnup` |
 | dependency add/remove | detail relations | `projectReports.criticalPath` |
 | delete | remove from every loaded list | the reports the ticket contributed to |
 
-`ticket-cache.ts:224` currently invalidates `projectReports.all` with a length predicate. That is the right prefix mechanism (FE-34) applied at the wrong altitude — it evicts all six reports for a title edit. Narrow it to the table above.
+The current `ticket-cache.ts` uses field flags, but the tested policy omits velocity/burnup for
+status changes and critical-path label/points dependencies. Verify the complete dependency matrix
+before implementation; the table is a corrected starting point, not an exhaustive acceptance test.
+
+- [ ] Exercise real cache invalidation and report projections after each supported mutation, including filtered counts and optimistic rollback; do not mock away the invalidation helper being verified
+- [ ] Separate client freshness settings, server TTL/revision policy and end-to-end stale-data bounds in measurements; report dataset size, cache hit/miss and p95 latency rather than inferred speedups
 
 ### Server-side, after commit
 

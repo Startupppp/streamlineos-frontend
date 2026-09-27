@@ -1,5 +1,16 @@
 # Step 6 — Code Removal, Consolidation, and Reuse Plan
 
+## September 27 review disposition
+
+R1's historical count of 54 routes without frontend callers is a candidate list, not deletion approval or a current count. [AV-08/09/10](08-architecture-review-validation-2026-09-27.md) governs cleanup:
+
+- Retain page-grant and space-member management: both now have mounted UI and serve required workflows.
+- Keep Support as the help-centre workflow adapter and KB as content/authorization/indexing owner. Duplicate controller deregistration has started; finish external/API caller and compatibility checks before deleting code.
+- Keep a small query module when it hides bounded authorized reads and prevents a dependency cycle. Replace duplicated predicates/unindexed scans before removing the module itself.
+- Retire wrappers only when they add no policy, type restriction, projection, lifecycle or error behavior. Do not replace a useful seam with direct table imports.
+- Preserve purpose-specific response projections. Shared primitives must not turn metadata queries into full-document loads or expose private fields publicly.
+- Re-measure the current tree: other sessions are changing it. Remove obsolete implementations and tests only after replacement callers and regression evidence exist.
+
 ## Goal
 
 Reduce concepts and duplicate implementations before adding infrastructure. Deletion follows dependency and migration proof; this file does not authorize dropping data or routes immediately.

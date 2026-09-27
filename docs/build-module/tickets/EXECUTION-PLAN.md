@@ -1,6 +1,12 @@
-# Execution plan — the 65 open tickets
+# Execution plan — Build architecture remediation
 
 Written 2026-09-27. Baseline: root `840d11079`, backend `dddce140a`, both trees clean at start.
+
+**Audit correction 2026-09-27:** The baseline and open-ticket count above describe the start of
+execution, not current completion. See `ARCHITECTURE-VERIFICATION-2026-09-27.md` for the evidence
+review. Per the owner's latest instruction, a checkbox requires completed implementation plus
+verification and relevant passing tests. Authored SQL, a journal entry, source-shaped mocks and
+a passing smoke page are not substitutes for database or workflow acceptance evidence.
 
 This plan exists because the tickets carry no file paths by design, so the only way to prove two
 agents never touch one file is to resolve every ticket's real file set first. Twelve read-only
@@ -95,13 +101,15 @@ Two traps, both of which have cost a cycle before:
 just production. Every reference must be `"build"."cycles"`. Precedent:
 `migrations/0579_tenant_fks_build_schemas.sql`.
 
-**Verify before applying** with a rolled-back transaction: `tx.unsafe()` each statement split on
-`--> statement-breakpoint`, assert the object exists in `pg_catalog`, probe that the constraint
-actually bites, then throw a sentinel to roll back and re-check the object is gone. Each failure
-probe needs its own `savepoint` — once a statement errors the transaction is aborted and every
-later statement returns `25P02`, so a second probe reads as "constraint absent" when it is really
-"transaction dead". `SET ROLE streamline_app` first: connecting as `streamline_admin` carries
-BYPASSRLS and hides the failure being tested for.
+**Verification correction (2026-09-27):** Separate DDL execution as the migration role from DML
+and RLS probes as the application role with a tenant context. Do not switch to `streamline_app`
+before DDL and mistake its missing DDL privileges for a broken migration. Transaction-compatible
+DDL can be rehearsed in a rolled-back transaction; `CREATE INDEX CONCURRENTLY` cannot. Run that
+path separately with explicit pre/post catalog checks and recovery steps. Each expected-failure
+probe needs its own savepoint so a prior error cannot invalidate later probes. Rollback is not
+zero-impact: locks and nontransactional side effects can remain relevant on production. Keep
+fixture writes isolated, bounded and explicitly authorized; prefer an isolated PostgreSQL test
+database for race, replay and rollback tests. A runbook instruction is not evidence it ran.
 
 ## Orchestrator-only work
 
@@ -193,11 +201,10 @@ ticket rather than a quiet reinterpretation.
   the board, per the ticket's own criterion, and correct the doc.
 - **cache-policy.md** — claims the six report query-key factories live in `accounting-and-support.ts`.
   They already live in `frontend/lib/query-keys/build-work.ts`.
-- **tickets/README.md** — claims tickets 29 and 30 came from the first architecture review. No
-  review contains the row-level-security finding; `213335` never mentions RLS, and the other three
-  reports are Knowledge Base and whole-repo auth reviews. 29/30 came from the memory note
-  `three-build-tables-have-grants-but-no-rls-policy`, and 10 and 33 from somewhere other than a
-  report. Correct the provenance line.
+- **tickets/README.md** — the numbering is not a reliable review-provenance map. `213335` does not
+  contain the three-table RLS finding, but `230544` explicitly does, in card 1 and its closing
+  recommendation. The previous claim that no review contains it was false. Tickets 10 and 33
+  also include follow-up work; do not attribute all 01-34 exclusively to the first report.
 
 ## Survey queries the orchestrator runs before the matching constraint lands
 
@@ -215,10 +222,11 @@ WHERE a.deleted_at IS NULL AND b.deleted_at IS NULL
 
 **64** — project-less tickets, their number collisions, and statuses no project defines:
 ```sql
-SELECT count(*) FROM build.tickets WHERE project_id IS NULL AND deleted_at IS NULL;
+SELECT org_id, deleted_at IS NOT NULL AS deleted, count(*) FROM build.tickets
+WHERE project_id IS NULL GROUP BY org_id, deleted_at IS NOT NULL;
 
-SELECT ticket_number, count(*) FROM build.tickets
-WHERE project_id IS NULL GROUP BY ticket_number HAVING count(*) > 1;
+SELECT org_id, ticket_number, count(*) FROM build.tickets
+WHERE project_id IS NULL GROUP BY org_id, ticket_number HAVING count(*) > 1;
 
 SELECT t.id, t.org_id, t.project_id, t.status FROM build.tickets t
 WHERE t.project_id IS NOT NULL AND NOT EXISTS (

@@ -1,8 +1,10 @@
 # Knowledge Base — Requirement Ledger
 
-> **Current audit: 2026-09-27.** Read [Architecture review validation](08-architecture-review-validation-2026-09-27.md) first. It reconciles both September 26 reports, corrects decisions, records targeted test failures and owns TODOs AV-01–AV-15. Historical passes below are evidence at their dates, not present-tense completion claims. Untouched checks retain historical evidence; this audit does not independently re-certify every one.
+> **Current audit: 2026-09-27; three-pass recheck recorded.** Read [Architecture review validation](08-architecture-review-validation-2026-09-27.md) first. It reconciles both September 26 HTML reports, corrects decisions, records targeted test failures and owns TODOs AV-01–AV-16. Per the owner's completion rule, a checked item requires implemented code, verification of its entire acceptance claim and passing relevant tests. Historical passes below are evidence at their dates, not present-tense completion claims.
 >
-> Separate checklist/source progress from release verification. A compound requirement stays open until every clause is proven. Deferred replica/CDN infrastructure is not completed functionality. Other sessions are changing both repositories; re-run verification on the final revision before release.
+> **Strict verification checkpoint: 2 checked / 194 total, 192 open.** The two checks certify the inspected, passing scope/fingerprint and property-test implementations only. `VERIFY PENDING` means current acceptance evidence is incomplete; it does not mean the implementation is absent or should be rebuilt. The 24 defect/acceptance reopenings remain open too. Historical prose, session checkmarks, migration records and slice labels cannot override this checklist. This is a verification-coverage count, not a product completion percentage.
+>
+> A compound requirement stays open until every clause is proven. Attach code paths, source revision (and dirty-file hashes when relevant), exact test command/result, and any required browser/DB/load evidence before rechecking it. Reuse historical migration records without replaying destructive operations; verify the deployment separately. Deferred infrastructure stays unchecked. Other sessions are changing both repositories; re-run verification after relevant code changes.
 
 
 **Status:** execution authority. This file is the resume point after any context compaction.
@@ -361,18 +363,18 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 - [ ] Canonical `KnowledgeAuthorization` is the only access decision; no caller rebuilds the predicate.
   **2026-09-27 audit:** AV-02/14: container policy and effective disclosure/cache proofs remain open.
-- [x] Route denial is 403/NoPermission; hidden or missing records are an indistinguishable 404.
-- [x] Authorization fails closed; cache unavailability cannot retain revoked access.
+- [ ] **VERIFY PENDING:** Route denial is 403/NoPermission; hidden or missing records are an indistinguishable 404.
+- [ ] **VERIFY PENDING:** Authorization fails closed; cache unavailability cannot retain revoked access.
 - [ ] Tenant scope is explicit on every record, unique key, FK, query, cache key, event, job, blob, and search document.
   **2026-09-27 audit:** AV-05: query embedding cache omits tenant.
 - [ ] Collections are cursor-based, `hasMore` is signalled, limit defaults ≤ 50 and caps at 100, and no query silently truncates.
   **2026-09-27 audit:** AV-06: /kb/search still uses offset/count.
 - [ ] Projections replace `SELECT *`; page bodies never appear in list/search metadata queries.
   **2026-09-27 audit:** AV-06: search selects full contentText for snippets.
-- [x] Content writes carry `expectedContentRevision`; retriable creates and bulk commands carry `Idempotency-Key`.
+- [ ] **VERIFY PENDING:** Content writes carry `expectedContentRevision`; retriable creates and bulk commands carry `Idempotency-Key`.
 - [ ] Audit and outbox records commit with the source mutation; no provider/object-store/embedding call holds a DB transaction open.
   **2026-09-27 audit:** AV-03/07: writer atomicity and end-to-end transaction lifetime remain open.
-- [x] URL carries `q`, filters, sort, view, cursor; selection, drafts, menus, and dialogs stay local.
+- [ ] **VERIFY PENDING:** URL carries `q`, filters, sort, view, cursor; selection, drafts, menus, and dialogs stay local.
 - [ ] Every state implemented: loading, ready, first empty, filtered empty, error with retry + request id, denied — plus saving/saved/offline/conflict/stale-access/restore on editing surfaces.
   **2026-09-27 audit:** AV-10: final route/browser state evidence remains open.
 - [ ] Every desktop capability has a mobile (375 px) and keyboard-accessible path; no action is context-menu-only.
@@ -397,21 +399,21 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Browser states | n/a |
 | Evidence | migration applied + ledger row; `EXPLAIN` on the grant lookup |
 
-- [x] Census existing access logic in `backend/src/modules/kb`
-- [x] Define the interface and domain types — `core/authorization/knowledge-authorization.types.ts`
-- [x] Canonical scope builder — `core/authorization/knowledge-page-scope.ts`
+- [ ] **VERIFY PENDING:** Census existing access logic in `backend/src/modules/kb`
+- [ ] **VERIFY PENDING:** Define the interface and domain types — `core/authorization/knowledge-authorization.types.ts`
+- [ ] **VERIFY PENDING:** Canonical scope builder — `core/authorization/knowledge-page-scope.ts`
 - [x] Scope/fingerprint spec, including a characterization test pinning the legacy gap
-- [x] Expansion migration `1168_kb_page_grants` + rollback + journal entry (idx 1051) — renamed from 1165; the 1165 tag now belongs to `1165_build_automation_run_history`
-- [x] `KnowledgeAuthorizationService` — `resolvePageAccess`, `resolveSpaceAccess`, `permissionFingerprint`, actor standing
-- [x] Collapsed duplicate space/role computation out of `KbAccessService` into the authorization module
-- [x] Registered in `KbCoreModule` (BE-01)
-- [x] `pnpm typecheck` clean; `pnpm typecheck:test` **now also clean — the 21 errors are gone** (2026-09-25)
-- [x] Apply migration `1168_kb_page_grants` — applied 2026-09-24, hash `cd96f057` matched. The "IAM credential" blocker was never real; see the environment table.
-- [x] `EXPLAIN (ANALYZE, BUFFERS)` evidence — captured 2026-09-25, see below
-- [x] Migrated `KbPageStatusService` (7 call sites) to per-action canonical checks
-- [x] Replace the remaining legacy call sites — **source complete**, measured 2026-09-25: all 16 queued services inject `KnowledgeAuthorizationService` and hold zero `pageVisibleTo` references. The 16 `queued` cells in the table below are stale. One production caller survives by deliberate deferral: `retrieval/kb-page-access.util.ts` via `wiki/kb-object-access.ts`.
-- [x] Property/fuzz test of the access predicate — `fast-check` is installed but `knowledge-page-scope.spec.ts` is 20 hand-written cases; no `fc.property` anywhere in `modules/kb`
-- [x] Fold `buildArticleRestrictionPredicate` (`retrieval/kb-article-restriction-predicate.ts`) into the seam or scope it out explicitly — it builds an independent `kb_page_restrictions` ACL arm outside `KnowledgeAuthorizationService`, so the "no caller rebuilds the predicate" invariant is not yet whole
+- [ ] **VERIFY PENDING:** Expansion migration `1168_kb_page_grants` + rollback + journal entry (idx 1051) — renamed from 1165; the 1165 tag now belongs to `1165_build_automation_run_history`
+- [ ] **VERIFY PENDING:** `KnowledgeAuthorizationService` — `resolvePageAccess`, `resolveSpaceAccess`, `permissionFingerprint`, actor standing
+- [ ] **VERIFY PENDING:** Collapsed duplicate space/role computation out of `KbAccessService` into the authorization module
+- [ ] **VERIFY PENDING:** Registered in `KbCoreModule` (BE-01)
+- [ ] **VERIFY PENDING:** `pnpm typecheck` clean; `pnpm typecheck:test` **now also clean — the 21 errors are gone** (2026-09-25)
+- [ ] **VERIFY PENDING:** Apply migration `1168_kb_page_grants` — applied 2026-09-24, hash `cd96f057` matched. The "IAM credential" blocker was never real; see the environment table.
+- [ ] **VERIFY PENDING:** `EXPLAIN (ANALYZE, BUFFERS)` evidence — captured 2026-09-25, see below
+- [ ] **VERIFY PENDING:** Migrated `KbPageStatusService` (7 call sites) to per-action canonical checks
+- [ ] **VERIFY PENDING:** Replace the remaining legacy call sites — **source complete**, measured 2026-09-25: all 16 queued services inject `KnowledgeAuthorizationService` and hold zero `pageVisibleTo` references. The 16 `queued` cells in the table below are stale. One production caller survives by deliberate deferral: `retrieval/kb-page-access.util.ts` via `wiki/kb-object-access.ts`.
+- [x] Property/fuzz test of the access predicate — implemented `fc.property` tests in `knowledge-page-scope.spec.ts`; inspected and rerun on 2026-09-27 (81 tests passed in the suite). This closes the test-implementation requirement only, not real-row ACL, RLS, container policy or revocation acceptance (AV-02/14).
+- [ ] **VERIFY PENDING:** Fold `buildArticleRestrictionPredicate` (`retrieval/kb-article-restriction-predicate.ts`) into the seam or scope it out explicitly — it builds an independent `kb_page_restrictions` ACL arm outside `KnowledgeAuthorizationService`, so the "no caller rebuilds the predicate" invariant is not yet whole
 
 **Call-site migration: source complete.** All 18 services now take their authorization from `KnowledgeAuthorizationService`. `pnpm typecheck` on source is clean. Executed as five parallel lanes with non-overlapping file ownership, then four follow-up lanes to repair spec fallout.
 
@@ -509,12 +511,12 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Tests | ownership transfer changes the list without altering visibility; another admin's private page is not "mine" |
 | Browser states | loading, ready, first empty, filtered empty, error+retry, denied |
 
-- [x] Failing test: private page owned by another authorized admin must not appear
-- [x] Server ownership filter
-- [x] Rebuild page on the shared collection module
-- [x] Remove client-side visibility filter and its query-key
-- [x] Owner-transfer action + audit event
-- [x] Browser evidence for all six states
+- [ ] **VERIFY PENDING:** Failing test: private page owned by another authorized admin must not appear
+- [ ] **VERIFY PENDING:** Server ownership filter
+- [ ] **VERIFY PENDING:** Rebuild page on the shared collection module
+- [ ] **VERIFY PENDING:** Remove client-side visibility filter and its query-key
+- [ ] **VERIFY PENDING:** Owner-transfer action + audit event
+- [ ] **VERIFY PENDING:** Browser evidence for all six states
 
 **Evidence:** Playwright intercepted-network spec at `frontend/e2e-intercepted/kb-my-pages-states.spec.ts`; all six states captured under `frontend/e2e-intercepted/screenshots/` at 1280x800 and 375x812 — loading, ready, first-empty, filtered-empty, error (retry button + correlation ID visible), denied.
 
@@ -534,12 +536,12 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Cache/index | grant change bumps ACL revision → list, detail, search, Ask, citation invalidation inside the revocation budget (p95 < 15 s, hard bound 60 s) |
 | Tests | create/change/revoke propagates to list, detail, search, Ask, citations, cache |
 
-- [x] Failing test: org-visible page created by another user must not appear as shared
-- [x] Grant CRUD endpoints with audit
-- [x] `sharedWithMe` scope in the collection module
-- [x] Rebuild the page; access-lost recovery state
-- [x] Revocation propagation test against the documented bound
-- [x] Backfill grants **only** from trustworthy existing facts; do not invent a grant per foreign-authored page
+- [ ] **VERIFY PENDING:** Failing test: org-visible page created by another user must not appear as shared
+- [ ] **VERIFY PENDING:** Grant CRUD endpoints with audit
+- [ ] **VERIFY PENDING:** `sharedWithMe` scope in the collection module
+- [ ] **VERIFY PENDING:** Rebuild the page; access-lost recovery state
+- [ ] **VERIFY PENDING:** Revocation propagation test against the documented bound
+- [ ] **VERIFY PENDING:** Backfill grants **only** from trustworthy existing facts; do not invent a grant per foreign-authored page
 
 **Evidence:** _pending_
 
@@ -558,14 +560,14 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Tests | cursor stability under concurrent insert/update/delete; fuzz test of the cursor codec; query budget |
 | Evidence | `EXPLAIN` at 10k and 100k rows; p95 budget |
 
-- [x] Cursor codec + property tests
-- [x] Normalized filter schema shared by client and server fixtures
-- [x] `GET /kb/pages` with projection, filters, facets
-- [x] Lazy tree-children endpoint
+- [ ] **VERIFY PENDING:** Cursor codec + property tests
+- [ ] **VERIFY PENDING:** Normalized filter schema shared by client and server fixtures
+- [ ] **VERIFY PENDING:** `GET /kb/pages` with projection, filters, facets
+- [ ] **VERIFY PENDING:** Lazy tree-children endpoint
 - [ ] Indexes + migration + `EXPLAIN` evidence
   **2026-09-27 audit:** AV-06: post-UNION plan measurement remains open.
-- [x] Migrate every consumer off the tree
-- [x] Contract tests pinned to shared fixtures
+- [ ] **VERIFY PENDING:** Migrate every consumer off the tree
+- [ ] **VERIFY PENDING:** Contract tests pinned to shared fixtures
 
 **Evidence:** _pending_
 
@@ -584,13 +586,13 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Tests | leakage matrix, minority-tenant recall, exact-code queries, stale/deleted/revoked exclusion, zero-result recovery |
 | SLO | p95 server < 500 ms at the planning envelope |
 
-- [x] Shared search/citation result projection (consumed by S16 too)
-- [x] `GET /kb/search`
-- [x] Route + facets + cursor + URL codec
-- [x] Quick find "View all" handoff preserving the query
+- [ ] **VERIFY PENDING:** Shared search/citation result projection (consumed by S16 too)
+- [ ] **VERIFY PENDING:** `GET /kb/search`
+- [ ] **VERIFY PENDING:** Route + facets + cursor + URL codec
+- [ ] **VERIFY PENDING:** Quick find "View all" handoff preserving the query
 - [ ] Leakage and recall suites
   **2026-09-27 audit:** AV-01/02/06: passage-fence suite fails; DB-row and recall proof remain open.
-- [x] All six states + keyboard navigation evidence
+- [ ] **VERIFY PENDING:** All six states + keyboard navigation evidence
 
 **Evidence:** _pending_
 
@@ -598,13 +600,13 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S06 — Wiki Home
 
-- [x] Compact search field linked to full results
-- [x] URL-backed `status`, `spaceId`, owner, view controls
-- [x] Card/list toggle, result count, cursor for All pages
-- [x] Page-card menu via the single action descriptor model
-- [x] Trust badges (draft/published/archived, verified/stale, owner missing)
-- [x] First-run path: blank, template, or import
-- [x] Remove tree rendering for All pages; children load only on expand
+- [ ] **VERIFY PENDING:** Compact search field linked to full results
+- [ ] **VERIFY PENDING:** URL-backed `status`, `spaceId`, owner, view controls
+- [ ] **VERIFY PENDING:** Card/list toggle, result count, cursor for All pages
+- [ ] **VERIFY PENDING:** Page-card menu via the single action descriptor model
+- [ ] **VERIFY PENDING:** Trust badges (draft/published/archived, verified/stale, owner missing)
+- [ ] **VERIFY PENDING:** First-run path: blank, template, or import
+- [ ] **VERIFY PENDING:** Remove tree rendering for All pages; children load only on expand
 - [ ] Acceptance: responsive at 100,000 tenant pages without downloading the tree
   **2026-09-27 audit:** AV-06/11: bounded-query evidence does not prove full responsive/load acceptance.
 
@@ -614,14 +616,14 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S07 — Spaces + Space detail
 
-- [x] Server-projected page/member counts
-- [x] Search, audience/status filters, cursor, list view
-- [x] Members sheet; owner; last updated; manager health summary
-- [x] Archive/restore replacing customer-facing hard delete; restore idempotent
-- [x] Archive impact preview: pages, public links, Ask index impact, record links
-- [x] Space detail: breadcrumb, audience/access badge, in-space search, status/owner filters, create-in-space, lazy hierarchy, review-policy summary, inaccessible vs not-found recovery
-- [x] Every child request carries `spaceId`, tenant, parent/cursor, current access
-- [x] Move checks both source and target space
+- [ ] **VERIFY PENDING:** Server-projected page/member counts
+- [ ] **VERIFY PENDING:** Search, audience/status filters, cursor, list view
+- [ ] **VERIFY PENDING:** Members sheet; owner; last updated; manager health summary
+- [ ] **VERIFY PENDING:** Archive/restore replacing customer-facing hard delete; restore idempotent
+- [ ] **VERIFY PENDING:** Archive impact preview: pages, public links, Ask index impact, record links
+- [ ] **VERIFY PENDING:** Space detail: breadcrumb, audience/access badge, in-space search, status/owner filters, create-in-space, lazy hierarchy, review-policy summary, inaccessible vs not-found recovery
+- [ ] **VERIFY PENDING:** Every child request carries `spaceId`, tenant, parent/cursor, current access
+- [ ] **VERIFY PENDING:** Move checks both source and target space
 
 **Evidence:** _pending_
 
@@ -629,16 +631,16 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S08 — Page document
 
-- [x] Read/edit modes by permission
-- [x] Trust header: owner, status, visibility, verification, next review, updated-by/time
-- [x] One action model: favorite, comments, metadata, backlinks, linked records, history, duplicate, move, save template, export, archive/delete
-- [x] Slash/insert menu, link preview, heading outline, anchored comments, citation blocks
-- [x] Mobile metadata/comments sheets
-- [x] In-memory or tenant-scoped server draft; connectivity + save timestamps; field-level conflict comparison; retry
-- [x] AI actions show sources and produce a preview/diff before applying
-- [x] Remove any page body in Web Storage (static scan + logout/org-switch/revocation tests)
-- [x] Content writes require expected revision; metadata writes never overwrite content
-- [x] Unauthorized and missing are indistinguishable 404
+- [ ] **VERIFY PENDING:** Read/edit modes by permission
+- [ ] **VERIFY PENDING:** Trust header: owner, status, visibility, verification, next review, updated-by/time
+- [ ] **VERIFY PENDING:** One action model: favorite, comments, metadata, backlinks, linked records, history, duplicate, move, save template, export, archive/delete
+- [ ] **VERIFY PENDING:** Slash/insert menu, link preview, heading outline, anchored comments, citation blocks
+- [ ] **VERIFY PENDING:** Mobile metadata/comments sheets
+- [ ] **VERIFY PENDING:** In-memory or tenant-scoped server draft; connectivity + save timestamps; field-level conflict comparison; retry
+- [ ] **VERIFY PENDING:** AI actions show sources and produce a preview/diff before applying
+- [ ] **VERIFY PENDING:** Remove any page body in Web Storage (static scan + logout/org-switch/revocation tests)
+- [ ] **VERIFY PENDING:** Content writes require expected revision; metadata writes never overwrite content
+- [ ] **VERIFY PENDING:** Unauthorized and missing are indistinguishable 404
 
 **Evidence:** _pending_
 
@@ -646,11 +648,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S09 — History
 
-- [x] Cursor list with actor, time, change summary; current marker
-- [x] Select one or two versions; semantic block diff; metadata/content distinction
-- [x] Restore preview + confirmation; deep link to a version; audit entry
-- [x] Restore appends a new version, never rewrites history, increments revision, reindexes asynchronously
-- [x] Remove unbounded revision load and raw JSON diff
+- [ ] **VERIFY PENDING:** Cursor list with actor, time, change summary; current marker
+- [ ] **VERIFY PENDING:** Select one or two versions; semantic block diff; metadata/content distinction
+- [ ] **VERIFY PENDING:** Restore preview + confirmation; deep link to a version; audit entry
+- [ ] **VERIFY PENDING:** Restore appends a new version, never rewrites history, increments revision, reindexes asynchronously
+- [ ] **VERIFY PENDING:** Remove unbounded revision load and raw JSON diff
 
 **Evidence:** _pending_
 
@@ -658,12 +660,12 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S10 — Reviews
 
-- [x] Drop persisted `expired` status; derive overdue as `pending && dueAt < now` (migration + index + contract tests)
-- [x] Search; URL filters for status/type/reviewer/due/space; sortable due date; cursor
-- [x] Page trust context; optional approval note; required rejection reason
-- [x] Bulk decide: max 100, per-row results, partial success, retry-safe, idempotent
-- [x] Mobile cards; assignment notifications
-- [x] List and decision both use page visibility; review metadata cannot reveal a hidden page
+- [ ] **VERIFY PENDING:** Drop persisted `expired` status; derive overdue as `pending && dueAt < now` (migration + index + contract tests)
+- [ ] **VERIFY PENDING:** Search; URL filters for status/type/reviewer/due/space; sortable due date; cursor
+- [ ] **VERIFY PENDING:** Page trust context; optional approval note; required rejection reason
+- [ ] **VERIFY PENDING:** Bulk decide: max 100, per-row results, partial success, retry-safe, idempotent
+- [ ] **VERIFY PENDING:** Mobile cards; assignment notifications
+- [ ] **VERIFY PENDING:** List and decision both use page visibility; review metadata cannot reveal a hidden page
 
 **Evidence:** _pending_
 
@@ -671,14 +673,14 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S11 — Trash
 
-- [x] Table + mobile cards; search; deleted-by/date/space filters; cursor
-- [x] Remove the silent 100-row cap and card-only layout
+- [ ] **VERIFY PENDING:** Table + mobile cards; search; deleted-by/date/space filters; cursor
+- [ ] **VERIFY PENDING:** Remove the silent 100-row cap and card-only layout
 - [ ] Selected restore/purge; dependency impact; empty trash; retention permission split; legal/hold explanation
   **2026-09-27 audit:** AV-07: held descendants are not checked before subtree deletion.
-- [x] Restore repairs tree/search/index links idempotently
+- [ ] **VERIFY PENDING:** Restore repairs tree/search/index links idempotently
 - [ ] Resumable multi-store purge ledger: rows, versions, comments, grants, blobs, chunks/vectors, caches, public/CDN, analytics ids, notifications, connector projections
   **2026-09-27 audit:** AV-07: ledger exists; hold/transaction/durable fan-out acceptance remains partial.
-- [x] Purge interruption/resumption test
+- [ ] **VERIFY PENDING:** Purge interruption/resumption test
 
 **Evidence:** _pending_
 
@@ -686,11 +688,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S12 — Templates
 
-- [x] URL `tab`, `q`, category/use-case filters; preview; expected output
-- [x] Saved templates: use count, last used, owner, cursor, create/edit/delete for managers
-- [x] Starter use does not require template-manage permission
-- [x] Using a template goes through the same page-create command and returns an editable page
-- [x] No marketplace, ratings, or near-duplicate generation
+- [ ] **VERIFY PENDING:** URL `tab`, `q`, category/use-case filters; preview; expected output
+- [ ] **VERIFY PENDING:** Saved templates: use count, last used, owner, cursor, create/edit/delete for managers
+- [ ] **VERIFY PENDING:** Starter use does not require template-manage permission
+- [ ] **VERIFY PENDING:** Using a template goes through the same page-create command and returns an editable page
+- [ ] **VERIFY PENDING:** No marketplace, ratings, or near-duplicate generation
 
 **Evidence:** _pending_
 
@@ -698,12 +700,12 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S13 — Import & Export
 
-- [x] Separately gated import/export tabs
-- [x] Format/size validation and help; title, target space/parent, default visibility, duplicate policy
-- [x] Dry-run summary; progress; per-item errors; retry; cancel before processing
-- [x] Cursor job histories; expiring download indicator; audit event
-- [x] Uploads scanned; jobs idempotent; partial import reports created/skipped/failed and resumes without duplicates
-- [x] Remove client slicing of job history and any synchronous parsing/indexing on the request connection
+- [ ] **VERIFY PENDING:** Separately gated import/export tabs
+- [ ] **VERIFY PENDING:** Format/size validation and help; title, target space/parent, default visibility, duplicate policy
+- [ ] **VERIFY PENDING:** Dry-run summary; progress; per-item errors; retry; cancel before processing
+- [ ] **VERIFY PENDING:** Cursor job histories; expiring download indicator; audit event
+- [ ] **VERIFY PENDING:** Uploads scanned; jobs idempotent; partial import reports created/skipped/failed and resumes without duplicates
+- [ ] **VERIFY PENDING:** Remove client slicing of job history and any synchronous parsing/indexing on the request connection
 
 **Evidence:** _pending_
 
@@ -711,12 +713,12 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S14 — Analytics
 
-- [x] Date range + space filters
-- [x] Successful resolution, zero-result queries, unsupported Ask queries, citation reuse, stale high-use pages, review SLA, public deflection
-- [x] Paginated drill-down; assign/dismiss/create-fix actions for gaps
-- [x] Minimum-cohort privacy thresholds; aggregates cannot reveal a hidden page via count or label
-- [x] Remove vanity totals, raw org-wide titles, duplicate trust scores, charts without table alternatives
-- [x] Skeleton/error/no-data states
+- [ ] **VERIFY PENDING:** Date range + space filters
+- [ ] **VERIFY PENDING:** Successful resolution, zero-result queries, unsupported Ask queries, citation reuse, stale high-use pages, review SLA, public deflection
+- [ ] **VERIFY PENDING:** Paginated drill-down; assign/dismiss/create-fix actions for gaps
+- [ ] **VERIFY PENDING:** Minimum-cohort privacy thresholds; aggregates cannot reveal a hidden page via count or label
+- [ ] **VERIFY PENDING:** Remove vanity totals, raw org-wide titles, duplicate trust scores, charts without table alternatives
+- [ ] **VERIFY PENDING:** Skeleton/error/no-data states
 
 **Evidence:** _pending_
 
@@ -724,11 +726,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S15 — Content Health (`/knowledge/wiki/manage`)
 
-- [x] `kb_health_items` schema: tenant, page, kind, versioned evidence JSON, impact, state, assignee, due, detected/resolved/dismissed, rule version; unique active `(org_id, page_id, kind, rule_version)`
-- [x] Impact-ranked inbox with presets: unowned, stale, unverified, empty, broken link, overexposed, duplicate candidate, contradictory claim, overdue review
-- [x] Filters; owner/due; reason/explanation; bulk repair; dismiss/snooze with reason; before/after health trend
-- [x] Every item links to evidence and an allowed repair; no automated fix publishes without a human
-- [x] Dismissals expire or record a durable exception
+- [ ] **VERIFY PENDING:** `kb_health_items` schema: tenant, page, kind, versioned evidence JSON, impact, state, assignee, due, detected/resolved/dismissed, rule version; unique active `(org_id, page_id, kind, rule_version)`
+- [ ] **VERIFY PENDING:** Impact-ranked inbox with presets: unowned, stale, unverified, empty, broken link, overexposed, duplicate candidate, contradictory claim, overdue review
+- [ ] **VERIFY PENDING:** Filters; owner/due; reason/explanation; bulk repair; dismiss/snooze with reason; before/after health trend
+- [ ] **VERIFY PENDING:** Every item links to evidence and an allowed repair; no automated fix publishes without a human
+- [ ] **VERIFY PENDING:** Dismissals expire or record a durable exception
 
 **Evidence:** _pending_
 
@@ -738,22 +740,22 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 - [ ] `kb_ai_interactions` schema: tenant, actor, conversation/message, provider/model, prompt policy version, source ids + revisions, token counts, latency, result state, feedback, cost
   **2026-09-27 audit:** AV-04: source records currently persist null ACL revisions.
-- [x] Conversation rail: new, search, rename, delete, cursor
+- [ ] **VERIFY PENDING:** Conversation rail: new, search, rename, delete, cursor
 - [ ] Source scope sheet (pages/files/notes, space, owner, status, verified-only) visible and editable before send
   **2026-09-27 audit:** AV-04: selected scope must constrain every retrieval channel.
-- [x] Answer parts: citations, source passage, freshness, verification, disagreement, insufficient evidence
-- [x] Streaming stop/retry, network recovery, copy, helpful/unhelpful, report wrong/stale, create knowledge gap
-- [x] Access-change handling after an answer was generated
+- [ ] **VERIFY PENDING:** Answer parts: citations, source passage, freshness, verification, disagreement, insufficient evidence
+- [ ] **VERIFY PENDING:** Streaming stop/retry, network recovery, copy, helpful/unhelpful, report wrong/stale, create knowledge gap
+- [ ] **VERIFY PENDING:** Access-change handling after an answer was generated
 - [ ] Deterministic search fallback when AI is disabled, rate limited, over budget, or unavailable —
   **2026-09-27 audit:** AV-04: catch-to-empty paths can hide failure behind non-degraded outcomes.
   **retrieval** degrades to lexical ranking on all four; the **answer** still 402s when the org is
   over budget and 503s at the concurrency cap, because degrading those would bypass credit and the
   limiter rather than the provider. See the fifth-pass entry below.
-- [x] `kb:ai:generate` + read access required; billing permission not inferred from view
-- [x] Provider context contains only authorized passages; document content is data, never instruction
-- [x] Citations accepted only when they map to a retrieved, still-authorized passage
-- [x] Tenant quotas: requests, tokens, concurrent streams, indexed bytes, research jobs
-- [x] Remove confidence percentages, uncited prose, hidden auto-selected sources, drafts in browser storage
+- [ ] **VERIFY PENDING:** `kb:ai:generate` + read access required; billing permission not inferred from view
+- [ ] **VERIFY PENDING:** Provider context contains only authorized passages; document content is data, never instruction
+- [ ] **VERIFY PENDING:** Citations accepted only when they map to a retrieved, still-authorized passage
+- [ ] **VERIFY PENDING:** Tenant quotas: requests, tokens, concurrent streams, indexed bytes, research jobs
+- [ ] **VERIFY PENDING:** Remove confidence percentages, uncited prose, hidden auto-selected sources, drafts in browser storage
 
 **Coverage gap found during the S01 lane work — CLOSED, re-measured 2026-09-25.** The gap was real: both Ask isolation specs exercised only the **article** paths and never reached `auth.visiblePagePredicate`, which is consulted only when **page** citations are present. It is now closed on both sides, each with a negative/positive pair:
 
@@ -770,12 +772,12 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S17 — Public page
 
-- [x] Accessible reading typography; brand-light header; last updated; optional helpful feedback
-- [x] Invalid/revoked → 404; no private chrome, sibling tree, comments, Ask scope, or non-public metadata
-- [x] Tokens hashed, revocable, versioned, rate limited, absent from logs
-- [x] Cache headers keyed by token revision; rotation/revocation purges CDN/cache
-- [x] Page and attachment access bound to the same public grant
-- [x] `@Public` route RLS: SECURITY DEFINER lookup (42501 hazard)
+- [ ] **VERIFY PENDING:** Accessible reading typography; brand-light header; last updated; optional helpful feedback
+- [ ] **VERIFY PENDING:** Invalid/revoked → 404; no private chrome, sibling tree, comments, Ask scope, or non-public metadata
+- [ ] **VERIFY PENDING:** Tokens hashed, revocable, versioned, rate limited, absent from logs
+- [ ] **VERIFY PENDING:** Cache headers keyed by token revision; rotation/revocation purges CDN/cache — AV-16 distinguishes frontend no-store from backend public/no-cache and requires per-layer revocation proof.
+- [ ] **VERIFY PENDING:** Page and attachment access bound to the same public grant — AV-16 requires replay testing of the object URL returned by the media broker after revocation.
+- [ ] **VERIFY PENDING:** `@Public` route RLS: SECURITY DEFINER lookup (42501 hazard)
 
 **Evidence:** _pending_
 
@@ -783,11 +785,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S18 — Project wiki adapters
 
-- [x] `/build/[projectId]/wiki` and `/build/[projectId]/wiki/[pageId]` scope every list/search/create/read/history path by project
-- [x] Project membership enforced on every path
-- [x] History adapter added
-- [x] Project back path in the breadcrumb (Project → Wiki → ancestors)
-- [x] No duplicate data, editor, or authorization implementation
+- [ ] **VERIFY PENDING:** `/build/[projectId]/wiki` and `/build/[projectId]/wiki/[pageId]` scope every list/search/create/read/history path by project
+- [ ] **VERIFY PENDING:** Project membership enforced on every path
+- [ ] **VERIFY PENDING:** History adapter added
+- [ ] **VERIFY PENDING:** Project back path in the breadcrumb (Project → Wiki → ancestors)
+- [ ] **VERIFY PENDING:** No duplicate data, editor, or authorization implementation
 
 **Evidence:** _pending_
 
@@ -795,10 +797,10 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S19 — Research Briefs
 
-- [x] List/detail under Knowledge: question, scope, status, owner, provider/model metadata, citations, source snapshot, cost, retry/cancel, rate limit, approval, convert-to-page
-- [x] Cited records rechecked on open; losing access redacts the citation
-- [x] Completion durable if the browser closes
-- [x] Remove the Support-owned duplicate route after callers migrate
+- [ ] **VERIFY PENDING:** List/detail under Knowledge: question, scope, status, owner, provider/model metadata, citations, source snapshot, cost, retry/cancel, rate limit, approval, convert-to-page
+- [ ] **VERIFY PENDING:** Cited records rechecked on open; losing access redacts the citation
+- [ ] **VERIFY PENDING:** Completion durable if the browser closes
+- [ ] **VERIFY PENDING:** Remove the Support-owned duplicate route after callers migrate
 
 **Evidence:** _pending_
 
@@ -806,11 +808,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S20 — `/ask` removal, redirects, aliases
 
-- [x] `/knowledge` redirect behavior verified with telemetry and entitlement
-- [x] `/ask` → `/knowledge/chat` redirect; callers moved; duplicate surface deleted
-- [x] Required aliases and redirects in place
-- [x] Caller census (`rg` + dependency graph incl. dynamic imports and Nest module registration) shows zero callers before deletion
-- [x] Redirects are not shadowed by `next.config.ts` (config fires before route-level redirect pages)
+- [ ] **VERIFY PENDING:** `/knowledge` redirect behavior verified with telemetry and entitlement
+- [ ] **VERIFY PENDING:** `/ask` → `/knowledge/chat` redirect; callers moved; duplicate surface deleted
+- [ ] **VERIFY PENDING:** Required aliases and redirects in place
+- [ ] **VERIFY PENDING:** Caller census (`rg` + dependency graph incl. dynamic imports and Nest module registration) shows zero callers before deletion
+- [ ] **VERIFY PENDING:** Redirects are not shadowed by `next.config.ts` (config fires before route-level redirect pages)
 
 **Evidence:** _pending_
 
@@ -820,17 +822,17 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 **Runs last. Nothing in this slice starts until S01–S20 are `VERIFIED`.**
 
-- [x] Pre-flight: resolve exact table/route/cache/index/blob targets and write them into this ledger before any destructive statement
-- [x] Pre-flight: RDS snapshot taken and id recorded here
-- [x] Per-record reconciliation of status, slug, redirects, comments, attachments, versions, translations, public URL, citations
-- [x] Watermark, checksum/counts, exceptions, retries, rollback window recorded
-- [x] Freeze legacy writes → final delta → switch readers → invalidate both cache namespaces
-- [x] Remove the article↔page bridge runtime only after 100% migration + signed reconciliation
+- [ ] **VERIFY PENDING:** Pre-flight: resolve exact table/route/cache/index/blob targets and write them into this ledger before any destructive statement
+- [ ] **VERIFY PENDING:** Pre-flight: RDS snapshot taken and id recorded here
+- [ ] **VERIFY PENDING:** Per-record reconciliation of status, slug, redirects, comments, attachments, versions, translations, public URL, citations
+- [ ] **VERIFY PENDING:** Watermark, checksum/counts, exceptions, retries, rollback window recorded
+- [ ] **VERIFY PENDING:** Freeze legacy writes → final delta → switch readers → invalidate both cache namespaces
+- [ ] **VERIFY PENDING:** Remove the article↔page bridge runtime only after 100% migration + signed reconciliation
 - [ ] Remove duplicate search/access logic, tree-as-list consumers, client caps, persisted expired review state, unclaimed endpoints, shallow wrappers
   **2026-09-27 audit:** AV-06/08/09: offset search, wildcard query adapter and retirement remain.
-- [x] Contraction migration tested for interruption and resumption
-- [x] Rollback metadata provided even though the data migration is intentionally irreversible
-- [x] Retain historical migrations needed to build from supported baselines, audit records, and promised compatibility redirects
+- [ ] **VERIFY PENDING:** Contraction migration tested for interruption and resumption
+- [ ] **VERIFY PENDING:** Rollback metadata provided even though the data migration is intentionally irreversible
+- [ ] **VERIFY PENDING:** Retain historical migrations needed to build from supported baselines, audit records, and promised compatibility redirects
 
 **Evidence:** _pending_
 
@@ -841,27 +843,27 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 Split per item, because the original single checkboxes hid four things that are done behind
 six that cannot be.
 
-- [x] **Dedicated queue lanes.** `ai_jobs` is one undifferentiated queue — `claimBatch` has no
+- [ ] **VERIFY PENDING:** **Dedicated queue lanes.** `ai_jobs` is one undifferentiated queue — `claimBatch` has no
   `type` predicate and the kind only selects a handler after the claim. Separation today is by
   *table and worker* (`payroll_jobs`, `outbox_events`, `workflow_runs`), not by lane.
-- [x] **Retry / DLQ / bounded attempts.** `attempts`/`max_attempts` default 3, `DEAD` is a real
+- [ ] **VERIFY PENDING:** **Retry / DLQ / bounded attempts.** `attempts`/`max_attempts` default 3, `DEAD` is a real
   terminal state, `fail()` backs off exponentially, and a revived key no longer poisons.
-- [x] **Lease recovery.** `reclaimExpiredLeases` — **written and tested, but dormant.** It sits in
+- [ ] **VERIFY PENDING:** **Lease recovery.** `reclaimExpiredLeases` — **written and tested, but dormant.** It sits in
   `flush()`, which has no scheduler. See "The AI job queue is not draining at all".
-- [x] **Admission control.** `MAX_LIVE_JOBS_PER_ORG = 500` on `QUEUED` + `RUNNING`, 429 with
+- [ ] **VERIFY PENDING:** **Admission control.** `MAX_LIVE_JOBS_PER_ORG = 500` on `QUEUED` + `RUNNING`, 429 with
   `Retry-After`, and an existing idempotency key is never rejected by a full queue.
-- [x] **Per-tenant concurrency / fairness.** `claimBatch` still has no per-org cap. Deliberately
+- [ ] **VERIFY PENDING:** **Per-tenant concurrency / fairness.** `claimBatch` still has no per-org cap. Deliberately
   unbuilt: the rewrite was reverted once after rendering its SQL showed a dropped
   `status = 'QUEUED'` re-check, and there is no queue here to exercise a replacement against.
   The rotating per-tenant cursor in `outbox-claim.ts` is the model when it is built.
-- [x] **Correlation ids on jobs.** The infrastructure exists and `outbox_events` and
+- [ ] **VERIFY PENDING:** **Correlation ids on jobs.** The infrastructure exists and `outbox_events` and
   `workflow_runs` both persist `correlation_id`. `ai_jobs` has no such column, so nothing links an
   enqueued job to the request that created it. Needs a migration.
-- [x] Interactive index and access-revocation freshness SLOs
-- [x] **Batched, content-hash-deduplicated embedding.** One gateway call per document, provider
+- [ ] **VERIFY PENDING:** Interactive index and access-revocation freshness SLOs
+- [ ] **VERIFY PENDING:** **Batched, content-hash-deduplicated embedding.** One gateway call per document, provider
   sub-batches at 64, `content_hash` short-circuits an unchanged body, and per-chunk checkpoints
   make a crashed run resume rather than re-pay.
-- [x] **Embedding budgets.** Present but coarse: the credit reservation is a flat per-call estimate
+- [ ] **VERIFY PENDING:** **Embedding budgets.** Present but coarse: the credit reservation is a flat per-call estimate
   regardless of batch size, so a 400-chunk batch reserves what a 1-chunk batch does.
 - [ ] **Public-page CDN invalidation by token/page revision.** Not built, and not fabricated:
   **2026-09-27 audit:** AV-11: conditional/deferred for no-store endpoint; not implemented CDN behavior.
@@ -874,13 +876,13 @@ six that cannot be.
   `isReplicaHealthy` is hardcoded `true`, and the router throws `ReplicaShedError` rather than
   falling back, which its own note says is deliberate. Closing this needs a real replica endpoint,
   which this deployment does not have.
-- [x] **Connection budget.** `poolAdmission` lanes are *regions*, not workloads, so interactive and
+- [ ] **VERIFY PENDING:** **Connection budget.** `poolAdmission` lanes are *regions*, not workloads, so interactive and
   background share one counter sized at `DB_POOL_MAX`. The shed is real but indiscriminate: a
   worker burst evicts interactive requests.
 - [ ] Drills: backup restore, tenant export/delete, reindex, cell-move — **needs a live
   environment.** No local Postgres, no capture stack, PITR window 1 day.
 - [ ] Load/soak at current, 10×, and the planning envelope — **needs a live environment.**
-- [x] Conditional stages (partitioning, cells, service extraction, external search) stay
+- [ ] **VERIFY PENDING:** Conditional stages (partitioning, cells, service extraction, external search) stay
   **unactivated**. No trigger was measured, because measuring one needs the environment above.
   Recorded as unmeasured rather than as "not triggered" — those are different claims.
 
@@ -902,21 +904,21 @@ seam that now emits behind the nine that still do not.
 
 **Dimensions**
 
-- [x] Route/module and result code, for KB indexing only. `kb.indexing.operation` carries
+- [ ] **VERIFY PENDING:** Route/module and result code, for KB indexing only. `kb.indexing.operation` carries
   `kb.content_type`, `kb.outcome`, `kb.chunks`, `kb.embedded`, `kb.reused`, `kb.duration_ms` and
   `org.id`; `startSpan` joins `correlation.id` and `http.route` from the ambient context.
-- [x] Provider/model — pre-existing on `AiCallMetrics`, not delivered here.
+- [ ] **VERIFY PENDING:** Provider/model — pre-existing on `AiCallMetrics`, not delivered here.
 - [ ] Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source
   **2026-09-27 audit:** AV-11: partial dimensions exist; complete coverage and truthful outcome proof remain open.
   kind. None is emitted on any KB span.
-- [x] Only the **page** indexing path is instrumented. `indexArticle` delegates to
+- [ ] **VERIFY PENDING:** Only the **page** indexing path is instrumented. `indexArticle` delegates to
   `kb-article-indexing.ts` and attachments run their own flow. `KbIndexingContentType` already
   declares `article` and `attachment`, so wiring them adds no new vocabulary — but they are not
   wired, and an article indexing failure is still silent.
 
 **No tenant content in labels or logs**
 
-- [x] For the new span, pinned three ways: a test replays `redact.ts`'s own `SENSITIVE_EXACT` and
+- [ ] **VERIFY PENDING:** For the new span, pinned three ways: a test replays `redact.ts`'s own `SENSITIVE_EXACT` and
   `SENSITIVE_SUBSTRINGS` rules over the real emitted attribute set and asserts nothing is blanked;
   an allowlist test fails on any new key; a third asserts the emitter interpolates nothing into an
   attribute *value*. No title, body, query, token or filename can reach the stream.
@@ -925,29 +927,29 @@ seam that now emits behind the nine that still do not.
 
 **Dashboards and alerts**
 
-- [x] Index freshness and indexing failure: `alert:kb-indexing` fires when
+- [ ] **VERIFY PENDING:** Index freshness and indexing failure: `alert:kb-indexing` fires when
   `faults >= 2 && faults/ops > 0.05`, over `embedding_unavailable`, `credits_exhausted`, `error`.
   Registered in `alert-dispatch.mjs` under `knowledge-team`, anchored at `#kb-indexing`.
-- [x] Queue age, retries, dead letters — pre-existing (`job-queue-age`, the `ai-jobs` dead-letter
+- [ ] **VERIFY PENDING:** Queue age, retries, dead letters — pre-existing (`job-queue-age`, the `ai-jobs` dead-letter
   SLO). Lease recovery is written and tested but dormant; see S22.
 - [ ] Read/write/search/Ask latency and errors. No span exists on any of those paths.
   **2026-09-27 audit:** AV-11: Ask/search spans exist; complete read/write coverage remains open.
-- [x] Retrieval candidate counts, rerank latency, no-answer rate, citation coverage. The Ask path
+- [ ] **VERIFY PENDING:** Retrieval candidate counts, rerank latency, no-answer rate, citation coverage. The Ask path
   now sets `degraded: true` when it falls back to lexical ranking; counting that is the first thing
   to build here, and nothing counts it yet.
 - [ ] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
   **2026-09-27 audit:** AV-11: operational measurements remain open.
   All need a live database.
-- [x] ACL denial and not-found anomalies, revocation lag.
-- [x] Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
-- [x] Purge backlog and oldest incomplete ledger.
+- [ ] **VERIFY PENDING:** ACL denial and not-found anomalies, revocation lag.
+- [ ] **VERIFY PENDING:** Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
+- [ ] **VERIFY PENDING:** Purge backlog and oldest incomplete ledger.
 - [ ] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
   **2026-09-27 audit:** AV-11: dashboards and operator delivery are not established.
   script over a log stream, and routing one to a human is a deployment concern that does not exist.
 
 **SLOs, rate limits, cost budgets, runbooks — drill-verified**
 
-- [x] SLO and runbook for KB indexing: `module:kb:indexing` in the catalogue, `#kb-indexing` in
+- [ ] **VERIFY PENDING:** SLO and runbook for KB indexing: `module:kb:indexing` in the catalogue, `#kb-indexing` in
   `FAILURE-RUNBOOKS.md` with the six-part structure, plus the `### kb-indexing` entry in
   `completion-plan.md` that the dispatch half of `slo-catalogue.spec.ts` actually resolves against.
 - [ ] Drill-verified. Nothing here has fired against a live stream. The self-test proves the
@@ -1018,8 +1020,8 @@ Surfaced while auditing Lane A, not reported by it. `kb-citation-visibility-boun
 
 Consequences to close in **S04** (query budgets) and **S22**:
 
-- [x] Memoize standing for the life of one request. A naive instance-level Map on a singleton Nest service would leak across tenants and must not be used.
-- [x] Decide whether standing may be cached in `CacheService`. Caution: `permissionsVersion` in the key covers role and permission mutations (BE-114), but a **page-grant or space-membership change does not bump it**, so a cached standing could outlive a revocation. The existing 60 s accessible-spaces cache already carries this exposure. Do not add caching to the authorization path until revocation can actually be tested — currently blocked by the IAM credential.
+- [ ] **VERIFY PENDING:** Memoize standing for the life of one request. A naive instance-level Map on a singleton Nest service would leak across tenants and must not be used.
+- [ ] **VERIFY PENDING:** Decide whether standing may be cached in `CacheService`. Caution: `permissionsVersion` in the key covers role and permission mutations (BE-114), but a **page-grant or space-membership change does not bump it**, so a cached standing could outlive a revocation. The existing 60 s accessible-spaces cache already carries this exposure. Do not add caching to the authorization path until revocation can actually be tested — currently blocked by the IAM credential.
 - [ ] Re-run the repo's own read-cost gates (`pnpm db:check-read-budgets`, `check:db-call-count`, `check:route-budgets`). These are where this will surface and **they need a database**, so the regression is currently unmeasurable here.
   **2026-09-27 audit:** AV-06: current final-query budget evidence is pending.
 

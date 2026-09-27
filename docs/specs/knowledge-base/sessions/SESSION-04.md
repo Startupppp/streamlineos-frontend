@@ -53,30 +53,30 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
 
 ## Todo
 
-- [x] Measure first: enumerate the eleven actions and the three surfaces that build them, and
+- [ ] **VERIFY PENDING:** Measure first: enumerate the eleven actions and the three surfaces that build them, and
       confirm `kb:pages:export` gates nothing today. Record both with `file:line`.
-- [x] Consume SESSION-02's `frontend/features/wiki/lib/page-action-descriptors.ts` in
+- [ ] **VERIFY PENDING:** Consume SESSION-02's `frontend/features/wiki/lib/page-action-descriptors.ts` in
       `page-document-toolbar.tsx`. Coordinate through `HANDOFF` lines; do not create a second
       descriptor module. If SESSION-02's module is not ready, build against the interface and
       reconcile — do not fork it.
-- [x] Linked records reachable below 1280 px: a sheet or tab path on mobile and at 1280,
+- [ ] **VERIFY PENDING:** Linked records reachable below 1280 px: a sheet or tab path on mobile and at 1280,
       keyboard-reachable, with the same actions as the desktop panel.
-- [x] Server-side export behind `kb:pages:export`: a route that authorizes, serializes on the
+- [ ] **VERIFY PENDING:** Server-side export behind `kb:pages:export`: a route that authorizes, serializes on the
       server via `kb-export-serializer.ts`, and returns an expiring download. The client-side
       serializer stops being the export path.
-- [x] `kb:pages:export` is reachable through a role template — done in `8dc7a95fe`, see above.
+- [ ] **VERIFY PENDING:** `kb:pages:export` is reachable through a role template — done in `8dc7a95fe`, see above.
       Your remaining obligation is ordering: the template widening must be **deployed** before the
       client stops serializing locally, or export breaks for everyone between the two.
       Ordering confirmed: Railway deployed `8dc7a95fe` on push; `export-page.ts` now calls the
       server — the client serializer is gone.
-- [x] Connectivity signal: an explicit offline state on the editor, with queued-save behaviour and
+- [ ] **VERIFY PENDING:** Connectivity signal: an explicit offline state on the editor, with queued-save behaviour and
       recovery when the network returns.
-- [x] Save timestamp and state are visible: saving, saved-at, and failed-with-retry.
-- [x] Field-level conflict comparison on stale revision, with retry — not a blanket overwrite.
-- [x] Content writes carry `expectedContentRevision`; metadata writes never overwrite content.
-- [x] Read and edit modes resolve from permission, and the trust header shows owner, status,
+- [ ] **VERIFY PENDING:** Save timestamp and state are visible: saving, saved-at, and failed-with-retry.
+- [ ] **VERIFY PENDING:** Field-level conflict comparison on stale revision, with retry — not a blanket overwrite.
+- [ ] **VERIFY PENDING:** Content writes carry `expectedContentRevision`; metadata writes never overwrite content.
+- [ ] **VERIFY PENDING:** Read and edit modes resolve from permission, and the trust header shows owner, status,
       visibility, verification, next review, and updated-by/time.
-- [x] AI actions show their sources and produce a preview/diff before applying.
+- [ ] **VERIFY PENDING:** AI actions show their sources and produce a preview/diff before applying.
       **Preview/diff: DONE 2026-09-25** (`cbcf66907`). **Sources: DONE 2026-09-25**
       (`c3c78e60f` backend, `fbf43a55c` frontend, `5c258d8fd` + `a9a9f13da` repairs).
       The backend now emits a named SSE data event (`data-kb-page-sources`) ahead of the text
@@ -116,7 +116,7 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       data events, so the backend emitting a `sources` event would flow through `streamKbDocAi`.
       That is a backend change inside `backend/src/modules/kb`, queued behind the lane that owns
       that tree.
-- [x] No page body in Web Storage: keep `page-document-no-storage.test.ts` biting, and extend it
+- [ ] **VERIFY PENDING:** No page body in Web Storage: keep `page-document-no-storage.test.ts` biting, and extend it
       across logout, org switch, and revocation.
       Extended with tests (c) and (d) for API-call pattern. Logout/org-switch/revocation extension
       completed 2026-09-25 as tests (e), (f) and (g) — 8/8 pass.
@@ -128,7 +128,7 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       (`wiki-right-panel-collapsed`, `wiki-nav-groups`), neither carrying content.
       So there was no defect; the three tests exist to stop one being introduced — the realistic
       regression is a well-meaning "rescue the draft to localStorage on a failed save".
-- [x] Unauthorized and missing are indistinguishable 404s.
+- [ ] **VERIFY PENDING:** Unauthorized and missing are indistinguishable 404s.
       **DONE 2026-09-25** (`4d688299c`, backend repo). The prior DEFERRED note checked one service
       and generalised from it. Sweeping every KB service that takes a resource id found **six**
       paths where a caller could tell restricted from nonexistent:
@@ -152,7 +152,7 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       101 tests pass across 12 suites, run by the orchestrator rather than taken from the report.
       Note the help-centre half is inert: `kb_articles` is confirmed **absent** from production, so
       that surface cannot load. Fixed for symmetry, not for effect.
-- [x] Mobile metadata and comments sheets; every desktop capability has a 375 px path.
+- [ ] **VERIFY PENDING:** Mobile metadata and comments sheets; every desktop capability has a 375 px path.
       Re-checked by enumeration 2026-09-25, because the original note asserted "no new mobile paths
       needed" without listing the capabilities. All thirteen enumerated and each traced to a trigger:
       `page-document.tsx:276` renders the sticky header at every breakpoint, and the toolbar
@@ -164,8 +164,8 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       Verified in jsdom only: triggers exist, are not `aria-hidden`, are not inside desktop-only
       containers. **Not** verified: real-browser focus behaviour and header overflow at 375 px with
       a long breadcrumb — jsdom cannot see layout overflow.
-- [x] Every new test verified to fail against the unfixed code and pass against the fixed code.
-- [x] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+- [ ] **VERIFY PENDING:** Every new test verified to fail against the unfixed code and pass against the fixed code.
+- [ ] **VERIFY PENDING:** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
       **DONE 2026-09-25**, serialized orchestrator pass. Backend `typecheck` and `typecheck:test`
       both clean; frontend `type-check`, `type-check:specs` and `check:named-handlers` clean.
       Backend `typecheck` was red on arrival — see SESSION-07 for the `data-${string}` finding.

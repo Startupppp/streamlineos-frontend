@@ -8,8 +8,14 @@ The same table's group is declared correctly by a second schema eighty lines awa
 
 **Status:** ready-for-agent
 
+**Schema correction (2026-09-27):** `backend/src/db/schema/build/core.ts:110` gives the group a
+default but does not declare it NOT NULL. A default is not a guarantee against historical or
+explicit nulls. Expose the current nullable contract honestly, or survey/backfill/constrain before
+requiring it. Ticket custom status names remain text; do not replace them with a fixed enum.
+
 - [ ] The state group is present in the response contract, the frontend contract and the read hook's row type
 - [ ] The completed-status helper returns every status whose group is completed, and a test covers a renamed completed status
 - [ ] The field is required where the database guarantees it, not optional-and-ignored
 - [ ] The two schemas for this table agree, or one of them is deleted
 - [ ] Every surface that hides or counts completed work is checked against a project with a renamed completed column
+- [ ] Test existing null group rows and newly created/custom-renamed statuses through the actual response parser, not a cast that invents the missing field

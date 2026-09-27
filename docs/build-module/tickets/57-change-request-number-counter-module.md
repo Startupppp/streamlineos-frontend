@@ -8,6 +8,11 @@ Extract the counter as a module whose interface is next-number-for-this-project 
 
 **Status:** ready-for-agent
 
+**Audit correction (2026-09-27):** Number allocation exists in both
+`client-portal.service.ts:40` and `change-requests.service.ts:182`; cover both creators.
+
+- [ ] Keep the transaction lock through allocation and insertion on both internal and portal creation paths; prove real concurrent uniqueness in an isolated database test, not merely a mocked lock call
+
 - [ ] The counter is a module with a single entry point taking the transaction, organisation and project
 - [ ] Its interface states that it must be called inside a transaction and that it serialises per project
 - [ ] A test proves two concurrent allocations produce different numbers, using a double that runs its callback

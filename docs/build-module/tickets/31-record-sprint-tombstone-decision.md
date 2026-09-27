@@ -10,6 +10,12 @@ Record the decision, not just the outcome — an unexplained "keep" invites the 
 
 **Status:** done
 
+**Verified 2026-09-27:** Decision/exception records match the surviving 410 adapter, and
+`backend/src/modules/build/execution/sprint-create-frozen.spec.ts` passed in the focused backend
+run recorded in `ARCHITECTURE-VERIFICATION-2026-09-27.md`. Migration/grant statements below are
+historical records, not a fresh production query. This ticket closes a documentation decision;
+it does not certify migration application or deployment.
+
 - [x] The decision and its reason are recorded where retirement decisions already live — `docs/build-module/99-kill-list.md` Sprint row (annotated 2026-09-27): states the frozen service, controller, schemas and spec are kept because every method throws `GoneException(FROZEN)` with the replacement path, and deleting them converts an informative 410 into a silent 404.
 - [x] The record names what would be lost by deleting: the 410 status and its migration hint (`"Sprints are frozen. Use /build/:projectId/cycles — Cycles are the only iteration identity."`) — `docs/build-module/99-kill-list.md` Sprint row annotation 2026-09-27.
 - [x] The kill-list acceptance criterion at line 117 (`No removed surface retains a parallel schema, permission, cache key, or endpoint family`) is annotated with this deliberate exception — `docs/build-module/99-kill-list.md` acceptance criteria section 2026-09-27: the box is left unticked and the exception is explained (no DB schema, no permission key, no cache key; only the HTTP 410 adapter survives).

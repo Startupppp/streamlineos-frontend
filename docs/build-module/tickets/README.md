@@ -1,6 +1,26 @@
 # Build module — architecture tickets
 
-68 tickets from two architecture reviews of the Build module, both on 2026-09-26. Tickets **01–34** came from the first pass; **35–68** from the second, which re-read the module corner by corner and found six things that are wrong today rather than merely shallow. Each ticket is a vertical slice: a narrow but complete path through every layer it touches, verifiable on its own, sized for one fresh context window.
+68 remediation tickets associated with two Build architecture reviews dated 2026-09-26 and
+subsequent decisions. The originals are `architecture-review-20260926-213335.html`
+("Architecture review — StreamlineOS Build module") and
+`architecture-review-20260926-230544.html` ("Build module — architecture review — 2026-09-26")
+in the review author's temporary directory. Tickets 35-68 expand the second pass, but numbering
+is not exact provenance: RLS tickets 29/30 also match the second report's card 1. Each ticket is
+intended to be a narrow, independently verifiable change, not an automatic promise of one-session completion.
+
+## Completion rule — owner instruction, 2026-09-27
+
+Check an acceptance box only when its implementation exists, has been verified, and its relevant
+tests pass. Record source paths, exact test command, result, date and checkout scope. A test file
+existing is not a test run; a mock matching the implementation is not proof of the requested behavior.
+For database criteria require application-role/catalog and behavioral evidence; for UI criteria
+require browser evidence. Journalled is not applied, applied is not deployed, and deployed is not
+workflow-verified. Keep unsupported claims unchecked and label them implemented/unverified rather
+than pretending the code is absent. N/A decisions are recorded separately and never counted as
+implemented requirements. Documentation-only decisions need consistency/source verification, not
+invented runtime tests.
+
+Current evidence and reopenings: [Architecture verification, 2026-09-27](./ARCHITECTURE-VERIFICATION-2026-09-27.md).
 
 Numbers run in dependency order — blockers before the tickets they gate. A ticket whose "Blocked by" reads *None* can start immediately; 42 of the 68 can.
 
@@ -32,9 +52,14 @@ Four findings from the second review produced no new tickets because the first p
 
 ## Four things to carry into the work
 
-**CCG-1 is false, and tickets 11–13 depend on knowing that.** The cross-cutting gaps document records optimistic concurrency as absent anywhere in the backend. Ticket update implements a complete compare-and-swap: it guards the write on the row's current version, increments it, returns 409 through a dedicated conflict exception, and has a passing spec. CCG-1 reached its conclusion by searching for `If-Match` and `ETag`; this codebase carries the token in the request body, so that search could not have found it. Two deferrals rest on the false premise — C3 was scoped out on pages needing a conflict surface, and C7's conflict state was called unreachable. Both should be reopened.
+**CCG-1's original premise was false and is now corrected.** Ticket update has a body-token
+compare-and-swap, but optional tokens and incomplete writer/client coverage are distinct gaps.
+Seven versioned-editing page C3 boxes were reopened in this audit; C7 remains open. Follow the
+corrected cross-cutting gap and tickets 36/11/12/13, not the old header-only search conclusion.
 
-**And the compare-and-swap is currently decorative, which is why 36 now gates 11–13.** Only five of the eleven ticket writers move the token. A check guarded on a value that six writers leave alone is not a check. Enforcing the token before the token is maintained would ship a conflict surface over a guarantee that does not hold.
+**Writer coverage must precede required-token rollout.** Ticket 36 gates 11-13. The review's
+five-of-eleven count is historical and was itself disputed in the execution plan; re-enumerate
+current writers and test the trigger and deployment ordering instead of repeating that number.
 
 **Nothing in either review was measured.** No query plan was run: every connection string in this repository points at production, so `EXPLAIN` was not an option and index reasoning comes from index definitions and predicate shape. No bundle was built and no browser opened. Where a ticket implies a performance gain, it is an argument from structure, not a measurement — do not close one by asserting an improvement that was never observed. Three findings were deliberately left unticketed for this reason: the board's four unindexed sort combinations, the leading-wildcard searches against trigram indexes that are dead under row-level security, and the 62 hardcoded physical table names inside SQL templates. Ticket 67 is the one exception, because its defect is readable off the source rather than off a plan.
 

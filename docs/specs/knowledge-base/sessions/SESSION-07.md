@@ -1,5 +1,7 @@
 # Session 07 — Ask UI: source scope sheet, answer parts, tenant quotas
 
+> **Reopened 2026-09-27:** selected scope is not proven consistent across page/article/source retrieval. Page candidate calls omit selected `spaceId`, and source retrieval has no selected-space argument. See [AV-04](../08-architecture-review-validation-2026-09-27.md); a rendered sheet alone is insufficient.
+
 Read `sessions/README.md` first. Its ten rules bind you.
 
 **Slice:** S16, the UI and quota half. The schema half is SESSION-06 — do not edit its files.
@@ -38,24 +40,24 @@ Migration: `backend/migrations/1212_kb_indexed_bytes_quota.sql` + its rollback.
 
 ## Todo
 
-- [x] Measure first: list which of the six answer parts render today, with `file:line`, and confirm
+- [ ] **VERIFY PENDING:** Measure first: list which of the six answer parts render today, with `file:line`, and confirm
       no pre-send scope control exists.
-- [x] Pre-send source scope sheet: pages, files and notes, filterable by space, owner, status and
+- [ ] Pre-send source scope sheet: pages, files and notes, filterable by space, owner, status and
       verified-only. Visible **and editable before send**, and what it shows is what is actually
       retrieved — not a decorative summary.
-- [x] The scope the user chose is sent with the request and honoured server-side. A scope the actor
+- [ ] The scope the user chose is sent with the request and honoured server-side. A scope the actor
       cannot read is not silently widened.
-- [x] All six answer parts render: citations, the source passage behind each citation, freshness,
+- [ ] **VERIFY PENDING:** All six answer parts render: citations, the source passage behind each citation, freshness,
       verification state, disagreement between sources, and an explicit insufficient-evidence
       result. Insufficient evidence is a first-class answer, not an empty state.
-- [x] Citations are accepted only when they map to a retrieved, still-authorized passage. A
+- [ ] **VERIFY PENDING:** Citations are accepted only when they map to a retrieved, still-authorized passage. A
       citation that no longer resolves is redacted, not rendered.
-- [x] Access-change handling after an answer was generated: re-opening a conversation re-checks
+- [ ] **VERIFY PENDING:** Access-change handling after an answer was generated: re-opening a conversation re-checks
       citations against current ACLs.
-- [x] Streaming stop and retry; network-loss recovery; copy; helpful/unhelpful; report wrong or
+- [ ] **VERIFY PENDING:** Streaming stop and retry; network-loss recovery; copy; helpful/unhelpful; report wrong or
       stale; create knowledge gap.
-- [x] Conversation rail: new, search, rename, delete, cursor-paginated.
-- [x] Tenant quotas enforced and surfaced: requests, tokens, concurrent streams, **indexed bytes**,
+- [ ] **VERIFY PENDING:** Conversation rail: new, search, rename, delete, cursor-paginated.
+- [ ] **VERIFY PENDING:** Tenant quotas enforced and surfaced: requests, tokens, concurrent streams, **indexed bytes**,
       research jobs. `1212` adds the indexed-bytes accounting, tenant-leading, with a rollback and
       a postcondition.
       **REOPENED by the orchestrator 2026-09-25**, then closed the same day in `cb0169dc3`.
@@ -74,15 +76,15 @@ Migration: `backend/migrations/1212_kb_indexed_bytes_quota.sql` + its rollback.
       (`kb-sources.service.ts:remove`) and reaping one stuck in `processing`
       (`kb-stuck-source-reaper.service.ts`) now return their bytes too, both measured by
       `kbSourceIndexedBytes` so the reservation and the release cannot drift apart.
-- [x] Over-quota is a clear, actionable state with the limit named — not a generic error.
-- [x] `kb:ai:generate` plus read access required on generation routes; history routes stay on
+- [ ] **VERIFY PENDING:** Over-quota is a clear, actionable state with the limit named — not a generic error.
+- [ ] **VERIFY PENDING:** `kb:ai:generate` plus read access required on generation routes; history routes stay on
       `kb:pages:view`. `kb-ask-generate-permission.spec.ts` pins this — keep it passing.
-- [x] Remove confidence percentages, uncited prose, hidden auto-selected sources, and any draft in
+- [ ] **VERIFY PENDING:** Remove confidence percentages, uncited prose, hidden auto-selected sources, and any draft in
       browser storage.
-- [x] All six states on `/knowledge/chat`; keyboard path for scope editing, stop and retry;
+- [ ] **VERIFY PENDING:** All six states on `/knowledge/chat`; keyboard path for scope editing, stop and retry;
       usable at 375 px.
-- [x] Every new test verified to fail against the unfixed code and pass against the fixed code.
-- [x] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+- [ ] **VERIFY PENDING:** Every new test verified to fail against the unfixed code and pass against the fixed code.
+- [ ] **VERIFY PENDING:** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
       **DONE 2026-09-25**, serialized orchestrator pass. Both backend gates are now clean; both
       opened red, and neither failure was visible to any test run.
       **`pnpm typecheck`** — `makeSourcesEventPipe` declared `eventType: string`, but the AI SDK's

@@ -2,7 +2,11 @@
 
 **Status:** planning authority
 
-**Audit date:** 2026-09-23
+**Latest architecture/completion audit:** 2026-09-27. Original product/browser audit: 2026-09-23.
+
+Start with [the two-review validation and corrective TODOs](08-architecture-review-validation-2026-09-27.md), then [the requirement ledger](REQUIREMENT-LEDGER.md). The validation distinguishes implementation, targeted tests, historical evidence, defects and conditional infrastructure. It supersedes conflicting completion claims in older session reports. Checklist percentages are not release-readiness or million-user capacity measurements.
+
+**Completion gate:** mark `[x]` only after the code is implemented, the whole requirement is verified, and relevant tests pass with recorded evidence. Otherwise use `[ ]` and distinguish missing implementation from verification pending. The current ledger retains only two narrowly verified test-implementation checks; this is not a measure of how much product code exists. Old audit reports and patch proposals are historical evidence, not authority to recheck work automatically.
 
 **Scope:** StreamlineOS `knowledge/**`, its project-wiki adapter, public-page renderer, and the backend modules that store, retrieve, govern, and index knowledge.
 
@@ -42,6 +46,7 @@ Use [`MASTER-IMPLEMENTATION-PROMPT.md`](MASTER-IMPLEMENTATION-PROMPT.md) when ha
 | 6 | [`05-data-api-search-security.md`](05-data-api-search-security.md) | Data, interface, search, ACL, cache, and retention contracts |
 | 7 | [`06-code-removal-and-reuse.md`](06-code-removal-and-reuse.md) | Deletion, consolidation, and reuse plan |
 | 8 | [`07-delivery-roadmap.md`](07-delivery-roadmap.md) | Sequencing, release gates, ownership, and proof |
+| 9 | [`08-architecture-review-validation-2026-09-27.md`](08-architecture-review-validation-2026-09-27.md) | Both architecture reports, corrected decisions, fresh test results and TODOs AV-01–AV-15 |
 
 ## Product thesis
 

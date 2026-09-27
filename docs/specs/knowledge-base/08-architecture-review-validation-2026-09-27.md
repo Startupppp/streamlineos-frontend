@@ -11,9 +11,11 @@ The originals are in `C:/Users/Aditya_Lappy/AppData/Local/Temp/`. This document 
 
 This was a documentation and verification task. No application code, schema, production data or deployment was changed by this review. Another session was editing and committing concurrently. One recorded source checkpoint was root `ffc97b8ebc3043bdd4a60bad98b43d7812fdb5e5`, backend `91f76c85fd768bd3de59c1811b7c3b43a3f00253`, plus working-tree changes. Test results below describe that changing checkout, not a certified release artifact.
 
-**Do not equate a checked box with release readiness.** The starting ledger had **190 checked / 194 total (97.9%)**, although it retained descriptions saying features were dormant or absent. The earlier 74% estimate is historical. Neither ratio measures security, latency, capacity, or deployment completion. Reopened items have a concrete defect or missing acceptance evidence below. Untouched checks retain their historical evidence; they are not all independently re-certified by this audit.
+**Completion rule:** check an item only when its code exists, its entire acceptance claim has been verified, and relevant tests pass. Source presence, a migration file, historical green output or a mocked component test cannot close a broader integration/security/deployment claim. Preserve old evidence, but leave unverified acceptance unchecked. The starting ledger's 190 checked / 194 total and older percentage estimates are historical, not current certification.
 
 Use these statuses: **source present**, **targeted tests passed**, **partial/defect**, **evidence pending**, and **conditional/deferred**. `VERIFIED` requires the entire acceptance claim and a recorded source revision/environment. Historical counts in the HTML reports are not current measurements.
+
+The initial review reopened 24 main-ledger checks for defects or incomplete acceptance. Applying the owner's stricter verification rule then reopened another 164 checks as **VERIFY PENDING**, leaving **2 checked / 194 total and 192 open**. Those 164 are not 164 newly discovered implementation failures: their complete acceptance claims have not been freshly proven. The two retained checks cover the scope/fingerprint test implementation and the property-test implementation, inspected and rerun below. Do not infer that only two features are built. The AV backlog adds acceptance detail; do not combine it or historical session counts with the ledger denominator.
 
 ## Decisions: accepted, corrected and bounded
 
@@ -32,7 +34,7 @@ Use these statuses: **source present**, **targeted tests passed**, **partial/def
 | Help-centre ownership | Support remains the customer/workflow adapter; KB owns content, authorization and indexing. Current help-centre module deregisters duplicate article/category/comment controllers and keeps required services. Finish caller, public API and compatibility evidence before deleting files or routes. Missing frontend imports alone are not proof of no external consumers. |
 | Split modules and large files | Split by behavior and change ownership, not to hit a count. Keep acyclic dependencies. A small query module can be justified if it hides authorization/projection and prevents an AI dependency cycle; delete it only after its callers have an equivalent working interface. |
 | ADR-0001: no second SQL PII detector or caller-set GUC attestation | Keep the decision under an application-writer threat model. **Qualify its rationale:** a caller-set GUC does not attest that a scan occurred, but PostgreSQL privileges and SET ROLE are not universally ineffective; ordinary roles need granted authority. BYPASSRLS is not itself a trigger bypass. Protect normal application writes with a least-privilege role and one mandatory mutation path. Privileged maintenance writes need an explicit scan/quarantine/revalidation process. Regex PII detection does not prevent prompt injection. Track AV-12; do not resurrect migration 1347 automatically. |
-| Replica/CDN deployment | Conditional. If no replica is deployed, keep authorization on primary and record replica work as deferred. If public responses are `no-store`, CDN invalidation is not an implemented capability. Introduce caches only with a measured gain and enforceable revocation policy. |
+| Replica/CDN deployment | Conditional. If no replica is deployed, keep authorization on primary and record replica work as deferred. Frontend `publicGetNoStore` uses `cache: "no-store"`; backend `KbPublicPagesController` sends `Cache-Control: public, no-cache` and a revision-bearing ETag. These are different layers, not a blanket no-store policy or proof of CDN invalidation. Introduce caches only with a measured gain and enforceable revocation policy. Verify media redirect destinations separately under AV-16. |
 
 Technical references: [PostgreSQL index combination](https://www.postgresql.org/docs/17/indexes-bitmap-scans.html), [PostgreSQL privileges](https://www.postgresql.org/docs/16/ddl-priv.html), and [TanStack infinite-query guidance](https://tanstack.com/query/v3/docs/framework/react/guides/infinite-queries). These support the qualifications above; they do not substitute for local measurements.
 
@@ -42,7 +44,7 @@ Technical references: [PostgreSQL index combination](https://www.postgresql.org/
 |---|---|---|
 | R1-C1 one access seam | Canonical scope includes restrictions; `KbAccessService.assertCanViewArticle` delegates to canonical access. Cache dimensions now include principal kind and ceiling. Container semantics still disagree with the glossary. | AV-02, AV-14 |
 | R1-C2 page changed writer | `wiki/kb-page-writer.service.ts` exists; create writes `contentText` and invokes it. Writer suites pass. Its coverage test checks constructor injection, not all operations. | AV-03 |
-| R1-C3 retrieve seam | `KbRetrievalService.retrieve` exists; extraction into `KbSearchRetrievalService` is in progress. Mocked orchestration tests pass while several real-service tests fail. | AV-01, AV-04 |
+| R1-C3 retrieve seam | `KbRetrievalService.retrieve` exists; extraction into `KbSearchRetrievalService` is in progress. Orchestration, connection-release and TTL suites pass on recheck; the passage-fence suite still calls a removed method and fails both tests. | AV-01, AV-04 |
 | R1-C4 connection lifetime | Search/source routes carry `NoTenantTransaction`; purge helpers reuse ambient transactions in targeted tests. Full request/worker lifetime and provider brown-out proof remain open. | AV-01, AV-07 |
 | R1-C5 query embeddings | Cache exists, but global scope, normalization and retention assumptions need correction. | AV-05 |
 | R1-C6 OR/indexes | Collection has bounded UNION branches. Earlier seeded evidence documents a bad OR plan; post-rewrite evidence is still requested in AUDIT-L2. | AV-06 |
@@ -69,7 +71,7 @@ Technical references: [PostgreSQL index combination](https://www.postgresql.org/
 | Create/duplicate/move skip indexing | Create now extracts text and invokes writer; writer tests pass. Keep all-writer atomicity and behavior coverage open (AV-03). |
 | HR metadata update bypasses PII gate | `documents-update-metadata-pii.spec.ts` passes. ADR operational limits remain AV-12. |
 | Purge takes a second connection | Ambient-transaction reuse tests pass. Do not equate helper-level proof with pool saturation testing; AV-07 covers remaining request/worker work. |
-| From-ticket success contract mismatch | Requires current response-contract/integration evidence; included in AV-10 rather than accepted from an old green gate. |
+| From-ticket success contract mismatch | Fresh `hooks/api/kb/from-ticket.test.tsx` run passes all 6 tests, including parsing the actual article shape and rejecting the obsolete success-only shape. Idempotent real-route retry remains part of AV-10. |
 | Narrow token shares owner's ACL cache | Principal kind/ceiling dimensions and common fill logic are now present. Remaining invalidation/fingerprint audit is AV-14. |
 | Security specs test unused pageVisibleTo | Current canonical and chunk suites target the live builders. Finish the cited suite census under AV-14. |
 | Page deletion fails to invalidate collections | Collection key is now under `kb/pages`, so page-prefix invalidation reaches it. Real mounted consumer behavior belongs to final UI gates. |
@@ -83,7 +85,7 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 
 ### AV-01 — P0: finish retrieval extraction and restore meaningful tests
 
-- [ ] Update production injection, imports, return types and tests to the final retrieval interface. The first audit run had **3 failing suites / 7 failing tests**: embedding TTL, search connection release, passage ACL fence. Tests call methods removed from `KbSearchService`; one mock lacks `resolveAccessibleSpaces`. Run all affected Ask/search callers plus a Nest registration/DI smoke test and both typechecks after the editing session settles. Do not silence failures or recreate pass-through wrappers just to satisfy stale mocks.
+- [ ] Update production injection, imports, return types and tests to the final retrieval interface. The first audit run had **3 failing suites / 7 failing tests**: embedding TTL, search connection release, passage ACL fence. A later rerun after concurrent edits passed TTL, connection release and retrieval orchestration, but **the passage ACL fence still failed 2 tests** calling a removed method. Run affected Ask/search callers, a Nest registration/DI smoke test and both typechecks after the editing session settles. Do not silence failures or recreate pass-through wrappers to satisfy stale mocks.
 
 ### AV-02 — P0: make container policy consistent and test actual disclosure
 
@@ -125,6 +127,7 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 
 - [ ] Verify each migrated envelope through the real HTTP parser and query hook, not a hook mock that already returns an array. Include from-ticket create success/idempotent retry, grants create/list parity, export history and each response projection. Update `selectFlatPages` documentation to describe its actual selected result, and retain raw page metadata where needed.
 - [ ] Fix `SpaceMembersSheet`'s missing accessible description. The six-suite frontend run passed, but Radix emitted the warning repeatedly and the source lacks `SheetDescription`. Verify keyboard/focus behavior and 375px layout on the real routes; green DOM tests alone do not close the global accessibility checkbox.
+- [ ] Repair the Spaces page test's stale hook mock (`useAddKbSpaceMember is not a function`), rerun the mounted members-sheet integration and verify the real route. The hook exists; this test failure does not establish a production crash. Reconcile the local-cursor decision in `LEDGER-PATCH-M8.md` with the global URL-state requirement: bind cursors to normalized filters/order and reset them when those change, or explicitly approve and document a local-cursor exception. Do not mark URL-cursor acceptance complete while it is local.
 
 ### AV-11 — P1: operational proof and truthful metrics
 
@@ -146,6 +149,10 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 ### AV-15 — P2: satisfy the no-comments rule without losing evidence
 
 - [ ] Remove explanatory source comments in changed KB code/tests after retaining necessary rationale in docs and behavior in test names. `kb-page-writer-coverage.spec.ts` currently contains multiple explanatory comment blocks, so the blanket no-comments completion checkbox is false. Do not remove license notices or directives required by tooling as cosmetic cleanup.
+
+### AV-16 — P1: verify public-response and attachment revocation by layer
+
+- [ ] Record browser, Next fetch, backend, CDN and object-origin policy separately. `KbPublicPagesController.getPublicMedia` validates the token/key and then redirects to `NEXT_PUBLIC_R2_PUBLIC_URL/fileKey`. Verify whether a previously obtained destination remains readable after token revocation, attachment unlink or page deletion; source inspection alone does not establish the deployed origin policy. If it does, replace unrestricted destinations with an authorization-preserving delivery contract, with an explicit maximum exposure window, and test replay, cached redirects, key ownership and revocation. Do not close S17's attachment/public-grant or CDN checks based only on broker authorization or ETag presence.
 
 ## Verification performed
 
@@ -182,3 +189,110 @@ Result: 6 suites / 56 tests passed; SpaceMembersSheet description warnings.
 ```
 
 All selected tests are local unit/component tests. No fresh browser sweep, real DB-row ACL test, production migration probe, load test or DR drill was performed by this audit. Completion of those items remains an explicit acceptance condition. A mock-based pass is labelled as such even when the test name says BITE or production.
+
+### Follow-up verification during concurrent implementation
+
+After the implementation session changed the retrieval imports/tests, reran the TTL, connection-release, passage-fence and retrieval-orchestration suites with the same `--runInBand --runTestsByPath` options: **3 suites passed, 1 failed; 23 tests passed, 2 failed**. Remaining failure: `svc.retrieveDocumentPassages is not a function` in `kb-search-acl-revision-passage-fence.spec.ts`. This supersedes the first run only for those four suites.
+
+Also ran `pnpm exec jest --runInBand --runTestsByPath hooks/api/kb/from-ticket.test.tsx` in frontend: **1 suite / 6 tests passed**. Together with the prior frontend run, **7 distinct frontend suites / 62 tests passed**, with the recorded SpaceMembersSheet accessibility warning still open. No failure is described as fixed merely because another session is working on it.
+
+Then ran the following frontend page batch with `pnpm exec jest --runInBand --runTestsByPath`:
+
+```text
+features/wiki/components/private-page.test.tsx
+features/wiki/components/shared-page.test.tsx
+features/wiki/components/wiki-home-page.test.tsx
+features/wiki/components/wiki-home-all-pages.test.tsx
+features/wiki/components/spaces-page.test.tsx
+features/wiki/components/space-detail-page.test.tsx
+features/wiki/components/page-document-toolbar.test.tsx
+features/wiki/components/reviews-page.test.tsx
+features/wiki/components/trash-page.test.tsx
+features/wiki/components/templates-page.test.tsx
+features/wiki/components/import-page.test.tsx
+features/wiki/components/knowledge-analytics-page.test.tsx
+features/wiki/components/kb-chat-parts.test.tsx
+features/wiki/components/public-page-content.test.tsx
+features/wiki/components/project-wiki-page-document.test.tsx
+features/help-centre/components/kb-research-brief-detail.test.tsx
+features/wiki/components/wiki-search-page.test.tsx
+```
+
+Result: **16 suites passed, 1 failed; 201 tests passed, 1 failed**. Spaces page's members-sheet test fails because its hook mock lacks `useAddKbSpaceMember`; record under AV-10. Search page tests also emit a DOM nesting warning from a test select double; fix the double and separately inspect production accessibility, rather than treating the mock warning as proof of a production hydration defect. Across the three distinct frontend batches: **23 suites passed, 1 failed; 263 tests passed, 1 failed**. These results establish component coverage, not full-page backend acceptance.
+
+### Evidence for the only two retained main-ledger checks
+
+Re-inspected the actual scope builder and spec, including live-grant characterization, fingerprint cases, and `fc.property` calls. Reran from `backend/`:
+
+```text
+pnpm exec jest --runInBand --runTestsByPath src/modules/kb/core/authorization/knowledge-page-scope.spec.ts
+Result: 1 suite passed; 81 tests passed; exit 0.
+```
+
+Checkpoint: root `266330e77e5ba03936929c48ba70a91e73a8f1dc`, backend `d72942d4fa2bba8706dec45396d61d136230692c`, with concurrent working-tree changes. SHA-256 immediately after this run, paths relative to `backend/src/modules/kb/core/authorization/`:
+
+| File | SHA-256 |
+|---|---|
+| `knowledge-page-scope.spec.ts` | `E61F97B34BF8A598184CFC13D9BAB66BF334EF82A51DBCB61C136099C1C2ECCD` |
+| `knowledge-page-scope.ts` | `15C29F2536120AC5D2C3BC0278C68AEBDC36E2FF97D9356200AEC3D178049082` |
+| `knowledge-authorization.types.ts` | `DD5CD52C41606A3A220EAD87ED0861F519E551D6518BD802F9FAB8E89C8636C3` |
+
+This closes only the existence and tested behavior of those test implementations. SQL-shape/property tests do not prove real database authorization, RLS, container semantics, cache revocation or million-user capacity. Those requirements remain unchecked. Recheck hashes and rerun after any relevant implementation change; these are not immutable release-wide results.
+
+## Requested three-pass recheck, including the original HTML reports
+
+Performed three different checks, not three repetitions of a green test suite. No new completion checks were added. No application code, original HTML report, migration or production data was changed.
+
+### Pass 1 — original-report coverage and completion evidence
+
+Re-read R1 and R2, including R1's ten candidates, live defects, six deficient gates and top recommendation, and R2's ten findings and ADR note. Checked their disposition against this report and the ledger. The other HTML files in the same temp folder concern the whole application or Build module; they are not the two named Knowledge/Documents reviews.
+
+Original HTML SHA-256 fingerprints:
+
+| Report | SHA-256 |
+|---|---|
+| `architecture-review-20260926-153104.html` (R1) | `49E039D873DB11CDF8BDEF7EA9609C1685DB54289CF6B6B77E6A2D27CD466580` |
+| `architecture-review-20260926-224038.html` (R2) | `5196773DBA43ED80F9B7EEE789D6B825D295DEA007EB55D0491D726F25049BD2` |
+
+R1's six gate warnings remain explicitly tracked as follows:
+
+| HTML gate warning | Recheck disposition |
+|---|---|
+| Cross-cutting invariant defeated by renaming an import | AV-14: require behavior through the live interface, not a symbol-name scan. |
+| Ten security specs exercise the retired predicate | AV-14: complete the consumer census and real-row counterexamples; the current canonical spec is not a substitute for all ten. |
+| Request-transaction checker misses embedding calls | Source has changed: the checker now derives provider methods and includes `embedQueryWithCredit` counterexamples. `node src/scripts/check-request-txn-outbound.mjs --self-test` passed in this recheck. This supersedes that specific old regex claim, but does not establish runtime connection safety or a clean whole-repository gate. AV-01/07 remain open. |
+| GET-write checker misses search event writes | Keep query telemetry's detached-write semantics explicit; AV-06/11 require read-cost and transaction evidence. The historical absence of a warning is not a runtime proof. |
+| Contract-parity baseline masks from-ticket and envelope drift | Fresh from-ticket and import/export tests pass; AV-10 still requires the real wire/route and idempotent retry, not array-shaped hook mocks. |
+| Dead-code gate has stale verdicts and hook exemptions | AV-09 requires a current caller/compatibility census before removal, including public routes and jobs. Do not delete working grants/member UI on R1's old counts. |
+
+### Pass 2 — current architecture and fresh regression tests
+
+Re-read the canonical access branches, query-embedding cache/input normalization, candidate scope arguments, source-revision records, root/subtree purge path, public response/media controller, frontend public fetch and ADR-0001. The container-policy mismatch, global embedding key/input mismatch, missing page/source selected-space filtering, null source ACL revisions and held-descendant purge gap remain unresolved in inspected source. Migration 1370 still has no matching tag in `backend/migrations/meta/_journal.json` at this checkpoint; no database state was queried.
+
+Corrected the overly broad public-cache wording: frontend fetch no-store and backend `public, no-cache` are not the same layer. Added AV-16 for revocation/replay verification of object URLs returned by the media broker. This is an unverified deployment risk, not a claim that an unauthorized object download was reproduced.
+
+Fresh backend command, from `backend/`:
+
+```text
+pnpm exec jest --runInBand --runTestsByPath src/modules/kb/core/authorization/knowledge-page-scope.spec.ts src/modules/kb/retrieval/kb-search-acl-revision-passage-fence.spec.ts src/modules/kb/retrieval/kb-query-embedding-ttl.spec.ts src/modules/kb/retrieval/kb-search-connection-release.spec.ts src/modules/kb/retrieval/kb-retrieval.service.spec.ts src/modules/kb/wiki/kb-page-writer.spec.ts src/modules/kb/wiki/kb-purge-pool-borrow.spec.ts
+```
+
+Result: **6 suites passed, 1 failed; 126 tests passed, 2 failed; exit 1**. Both failures remain in the passage-fence suite calling removed `retrieveDocumentPassages` on the old service. These failures block that verification; they do not alone prove stale passages reach a live prompt.
+
+Fresh frontend command, from `frontend/`:
+
+```text
+pnpm exec jest --runInBand --runTestsByPath features/wiki/components/spaces-page.test.tsx features/wiki/components/space-members-sheet.test.tsx hooks/api/kb/from-ticket.test.tsx hooks/api/kb/import-export.test.tsx
+```
+
+Result: **3 suites passed, 1 failed; 37 tests passed, 1 failed; exit 1**. Spaces page still fails on the missing `useAddKbSpaceMember` mock, while the standalone members sheet passes with the accessible-description warning. No code fix is inferred from another session's activity.
+
+Root/backend HEADs and all three authorization file hashes match the earlier retained-check checkpoint above. The checkout remains dirty and shared. Tests were local unit/component checks; no DB-row, browser, load, deployment or disaster-recovery certification is implied.
+
+### Pass 3 — documentation and checklist consistency
+
+- Recounted the main ledger: **2 checked, 192 unchecked, 194 total**. The only retained checks still correspond to the inspected scope/fingerprint and property-test implementations, with the suite passing again. No product-wide percentage is asserted.
+- Confirmed SESSION-01 through SESSION-08 have zero checked items; their historical evidence does not override current verification requirements.
+- Checked all ledger AV references against report headings, and all relative Markdown-file links across **51 Markdown files**: no missing targets.
+- Linked S17's still-open public-cache and attachment-grant requirements to AV-16. Kept missing implementation, failing verification and historical evidence distinct.
+- Preserve the original HTML reports as dated evidence; their source counts, line numbers, speculative recommendations and fixed defects are not current acceptance results.

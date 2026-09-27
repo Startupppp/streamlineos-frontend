@@ -18,8 +18,8 @@ interface EmptyStateProps {
   illustration?: React.ReactNode;
   illustrationPreset?: StateIllustrationPreset;
   /** Fixed illustration box size. Defaults to `sm` when compact, otherwise `md`. */
-  illustrationSize?: "sm" | "md";
-  title: string;
+  illustrationSize?: "xs" | "sm" | "md";
+  title?: string;
   description?: string;
   action?: ActionProps;
   secondaryAction?: ActionProps;
@@ -27,6 +27,10 @@ interface EmptyStateProps {
   actionVariant?: "default" | "outline";
   className?: string;
   compact?: boolean;
+  /** When true, renders without card chrome (border, min-h, flex-1). Caller controls sizing via className or height. */
+  bare?: boolean;
+  /** Inline pixel height applied to the container. Only meaningful when bare is true. */
+  height?: number;
   /**
    * When true, one or more active filters are responsible for the empty result.
    * Renders "No results match your filters." and a "Clear filters" button
@@ -85,7 +89,8 @@ function ActionButton({
 
 const FILTERED_EMPTY_TITLE = "No results match your filters.";
 
-const ILLUSTRATION_BOX_CLASS: Record<"sm" | "md", string> = {
+const ILLUSTRATION_BOX_CLASS: Record<"xs" | "sm" | "md", string> = {
+  xs: "mb-1 size-10",
   sm: "mb-2 size-24",
   md: "mb-5 size-48 sm:size-56",
 };
@@ -102,6 +107,8 @@ export function EmptyState({
   actionVariant,
   className,
   compact = false,
+  bare = false,
+  height,
   filtersActive = false,
   filteredTitle,
   onClearFilters,
@@ -128,6 +135,8 @@ export function EmptyState({
       />
     );
 
+  const headingText = filtersActive ? (filteredTitle ?? FILTERED_EMPTY_TITLE) : title;
+
   return (
     <div
       role="status"
@@ -135,9 +144,12 @@ export function EmptyState({
         "flex flex-col items-center justify-center text-center",
         compact
           ? "py-4 px-2"
-          : "h-full min-h-80 w-full flex-1 rounded-xl border border-dashed border-border bg-card px-6 py-12",
+          : bare
+            ? ""
+            : "h-full min-h-80 w-full flex-1 rounded-xl border border-dashed border-border bg-card px-6 py-12",
         className
       )}
+      style={bare && height !== undefined ? { height } : undefined}
     >
       {visual ? (
         <div
@@ -151,14 +163,16 @@ export function EmptyState({
         </div>
       ) : null}
 
-      <h2
-        className={cn(
-          "font-semibold text-foreground",
-          compact ? "text-label leading-tight" : "text-sm"
-        )}
-      >
-        {filtersActive ? filteredTitle ?? FILTERED_EMPTY_TITLE : title}
-      </h2>
+      {headingText !== undefined && (
+        <h2
+          className={cn(
+            "font-semibold text-foreground",
+            compact ? "text-label leading-tight" : "text-sm"
+          )}
+        >
+          {headingText}
+        </h2>
+      )}
 
       {description && (
         <p

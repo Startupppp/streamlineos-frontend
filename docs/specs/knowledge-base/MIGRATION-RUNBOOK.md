@@ -1,5 +1,7 @@
 # KB migration runbook — 1168 … 1176, and 1197 … 1203
 
+> **September 27 scope clarification:** the production measurements below apply to the named historical migrations at their recorded dates. They do not prove all newer KB migrations are applied. [AV-13](08-architecture-review-validation-2026-09-27.md) requires authored/journalled/applied/catalog-verified states to be recorded separately for the release revision. The audit observed `1370_kb_chunk_acl_dead_index.sql` without a journal entry; another session is actively changing the migration set, so re-read before taking action. No production migration was run by this documentation audit. Do not reapply 1174 or activate rejected 1347 from a stale checklist.
+
 ## Current state: **all ten applied, 1174 included. The cutover is closed.**
 
 > **Measured 2026-09-24 against production Aurora. This supersedes every "1174 is pending"

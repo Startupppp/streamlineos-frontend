@@ -4,6 +4,12 @@
 
 Both need the same two things — a ratchet file holding the current numbers, and a floor that fails when the set it quantifies over is empty.
 
+**Premise correction (2026-09-27):** `scripts/check-build-execution-plan.mjs:20` already requires
+seven named files, so emptying the entire docs directory does not pass. The remaining issue is
+unbounded/empty enumerated PRD subsets and a route count asserted as prose. Census `--check`
+also detects output drift, but does not itself enforce a security-verdict improvement ratchet.
+Use identity-based baselines so deleting a controller cannot hide a newly vulnerable handler.
+
 **Blocked by:** None — can start immediately.
 
 **Status:** ready-for-agent

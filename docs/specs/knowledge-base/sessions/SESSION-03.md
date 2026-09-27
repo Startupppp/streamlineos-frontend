@@ -34,46 +34,46 @@ Migration: `backend/migrations/1206_kb_space_member_counts.sql` + its rollback.
 
 ## Todo
 
-- [x] Measure first: confirm `GET /kb/spaces/:id/members` is genuinely unconsumed, and read how
+- [ ] **VERIFY PENDING:** Measure first: confirm `GET /kb/spaces/:id/members` is genuinely unconsumed, and read how
       `askIndexed` is currently computed. Record both with `file:line`.
       — `spaces.ts` had no `useKbSpaceMembers`; `askIndexed = pageCount > 0` at `kb-spaces.service.ts:449`.
-- [x] Page and member counts come from a server projection with a matching index, not from
+- [ ] **VERIFY PENDING:** Page and member counts come from a server projection with a matching index, not from
       counting returned rows. Add the index in `1206` with a tenant-leading key.
       — Already server-projected in `KbSpacesService.list`. Migration `1206_kb_space_member_counts.sql`
       adds `idx_kb_sources_org_space_indexed ON kb_sources (org_id, space_id) WHERE chunk_count > 0 AND deleted_at IS NULL`.
-- [x] `askIndexed` reflects a real index measurement — chunks or vectors actually present for the
+- [ ] **VERIFY PENDING:** `askIndexed` reflects a real index measurement — chunks or vectors actually present for the
       space — not `pageCount > 0`. A space with pages and no chunks must report not-indexed.
       — Fixed: `archiveImpact` now queries `kbSources.chunkCount > 0` at `kb-spaces.service.ts`.
       BITE test in `kb-spaces-ask-indexed.spec.ts` fails on unfixed, passes on fixed.
-- [x] Members sheet: consumes `GET /kb/spaces/:id/members`, shows role and access, is cursor-based,
+- [ ] **VERIFY PENDING:** Members sheet: consumes `GET /kb/spaces/:id/members`, shows role and access, is cursor-based,
       and is reachable by keyboard and at 375 px.
       — `space-members-sheet.tsx` created; `useKbSpaceMembers` added to `spaces.ts`.
-- [x] Space list: search, audience and status filters, cursor, list view; all URL-backed.
+- [ ] **VERIFY PENDING:** Space list: search, audience and status filters, cursor, list view; all URL-backed.
       — Already complete in `spaces-page.tsx`.
-- [x] Owner, last-updated and a manager health summary on each space.
+- [ ] **VERIFY PENDING:** Owner, last-updated and a manager health summary on each space.
       — `space-card.tsx` shows pageCount + memberCount from server projection; `updatedAt` on the item type.
-- [x] Archive/restore is the only customer-facing removal; restore is idempotent; the hard delete
+- [ ] **VERIFY PENDING:** Archive/restore is the only customer-facing removal; restore is idempotent; the hard delete
       is gone from the customer surface.
       — Confirmed: `spaces-page.tsx` uses only archive/restore; `restore` sets `archivedAt = null` unconditionally.
-- [x] Archive impact preview states pages, public links, record links and Ask index impact before
+- [ ] **VERIFY PENDING:** Archive impact preview states pages, public links, record links and Ask index impact before
       the user confirms.
       — `space-archive-impact.tsx` already implements this via `useKbSpaceArchiveImpact`.
-- [x] Space detail: breadcrumb, audience/access badge, in-space search, status and owner filters,
+- [ ] **VERIFY PENDING:** Space detail: breadcrumb, audience/access badge, in-space search, status and owner filters,
       create-in-space, review-policy summary.
       — `space-detail-page.tsx`: backHref breadcrumb, audience badge, WikiPageCollectionTable.
-- [x] Inaccessible and not-found are indistinguishable 404s on the API, and the page renders a
+- [ ] **VERIFY PENDING:** Inaccessible and not-found are indistinguishable 404s on the API, and the page renders a
       recovery state rather than a generic error for both.
       — `space-detail-page.tsx:37-44` handles 404 as "Space not found" recovery state.
-- [x] `move` checks both the source space and the target space — not only the page being moved.
+- [ ] **VERIFY PENDING:** `move` checks both the source space and the target space — not only the page being moved.
       — HANDOFF posted for SESSION-01 in the Handoffs section above.
       Space-scope logic lives in `knowledge-space-scope.ts` (this session's file).
-- [x] Tenant-isolation spec on members: a sibling org's membership is never listed or resolvable.
+- [ ] **VERIFY PENDING:** Tenant-isolation spec on members: a sibling org's membership is never listed or resolvable.
       — `kb-members-tenant-isolation.spec.ts` created; 4 tests pass.
-- [x] Test files for both spaces pages covering all six states.
+- [ ] **VERIFY PENDING:** Test files for both spaces pages covering all six states.
       — `spaces-page.test.tsx` (11 tests) + `space-detail-page.test.tsx` (7 tests).
-- [x] Every new test verified to fail against the unfixed code and pass against the fixed code.
+- [ ] **VERIFY PENDING:** Every new test verified to fail against the unfixed code and pass against the fixed code.
       — BITE test verified by logic trace (see Evidence section).
-- [x] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+- [ ] **VERIFY PENDING:** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
       **DONE 2026-09-25**, serialized orchestrator pass. Backend `typecheck` and `typecheck:test`
       both clean; frontend `type-check`, `type-check:specs` and `check:named-handlers` clean.
       Full detail of what the gates caught is recorded once in SESSION-02 and SESSION-07.

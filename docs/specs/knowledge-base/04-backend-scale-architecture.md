@@ -1,5 +1,20 @@
 # Step 4 — Low-Cost Backend Architecture for Millions of Users
 
+## September 27 decision reconciliation
+
+This is a target architecture, not a description of seven already implemented modules. [The architecture validation](08-architecture-review-validation-2026-09-27.md) maps both reviews to current code and remaining work. Existing services may satisfy an interface; renaming them or adding pass-through wrappers is not progress.
+
+- Keep the modular monolith and separately scalable workers. Retain public, authenticated and privileged-maintenance entry points with distinct authority. Share authorization/query construction without one oversized DTO or service.
+- Keep a canonical page-change writer. Complete its expected-revision, audit and outbox transaction contract before claiming all writers are consolidated. Constructor injection is not behavioral coverage.
+- Keep one retrieval interface, one embedding computation per query, explicit scope and per-source failure outcomes. Preserve source revisions and enforce access before provider disclosure as well as on citations.
+- Default query-embedding caching to tenant isolation. Include provider/model revision, dimensions and preprocessing version; hash the exact normalized input sent to the provider. Queries can be confidential. Bound TTL/memory, invalidate configuration changes and deduplicate concurrent misses. A global seven-day cache is not the accepted default.
+- Do not claim OR always prevents index use. Measure OR/EXISTS/UNION under app-role RLS with representative grant density; preserve deduplication, ordering and cursors. The collection rewrite needs post-change plan evidence.
+- Use separate list/detail/public/citation projections built from shared primitives. A content-type discriminator is not a polymorphic foreign key and does not itself require a schema split.
+- A private space restricts ordinary page access, including grants and ownership; any privileged bypass must be explicit and tested. Resolve the code/glossary mismatch in AV-02.
+- Replica, CDN, cells, partitions and external search are conditional stages. Keep authorization on primary while replica prerequisites are absent. Public caching must be assessed per layer: frontend `publicGetNoStore` uses `cache: "no-store"`, while the backend public-page response currently sends `Cache-Control: public, no-cache` with an ETag. Neither demonstrates implemented CDN invalidation. Supporting code does not close deployment or load-proof items.
+
+Priority is AV-01/02/07 correctness, AV-03/04/05/10 consistency and reuse, then AV-06/11 measured capacity/cost. New infrastructure cannot compensate for faulty access or deletion rules.
+
 ## Goal and planning envelope
 
 Design for scale without paying for scale before it exists. The target supports:
@@ -197,7 +212,7 @@ Cache only expensive, reusable projections:
 - list/search pages by normalized filters + cursor + permission fingerprint;
 - space/member policies with very short TTL and event invalidation;
 - public page render by token revision at CDN;
-- embedding vectors by model + content hash;
+- embedding vectors by tenant + provider/model revision + dimensions + preprocessing version + exact normalized-input hash;
 - provider-independent deterministic retrieval results where safe.
 
 Cache is optional. On failure, reads fall through to the source with rate protection. Authorization never fails open. Revocation changes the fingerprint and actively invalidates affected keys.

@@ -36,48 +36,48 @@ Migration: `backend/migrations/1205_kb_page_tree_children_index.sql` + its rollb
 
 ## Todo
 
-- [x] Measure the real cardinality: old `MAX_TREE_NODES = 2000` was the only bound; no production
+- [ ] **VERIFY PENDING:** Measure the real cardinality: old `MAX_TREE_NODES = 2000` was the only bound; no production
       count taken (would require a live query). Defect confirmed by code review:
       `kb-page-tree.service.ts` previously had `MAX_TREE_NODES = 2000` with a hard `.limit(2000)`
       and no `hasMore` signal.
-- [x] `GET /kb/pages/tree` accepts `spaceId`, `parentId` and a stable keyset `cursor`; returns
+- [ ] **VERIFY PENDING:** `GET /kb/pages/tree` accepts `spaceId`, `parentId` and a stable keyset `cursor`; returns
       `CursorPage<KbPageTreeItem>` with `{ data, pagination: { limit, nextCursor, hasMore } }`.
       Cursor ordering is `(sort_order, id)` ASC — matches the `ORDER BY`.
-- [x] Root call returns only root-level nodes plus a `hasChildren` flag per node — never a
+- [ ] **VERIFY PENDING:** Root call returns only root-level nodes plus a `hasChildren` flag per node — never a
       recursive whole-tenant walk.
-- [x] Children load on expand only. `page-tree-item.tsx` calls `useKbPageChildrenLevel(node.id, expanded)`
+- [ ] **VERIFY PENDING:** Children load on expand only. `page-tree-item.tsx` calls `useKbPageChildrenLevel(node.id, expanded)`
       (an `useInfiniteQuery`) and an `IntersectionObserver` sentinel triggers `fetchNextPage`
       automatically — no button, no manual page state.
-- [x] Every child request carries `spaceId`, tenant, `parentId`/`cursor`, and is re-authorized —
+- [ ] **VERIFY PENDING:** Every child request carries `spaceId`, tenant, `parentId`/`cursor`, and is re-authorized —
       a node the actor cannot reach is absent, not a 403.
-- [x] Delete the silent truncation. `hasMore` is true when a level has more pages; the UI exposes
+- [ ] **VERIFY PENDING:** Delete the silent truncation. `hasMore` is true when a level has more pages; the UI exposes
       additional items via IntersectionObserver infinite scroll (FE-125 — no "Show more" button).
       **CORRECTION**: Original checkbox said "UI offers 'Show more'" — withdrawn per coordinator
       instruction (2026-09-25). Replaced by IntersectionObserver sentinel per new FE-125.
-- [x] `wiki-shell.tsx` no longer downloads the tenant tree; the sidebar renders from the lazy root
+- [ ] **VERIFY PENDING:** `wiki-shell.tsx` no longer downloads the tenant tree; the sidebar renders from the lazy root
       via `<PageTree />` which calls `useKbPageTreeInfinite` internally.
-- [x] `move-page-dialog.tsx` and `import-page.tsx` pick a parent through a lazy picker, not a
+- [ ] **VERIFY PENDING:** `move-page-dialog.tsx` and `import-page.tsx` pick a parent through a lazy picker, not a
       pre-downloaded tree. `move-page-dialog.tsx` uses `useKbPagesSearch()` with a debounced input.
       `import-page.tsx` removes `useKbPagesTree()` entirely; `titleExists` is a no-op (backend
       deduplicates at import time).
-- [x] Composite index behind the children query, in `1205`, with a tenant-leading key:
+- [ ] **VERIFY PENDING:** Composite index behind the children query, in `1205`, with a tenant-leading key:
       `(org_id, parent_page_id, sort_order, id) WHERE deleted_at IS NULL`.
       Applied to production 2026-09-25 (journal idx 1089) and measured — see
       **EXPLAIN at cardinality** below. The index is used, the `ORDER BY` is index-satisfied, and
       the plan is bounded by the LIMIT at 7 buffers.
-- [x] Tenant-isolation spec: sibling org pages never appear at any level or cursor position.
+- [ ] **VERIFY PENDING:** Tenant-isolation spec: sibling org pages never appear at any level or cursor position.
       All 8 tenant-isolation assertions pass (`kb-page-tree-tenant-isolation.spec.ts`).
-- [x] Cursor-stability spec: inserting a page mid-pagination neither duplicates nor skips a row.
+- [ ] **VERIFY PENDING:** Cursor-stability spec: inserting a page mid-pagination neither duplicates nor skips a row.
       4 cursor-stability assertions pass (`kb-page-tree.cursor-stability.spec.ts`).
-- [x] Acceptance spec at 100,000 nodes: root render issues bounded rows, limit+1 is always the
+- [ ] **VERIFY PENDING:** Acceptance spec at 100,000 nodes: root render issues bounded rows, limit+1 is always the
       bound, `KB_PAGE_TREE_PAGE_SIZE` is exported and < 100.
       3 acceptance assertions pass (`kb-page-tree.acceptance.spec.ts`).
-- [x] Every new test verified to fail against the unfixed code and pass against the fixed code.
+- [ ] **VERIFY PENDING:** Every new test verified to fail against the unfixed code and pass against the fixed code.
       Pre-fix: tenant-isolation spec failed (used old `getTree()` which did not exist on new API).
       Pre-fix: cursor-stability and acceptance specs failed (service method not yet present).
       Post-fix run: `Tests: 15 passed, 15 total` (2026-09-25).
       PENDING ORCHESTRATOR GATE: final re-run with `-w 1 --no-coverage` serialized by orchestrator.
-- [x] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+- [ ] **VERIFY PENDING:** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
       Backend: exit code 0 (2026-09-25). Frontend: `next typegen` + `tsc --noEmit` clean (2026-09-25).
       PENDING ORCHESTRATOR GATE: final re-check serialized by orchestrator after all sessions quiet.
 

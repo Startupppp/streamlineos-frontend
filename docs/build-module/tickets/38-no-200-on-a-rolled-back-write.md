@@ -6,7 +6,15 @@ There are only two honest options for a statement in someone else's transaction:
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** partial — implementation fragments exist; full acceptance remains unverified (audit 2026-09-27)
+
+**Audit 2026-09-27:** Savepoint wrapping exists for five comment/subresource effects, but
+`projects-tickets-update.service.ts:343` still swallows database-reaching effect failures. The
+swallowed-write gate fails with six sites against a four-site baseline; passing its self-tests
+does not mean the source gate passes. Indirect calls and promise `.catch()` need coverage.
+
+- [ ] Resolve the six current gate findings and add indirect-call/promise-catch fixtures; do not raise the baseline to declare completion
+- [ ] Prove ambient-transaction commit/rollback semantics for required effects and savepoint recovery for explicitly best-effort effects; mocked callback invocation is not a database commit test
 
 - [ ] Each of the five swallowing sites either propagates or runs behind a savepoint, with the choice stated in the call
 - [ ] A failing effect behind a savepoint leaves the outer transaction able to commit, proved by a test that makes the effect fail
