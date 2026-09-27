@@ -74,7 +74,7 @@ function ticketPageContract(rowExtension) {
   });
 }
 
-export function runSelfTest(evaluate, floorFailures, partitionFindings) {
+export function runSelfTest(evaluate, floorFailures, partitionFindings, staleFailures, checkDbCoverage) {
   const checks = [];
   const assert = (label, actual, expected) => {
     const ok = JSON.stringify(actual) === JSON.stringify(expected);
@@ -323,6 +323,51 @@ export function runSelfTest(evaluate, floorFailures, partitionFindings) {
       }),
     ).typeMismatches.length,
     0,
+  );
+
+  assert(
+    "stale baseline entries cause a gate failure so the baseline can only shrink",
+    staleFailures(["get /x field"]).length,
+    1,
+  );
+
+  assert(
+    "an empty stale list produces no failure — the baseline need not shrink when nothing is stale",
+    staleFailures([]).length,
+    0,
+  );
+
+  assert(
+    "a DB column absent from both the OpenAPI spec and the frontend contract is reported",
+    checkDbCoverage(
+      ["id", "title", "budget", "orgId"],
+      new Set(["id", "title"]),
+      new Set(["id", "title"]),
+      new Set(["orgId"]),
+    ),
+    ["budget"],
+  );
+
+  assert(
+    "a column in the private allowlist is not reported — the gate never forces internal columns into public responses",
+    checkDbCoverage(
+      ["id", "orgId"],
+      new Set(["id"]),
+      new Set(["id"]),
+      new Set(["orgId"]),
+    ),
+    [],
+  );
+
+  assert(
+    "a column already declared in either contract is not reported as absent",
+    checkDbCoverage(
+      ["id", "title"],
+      new Set(["id"]),
+      new Set(["id", "title"]),
+      new Set(),
+    ),
+    [],
   );
 
   for (const check of checks)

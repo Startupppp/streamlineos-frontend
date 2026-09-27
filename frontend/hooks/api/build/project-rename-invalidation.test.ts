@@ -6,6 +6,7 @@ import { createElement } from "react";
 import type { ReactNode } from "react";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useUpdateProject } from "./projects";
+import type { ProjectWithDetails, ProjectListResponse } from "@/types/projects";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -38,12 +39,6 @@ jest.mock("@/hooks/api/access", () => ({
 
 jest.mock("@/lib/api-envelope", () => ({
   lazyContract: (fn: () => unknown) => fn,
-}));
-
-jest.mock("@/hooks/api/build/project-cache-patch", () => ({
-  getWorkspaceUsersFromCache: jest.fn().mockReturnValue([]),
-  patchProjectListCache: jest.fn().mockImplementation((old: unknown) => old),
-  applyProjectDetailPatch: jest.fn().mockImplementation((old: unknown) => old),
 }));
 
 jest.mock("@/features/build/project-detail/project-hydration-context", () => ({
@@ -150,5 +145,67 @@ describe("useUpdateProject — invalidation scope (ticket 20)", () => {
     );
 
     expect(keys).toContain(JSON.stringify(buildWorkQueryKeys.projects.list()));
+  });
+
+  it("patches the project detail cache optimistically with the new name before the server responds", async () => {
+    const seedDetail: ProjectWithDetails = {
+      id: 42,
+      orgId: "org-abc",
+      name: "Old Name",
+      description: null,
+      key: "PROJ",
+      managedProductId: null,
+      startDate: null,
+      endDate: null,
+      status: "ACTIVE",
+      settings: null,
+    };
+    const detailKey = buildWorkQueryKeys.projects.detail(42);
+    client.setQueryData(detailKey, seedDetail);
+
+    const { result } = renderHook(() => useUpdateProject(), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ projectId: 42, name: "New Name" });
+    });
+
+    const cached = client.getQueryData<ProjectWithDetails>(detailKey);
+    expect(cached?.name).toBe("New Name");
+  });
+
+  it("patches the project list cache optimistically so the renamed name appears without a full refetch", async () => {
+    const seedList: ProjectListResponse = {
+      data: [
+        {
+          id: 42,
+          name: "Old Name",
+          description: null,
+          key: "PROJ",
+          status: "ACTIVE",
+          priority: null,
+          health: "on_track",
+          managedProductId: null,
+          startDate: null,
+          endDate: null,
+          manager: null,
+          progress: { total: 0, done: 0, percentage: 0 },
+          members: [],
+          teams: [],
+        },
+      ],
+      hasMore: false,
+      nextCursor: null,
+    };
+    const listKey = buildWorkQueryKeys.projects.list();
+    client.setQueryData(listKey, seedList);
+
+    const { result } = renderHook(() => useUpdateProject(), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ projectId: 42, name: "New Name" });
+    });
+
+    const cached = client.getQueryData<ProjectListResponse>(listKey);
+    expect(cached?.data[0].name).toBe("New Name");
   });
 });

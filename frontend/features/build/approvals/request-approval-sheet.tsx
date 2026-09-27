@@ -47,17 +47,14 @@ import { useChangeRequests } from "@/hooks/api/build/change-requests";
 import { useTimesheetEntries } from "@/hooks/api/timesheets-core/entries";
 import { useProjectFiles } from "@/hooks/api/build/project-files";
 import type { ApprovalEntityType, CreateApprovalInput } from "@/types/projects";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
+import { entityTypeLabel, entityTypeSearchLabel, entityTypeTitlePrefix } from "./approvals-constants";
 
-const ENTITY_TYPES: { value: ApprovalEntityType; label: string; searchLabel: string }[] = [
-  { value: "task", label: "Task", searchLabel: "tasks" },
-  { value: "milestone", label: "Milestone", searchLabel: "milestones" },
-  { value: "release", label: "Release", searchLabel: "releases" },
-  { value: "budget", label: "Budget", searchLabel: "" },
-  { value: "change_request", label: "Change Request", searchLabel: "change requests" },
-  { value: "timesheet", label: "Timesheet Entry", searchLabel: "timesheet entries" },
-  { value: "document", label: "Document", searchLabel: "documents" },
-  { value: "client_approval", label: "Client Approval", searchLabel: "client approvals" },
-];
+const ENTITY_TYPES = DB_ENUMS.approval_entity_type.map((v) => ({
+  value: v,
+  label: entityTypeLabel(v),
+  searchLabel: entityTypeSearchLabel(v),
+}));
 
 interface RequestApprovalSheetProps {
   open: boolean;
@@ -236,17 +233,7 @@ export function RequestApprovalSheet({
     if (!entityId) return;
     const item = entityItems.find((o) => o.value === entityId);
     if (!item) return;
-    const entityTypeLabels: Record<ApprovalEntityType, string> = {
-      task: "Approve task",
-      milestone: "Approve milestone",
-      budget: "Approve budget",
-      release: "Approve release",
-      change_request: "Approve change request",
-      document: "Approve document",
-      timesheet: "Approve timesheet",
-      client_approval: "Approve client request",
-    };
-    const prefix = entityTypeLabels[entityType] ?? "Approve";
+    const prefix = entityTypeTitlePrefix(entityType);
     form.setValue("title", `${prefix}: ${item.rawTitle}`);
   }, [entityId, entityItems, entityType, form]);
 
@@ -268,7 +255,7 @@ export function RequestApprovalSheet({
     onOpenChange(next);
   }
 
-  const showEntityPicker = ["task", "milestone", "release", "change_request", "timesheet", "document", "client_approval"].includes(entityType);
+  const showEntityPicker = entityType !== "budget";
   const isBudgetType = entityType === "budget";
   const activeEntityType = ENTITY_TYPES.find((t) => t.value === entityType);
 

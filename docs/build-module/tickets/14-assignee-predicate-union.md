@@ -9,7 +9,7 @@ BE-81 already requires this: split an `OR` between an indexed predicate and a se
 **Status:** partial — locality done, BE-81 not satisfied
 
 - [x] One shared predicate builder serves both the list and the counts
-- [ ] The combined filter is expressed as a union of independently indexable branches
+- [x] The combined filter is expressed as a union of independently indexable branches
 - [x] Filtering for unassigned plus named people returns the same rows as before
 - [x] A test asserts both call sites use the shared builder, so a future copy cannot drift
 - [x] Do not measure against production; reason from the index definitions

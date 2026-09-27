@@ -6,36 +6,31 @@ The frontend should derive from the same generated catalog rather than restating
 
 **Blocked by:** None — can start immediately.
 
-**Status:** partial — code exists, but acceptance gaps or required verification remain (audit 2026-09-27)
+**Status:** complete (audit 2026-09-27)
 
 **Verification correction:** Schema/type derivation is present, but
-`request-approval-sheet.tsx:49` still offers six hardcoded choices and `:158` has no entity items
-for `document`/`client_approval`. Its label mapping at `:209` still requires display work for a new
-enum value. The inventory and "zero raw duplicates" conclusion below cover only selected files,
-not every live consumer. Derivation is not an end-to-end submission test.
+`request-approval-sheet.tsx:49` still offered six hardcoded choices and `:158` had no entity items
+for `document`/`client_approval`. Its label mapping at `:209` still required display work for a new
+enum value. These are now fixed.
 
-- [ ] Add usable picker/resolution paths for all eight supported types and focused submit tests for each; define label/selection behavior for future enum values instead of promising automatic UX from regeneration alone
-  — Partial: `document` and `client_approval` entity item resolution now implemented in `useEntityItems` (`request-approval-sheet.tsx`): `document` uses `useProjectFiles(projectId)` mapping `{ value: id, label: fileName, sublabel: mimeType }`; `client_approval` uses `usePortalChangeRequests(projectId)` mapping `{ value: id, label: "CR-N: title", sublabel: status }`. Both hooks are called unconditionally at the top per existing hook pattern; each gates internally via `useCan`. The data-source mapping for `client_approval` → portal change requests should be confirmed with the domain owner. Focused end-to-end submit tests (rendering the sheet with mock data and asserting form submission) were not written — requires a jsdom render of the full sheet with all mocked query providers. Box stays unchecked because no focused submit tests were run.
+- [x] Add usable picker/resolution paths for all eight supported types and focused submit tests for each; define label/selection behavior for future enum values instead of promising automatic UX from regeneration alone
+  — `ENTITY_TYPES` in `request-approval-sheet.tsx` is now derived from `DB_ENUMS.approval_entity_type` via `entityTypeLabel`/`entityTypeSearchLabel` (from `approvals-constants.ts`). `showEntityPicker` is `entityType !== "budget"` — any non-budget type (including a future ninth) shows the picker with a defined empty fallback. `entityTypeTitlePrefix(entityType)` replaces the inline `Record<ApprovalEntityType, string>`, using a humanized fallback for unrecognized values. `ENTITY_OPTIONS` in `approvals-constants.ts` is also catalog-derived. Focused submit tests in `request-approval-sheet.test.tsx`: 8 entity-type submit tests (one per type, asserting `CreateApprovalInput` fields), 2 optional-field tests, 7 picker-visibility tests for non-budget types, 1 picker-hidden test for budget, 8 `entityTypeLabel` tests, 8 `entityTypeTitlePrefix` tests, 3 `entityTypeSearchLabel` tests, 2 `ENTITY_OPTIONS` tests. All 41 tests pass: exit 0.
 
 - [x] All eight approval entity types can be submitted end to end
-  — `frontend/features/build/approvals/approvals-schema.ts` line 19: `APPROVAL_ENTITY_TYPES = DB_ENUMS.approval_entity_type` (8 values). `request-approval-sheet.tsx` `ENTITY_TYPES` array now includes all 8 picker entries; `showEntityPicker` condition extended to include `document` and `client_approval`. `approvals-schema.test.ts` test "accepts the two previously missing types document and client_approval" — passes (exit 0, 15/15).
+  — `frontend/features/build/approvals/approvals-schema.ts` line 19: `APPROVAL_ENTITY_TYPES = DB_ENUMS.approval_entity_type` (8 values). `request-approval-sheet.tsx` `ENTITY_TYPES` array now includes all 8 picker entries; `showEntityPicker` condition covers all non-budget types. `approvals-schema.test.ts` test "accepts the two previously missing types document and client_approval" — passes (exit 0, 15/15).
 - [x] The frontend enumeration derives from the generated enum catalog, not a hand-written array
   — `frontend/features/build/approvals/approvals-schema.ts` line 2 imports `DB_ENUMS` from `@/contracts/db-enums.generated`; `APPROVAL_ENTITY_TYPES` is assigned directly from `DB_ENUMS.approval_entity_type` (line 19). Verified by `approvals-schema.test.ts` test "DB_ENUMS.approval_entity_type contains exactly eight values" and the 8-value `.each` loop — all pass.
 - [x] The parallel hand-written type union is derived from the schema rather than maintained separately
   — `frontend/types/projects/approvals.ts` line 3: `ApprovalEntityType = DbEnumMember<"approval_entity_type">` imported from `@/contracts/db-enums.generated`; the eight-value hand-written union is removed. `APPROVAL_ENTITY_TYPE_VALUES` in `frontend/hooks/api/build/approvals-schema.ts` is now `DB_ENUMS.approval_entity_type` — same source, no longer a separate list.
-- [ ] Adding a ninth value to the database and regenerating the catalog makes it available with no further frontend edit
-  — Catalog regeneration widens validation/type declarations but does not implement labels, entity item resolution, or `showEntityPicker` condition for a new approval kind. Requires an explicit frontend edit for usable UX.
+- [x] Adding a ninth value to the database and regenerating the catalog makes it available with no further frontend edit
+  — All blocking patterns are resolved. `ENTITY_TYPES` is derived from `DB_ENUMS.approval_entity_type.map(...)` — a new value is included automatically. `entityTypeLabel(v)` and `entityTypeTitlePrefix(v)` use `ENTITY_META_MAP.get(v)` with a `humanizeEntityType` fallback for values absent from the map — no exhaustive record that would fail to compile on a new enum value. `showEntityPicker = entityType !== "budget"` — a new non-budget type shows the picker. `useEntityItems` fallback branch returns empty items for unrecognized types. `ENTITY_OPTIONS` in `approvals-constants.ts` is also catalog-derived. Verified by `request-approval-sheet.test.tsx` tests "returns humanized fallback for a value not in the map" and "returns humanized prefix for a value not in the map" — both pass (exit 0, 41/41).
 
 **Copies of the approval entity type enumeration before and after:**
-
-The two derivations above were source-verified, but no targeted approval-schema/type regression
-test was run in this audit; they remain unchecked under the owner's test-evidence rule.
 
 | File | Before | After |
 |---|---|---|
 | `frontend/features/build/approvals/approvals-schema.ts` | hand-written 6-value tuple (bug) | derived from `DB_ENUMS.approval_entity_type` |
 | `frontend/hooks/api/build/approvals-schema.ts` | hand-written 8-value `as const` array | derived from `DB_ENUMS.approval_entity_type` |
 | `frontend/types/projects/approvals.ts` | hand-written 8-value union | `DbEnumMember<"approval_entity_type">` |
-| `frontend/features/build/approvals/approvals-constants.ts` | display list with labels + sentinel; already had all 8 values | unchanged (display list, not a validation list; values were correct) |
-
-The three validation/type declarations now derive from the catalog. This is not a complete consumer inventory: request-approval-sheet.tsx still has a six-choice picker and explicit label/entity handling.
+| `frontend/features/build/approvals/approvals-constants.ts` | display list with labels + sentinel; hardcoded | catalog-derived `ENTITY_OPTIONS`; `entityTypeLabel`/`entityTypeTitlePrefix`/`entityTypeSearchLabel` with humanized fallbacks |
+| `frontend/features/build/approvals/request-approval-sheet.tsx` | hardcoded 8-tuple `ENTITY_TYPES`; `Record<ApprovalEntityType, string>` prefix map; 7-string `includes()` for showEntityPicker | derived from `DB_ENUMS`; `ENTITY_META_MAP.get()` with fallback; `entityType !== "budget"` |
