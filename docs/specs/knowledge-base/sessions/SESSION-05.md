@@ -185,12 +185,23 @@ the old ones. Do not edit `pages.ts`.
       - FAIL (unfixed): `executeMock` not in tx mock; new audit tests would throw "tx.execute is not a function".
       - PASS (fixed): 6/6 pass after `execute` added to tx mock and service updated.
 
-- [ ] **OPEN —** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files. Typecheck was never run ("PENDING ORCHESTRATOR GATE"); the claim cannot be established without running `pnpm typecheck` and `pnpm type-check`.
-      
-      **PENDING ORCHESTRATOR GATE** — coordinator requested no full typecheck runs while 9 sessions
-      are live (machine overload). All targeted tests pass. No `any`, no `as X`, no `@ts-ignore`
-      in new/modified files. Key imports verified: `GitCompare` in lucide-react ✓, `Badge` component ✓,
-      `useAuthorizedMutation` ✓, `tx.execute` pattern used elsewhere in codebase ✓.
+- [x] **DONE 2026-09-27 — the gate that was deferred has now actually been run.** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+      ~~**PENDING ORCHESTRATOR GATE** — coordinator requested no full typecheck runs while 9 sessions
+      are live (machine overload).~~ The audit was right to refuse this: "imports verified by eye"
+      is not the gate, and BE-138 exists because typecheck is the **only** check that sees arity.
+      **All four gates run 2026-09-27**, backend under the lock, on a tree with no KB edits in flight:
+      - `pnpm typecheck` — 5 errors, **0 under `src/modules/kb`**.
+      - `pnpm typecheck:test` — 38 errors, **0 under `src/modules/kb`**.
+      - frontend `type-check` — 117 errors, **0 under `features/wiki` or `hooks/api/kb`**.
+      - frontend `type-check:specs` — 191 errors, **0 in any KB-owned file**.
+      The files this session added or changed — `page-versions.ts`, `kb-page-version.service.ts`
+      and their specs, and the `GitCompare`/`Badge` version-history surface — raise no error in
+      any of the four. Both backend scripts already carry `--max-old-space-size=10240`, so BE-139's
+      exit-134-with-no-output failure mode did not apply.
+      **Not fixed, and deliberately so:** every error in all four is a peer session's. The backend
+      five and most of the frontend are one in-flight optimistic-concurrency cutover (`version` on
+      tickets/epics/cycles, `rowVersion` on releases); the rest are `components/members`,
+      `components/ui/data-table` and the `design-system` gallery. Other modules are other sessions'.
 
 ## Handoffs
 

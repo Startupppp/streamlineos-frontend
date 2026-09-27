@@ -127,7 +127,21 @@ the edit in `## Handoffs` so the orchestrator can check for a collision.
       "a single correlation_id locates every piece of data for one Ask: interaction row, events, sources, cost" PASS.
       The `correlation_id` is present on both the interaction row and the event, enabling the join.
 
-- [ ] **OPEN —** Interruption spec: a provider failure mid-Ask still leaves a coherent interaction row in a terminal state, not a dangling one. Same 7-arg constructor issue — `gatherContext` throws before the provider call, so no terminal row is ever written and the interruption assertions fail.
+- [x] **DONE 2026-09-27 — verified by running it, and the assertions bite.** Interruption spec: a provider failure mid-Ask still leaves a coherent interaction row in a terminal state, not a dangling one.
+      ~~Same 7-arg constructor issue — `gatherContext` throws before the provider call, so no
+      terminal row is ever written and the interruption assertions fail.~~
+      **Stale.** Every `new KbAskService(...)` in the spec now passes 8 args, the 8th being
+      `buildRetrieval() as never` (`kb-ask-interaction-reconstruction.spec.ts:168-176, 200-208,
+      230-238`). All four tests pass; named run output below.
+      **Checked for vacuity, because a terminal-row assertion is exactly the shape that passes
+      on nothing:** `buildDb` at `:48` is `db.transaction = jest.fn().mockImplementation((fn) => fn(db))`,
+      so the callback really runs and `insertedRows` really fills — BE-136 satisfied. The two
+      failure tests do not merely assert "no throw": the provider test pins
+      `resultState === "provider_unavailable"` **and** `gatewayCorrelationId === "gw-fail-corr"`,
+      and the credits test pins `resultState === "credits_exhausted"` **and** that the 402 still
+      propagates (`rejects.toThrow(InsufficientAiCreditsException)`) — a terminal row that
+      swallowed the error would fail it. The success path in the same file is the positive
+      control (BE-141).
       **Evidence:** `kb-ask-interaction-reconstruction.spec.ts` —
       "an interrupted Ask (provider failure mid-flight) leaves a terminal row" PASS,
       "a credits_exhausted failure writes a terminal row before the 402 propagates" PASS.
@@ -135,7 +149,21 @@ the edit in `## Handoffs` so the orchestrator can check for a collision.
       "credits_exhausted interaction row is written before the 402 is thrown" PASS,
       "provider_unavailable interaction row is written and the fallback response is returned" PASS.
 
-- [ ] **OPEN —** Every new test verified to fail against the unfixed code and pass against the fixed code. The isolation spec (`kb-ask-interaction-tenant-isolation.spec.ts`) and reconstruction spec (`kb-ask-interaction-reconstruction.spec.ts`) both instantiate `KbAskService` with 7 args, missing `retrieval: KbRetrievalService` (8th constructor param); those 8 tests fail in the current tree, so "57 tests PASS" does not hold.
+- [x] **DONE 2026-09-27 — the 8 tests the audit said would fail all pass; the claim was true when written and has since been repaired.** Every new test verified to fail against the unfixed code and pass against the fixed code.
+      ~~The isolation spec (`kb-ask-interaction-tenant-isolation.spec.ts`) and reconstruction spec
+      (`kb-ask-interaction-reconstruction.spec.ts`) both instantiate `KbAskService` with 7 args,
+      missing `retrieval: KbRetrievalService` (8th constructor param); those 8 tests fail in the
+      current tree, so "57 tests PASS" does not hold.~~
+      **Repaired, then measured.** `KbAskService`'s constructor takes 8 params
+      (`kb-ask.service.ts:60-69`, 8th `private readonly retrieval: KbRetrievalService`). Both specs
+      now pass 8 — `kb-ask-interaction-reconstruction.spec.ts:120-128` and
+      `kb-ask-interaction-tenant-isolation.spec.ts:78-86` each end `buildRetrieval() as never` /
+      `retrieval as never`.
+      **Run 2026-09-27:** the two named specs — `8 passed, 8 total`, exactly the 8 the audit
+      predicted would fail. Widened to the three interaction/service specs — `36 passed, 36 total`.
+      Widened to the whole module — `src/modules/kb/retrieval`: **77 suites, 629 tests, all pass.**
+      The "57 tests in 8 spec files" figure is not restated here because it was never re-measured;
+      what was measured is recorded above instead.
       **Evidence (fail before fix):** Against the original `kb-ask.service.ts` (no `kbAiInteractions`
       import, no `correlationId` generation, no `tx.insert`, no `correlationId` on events):
       - "writes one interaction row per Ask" → `insertedRows` empty → `.toBeDefined()` FAILS
@@ -145,7 +173,17 @@ the edit in `## Handoffs` so the orchestrator can check for a collision.
       - "tenant isolation: orgId on row" → no rows → `interactionRows.length > 0` FAILS
       **Evidence (pass after fix):** All 57 tests in 8 spec files PASS (run output recorded above).
 
-- [ ] **OPEN —** `pnpm typecheck` and `pnpm typecheck:test` (backend, under the lock) clean for your files. Typecheck was never run ("PENDING ORCHESTRATOR GATE"); the claim cannot be established without executing `pnpm typecheck` and `pnpm typecheck:test` under the backend lock.
+- [x] **DONE 2026-09-27 — both gates actually executed, not deferred.** `pnpm typecheck` and `pnpm typecheck:test` (backend, under the lock) clean for your files.
+      ~~Typecheck was never run ("PENDING ORCHESTRATOR GATE").~~ It has now been run.
+      - `pnpm typecheck` — 5 errors, **0 under `src/modules/kb`**.
+      - `pnpm typecheck:test` — 38 errors, **0 under `src/modules/kb`**.
+      `typecheck:test` is the gate that mattered here, because the whole audit finding above was a
+      constructor-arity mismatch and BE-138 says typecheck is the only check that sees arity. It
+      now reports nothing against `kb-ask.service.ts`, `kb-ask-interaction-reconstruction.spec.ts`
+      or `kb-ask-interaction-tenant-isolation.spec.ts`.
+      All 43 errors are a peer session's in-flight `version`/`rowVersion` optimistic-concurrency
+      cutover across Build, `agent-access`, `ai/core/confirm-actions`, `integrations/git` and
+      `portal/client`. Not fixed: other modules are other sessions'.
 
 ## Handoffs
 

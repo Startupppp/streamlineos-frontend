@@ -42,9 +42,35 @@ Migration: `backend/migrations/1212_kb_indexed_bytes_quota.sql` + its rollback.
 
 - [x] Measure first: list which of the six answer parts render today, with `file:line`, and confirm
       no pre-send scope control exists. (Evidence section lines 150-157; scope sheet: kb-sources-sheet.tsx:50)
-- [ ] Pre-send source scope sheet: pages, files and notes, filterable by space, owner, status and
+- [x] **DONE 2026-09-27 — pages were the missing third category; all six filters now present.** Pre-send source scope sheet: pages, files and notes, filterable by space, owner, status and
       verified-only. Visible **and editable before send**, and what it shows is what is actually
       retrieved — not a decorative summary.
+      **Pages are now selectable.** `kb-sources-sheet.tsx` gained a Pages section with a search box
+      and a `ScopePageRow` per hit; selection flows pending → `handleScopeConfirm` → applied and
+      lands on the ask payload as `scopePageIds` (`knowledge-base-page.tsx`). Files and notes were
+      already there — `KB_SOURCE_KINDS` is `["file", "note"]` (`db/schema/kb/sources.ts:15`), which
+      is why pages could never have appeared through the sources list and needed their own category.
+      **Not a decorative summary — proven in the rendered SQL.** `pageIds` reaches
+      `pageKeywordCandidates` and `pageVectorCandidates` and is pushed onto the same condition
+      array that already holds the org, `wikiPagePredicate()` and visibility predicates, so it is
+      ANDed and can only narrow (`kb-candidate.service.ts:145, :165`).
+      `kb-ask-page-scope-honoured.spec.ts` asserts each id appears as a bound parameter, each
+      positive paired with a CONTROL proving the ids are absent when `pageIds` is omitted (BE-141).
+      **One gap found in that spec and closed.** It stubs visibility as `sql\`true\``, so it proves
+      the `IN` filter exists but not that the ACL predicate survives beside it. Mutating
+      `pageKeywordCandidates` to replace the condition array with org + `IN` whenever `pageIds`
+      was supplied — a cross-tenant read — left **all 6 of its tests passing**.
+      `kb-ask-page-scope-preserves-visibility.spec.ts` was added for exactly that mutation: it
+      fails on it (1 failure), passes on the real code, and carries its own omitted-`pageIds`
+      controls. Mutation reverted; `git diff` confirms only the intended 4 lines remain.
+      **Bound at 50**, matching `sourceIds`, with `.min(1)` so an empty array cannot widen —
+      the defect fixed in `75737cb60`.
+      **Search is debounced at 300ms** (`useDebouncedValue`, the pattern `quick-find-dialog.tsx:29`
+      already used). `useKbPagesSearch` sets `staleTime: 0`, so the undebounced first cut was one
+      uncached request per keystroke; no eager page-tree fetch, the query is `enabled` only on a
+      non-empty term.
+      **Suites:** backend KB 270 suites / 2407 tests; frontend `features/wiki` + `hooks/api/kb`
+      79 suites / 658 tests. All green.
 - [x] **DONE 2026-09-27 — and settling it turned up a real widening defect, now fixed.** The scope the user chose is sent with the request and honoured server-side. A scope the actor
       cannot read is not silently widened.
       **Sent:** `knowledge-base-page.tsx:233-234` puts the applied `sourceIds` and `verifiedOnly`

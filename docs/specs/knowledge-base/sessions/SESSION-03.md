@@ -72,10 +72,21 @@ Migration: `backend/migrations/1206_kb_space_member_counts.sql` + its rollback.
       — `spaces-page.test.tsx` (11 tests) + `space-detail-page.test.tsx` (7 tests). (Actual counts: 17 tests and 16 tests respectively; both files exist with genuine paired positive+negative controls.)
 - [x] Every new test verified to fail against the unfixed code and pass against the fixed code. The BITE test in `kb-spaces-ask-indexed.spec.ts` now runs — it was constructing the pre-split class and dying on `TypeError` before reaching an assertion, so it proved nothing while reading as coverage.
       — BITE test verified by logic trace (see Evidence section).
-- [ ] **OPEN —** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files. `kb-spaces-ask-indexed.spec.ts` has a type error — it calls `.archiveImpact()` on a `KbSpacesService` instance, but `archiveImpact` is on `KbSpaceLifecycleService`; `typecheck:test` would catch this.
-      **DONE 2026-09-25**, serialized orchestrator pass. Backend `typecheck` and `typecheck:test`
-      both clean; frontend `type-check`, `type-check:specs` and `check:named-handlers` clean.
-      Full detail of what the gates caught is recorded once in SESSION-02 and SESSION-07.
+- [x] **DONE 2026-09-27 — all four gates run on a settled tree; the audit's stated defect was already repaired.** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+      ~~`kb-spaces-ask-indexed.spec.ts` has a type error — it calls `.archiveImpact()` on a `KbSpacesService` instance, but `archiveImpact` is on `KbSpaceLifecycleService`; `typecheck:test` would catch this.~~
+      **Stale.** Commit `9d7cdbae1` *"fix(documents): point the archiveImpact spec at the class
+      that owns it"* already repaired this. `kb-spaces-ask-indexed.spec.ts:50` now constructs
+      `new KbSpaceLifecycleService(db, authz)` — 2 args against a 2-arg constructor
+      (`kb-space-lifecycle.service.ts:44-47`) — and `archiveImpact(orgId, spaceId)` is defined on
+      that class at `:93`. `typecheck:test` reports no error in the file.
+      **Gate evidence, all four run 2026-09-27 on a tree with no KB edits in flight:**
+      - `pnpm typecheck` — 5 errors, **0 under `src/modules/kb`**.
+      - `pnpm typecheck:test` — 38 errors, **0 under `src/modules/kb`**.
+      - frontend `type-check` — 117 errors, **0 under `features/wiki` or `hooks/api/kb`**.
+      - frontend `type-check:specs` — 191 errors, **0 in any KB-owned file**.
+      Every error in all four belongs to a peer session's in-flight optimistic-concurrency cutover
+      (`version` on tickets/epics/cycles, `rowVersion` on releases) plus `components/members`,
+      `components/ui/data-table` and the `design-system` gallery. Left untouched: not this module.
 
 ## Handoffs
 

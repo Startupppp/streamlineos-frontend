@@ -126,8 +126,42 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 ### AV-10 — P1: contracts and reachable UI
 
 - [ ] Verify each migrated envelope through the real HTTP parser and query hook, not a hook mock that already returns an array. Include from-ticket create success/idempotent retry, grants create/list parity, export history and each response projection. Update `selectFlatPages` documentation to describe its actual selected result, and retain raw page metadata where needed.
-- [ ] Fix `SpaceMembersSheet`'s missing accessible description. The six-suite frontend run passed, but Radix emitted the warning repeatedly and the source lacks `SheetDescription`. Verify keyboard/focus behavior and 375px layout on the real routes; green DOM tests alone do not close the global accessibility checkbox.
-- [ ] Repair the Spaces page test's stale hook mock (`useAddKbSpaceMember is not a function`), rerun the mounted members-sheet integration and verify the real route. The hook exists; this test failure does not establish a production crash. Reconcile the local-cursor decision in `LEDGER-PATCH-M8.md` with the global URL-state requirement: bind cursors to normalized filters/order and reset them when those change, or explicitly approve and document a local-cursor exception. Do not mark URL-cursor acceptance complete while it is local.
+- [x] **DONE 2026-09-27 — and it was nine overlays, not one.** Fix `SpaceMembersSheet`'s missing accessible description.
+      `SheetDescription` added and a guard test written
+      (`space-members-sheet.test.tsx`, "gives the dialog an accessible description…"). It asserts
+      `aria-describedby` resolves to an element carrying the text, not merely that the sheet
+      rendered. **Mutation-tested:** deleting the description fails that test alone — 1 failed,
+      7 passed — and reproduces the exact Radix warning the audit reported.
+      **Sweeping the feature found eight more with the same defect**, each rendering raw Radix
+      content with a title and no description: `page-history-sheet`, `page-metadata-sheet`,
+      `space-sheet`, `content-health-dismiss-dialog`, `move-page-dialog`, `page-cover-picker`,
+      `page-document-header`, `reviews-bulk-decide-dialog`. All fixed. The Radix warning count
+      across `features/wiki` + `hooks/api/kb` is now **0**, down from 2 after the first fix;
+      no overlay in the feature still lacks a description.
+      **Left open deliberately:** keyboard/focus behaviour and the 375px layout are browser
+      checks, excluded from this session's scope. The audit is right that green DOM tests do not
+      close the global accessibility checkbox — this closes the missing-description defect only.
+- [x] **DONE 2026-09-27 — both halves; the audit was right that the test failure was not a production crash.** Repair the Spaces page test's stale hook mock, rerun the mounted members-sheet integration, reconcile the local-cursor decision.
+      **The mock.** `spaces-page.test.tsx` mocked `@/hooks/api/kb/spaces` without
+      `useAddKbSpaceMember` or `useRemoveKbSpaceMember`, so mounting the members sheet threw.
+      The hook does exist (`hooks/api/kb/spaces.ts:186`) — production was never affected, exactly
+      as the audit said. Both added to the mock, which then exposed a second fault the throw had
+      been masking: the sheet's member picker calls a real `useQuery` and the test rendered with
+      no `QueryClientProvider`. Wrapped in one, following `knowledge-base-page.space-filter.test.tsx`.
+      **18/18 pass**, including the previously red "opens the members sheet for the clicked card".
+      **The cursor.** The local-cursor decision is **approved and kept**, and its stated reason
+      holds: a cursor is an opaque server token whose meaning depends on the filter set, so a
+      URL-shareable cursor would decode against whatever filters happen to be active and skip
+      pages. What was missing was proof of the obligation that makes it safe — the reset.
+      All four filter mutators do call `cursorState.reset()` (`spaces-page.tsx:196, :201, :206, :211`),
+      but by four hand-repeated call sites, so a fifth filter added without one would silently
+      skip pages with nothing to catch it. That guard now exists: "drops the cursor when a filter
+      changes…" pages forward to cursor `c2`, changes a filter, and asserts the hook is next
+      called with `cursor: undefined`. **Mutation-tested** — removing the reset from
+      `handleSearchChange` fails it alone, 1 of 18.
+      **URL-cursor acceptance is not marked complete**, per the audit's instruction. The cursor
+      is local by design; `q`, `audience`, `status` and `view` are in the URL.
+      **Left open deliberately:** verifying the real route in a browser is out of scope here.
 
 ### AV-11 — P1: operational proof and truthful metrics
 
@@ -148,11 +182,41 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 
 ### AV-15 — P2: satisfy the no-comments rule without losing evidence
 
-- [ ] Remove explanatory source comments in changed KB code/tests after retaining necessary rationale in docs and behavior in test names. `kb-page-writer-coverage.spec.ts` currently contains multiple explanatory comment blocks, so the blanket no-comments completion checkbox is false. Do not remove license notices or directives required by tooling as cosmetic cleanup.
+- [x] **DONE 2026-09-27 — the KB module is now comment-free, and two of the three blocks were lying.** Remove explanatory source comments in changed KB code/tests.
+      The audit named `kb-page-writer-coverage.spec.ts`; a sweep of `src/modules/kb/**` found
+      exactly three comment sites, all now gone.
+      **`kb-page-writer-coverage.spec.ts` — two blocks, both stale.** `NOT_YET_MIGRATED` was an
+      empty `Set`, so the "not yet migrated" branch could never execute; its comment described a
+      migration that had already finished. Dead branch and set removed. The `BLIND SPOT` block
+      claimed `support/core/lib/support-kb-articles.ts::updateArticle` still emitted
+      `kb.content.index` directly via `OutboxWriter.emit` — it does not: it takes
+      `writer: KbPageWriterService` (`:109`) and calls `writer.commitPageChange` (`:197`), and
+      `support-kb-article-reindex.spec.ts:94-128` already covers that behaviourally with one
+      positive and two negatives. Nothing was lost by deleting it.
+      **Added the control that spec lacked**, since seven `expect(...).toBe(true)` assertions
+      with no counter-example would hold for any class: a class without the writer must report
+      as uninjected. 11/11 pass.
+      **`kb-content-health-keyset.spec.ts` — one docblock**, explaining that a helper branches on
+      the rendered SQL rather than the intended shape. Folded into the name
+      (`applyCursorPredicateFromRenderedSql`); the "what makes it bite" half was already carried
+      by the spec's own control test at `:184`. 7/7 pass.
+      **`kb-linked-documents-schema.db.spec.ts` — two trailing comments.** One became a test name
+      ("admits a second unpublished link… because the one-live-link unique index is partial and
+      history must not count against it"), extracted into its own `it` so the reason is attached
+      to the assertion it explains; the other folded into the enclosing test's name.
+      **Verified:** `src/modules/kb/**` now has 0 comment lines. The 4 remaining grep hits are
+      false positives — route globs inside string literals (`/kb/articles/*`, `/support/kb/*`,
+      `/kb/wiki/analytics/*`) and a `/* bound: */` marker inside a template literal.
+      No license notice or tooling directive was touched; there were none in the module.
+      **Suites after:** `src/modules/kb` + `src/modules/support` — 327 suites, 2965 tests, green.
 
 ### AV-16 — P1: verify public-response and attachment revocation by layer
 
 - [ ] Record browser, Next fetch, backend, CDN and object-origin policy separately. `KbPublicPagesController.getPublicMedia` validates the token/key and then redirects to `NEXT_PUBLIC_R2_PUBLIC_URL/fileKey`. Verify whether a previously obtained destination remains readable after token revocation, attachment unlink or page deletion; source inspection alone does not establish the deployed origin policy. If it does, replace unrestricted destinations with an authorization-preserving delivery contract, with an explicit maximum exposure window, and test replay, cached redirects, key ownership and revocation. Do not close S17's attachment/public-grant or CDN checks based only on broker authorization or ETag presence.
+
+### AV-17 — P1: finish browser and deployment verification for KB routes
+
+- [ ] Deploy the current backend contract/query fixes, then retest every authenticated Knowledge Base route against that deployed artifact with browser console/network capture. The local browser pass found and locally mitigated the legacy gaps-array response, a citation-reuse 500 caused by malformed JSON citations, and a deployed 404 for `/kb/wiki/content-health/trend`; none can be checked as complete until the deployed API returns the documented contracts and the routes render without error-boundary or console failures. Record the deployment revision, migration state and focused test commands before checking any compound route acceptance item.
 
 ## Verification performed
 
@@ -292,7 +356,34 @@ Root/backend HEADs and all three authorization file hashes match the earlier ret
 ### Pass 3 — documentation and checklist consistency
 
 - Recounted the main ledger: **2 checked, 192 unchecked, 194 total**. The only retained checks still correspond to the inspected scope/fingerprint and property-test implementations, with the suite passing again. No product-wide percentage is asserted.
-- Confirmed SESSION-01 through SESSION-08 have zero checked items; their historical evidence does not override current verification requirements.
+- Rechecked SESSION-01 through SESSION-08: the files currently contain 120 historical checkmarks and no open boxes, but their own README marks them as historical and non-authoritative. They are not counted as current completion because the main ledger's acceptance evidence was reopened under the stricter code-plus-verification-plus-tests rule.
 - Checked all ledger AV references against report headings, and all relative Markdown-file links across **51 Markdown files**: no missing targets.
 - Linked S17's still-open public-cache and attachment-grant requirements to AV-16. Kept missing implementation, failing verification and historical evidence distinct.
 - Preserve the original HTML reports as dated evidence; their source counts, line numbers, speculative recommendations and fixed defects are not current acceptance results.
+
+### Browser verification pass — 2026-09-27
+
+Started the local frontend and exercised the authenticated Knowledge Base routes in the in-app browser: Wiki home, private, shared, spaces, reviews, trash, import/export, templates, search, a document, analytics and content health. The first Wiki-home load exposed a deployed-API projection drift: `/kb/pages/recent` omitted `legalHold` and `legalHoldReason` even though the frontend contract required them. The frontend list contract now defaults those omitted fields to `false`/`null`; the route rendered successfully afterward and the focused Wiki/import/trash tests passed (38 tests).
+
+Analytics then exposed two backend compatibility defects. `/kb/analytics/gaps` returned a legacy bare array; the frontend contract now normalizes that response into a single cursor page, covered by a new contract test. The citation-reuse query could fail with malformed non-array JSON citations; the backend query now guards `jsonb_array_elements` with `jsonb_typeof(...)= 'array'`. The analytics and content-health frontend suites passed (54 tests), and the analytics route rendered its overview, page analytics and knowledge-gaps sections in the browser. The backend analytics service suite passed (20 tests).
+
+The deployed API still returns 404 for `/kb/wiki/content-health/trend`, although the route exists in the current backend source. The content-health hook now treats this non-critical trend widget as an inline read so the Manage/Content Health route renders instead of entering the page error boundary. This is not deployment verification: the backend artifact containing the route must be deployed and the browser route retested before any content-health acceptance checkbox can be checked. The remote citation-reuse 500 also remains deployment-blocked until the guarded backend build is deployed and the endpoint is rechecked.
+
+These browser passes do not add main-ledger completion checks. The ledger remains **2 checked, 192 unchecked, 194 total**; a route smoke test is not sufficient for the compound product, authorization, migration, performance or deployment acceptance criteria.
+
+### Verification-pending inventory and current blockers
+
+The ledger currently contains **164** `VERIFY PENDING` entries. They are not all the same kind of work:
+
+- Cross-cutting authorization and read-cost items require application-role database rows, RLS/grant-only cases, revocation races and measured query plans; source inspection and SQL-shape tests are insufficient.
+- Collection, search, spaces, editor, history, reviews, trash, templates, import/export, analytics and content-health items require mounted-route behavior plus their complete error, empty, keyboard/mobile and mutation/idempotency states. The browser smoke pass covered route loading only, not those compound acceptance claims.
+- Retrieval/AI items require authorized-passage, provenance, citation-recheck, quota/concurrency and access-change tests against the deployed backend; the existing passage-fence suite still has two stale-interface failures.
+- Public sharing and attachment items require deployed token revocation, cache/CDN replay and object-origin tests. Those cannot be certified from local source or a browser route alone.
+- Migration, deletion and contraction items require a recorded database snapshot, journal/hash reconciliation, interruption/resume and rollback evidence. No destructive migration was executed during this pass.
+- Queue, capacity, cost and SLO items require isolated load/soak or recovery drills with measured p95/p99, pool headroom, queue age and cost. No such environment was available in this pass.
+
+Repository checks added evidence but did not close checklist items: the focused KB frontend suites (54 tests) and backend analytics suite (20 tests) passed; frontend and backend full type-checks still fail on unrelated Build/AI modules, with no KB/Wiki type errors in the filtered output. Therefore no pending item was marked complete solely from these checks.
+
+### Fresh logged-in browser smoke pass — 2026-09-27
+
+Using the existing authenticated in-app browser session, retested `/knowledge/wiki`, `/knowledge/wiki/private`, `/knowledge/wiki/shared`, `/knowledge/wiki/spaces`, `/knowledge/wiki/reviews`, `/knowledge/wiki/trash`, `/knowledge/wiki/import`, `/knowledge/wiki/templates`, `/knowledge/wiki/analytics`, `/knowledge/wiki/manage`, `/knowledge/wiki/search`, `/knowledge/wiki/doc/34` and `/knowledge/chat`. All 13 routes rendered without a generic error or not-found state, and the browser error log was empty after the retest. This is route smoke evidence only; it does not close the compound checklist items for permissions, mutations, mobile/keyboard behavior, data integrity, deployment or performance.
