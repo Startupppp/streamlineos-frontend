@@ -51,17 +51,31 @@ dependency direction and testability; command-center/dashboard compositions need
   output: the old code passed a single `EmptyState` a `filtersActive` prop and let it choose its own copy,
   where the surface now selects between `empty` and `filteredEmpty` from `isFiltered`. The teams page keeps
   its offline empty variant through the same seam.
-- [ ] Lists using a cursor pager keep their pagination in the URL and use the cursor pagination mode, per FE-86 and FE-125
-  **Left unchecked, and this is a finding rather than an omission.** The cursor mode half is satisfied -- all
-  three pages declare `mode: "cursor"` and reset correctly, because they pass `listFilters.resetKey` to
-  `useCursorPager` so a filter change clears the cursor.
-  The URL half is **false for every cursor list in the Build module**, including the reference adopter
-  `releases-page.tsx` that ticket 49 shipped. `useCursorPager` in `@/components/ui/table-pagination` keeps its
-  cursor stack in `useState`, so pagination position is lost on reload and never appears in the URL, which is
-  exactly what FE-86 requires it to do. Fixing it means either teaching `useCursorPager` to read and write the
-  URL or moving these pages onto `listFilters.setCursor`; the first is a shared UI primitive owned by another
-  session, so it is recorded here rather than changed. This box cannot be earned page by page -- the defect is
-  one level below the pages.
+- [x] Lists using a cursor pager keep their pagination in the URL and use the cursor pagination mode, per FE-86 and FE-125
+  Earned 2026-09-27, and earning it meant fixing the defect the first pass found rather than recording it.
+
+  The cursor-mode half was already satisfied: these lists declare `mode: "cursor"` and pass
+  `listFilters.resetKey`, so a filter change clears the walk.
+
+  **The URL half was false for every paginated list in the Build module, including the reference adopter ticket
+  49 shipped.** `useCursorPager` in `components/ui/table-pagination-shared.tsx` keeps its cursor stack in
+  `useState`, so a reload dropped the reader back to page 1, the browser back button did not step back a page,
+  and a copied link never pointed at the page it was copied from. That primitive belongs to another session, so
+  it was not edited.
+
+  `features/build/shared/use-build-cursor-pager.ts` is a Build-owned replacement with the same `CursorPager`
+  interface, which made adoption a one-line import change. **All 18 Build consumers now use it** and none still
+  reaches the state-based pager -- verified by a sweep of production files, not from a report. Its own suite is
+  10 tests: the walk is written to and read from the `cursors` query parameter, `goPrevious` steps back one page
+  at a time (which a single stored cursor could not do), the parameter is dropped entirely on return to page 1,
+  other query parameters survive paging so a filter or search term is not discarded, a malformed stack falls back
+  to page 1 rather than throwing, and a changed reset key clears the walk.
+
+  The stack is stored as a JSON array rather than a delimited string, with a test whose cursor contains a comma,
+  a tilde, a quote and a bracket. Cursors are base64url today, so a delimiter would work -- and would be one
+  cursor-format change away from splitting a cursor in half.
+
+  The full Build frontend suite is green after the swap: **260 suites, 2671 tests.**
 - [x] Each page's rows can be supplied as props
   Earned 2026-09-27. Each page derives `rows` as `data?.data ?? []` and passes it explicitly, so a fixture can
   drive the table without mocking the hook. Asserted by "renders the data table when resolution is ready and
