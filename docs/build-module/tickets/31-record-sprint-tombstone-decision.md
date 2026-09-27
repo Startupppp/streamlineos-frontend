@@ -8,10 +8,10 @@ Record the decision, not just the outcome — an unexplained "keep" invites the 
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The decision and its reason are recorded where retirement decisions already live
-- [ ] The record names what would be lost by deleting: the 410 status and its migration hint
-- [ ] The kill-list acceptance criterion about removed surfaces retaining parallel schemas is annotated to reflect this deliberate exception
-- [ ] No code is deleted
-- [ ] The still-open question of the surviving sprint-named permission key gating the cycles surface is cross-referenced, since that is a separate decision
+- [x] The decision and its reason are recorded where retirement decisions already live — `docs/build-module/99-kill-list.md` Sprint row (annotated 2026-09-27): states the frozen service, controller, schemas and spec are kept because every method throws `GoneException(FROZEN)` with the replacement path, and deleting them converts an informative 410 into a silent 404.
+- [x] The record names what would be lost by deleting: the 410 status and its migration hint (`"Sprints are frozen. Use /build/:projectId/cycles — Cycles are the only iteration identity."`) — `docs/build-module/99-kill-list.md` Sprint row annotation 2026-09-27.
+- [x] The kill-list acceptance criterion at line 117 (`No removed surface retains a parallel schema, permission, cache key, or endpoint family`) is annotated with this deliberate exception — `docs/build-module/99-kill-list.md` acceptance criteria section 2026-09-27: the box is left unticked and the exception is explained (no DB schema, no permission key, no cache key; only the HTTP 410 adapter survives).
+- [x] No code is deleted — no source file was modified; this ticket records a decision in documentation only.
+- [x] The still-open question of the surviving sprint-named permission key is cross-referenced — the kill-list annotation notes that migration `1197_build_cycle_permissions.sql` renamed `build:sprints:view/manage` to `build:cycles:view/manage` and rewrote all existing grants; OQ11 was simultaneously retired as answered by ticket 68.

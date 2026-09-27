@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ApprovalEntityType } from "@/types/projects";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 export const decideApprovalSchema = z.object({
   decision: z.enum(["approved", "rejected", "changes_requested"]),
@@ -16,10 +16,7 @@ export type DelegateApprovalValues = z.infer<typeof delegateApprovalSchema>;
 
 const TITLE_REGEX = /\S/;
 
-const APPROVAL_ENTITY_TYPES: [ApprovalEntityType, ...ApprovalEntityType[]] = [
-  "task", "milestone", "budget", "release",
-  "change_request", "timesheet",
-];
+const APPROVAL_ENTITY_TYPES = DB_ENUMS.approval_entity_type;
 
 export const requestApprovalSchema = z.object({
   entityType: z.enum(APPROVAL_ENTITY_TYPES),

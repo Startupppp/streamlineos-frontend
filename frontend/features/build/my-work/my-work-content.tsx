@@ -22,7 +22,7 @@ import type { MyWorkView } from "./my-work-view";
 import type { UseMyWorkBulkReturn } from "./use-my-work-bulk";
 import { AllWorkListSkeleton, BucketSection, BUCKET_ORDER } from "./my-work-rows";
 import { MyWorkViewBody } from "./my-work-view-body-lazy";
-import { MyWorkPaginationBar } from "./my-work-pagination-bar";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 
 const TABLE_COLUMNS: DataTableColumn<KanbanTicket>[] = [
@@ -237,12 +237,16 @@ export const MyWorkContent = memo(function MyWorkContent({
               if (items.length === 0) return null;
               return <BucketSection key={bucket} bucket={bucket} items={items} />;
             })}
-            <MyWorkPaginationBar
+            <TablePagination
+              mode="cursor"
+              rowCount={kanbanTickets.length}
               pageNumber={pageNumber}
               hasPrevious={hasPrevious}
               hasMore={hasMore}
               onPrevious={onPreviousPage}
               onNext={onNextPage}
+              hideOnSinglePage
+              showLabels
             />
           </div>
         </ScrollArea>
@@ -254,12 +258,16 @@ export const MyWorkContent = memo(function MyWorkContent({
             displayOptions={displayOptions}
             ticketMeta={ticketMeta}
           />
-          <MyWorkPaginationBar
+          <TablePagination
+            mode="cursor"
+            rowCount={kanbanTickets.length}
             pageNumber={pageNumber}
             hasPrevious={hasPrevious}
             hasMore={hasMore}
             onPrevious={onPreviousPage}
             onNext={onNextPage}
+            hideOnSinglePage
+            showLabels
           />
         </div>
       )}

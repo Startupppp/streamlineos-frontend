@@ -184,7 +184,8 @@ export function useUpdateProject(
       apiClient.patch<ProjectWithDetails>(`/build/${projectId}`, data, undefined, projectDetailLazy),
     onMutate: async (variables) => {
       const { projectId, ...patch } = variables;
-      await queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.all });
+      await queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.list() });
+      await queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
       const workspaceUsers = getWorkspaceUsersFromCache(queryClient);
       const listSnapshots = queryClient.getQueriesData<ProjectListCache>({
         queryKey: buildWorkQueryKeys.projects.list(),
@@ -220,7 +221,6 @@ export function useUpdateProject(
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.members(variables.projectId),
       });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
   });

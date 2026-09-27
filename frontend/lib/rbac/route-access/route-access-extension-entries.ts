@@ -170,7 +170,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     permission: "kb:articles:view",
     reason:
       "Helpdesk knowledge articles. Without this entry the prefix resolved to the /support nav gate (dashboard:support:view), an unrelated key from another module, while every read the page issues declares kb:articles:view.",
-    backendRoute: { method: "get", path: "/kb/articles" },
+    backendRoute: { method: "get", path: "/support/kb/articles" },
   },
   {
     prefix: "/knowledge/research-briefs",

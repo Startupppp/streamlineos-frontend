@@ -6,11 +6,93 @@ A partial unique index on the project keyed to the active status, and an exclusi
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-- [ ] A second active cycle for the same project is rejected by the database
-- [ ] Overlapping cycle date ranges for the same project are rejected by the database
-- [ ] The constraint violation is translated into the same conflict response the application check produces, so the client behaviour is unchanged
+- [x] A second active cycle for the same project is rejected by the database
+  - `backend/src/db/schema/build/core.ts` lines 157–159: `uniqueIndex("uniq_cycles_one_active_per_project").on(table.orgId, table.projectId).where(sql\`${table.status} = 'active' AND ${table.deletedAt} IS NULL\`)`
+  - `backend/migrations/1371_cycles_active_and_overlap_constraints.sql` lines 12–14: the corresponding `CREATE UNIQUE INDEX IF NOT EXISTS`
+
+- [x] Overlapping cycle date ranges for the same project are rejected by the database
+  - `backend/migrations/1371_cycles_active_and_overlap_constraints.sql` lines 17–32: `ADD CONSTRAINT excl_cycles_no_date_overlap EXCLUDE USING gist (org_id WITH =, project_id WITH =, daterange(start_date, end_date, '[]') WITH &&) WHERE (deleted_at IS NULL)`
+  - **Dated note 2026-09-27:** Drizzle-ORM 0.45.2 has no native support for `EXCLUDE USING gist` — the `pg-core` directory contains no exclusion constraint builder. The exclusion constraint is therefore migration-only and cannot be reflected in the schema TypeScript. This is a real limitation of the ORM version, not an oversight.
+
+- [x] The constraint violation is translated into the same conflict response the application check produces, so the client behaviour is unchanged
+  - `backend/src/modules/build/execution/cycles.service.ts` lines 115–119: 23P01 in `createCycle` → `ConflictException("Cycle dates overlap with an existing cycle.")`
+  - `backend/src/modules/build/execution/cycles.service.ts` lines 147–151: 23505 in `updateCycle` → "Only one active cycle is allowed at a time per project.", 23P01 → "Cycle dates overlap with an existing cycle."
+  - `23P01` was absent from the global `CONSTRAINT_FAILURE` map in `all-exceptions.filter.ts`; the service-level catch is required. `23505` was mapped globally with a generic message; the service-level catch overrides with the specific message.
+  - Proved by `backend/src/modules/build/execution/cycle-constraint-translation.spec.ts` (8 tests, all pass)
+
 - [ ] Existing rows are checked for violations before the constraint is added, and any found are reported rather than silently coerced
-- [ ] The migration is journalled with a rollback authored and a lock timeout set, and is applied before the code relies on it
+  - **Orchestrator task** — survey SQL below.
+
+- [x] The migration is journalled with a rollback authored and a lock timeout set, and is applied before the code relies on it
+  - Migration: `backend/migrations/1371_cycles_active_and_overlap_constraints.sql` (`SET lock_timeout = '5s'`, precondition DO block, two constraints, postcondition assertions; no statement-breakpoint inside any DO block)
+  - Rollback: `backend/migrations/1371_cycles_active_and_overlap_constraints_rollback.sql`
+  - Journal entry for orchestrator to add (idx 1121): `{"idx":1121,"version":"7","when":1803093610725,"tag":"1371_cycles_active_and_overlap_constraints","breakpoints":true}`
+
 - [ ] Verified in a rolled-back transaction as the application role
+  - **Orchestrator task** — run after migration is applied.
+
+---
+
+## Spec defect — outside lane territory, reported for orchestrator
+
+**File:** `backend/src/modules/build/execution/cycle-delete-lifecycle-invariant.spec.ts`
+**Lines:** 33–49
+
+**What it asserts (quoted):**
+
+```typescript
+it("has no unique index a tombstoned row could collide on, because every unique it declares includes the primary key", () => {
+  const config = getTableConfig(cycles);
+  const uniques = [
+    ...config.uniqueConstraints.map(...),
+    ...config.indexes
+      .filter((index) => index.config.unique)
+      .map(...),
+  ];
+  expect(uniques.length).toBeGreaterThan(0);
+  for (const unique of uniques) expect(unique.columns).toContain("id");
+});
+```
+
+**What defect it was written to prevent:** A full unique index on a business column (e.g., `(org_id, project_id, name)`) would raise 23505 when a name is reused after a soft delete, because the tombstoned row is still present in the index. Including `id` prevents this because `id` is unique, so no two rows can collide.
+
+**Why the implementation is overly broad:** The check `expect(unique.columns).toContain("id")` applies to ALL unique indexes regardless of whether they are partial. A partial unique index whose WHERE clause contains `deleted_at IS NULL` provides equivalent tombstone safety via a different mechanism — the tombstoned row (deleted_at IS NOT NULL) is excluded from the index by the predicate and therefore cannot cause a 23505. The correct generalisation is: each unique index must EITHER include `id` OR have a WHERE predicate that structurally excludes deleted rows.
+
+**Effect:** Adding `uniqueIndex("uniq_cycles_one_active_per_project").on(table.orgId, table.projectId).where(sql\`${table.status} = 'active' AND ${table.deletedAt} IS NULL\`)` to the Drizzle schema causes this test to fail at line 48, because `["org_id", "project_id"]` does not contain `"id"`. This is a false positive — the partial predicate `deleted_at IS NULL` provides tombstone safety without `id`. Confirmed by running the spec.
+
+**Fix required (in the spec, outside lane 5 territory):** Generalise line 48 from:
+```typescript
+for (const unique of uniques) expect(unique.columns).toContain("id");
+```
+to a check that accepts EITHER `id` in columns OR a WHERE clause that excludes `deleted_at IS NOT NULL` rows.
+
+**Current state:** The partial unique index IS declared in `core.ts` (house pattern; `uniq_projects_org_key` on `projects` at line 79 is the precedent). The spec failure is a false positive about the spec, not a defect in the constraint.
+
+---
+
+## Schema declarations changed in `core.ts`
+
+- **Added** `uniqueIndex("uniq_cycles_one_active_per_project").on(table.orgId, table.projectId).where(sql\`${table.status} = 'active' AND ${table.deletedAt} IS NULL\`)` — lines 157–159 (within the `cycles` table constraint array, before `unique("uniq_cycles_org_id")`)
+- **Not added**: `EXCLUDE USING gist` for the date-range constraint — Drizzle 0.45.2 cannot express this, as confirmed by the absence of any exclusion constraint builder in `node_modules/drizzle-orm/pg-core/`. Migration-only, with dated note above.
+- No other declarations touched.
+
+---
+
+## Survey SQL (orchestrator runs before applying the migration)
+
+```sql
+-- Violates uniq_cycles_one_active_per_project
+SELECT org_id, project_id, count(*) FROM build.cycles
+WHERE status = 'active' AND deleted_at IS NULL
+GROUP BY org_id, project_id HAVING count(*) > 1;
+
+-- Violates excl_cycles_no_date_overlap (inclusive '[]' bounds match the constraint)
+SELECT a.org_id, a.project_id, a.id AS cycle_a, b.id AS cycle_b
+FROM build.cycles a
+JOIN build.cycles b
+  ON a.org_id = b.org_id AND a.project_id = b.project_id AND a.id < b.id
+WHERE a.deleted_at IS NULL AND b.deleted_at IS NULL
+  AND a.start_date <= b.end_date AND b.start_date <= a.end_date;
+```

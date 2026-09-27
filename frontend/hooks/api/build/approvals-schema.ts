@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 const APPROVAL_STATUS_VALUES = [
   "requested",
@@ -10,16 +11,7 @@ const APPROVAL_STATUS_VALUES = [
   "cancelled",
 ] as const;
 
-const APPROVAL_ENTITY_TYPE_VALUES = [
-  "task",
-  "milestone",
-  "budget",
-  "release",
-  "change_request",
-  "document",
-  "timesheet",
-  "client_approval",
-] as const;
+const APPROVAL_ENTITY_TYPE_VALUES = DB_ENUMS.approval_entity_type;
 
 export const approvalStatusSchema = z.enum(APPROVAL_STATUS_VALUES);
 export const approvalEntityTypeSchema = z.enum(APPROVAL_ENTITY_TYPE_VALUES);

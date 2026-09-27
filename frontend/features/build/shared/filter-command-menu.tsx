@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { FilterCategorySubmenu } from "./filter-category-submenu";
 import { FilterFlatSearch } from "./filter-flat-search";
 import { FilterAssigneeLeading } from "./filter-option-leading";
+import { AssigneeFilterSubmenu } from "./assignee-filter-submenu";
 import {
   FilterTriggerButton,
   MobileFilterSearch,
@@ -169,14 +170,25 @@ export function FilterCommandMenu({
                   </div>
                 ) : activeCategory ? (
                   <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-                    <FilterCategorySubmenu
-                      category={activeCategory}
-                      onClose={handleBackToCategories}
-                      showTitle={false}
-                      className="w-full min-w-0"
-                      listClassName="max-h-none overflow-visible p-1.5"
-                      {...sharedProps}
-                    />
+                    {activeCategory === "assignee" ? (
+                      <AssigneeFilterSubmenu
+                        selectedAssignees={sharedProps.selectedAssignees}
+                        onToggleAssignee={sharedProps.onToggleAssignee}
+                        onClose={handleBackToCategories}
+                        showTitle={false}
+                        className="w-full min-w-0"
+                        listClassName="max-h-none overflow-visible p-1.5"
+                      />
+                    ) : (
+                      <FilterCategorySubmenu
+                        category={activeCategory}
+                        onClose={handleBackToCategories}
+                        showTitle={false}
+                        className="w-full min-w-0"
+                        listClassName="max-h-none overflow-visible p-1.5"
+                        {...sharedProps}
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="flex min-h-0 flex-1 flex-col pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -256,13 +268,23 @@ export function FilterCommandMenu({
                   transition={pmSnappy}
                   className="min-w-0 overflow-y-auto bg-muted/15 outline-none"
                 >
-                  <FilterCategorySubmenu
-                    category={resolvedCategory}
-                    onClose={handleSubmenuClose}
-                    showTitle
-                    className="w-[280px]"
-                    {...sharedProps}
-                  />
+                  {resolvedCategory === "assignee" ? (
+                    <AssigneeFilterSubmenu
+                      selectedAssignees={sharedProps.selectedAssignees}
+                      onToggleAssignee={sharedProps.onToggleAssignee}
+                      onClose={handleSubmenuClose}
+                      showTitle
+                      className="w-[280px]"
+                    />
+                  ) : (
+                    <FilterCategorySubmenu
+                      category={resolvedCategory}
+                      onClose={handleSubmenuClose}
+                      showTitle
+                      className="w-[280px]"
+                      {...sharedProps}
+                    />
+                  )}
                 </motion.div>
               ) : (
                 <div className="flex w-[280px] items-center justify-center px-6 py-10 text-center text-sm text-muted-foreground">

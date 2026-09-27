@@ -23,16 +23,16 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   useTicketActivity,
-  type TicketActivityAction,
   type TicketActivityEntry,
 } from "@/hooks/api/build/ticket-activity";
+import type { KnownTicketActivityAction } from "@/hooks/api/build/build-tickets-core-schema";
 
 interface TicketActivityLogProps {
   projectId: number;
   ticketId: number;
 }
 
-const ACTION_ICONS: Record<TicketActivityAction, LucideIcon> = {
+const ACTION_ICONS: Record<KnownTicketActivityAction, LucideIcon> = {
   created: CircleDot,
   status_changed: Activity,
   priority_changed: Flag,
@@ -49,12 +49,16 @@ const ACTION_ICONS: Record<TicketActivityAction, LucideIcon> = {
   type_changed: RefreshCw,
 };
 
+function isKnownAction(action: string): action is KnownTicketActivityAction {
+  return action in ACTION_ICONS;
+}
+
 interface ActivityItemProps {
   entry: TicketActivityEntry;
 }
 
 const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
-  const Icon = ACTION_ICONS[entry.action] ?? History;
+  const Icon = isKnownAction(entry.action) ? ACTION_ICONS[entry.action] : History;
   const actorName = entry.user?.name ?? "Someone";
   const timeAgo = formatRelativeTime(entry.createdAt);
   const showTransition = !!(entry.fromValue || entry.toValue);
@@ -66,7 +70,7 @@ const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
       </div>
       <div className="min-w-0 flex-1 text-xs leading-relaxed">
         <span className="font-medium text-foreground">{actorName}</span>{" "}
-        <span className="text-muted-foreground">{entry.label}</span>
+        <span className="text-muted-foreground">{entry.label || entry.action}</span>
         {showTransition && (
           <span className="mt-0.5 flex flex-wrap items-center gap-1 text-muted-foreground">
             {entry.fromValue && (

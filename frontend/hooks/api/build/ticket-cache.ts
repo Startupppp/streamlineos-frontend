@@ -191,10 +191,6 @@ export function invalidateBuildViews(
     queryKey: buildWorkQueryKeys.projects.allWorkAll,
   });
   void client.invalidateQueries({
-    queryKey:
-      buildWorkQueryKeys.projectReports.criticalPath(projectId),
-  });
-  void client.invalidateQueries({
     queryKey: collaborationQueryKeys.dashboard.myIssues(),
   });
   void client.invalidateQueries({
@@ -271,36 +267,60 @@ export function invalidateTicketUpdateViews(
     refetchType: "none",
   });
 
-  const affectsPlanning =
-    changes.status !== undefined ||
-    changes.cycleId !== undefined ||
-    changes.points !== undefined ||
-    changes.startDate !== undefined ||
-    changes.dueDate !== undefined;
+  const statusChanged = changes.status !== undefined;
+  const cycleChanged = changes.cycleId !== undefined;
+  const pointsChanged = changes.points !== undefined;
+  const schedulingChanged =
+    changes.startDate !== undefined || changes.dueDate !== undefined;
 
-  if (!affectsPlanning) return;
+  if (!statusChanged && !cycleChanged && !pointsChanged && !schedulingChanged)
+    return;
 
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.cycles(projectId),
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
-    queryKey:
-      buildWorkQueryKeys.projectReports.criticalPath(projectId),
-    refetchType: "none",
-  });
-  void client.invalidateQueries({
-    queryKey: buildWorkQueryKeys.projectReports.all,
-    refetchType: "none",
-    predicate: (query) =>
-      query.queryKey[
-        buildWorkQueryKeys.projectReports.all.length + 1
-      ] === projectId,
-  });
+  if (statusChanged) {
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
+      refetchType: "none",
+    });
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.cycleTime(projectId),
+      refetchType: "none",
+    });
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.leadTime(projectId),
+      refetchType: "none",
+    });
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.cfd(projectId),
+      refetchType: "none",
+    });
+  }
+
+  if (cycleChanged) {
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projects.cycles(projectId),
+      refetchType: "none",
+    });
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.velocity(projectId),
+      refetchType: "none",
+    });
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.burnup(projectId),
+      refetchType: "none",
+    });
+  }
+
+  if (pointsChanged) {
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.velocity(projectId),
+      refetchType: "none",
+    });
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.burnup(projectId),
+      refetchType: "none",
+    });
+  }
+
   void client.invalidateQueries({
     queryKey: collaborationQueryKeys.dashboard.activeSprintSummary(),
     refetchType: "none",

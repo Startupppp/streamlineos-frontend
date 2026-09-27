@@ -104,3 +104,13 @@ Each file runs as a single simple-query batch, so a `DO $$` guard that raises ab
 no partial damage. That is by design and has been confirmed. A failure at step 5 or 6 means a
 precondition is genuinely unmet — read the `RAISE EXCEPTION` message, do not retry, and do not edit the
 guard out.
+
+---
+
+## Migration 1197 — BE-111 conflict and replay limitation
+
+`backend/migrations/1197_build_cycle_permissions.sql` renamed `build:sprints:view/manage` to `build:cycles:view/manage` by directly rewriting existing rows in `role_permission_grants`, `user_permission_grants`, `permission_supported_scopes`, and `user_delegation_permissions`.
+
+**Conflict with BE-111:** `backend/CLAUDE.md:150` (rule BE-111) prohibits backfilling grants by migration: "Widen a role template and let `RoleGrantReconcilerService` converge at boot. Never backfill grants by migration." Migration 1197 was applied to production before that rule was written as a firm prohibition, and was the correct operational choice at the time — a rename of live permission keys with zero downtime required an in-place rewrite because `RoleGrantReconcilerService` could not reach rows bearing a key it did not know. The migration is applied and its result is correct; the conflict is recorded here so a future reader of BE-111 understands why an exception exists in the history.
+
+**Replay limitation:** lines 6-11 of the migration raise `RAISE EXCEPTION '1197 precondition: legacy Build iteration permissions are missing'` when the old keys (`build:sprints:view`, `build:sprints:manage`) are absent from the `permissions` table. On a fresh empty database seeded only by `RoleGrantReconcilerService` those keys do not exist, so the migration fails. This migration cannot be verified by replaying it on an empty database (contra BE-66). Record this explicitly rather than running it on a cold chain and misreading the failure as a broken migration.

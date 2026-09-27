@@ -53,6 +53,14 @@ export interface TablePaginationCursorProps extends TablePaginationChrome {
   onNext: () => void;
   onPrevious: () => void;
   pageSize?: number;
+  /**
+   * When true, hides the bar when both hasPrevious and hasMore are false
+   * (i.e. there is only a single page). Default hides only when rowCount is
+   * zero and hasPrevious is false.
+   */
+  hideOnSinglePage?: boolean;
+  /** When true, prev/next buttons include a text label alongside the icon. */
+  showLabels?: boolean;
   page?: never;
   total?: never;
   onPageChange?: never;
@@ -163,8 +171,13 @@ function CursorFooter({
   pageSizeOptions,
   disabled = false,
   className,
+  hideOnSinglePage = false,
+  showLabels = false,
 }: TablePaginationCursorProps) {
-  if (rowCount === 0 && !hasPrevious) return null;
+  const shouldHide = hideOnSinglePage
+    ? !hasPrevious && !hasMore
+    : rowCount === 0 && !hasPrevious;
+  if (shouldHide) return null;
 
   return (
     <nav aria-label="Pagination" className={cn(SHELL_CLASS, className)}>
@@ -188,22 +201,24 @@ function CursorFooter({
           type="button"
           variant="outline"
           size="sm"
-          className="h-7 px-1.5"
+          className={cn("h-7", showLabels ? "gap-1 px-2 text-xs" : "px-1.5")}
           disabled={disabled || !hasPrevious}
           onClick={onPrevious}
           aria-label="Previous page"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
+          {showLabels ? "Previous" : null}
         </Button>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-7 px-1.5"
+          className={cn("h-7", showLabels ? "gap-1 px-2 text-xs" : "px-1.5")}
           disabled={disabled || !hasMore}
           onClick={onNext}
           aria-label="Next page"
         >
+          {showLabels ? "Next" : null}
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>
       </div>

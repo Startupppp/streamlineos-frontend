@@ -50,6 +50,59 @@ marker and would tear the block into invalid fragments.
 Exclusion-constraint precedent (`btree_gist` already installed, no extension migration needed):
 `backend/migrations/0330_worker_engagement_overlap.sql`, `backend/migrations/0379_legal_entities_create.sql`.
 
+**Reserved filename-prefix ranges, one per lane.** Added after two lanes independently authored a
+`1371_` migration and one had to be renumbered. The prefix number is embedded in each file's
+`RAISE EXCEPTION` and post-check message strings, so a renumber has to carry through the strings —
+grep for the old number afterwards.
+
+| Range | Owner |
+|---|---|
+| 1370 | peer session (Knowledge Base) — not ours |
+| 1371 | ticket 62, cycle invariants |
+| 1372 | ticket 65, OKR link exclusive arc |
+| 1373–1376 | tickets 36, 37, 35 — version trigger, watermark remediation, portal columns |
+| 1377–1379 | tickets 15, 16 — mention index, activity project column |
+| 1380–1389 | tickets 63, 64 — seven partial unique indexes plus the ticket-status FK |
+| 1390–1392 | ticket 30, row-level security on the three tables |
+| 1393–1396 | ticket 66, journalling the off-journal tables |
+| 1397+ | unassigned |
+
+Every lane must also report the **order** its migrations apply in, and whether any uses
+`CREATE INDEX CONCURRENTLY` — a concurrent build cannot run inside a transaction block, which
+changes how the orchestrator applies it.
+
+## Applying a migration (orchestrator only)
+
+`DATABASE_URL` is handed straight to `postgres()` by `run-pending-migrations.mjs`, which never mints
+an IAM token, so a plain run dies `28P01` — that reads like a wrong password and is not one. The
+working technique is a small wrapper kept **outside the repo** (a peer session's `git add -A` would
+otherwise commit it): read `DATABASE_URL`, parse host/port/username, mint a token with
+`createRdsIamPasswordProvider` from `src/db/rds-iam-auth.ts`, set it as the URL password
+URI-encoded, and spawn `run-pending-migrations.mjs --tag=<name>` with that URL in the child env.
+Run `--dry-run` first.
+
+Two traps, both of which have cost a cycle before:
+
+- Parse the region with `hostname.split(".").at(-4)`, not `at(-3)`. For
+  `…instance-1.c94aokgu6g21.ap-south-1.rds.amazonaws.com`, `at(-3)` yields the literal `"rds"`, the
+  signer accepts it, and the token fails `28P01` — indistinguishable from bad credentials.
+- Resolve packages with `createRequire(\`${BACKEND}/package.json\`)`. A script outside the repo
+  cannot resolve `@aws-sdk/rds-signer` from its own location.
+
+**Schema qualification is mandatory.** Build tables live in the Postgres schema `build`, and
+`MIGRATION_SEARCH_PATH` is `'"$user", public, build_events, app'` — no `build`. An unqualified
+`ALTER TABLE "cycles"` fails `relation does not exist` on any correctly configured database, not
+just production. Every reference must be `"build"."cycles"`. Precedent:
+`migrations/0579_tenant_fks_build_schemas.sql`.
+
+**Verify before applying** with a rolled-back transaction: `tx.unsafe()` each statement split on
+`--> statement-breakpoint`, assert the object exists in `pg_catalog`, probe that the constraint
+actually bites, then throw a sentinel to roll back and re-check the object is gone. Each failure
+probe needs its own `savepoint` — once a statement errors the transaction is aborted and every
+later statement returns `25P02`, so a second probe reads as "constraint absent" when it is really
+"transaction dead". `SET ROLE streamline_app` first: connecting as `streamline_admin` carries
+BYPASSRLS and hides the failure being tested for.
+
 ## Orchestrator-only work
 
 - Every journal entry, and applying every migration to production.

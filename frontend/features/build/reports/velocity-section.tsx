@@ -11,6 +11,7 @@ import { useVelocityReport } from "@/hooks/api/build/reports";
 import { ChartCard } from "./chart-card";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
 const VelocityChart = dynamic(
   () => import("./velocity-chart").then((m) => ({ default: m.VelocityChart })),
@@ -18,13 +19,23 @@ const VelocityChart = dynamic(
 );
 
 export function VelocitySection({ projectId }: { projectId: number }) {
-  const { data, isLoading, isError, error, refetch } = useVelocityReport(projectId);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useVelocityReport(projectId);
 
   const handleRetry = useCallback(() => refetch(), [refetch]);
+  const handleLoadMore = useCallback(() => fetchNextPage(), [fetchNextPage]);
 
   const chartData = useMemo(
     () =>
-      (data ?? []).map((s) => ({
+      (data?.pages.flatMap((p) => p.data) ?? []).map((s) => ({
         name: s.name,
         Committed: s.committedPoints,
         Completed: s.completedPoints,
@@ -41,7 +52,7 @@ export function VelocitySection({ projectId }: { projectId: number }) {
   });
 
   return (
-    <ChartCard title="Velocity · latest 100 cycles" icon={Gauge}>
+    <ChartCard title="Velocity" icon={Gauge}>
       <PageState
         resolution={resolution}
         loading={<LoadingState variant="cards" rows={2} />}
@@ -57,6 +68,13 @@ export function VelocitySection({ projectId }: { projectId: number }) {
         compact
       >
         <VelocityChart data={chartData} />
+        <InfiniteScrollSentinel
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={handleLoadMore}
+          label="Load more velocity cycles"
+          exhausted="All cycles loaded"
+        />
       </PageState>
     </ChartCard>
   );

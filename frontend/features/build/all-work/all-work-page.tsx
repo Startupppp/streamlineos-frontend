@@ -21,6 +21,7 @@ import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { useAllWork, useProjects } from "@/hooks/api/build";
+import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useProjectTeams } from "@/hooks/api/build/teams";
 import { useManagedProducts } from "@/hooks/api/build/managed-products";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -85,6 +86,7 @@ export function AllWorkPage() {
   const { data: projectsData } = useProjects({
     limit: 100,
   });
+  const { data: buildMembersData } = useBuildMembers();
   const { data: orgStates } = useOrgCustomStates();
   const { data: teamsData } = useProjectTeams({ pageSize: 100 });
   const { data: productsData } = useManagedProducts({ limit: 100 });
@@ -149,28 +151,7 @@ export function AllWorkPage() {
     () => allProjects.map((p) => ({ id: p.id, name: p.name, key: p.key })),
     [allProjects],
   );
-  const deduplicatedMembers = useMemo(
-    () =>
-      allProjects
-        .flatMap((p) => p.members)
-        .filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i)
-        .map(
-          (m): {
-            id: string;
-            name: string | null;
-            firstName: string | null;
-            lastName: string | null;
-            image: string | null;
-          } => ({
-            id: m.id,
-            name: null,
-            firstName: m.firstName,
-            lastName: m.lastName,
-            image: m.image,
-          }),
-        ),
-    [allProjects],
-  );
+  const buildMembers = buildMembersData?.data ?? [];
 
   const {
     tableSelection,
@@ -349,7 +330,7 @@ export function AllWorkPage() {
             }
             filters={
               <TicketFilterBar
-                members={deduplicatedMembers}
+                members={buildMembers}
                 projectOptions={projectOptions}
                 showTypeFilter
                 showAssigneeFilter
@@ -395,7 +376,7 @@ export function AllWorkPage() {
               {tableSelection.size > 0 ? (
                 <BulkActionBar
                   selectedCount={tableSelection.size}
-                  members={deduplicatedMembers}
+                  members={buildMembers}
                   cycles={[]}
                   statuses={orgStates}
                   hideCycle

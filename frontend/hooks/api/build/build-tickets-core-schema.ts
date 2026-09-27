@@ -281,11 +281,13 @@ export const ticketActivityActionContract = z.enum([
   "type_changed",
 ]);
 
+export type KnownTicketActivityAction = z.infer<typeof ticketActivityActionContract>;
+
 export const ticketActivityPageContract = z.object({
   data: z.array(
     z.object({
       id: z.number().int(),
-      action: ticketActivityActionContract,
+      action: z.string(),
       label: z.string(),
       fromValue: z.string().nullable(),
       toValue: z.string().nullable(),

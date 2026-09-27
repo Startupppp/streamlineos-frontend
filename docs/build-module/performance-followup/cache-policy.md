@@ -51,7 +51,7 @@ Stale times follow the FE-24 ladder. All six report hooks currently sit at `60_0
 
 | Hook | Key today | Recommended key | Stale time |
 |---|---|---|---|
-| `useVelocityReport` | `projectReports.velocity(projectId)` | `buildWork.projectReports.velocity(projectId, { limit, cursor })` | `2 * 60_000` |
+| `useVelocityReport` | `projectReports.velocity(projectId)` | unchanged — `useInfiniteQuery` manages pages under this single key via internal `pageParam`; no cursor segment needed in the key | `2 * 60_000` |
 | `useBurnupReport` | `projectReports.burnup(projectId, sprintId?)` | `buildWork.projectReports.burnup(projectId, cycleId?)` — rename the parameter | `2 * 60_000` |
 | `useCfdReport` | `projectReports.cfd(projectId, { days })` | unchanged, moved to `build-work` | `2 * 60_000` |
 | `useCriticalPath` | `projectReports.criticalPath(projectId)` | unchanged, moved to `build-work` | `2 * 60_000` |
@@ -59,7 +59,9 @@ Stale times follow the FE-24 ladder. All six report hooks currently sit at `60_0
 | `useLeadTimeReport` | `projectReports.leadTime(projectId)` | unchanged, moved to `build-work` | `2 * 60_000` |
 | project analytics | `buildWork.projects.analytics(projectId)` | unchanged | `30_000` |
 
-Every one of these factories lives in `accounting-and-support.ts` today and should move to `build-work.ts` (P2-7). Consumers import the domain module directly, never the aggregate (FE-18).
+Every one of these factories lives in `frontend/lib/query-keys/build-work.ts` today under `buildWorkQueryKeys.projectReports`. Consumers import the domain module directly, never the aggregate (FE-18).
+
+**Decision — velocity cursor in key (2026-09-27):** cache-policy.md previously prescribed `velocity(projectId, { limit, cursor })` — a cursor literally in the query key. The board (`useProjectBoardTickets`) manages pagination via `useInfiniteQuery`'s internal `pageParam` with no cursor in the key, per the pattern ticket 33 explicitly requires to match. Following the board: `useVelocityReport` uses `useInfiniteQuery`; all pages accumulate under `projectReports.velocity(projectId)` without a cursor segment. "Pages do not collide" is satisfied by TanStack storing each page at a distinct offset within one cache entry, not by a literal cursor in the key. The cursor-in-key row above is corrected accordingly.
 
 `staleTime` is a client-side freshness floor, not a staleness bound. With a 300 s server cache behind a 60 s client stale time, a refetch the client considers fresh can still return data five minutes old. Raising the client stale time to `2 * 60_000` narrows the gap between what the two layers promise; the revision key is what actually bounds correctness.
 

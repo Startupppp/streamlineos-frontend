@@ -2,16 +2,64 @@
 
 **What to build:** Scrolling the approvals inbox shows every pending approval exactly once. The read orders by creation time then identifier, but when the cursor's timestamp is absent it falls back to comparing identifiers alone — and the identifier is not monotone with creation time, so that branch both skips rows and repeats them. A user scrolls past an approval that was waiting for them.
 
-Delete the branch rather than repair it: a cursor that cannot express the ordering is not a cursor. The board already does this correctly, carrying the ordering mode in the cursor so a stale cursor from a different sort is rejected instead of silently misapplied.
+Delete the branch rather than repair it: a cursor that cannot express the ordering is not a cursor. The closest real match for "carrying the ordering mode in the cursor so a stale cursor is rejected" is `decodeProgramCursor` in `backend/src/modules/build/portfolios/programs.service.ts` (uses `decodeTupleCursor(cursor, 4)` giving `[cursorSort, cursorOrder, sortValue, id]` and rejects when sort or order disagree). The ticket's "board" reference found no component by that name — `programs.service.ts` is the closest real analogue; the ticket's wording is a premise correction.
 
 The supporting index is a separate, unmeasured question: it covers organisation, approver and status with no creation time or identifier, so it can select the rows but cannot supply their order. That is a performance claim this review could not verify — record it with the query that would settle it rather than asserting an improvement.
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The identifier-only cursor branch is gone
-- [ ] Every cursor carries enough to express the ordering it belongs to, and a mismatched cursor is rejected rather than misapplied
-- [ ] A test pages through a fixture where identifier order and creation order disagree, and sees each row once
-- [ ] Keyset pages carry no total, per BE-25
-- [ ] Any index change is proposed with the plan that would justify it, not asserted as an improvement
+- [x] The identifier-only cursor branch is gone
+  — `backend/src/modules/build/approvals/build-approvals-inbox.service.ts` line 23: `if (cursorId === null || cursorAt === null) return undefined;` replaces the two-line guard that previously fell through to `lt(projectApprovals.id, cursorId)` when only `cursorAt` was null.
+
+  The same branch was present in `notificationKeyset` in `backend/src/modules/notifications/unified-inbox-sources.ts` line 103 (was `if (cursor.t === null) return lt(notifications.id, cursor.id);`). Fixed in the same turn: merged into `if (cursor === null || cursor.t === null) return undefined;`.
+
+- [x] Every cursor carries enough to express the ordering it belongs to, and a mismatched cursor is rejected rather than silently misapplied
+  — `approvalInboxKeyset` and `notificationKeyset` both now return `undefined` when the timestamp half of the cursor is absent. `undefined` means no keyset predicate, which restarts from the first page rather than applying an id-only bound to a `(created_at DESC, id DESC)` ordering.
+
+  **Decision — silent restart vs. BadRequestException (2026-09-27):** The ticket says "rejected rather than silently misapplied." `decodeProgramCursor` throws `BadRequestException` and that propagates cleanly because `ProgramsService` sits directly under a NestJS route handler. The approval and notification fetch paths are different: both sit inside `readSourceWithin` in `unified-inbox.service.ts` (line 257), which catches all thrown exceptions and converts them to `{ ok: false, error: "source unavailable" }`. A `BadRequestException` thrown from `approvalInboxKeyset` or `notificationKeyset` would never reach the client as a 400 — it would appear as `available: false` on the affected source in a degraded inbox response (`degraded: true`). That is strictly worse: the user loses the approval or notification source entirely for the current page load, with no actionable signal, rather than simply re-seeing rows already delivered. Returning `undefined` on a null-timestamp cursor satisfies "not misapplied" — the broken cursor is not applied to the ordering at all. The silent re-serve from page one is the lesser harm, and the precedent `decodeProgramCursor` uses does not apply across the `readSourceWithin` boundary.
+
+- [x] A test pages through a fixture where identifier order and creation order disagree, and sees each row once
+  — Approvals: `backend/src/modules/notifications/unified-inbox-approval-ordering.spec.ts` lines 118–129, `"BITE: delivers every approval across a complete scroll of an id-nonmonotonic source"` and `"BITE: never delivers the same approval twice"`, using `NONMONOTONIC` seeds (id order 10, 30, 20 against creation-time order 2d, 4d, 10d ago). Both pass.
+
+  — Notifications: same file, `"BITE: delivers every notification across a complete scroll of an id-nonmonotonic source"` and `"BITE: never delivers the same notification twice"`, reusing `NONMONOTONIC` seeds via `scrollNotifications`. Both pass. `notificationKeyset` uses `(created_at DESC, id DESC)` — the same ordering as approvals; the fix is symmetric.
+
+- [x] Keyset pages carry no total, per BE-25
+  — `getInboxPage` returns `ApprovalInboxRow[]` with no total field. `backend/src/modules/build/approvals/build-approvals-inbox.service.ts` lines 36–67. No change needed here.
+
+- [x] Any index change is proposed with the plan that would justify it, not asserted as an improvement
+  — `idx_project_approvals_approver_status` (`backend/src/db/schema/build/approvals.ts` line 50) covers `(org_id, approver_membership_id, status)` with no `created_at` or `id`, so it can satisfy the membership + status filter but cannot supply the sort order. A covering index that serves both would be:
+
+    ```sql
+    CREATE INDEX CONCURRENTLY idx_project_approvals_approver_created_id
+      ON build.project_approvals (org_id, approver_membership_id, status, created_at DESC, id DESC)
+      WHERE deleted_at IS NULL;
+    ```
+
+    The query that would justify it (run as `streamline_app` with tenant GUC set, per BE-76, measuring in buffers per BE-77):
+
+    ```sql
+    EXPLAIN (ANALYZE, BUFFERS)
+    SELECT id, project_id, title, status, entity_type, entity_id, due_at, created_at
+    FROM build.project_approvals
+    WHERE org_id = '<org_id>'
+      AND approver_membership_id = <membership_id>
+      AND status IN ('requested', 'pending', 'escalated')
+      AND deleted_at IS NULL
+      AND (created_at < '<cursor_at>' OR (created_at = '<cursor_at>' AND id < <cursor_id>))
+    ORDER BY created_at DESC, id DESC
+    LIMIT 26;
+    ```
+
+    No improvement is asserted. The index proposal awaits an `EXPLAIN (ANALYZE, BUFFERS)` run as `streamline_app`.
+
+---
+
+## Premise corrections (2026-09-27)
+
+- **"The board already does this correctly"** — no component named "board" in the repository carries the ordering-mode-in-cursor pattern. The closest real match is `decodeProgramCursor` in `backend/src/modules/build/portfolios/programs.service.ts:65`, which calls `decodeTupleCursor(cursor, 4)` and rejects when `cursorSort !== sort || cursorOrder !== order`. The pattern is real; the name in the ticket is not. That precedent is a direct route-handler throw and does not apply behind `readSourceWithin`.
+
+- **Closing the null-timestamp hole** — the hole (`InboxSourcePosition.t: string | null` passing through `fetchBuildApprovalItems` as `cursor?.t ?? null`) does not require changes to `unified-inbox-sources.ts` or `dto/unified-inbox.schemas.ts`. The fix is entirely inside the keyset functions. `InboxSourcePosition.t` stays nullable because it is shared across sources; each keyset closes its own hole independently.
+
+- **`notificationKeyset` sibling bug fixed in this turn** — `backend/src/modules/notifications/unified-inbox-sources.ts` line 103 carried the identical `if (cursor.t === null) return lt(notifications.id, cursor.id);` branch. Fixed as part of this ticket since `unified-inbox-sources.ts` is in territory. The null-timestamp decision documented under criterion 2 applies equally to notifications.

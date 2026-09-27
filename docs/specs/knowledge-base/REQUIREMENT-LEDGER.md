@@ -1,5 +1,10 @@
 # Knowledge Base — Requirement Ledger
 
+> **Current audit: 2026-09-27.** Read [Architecture review validation](08-architecture-review-validation-2026-09-27.md) first. It reconciles both September 26 reports, corrects decisions, records targeted test failures and owns TODOs AV-01–AV-15. Historical passes below are evidence at their dates, not present-tense completion claims. Untouched checks retain historical evidence; this audit does not independently re-certify every one.
+>
+> Separate checklist/source progress from release verification. A compound requirement stays open until every clause is proven. Deferred replica/CDN infrastructure is not completed functionality. Other sessions are changing both repositories; re-run verification on the final revision before release.
+
+
 **Status:** execution authority. This file is the resume point after any context compaction.
 
 **Opened:** 2026-09-23
@@ -62,29 +67,29 @@ These were resolved at open and constrain every slice. Re-verify before trusting
 
 | # | Slice | Phase | Priority | Status |
 |---:|---|---|---|---|
-| S01 | `KnowledgeAuthorization` + `kb_page_grants` schema | 1 | P0 | **NEAR-DONE — seam shipped, 1168 applied, EXPLAIN captured; 2 items open (fuzz test, article-restriction arm)** |
-| S02 | My pages — server-side ownership | 1 | P0 | LANDED — needs final gate sweep |
-| S03 | Shared with me — explicit grants | 1 | P0 | LANDED — needs final gate sweep |
-| S04 | `KnowledgeCollection` + canonical `GET /kb/pages` + cursor codec | 2 | P0 | LANDED — EXPLAIN evidence blocked on IAM |
-| S05 | Full Search — `/knowledge/wiki/search` | 2 | P0 | LANDED — needs final gate sweep |
-| S06 | Wiki Home rebuilt on list projection | 2 | P0 | **PARTIAL — URL state + flat cursor list + all 6 states shipped; the shell still downloads the whole tree (see twelfth pass)** |
-| S07 | Spaces list + detail, server counts, archive/restore, lazy tree | 2/3 | P0 | **PARTIAL — move-target authz hole CLOSED; 404 recovery, retry, archive impact, member count, archive labelling landed; members sheet + lazy hierarchy open** |
-| S08 | Page document — trust header, action model, offline/conflict | 3 | P0 | **PARTIAL — revision safety, 404 indistinguishability and no-Web-Storage all proven; action descriptor, offline, editor features open** |
-| S09 | History — diff + append-only restore | 3 | P0 | **PARTIAL — append-only restore proven at three layers; `/build` history redirect landed; current marker, 2-version compare, semantic diff open** |
-| S10 | Reviews — derived overdue, URL filters, bulk decide | 4 | P0/P1 | LANDED — needs final gate sweep |
-| S11 | Trash — cursor, bulk restore/purge, resumable purge ledger | 3 | P0 | **CLOSED — purge ledger shipped by 1193, applied and verified** |
-| S12 | Templates — URL state, preview, saved-template lifecycle | 3 | P1 | LANDED — backend pre-existed; BE-24 cap+pagination fixed |
-| S13 | Import & Export — validation, dry-run, resumable jobs | 3 | P0 | BUILT — controller + suites green; checkbox list not re-audited |
-| S14 | Analytics — permission-safe, minimum cohort, drill-down | 4 | P1 | LANDED — registered in KbWikiModule (BE-01) |
-| S15 | Content Health — `/knowledge/wiki/manage` | 4 | P1 | **BUILT — page shipped, 8 of 10 signals; see tenth pass** |
-| S16 | Ask KB — scope, citations, fallback, budgets | 1/4 | P0/P1 | **PARTIAL — page-citation coverage gap CLOSED; `kb:ai:generate` now gates generation (1203); `kb_ai_interactions`, scope sheet, answer parts open** |
-| S17 | Public page — `/wiki/[shareToken]` | 3 | P0 | **VERIFIED — token versioning closed by 1192, applied** |
-| S18 | Project wiki adapters | 2 | P0 | BUILT — adapter suites green; checkbox list not re-audited |
-| S19 | Research Briefs moved under Knowledge | 4 | P1 | LANDED — one controller repo-wide; no duplicate left to remove |
-| S20 | `/ask` removal, redirects, aliases | 6 | P0 | VERIFIED — surface deleted, redirect live, not shadowed |
-| S21 | `kb_articles` cutover + destructive contraction | 6 | P1 | **VERIFIED — measured against production, ninth pass** |
-| S22 | Async scale — queue lanes, admission, SLOs, DR drills | 5 | P0/P1 | **BUILT — 5 of 5; 1194 applied; replica lane deferred, no replica exists** |
-| S23 | Observability — dashboards, alerts, cost budgets, runbooks | 0/5 | P0 | **BUILT — `kb-ask` alert + SLO + runbook; dashboards absent repo-wide** |
+| S01 | `KnowledgeAuthorization` + `kb_page_grants` schema | 1 | P0 | PARTIAL — canonical builder/tests present; container/cache proof open (AV-02/14) |
+| S02 | My pages — server-side ownership | 1 | P0 | SOURCE PRESENT — ownership implemented; final route/browser evidence not re-certified |
+| S03 | Shared with me — explicit grants | 1 | P0 | SOURCE PRESENT — grants UI reachable; container/revocation proof open (AV-02/14) |
+| S04 | `KnowledgeCollection` + canonical `GET /kb/pages` + cursor codec | 2 | P0 | PARTIAL — collection/UNION present; post-rewrite plans pending (AV-06) |
+| S05 | Full Search — `/knowledge/wiki/search` | 2 | P0 | PARTIAL — full-search present; retrieval integration/security evidence open (AV-01/02/06) |
+| S06 | Wiki Home rebuilt on list projection | 2 | P0 | SOURCE PRESENT — lazy tree/actions present; full 100k-page responsiveness pending (AV-06/11) |
+| S07 | Spaces list + detail, server counts, archive/restore, lazy tree | 2/3 | P0 | SOURCE PRESENT — members UI reachable; accessibility/container policy open (AV-02/10) |
+| S08 | Page document — trust header, action model, offline/conflict | 3 | P0 | SOURCE PRESENT — editor retained; atomic writer/full UI proof open (AV-03/10) |
+| S09 | History — diff + append-only restore | 3 | P0 | TARGETED TESTS PASSED — history UI; final integration/browser evidence not re-certified |
+| S10 | Reviews — derived overdue, URL filters, bulk decide | 4 | P0/P1 | SOURCE PRESENT — reviews retained; historical evidence, not fresh release certification |
+| S11 | Trash — cursor, bulk restore/purge, resumable purge ledger | 3 | P0 | REOPENED — held-descendant purge and end-to-end drain proof open (AV-07) |
+| S12 | Templates — URL state, preview, saved-template lifecycle | 3 | P1 | SOURCE PRESENT — templates/pagination retained; historical evidence |
+| S13 | Import & Export — validation, dry-run, resumable jobs | 3 | P0 | TARGETED TESTS PASSED — job-hook envelopes; full processing evidence not re-certified |
+| S14 | Analytics — permission-safe, minimum cohort, drill-down | 4 | P1 | SOURCE PRESENT — analytics retained; privacy/drill-down evidence not re-certified |
+| S15 | Content Health — `/knowledge/wiki/manage` | 4 | P1 | TARGETED TESTS PASSED — health keyset/UI; full workflow not re-certified |
+| S16 | Ask KB — scope, citations, fallback, budgets | 1/4 | P0/P1 | PARTIAL — retrieval extraction, scope, failure states, source revisions open (AV-01/04/05) |
+| S17 | Public page — `/wiki/[shareToken]` | 3 | P0 | HISTORICALLY VERIFIED — token evidence retained; no-store is not CDN invalidation (AV-11) |
+| S18 | Project wiki adapters | 2 | P0 | SOURCE PRESENT — project adapters retained; scope integration evidence not re-certified |
+| S19 | Research Briefs moved under Knowledge | 4 | P1 | SOURCE PRESENT — Research Briefs retained; provenance needs final verification |
+| S20 | `/ask` removal, redirects, aliases | 6 | P0 | HISTORICALLY VERIFIED — redirects/removal retained; not rerun this audit |
+| S21 | `kb_articles` cutover + destructive contraction | 6 | P1 | CUTOVER HISTORICALLY VERIFIED — 1174 not reopened; cleanup separate (AV-08/09/13) |
+| S22 | Async scale — queue lanes, admission, SLOs, DR drills | 5 | P0/P1 | PARTIAL — queue/pool foundation present; load/DR/conditional infrastructure open (AV-07/11) |
+| S23 | Observability — dashboards, alerts, cost budgets, runbooks | 0/5 | P0 | PARTIAL — telemetry present; coverage, dashboards/live drills open (AV-11) |
 
 ## S14/S15 Analytics + Content Health — built, but the routes did not exist
 
@@ -354,18 +359,26 @@ The `notifications/` type errors are another session's: those files are byte-ide
 
 Every slice that touches a disclosure or mutation path must satisfy all of these before it is marked `VERIFIED`.
 
-- [x] Canonical `KnowledgeAuthorization` is the only access decision; no caller rebuilds the predicate.
+- [ ] Canonical `KnowledgeAuthorization` is the only access decision; no caller rebuilds the predicate.
+  **2026-09-27 audit:** AV-02/14: container policy and effective disclosure/cache proofs remain open.
 - [x] Route denial is 403/NoPermission; hidden or missing records are an indistinguishable 404.
 - [x] Authorization fails closed; cache unavailability cannot retain revoked access.
-- [x] Tenant scope is explicit on every record, unique key, FK, query, cache key, event, job, blob, and search document.
-- [x] Collections are cursor-based, `hasMore` is signalled, limit defaults ≤ 50 and caps at 100, and no query silently truncates.
-- [x] Projections replace `SELECT *`; page bodies never appear in list/search metadata queries.
+- [ ] Tenant scope is explicit on every record, unique key, FK, query, cache key, event, job, blob, and search document.
+  **2026-09-27 audit:** AV-05: query embedding cache omits tenant.
+- [ ] Collections are cursor-based, `hasMore` is signalled, limit defaults ≤ 50 and caps at 100, and no query silently truncates.
+  **2026-09-27 audit:** AV-06: /kb/search still uses offset/count.
+- [ ] Projections replace `SELECT *`; page bodies never appear in list/search metadata queries.
+  **2026-09-27 audit:** AV-06: search selects full contentText for snippets.
 - [x] Content writes carry `expectedContentRevision`; retriable creates and bulk commands carry `Idempotency-Key`.
-- [x] Audit and outbox records commit with the source mutation; no provider/object-store/embedding call holds a DB transaction open.
+- [ ] Audit and outbox records commit with the source mutation; no provider/object-store/embedding call holds a DB transaction open.
+  **2026-09-27 audit:** AV-03/07: writer atomicity and end-to-end transaction lifetime remain open.
 - [x] URL carries `q`, filters, sort, view, cursor; selection, drafts, menus, and dialogs stay local.
-- [x] Every state implemented: loading, ready, first empty, filtered empty, error with retry + request id, denied — plus saving/saved/offline/conflict/stale-access/restore on editing surfaces.
-- [x] Every desktop capability has a mobile (375 px) and keyboard-accessible path; no action is context-menu-only.
-- [x] No code comments, TODO/FIXME/HACK, commented-out code, or placeholder prose in source files.
+- [ ] Every state implemented: loading, ready, first empty, filtered empty, error with retry + request id, denied — plus saving/saved/offline/conflict/stale-access/restore on editing surfaces.
+  **2026-09-27 audit:** AV-10: final route/browser state evidence remains open.
+- [ ] Every desktop capability has a mobile (375 px) and keyboard-accessible path; no action is context-menu-only.
+  **2026-09-27 audit:** AV-10: accessibility warning and real mobile/keyboard proof remain open.
+- [ ] No code comments, TODO/FIXME/HACK, commented-out code, or placeholder prose in source files.
+  **2026-09-27 audit:** AV-15: explanatory comments remain in KB source tests.
 
 ## Slices
 
@@ -549,7 +562,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Normalized filter schema shared by client and server fixtures
 - [x] `GET /kb/pages` with projection, filters, facets
 - [x] Lazy tree-children endpoint
-- [x] Indexes + migration + `EXPLAIN` evidence
+- [ ] Indexes + migration + `EXPLAIN` evidence
+  **2026-09-27 audit:** AV-06: post-UNION plan measurement remains open.
 - [x] Migrate every consumer off the tree
 - [x] Contract tests pinned to shared fixtures
 
@@ -574,7 +588,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] `GET /kb/search`
 - [x] Route + facets + cursor + URL codec
 - [x] Quick find "View all" handoff preserving the query
-- [x] Leakage and recall suites
+- [ ] Leakage and recall suites
+  **2026-09-27 audit:** AV-01/02/06: passage-fence suite fails; DB-row and recall proof remain open.
 - [x] All six states + keyboard navigation evidence
 
 **Evidence:** _pending_
@@ -590,7 +605,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Trust badges (draft/published/archived, verified/stale, owner missing)
 - [x] First-run path: blank, template, or import
 - [x] Remove tree rendering for All pages; children load only on expand
-- [x] Acceptance: responsive at 100,000 tenant pages without downloading the tree
+- [ ] Acceptance: responsive at 100,000 tenant pages without downloading the tree
+  **2026-09-27 audit:** AV-06/11: bounded-query evidence does not prove full responsive/load acceptance.
 
 **Evidence:** _pending_
 
@@ -657,9 +673,11 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 - [x] Table + mobile cards; search; deleted-by/date/space filters; cursor
 - [x] Remove the silent 100-row cap and card-only layout
-- [x] Selected restore/purge; dependency impact; empty trash; retention permission split; legal/hold explanation
+- [ ] Selected restore/purge; dependency impact; empty trash; retention permission split; legal/hold explanation
+  **2026-09-27 audit:** AV-07: held descendants are not checked before subtree deletion.
 - [x] Restore repairs tree/search/index links idempotently
-- [x] Resumable multi-store purge ledger: rows, versions, comments, grants, blobs, chunks/vectors, caches, public/CDN, analytics ids, notifications, connector projections
+- [ ] Resumable multi-store purge ledger: rows, versions, comments, grants, blobs, chunks/vectors, caches, public/CDN, analytics ids, notifications, connector projections
+  **2026-09-27 audit:** AV-07: ledger exists; hold/transaction/durable fan-out acceptance remains partial.
 - [x] Purge interruption/resumption test
 
 **Evidence:** _pending_
@@ -718,13 +736,16 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S16 — Ask KB
 
-- [x] `kb_ai_interactions` schema: tenant, actor, conversation/message, provider/model, prompt policy version, source ids + revisions, token counts, latency, result state, feedback, cost
+- [ ] `kb_ai_interactions` schema: tenant, actor, conversation/message, provider/model, prompt policy version, source ids + revisions, token counts, latency, result state, feedback, cost
+  **2026-09-27 audit:** AV-04: source records currently persist null ACL revisions.
 - [x] Conversation rail: new, search, rename, delete, cursor
-- [x] Source scope sheet (pages/files/notes, space, owner, status, verified-only) visible and editable before send
+- [ ] Source scope sheet (pages/files/notes, space, owner, status, verified-only) visible and editable before send
+  **2026-09-27 audit:** AV-04: selected scope must constrain every retrieval channel.
 - [x] Answer parts: citations, source passage, freshness, verification, disagreement, insufficient evidence
 - [x] Streaming stop/retry, network recovery, copy, helpful/unhelpful, report wrong/stale, create knowledge gap
 - [x] Access-change handling after an answer was generated
-- [x] Deterministic search fallback when AI is disabled, rate limited, over budget, or unavailable —
+- [ ] Deterministic search fallback when AI is disabled, rate limited, over budget, or unavailable —
+  **2026-09-27 audit:** AV-04: catch-to-empty paths can hide failure behind non-degraded outcomes.
   **retrieval** degrades to lexical ranking on all four; the **answer** still 402s when the org is
   over budget and 503s at the concurrency cap, because degrading those would bypass credit and the
   limiter rather than the provider. See the fifth-pass entry below.
@@ -805,7 +826,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] Watermark, checksum/counts, exceptions, retries, rollback window recorded
 - [x] Freeze legacy writes → final delta → switch readers → invalidate both cache namespaces
 - [x] Remove the article↔page bridge runtime only after 100% migration + signed reconciliation
-- [x] Remove duplicate search/access logic, tree-as-list consumers, client caps, persisted expired review state, unclaimed endpoints, shallow wrappers
+- [ ] Remove duplicate search/access logic, tree-as-list consumers, client caps, persisted expired review state, unclaimed endpoints, shallow wrappers
+  **2026-09-27 audit:** AV-06/08/09: offset search, wildcard query adapter and retirement remain.
 - [x] Contraction migration tested for interruption and resumption
 - [x] Rollback metadata provided even though the data migration is intentionally irreversible
 - [x] Retain historical migrations needed to build from supported baselines, audit records, and promised compatibility redirects
@@ -841,7 +863,8 @@ six that cannot be.
   make a crashed run resume rather than re-pay.
 - [x] **Embedding budgets.** Present but coarse: the credit reservation is a flat per-call estimate
   regardless of batch size, so a 400-chunk batch reserves what a 1-chunk batch does.
-- [x] **Public-page CDN invalidation by token/page revision.** Not built, and not fabricated:
+- [ ] **Public-page CDN invalidation by token/page revision.** Not built, and not fabricated:
+  **2026-09-27 audit:** AV-11: conditional/deferred for no-store endpoint; not implemented CDN behavior.
   there is no CDN in front of this endpoint, the frontend route is `force-dynamic` with
   `cache: "no-store"`, and `kb_pages.content_revision` is available whenever one is introduced.
   What *was* fixed here is a real defect in the same area — see "Unsharing a page did not revoke
@@ -883,7 +906,8 @@ seam that now emits behind the nine that still do not.
   `kb.content_type`, `kb.outcome`, `kb.chunks`, `kb.embedded`, `kb.reused`, `kb.duration_ms` and
   `org.id`; `startSpan` joins `correlation.id` and `http.route` from the ambient context.
 - [x] Provider/model — pre-existing on `AiCallMetrics`, not delivered here.
-- [x] Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source
+- [ ] Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source
+  **2026-09-27 audit:** AV-11: partial dimensions exist; complete coverage and truthful outcome proof remain open.
   kind. None is emitted on any KB span.
 - [x] Only the **page** indexing path is instrumented. `indexArticle` delegates to
   `kb-article-indexing.ts` and attachments run their own flow. `KbIndexingContentType` already
@@ -896,7 +920,8 @@ seam that now emits behind the nine that still do not.
   `SENSITIVE_SUBSTRINGS` rules over the real emitted attribute set and asserts nothing is blanked;
   an allowlist test fails on any new key; a third asserts the emitter interpolates nothing into an
   attribute *value*. No title, body, query, token or filename can reach the stream.
-- [x] Not audited for the rest of the KB surface.
+- [ ] Not audited for the rest of the KB surface.
+  **2026-09-27 audit:** AV-11: an unaudited claim cannot be complete.
 
 **Dashboards and alerts**
 
@@ -905,16 +930,19 @@ seam that now emits behind the nine that still do not.
   Registered in `alert-dispatch.mjs` under `knowledge-team`, anchored at `#kb-indexing`.
 - [x] Queue age, retries, dead letters — pre-existing (`job-queue-age`, the `ai-jobs` dead-letter
   SLO). Lease recovery is written and tested but dormant; see S22.
-- [x] Read/write/search/Ask latency and errors. No span exists on any of those paths.
+- [ ] Read/write/search/Ask latency and errors. No span exists on any of those paths.
+  **2026-09-27 audit:** AV-11: Ask/search spans exist; complete read/write coverage remains open.
 - [x] Retrieval candidate counts, rerank latency, no-answer rate, citation coverage. The Ask path
   now sets `degraded: true` when it falls back to lexical ranking; counting that is the first thing
   to build here, and nothing counts it yet.
-- [x] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
+- [ ] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
+  **2026-09-27 audit:** AV-11: operational measurements remain open.
   All need a live database.
 - [x] ACL denial and not-found anomalies, revocation lag.
 - [x] Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
 - [x] Purge backlog and oldest incomplete ledger.
-- [x] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
+- [ ] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
+  **2026-09-27 audit:** AV-11: dashboards and operator delivery are not established.
   script over a log stream, and routing one to a human is a deployment concern that does not exist.
 
 **SLOs, rate limits, cost budgets, runbooks — drill-verified**
@@ -992,7 +1020,8 @@ Consequences to close in **S04** (query budgets) and **S22**:
 
 - [x] Memoize standing for the life of one request. A naive instance-level Map on a singleton Nest service would leak across tenants and must not be used.
 - [x] Decide whether standing may be cached in `CacheService`. Caution: `permissionsVersion` in the key covers role and permission mutations (BE-114), but a **page-grant or space-membership change does not bump it**, so a cached standing could outlive a revocation. The existing 60 s accessible-spaces cache already carries this exposure. Do not add caching to the authorization path until revocation can actually be tested — currently blocked by the IAM credential.
-- [x] Re-run the repo's own read-cost gates (`pnpm db:check-read-budgets`, `check:db-call-count`, `check:route-budgets`). These are where this will surface and **they need a database**, so the regression is currently unmeasurable here.
+- [ ] Re-run the repo's own read-cost gates (`pnpm db:check-read-budgets`, `check:db-call-count`, `check:route-budgets`). These are where this will surface and **they need a database**, so the regression is currently unmeasurable here.
+  **2026-09-27 audit:** AV-06: current final-query budget evidence is pending.
 
 The mocked statement-count guards no longer measure the real cost, because the work moved behind a seam the specs stub out. That is a genuine loss of coverage, not a win.
 

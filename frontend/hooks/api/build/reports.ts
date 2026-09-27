@@ -1,15 +1,28 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 
-const velocityContract = lazyContract(() =>
-  import("@/hooks/api/build/reports-schema").then((m) => m.velocityContract),
+const velocityPageContract = lazyContract(() =>
+  Promise.all([
+    import("zod"),
+    import("@/hooks/api/build/reports-schema"),
+  ] as const).then(([{ z }, { velocityContract }]) =>
+    z.object({
+      data: velocityContract,
+      pagination: z.object({
+        limit: z.number().int(),
+        hasMore: z.boolean(),
+        nextCursor: z.string().nullable(),
+      }),
+    }),
+  ),
 );
 const burnupDataContract = lazyContract(() =>
   import("@/hooks/api/build/reports-schema").then((m) => m.burnupDataContract),
@@ -30,7 +43,7 @@ const snapshotResultContract = lazyContract(() =>
   import("@/hooks/api/build/reports-schema").then((m) => m.snapshotResultContract),
 );
 
-interface VelocitySprint {
+export interface VelocitySprint {
   cycleId: number;
   name: string;
   startDate: string;
@@ -39,6 +52,15 @@ interface VelocitySprint {
   completedPoints: number;
   committedCount: number;
   completedCount: number;
+}
+
+interface VelocityPage {
+  data: VelocitySprint[];
+  pagination: {
+    limit: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+  };
 }
 
 interface BurnupPoint {
@@ -84,11 +106,19 @@ interface CriticalPathReport {
 
 export function useVelocityReport(projectId: number) {
   const canView = useCan("build:view");
-  return useQuery({
+  return useInfiniteQuery<VelocityPage, Error, VelocityPage, readonly unknown[], string | undefined>({
     queryKey: buildWorkQueryKeys.projectReports.velocity(projectId),
-    queryFn: ({ signal }) => apiClient.get<VelocitySprint[]>(`/build/${projectId}/reports/velocity`, undefined, signal, velocityContract),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<VelocityPage>(
+        `/build/${projectId}/reports/velocity`,
+        pageParam !== undefined ? { limit: 100, cursor: pageParam } : { limit: 100 },
+        signal,
+        velocityPageContract,
+      ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -104,7 +134,7 @@ export function useBurnupReport(projectId: number, cycleId?: number) {
         burnupDataContract,
       ),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -115,7 +145,7 @@ export function useCfdReport(projectId: number, days = 30) {
     queryFn: ({ signal }) =>
       apiClient.get<CfdReport>(`/build/${projectId}/reports/cfd`, { days }, signal, cfdDataContract),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -126,7 +156,7 @@ export function useCriticalPath(projectId: number) {
     queryFn: ({ signal }) =>
       apiClient.get<CriticalPathReport>(`/build/${projectId}/reports/critical-path`, undefined, signal, criticalPathContract),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -136,7 +166,7 @@ export function useCycleTimeReport(projectId: number) {
     queryKey: buildWorkQueryKeys.projectReports.cycleTime(projectId),
     queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/reports/cycle-time`, undefined, signal, cycleTimeContract),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -146,7 +176,7 @@ export function useLeadTimeReport(projectId: number) {
     queryKey: buildWorkQueryKeys.projectReports.leadTime(projectId),
     queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/reports/lead-time`, undefined, signal, leadTimeContract),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
   });
 }
 

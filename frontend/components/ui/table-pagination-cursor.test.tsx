@@ -77,6 +77,79 @@ describe("TablePagination cursor mode", () => {
   });
 });
 
+describe("TablePagination cursor hideOnSinglePage option", () => {
+  const noop = () => {};
+
+  it("hides when both prev and next are exhausted and hideOnSinglePage is true", () => {
+    const { container } = render(
+      <TablePagination
+        mode="cursor"
+        rowCount={5}
+        hasMore={false}
+        hasPrevious={false}
+        onNext={noop}
+        onPrevious={noop}
+        hideOnSinglePage
+      />,
+    );
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("stays visible on a single page without hideOnSinglePage so existing callers are unchanged", () => {
+    render(
+      <TablePagination
+        mode="cursor"
+        rowCount={5}
+        hasMore={false}
+        hasPrevious={false}
+        onNext={noop}
+        onPrevious={noop}
+      />,
+    );
+
+    expect(screen.getByLabelText("Previous page")).toBeInTheDocument();
+    expect(screen.getByLabelText("Next page")).toBeInTheDocument();
+  });
+});
+
+describe("TablePagination cursor showLabels option", () => {
+  const noop = () => {};
+
+  it("renders text labels on buttons when showLabels is true", () => {
+    render(
+      <TablePagination
+        mode="cursor"
+        rowCount={10}
+        hasMore
+        hasPrevious
+        onNext={noop}
+        onPrevious={noop}
+        showLabels
+      />,
+    );
+
+    expect(screen.getByLabelText("Previous page")).toHaveTextContent("Previous");
+    expect(screen.getByLabelText("Next page")).toHaveTextContent("Next");
+  });
+
+  it("renders icon-only buttons without showLabels so existing callers are unchanged", () => {
+    render(
+      <TablePagination
+        mode="cursor"
+        rowCount={10}
+        hasMore
+        hasPrevious
+        onNext={noop}
+        onPrevious={noop}
+      />,
+    );
+
+    expect(screen.getByLabelText("Previous page")).not.toHaveTextContent("Previous");
+    expect(screen.getByLabelText("Next page")).not.toHaveTextContent("Next");
+  });
+});
+
 describe("useCursorPager", () => {
   it("starts at the head with no previous page", () => {
     const { result } = renderHook(() => useCursorPager());

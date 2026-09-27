@@ -1,12 +1,6 @@
-export type ApprovalEntityType =
-  | "task"
-  | "milestone"
-  | "budget"
-  | "release"
-  | "change_request"
-  | "document"
-  | "timesheet"
-  | "client_approval";
+import type { DbEnumMember } from "@/contracts/db-enums.generated";
+
+export type ApprovalEntityType = DbEnumMember<"approval_entity_type">;
 
 export type ApprovalStatus =
   | "requested"
