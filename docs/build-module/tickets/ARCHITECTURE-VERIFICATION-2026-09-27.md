@@ -21,7 +21,8 @@ test run. A passing mock is only evidence for the behavior it exercises. Databas
 criteria need their own evidence. N/A is a decision, not completed functionality.
 
 **Result after three-pass recheck: 2 of 68 tickets supported as complete within their stated
-scope; 28 partial or awaiting verification; 38 open.** The two are 31 and 34. Before this audit,
+scope; 28 partial or awaiting verification; 38 open.** The two are 31 and 34. **Superseded — see the
+addendum at the foot of this file. As of 2026-09-27 that count is 21, not 2.** Before this audit,
 15 ticket headers said done; thirteen were downgraded. This is not a percentage of the seven-phase product
 plan, and does not imply only three features work. Many partial tickets contain real code.
 
@@ -114,6 +115,8 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
 - [ ] **P1: honest verification gates.** Repair the failing census and swallowed-write checks, then 40/58-61/68. Scope baselines by identity and add negative self-tests so omissions cannot make a gate greener.
 - [ ] **P2: controlled reuse/restructure.** Keep 01-03/21-28/49-56 behind stable contracts. Preserve useful adapters; delete pure forwarding, not encapsulation. Pilot two compatible list pages, compose domain-specific controls, preserve primitive/query ownership, and do not force dashboards/editors/boards into one table configuration.
 - [ ] **Release proof:** Browser verification remains separate and unchecked. Verify changed workflows through the UI after implementation/deployment; a source audit or component test is not browser evidence.
+  - Stays unchecked by owner decision, 2026-09-27, and the exclusion is now written down with counts rather than left implicit: see `docs/build-module/BROWSER-VERIFICATION-EXCLUSIONS.md`. 168 of the 250 unchecked boxes outside `tickets/` are this class — 87 keyboard/screen-reader/reduced-motion/375 px, 80 production browser evidence, 1 narrow viewport. The remaining 82 are real scope and are explicitly not covered by that note.
+  - The sentence above is also a live constraint, not just a caveat. A Playwright run here would not settle these: the capture harness is gone, and the e2e suite **skips** rather than fails when no backend is reachable, so an automated attempt would report green having loaded no page. jsdom cannot observe focus order, focus trapping, `prefers-reduced-motion` or real 375 px layout at all.
 
 Decisions retained: organization tenancy with project/product scopes is not reopened here; keep
 the useful sprint 410 tombstone; retain the resource-allocation retirement decision subject to
@@ -242,3 +245,80 @@ check `git -c core.autocrlf=false -c core.whitespace=cr-at-eol diff --check -- d
 - [x] Invalid or overbroad architecture recommendations were corrected and assigned explicit follow-up work.
 - [x] Existing code/UI changes were preserved; this pass changed documentation only.
 - [ ] All 68 remediation tickets are implemented, verified and tested. This remains unfinished product work, not an audit claim.
+
+---
+
+## Addendum — 2026-09-27, after remediation
+
+**The table above is a snapshot taken before the remediation programme ran, and it is now wrong in about twenty rows.** It is kept rather than rewritten, because it is the record of what the audit found; this addendum is the current state. Where the two disagree, this section is correct. The counts below are generated from the tickets' own checkbox state, not from a lane's report.
+
+**21 of 68 tickets now have every box ticked**, against 2 when the table was written: 04, 05, 08, 09, 12, 15, 19, 29, 31, 32, 33, 34, 35, 41, 42, 58, 59, 61, 62, 64, 68.
+
+Rows in the table above that are now materially wrong, and worth naming because each was recorded as open:
+
+| ticket | the table says | actually |
+|---|---|---|
+| 12 | Open — `dto/ticket.schemas.ts:174` still permits token omission | Complete. `version` is required, and a stale token returns 409 carrying `details.currentVersion`. |
+| 30 | Open/unverified — no targeted migration, live posture not queried | Complete. 1390/1391/1392 applied; proved as `streamline_app` with `rolbypassrls` false — rows visible to the owning tenant, zero to another tenant, 42501 with no GUC. Schema `build` is 90 of 90 covered. |
+| 32 | Open — controller still exposes resource allocation | Complete. Route, service path, schemas, census entry and specs retired. |
+| 41, 42 | Open — canonical and divergent helpers both survive | Complete. One reachability module; `checkProjectAccess` deleted rather than left forwarding (BE-143). |
+| 36 | Partial — unjournalled trigger while app increments are removed | The landmine is defused: 1373 is journalled (idx 1123) and applied. Three boxes remain, all needing per-path database tests. |
+| 62, 64 | Partial — planned journal entry is not an actual entry | Complete. 1371 and 1381 applied and proved as the application role in rolled-back transactions. |
+| 15 | Partial — journal, application, semantics and plan unverified | Complete, including the plan. The measurement **refutes** the index rationale at current scale: no plan uses the GIN trigram indexes, `users` is 49 rows, and the function costs 54 buffers against the inline predicate's 10. |
+| 61 | Open | Complete. No Build test name claims BE-81 without asserting it. |
+
+Also corrected since the table was written: ticket 60 was marked complete and was not — running it showed all 15 controller e2e suites had never executed, dying at `app.init()`. Three of its boxes were un-ticked. And a lane reported a live production 42883 outage on the mention function; it was not live, because the call site is absent from `origin/main`.
+
+Tickets still carrying unchecked boxes, with counts:
+
+| ticket | remaining |
+|---|---|
+| 01 | 5 of 5 boxes remain |
+| 02 | 6 of 6 boxes remain |
+| 03 | 4 of 4 boxes remain |
+| 06 | 2 of 5 boxes remain |
+| 07 | 1 of 4 boxes remain |
+| 10 | 2 of 4 boxes remain |
+| 11 | 1 of 4 boxes remain |
+| 13 | 4 of 4 boxes remain |
+| 14 | 1 of 6 boxes remain |
+| 16 | 3 of 7 boxes remain |
+| 17 | 3 of 5 boxes remain |
+| 18 | 2 of 7 boxes remain |
+| 20 | 1 of 4 boxes remain |
+| 21 | 4 of 4 boxes remain |
+| 22 | 4 of 4 boxes remain |
+| 23 | 3 of 3 boxes remain |
+| 24 | 4 of 4 boxes remain |
+| 25 | 6 of 6 boxes remain |
+| 26 | 4 of 4 boxes remain |
+| 27 | 5 of 5 boxes remain |
+| 28 | 4 of 4 boxes remain |
+| 30 | 1 of 6 boxes remain |
+| 36 | 3 of 9 boxes remain |
+| 37 | 4 of 9 boxes remain |
+| 38 | 1 of 7 boxes remain |
+| 39 | 1 of 6 boxes remain |
+| 40 | 3 of 7 boxes remain |
+| 43 | 5 of 6 boxes remain |
+| 44 | 6 of 6 boxes remain |
+| 45 | 5 of 5 boxes remain |
+| 46 | 2 of 8 boxes remain |
+| 47 | 3 of 5 boxes remain |
+| 48 | 2 of 5 boxes remain |
+| 49 | 7 of 7 boxes remain |
+| 50 | 5 of 5 boxes remain |
+| 51 | 5 of 5 boxes remain |
+| 52 | 5 of 5 boxes remain |
+| 53 | 5 of 5 boxes remain |
+| 54 | 5 of 5 boxes remain |
+| 55 | 5 of 5 boxes remain |
+| 56 | 5 of 5 boxes remain |
+| 57 | 1 of 7 boxes remain |
+| 60 | 3 of 5 boxes remain |
+| 63 | 2 of 10 boxes remain |
+| 65 | 4 of 6 boxes remain |
+| 66 | 2 of 6 boxes remain |
+| 67 | 1 of 7 boxes remain |
+
+The bulk of what remains is two held-back phases rather than scattered work: the list-surface tickets 49-56, deliberately sequenced last because they rewrite 73 page files, and the core restructure 01/02/03/25/26/27/28, which moves ~185 files and cannot run beside any backend content ticket. Browser-verification boxes are excluded by owner decision and counted in `../BROWSER-VERIFICATION-EXCLUSIONS.md`.

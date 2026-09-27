@@ -1,5 +1,7 @@
 # Build module — architecture tickets
 
+> **Browser-verification boxes are excluded by owner decision.** 168 unchecked boxes across the `10-*.md` page specifications require a human in a real browser against a deployed environment. They stay unchecked on purpose; the classes, counts and the reason automation cannot substitute are in [`../BROWSER-VERIFICATION-EXCLUSIONS.md`](../BROWSER-VERIFICATION-EXCLUSIONS.md).
+
 68 remediation tickets associated with two Build architecture reviews dated 2026-09-26 and
 subsequent decisions. The originals are `architecture-review-20260926-213335.html`
 ("Architecture review — StreamlineOS Build module") and
