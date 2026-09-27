@@ -2,15 +2,14 @@
 
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { useFeedbucketSubmissions } from "@/hooks/api/feedbucket";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
 import { SubmissionBulkToolbar } from "@/components/shared/submission-bulk-toolbar";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
@@ -145,13 +144,6 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
 
   const { data, isLoading, isError, error, refetch } = useFeedbucketSubmissions(queryParams);
 
-  const resolution = usePageState({
-    permission: "feedbucket:submissions:view",
-    isLoading,
-    isError,
-    error,
-  });
-
   const handleTypeChange = useCallback(
     (value: string) => listFilters.setValue("type", value),
     [listFilters],
@@ -271,6 +263,8 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
 
   const getSubmissionRowLabel = useCallback((row: SubmissionRow): string => row.message.slice(0, 80), []);
 
+  const getSubmissionRowKey = useCallback((row: SubmissionRow) => row.id, []);
+
   return (
     <PageWrapper
       title="Feedback"
@@ -375,46 +369,45 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
       ) : null}
       <PmPageShell>
         <PmSection index={0} className="flex flex-1 min-h-0 flex-col">
-          <PageState
-            resolution={resolution}
+          <BuildListSurface<SubmissionRow>
+            permission="feedbucket:submissions:view"
+            rows={data?.data ?? []}
+            columns={FEEDBACK_COLUMNS}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            getRowKey={getSubmissionRowKey}
+            onRowClick={canOpenSubmissionDetail ? handleRowClick : undefined}
+            mobileCard={renderMobileCard}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_SIZE,
+              total: data?.total ?? 0,
+              onPageChange: handlePageChange,
+            }}
+            tableClassName="flex flex-1 min-h-0 h-full border-0 rounded-none"
             loading={<DataTableSkeleton rows={10} headers={FEEDBACK_SKELETON_HEADERS} />}
+            empty={
+              <EmptyState
+                illustration={<EmptyInboxIllustration className="h-24 w-24" />}
+                title="No feedback submissions"
+                description="Submissions from widgets linked to this product will appear here."
+                className={CONTENT_FILL_PANEL}
+              />
+            }
+            rowClassName={resolveRowClassName}
+            selection={
+              selectionEnabled
+                ? {
+                    selected,
+                    onChange: setSelected,
+                    getRowLabel: getSubmissionRowLabel,
+                  }
+                : undefined
+            }
             onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <DataTable
-              data={data?.data ?? []}
-              columns={FEEDBACK_COLUMNS}
-              getRowKey={(row) => row.id}
-              onRowClick={canOpenSubmissionDetail ? handleRowClick : undefined}
-              mobileCard={renderMobileCard}
-              pagination={{
-                mode: "server",
-                page,
-                pageSize: PAGE_SIZE,
-                total: data?.total ?? 0,
-                onPageChange: handlePageChange,
-              }}
-              className="flex flex-1 min-h-0 h-full border-0 rounded-none"
-              emptyState={
-                <EmptyState
-                  illustration={<EmptyInboxIllustration className="h-24 w-24" />}
-                  title="No feedback submissions"
-                  description="Submissions from widgets linked to this product will appear here."
-                  className={CONTENT_FILL_PANEL}
-                />
-              }
-              rowClassName={resolveRowClassName}
-              selection={
-                selectionEnabled
-                  ? {
-                      selected,
-                      onChange: setSelected,
-                      getRowLabel: getSubmissionRowLabel,
-                    }
-                  : undefined
-              }
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
     </PageWrapper>

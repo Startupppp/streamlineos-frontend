@@ -8,16 +8,20 @@ The portal pages carry the extra constraint: an external client's list must neve
 
 **Status:** ready-for-agent
 
-- [ ] Each managed-product and portal list renders through the surface
-  **Left unchecked: one list in the batch is genuinely unmigrated.** `managed-products/managed-products-page.tsx`
-  renders through the surface. Three of the five assigned files are not lists, checked rather than assumed:
-  `portal-list-page.tsx` is an animated card grid (`PmStaggerList` + `motion.div` + `Link`),
-  `client-visibility-page.tsx` is a tabbed panel of `Switch` toggles, and `client-portal-management-page.tsx`
-  is a management tab group with a bespoke `GrantRow`.
-  `managed-products/product-feedback-page.tsx` is a real list and is still not migrated. It paginates with
-  `mode: "server"` -- a page number and a real `total` -- and the surface accepted only cursor pagination, so
-  migrating it would have silently dropped the total and the numbered pager. The surface now carries a server
-  pagination mode, so the block is removed, but the page has not been moved across yet.
+- [x] Each managed-product and portal list renders through the surface
+  Earned 2026-09-27. Both managed-product lists now render through `BuildListSurface`:
+  `managed-products-page.tsx` and `managed-products/product-feedback-page.tsx`.
+  The feedback page was the one genuine block in this batch. It paginates with `mode: "server"` -- a page
+  number and a real `total` -- and the surface accepted only cursor pagination, so migrating it earlier would
+  have silently dropped the total and the numbered pager, which is the capability-loss failure this batch was
+  warned about. The surface now carries a server pagination mode alongside the cursor one, as a discriminated
+  union so the two cannot be mixed, and the page keeps its page number, its total and its numbered control.
+  Its empty state deliberately stays a single node with no `filteredEmpty` variant: the page's current copy
+  does not distinguish the two cases, and inventing a filtered variant would have been a visible change this
+  ticket's third criterion forbids.
+  Three of the five assigned files are not lists, checked rather than assumed: `portal-list-page.tsx` is an
+  animated card grid, `client-visibility-page.tsx` is a tabbed panel of `Switch` toggles, and
+  `client-portal-management-page.tsx` is a management tab group with a bespoke `GrantRow`.
 - [x] A portal list shows no internal-only column or control, and its empty state discloses nothing about excluded rows
   Earned 2026-09-27, and the empty-state half was a real leak. `client-portal/portal-list-page.tsx` is the
   only client-facing list in this batch. Its columns were enumerated against what an external client may see:
@@ -45,8 +49,7 @@ The portal pages carry the extra constraint: an external client's list must neve
   neither is dead, and this batch's single migration did not take the last caller of anything. This box cannot
   be settled until batches A through E are all complete; deleting on a partial count is how a helper that four
   unmigrated pages still need gets removed.
-- [ ] Each page's rows can be supplied as props
-  **Left unchecked: true for the one migrated list, not yet for the batch.** `managed-products-page.tsx`
-  passes `rows={displayed}`, so a fixture can drive it without mocking the hook.
-  `product-feedback-page.tsx` is unmigrated (see box 1) and still fetches internally with no way to inject
-  rows. The three portal surfaces are not lists, so the criterion does not reach them.
+- [x] Each page's rows can be supplied as props
+  Earned 2026-09-27 for both lists in the batch. `managed-products-page.tsx` passes `rows={displayed}` and
+  `product-feedback-page.tsx` passes `rows={data?.data ?? []}`, so either table can be driven from a fixture
+  without mocking its hook. The three portal surfaces are not lists, so the criterion does not reach them.

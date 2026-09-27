@@ -8,16 +8,19 @@ These pages are the most permission-sensitive in Build, so the branch the module
 
 **Status:** ready-for-agent
 
-- [ ] Each settings list renders through the surface
-  **Left unchecked: one list in the batch is still not migrated.** `members/members-page.tsx` (295 lines) was
-  the batch's only full `DataTable` list page and it now renders through `BuildListSurface`. The nine
-  `project-settings-*-page.tsx` files and `workflow/workflow-page.tsx` are forms, panels and card grids rather
-  than table lists -- they use `PageState` directly, which is correct for them, and forcing them onto a list
-  surface would be the wrong shape.
-  `workflow/transitions-table.tsx` genuinely belongs on the surface and is blocked: it passes `compact` to
-  `PageState` and `className="border-0"` to the inner `DataTable`, and `BuildListSurface` forwards neither.
-  Both are one-line passthroughs to props that already exist on the components underneath, so this is a small
-  piece of work on the module rather than a design problem -- but it is not done, so the box is not ticked.
+- [x] Each settings list renders through the surface
+  Earned 2026-09-27. Both table lists in this batch now render through `BuildListSurface`:
+  `members/members-page.tsx` (295 lines, `build:members:view`) and `workflow/transitions-table.tsx`
+  (`build:workflow:view`).
+  The transitions table was blocked on two props the module did not forward, and the block was removed rather
+  than worked around: it passes `compact` to `PageState` and `className="border-0"` to the inner table, and
+  both already existed on the components underneath. The surface now forwards `compact` and a `tableClassName`
+  that is distinct from its own `className`, so a caller can style the table without restyling the state
+  container. Its own `usePageState` call was removed with the migration -- leaving it would have run the access
+  check twice.
+  The nine `project-settings-*-page.tsx` files and `workflow/workflow-page.tsx` are forms, panels and card
+  grids, not table lists. They use `PageState` directly, which is the correct shape for them; a list surface
+  would be the wrong abstraction and is not forced on them.
 - [x] Every page in the batch shows a no-permission state for an actor without its permission key, never an empty table
   Earned 2026-09-27 across all eleven suites in the batch, each asserting `NoPermissionState` for a denied
   actor with a paired positive in the same file (FE-122) -- the pairing matters here because a denial test

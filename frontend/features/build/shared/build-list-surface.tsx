@@ -58,6 +58,8 @@ export interface BuildListSurfaceProps<TRow> {
     getRowLabel?: (row: TRow, index: number) => string;
   };
   isFetchingMore?: boolean;
+  compact?: boolean;
+  tableClassName?: string;
   minWidth?: string;
   footer?: ReactNode;
   rowClassName?: (row: TRow, index: number) => string;
@@ -86,6 +88,8 @@ export function BuildListSurface<TRow>({
   mobileCard,
   selection,
   isFetchingMore,
+  compact,
+  tableClassName,
   minWidth,
   footer,
   rowClassName,
@@ -122,6 +126,7 @@ export function BuildListSurface<TRow>({
         loading={resolvedLoading}
         empty={resolvedEmpty}
         onRetry={onRetry}
+        compact={compact}
         className={className ?? CONTENT_FILL_PANEL}
       >
         <DataTable<TRow>
@@ -145,7 +150,7 @@ export function BuildListSurface<TRow>({
           footer={footer}
           rowClassName={rowClassName}
           sortState={sortState}
-          className={CONTENT_FILL_PANEL}
+          className={tableClassName ?? CONTENT_FILL_PANEL}
         />
       </PageState>
     </div>
