@@ -16,8 +16,6 @@ export function ReportsExportButton({ projectId }: ReportsExportButtonProps) {
   const { data } = useVelocityReport(projectId);
   const cycles = data?.pages.flatMap((page) => page.data) ?? [];
 
-  const cycles = data?.pages.flatMap((page) => page.data) ?? [];
-
   const handleExport = useCallback(() => {
     if (cycles.length === 0) return;
     exportToCsv(

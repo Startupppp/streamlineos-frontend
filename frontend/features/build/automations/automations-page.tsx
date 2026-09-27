@@ -130,7 +130,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      triggerEvent: "",
+      triggerEvent: "ticket.created",
       conditions: [],
       actions: [{ type: "set_status", value: "" }],
       isActive: true,
@@ -169,7 +169,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
     setEditingAutomation(null);
     form.reset({
       name: "",
-      triggerEvent: "",
+      triggerEvent: "ticket.created",
       conditions: [],
       actions: [{ type: "set_status", value: "" }],
       isActive: true,

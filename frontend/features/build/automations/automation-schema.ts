@@ -13,7 +13,14 @@ export const actionSchema = z.object({
 
 export const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
-  triggerEvent: z.string().min(1, "Select a trigger"),
+  triggerEvent: z.enum([
+    "ticket.created",
+    "ticket.updated",
+    "ticket.status_changed",
+    "ticket.assigned",
+    "sprint.started",
+    "sprint.completed",
+  ]),
   conditions: z.array(conditionSchema),
   actions: z.array(actionSchema).min(1, "At least one action required"),
   isActive: z.boolean(),
