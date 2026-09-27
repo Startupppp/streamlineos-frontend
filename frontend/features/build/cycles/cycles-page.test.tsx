@@ -23,6 +23,10 @@ jest.mock("@/hooks/api/build/tickets", () => ({
   useBulkUpdateTickets: jest.fn(() => ({ mutateAsync: jest.fn(), isPending: false })),
 }));
 
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProject: jest.fn(() => ({ data: null })),
+}));
+
 jest.mock("@/hooks/api/build/reports", () => ({
   useVelocityReport: jest.fn(() => ({ data: undefined, isLoading: false, isError: false })),
 }));

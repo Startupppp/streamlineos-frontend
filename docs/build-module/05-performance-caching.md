@@ -7,7 +7,7 @@
 
 ## Evidence
 
-- Client keys and hooks: `frontend/lib/query-keys.ts`, `frontend/hooks/api/build/`.
+- Client keys and hooks: `frontend/lib/query-keys/build-work.ts` (domain module; the aggregate `frontend/lib/query-keys.ts` must not be imported in production per FE-18), `frontend/hooks/api/build/`.
 - Query scope: `frontend/lib/query-scope.ts`.
 - Backend services: `backend/src/modules/build/`.
 - Read-budget tooling: `backend/src/scripts/check-build-read-cost.mjs` and `db:check-read-budgets:build`.
@@ -91,11 +91,11 @@ The 2026-09-22 audit added two endpoints to this queue that were not on it:
 
 ## Acceptance criteria
 
-- [ ] Every retained list uses bounded server pagination or virtualization.
-- [ ] Query keys include every response-shaping input and rely on the repository tenant hash.
-- [ ] Every mutation documents precise patches and invalidations.
-- [ ] Read-budget tests cover board, My Work, ticket list, and organization assigned-work queries.
-- [ ] Production skeletons resolve to ready, empty, denied, or error within a measured budget.
-- [ ] Cross-module projections preserve source ACL, source freshness, and source ownership.
-- [ ] Every invalidated cache key shape has a reader — `node src/scripts/build-performance/build-cache-key-readers.mjs` reports no orphaned invalidation.
-- [ ] No pending migration removes a table or column the report-revision trigger reaches — `node src/scripts/build-performance/build-report-revision-integrity.mjs` exits 0.
+- [ ] Every retained list uses bounded server pagination or virtualization. **2026-09-27:** `check:unbounded-reads` (gate: `BE-132`) enforces bounded reads statically. Virtualization is verified on the Kanban surface (`kanban-virtual-ticket-list.tsx:258`). "Every retained list" across 74 routes is a per-route claim the gate covers but whose result must be confirmed by running the gate and reading its output.
+- [ ] Query keys include every response-shaping input and rely on the repository tenant hash. **2026-09-27:** `check:query-scope` (gate: `FE-20`) enforces tenant-free key arrays and the scoped hash. `check:cache-key-shapes` (gate: `BE-120`) enforces that every filter appears in the cache key. Neither gate has been confirmed passing at this commit. Owner must confirm both gates pass.
+- [ ] Every mutation documents precise patches and invalidations. **2026-09-27:** Ticket mutations are documented in `performance-followup/cache-policy.md` (status, title, assignee, rank, points, cycle, dependency, delete). `frontend/hooks/api/build/ticket-cache.ts` implements the matrix. "Every mutation" across governance, forms, QA, meetings, incidents has not been systematically verified here. Owner must extend the matrix or accept ticket mutations as the documented scope.
+- [x] Read-budget tests cover board, My Work, ticket list, and organization assigned-work queries. `backend/src/scripts/read-cost-budgets.mjs:61,83,108,124` defines budget specs with IDs `scoped-board-page`, `my-work`, `ticket-list-project`, `ticket-org-assigned-to-me`. `backend/package.json:79` registers `db:check-read-budgets:build` as the entry point. These scripts require `APP_DATABASE_URL` (the non-BYPASSRLS app role) to execute measurements.
+- [ ] Production skeletons resolve to ready, empty, denied, or error within a measured budget. **2026-09-27:** Budgets are defined (P75 &lt;500 ms shell/nav, P75 &lt;1 s warm page, P95 &lt;400 ms list, P95 &lt;1.5 s aggregate). Actual skeleton-to-ready durations require production traces (Real User Monitoring or Web Vitals with the production API URL baked in — `frontend/CLAUDE.md` warns `WV bakes` the prod URL). Instrument: production RUM or `db:check-read-budgets:build` with a production-shaped fixture.
+- [ ] Cross-module projections preserve source ACL, source freshness, and source ownership. **2026-09-27:** The endpoint plan table above specifies the policy for Files/Wiki/Chat/Calendar projections. Whether every live cross-module call actually includes source-revision in its cache key and re-applies the source ACL requires per-projection audit. Owner must nominate which cross-module surfaces to audit first.
+- [x] Every invalidated cache key shape has a reader — `node src/scripts/build-performance/build-cache-key-readers.mjs` reports no orphaned invalidation. Verified 2026-09-27: `analyse()` run against `backend/src/modules/build/` (all `.ts`/`.mjs` files) returned **0 orphan writes, 0 null-shape reads**. The self-test suite at `backend/src/scripts/build-performance/__tests__/build-performance-checks.test.mjs` passed 22/22. The analyser covers `cached`, `cachedVersioned`, `cachedVersionedForOrg`, `del`, `invalidateNamespace`, `invalidateNamespaceForOrg`.
+- [x] No pending migration removes a table or column the report-revision trigger reaches — `node src/scripts/build-performance/build-report-revision-integrity.mjs` exits 0. Verified 2026-09-27: `analyse()` run against `backend/migrations/` (3 report-revision migrations found: `1073_build_report_revision.sql`, `1152_build_report_revision_cycles.sql`, `1157_build_report_revision_rename_safe.sql`) and 9 pending migration files returned **0 findings**. Self-test passed 22/22.

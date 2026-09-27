@@ -10,6 +10,7 @@ import { SubtaskComposer } from "./subtask-composer";
 import { TicketAiSuggestSubtasksAction } from "@/features/build/ai/ticket-detail-ai";
 import type { Ticket } from "@/types/projects";
 import type { ProjectStatusRecord } from "@/types/projects";
+import { isCompletedTicketStatus } from "@/features/build/shared/completed-status";
 import { useCan } from "@/hooks/api/access";
 
 interface TicketSubtasksProps {
@@ -31,7 +32,7 @@ export function TicketSubtasks({
   const projectKey = projectData?.key ?? null;
   const projectStatuses: ProjectStatusRecord[] = projectData?.statuses ?? [];
 
-  const subtasksDone = subtasks.filter((s) => s.status === "DONE").length;
+  const subtasksDone = subtasks.filter((s) => isCompletedTicketStatus(s.status, projectStatuses)).length;
   const subtasksTotal = subtasks.length;
   const subtaskProgress = subtasksTotal > 0 ? (subtasksDone / subtasksTotal) * 100 : 0;
 

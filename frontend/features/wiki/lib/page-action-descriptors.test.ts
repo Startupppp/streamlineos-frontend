@@ -50,6 +50,7 @@ describe("kb page action descriptors", () => {
       "info",
       "backlinks",
       "favorite",
+      "linkedRecords",
     ]);
   });
 

@@ -28,3 +28,10 @@ patch wrote the renamed name before `onSettled` ran.
   — `frontend/hooks/api/build/project-rename-invalidation.test.ts` uses the real `project-cache-patch` module (no identity mock). Test "does not invalidate any ticket collection after a project rename" asserts `tickets({ projectId: 42 })`, `allWorkAll` and `columnCounts(42)` are absent from all `invalidateQueries` calls. All 6 tests pass: exit 0.
 
 **Remaining scope (2026-09-27):** The "board does not refetch or flash" box is browser/visual and out of scope by owner decision.
+
+**Test run evidence (2026-09-27):**
+```
+node node_modules/jest/bin/jest.js --runInBand --runTestsByPath \
+  hooks/api/build/project-rename-invalidation.test.ts
+Tests: 6 passed, 6 total — exit 0
+```

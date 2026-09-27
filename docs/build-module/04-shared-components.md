@@ -124,8 +124,8 @@ Additional interfaces: `DateRangePicker`, `PriorityChip`, `ActivityFeed`, `Empty
 
 ## Acceptance criteria
 
-- [ ] Every new shared module has at least two consumers or replaces an existing duplicate.
-- [ ] DataGrid supports server and cursor pagination without pretending a cursor is a page number.
-- [ ] Kanban remains virtualized and keyboard operable.
-- [ ] Overlay choice follows the documented rule on every page.
-- [ ] Shared modules own loading, error, empty, denied, focus, and responsive mechanics.
+- [ ] Every new shared module has at least two consumers or replaces an existing duplicate. **2026-09-27:** No systematic gate enforces the two-consumer rule. `frontend/CLAUDE.md FE-59` records the "exactly one DataTable" invariant but does not count consumers per new component. Owner must confirm whether a consumer-count gate is required or whether code review is the enforcer.
+- [x] DataGrid supports server and cursor pagination without pretending a cursor is a page number. `frontend/components/ui/data-table.tsx:86` tags `mode === "cursor"` as `cursorPag` and `mode === "server"` as `serverPag`; line 99 disables client-side sorting when either is active (`isServerPagination = serverPag !== null || cursorPag !== null`), with comment explicitly stating "a server- or cursor-paginated table holds one page, and sorting that page would present a slice as the sorted set."
+- [x] Kanban remains virtualized and keyboard operable. `frontend/features/build/views/kanban-virtual-ticket-list.tsx:258` renders with `mode="virtual"`; lines 118-134 attach `ariaAttributes`, `aria-label={ticket.title}`, and `onKeyDown={handleKeyDown}` to each card. Browser-level focus order and drag-keyboard-alternative require real-browser testing (FE-123); source confirms the hooks are wired.
+- [ ] Overlay choice follows the documented rule on every page. **2026-09-27:** The overlay decision rule is documented here and in `frontend/CLAUDE.md FE-110`. No static gate enforces per-page compliance. Owner must confirm whether a code-review checklist is sufficient or a gate is required.
+- [ ] Shared modules own loading, error, empty, denied, focus, and responsive mechanics. **2026-09-27:** The `page-state.tsx`, `empty-state.tsx`, `entity-form-dialog.tsx`, `entity-form-sheet.tsx` primitives exist and cover the standard states. "Every shared module" owning focus and responsive mechanics requires per-component audit. `FE-40`, `FE-41` enforce `usePageState` on pages. Owner must confirm whether "shared modules" means these primitives or all feature-level components that use them.

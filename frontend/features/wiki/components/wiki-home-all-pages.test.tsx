@@ -239,6 +239,7 @@ function makeItem(id: number, extra: Record<string, unknown> = {}) {
 function makeResponse(
   items: ReturnType<typeof makeItem>[],
   paginationOverrides: Record<string, unknown> = {},
+  countOverrides: Partial<{ count: number; isExact: boolean }> = {},
 ) {
   return {
     data: items,
@@ -249,6 +250,11 @@ function makeResponse(
       ...paginationOverrides,
     },
     facets: null,
+    boundedCount: {
+      count: items.length,
+      isExact: true,
+      ...countOverrides,
+    },
   };
 }
 
@@ -415,6 +421,51 @@ describe("WikiHomeAllPages — card view cursor pagination", () => {
     await user.click(within(pagination).getByRole("button", { name: /next page/i }));
 
     expect(mockGoNext).toHaveBeenCalledWith("cursor-abc");
+  });
+});
+
+describe("WikiHomeAllPages — bounded count display", () => {
+  it("renders the exact page count when isExact is true", () => {
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([makeItem(1), makeItem(2)], {}, { count: 2, isExact: true }),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<WikiHomeAllPages />);
+
+    expect(screen.getByText("2 pages")).toBeInTheDocument();
+  });
+
+  it("renders the count in N+ form when isExact is false, so the user knows more pages exist beyond the count cap", () => {
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([makeItem(1)], {}, { count: 500, isExact: false }),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<WikiHomeAllPages />);
+
+    expect(screen.getByText("500+ pages")).toBeInTheDocument();
+  });
+
+  it("does not render a count while the collection is loading", () => {
+    useKbPageCollection.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "loading" });
+
+    render(<WikiHomeAllPages />);
+
+    expect(screen.queryByText(/pages$/)).not.toBeInTheDocument();
   });
 });
 

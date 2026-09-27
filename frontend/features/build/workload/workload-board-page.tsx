@@ -338,6 +338,7 @@ export function WorkloadBoardPage({ params }: PageProps) {
             tickets={allTickets}
             projectId={projectId}
             projectKey={data.key}
+            projectStatuses={statuses}
             members={members}
             filters={workloadFilters}
             onFilterChange={handleWorkloadFilterChange}

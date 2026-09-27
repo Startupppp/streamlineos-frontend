@@ -357,6 +357,7 @@ export function ProjectBoardContent({
               tickets={filteredTickets}
               projectId={projectId}
               projectKey={projectKey}
+              projectStatuses={statuses}
               members={members}
               filters={workloadFilters}
               onFilterChange={onWorkloadFilterChange}

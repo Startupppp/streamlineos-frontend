@@ -1,4 +1,5 @@
 import {
+  KbClipboardIcon,
   KbCopyIcon,
   KbFileDownIcon,
   KbHistoryIcon,
@@ -32,6 +33,7 @@ export type KbPageActionId =
   | "history"
   | "info"
   | "favorite"
+  | "linkedRecords"
   | "cover"
   | "duplicate"
   | "move"
@@ -172,6 +174,15 @@ const KB_PAGE_ACTION_DEFINITIONS: readonly KbPageActionDefinition[] = [
     icon: KbStarIcon,
     toggledLabel: "Remove from favorites",
     isToggled: isFavorited,
+    isPermitted: alwaysPermitted,
+  },
+  {
+    id: "linkedRecords",
+    group: "view",
+    permission: null,
+    destructive: false,
+    label: "Linked records",
+    icon: KbClipboardIcon,
     isPermitted: alwaysPermitted,
   },
   {

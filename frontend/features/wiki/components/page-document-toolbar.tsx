@@ -46,6 +46,7 @@ interface PageDocumentToolbarProps {
   onOpenMove: () => void;
   onOpenSaveAsTemplate: () => void;
   onOpenCover: () => void;
+  onOpenLinkedRecords: () => void;
   onDelete: () => void;
   onNavigate: (pageId: number) => void;
 }
@@ -63,6 +64,7 @@ export function PageDocumentToolbar({
   onOpenMove,
   onOpenSaveAsTemplate,
   onOpenCover,
+  onOpenLinkedRecords,
   onDelete,
   onNavigate,
 }: PageDocumentToolbarProps) {
@@ -151,6 +153,7 @@ export function PageDocumentToolbar({
       case "history": onOpenHistory(); break;
       case "info": onOpenMetaSheet(); break;
       case "favorite": handleToggleFavorite(); break;
+      case "linkedRecords": onOpenLinkedRecords(); break;
       case "cover": onOpenCover(); break;
       case "duplicate": handleDuplicate(); break;
       case "move": onOpenMove(); break;

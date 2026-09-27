@@ -155,11 +155,6 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
-      source: "/build/:projectId(\\d+)/wiki/:pageId(\\d+)/history",
-      destination: "/knowledge/wiki/doc/:pageId/history",
-      permanent: false,
-    },
-    {
       source: "/build/:projectId(\\d+)/timeline",
       destination: "/build/:projectId/issues?view=timeline",
       permanent: false,

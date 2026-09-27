@@ -42,7 +42,7 @@ const page = {
 
 function noop() {}
 
-function renderToolbar(overrides: Partial<KbPageDetail> = {}) {
+function renderToolbar(overrides: Partial<KbPageDetail> = {}, onOpenLinkedRecords: () => void = noop) {
   return render(
     <PageDocumentToolbar
       page={{ ...page, ...overrides }}
@@ -56,6 +56,7 @@ function renderToolbar(overrides: Partial<KbPageDetail> = {}) {
       onOpenCover={noop}
       onDelete={noop}
       onNavigate={noop}
+      onOpenLinkedRecords={onOpenLinkedRecords}
     />,
   );
 }
@@ -139,5 +140,26 @@ describe("PageDocumentToolbar", () => {
     await user.click(screen.getByRole("button", { name: "More options" }));
 
     expect(screen.getByRole("menuitem", { name: /^move$/i })).toBeInTheDocument();
+  });
+
+  it("shows Linked records in the dropdown regardless of capability", async () => {
+    const user = userEvent.setup();
+    mockUseCan.mockReturnValue(false);
+
+    renderToolbar();
+    await user.click(screen.getByRole("button", { name: "More options" }));
+
+    expect(screen.getByRole("menuitem", { name: /linked records/i })).toBeInTheDocument();
+  });
+
+  it("calls onOpenLinkedRecords when Linked records is selected", async () => {
+    const user = userEvent.setup();
+    const onOpenLinkedRecords = jest.fn();
+
+    renderToolbar({}, onOpenLinkedRecords);
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    await user.click(screen.getByRole("menuitem", { name: /linked records/i }));
+
+    expect(onOpenLinkedRecords).toHaveBeenCalledTimes(1);
   });
 });

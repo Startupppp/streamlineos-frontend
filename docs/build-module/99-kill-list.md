@@ -88,7 +88,7 @@ Two notes on the executed rows, because both departed from the wording above:
   `fromSavedViewLayout` (`frontend/lib/build/view-types.ts`) map across that
   boundary, and `view-types.test.ts` pins the round trip.
 
-Re-verified 2026-09-24: `frontend/lib/build/build-route-manifest.ts` holds exactly **65 entries, all `KEEP`**, and `app/(authenticated)/build` contains exactly 65 `page.tsx` files. `build-route-manifest.test.ts` pins the manifest and disk tree in both directions.
+Re-verified 2026-09-27: `frontend/lib/build/build-route-manifest.ts` holds exactly **74 entries, all `KEEP`**, and `app/(authenticated)/build` contains exactly 74 `page.tsx` files. `build-route-manifest.test.ts` pins the manifest and disk tree in both directions (the test asserts 74 at line 33; the previous "65" count was stale).
 
 The `/build/[projectId]/views` note that used to sit here is resolved: the executed
 target is `/build/[projectId]/issues`, and the "plus Settings" half was never built
@@ -112,7 +112,7 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
 
 ## Acceptance criteria
 
-- [ ] Every killed page has a migration target and caller census.
-- [ ] Redirects are temporary, observable, and removed after deep-link migration.
+- [x] Every killed page has a migration target and caller census. The executed-removals table above lists each removed path, its "Job preserved at" target, and its "Deep link preserved by" redirect. `frontend/lib/build/build-redirect-route-removal.test.ts` and `build-route-manifest.test.ts` enforce that no redirect-only page file remains and the manifest matches the disk. Both directions are pinned.
+- [ ] Redirects are temporary, observable, and removed after deep-link migration. **2026-09-27:** All Build-module redirects in `frontend/next.config.ts` are `permanent: false` (verified lines 163–241; the `permanent: true` entries at lines 87–139 are non-Build routes for `/signup`, `/hr/recruitment`, `/hr/leave-policies`). "Removed after deep-link migration" is a future-intent process claim — no gate enforces redirect expiry. Owner must decide whether to add an expiry mechanism or accept manual removal as sufficient.
 - [ ] No removed surface retains a parallel schema, permission, cache key, or endpoint family. **Deliberate exception (2026-09-27):** the Sprint endpoint family (`/build/:projectId/sprints`) is retained as a 410 tombstone. The tombstone retains no DB schema (`build.sprints` is dropped), no permission key (`build:sprints:view/manage` were renamed to `build:cycles:view/manage` by migration 1197), and no cache key; what survives is the HTTP adapter that returns an informative 410 rather than a silent 404. The box is left unticked to record that the exception is deliberate, not overlooked.
-- [ ] Product copy does not advertise removed or unimplemented capabilities.
+- [ ] Product copy does not advertise removed or unimplemented capabilities. **2026-09-27:** Cannot be verified from source code analysis alone — requires a UI walkthrough of navigation labels, empty states, and help text. Owner must schedule a copy audit or accept the removal table above as the authoritative record of what has been removed.

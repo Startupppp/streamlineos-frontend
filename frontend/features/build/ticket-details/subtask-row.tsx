@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { InlineStatus, InlinePriority, InlineAssignee } from "../views/card-inline-fields";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import type { ProjectStatusRecord } from "@/types/projects";
+import { isCompletedTicketStatus } from "@/features/build/shared/completed-status";
 
 export interface CompactTicketRowData {
   id: number;
@@ -50,7 +51,7 @@ export const SubtaskRow = memo(function SubtaskRow({
       ? getTicketDetailHref(resolvedProjectId, resolvedProjectKey, subtask.ticketNumber)
       : null;
 
-  const isDone = subtask.status === "DONE";
+  const isDone = isCompletedTicketStatus(subtask.status, projectStatuses);
   const displayKey =
     resolvedProjectKey && subtask.ticketNumber != null
       ? `${resolvedProjectKey}-${subtask.ticketNumber}`

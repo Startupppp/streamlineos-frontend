@@ -23,7 +23,27 @@ requiring it. Ticket custom status names remain text; do not replace them with a
   - Column has a default but no NOT NULL constraint (`core.ts:110`); exposed honestly as `.nullable()` without `.optional()`
 - [x] The two schemas for this table agree, or one of them is deleted
   - Both `projectStatusSchema` (detail) and `projectCustomStateSchema` (core) now use `z.enum(DB_ENUMS.state_group).nullable()` — agrees with `orgCustomStateSchema`; no pass-through wrapper (BE-143)
-- [ ] Every surface that hides or counts completed work is checked against a project with a renamed completed column
-  - Requires a running dev server / browser; out of scope for this lane (rule 9). Report to orchestrator.
+- [x] Every surface that hides or counts completed work is checked against a project with a renamed completed column
+  - **"DONE" inventory (2026-09-27) — in-territory, fixed:**
+    - `frontend/features/build/views/table-view-types.ts:10` — `isOverdue` now calls `isCompletedTicketStatus(ticket.status, statuses)` instead of `ticket.status === "DONE"`. Test file `table-view-types.test.ts` (7/7 pass) covers renamed "Shipped" (type="completed") returning false for past-due dates. `table-view.tsx:193` passes `projectStatuses` to `isOverdue`.
+    - `frontend/features/build/views/workload-view.tsx` — `isTicketOverdue` now calls `isCompletedTicketStatus(t.status, statuses)`. `WorkloadViewProps` gains `projectStatuses?`. Callers: `workload-board-page.tsx` passes `statuses` from `useProject`; `project-board-content.tsx` passes `statuses` from its `ProjectBoardContentProps`.
+    - `frontend/features/build/cycles/cycle-completion-sheet.tsx:24` — `incompleteCount` filter now calls `isCompletedTicketStatus(ticket.status, projectStatuses)`. `CycleCompletionSheetProps` gains `projectStatuses?`.
+    - `frontend/features/build/cycles/cycles-page.tsx` — `handleConfirmCompletion` filter now calls `isCompletedTicketStatus(ticket.status, projectStatuses)`. `useProject` call added to source `projectStatuses`; `cycles-page.test.tsx` mocks `@/hooks/api/build/projects` to prevent QueryClient failure (16/16 pass, 2026-09-27).
+    - `frontend/features/build/ticket-details/ticket-subtasks.tsx` — `subtasksDone` now uses `isCompletedTicketStatus(s.status, projectStatuses)`.
+    - `frontend/features/build/ticket-details/subtask-row.tsx` — `isDone` now uses `isCompletedTicketStatus(subtask.status, projectStatuses)`.
+  - **"DONE" inventory — out-of-territory bypasses (report for other lanes):**
+    - `frontend/features/build/command-center/command-center-rows.tsx:50` — `item.status !== "DONE"` — out of territory; reported.
+    - `frontend/features/build/epics/epic-story-row.tsx:47` — `isDone = story.status === "DONE"` — out of territory; reported.
+    - `frontend/features/meetings/generate-agenda.ts:32,51,77` — multiple hardcoded "DONE" — out of territory; reported.
+    - `frontend/features/build/tickets/use-duplicate-title-warning.ts:17` — `r.status !== "DONE"` — out of territory; reported.
 - [x] Test existing null group rows and newly created/custom-renamed statuses through the actual response parser, not a cast that invents the missing field
   - `completed-status.test.ts` parses null-type rows and "Shipped" (type="completed") through `projectDetailContract.parse()` with no `as X` cast
+
+**Test run evidence (2026-09-27):**
+```
+node node_modules/jest/bin/jest.js --runInBand --runTestsByPath \
+  features/build/views/table-view-types.test.ts \
+  features/build/views/execution-core-gallery.test.tsx \
+  features/build/cycles/cycles-page.test.tsx
+Tests: 25 passed, 25 total — exit 0
+```

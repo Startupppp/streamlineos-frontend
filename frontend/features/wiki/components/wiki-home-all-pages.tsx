@@ -466,29 +466,38 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
           </SelectContent>
         </Select>
 
-        <div className="ml-auto flex items-center gap-1">
-          <Button
-            type="button"
-            variant={view === "list" ? "secondary" : "ghost"}
-            size="icon"
-            className="h-9 w-9"
-            aria-label="List view"
-            aria-pressed={view === "list"}
-            onClick={handleViewList}
-          >
-            <LayoutList className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant={view === "card" ? "secondary" : "ghost"}
-            size="icon"
-            className="h-9 w-9"
-            aria-label="Card view"
-            aria-pressed={view === "card"}
-            onClick={handleViewCard}
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
+        <div className="ml-auto flex items-center gap-2">
+          {data !== undefined && (
+            <span className="text-sm text-muted-foreground tabular-nums">
+              {data.boundedCount.isExact
+                ? `${data.boundedCount.count} pages`
+                : `${data.boundedCount.count}+ pages`}
+            </span>
+          )}
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant={view === "list" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-9 w-9"
+              aria-label="List view"
+              aria-pressed={view === "list"}
+              onClick={handleViewList}
+            >
+              <LayoutList className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={view === "card" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-9 w-9"
+              aria-label="Card view"
+              aria-pressed={view === "card"}
+              onClick={handleViewCard}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 

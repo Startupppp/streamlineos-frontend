@@ -11,6 +11,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +28,7 @@ import PageCommentsSheet from "./page-comments-sheet";
 import PageHistorySheet from "./page-history-sheet";
 import MovePageDialog from "./move-page-dialog";
 import PageMetadataSheet from "./page-metadata-sheet";
+import { PageRecordLinks } from "./page-record-links";
 import { PageDocumentBreadcrumb } from "./page-document-breadcrumb";
 import { PageDocumentToolbar } from "./page-document-toolbar";
 import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
@@ -65,6 +73,7 @@ export default function PageDocumentHeader({
   const [templateName, setTemplateName] = useState("");
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [metaSheetOpen, setMetaSheetOpen] = useState(false);
+  const [linkedRecordsOpen, setLinkedRecordsOpen] = useState(false);
 
   function handleOpenMetaSheet() {
     setMetaSheetOpen(true);
@@ -72,6 +81,14 @@ export default function PageDocumentHeader({
 
   function handleMetaSheetOpenChange(open: boolean) {
     setMetaSheetOpen(open);
+  }
+
+  function handleOpenLinkedRecords() {
+    setLinkedRecordsOpen(true);
+  }
+
+  function handleLinkedRecordsOpenChange(open: boolean) {
+    setLinkedRecordsOpen(open);
   }
 
   function handleOpenComments() {
@@ -159,6 +176,7 @@ export default function PageDocumentHeader({
           onOpenMove={handleOpenMove}
           onOpenSaveAsTemplate={handleOpenSaveAsTemplate}
           onOpenCover={onOpenCover}
+          onOpenLinkedRecords={handleOpenLinkedRecords}
           onDelete={handleDelete}
           onNavigate={onNavigate}
         />
@@ -230,6 +248,25 @@ export default function PageDocumentHeader({
         open={metaSheetOpen}
         onOpenChange={handleMetaSheetOpenChange}
       />
+
+      <Sheet
+        open={linkedRecordsOpen}
+        onOpenChange={handleLinkedRecordsOpenChange}
+      >
+        <SheetContent
+          side="right"
+          className="flex flex-col gap-0 p-0 sm:max-w-sm"
+        >
+          <SheetHeader className="border-b border-border px-4 py-3 pr-12">
+            <SheetTitle>Linked records</SheetTitle>
+          </SheetHeader>
+          <SheetBody>
+            <div className="px-4 py-4">
+              <PageRecordLinks pageId={pageId} />
+            </div>
+          </SheetBody>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

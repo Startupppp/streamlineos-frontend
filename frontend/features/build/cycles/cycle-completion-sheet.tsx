@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
+import { isCompletedTicketStatus } from "@/features/build/shared/completed-status";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -11,6 +12,7 @@ interface CycleCompletionSheetProps {
   cycle: Cycle | null;
   nextCycle?: Cycle;
   tickets: Ticket[];
+  projectStatuses?: Array<{ name: string; type?: string | null }>;
   moveTo: "backlog" | "next";
   isPending: boolean;
   onMoveToChange: (value: "backlog" | "next") => void;
@@ -18,8 +20,8 @@ interface CycleCompletionSheetProps {
   onConfirm: (targetCycleId: number | null) => void;
 }
 
-export function CycleCompletionSheet({ cycle, nextCycle, tickets, moveTo, isPending, onMoveToChange, onCancel, onConfirm }: CycleCompletionSheetProps) {
-  const incompleteCount = cycle ? tickets.filter((ticket) => ticket.cycleId === cycle.id && ticket.status !== "DONE").length : 0;
+export function CycleCompletionSheet({ cycle, nextCycle, tickets, projectStatuses, moveTo, isPending, onMoveToChange, onCancel, onConfirm }: CycleCompletionSheetProps) {
+  const incompleteCount = cycle ? tickets.filter((ticket) => ticket.cycleId === cycle.id && !isCompletedTicketStatus(ticket.status, projectStatuses)).length : 0;
 
   return (
     <Sheet open={cycle !== null} onOpenChange={(open) => { if (!open) onCancel(); }}>

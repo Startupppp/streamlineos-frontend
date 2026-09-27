@@ -65,7 +65,11 @@ export function useKbAnalyticsOverview(range?: KbAnalyticsRange) {
 
 export function useKbNoResults(range?: KbAnalyticsRange) {
   const canViewAnalytics = useCan("kb:analytics:view");
-  const queryParams: Record<string, unknown> = { from: range?.from, to: range?.to };
+  const queryParams: Record<string, unknown> = {
+    from: range?.from,
+    to: range?.to,
+    ...(range?.spaceId !== undefined ? { spaceId: range.spaceId } : {}),
+  };
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.noResults(queryParams),
     queryFn: ({ signal }) => apiClient.get<KbNoResultRow[]>("/kb/analytics/no-results", queryParams, signal, kbAnalyticsNoResultsContract),
@@ -115,7 +119,11 @@ export function usePageAnalytics(filters?: PageAnalyticsFilters) {
 
 export function useCitationReuse(range?: KbAnalyticsRange) {
   const canViewAnalytics = useCan("kb:analytics:view");
-  const queryParams: Record<string, unknown> = { from: range?.from, to: range?.to };
+  const queryParams: Record<string, unknown> = {
+    from: range?.from,
+    to: range?.to,
+    ...(range?.spaceId !== undefined ? { spaceId: range.spaceId } : {}),
+  };
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.citationReuse(queryParams),
     queryFn: ({ signal }) =>
@@ -128,7 +136,11 @@ export function useCitationReuse(range?: KbAnalyticsRange) {
 
 export function useReviewSla(range?: KbAnalyticsRange) {
   const canViewAnalytics = useCan("kb:analytics:view");
-  const queryParams: Record<string, unknown> = { from: range?.from, to: range?.to };
+  const queryParams: Record<string, unknown> = {
+    from: range?.from,
+    to: range?.to,
+    ...(range?.spaceId !== undefined ? { spaceId: range.spaceId } : {}),
+  };
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.kb.reviewSla(queryParams),
     queryFn: ({ signal }) =>

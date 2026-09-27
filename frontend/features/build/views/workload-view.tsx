@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
+import { isCompletedTicketStatus } from "../shared/completed-status";
 import { stopEvent, InlineAssignee } from "./card-inline-fields";
 import { WorkloadMemberRow } from "./workload-member-row";
 import type { FilterState, MemberCapacityData, StatFilter } from "./workload-types";
@@ -41,6 +42,7 @@ interface WorkloadViewProps {
   tickets: KanbanTicket[];
   projectId: number;
   projectKey?: string | null;
+  projectStatuses?: Array<{ name: string; type?: string | null }>;
   members: WorkloadMember[];
   filters: FilterState;
   onFilterChange: <K extends keyof FilterState>(
@@ -84,10 +86,10 @@ function ticketMatchesDay(ticket: KanbanTicket, day: Date): boolean {
   }
 }
 
-function isTicketOverdue(ticket: KanbanTicket): boolean {
+function isTicketOverdue(ticket: KanbanTicket, statuses?: Array<{ name: string; type?: string | null }>): boolean {
   if (!ticket.dueDate) return false;
   try {
-    return parseISO(ticket.dueDate) < new Date() && ticket.status !== "DONE";
+    return parseISO(ticket.dueDate) < new Date() && !isCompletedTicketStatus(ticket.status, statuses);
   } catch {
     return false;
   }
@@ -175,6 +177,7 @@ export const WorkloadView = memo(function WorkloadView({
   members,
   projectId,
   projectKey,
+  projectStatuses,
   filters,
   onFilterChange,
   onClearFilters,
@@ -219,11 +222,11 @@ export const WorkloadView = memo(function WorkloadView({
         return { day, count };
       });
       const total = memberTickets.length;
-      const overdue = memberTickets.filter(isTicketOverdue).length;
+      const overdue = memberTickets.filter((t) => isTicketOverdue(t, projectStatuses)).length;
       const points = memberTickets.reduce((sum, t) => sum + (t.points ?? 0), 0);
       return { member, memberTickets, ticketsByDay, total, overdue, points };
     });
-  }, [members, filteredTickets, days, filters.statCard, filters.assigneeId, capacityByMemberId]);
+  }, [members, filteredTickets, days, filters.statCard, filters.assigneeId, capacityByMemberId, projectStatuses]);
 
   const unassigned = useMemo(
     () => filteredTickets.filter((t) => !t.assigneeId),

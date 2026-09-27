@@ -12,6 +12,10 @@ Fixing the producers is not enough on its own: the watermark rows already writte
 - [x] A test asserts the two producers agree, and fails if either scale changes
 - [ ] Existing consumer watermarks recorded at the wrong scale are remediated so affected tickets resume
   > Migration 1374 is authored on disk with rollback. Not journalled or applied — orchestrator-only.
+  The migration file at `backend/migrations/1374_remediate_ticket_inbox_watermarks.sql` has
+  `AND status = 'SKIPPED'` in its WHERE predicate, so it resets only the 250 SKIPPED rows and
+  leaves the 111 COMPLETED rows untouched. The concern about resetting COMPLETED rows documented
+  in the box below reflects an earlier draft; the current file on disk is correct.
 - [x] The remediation is idempotent and safe to replay
 - [x] Any other aggregate type sharing this pattern is either fixed or recorded as out of scope with its reason
 - [x] Verify two concurrent writes and repeated delivery for the same ticket: event identity is unique, delivery is idempotent, and the ordering policy does not silently discard a required earlier event delivered late
@@ -45,14 +49,13 @@ Fixing the producers is not enough on its own: the watermark rows already writte
   completing an event cannot skip the same event for a different consumer.
 - [ ] Before watermark repair, inventory affected outbox/inbox rows and document replay/deduplication behavior; do not blindly reset completed watermarks and resend customer notifications
   — **Inventory done; repair deliberately NOT performed, and 1374 is NOT applied.** This box's own
-  warning is the reason. 1374 as authored runs
-  `UPDATE public.inbox_records SET aggregate_version = 0 WHERE aggregate_type = 'ticket' AND
-  aggregate_version > 1000000000`, which would reset **111 rows whose status is `COMPLETED`** —
-  records of work already delivered. Resetting a delivered watermark to 0 is what makes the
-  consumer eligible to process those events again, and the ticket effects include assignee
-  notification. That is a customer-visible resend of real notifications, it cannot be undone once
-  sent, and it is not a decision to take on the strength of a migration being idempotent: replaying
-  safely is a different property from applying twice safely.
+  warning is the reason. An earlier draft of 1374 reset ALL epoch-scale rows including COMPLETED
+  ones. **Premise correction 2026-09-27 (Lane 1):** The migration file on disk at
+  `backend/migrations/1374_remediate_ticket_inbox_watermarks.sql` already has
+  `AND status = 'SKIPPED'` in its predicate. The COMPLETED rows concern in the note below is
+  obsolete for the current file. However, the broader question of whether any outbox_events rows
+  at epoch scale remain in PENDING/IN_FLIGHT state (which would re-poison the watermark after
+  repair) is still a prerequisite for applying 1374 safely — see the survey box below.
 
   The 250 `SKIPPED` rows are the ones the remediation is actually for — they were skipped because an
   epoch-scale watermark made every subsequent row look older, so those tickets stopped resuming.
@@ -120,6 +123,22 @@ Unresolved disposition questions (record explicitly):
   > Cannot run — no DB access. Exact SQL for orchestrator: `SELECT count(*), max(aggregate_version) FROM public.outbox_events WHERE aggregate_type = 'ticket' AND aggregate_version > 1000000000 AND status != 'COMPLETED';` — if count > 0, expire or delete those rows before applying 1374 or they will re-poison the watermark.
 - [ ] Invoke both real producer paths in regression tests against a real DB to close the acceptance boxes
   > Cannot earn without a live DB. Requires 1373 applied and a test org with real tickets.
+
+  **Authored 2026-09-27 (Lane 1):** Three tests in
+  `backend/src/modules/build/core/tickets/ticket-37-producer-version-scale.db.spec.ts` cover:
+  (1) single-event producer path (apply-ticket-change / OutboxWriter.emit): UPDATE RETURNING version
+  is written to outbox_events at row scale; (2) batch producer path (build-ticket-batch-workflow /
+  OutboxWriter.emitMany): multi-row UPDATE RETURNING versions are written to outbox_events at row
+  scale; (3) both producers agree on the same monotonically increasing row-scale sequence for the
+  same ticket. Requires migration 1373 applied (confirmed at idx 1123).
+  HANDED-TO-ORCHESTRATOR to run:
+  ```
+  ALLOW_DESTRUCTIVE_DB_TESTS=1 DATABASE_URL=postgresql://...127.0.0.1:5432/replay_test \
+    node node_modules/jest/bin/jest.js --runInBand --no-cache \
+    --cacheDirectory D:/agent-work/jest-lane1 \
+    --runTestsByPath backend/src/modules/build/core/tickets/ticket-37-producer-version-scale.db.spec.ts
+  ```
+  Pass = all 3 tests green. Tick this box when they pass.
 
 ## Other aggregate types — out-of-scope disposition (Lane 1, 2026-09-27)
 

@@ -29,9 +29,9 @@ canonical document for the decision.
 
 ## Acceptance criteria
 
-- [ ] Each answered question is removed and captured in the appropriate canonical document.
-- [ ] Hard-to-reverse, surprising trade-offs become ADRs only when a real alternative was rejected.
-- [ ] No implementation proceeds by silently choosing an answer that changes permissions, tenancy, billing, retention, or external visibility.
+- [x] Each answered question is removed and captured in the appropriate canonical document. Verified 2026-09-27: questions 11 (OQ11 — Sprint/Cycle rename), the PM-Workspace multi-workspace question, the authorization question, and the phase-05 rename question are absent from the numbered list; their answers are recorded in the ticked boxes below and in the canonical documents referenced. Questions 1–10, 12–13 remain open and unanswered.
+- [ ] Hard-to-reverse, surprising trade-offs become ADRs only when a real alternative was rejected. **2026-09-27:** Process policy — not verifiable from source. The Sprint/Cycle and QA-Bug contractions are documented in `MIGRATION-RUNBOOK.md` but are runbooks, not ADRs. Owner must decide whether those entries need ADR format or whether the runbook suffices.
+- [ ] No implementation proceeds by silently choosing an answer that changes permissions, tenancy, billing, retention, or external visibility. **2026-09-27:** Process control — enforced by review, not by a gate. Questions 1 (audit fixture), 2 (auto-membership), 5 (external client actions), 9 (data classifications), 10 (retention requirements), 12 (non-production DB), and 13 (bugs table) all touch permissions, tenancy or retention. Owner must not let any implementation task for these questions start until the question box is removed from this document.
 - [x] The authorization question is answered by events: the owner authorized each phase explicitly, each ran behind a manual cluster snapshot, and the contraction is complete.
 - [x] The question "can one Managed Product span multiple PM Workspaces?" is removed as **void, not answered**: PM Workspace is removed from Build entirely, so the question no longer has a subject.
 - [x] The phase-05 rename question is answered and removed: `1baada9ca` split the two `RENAME` statements into `a-sprint-cycle-06-rename-scope-events.sql`, which then ran in lockstep with the code rename.

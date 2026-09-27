@@ -28,7 +28,11 @@ import {
 import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { computeVersionDiff } from "@/features/wiki/lib/version-diff";
-import { pageHref, KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
+import {
+  pageHref,
+  projectPageHref,
+  KNOWLEDGE_BASE,
+} from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 
 interface BlockDiffViewProps {
@@ -44,37 +48,60 @@ function BlockDiffView({
   versionTitle,
   currentTitle,
 }: BlockDiffViewProps) {
-  const diff = computeVersionDiff(versionTitle, versionContent, currentTitle, currentContent);
+  const diff = computeVersionDiff(
+    versionTitle,
+    versionContent,
+    currentTitle,
+    currentContent,
+  );
   const hasChanges =
-    diff.titleChanged || diff.addedCount > 0 || diff.removedCount > 0 || diff.changedCount > 0;
+    diff.titleChanged ||
+    diff.addedCount > 0 ||
+    diff.removedCount > 0 ||
+    diff.changedCount > 0;
 
   return (
     <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 space-y-2">
       <div className="flex items-center gap-2 flex-wrap">
-        <p className="text-xs font-semibold text-foreground">Block diff vs current</p>
+        <p className="text-xs font-semibold text-foreground">
+          Block diff vs current
+        </p>
         {diff.addedCount > 0 && (
-          <Badge variant="outline" className="text-status-success-ink border-status-success-ink text-xs px-1.5 py-0">
+          <Badge
+            variant="outline"
+            className="text-status-success-ink border-status-success-ink text-xs px-1.5 py-0"
+          >
             +{diff.addedCount} added
           </Badge>
         )}
         {diff.removedCount > 0 && (
-          <Badge variant="outline" className="text-status-danger-ink border-status-danger-ink text-xs px-1.5 py-0">
+          <Badge
+            variant="outline"
+            className="text-status-danger-ink border-status-danger-ink text-xs px-1.5 py-0"
+          >
             -{diff.removedCount} removed
           </Badge>
         )}
         {diff.changedCount > 0 && (
-          <Badge variant="outline" className="text-status-warning-ink border-status-warning-ink text-xs px-1.5 py-0">
+          <Badge
+            variant="outline"
+            className="text-status-warning-ink border-status-warning-ink text-xs px-1.5 py-0"
+          >
             {diff.changedCount} changed
           </Badge>
         )}
       </div>
       {!hasChanges && (
-        <p className="text-xs text-muted-foreground">Identical to the current page.</p>
+        <p className="text-xs text-muted-foreground">
+          Identical to the current page.
+        </p>
       )}
       {diff.titleChanged && (
         <p className="text-xs text-muted-foreground">
           Title:{" "}
-          <span className="line-through text-status-danger-ink">{diff.oldTitle}</span>
+          <span className="line-through text-status-danger-ink">
+            {diff.oldTitle}
+          </span>
           {" → "}
           <span className="text-status-success-ink">{diff.newTitle}</span>
         </p>
@@ -93,7 +120,9 @@ function BlockDiffView({
                     : "bg-status-warning-muted text-status-warning-ink"
               }`}
             >
-              <span className="font-semibold uppercase tracking-wide mr-1 opacity-60">{b.type}</span>
+              <span className="font-semibold uppercase tracking-wide mr-1 opacity-60">
+                {b.type}
+              </span>
               {b.kind === "changed" && b.altText ? (
                 <>
                   <span className="line-through opacity-60">{b.altText}</span>
@@ -126,23 +155,33 @@ function TwoVersionDiffView({ versionA, versionB }: TwoVersionDiffViewProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-        <span>Version {versionA.versionNumber} → Version {versionB.versionNumber}</span>
+        <span>
+          Version {versionA.versionNumber} → Version {versionB.versionNumber}
+        </span>
         <div className="flex gap-2">
           {diff.addedCount > 0 && (
-            <span className="text-status-success-ink font-medium">+{diff.addedCount}</span>
+            <span className="text-status-success-ink font-medium">
+              +{diff.addedCount}
+            </span>
           )}
           {diff.removedCount > 0 && (
-            <span className="text-status-danger-ink font-medium">-{diff.removedCount}</span>
+            <span className="text-status-danger-ink font-medium">
+              -{diff.removedCount}
+            </span>
           )}
           {diff.changedCount > 0 && (
-            <span className="text-status-warning-ink font-medium">~{diff.changedCount}</span>
+            <span className="text-status-warning-ink font-medium">
+              ~{diff.changedCount}
+            </span>
           )}
         </div>
       </div>
       {diff.titleChanged && (
         <div className="text-xs px-3 py-2 rounded border border-border">
           <span className="font-semibold text-foreground">Title: </span>
-          <span className="line-through text-status-danger-ink">{diff.oldTitle}</span>
+          <span className="line-through text-status-danger-ink">
+            {diff.oldTitle}
+          </span>
           {" → "}
           <span className="text-status-success-ink">{diff.newTitle}</span>
         </div>
@@ -161,7 +200,9 @@ function TwoVersionDiffView({ versionA, versionB }: TwoVersionDiffViewProps) {
                     : "bg-status-warning-muted text-status-warning-ink"
             }`}
           >
-            <span className="font-semibold uppercase tracking-wide mr-1 opacity-60">{b.type}</span>
+            <span className="font-semibold uppercase tracking-wide mr-1 opacity-60">
+              {b.type}
+            </span>
             {b.kind === "changed" && b.altText ? (
               <>
                 <span className="line-through opacity-60">{b.altText}</span>
@@ -180,17 +221,26 @@ function TwoVersionDiffView({ versionA, versionB }: TwoVersionDiffViewProps) {
 
 interface PageHistoryPageProps {
   pageId: number;
+  projectId?: number;
   initialVersion?: number;
   initialCompare?: number;
 }
 
 export default function PageHistoryPage({
   pageId,
+  projectId,
   initialVersion,
   initialCompare,
 }: PageHistoryPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const documentHref =
+    projectId !== undefined
+      ? projectPageHref(projectId, pageId)
+      : pageHref(pageId);
+  const unresolvedHref =
+    projectId !== undefined ? `/build/${projectId}/wiki` : KNOWLEDGE_BASE;
 
   const versionParam = searchParams.get("version");
   const compareParam = searchParams.get("compare");
@@ -204,7 +254,11 @@ export default function PageHistoryPage({
   const [compareMode, setCompareMode] = useState(Boolean(selectedB));
   const [restoreAlertOpen, setRestoreAlertOpen] = useState(false);
 
-  const { data: currentPage, isLoading: pageLoading, isError: pageError } = useKbPage(pageId);
+  const {
+    data: currentPage,
+    isLoading: pageLoading,
+    isError: pageError,
+  } = useKbPage(pageId);
   const {
     data: versionsData,
     isLoading: versionsLoading,
@@ -216,14 +270,10 @@ export default function PageHistoryPage({
   const versions = versionsData?.pages.flatMap((p) => p.data) ?? [];
   const currentVersionNumber = versions[0]?.versionNumber ?? null;
 
-  const { data: versionADetail, isLoading: detailALoading } = useKbPageVersionDetail(
-    pageId,
-    selectedA ?? 0,
-  );
-  const { data: versionBDetail, isLoading: detailBLoading } = useKbPageVersionDetail(
-    pageId,
-    selectedB ?? 0,
-  );
+  const { data: versionADetail, isLoading: detailALoading } =
+    useKbPageVersionDetail(pageId, selectedA ?? 0);
+  const { data: versionBDetail, isLoading: detailBLoading } =
+    useKbPageVersionDetail(pageId, selectedB ?? 0);
   const restoreVersion = useRestoreKbVersion();
 
   function syncUrl(a: number | null, b: number | null) {
@@ -231,7 +281,9 @@ export default function PageHistoryPage({
     if (a) params.set("version", String(a));
     if (b) params.set("compare", String(b));
     const qs = params.toString();
-    router.replace(`${window.location.pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+    router.replace(`${window.location.pathname}${qs ? `?${qs}` : ""}`, {
+      scroll: false,
+    });
   }
 
   function handleVersionSelect(e: React.MouseEvent<HTMLButtonElement>) {
@@ -283,14 +335,14 @@ export default function PageHistoryPage({
       {
         onSuccess: () => {
           toast.success("Version restored");
-          router.push(pageHref(pageId));
+          router.push(documentHref);
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [selectedA, pageId, restoreVersion, router]);
+  }, [selectedA, pageId, restoreVersion, router, documentHref]);
 
-  const backHref = pageLoading || pageError ? KNOWLEDGE_BASE : pageHref(pageId);
+  const backHref = pageLoading || pageError ? unresolvedHref : documentHref;
 
   if (pageLoading) {
     return (
@@ -317,7 +369,8 @@ export default function PageHistoryPage({
     );
   }
 
-  const showingCompare = compareMode && selectedA !== null && selectedB !== null;
+  const showingCompare =
+    compareMode && selectedA !== null && selectedB !== null;
   const showingDetail = !showingCompare && selectedA !== null;
 
   return (
@@ -325,7 +378,7 @@ export default function PageHistoryPage({
       <PageWrapper
         title="Page history"
         subtitle={currentPage.title || "Untitled"}
-        backHref={pageHref(pageId)}
+        backHref={documentHref}
         noInternalScroll
       >
         <div className="h-full flex flex-col md:flex-row gap-4">
@@ -338,7 +391,9 @@ export default function PageHistoryPage({
                 <button
                   type="button"
                   onClick={handleToggleCompare}
-                  aria-label={compareMode ? "Exit compare mode" : "Enter compare mode"}
+                  aria-label={
+                    compareMode ? "Exit compare mode" : "Enter compare mode"
+                  }
                   aria-pressed={compareMode}
                   className={`inline-flex items-center gap-1 text-xs rounded-md px-2 py-1 transition-colors ${
                     compareMode
@@ -355,7 +410,9 @@ export default function PageHistoryPage({
                   {selectedA ? (
                     <span>
                       Base: v{selectedA}
-                      {selectedB ? ` · Compare: v${selectedB}` : " · Pick a compare version"}
+                      {selectedB
+                        ? ` · Compare: v${selectedB}`
+                        : " · Pick a compare version"}
                     </span>
                   ) : (
                     "Select base version"
@@ -380,7 +437,8 @@ export default function PageHistoryPage({
                     />
                   )}
                   {versions.map((v: KbPageVersion) => {
-                    const isCurrentVersion = v.versionNumber === currentVersionNumber;
+                    const isCurrentVersion =
+                      v.versionNumber === currentVersionNumber;
                     const isSelectedA = selectedA === v.versionNumber;
                     const isSelectedB = selectedB === v.versionNumber;
                     const isSelected = isSelectedA || isSelectedB;
@@ -431,7 +489,8 @@ export default function PageHistoryPage({
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {v.authorName ? `${v.authorName} · ` : ""}{kbTimeAgo(v.createdAt)}
+                              {v.authorName ? `${v.authorName} · ` : ""}
+                              {kbTimeAgo(v.createdAt)}
                             </p>
                             {v.changeSummary && (
                               <TruncatedText
@@ -463,9 +522,13 @@ export default function PageHistoryPage({
             {!selectedA ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[20rem] border border-dashed border-border rounded-xl bg-card gap-3">
                 <KbClockIcon className="w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Select a version to preview</p>
+                <p className="text-sm text-muted-foreground">
+                  Select a version to preview
+                </p>
                 {compareMode && (
-                  <p className="text-xs text-muted-foreground">Select two versions to compare</p>
+                  <p className="text-xs text-muted-foreground">
+                    Select two versions to compare
+                  </p>
                 )}
               </div>
             ) : showingCompare && versionADetail && versionBDetail ? (
@@ -487,7 +550,10 @@ export default function PageHistoryPage({
                         <Skeleton className="h-4 w-5/6" />
                       </div>
                     ) : (
-                      <TwoVersionDiffView versionA={versionADetail} versionB={versionBDetail} />
+                      <TwoVersionDiffView
+                        versionA={versionADetail}
+                        versionB={versionBDetail}
+                      />
                     )}
                   </div>
                 </ScrollArea>
@@ -499,18 +565,27 @@ export default function PageHistoryPage({
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <TruncatedText
-                          text={detailALoading ? "Loading…" : versionADetail?.title ?? "Untitled"}
+                          text={
+                            detailALoading
+                              ? "Loading…"
+                              : (versionADetail?.title ?? "Untitled")
+                          }
                           className="text-sm font-semibold text-foreground"
                         />
                         {selectedA === currentVersionNumber && (
-                          <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4 leading-none shrink-0">
+                          <Badge
+                            variant="secondary"
+                            className="text-xs px-1.5 py-0 h-4 leading-none shrink-0"
+                          >
                             Current
                           </Badge>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Version {selectedA}
-                        {versionADetail?.authorName ? ` · ${versionADetail.authorName}` : ""}
+                        {versionADetail?.authorName
+                          ? ` · ${versionADetail.authorName}`
+                          : ""}
                       </p>
                       {versionADetail?.changeSummary && (
                         <p className="text-xs text-muted-foreground mt-0.5">
@@ -521,7 +596,11 @@ export default function PageHistoryPage({
                     <LoadingButton
                       size="sm"
                       onClick={handleRestoreClick}
-                      disabled={detailALoading || !versionADetail?.content || selectedA === currentVersionNumber}
+                      disabled={
+                        detailALoading ||
+                        !versionADetail?.content ||
+                        selectedA === currentVersionNumber
+                      }
                       isPending={restoreVersion.isPending}
                       loadingText="Restoring…"
                       className="shrink-0 gap-1.5 h-7 text-xs"

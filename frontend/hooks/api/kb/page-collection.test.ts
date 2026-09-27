@@ -2,6 +2,7 @@ import {
   KB_PAGE_COLLECTION_QUERY_FIELDS,
   buildKbPageCollectionQueryParams,
 } from "./page-collection";
+import { kbPageCollectionResponseSchema } from "./kb-page-collection-schema";
 
 const BACKEND_FIXTURE_FIELDS = [
   "q",
@@ -18,6 +19,68 @@ const BACKEND_FIXTURE_FIELDS = [
   "limit",
   "facets",
 ] as const;
+
+const WIRE_FIXTURE = {
+  data: [
+    {
+      id: 1,
+      title: "Onboarding",
+      icon: null,
+      coverImage: null,
+      spaceId: null,
+      projectId: null,
+      parentPageId: null,
+      status: "published",
+      visibility: "org",
+      contentType: "rich-text",
+      trustState: "verified",
+      ownerMembershipId: 1,
+      ownerUserId: "user-1",
+      createdById: "user-1",
+      createdByMembershipId: 1,
+      lastEditedById: "user-1",
+      lastEditedByMembershipId: 1,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-09-01T00:00:00.000Z",
+      deletedAt: null,
+      nextReviewAt: null,
+      verifiedUntil: null,
+      contentRevision: 1,
+      aclRevision: 1,
+      sharedBy: null,
+    },
+  ],
+  pagination: { limit: 50, hasMore: false, nextCursor: null },
+  facets: null,
+  boundedCount: { count: 1, isExact: true },
+};
+
+describe("KB page collection — response contract parity (FE-28)", () => {
+  it("parses a wire payload including every backend-projected field without error, so a missing FE declaration fails here rather than silently rendering empty", () => {
+    expect(kbPageCollectionResponseSchema.safeParse(WIRE_FIXTURE).success).toBe(true);
+  });
+
+  it("the parsed result includes boundedCount, confirming the FE contract declares the field rather than stripping it", () => {
+    const parsed = kbPageCollectionResponseSchema.parse(WIRE_FIXTURE);
+    expect(parsed.boundedCount).toEqual({ count: 1, isExact: true });
+  });
+
+  it("every backend item field is present in the parsed result, so a field added to the backend schema but not the frontend is caught at this boundary", () => {
+    const parsed = kbPageCollectionResponseSchema.parse(WIRE_FIXTURE);
+    const item = parsed.data[0];
+    const backendProjectedFields = [
+      "id", "title", "icon", "coverImage", "spaceId", "projectId",
+      "parentPageId", "status", "visibility", "contentType", "trustState",
+      "ownerMembershipId", "ownerUserId", "createdById", "createdByMembershipId",
+      "lastEditedById", "lastEditedByMembershipId", "createdAt", "updatedAt",
+      "deletedAt", "nextReviewAt", "verifiedUntil", "contentRevision", "aclRevision",
+      "sharedBy",
+    ] as const;
+    for (const field of backendProjectedFields) {
+      expect(item).toHaveProperty(field);
+    }
+  });
+});
 
 describe("KB_PAGE_COLLECTION_QUERY_FIELDS — the cross-repo half of the collection query fixture", () => {
   it("matches the field list pinned on the backend (backend/src/modules/kb/core/collection/knowledge-collection.types.ts), so a field added to one side and not the other is caught here", () => {

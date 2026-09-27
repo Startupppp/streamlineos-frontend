@@ -60,6 +60,10 @@ export const kbPageCollectionResponseSchema = z.object({
       ),
     })
     .nullable(),
+  boundedCount: z.object({
+    count: z.number().int(),
+    isExact: z.boolean(),
+  }),
 });
 
 export type KbPageCollectionResponse = z.infer<

@@ -13,6 +13,15 @@
 - [x] A page that declares no seam cannot render a search control — proved by a compile-time or test-time failure, not a convention
   — `use-build-list-filters.test.tsx`: "omits search fields entirely when withSearch is false so a page without a server seam cannot render a search input" — asserts `"search" in result.current === false`, `"debouncedSearch" in result.current === false`, `"setSearch" in result.current === false`. 12/12 pass. TypeScript overload ensures compile-time error if caller with `withSearch: false` accesses `.search`.
 - [ ] No client-side search filter over a paged list remains anywhere in Build
-  — Risks, meetings, forms client-side filters deleted. Other Build lists (decisions, backlog, QA, incidents, milestones, releases, files, change requests) not in this lane's scope. Not fully verified.
+  — Risks, meetings, forms client-side filters deleted (tickets 46, 47).
+  — Exhaustive inventory of remaining client-side search in Build (2026-09-27):
+  — PAGED — client-side search remains, outside territory:
+    (1) `decisions-page.tsx:129` — `allDecisions.filter(d => d.title.toLowerCase().includes(search))` over a cursor-paged list; `useProjectDecisions` (`governance.ts:138`) accepts no search param. Belongs to `governance/` module.
+    (2) `incidents-page.tsx:115` — client-side `.filter()` over infinite-scroll paged incidents; `useIncidents` only forwards `status` and `severity`. Belongs to `incidents/` module.
+  — NOT PAGED — client-side search is acceptable (bounded full set, not paginated):
+    `cycles-page.tsx:70` — `useCycles` returns full `Cycle[]`, no cursor/page.
+    `automations-page.tsx:105`, `modules-page.tsx:95`, `workflow-page.tsx:72`, `settings-views-page.tsx:53` — none paginated.
+    `cycle-detail-page.tsx:211`, `epics-page.tsx:67` — client-side search over board ticket state that is managed by a separate paged mechanism; the search is a local filter on an already-fetched page, not a bypass of server pagination.
+  — Box left unticked: two paged lists (decisions, incidents) have client-side search that reaches the server only for status/severity filters. Fixing them requires changes to `governance/decisions.service.ts` and the incidents module, both outside this lane's territory.
 - [x] Ticket 09's assignee filter is consistent with this change rather than duplicating it
   — `AssigneeFilterSubmenu` owns its own search state, debounces at 300ms, calls `useBuildMembers({ search: debouncedSearch })` server-side. No client-side `.filter()` applied to the list. Consistent with the server-search pattern.

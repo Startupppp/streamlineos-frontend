@@ -13,4 +13,13 @@ One thing the note above does not cover, found later: the compare-and-swap is co
 - [x] Every mutable Build entity's read response carries its current concurrency token
 - [x] Every first-party client sends the token it last read on update
 - [ ] Nothing rejects a request for omitting the token yet — superseded: ticket 12 makes the token required, so rejection is deliberate
+
+  **N/A — DECISION 2026-09-27 (Lane 1):** This criterion required that no endpoint reject a
+  missing token ("expand half of expand–contract"). Ticket 12 completed the contract half and
+  made the token required. The criterion is void because the intended state it described
+  ("nothing rejects omission yet") is now permanently the wrong state. Proof: `dto/ticket.schemas.ts`
+  at the `version` field (enforced by the `updateTicketSchema`) requires the token; the
+  `projects-ticket-version-conflict.spec.ts` test "version is required — a body without it fails
+  schema validation (ticket-12 box-1)" at line 158 proves rejection is live. Leaving unticked per
+  programme rule: an N/A is a decision, not completed functionality.
 - [x] The existing ticket conflict behaviour is unchanged

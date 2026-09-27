@@ -101,8 +101,8 @@ bump `updatedAt`) remain a known design gap: targeted invalidation of those path
 change to remove the generic-timestamp dependency from those report projections. That gap is documented
 in ticket 19, not this table.
 
-- [ ] Exercise real cache invalidation and report projections after each supported mutation, including filtered counts and optimistic rollback; do not mock away the invalidation helper being verified
-- [ ] Separate client freshness settings, server TTL/revision policy and end-to-end stale-data bounds in measurements; report dataset size, cache hit/miss and p95 latency rather than inferred speedups
+- [ ] Exercise real cache invalidation and report projections after each supported mutation, including filtered counts and optimistic rollback; do not mock away the invalidation helper being verified. **2026-09-27:** The invalidation matrix in `ticket-cache.ts:281-348` is implemented correctly (status→{velocity,burnup,cycleTime,leadTime,cfd}; points→{velocity,burnup,criticalPath}; title→{criticalPath}; cycleId→{velocity,burnup}). Actual end-to-end verification — that invalidation causes refetches, that counts update, and that rollback restores state — requires integration tests against a running API with a real Redis instance. CI is dead (lapsed billing) so this cannot be automatically confirmed.
+- [ ] Separate client freshness settings, server TTL/revision policy and end-to-end stale-data bounds in measurements; report dataset size, cache hit/miss and p95 latency rather than inferred speedups. **2026-09-27:** Client stale times are documented in the table above (all report hooks at `2 * 60_000`, verified `frontend/hooks/api/build/reports.ts:133,149,160,171,181,191`). Server TTLs are documented for billing-summary (300 s) and report-revision-keyed endpoints (30 s burnup/velocity, 300 s others). End-to-end measurements (cache hit/miss ratios, p95 latency from RUM) require a production-connected profiling run — not available in this session.
 
 ### Server-side, after commit
 

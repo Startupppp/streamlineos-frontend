@@ -83,6 +83,7 @@ function renderToolbar(onNavigate: (pageId: number) => void) {
       onOpenMove={noop}
       onOpenSaveAsTemplate={noop}
       onOpenCover={noop}
+      onOpenLinkedRecords={noop}
       onDelete={noop}
       onNavigate={onNavigate}
     />,

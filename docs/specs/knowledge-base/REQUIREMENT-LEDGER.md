@@ -441,8 +441,9 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
       `kb-core.module.ts:40,52` exports and provides `KnowledgeAuthorizationService`.
 - [ ] **BLOCKED:** `pnpm typecheck` clean; `pnpm typecheck:test` **now also clean — the 21 errors are gone** (2026-09-25)
       Cannot run `tsc` in this session. Per twelfth pass, both passed with 0 KB errors.
-- [ ] **BLOCKED:** Apply migration `1168_kb_page_grants` — applied 2026-09-24, hash `cd96f057` matched. The "IAM credential" blocker was never real; see the environment table.
-      Per sixth pass, hash `cd96f057` verified against production `drizzle.__drizzle_migrations`. Cannot re-probe production DB in this session.
+- [x] **DONE 2026-09-27 — re-probed, and the whole KB set was probed with it.** Apply migration `1168_kb_page_grants`.
+      `D:/agent-work/kb-ledger-reconcile.mjs`, run through the IAM wrapper against production, hashes each KB-tagged journal entry's file bytes and joins `drizzle.__drizzle_migrations` on `hash` **and** `created_at`. Result: **80 of 80 KB-tagged entries applied, 0 not applied, 0 `created_at` mismatches, 0 journalled-but-file-absent.** Matching by hash rather than by tag is what makes this evidence — a tag match would have proved nothing.
+      Production ledger holds 1034 rows against 1013 journal entries; the surplus is the reconciled-not-replayed history, not KB drift.
 - [ ] **BLOCKED:** `EXPLAIN (ANALYZE, BUFFERS)` evidence — captured 2026-09-25, see below
       Plan captured in twelfth pass (0.134 ms, index scan on `idx_kb_page_grants_org_page_live`). ⚠️ `kb_page_grants` held 0 rows at capture time — plan proves index reachability, not cardinality behavior. Re-measurement required at seeded cardinality.
 - [x] **DONE 2026-09-27:** Migrated `KbPageStatusService` (7 call sites) to per-action canonical checks

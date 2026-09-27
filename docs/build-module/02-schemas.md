@@ -35,7 +35,7 @@ Organization
 | WorkItem | `id`, `orgId`, `projectId`, number/key, type, title, status, priority, rank, reporter | parent, assignees, cycle, module, release, labels, relations | soft delete + version |
 
 **`WorkItem.version` is maintained by the database, in exactly one place.** The trigger
-`build.trg_tickets_version_bump` (migration 1373, journal idx 1124, applied 2026-09-27) is
+`build.trg_tickets_version_bump` (migration 1373, journal idx 1123, applied 2026-09-27) is
 `BEFORE UPDATE … FOR EACH ROW` and assigns `NEW.version := OLD.version + 1`. No application code
 increments it, and none may — the assignment overwrites whatever the statement set, so a `SET
 version = version + 1` in a handler is silently discarded rather than doubling the token, and a
@@ -103,9 +103,9 @@ including a soft delete, so a tombstoning write is never mistaken for no change.
 
 ## Acceptance criteria
 
-- [ ] Every tenant-owned relation is protected by `orgId` in schema and query predicates.
+- [ ] Every tenant-owned relation is protected by `orgId` in schema and query predicates. **2026-09-27:** Schema half is verified by `backend/src/db/schema/build/build-tenant-fk-invariant.spec.ts:94-97` (all 80+ build/build_events tables carry `org_id`; 100+ cross-table FKs pair the tenant column). Query-predicate half requires `EXPLAIN (ANALYZE, BUFFERS)` as `streamline_app` with the tenant GUC set (BE-76/BE-77) — this cannot be run without a live database connection.
 - [x] Standalone projects work with no product: `managedProductId = null` makes the project organization-level. PM Workspace and `pmWorkspaceId` no longer exist.
-- [ ] Cycle and BUG have one canonical identity each.
-- [ ] Every list has a measured composite index matching filters and cursor order.
-- [ ] Client and server validation constraints have automated parity evidence.
-- [ ] Soft delete, restore, retention, audit, and outbox behavior is specified for every mutable entity.
+- [x] Cycle and BUG have one canonical identity each. `build.bugs` is absent from all build schema files; defect detail lives on `build.work_item_qa_details` (`backend/src/db/schema/build/qa.ts:141`) with a composite FK to `build.tickets`. `build.cycles` remains the only iteration table (`backend/src/db/schema/build/core.ts:123`); no `build.sprints` table exists in the Drizzle schema.
+- [ ] Every list has a measured composite index matching filters and cursor order. **2026-09-27:** Composite indexes exist in the Drizzle schema files (e.g., `idx_tickets_org_project_rank_id`, `idx_tickets_org_project_updated` in `ticket-core.ts`; `idx_projects_name_trgm` in `core.ts`). "Measured" requires `EXPLAIN (ANALYZE, BUFFERS)` as `streamline_app` — impossible without a live DB connection. Instrument: `backend/src/scripts/run-read-cost-budgets.mjs` with `APP_DATABASE_URL` set.
+- [x] Client and server validation constraints have automated parity evidence. `frontend/package.json:50` registers `check:contract-parity` which runs `scripts/check-contract-parity.mjs --backend-file contracts/openapi.json`; `check:contract-drift` at line 52 guards against in-flight drift. Per-entity schema tests live in `frontend/hooks/api/build/*-schema.test.ts`.
+- [ ] Soft delete, restore, retention, audit, and outbox behavior is specified for every mutable entity. **2026-09-27:** Soft-delete fields (`deletedAt`, `deletedByMembershipId`) are present on core mutable entities (verified in `ticket-core.ts`, `core.ts`, `members.ts`, `teams.ts`). Outbox behavior is specified for the main ticket/project write path. "Every mutable entity" including governance, forms, and QA entities requires a systematic per-entity review against the spec; no gate currently enforces this comprehensively. Owner must confirm scope and authorize or defer the outstanding entities explicitly.

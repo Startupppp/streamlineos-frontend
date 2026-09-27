@@ -40,7 +40,13 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PageWrapper: ({
+    children,
+    backHref,
+  }: {
+    children: React.ReactNode;
+    backHref?: string;
+  }) => <div data-back-href={backHref}>{children}</div>,
 }));
 
 jest.mock("@/components/ui/confirm-dialog", () => ({
@@ -77,6 +83,8 @@ jest.mock("@/features/wiki/lib/version-diff", () => ({
 
 jest.mock("@/lib/knowledge-routes", () => ({
   pageHref: (id: number) => `/wiki/pages/${id}`,
+  projectPageHref: (projectId: number, pageId: number) =>
+    `/build/${projectId}/wiki/${pageId}`,
   KNOWLEDGE_BASE: "/wiki",
 }));
 
@@ -159,6 +167,22 @@ describe("PageHistoryPage sentinel", () => {
     expect(fetchNextPage).not.toHaveBeenCalled();
     intersect();
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns to the knowledge document when no project scopes the history", () => {
+    const { container } = render(<PageHistoryPage pageId={7} />);
+
+    expect(
+      container.querySelector("[data-back-href]")?.getAttribute("data-back-href"),
+    ).toBe("/wiki/pages/7");
+  });
+
+  it("returns to the project wiki document so a project-scoped history keeps its project", () => {
+    const { container } = render(<PageHistoryPage pageId={7} projectId={42} />);
+
+    expect(
+      container.querySelector("[data-back-href]")?.getAttribute("data-back-href"),
+    ).toBe("/build/42/wiki/7");
   });
 
   it("exposes an accessible load-more control with the sentinel label", () => {

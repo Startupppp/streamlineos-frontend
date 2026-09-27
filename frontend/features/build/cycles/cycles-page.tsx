@@ -6,6 +6,8 @@ import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from "@animateicons/react
 import { toast } from "sonner";
 import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import { useCycles, useDeleteCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
+import { useProject } from "@/hooks/api/build/projects";
+import { isCompletedTicketStatus } from "@/features/build/shared/completed-status";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -56,6 +58,8 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   });
   const { error, refetch, isError, isLoading, data: cycles } = useCycles(projectId);
   const { data: tickets = [] } = useProjectBoardTickets(projectId);
+  const { data: projectData } = useProject(projectId);
+  const projectStatuses = projectData?.statuses ?? [];
   const updateCycle = useUpdateCycle();
   const bulkUpdateTickets = useBulkUpdateTickets(projectId);
   const deleteCycle = useDeleteCycle();
@@ -145,7 +149,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   const handleConfirmCompletion = useCallback(async (targetCycleId: number | null) => {
     if (!completionTarget) return;
     const incompleteTicketIds = tickets
-      .filter((ticket) => ticket.cycleId === completionTarget.id && ticket.status !== "DONE")
+      .filter((ticket) => ticket.cycleId === completionTarget.id && !isCompletedTicketStatus(ticket.status, projectStatuses))
       .map((ticket) => ticket.id);
     try {
       if (incompleteTicketIds.length > 0) {
@@ -361,6 +365,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
         cycle={completionTarget}
         nextCycle={upcomingCycles.find((cycle) => cycle.id !== completionTarget?.id)}
         tickets={tickets}
+        projectStatuses={projectStatuses}
         moveTo={completionMoveTo}
         isPending={bulkUpdateTickets.isPending || updateCycle.isPending}
         onMoveToChange={setCompletionMoveTo}
