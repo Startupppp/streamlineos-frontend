@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
 import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
@@ -27,6 +28,8 @@ const mockCreate = jest.fn();
 const mockUpdate = jest.fn();
 const mockArchiveImpact = jest.fn();
 const mockMembers = jest.fn();
+const mockAddMember = jest.fn();
+const mockRemoveMember = jest.fn();
 
 jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: (...args: unknown[]) => mockSpaces(...args),
@@ -36,6 +39,8 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
   useUpdateKbSpace: () => mockUpdate(),
   useKbSpaceArchiveImpact: () => mockArchiveImpact(),
   useKbSpaceMembers: () => mockMembers(),
+  useAddKbSpaceMember: () => mockAddMember(),
+  useRemoveKbSpaceMember: () => mockRemoveMember(),
 }));
 
 function space(over: Partial<KbSpaceListItem> = {}): KbSpaceListItem {
@@ -74,6 +79,22 @@ function mutation(over: Record<string, unknown> = {}) {
   return { mutate: jest.fn(), isPending: false, ...over };
 }
 
+function pageTree(client: QueryClient) {
+  return (
+    <QueryClientProvider client={client}>
+      <SpacesPage />
+    </QueryClientProvider>
+  );
+}
+
+function renderPage() {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const result = render(pageTree(client));
+  return { ...result, rerenderPage: () => result.rerender(pageTree(client)) };
+}
+
 const accessGranted = { data: { isOrgOwner: true, scopes: {}, modules: {} }, isLoading: false };
 const accessDenied = { data: { isOrgOwner: false, scopes: {}, modules: {} }, isLoading: false };
 
@@ -89,11 +110,13 @@ beforeEach(() => {
   mockUpdate.mockReturnValue(mutation());
   mockArchiveImpact.mockReturnValue({ data: undefined, isLoading: false, isError: false });
   mockMembers.mockReturnValue({ data: undefined, isLoading: false, isError: false });
+  mockAddMember.mockReturnValue(mutation());
+  mockRemoveMember.mockReturnValue(mutation());
 });
 
 describe("SpacesPage", () => {
   it("renders a space card with name, page count and member count when the list has entries", () => {
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.getByText("Engineering")).toBeInTheDocument();
     expect(screen.getByText(/12 pages/)).toBeInTheDocument();
@@ -103,7 +126,7 @@ describe("SpacesPage", () => {
   it("shows the loading skeleton while the request is in flight, and not the empty state", () => {
     mockSpaces.mockReturnValue(listing([], { data: undefined, isLoading: true }));
 
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.queryByText("No spaces yet")).not.toBeInTheDocument();
     expect(screen.queryByText("Engineering")).not.toBeInTheDocument();
@@ -112,7 +135,7 @@ describe("SpacesPage", () => {
   it("shows the empty state with no create button for a viewer when the list is empty", () => {
     mockSpaces.mockReturnValue(listing([]));
 
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.getByText("No spaces yet")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "New space" })).not.toBeInTheDocument();
@@ -122,7 +145,7 @@ describe("SpacesPage", () => {
     mockCan.mockImplementation((key) => key === "kb:spaces:manage");
     mockSpaces.mockReturnValue(listing([]));
 
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.getByText("No spaces yet")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create space" })).toBeInTheDocument();
@@ -137,7 +160,7 @@ describe("SpacesPage", () => {
       }),
     );
 
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
     expect(screen.queryByText("No spaces yet")).not.toBeInTheDocument();
@@ -147,7 +170,7 @@ describe("SpacesPage", () => {
     mockSearchParams = new URLSearchParams("q=xyz");
     mockSpaces.mockReturnValue(listing([]));
 
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.getByText("No spaces match your filters")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Clear filters" })).toBeInTheDocument();
@@ -156,13 +179,13 @@ describe("SpacesPage", () => {
   it("shows the New space button only when the user can manage spaces", () => {
     mockCan.mockImplementation((key) => key === "kb:spaces:manage");
 
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.getByRole("button", { name: /New space/i })).toBeInTheDocument();
   });
 
   it("does not show the New space button when the user cannot manage spaces", () => {
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.queryByRole("button", { name: /New space/i })).not.toBeInTheDocument();
   });
@@ -170,7 +193,7 @@ describe("SpacesPage", () => {
   it("shows Edit, Members and Archive buttons on each card for a manager", () => {
     mockCan.mockImplementation((key) => key === "kb:spaces:manage");
 
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.getByRole("button", { name: /Edit/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Archive/i })).toBeInTheDocument();
@@ -180,7 +203,7 @@ describe("SpacesPage", () => {
   it("BITE: shows the owner and last-updated line on each card", () => {
     mockSpaces.mockReturnValue(listing([space({ ownerName: "Priya Shah" })]));
 
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.getByText(/Owned by Priya Shah/)).toBeInTheDocument();
     expect(screen.getByText(/Updated/)).toBeInTheDocument();
@@ -190,17 +213,17 @@ describe("SpacesPage", () => {
     mockSpaces.mockReturnValue(listing([space({ pagesOverdueForReview: 3 })]));
     mockCan.mockImplementation((key) => key === "kb:spaces:manage");
 
-    const { rerender } = render(<SpacesPage />);
+    const { rerenderPage } = renderPage();
     expect(screen.getByText(/3 pages overdue for review/)).toBeInTheDocument();
 
     mockCan.mockReturnValue(false);
-    rerender(<SpacesPage />);
+    rerenderPage();
     expect(screen.queryByText(/overdue for review/)).not.toBeInTheDocument();
   });
 
   it("opens the members sheet for the clicked card when Members is pressed", async () => {
     mockCan.mockImplementation((key) => key === "kb:spaces:manage");
-    render(<SpacesPage />);
+    renderPage();
 
     await userEvent.click(screen.getByRole("button", { name: /Members/i }));
 
@@ -216,7 +239,7 @@ describe("SpacesPage", () => {
       refetch: jest.fn(),
     });
 
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.getByRole("button", { name: /next/i })).toBeInTheDocument();
   });
@@ -224,7 +247,7 @@ describe("SpacesPage", () => {
   it("passes the active filters to the spaces hook", () => {
     mockSearchParams = new URLSearchParams("audience=public&status=archived");
 
-    render(<SpacesPage />);
+    renderPage();
 
     expect(mockSpaces).toHaveBeenCalledWith(
       expect.objectContaining({ audience: "public", archived: true }),
@@ -236,7 +259,7 @@ describe("SpacesPage — card/list view", () => {
   it("BITE: renders the spaces as a table when the URL asks for the list view", () => {
     mockSearchParams = new URLSearchParams("view=list");
 
-    render(<SpacesPage />);
+    renderPage();
 
     const table = screen.getByRole("table");
     expect(within(table).getByText("Engineering")).toBeInTheDocument();
@@ -246,7 +269,7 @@ describe("SpacesPage — card/list view", () => {
   it("BITE: the view toggle reflects the list view selected in the URL", () => {
     mockSearchParams = new URLSearchParams("view=list");
 
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.getByRole("button", { name: "List view" })).toHaveAttribute(
       "aria-pressed",
@@ -259,7 +282,7 @@ describe("SpacesPage — card/list view", () => {
   });
 
   it("keeps the card grid as the default view when the URL names no view", () => {
-    render(<SpacesPage />);
+    renderPage();
 
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();

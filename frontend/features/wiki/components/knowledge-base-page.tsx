@@ -30,6 +30,8 @@ import {
   useDeleteKbSource,
   type KbSourcesParams,
 } from "@/hooks/api/kb/sources";
+import { useKbPagesSearch } from "@/hooks/api/kb/pages";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { companyDocumentHref, pageHref } from "@/lib/knowledge-routes";
 import {
   KbSourcesSheet,
@@ -91,6 +93,9 @@ export default function KnowledgeBasePage() {
   const [pendingScopeIds, setPendingScopeIds] = useState<number[]>([]);
   const [scopeVerifiedOnly, setScopeVerifiedOnly] = useState(false);
   const [pendingVerifiedOnly, setPendingVerifiedOnly] = useState(false);
+  const [scopePageIds, setScopePageIds] = useState<number[]>([]);
+  const [pendingPageIds, setPendingPageIds] = useState<number[]>([]);
+  const [pageSearchQuery, setPageSearchQuery] = useState("");
   const [noteOpen, setNoteOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -132,6 +137,11 @@ export default function KnowledgeBasePage() {
 
   const spacesQuery = useKbSpaces();
   const kbSpaces = spacesQuery.data?.data ?? [];
+
+  const debouncedPageSearchQuery = useDebouncedValue(pageSearchQuery.trim(), 300);
+  const pageSearchResult = useKbPagesSearch(debouncedPageSearchQuery);
+  const pageSearchResults = pageSearchResult.data?.items ?? [];
+  const pageSearchIsLoading = pageSearchResult.isLoading;
 
   const allConversations = useMemo(
     () => (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations),
@@ -237,6 +247,7 @@ export default function KnowledgeBasePage() {
     }
     const scopePayload = {
       ...(scopeSourceIds.length > 0 ? { sourceIds: scopeSourceIds } : {}),
+      ...(scopePageIds.length > 0 ? { pageIds: scopePageIds } : {}),
       ...(scopeVerifiedOnly ? { verifiedOnly: true } : {}),
     };
     ask.mutate(
@@ -338,6 +349,8 @@ export default function KnowledgeBasePage() {
   function handleScopeClick() {
     setPendingScopeIds(scopeSourceIds);
     setPendingVerifiedOnly(scopeVerifiedOnly);
+    setPendingPageIds(scopePageIds);
+    setPageSearchQuery("");
     setSourcesSheet({ kind: "scope" });
   }
   function handleSourcesSheetOpenChange(open: boolean) {
@@ -347,8 +360,8 @@ export default function KnowledgeBasePage() {
 
   function handleScopeSelectionChange(ids: number[]) { setPendingScopeIds(ids); }
   function handleScopeVerifiedOnlyChange(v: boolean) { setPendingVerifiedOnly(v); }
-  function handleScopeConfirm() { setScopeSourceIds(pendingScopeIds); setScopeVerifiedOnly(pendingVerifiedOnly); setSourcesSheet({ kind: "closed" }); }
-  function handleClearScope() { setScopeSourceIds([]); setScopeVerifiedOnly(false); }
+  function handleScopeConfirm() { setScopeSourceIds(pendingScopeIds); setScopeVerifiedOnly(pendingVerifiedOnly); setScopePageIds(pendingPageIds); setSourcesSheet({ kind: "closed" }); }
+  function handleClearScope() { setScopeSourceIds([]); setScopeVerifiedOnly(false); setScopePageIds([]); }
 
   function makeDeleteHandler(id: number) {
     return function handleDeleteSource() {
@@ -363,7 +376,8 @@ export default function KnowledgeBasePage() {
 
   const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
   const readyCount = sources.filter((s) => s.status === "ready").length;
-  const scopeActive = scopeSourceIds.length > 0 || scopeVerifiedOnly;
+  const scopeActive = scopeSourceIds.length > 0 || scopeVerifiedOnly || scopePageIds.length > 0;
+  const scopeItemCount = scopeSourceIds.length + scopePageIds.length;
   const baseDisplaySources = hasScopeFilters ? scopeSources : sources;
   const scopeDisplaySources = scopeSpaceIdFilter !== null
     ? baseDisplaySources.filter((s) => s.spaceId === scopeSpaceIdFilter)
@@ -386,10 +400,10 @@ export default function KnowledgeBasePage() {
             size="sm"
             className="gap-1.5"
             onClick={handleScopeClick}
-            aria-label={scopeActive ? `Searching ${scopeSourceIds.length} source${scopeSourceIds.length === 1 ? "" : "s"}` : "Choose sources to search"}
+            aria-label={scopeActive ? `Searching ${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}` : "Choose sources to search"}
           >
             <SlidersHorizontal className="h-4 w-4" />
-            {scopeActive ? `${scopeSourceIds.length} source${scopeSourceIds.length === 1 ? "" : "s"}` : "Scope"}
+            {scopeActive ? `${scopeItemCount} item${scopeItemCount === 1 ? "" : "s"}` : "Scope"}
           </Button>
           <LoadingButton variant="outline" size="sm" className="gap-1.5" isPending={uploadSource.isPending} onClick={handleManageSourcesClick}>
             {!uploadSource.isPending && <BookOpenTextIcon size={16} />}
@@ -532,7 +546,7 @@ export default function KnowledgeBasePage() {
                 </div>
                 {scopeActive && (
                   <p className="mt-1.5 text-micro text-muted-foreground">
-                    Searching {scopeSourceIds.length} selected source{scopeSourceIds.length === 1 ? "" : "s"}.{" "}
+                    Searching {scopeItemCount} selected item{scopeItemCount === 1 ? "" : "s"}.{" "}
                     <button type="button" onClick={handleScopeClick} className="underline hover:text-foreground">Edit</button>
                     {" · "}
                     <button type="button" onClick={handleClearScope} className="underline hover:text-foreground">Clear</button>
@@ -581,6 +595,12 @@ export default function KnowledgeBasePage() {
           onSpaceIdFilterChange={setScopeSpaceIdFilter}
           spaces={kbSpaces}
           onConfirm={handleScopeConfirm}
+          pageSearchQuery={pageSearchQuery}
+          onPageSearchQueryChange={setPageSearchQuery}
+          pageSearchResults={pageSearchResults}
+          pageSearchIsLoading={pageSearchIsLoading}
+          selectedPageIds={pendingPageIds}
+          onPageSelectionChange={setPendingPageIds}
         />
       )}
 

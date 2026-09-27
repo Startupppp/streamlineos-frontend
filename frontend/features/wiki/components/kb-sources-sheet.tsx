@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   UserIcon,
   Layers,
+  FileText,
 } from "lucide-react";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -25,6 +26,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
@@ -32,6 +34,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { KbSource } from "@/hooks/api/kb/sources";
+import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
 
 interface KbSourcesSheetManageProps {
   mode: "manage";
@@ -69,6 +72,12 @@ interface KbSourcesSheetScopeProps {
   onSpaceIdFilterChange: (spaceId: SpaceIdFilter) => void;
   spaces: ReadonlyArray<{ id: number; name: string }>;
   onConfirm: () => void;
+  pageSearchQuery: string;
+  onPageSearchQueryChange: (q: string) => void;
+  pageSearchResults: KbPageSearchResult[];
+  pageSearchIsLoading: boolean;
+  selectedPageIds: number[];
+  onPageSelectionChange: (ids: number[]) => void;
 }
 
 export type KbSourcesSheetProps =
@@ -180,6 +189,8 @@ function KindFilterButton({
   );
 }
 
+const PAGE_SEARCH_SKELETON_KEYS = ["page-search-skeleton-a", "page-search-skeleton-b"] as const;
+
 const OWNER_FILTERS = ["all", "mine"] as const;
 export type OwnerFilter = (typeof OWNER_FILTERS)[number];
 
@@ -261,16 +272,23 @@ function KbSourcesScopeSheet({
   onSpaceIdFilterChange,
   spaces,
   onConfirm,
+  pageSearchQuery,
+  onPageSearchQueryChange,
+  pageSearchResults,
+  pageSearchIsLoading,
+  selectedPageIds,
+  onPageSelectionChange,
 }: Omit<KbSourcesSheetScopeProps, "mode">) {
   const readyVisible = sources.filter((s) => s.status === "ready");
   const allSelected =
     readyVisible.length > 0 &&
     readyVisible.every((s) => selectedIds.includes(s.id));
-  const noneSelected = selectedIds.length === 0;
+  const totalSelected = selectedIds.length + selectedPageIds.length;
+  const noneSelected = totalSelected === 0;
 
   const description = noneSelected
-    ? "All ready sources will be searched. Select specific sources to narrow the answer."
-    : `${selectedIds.length} source${selectedIds.length === 1 ? "" : "s"} selected — only these will be searched.`;
+    ? "All ready sources and pages will be searched. Select specific items to narrow the answer."
+    : `${totalSelected} item${totalSelected === 1 ? "" : "s"} selected — only these will be searched.`;
 
   function handleToggleAll() {
     if (allSelected) {
@@ -367,9 +385,9 @@ function KbSourcesScopeSheet({
         {readyVisible.length > 1 && (
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">
-              {noneSelected
-                ? "No filter — searching all sources"
-                : `${selectedIds.length} of ${sources.filter((s) => s.status === "ready").length} selected`}
+              {selectedIds.length === 0
+                ? "No sources selected"
+                : `${selectedIds.length} of ${sources.filter((s) => s.status === "ready").length} sources selected`}
             </span>
             <Button
               variant="ghost"
@@ -389,19 +407,47 @@ function KbSourcesScopeSheet({
           onToggle={handleToggleSource}
         />
 
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">Pages</p>
+          <Input
+            value={pageSearchQuery}
+            onChange={(e) => onPageSearchQueryChange(e.target.value)}
+            placeholder="Search pages…"
+            className="h-8 text-xs"
+            aria-label="Search pages"
+          />
+          {pageSearchIsLoading ? (
+            <div className="space-y-1">
+              {PAGE_SEARCH_SKELETON_KEYS.map((skeletonKey) => (
+                <Skeleton key={skeletonKey} className="h-10 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : pageSearchResults.length > 0 ? (
+            <ul className="space-y-1">
+              {pageSearchResults.map((page) => (
+                <ScopePageRow
+                  key={page.id}
+                  page={page}
+                  selectedPageIds={selectedPageIds}
+                  onToggle={onPageSelectionChange}
+                />
+              ))}
+            </ul>
+          ) : pageSearchQuery.length > 0 ? (
+            <p className="text-xs text-muted-foreground">No pages found</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Type to search pages</p>
+          )}
+        </div>
+
         <Button
           className="w-full gap-1.5"
           onClick={onConfirm}
-          aria-label={
-            noneSelected
-              ? "Search all sources"
-              : `Search ${selectedIds.length} selected source${selectedIds.length === 1 ? "" : "s"}`
-          }
         >
           <Check className="h-4 w-4" />
           {noneSelected
-            ? "Search all sources"
-            : `Search ${selectedIds.length} source${selectedIds.length === 1 ? "" : "s"}`}
+            ? "Search all sources and pages"
+            : `Search ${totalSelected} item${totalSelected === 1 ? "" : "s"}`}
         </Button>
       </div>
     </AppSheet>
@@ -552,6 +598,41 @@ function ScopeSourceRow({
         </p>
       </label>
       <SourceStatusBadge source={source} />
+    </li>
+  );
+}
+
+function ScopePageRow({
+  page,
+  selectedPageIds,
+  onToggle,
+}: {
+  page: KbPageSearchResult;
+  selectedPageIds: number[];
+  onToggle: (ids: number[]) => void;
+}) {
+  const isChecked = selectedPageIds.includes(page.id);
+  function handleCheckedChange() {
+    if (isChecked) {
+      onToggle(selectedPageIds.filter((x) => x !== page.id));
+    } else {
+      onToggle([...selectedPageIds, page.id]);
+    }
+  }
+  return (
+    <li className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 shadow-sm">
+      <Checkbox
+        id={`scope-page-${page.id}`}
+        checked={isChecked}
+        onCheckedChange={handleCheckedChange}
+        aria-label={`Include ${page.title} in search`}
+      />
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted">
+        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+      <label htmlFor={`scope-page-${page.id}`} className="min-w-0 flex-1 cursor-pointer">
+        <TruncatedText text={page.title} className="text-sm font-medium text-foreground" />
+      </label>
     </li>
   );
 }

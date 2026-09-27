@@ -18,6 +18,8 @@ export interface KbAskScopedInput {
   spaceId?: number;
   conversationId?: number;
   sourceIds?: number[];
+  pageIds?: number[];
+  verifiedOnly?: boolean;
 }
 
 export function useKbAsk() {
