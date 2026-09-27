@@ -63,6 +63,7 @@ describe("improve diff wiring", () => {
         onOpenMove={noop}
         onOpenSaveAsTemplate={noop}
         onOpenCover={noop}
+        onOpenLinkedRecords={noop}
         onDelete={noop}
         onNavigate={noop}
       />,

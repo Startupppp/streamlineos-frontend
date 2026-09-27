@@ -119,6 +119,7 @@ export interface Cycle {
   name: string;
   description: string | null;
   goal: string | null;
+  capacity: number | null;
   status: CycleStatus;
   version: number;
   startDate: string;

@@ -121,6 +121,8 @@ export interface Ticket {
   watchers?: TicketWatcher[];
   project?: { id: number; name: string; key: string } | null;
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
+  health?: "on_track" | "at_risk" | "off_track" | null;
+  dependencyCount?: number;
   customerId?: number | null;
   customer?: { id: number; name: string } | null;
 }

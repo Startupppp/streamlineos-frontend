@@ -125,6 +125,7 @@ export interface UpdateCycleInput {
   name?: string;
   description?: string;
   goal?: string;
+  capacity?: number | null;
   status?: "draft" | "active" | "completed";
   startDate?: string;
   endDate?: string;
