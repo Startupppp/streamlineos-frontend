@@ -14,25 +14,10 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
-} from "@/components/ui/sheet";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { CircleCheckIcon } from "@animateicons/react/lucide";
+import { NotesSheet, CreateBugSheet } from "./run-execution-sheets";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -412,110 +397,24 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
         </PmSection>
       </PmPageShell>
 
-      <Sheet open={notesSheetOpen} onOpenChange={setNotesSheetOpen}>
-        <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">
-          <SheetHeader className="shrink-0 border-b px-5 py-4">
-            <SheetTitle>
-              {notesResult?.testCase
-                ? `Notes for TC-${notesResult.testCase.caseNumber}`
-                : "Execution Notes"}
-            </SheetTitle>
-          </SheetHeader>
-          <div className="flex min-h-0 flex-1 flex-col p-5">
-            <Textarea
-              value={notesValue}
-              onChange={(e) => setNotesValue(e.target.value)}
-              placeholder="Add execution notes…"
-              className="min-h-[120px] resize-none text-dense"
-              disabled={!canExecute}
-            />
-          </div>
-          <SheetFooter className="flex shrink-0 gap-2 border-t px-5 py-3">
-            <SheetClose asChild>
-              <Button type="button" variant="outline" size="sm" className="text-dense">
-                Cancel
-              </Button>
-            </SheetClose>
-            {canExecute ? (
-              <LoadingButton
-                type="button"
-                size="sm"
-                className="text-dense"
-                isPending={updateResult.isPending}
-                loadingText="Saving…"
-                onClick={handleSaveNotes}
-              >
-                Save
-              </LoadingButton>
-            ) : null}
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <NotesSheet
+        open={notesSheetOpen}
+        onOpenChange={setNotesSheetOpen}
+        notesResult={notesResult}
+        notesValue={notesValue}
+        onNotesChange={setNotesValue}
+        canExecute={canExecute}
+        isSaving={updateResult.isPending}
+        onSave={handleSaveNotes}
+      />
 
-      <Sheet open={bugSheetOpen} onOpenChange={setBugSheetOpen}>
-        <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">
-          <SheetHeader className="shrink-0 border-b px-5 py-4">
-            <SheetTitle>Create Bug from Result</SheetTitle>
-          </SheetHeader>
-          <Form {...bugForm}>
-            <form onSubmit={bugForm.handleSubmit(handleSubmitBug)} className="flex min-h-0 flex-1 flex-col">
-              <ScrollArea className="flex-1">
-                <div className="space-y-4 px-5 py-4">
-                  <FormField
-                    control={bugForm.control}
-                    name="bugTitle"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-dense">Title <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input {...field} className="text-dense" placeholder="Bug title" />
-                        </FormControl>
-                        <FormMessage className="text-micro" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={bugForm.control}
-                    name="bugSeverity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-dense">Severity</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="blocker">Blocker</SelectItem>
-                            <SelectItem value="critical">Critical</SelectItem>
-                            <SelectItem value="major">Major</SelectItem>
-                            <SelectItem value="minor">Minor</SelectItem>
-                            <SelectItem value="trivial">Trivial</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage className="text-micro" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </ScrollArea>
-              <SheetFooter className="flex shrink-0 gap-2 border-t px-5 py-3">
-                <SheetClose asChild>
-                  <Button type="button" variant="outline" size="sm" className="text-dense">Cancel</Button>
-                </SheetClose>
-                <LoadingButton
-                  type="submit"
-                  size="sm"
-                  className="text-dense"
-                  isPending={createBugFromResult.isPending}
-                  loadingText="Creating…"
-                >
-                  Create Bug
-                </LoadingButton>
-              </SheetFooter>
-            </form>
-          </Form>
-        </SheetContent>
-      </Sheet>
+      <CreateBugSheet
+        open={bugSheetOpen}
+        onOpenChange={setBugSheetOpen}
+        form={bugForm}
+        onSubmit={handleSubmitBug}
+        isPending={createBugFromResult.isPending}
+      />
     </PageWrapper>
   );
 }

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectSettingsAgentsPage } from "./project-settings-agents-page";
 
@@ -23,8 +23,17 @@ jest.mock("@/hooks/api/build/agent-tokens", () => ({
   useAgentTokens: () => ({ data: [], isLoading: false }),
 }));
 
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
+}));
+
 jest.mock("@/features/build/settings/agent-tokens-section", () => ({
-  AgentTokensSection: () => <div data-testid="agent-tokens-section" />,
+  AgentTokensSection: ({ createRef }: { createRef?: React.RefObject<(() => void) | null> }) => {
+    if (createRef) {
+      createRef.current = () => { (createRef as { _triggered?: boolean })._triggered = true; };
+    }
+    return <div data-testid="agent-tokens-section" />;
+  },
 }));
 
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({
@@ -55,6 +64,11 @@ jest.mock("@/features/build/shared/build-list-toolbar", () => ({
   BuildListToolbar: () => null,
 }));
 
+jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
+}));
+
 jest.mock("@/components/pm-chrome", () => ({
   PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PmPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -80,7 +94,13 @@ jest.mock("@/components/shared/page-state", () => ({
 
 beforeEach(() => {
   mockAccessState = "denied";
+  mockUseBuildListKeyboard.mockClear();
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
+  (
+    jest.requireMock("@/hooks/common/use-online-status") as {
+      useOnlineStatus: jest.Mock;
+    }
+  ).useOnlineStatus.mockReturnValue(true);
 });
 
 describe("ProjectSettingsAgentsPage — keyboard shortcuts (Requirement C3)", () => {
@@ -97,6 +117,22 @@ describe("ProjectSettingsAgentsPage — keyboard shortcuts (Requirement C3)", ()
     render(<ProjectSettingsAgentsPage projectId={1} />);
     expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
       expect.objectContaining({ searchInputRef: expect.anything() }),
+    );
+  });
+
+  it("passes onCreate to useBuildListKeyboard so the c key can trigger the create token dialog", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onCreate: expect.any(Function) }),
+    );
+  });
+
+  it("passes onShortcutHelp to useBuildListKeyboard so the ? key opens the shortcut help overlay", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
     );
   });
 });
@@ -151,5 +187,41 @@ describe("ProjectSettingsAgentsPage — permission key (Criterion 3)", () => {
     expect(mockUsePageState).toHaveBeenCalledWith(
       expect.objectContaining({ permission: "settings:api-tokens:read" }),
     );
+  });
+});
+
+describe("ProjectSettingsAgentsPage — shortcut help dialog (BLD-X-FE-SETTINGS-AGENTS-003)", () => {
+  it("ShortcutHelpDialog is not shown on initial render — paired with the open test below", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("the onShortcutHelp callback passed to the keyboard hook opens the dialog when called", async () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    const capturedOptions = mockUseBuildListKeyboard.mock.calls[0]?.[0] as { onShortcutHelp: () => void };
+    expect(typeof capturedOptions.onShortcutHelp).toBe("function");
+    await act(async () => { capturedOptions.onShortcutHelp(); });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsAgentsPage — offline state (BLD-X-FE-SETTINGS-AGENTS-004)", () => {
+  it("shows the offline banner when the device is offline and the page is ready", () => {
+    mockAccessState = "granted";
+    (
+      jest.requireMock("@/hooks/common/use-online-status") as {
+        useOnlineStatus: jest.Mock;
+      }
+    ).useOnlineStatus.mockReturnValue(false);
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
+  });
+
+  it("does not show the offline banner when the device is online", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    expect(screen.queryByText(/you are offline/i)).not.toBeInTheDocument();
   });
 });

@@ -141,8 +141,14 @@ Build owns projects, work items, cycles, delivery planning, project governance, 
 ## Acceptance criteria
 
 - [ ] Every current Build route has a keep, move, consolidate, or delete decision with a user job.
+  <!-- 2026-09-27: Blocked by one unregistered route. Physical route `frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/history/page.tsx` exists (75 authenticated Build pages total) but has no entry in the route table, no manifest entry, and no `10-*.md` spec. All other 74 manifest routes have documented decisions. Settles when this route is added to the manifest with a disposition and user job — or removed if the KB workstream owns it and it belongs under a KB route group. -->
 - [ ] Every retained page has one self-contained `10-*.md` implementation specification.
-- [ ] Every production finding names a route, endpoint, or repository path.
-- [ ] No feature survives without a one-line user job.
-- [ ] Cross-module ownership prevents Build from duplicating HRMS, CRM, Timesheets, Accounting, Knowledge, Files, Calendar, or Chat.
-- [ ] P0/P1/P2 backlog order respects schema, permission, API, component, and page dependencies.
+  <!-- 2026-09-27: Blocked by the same gap as the box above. `build/[projectId]/wiki/[pageId]/history` has no spec file. 83 spec files exist for the 74 authenticated Build pages + 9 portal/public pages in the manifest. The unregistered history page has none. Settles together with the box above. -->
+- [x] Every production finding names a route, endpoint, or repository path.
+  <!-- Evidence: verified production findings table at `00-overview.md:82–87`; each of the 6 rows cites at least one route and one repository path. -->
+- [x] No feature survives without a one-line user job.
+  <!-- Evidence: personas table `00-overview.md:69–77`; route table in `01-ia-navigation.md` has a Primary persona column for every KEEP row. Every product decision states the user job it serves. -->
+- [x] Cross-module ownership prevents Build from duplicating HRMS, CRM, Timesheets, Accounting, Knowledge, Files, Calendar, or Chat.
+  <!-- Evidence: cross-module ownership table `00-overview.md:114–126` documents system of record and Build use for every shared concern; `00-overview.md:97` product decision: Library belongs to Knowledge, not Build. -->
+- [x] P0/P1/P2 backlog order respects schema, permission, API, component, and page dependencies.
+  <!-- Evidence: `06-prioritized-backlog.md` documents Stage A→B→C→D→E dependency order with explicit "Depends on:" fields per item; P1-3 explicitly requires P1-2; P1-8 requires P1-4; P2 blocked until Stage E. -->

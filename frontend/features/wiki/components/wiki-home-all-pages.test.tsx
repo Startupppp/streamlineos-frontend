@@ -505,3 +505,33 @@ describe("WikiHomeAllPages — trust badges in the default list view", () => {
     expect(within(cell.container).getByText("Verified")).toBeInTheDocument();
   });
 });
+
+describe("WikiHomeAllPages — error forwarding to usePageState (FE-41)", () => {
+  it("forwards isError and error to usePageState so a 402 shows the upgrade path rather than a silent empty list", () => {
+    mockSearchParams = new URLSearchParams();
+    const fetchError = new Error("Forbidden");
+    useKbPageCollection.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: fetchError,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<WikiHomeAllPages />);
+
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ isError: true, error: fetchError }),
+    );
+  });
+
+  it("passes isError false when the collection loads successfully — paired positive control for the error-forwarding test above", () => {
+    mockSearchParams = new URLSearchParams();
+    render(<WikiHomeAllPages />);
+
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ isError: false }),
+    );
+  });
+});

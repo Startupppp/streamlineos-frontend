@@ -261,6 +261,8 @@ Completed:
 - [ ] Production migration ledger has zero pending migrations and includes migration `1197` (1197 is complete; the unrelated mixed-module backlog remains).
 - [x] Frontend and backend focused tests and typechecks pass.
 - [ ] Authenticated desktop and mobile browser matrices pass for the full Build route census against the production API.
+  <!-- 2026-09-27: Desktop 74-route sweep passed 2026-09-25; mobile matrix explicitly open (see § Browser verification "The mobile matrix remains open"). Settles when the mobile matrix is executed against the production API without console errors. -->
 - [x] Frontend candidate is merged into `origin/main`.
 - [ ] Deployment status for the latest frontend and backend commits is verified.
+  <!-- 2026-09-27: Backend deployment identity unverified — Railway ships every push, but the running service must be probed to confirm it carries the release commit. Frontend deployment source is an external service not represented in `.github/workflows/` (see § External repository debt). Settles when `https://api.streamlineos.in/health` is probed and the build/commit identity returned matches the release commit, and the frontend deployment source is identified and its build identity confirmed. -->
 - [x] Production-domain Build smoke passes without current console errors.

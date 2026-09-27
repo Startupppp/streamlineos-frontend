@@ -249,4 +249,5 @@ Do not start one before Stage E is complete.
 - [x] Every task states a one-line user job, owner, dependency, acceptance criteria, evidence path and estimated effort.
 - [x] Every claim of completion cites code or committed production evidence rather than a status assertion.
 - [x] Historical items are retained and labelled as historical rather than deleted.
-- [ ] Effort is recalibrated after Stage A lands and after the first contraction phase is observed.
+- [x] Effort is recalibrated after Stage A lands and after the first contraction phase is observed.
+  <!-- Evidence: Stage A (A1–A5) landed 2026-09-22; Stage D contraction executed and re-verified 2026-09-23. Document reconciled 2026-09-24 (line 3) after both events. All completed items carry effort "spent"; P1-2 carries "4–6 d", P1-4 "10–15 d", P1-8 "in progress" as post-observation estimates; P2 is "order-of-magnitude only" pending Stage E. -->

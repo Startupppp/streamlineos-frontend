@@ -51,44 +51,12 @@ import {
   RiskMobileCard,
 } from "./risks-table-columns";
 import { RiskBulkActionBar } from "./risk-bulk-action-bar";
-
-const STATUS_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "All statuses" },
-  { value: "open", label: "Open" },
-  { value: "mitigating", label: "Mitigating" },
-  { value: "monitoring", label: "Monitoring" },
-  { value: "accepted", label: "Accepted" },
-  { value: "closed", label: "Closed" },
-];
-
-const PROBABILITY_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "All probabilities" },
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-];
-
-const IMPACT_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "All impacts" },
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-];
-
-const FILTER_DEFINITIONS = [
-  {
-    param: "status",
-    options: STATUS_OPTIONS.map((o) => o.value),
-  },
-  {
-    param: "probability",
-    options: ["low", "medium", "high"] as const,
-  },
-  {
-    param: "impact",
-    options: ["low", "medium", "high"] as const,
-  },
-] as const;
+import {
+  STATUS_OPTIONS,
+  PROBABILITY_OPTIONS,
+  IMPACT_OPTIONS,
+  FILTER_DEFINITIONS,
+} from "./risks-filter-options";
 
 interface RisksPageProps {
   projectId: number;

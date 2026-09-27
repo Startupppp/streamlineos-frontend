@@ -123,6 +123,19 @@ export function renderMobileCard(row: GalleryRow) {
   );
 }
 
+export function noop() {
+  return undefined;
+}
+
+export const GALLERY_STATIC_PAGINATION = {
+  mode: "cursor",
+  pageSize: 50,
+  hasMore: true,
+  hasPrevious: true,
+  onNext: noop,
+  onPrevious: noop,
+} as const;
+
 export function GalleryCase({
   id,
   title,

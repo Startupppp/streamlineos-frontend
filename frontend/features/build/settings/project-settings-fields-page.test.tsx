@@ -99,6 +99,7 @@ beforeEach(() => {
   mockAccessState = "denied";
   mockDebouncedSearch = "";
   mockCustomFields = [];
+  mockUseBuildListKeyboard.mockClear();
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });
 
@@ -216,12 +217,13 @@ describe("ProjectSettingsFieldsPage — keyboard shortcuts (extended)", () => {
     expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
   });
 
-  it("the onShortcutHelp callback passed to the keyboard hook is a function that updates component state — calling it does not throw", async () => {
+  it("the onShortcutHelp callback passed to the keyboard hook opens the ShortcutHelpDialog when called", async () => {
     mockAccessState = "granted";
     render(<ProjectSettingsFieldsPage projectId={1} />);
     const capturedOptions = mockUseBuildListKeyboard.mock.calls[0][0] as { onShortcutHelp: () => void };
     expect(typeof capturedOptions.onShortcutHelp).toBe("function");
     await act(async () => { capturedOptions.onShortcutHelp(); });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
   });
 });
 

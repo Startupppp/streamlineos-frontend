@@ -121,7 +121,9 @@
     "check:pm-workspace-removal": "node scripts/check-pm-workspace-removal.mjs",
     "check:pm-workspace-removal:self-test": "node scripts/check-pm-workspace-removal.mjs --self-test",
     "check:build-list-surface": "node scripts/check-build-list-surface.mjs",
-    "check:build-list-surface:self-test": "node scripts/check-build-list-surface.mjs --self-test"
+    "check:build-list-surface:self-test": "node scripts/check-build-list-surface.mjs --self-test",
+    "check:build-paged-client-search": "node scripts/check-build-paged-client-search.mjs",
+    "check:build-paged-client-search:self-test": "node scripts/check-build-paged-client-search.mjs --self-test"
   },
   "dependencies": {
     "@animateicons/react": "^0.3.4",

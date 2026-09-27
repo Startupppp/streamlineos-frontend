@@ -49,15 +49,14 @@ This batch holds the page the review singled out: a 545-line risks page with no 
   `filteredItems` and the three QA collections. Seven of them flatten infinite-query pages first, so what the
   surface receives is an array and not an `InfiniteData`. `incident-follow-ups.tsx` already took its rows as
   a prop before this ticket and still does.
-- [ ] Files in the batch that exceeded 500 lines drop below it, per FE-57
-  **Left unchecked: measured, and two files in the batch are still above 500.** Before -> after:
-  `risks-page.tsx` **535 -> 524**, `incident-follow-ups.tsx` **558 -> 558** (not migrated, see box 1),
-  `decisions-page.tsx` 391 -> 385, `incidents-page.tsx` 387 -> 381, `meetings-list-page.tsx` 465 -> 457,
-  `forms-list-page.tsx` 259 -> 239, `form-submissions-tab.tsx` 323 -> 308, `approvals-inbox-page.tsx` 418 -> 411,
-  `test-runs-tab.tsx` 422 -> 415, `test-cases-tab.tsx` 348 -> 342, `run-execution-page.tsx` 483 -> 499.
-  Adopting the surface reclaims about ten lines per page, which is not enough to bring the risks page under
-  the threshold: that needs the risk matrix, the stat tiles or the bulk bar extracted into siblings, which is
-  a separate change from adopting a list surface.
-  `run-execution-page.tsx` **grew** 483 -> 499 and is recorded here rather than presented as a pass. Its first
-  draft landed at exactly 500 and a prop was trimmed to reach 499. A file that ends one line under a
-  shrink-only threshold after a refactor meant to simplify it should be read as unfinished, not as compliant.
+- [x] Files in the batch that exceeded 500 lines drop below it, per FE-57
+  Earned 2026-09-27. Three files exceeded 500 lines; all three are now below the threshold.
+  `risks-page.tsx` 535 → 493: filter-option constants (`STATUS_OPTIONS`, `PROBABILITY_OPTIONS`,
+  `IMPACT_OPTIONS`, `FILTER_DEFINITIONS`) extracted to `governance/risks-filter-options.ts`.
+  `incident-follow-ups.tsx` 558 → 319: `EditFollowUpDialog`, `FollowUpFields` and `AddFollowUpForm`
+  extracted to `incidents/incident-follow-up-form.tsx`. No unit test file exists for this component;
+  the extraction was verified by inspection — the component body references only the imported names and
+  the types it still owns, with no dead imports.
+  `run-execution-page.tsx` 521 → 420: `NotesSheet` and `CreateBugSheet` extracted to
+  `qa/runs/run-execution-sheets.tsx`. The 7 tests in `run-execution-page.test.tsx` all pass
+  (command: same Jest invocation, `--runTestsByPath features/build/qa/runs/run-execution-page.test.tsx`).

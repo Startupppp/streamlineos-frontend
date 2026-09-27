@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useAgentTokens } from "@/hooks/api/build/agent-tokens";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
@@ -13,26 +14,38 @@ import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 
 interface ProjectSettingsAgentsPageProps {
   projectId: number;
 }
 
 export function ProjectSettingsAgentsPage({ projectId: _projectId }: ProjectSettingsAgentsPageProps) {
+  const isOnline = useOnlineStatus();
   const listFilters = useBuildListFilters({ withSearch: true });
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const createTokenRef = useRef<(() => void) | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const { data: tokens } = useAgentTokens();
 
   const handleKeyboardClear = useCallback(() => {
     listFilters.clearAll();
   }, [listFilters]);
 
+  const handleKeyboardCreate = useCallback(() => {
+    createTokenRef.current?.();
+  }, []);
+
   const handleKeyboardOpen = useCallback((_index: number) => {}, []);
+
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   useBuildListKeyboard({
     itemCount: tokens?.length ?? 0,
     onOpen: handleKeyboardOpen,
+    onCreate: handleKeyboardCreate,
     onClearSelection: handleKeyboardClear,
+    onShortcutHelp: handleShortcutHelp,
     searchInputRef,
   });
 
@@ -72,6 +85,14 @@ export function ProjectSettingsAgentsPage({ projectId: _projectId }: ProjectSett
         >
           <div className="flex flex-col gap-4">
             <PmSection index={0}>
+              {!isOnline && (
+                <div
+                  role="status"
+                  className="mb-4 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground"
+                >
+                  You are offline — changes will not be saved until you reconnect.
+                </div>
+              )}
               <PmPanel className="p-4" solid>
                 <div className="mb-3 border-b border-border pb-3">
                   <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
@@ -82,12 +103,14 @@ export function ProjectSettingsAgentsPage({ projectId: _projectId }: ProjectSett
                     inherit the permissions of the issuing member.
                   </p>
                 </div>
-                <AgentTokensSection />
+                <AgentTokensSection createRef={createTokenRef} />
               </PmPanel>
             </PmSection>
           </div>
         </PageState>
       </PmPageShell>
+
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
     </PageWrapper>
   );
 }

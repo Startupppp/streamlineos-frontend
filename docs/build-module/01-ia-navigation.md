@@ -198,9 +198,15 @@ This table preserves the original 2026-09-21 route decisions while pointing ever
 Dynamic detail pages require valid parent IDs and must return indistinguishable 404s for missing, deleted, cross-tenant, or unauthorized parents. The 17 proposed target pages have separate `10-*.md` specifications but are excluded from this existing-page table because no physical route file exists today.
 ## Acceptance criteria
 
-- [ ] No sidebar scope has more than nine primary destinations.
+- [x] No sidebar scope has more than nine primary destinations.
+  <!-- Evidence: `01-ia-navigation.md:43–47` — Organization: 6 destinations, Managed Product: 6, Project: 9. All three scopes are ≤9. -->
 - [ ] Every destination has one canonical route and a command-palette entry where useful.
+  <!-- 2026-09-27: Route uniqueness is confirmed (`check:route-access-contract` pass, 215 permission keys; `build-route-manifest.ts` has 74 KEEP entries with no duplicates). Command-palette entry coverage requires running `check:command-catalog` against the current route set; that gate still reports 23 non-Build findings — the Build subset is unverified independently. Settles when a focused command-catalog check confirms every Build route that should have a command-palette entry has one. -->
 - [ ] Collapsed, mobile, keyboard, and screen-reader navigation expose equivalent names and badges.
-- [ ] Route moves preserve deep links through intentional redirects and remove old callers.
-- [ ] Library remains Knowledge-owned while project Wiki remains an access-filtered projection.
+  <!-- BROWSER-EXCLUDED (2026-09-27). Requires a real browser with focus tracking and screen reader. Source confirms collapsed rail is 48–56 px target and labels become tooltips (`01-ia-navigation.md:93–95`), but behavioral equivalence across modes cannot be verified in jsdom. -->
+- [x] Route moves preserve deep links through intentional redirects and remove old callers.
+  <!-- Evidence: `frontend/next.config.ts:83+` (redirects block). All EXECUTED moves verified present: workspaces (9 entries), goal→goals, drafts→inbox, automations→settings/automations, workflow→settings/workflow, timeline→issues, analytics→reports, webhooks→settings/integrations/webhooks, access/client-access/members redirects. Old physical route files are deleted; `build-route-manifest.ts` contains only KEEP entries. -->
+- [x] Library remains Knowledge-owned while project Wiki remains an access-filtered projection.
+  <!-- Evidence: `01-ia-navigation.md:84–88` documents policy; `frontend/features/wiki/components/wiki-sidebar-nav.tsx` shows Library as a Knowledge navigation group (Private/Shared/Spaces). `00-overview.md:97` product decision: "Library belongs to Knowledge, not Build." -->
 - [ ] Filters, sort, group, layout, and tab state are shareable URL parameters.
+  <!-- 2026-09-27: The shared hook `frontend/features/build/shared/use-build-list-url-state.ts` exists and is used on Projects, Roadmap, Triage, Intake, Forms, Incidents, and Modules. P1-2 in `06-prioritized-backlog.md` notes "the remaining collection audit is still open" — Inbox, Cycles, Feedbucket, Reports, and detail overlays intentionally remain separate. Criterion as stated requires all Build list routes; partially satisfied. Settles when the collection audit completes and every remaining list route either uses the shared hook or has an explicitly documented exception. -->

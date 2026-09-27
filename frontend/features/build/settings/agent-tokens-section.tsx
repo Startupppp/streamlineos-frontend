@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Bot } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -19,7 +19,11 @@ import { TokenRow, TokenListSkeleton, TokensEmptyHint } from "./agent-token-list
 import { CreateTokenDialog } from "./agent-token-create-dialog";
 import { SetupHelp } from "./agent-token-setup-help";
 
-export function AgentTokensSection() {
+interface AgentTokensSectionProps {
+  createRef?: React.RefObject<(() => void) | null>;
+}
+
+export function AgentTokensSection({ createRef }: AgentTokensSectionProps = {}) {
   const canManageTokens = useCan("settings:api-tokens:write");
   const { data: tokens, isLoading, isError, refetch } = useAgentTokens();
   const revokeToken = useRevokeAgentToken();
@@ -27,6 +31,15 @@ export function AgentTokensSection() {
   const [revokeId, setRevokeId] = useState<number | null>(null);
 
   const handleOpenDialog = useCallback(() => setDialogOpen(true), []);
+
+  useEffect(() => {
+    if (createRef && canManageTokens) {
+      createRef.current = handleOpenDialog;
+    }
+    return () => {
+      if (createRef) createRef.current = null;
+    };
+  }, [createRef, canManageTokens, handleOpenDialog]);
 
   const handleRevoke = useCallback((id: number) => setRevokeId(id), []);
 

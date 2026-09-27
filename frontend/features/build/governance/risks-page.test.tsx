@@ -140,6 +140,7 @@ import {
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { GOVERNANCE_RISK_ROWS } from "@/features/build/shared/build-list-fixtures";
 
 const mockUseProjectRisks = useProjectRisks as jest.Mock;
 const mockUseProjectRiskStats = useProjectRiskStats as jest.Mock;
@@ -261,7 +262,7 @@ it("surfaces the 402 upgrade path from the backend rather than a generic error s
 
 it("renders the data table when rows are present and not the empty state", () => {
   mockUseProjectRisks.mockReturnValue(
-    baseQueryResult({ data: riskPage([riskRow]) }),
+    baseQueryResult({ data: riskPage(GOVERNANCE_RISK_ROWS) }),
   );
   render(<RisksPage projectId={1} />);
   expect(screen.getByTestId("data-table")).toBeInTheDocument();

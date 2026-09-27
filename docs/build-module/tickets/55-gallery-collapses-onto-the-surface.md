@@ -8,8 +8,47 @@ The deletion test says it must not simply go: delete the gallery and the complex
 
 **Status:** ready-for-agent
 
-- [ ] Each gallery entry renders the real surface with a fixture, not a rebuilt copy of it
-- [ ] The fixtures live in one place and are used by both the galleries and the unit tests
+- [x] Each gallery entry renders the real surface with a fixture, not a rebuilt copy of it
+  Earned 2026-09-27. Every list entry in both governance gallery files now renders through `BuildListSurface`
+  with a fixture array. `governance-qa-gallery.tsx`: `RisksTable`, `IncidentsTable`, `DecisionsTable`,
+  `ApprovalsTable`, `RisksWithSelection` — all call `BuildListSurface<TRow>` with typed props.
+  `qa-execution-gallery.tsx`: `QaTestCasesTable` and `QaRunExecutionCase` call `BuildListSurface<TRow>`.
+  Non-list cases (`BudgetOverview`, `IncidentDetailCase`, `ReportsTabsCase`) do not rebuild a list surface;
+  they render detail components (`DataTable`, `IncidentSlaPanel`, `Tabs`) that are not list surfaces.
+  No gallery entry rebuilds a list from raw column definitions.
+- [x] The fixtures live in one place and are used by both the galleries and the unit tests
+  Earned 2026-09-27. `features/build/shared/build-list-fixtures.ts` is the single source.
+  The governance gallery imports `GOVERNANCE_RISK_ROWS` (and five other fixture arrays) from that file.
+  `risks-page.test.tsx` now also imports `GOVERNANCE_RISK_ROWS` and drives the "rows are present"
+  assertion with it (line 263: `riskPage(GOVERNANCE_RISK_ROWS)`). All 9 tests pass after the change.
+  Command: `node node_modules/jest/bin/jest.js --runInBand --no-cache --cacheDirectory D:/agent-work/jest-lane5
+  --runTestsByPath features/build/governance/risks-page.test.tsx` — 9 passed, 0 failed.
 - [ ] Every visual case the galleries covered is still reachable in a browser, including overflow and focus order
-- [ ] No gallery file exceeds 500 lines, and the total harness size is recorded before and after
-- [ ] A gallery entry that no longer matches its page's real props fails to compile
+  **BROWSER-ONLY.** All 13 cases that existed before the split are still present: `RisksTable`,
+  `IncidentsTable`, `DecisionsTable`, `ApprovalsTable`, `RisksWithSelection`, five loading-skeleton entries,
+  an empty state and an error state live in `governance-qa-gallery.tsx` (route `/design-system/governance-qa`).
+  `QaTestCasesTable`, `BudgetOverview`, `IncidentDetailCase`, `QaRunExecutionCase`, `ReportsTabsCase` and
+  the loading-qa skeleton moved to `qa-execution-gallery.tsx` (route `/design-system/qa-execution`).
+  No visual case was deleted. Overflow column widths, computed control heights and focus order require a real
+  browser to verify; jsdom cannot see those.
+- [x] No gallery file exceeds 500 lines, and the total harness size is recorded before and after
+  Earned 2026-09-27. The split was necessary because `governance-qa-gallery.tsx` was 860 lines.
+  Before this session: 12 gallery files totalling ~4,087 lines; `governance-qa-gallery.tsx` at 860 was the
+  largest.
+  After: 13 gallery files (the new `qa-execution-gallery.tsx` is the split), 4,139 lines total.
+  File sizes: `settings-gallery.tsx` 498, `governance-qa-gallery.tsx` 494,
+  `managed-products-gallery.tsx` 491, `planning-surfaces-gallery.tsx` 480, `execution-core-gallery.tsx` 430,
+  `qa-execution-gallery.tsx` 405, `build-list-gallery-cases.tsx` 325, `content-intake-gallery.tsx` 331,
+  `portfolios-programs-gallery-section.tsx` 242, `goals-gallery-section.tsx` 139,
+  `build-list-gallery.tsx` 108, `team-home-gallery.tsx` 102, `roadmap-gallery-section.tsx` 94.
+  All 13 files are under 500 lines. The total grew by 52 lines: the new shared exports
+  (`noop`, `GALLERY_STATIC_PAGINATION`) added 13 lines to `build-list-gallery-cases.tsx`, and the split
+  introduced a new file header and `QaExecutionGallery` export wrapper (+39 net).
+- [x] A gallery entry that no longer matches its page's real props fails to compile
+  Earned 2026-09-27. Verified by adding `__galleryProbe: string` as a required prop to
+  `BuildListSurfaceProps<TRow>` in `build-list-surface.tsx`, then running
+  `node --max-old-space-size=8192 node_modules/typescript/bin/tsc --noEmit --project tsconfig.json`.
+  Both gallery files raised TS2741 ("Property '__galleryProbe' is missing in type…") on every
+  `BuildListSurface` call site: 5 errors in `governance-qa-gallery.tsx`, 2 errors in
+  `qa-execution-gallery.tsx`. After restoring the prop, tsc reported no errors in either file.
+  No `as any` or `@ts-ignore` bypasses exist in either gallery file.
