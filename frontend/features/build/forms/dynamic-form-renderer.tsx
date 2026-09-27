@@ -78,7 +78,8 @@ export function DynamicFormRenderer({
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [submitterName, setSubmitterName] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { data: members } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
 
   function setFieldValue(key: string, v: unknown) {
     setValues((prev) => ({ ...prev, [key]: v }));

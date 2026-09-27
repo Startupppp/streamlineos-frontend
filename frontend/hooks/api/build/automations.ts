@@ -77,7 +77,7 @@ export function useCreateAutomation(projectId: number) {
     mutationFn: (
       data: Omit<ProjectAutomation, "id" | "projectId" | "createdAt">,
     ) =>
-      apiClient.post<ProjectAutomation>(
+      apiClient.post(
         `/build/${projectId}/automations`,
         data,
         undefined,
@@ -98,7 +98,7 @@ export function useUpdateAutomation(projectId: number) {
       automationId,
       ...data
     }: Partial<ProjectAutomation> & { automationId: number }) =>
-      apiClient.patch<ProjectAutomation>(
+      apiClient.patch(
         `/build/${projectId}/automations/${automationId}`,
         data,
         undefined,

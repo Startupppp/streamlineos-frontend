@@ -64,7 +64,8 @@ export function TriagePage({ projectId }: TriagePageProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const canUpdate = useCan("build:tickets:update");
   const bulkUpdate = useBulkUpdateTickets(projectId);
-  const { data: members } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
   const { data: cycles } = useCycles(projectId);
   const cursorTrail = useMemo(
     () =>

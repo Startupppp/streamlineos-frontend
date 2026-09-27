@@ -86,7 +86,8 @@ export function useCreateTicketForm({
   const { data: labelsRaw } = useProjectLabels(projectId ?? undefined, {
     enabled: projectId != null,
   });
-  const { data: membersRaw } = useProjectMembers(queryProjectId);
+  const { data: membersPage } = useProjectMembers(queryProjectId);
+  const membersRaw = membersPage?.data;
 
   const cycles = useMemo<Cycle[]>(
     () => (projectId != null ? (cyclesRaw ?? []) : []),

@@ -8,7 +8,7 @@ export interface CursorPagination {
   hasMore: boolean;
 }
 
-export interface CursorPage<T> {
+export interface PortfolioCursorPage<T> {
   data: T[];
   pagination: CursorPagination;
 }
@@ -29,7 +29,7 @@ export interface Portfolio {
   projectCount?: number;
 }
 
-export type PortfoliosPage = CursorPage<Portfolio>;
+export type PortfoliosPage = PortfolioCursorPage<Portfolio>;
 
 export interface LinkedProject {
   id: number;
@@ -47,8 +47,8 @@ export interface LinkedProgram {
 }
 
 export interface PortfolioDetail extends Portfolio {
-  projects: CursorPage<LinkedProject>;
-  programs: CursorPage<LinkedProgram>;
+  projects: PortfolioCursorPage<LinkedProject>;
+  programs: PortfolioCursorPage<LinkedProgram>;
 }
 
 export interface CreatePortfolioInput {
@@ -84,7 +84,7 @@ export interface Program {
   projectCount?: number;
 }
 
-export type ProgramsPage = CursorPage<Program>;
+export type ProgramsPage = PortfolioCursorPage<Program>;
 
 export interface CreateProgramInput {
   name: string;

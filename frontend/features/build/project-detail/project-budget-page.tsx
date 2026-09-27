@@ -53,7 +53,8 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
     error,
     isEmpty: !budget,
   });
-  const { data: members } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
   const { data: orgMembersData } = useOrgMembers(1, 200);
   const updateBudget = useUpdateProjectBudget(projectId);
 

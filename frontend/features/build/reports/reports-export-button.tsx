@@ -14,6 +14,7 @@ interface ReportsExportButtonProps {
 export function ReportsExportButton({ projectId }: ReportsExportButtonProps) {
   const canView = useCan("build:view");
   const { data } = useVelocityReport(projectId);
+  const cycles = data?.pages.flatMap((page) => page.data) ?? [];
 
   const cycles = data?.pages.flatMap((page) => page.data) ?? [];
 

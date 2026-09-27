@@ -121,7 +121,8 @@ export function CycleDetailPage({
     error: cyclesError,
     refetch: refetchCycles,
   } = useCycles(projectId);
-  const { data: members } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
   // The board this page renders reads column counts keyed only on projectId.
   // Warming it here keeps it off the far side of the loading guard.
   useTicketColumnCounts(projectId);

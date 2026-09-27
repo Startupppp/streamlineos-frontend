@@ -114,25 +114,26 @@ export function DataTable<T>({
     const defs: ColumnDef<T>[] = [];
 
     if (selection) {
+      const activeSelection = selection;
       defs.push({
         id: "__select__",
         header: ({ table }) => {
           const pageRowIds = table.getRowModel().rows.map((r) => r.id);
           const allSelected =
             pageRowIds.length > 0 &&
-            pageRowIds.every((id) => selection.selected.has(id));
+            pageRowIds.every((id) => activeSelection.selected.has(id));
           function handleSelectAllChange(v: boolean | "indeterminate") {
             if (v) {
-              selection.onChange(
+              activeSelection.onChange(
                 new Set<string | number>([
-                  ...selection.selected,
+                  ...activeSelection.selected,
                   ...pageRowIds,
                 ]),
               );
             } else {
-              const next = new Set<string | number>(selection.selected);
+              const next = new Set<string | number>(activeSelection.selected);
               for (const id of pageRowIds) next.delete(id);
-              selection.onChange(next);
+              activeSelection.onChange(next);
             }
           }
           return (
@@ -149,7 +150,7 @@ export function DataTable<T>({
               checked={row.getIsSelected()}
               onCheckedChange={(v) => row.toggleSelected(!!v)}
               aria-label={selectionRowLabel(
-                selection.getRowLabel?.(row.original, row.index),
+                activeSelection.getRowLabel?.(row.original, row.index),
               )}
               onClick={(e) => e.stopPropagation()}
             />
