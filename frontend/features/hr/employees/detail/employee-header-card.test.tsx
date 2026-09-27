@@ -23,6 +23,15 @@ jest.mock("@/components/hr/resend-invite-button", () => ({
 jest.mock("@/components/hr/copy-invite-link-button", () => ({
   CopyInviteLinkButton: () => null,
 }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => false,
+}));
+jest.mock("@/hooks/api/hr", () => ({
+  useUpdateProfile: () => ({ mutateAsync: jest.fn(), isPending: false }),
+}));
+jest.mock("@/hooks/api/use-upload-file", () => ({
+  useUploadFile: () => ({ mutateAsync: jest.fn(), isPending: false }),
+}));
 jest.mock("@/features/hr/employees/detail/invite-delivery-badge", () => ({
   InviteDeliveryBadge: () => null,
   InviteDeliveryNote: () => null,
