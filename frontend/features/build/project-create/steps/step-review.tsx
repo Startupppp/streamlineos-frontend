@@ -45,7 +45,7 @@ export function StepReview({ draft }: StepReviewProps) {
         ].join(", ");
   const templateName =
     draft.templateId !== null
-      ? ((templatePages?.pages.flatMap((page) => page.data) ?? []).find(
+      ? ((templatePages?.pages.flatMap((page) => Array.isArray(page) ? page : page.data) ?? []).find(
           (t) => t.id === draft.templateId,
         )?.name ?? "Unknown template")
       : "Blank";

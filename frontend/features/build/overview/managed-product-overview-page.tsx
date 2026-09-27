@@ -7,6 +7,7 @@ import {
   useManagedProduct,
   useManagedProductInsights,
 } from "@/hooks/api/build/managed-products";
+import type { ManagedProduct } from "@/types/projects/managed-products";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useRoadmapItems } from "@/hooks/api/build/roadmap";
 import { useGoalsPage } from "@/hooks/api/goals";
@@ -71,7 +72,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     isEmpty: !productQuery.data,
   });
 
-  const product = productQuery.data;
+  const product: ManagedProduct | null | undefined = productQuery.data;
   const projectsPage = projectsQuery.data;
 
   const hasMoreProjects = projectsPage?.hasMore ?? false;

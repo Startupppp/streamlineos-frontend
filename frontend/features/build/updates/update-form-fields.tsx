@@ -1,6 +1,6 @@
 "use client";
 
-import type { UseFormReturn } from "react-hook-form";
+import type { UseFormReturn, ControllerRenderProps } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -38,7 +38,7 @@ export function UpdateFormFields({ form, isOpen }: UpdateFormFieldsProps) {
     );
   }
 
-  function renderWinsField({ field }: { field: React.ComponentProps<typeof Textarea> }) {
+  function renderWinsField({ field }: { field: ControllerRenderProps<CreateUpdateInput, "wins"> }) {
     return (
       <FormItem>
         <FormLabel>Wins</FormLabel>
@@ -55,7 +55,7 @@ export function UpdateFormFields({ form, isOpen }: UpdateFormFieldsProps) {
     );
   }
 
-  function renderRisksField({ field }: { field: React.ComponentProps<typeof Textarea> }) {
+  function renderRisksField({ field }: { field: ControllerRenderProps<CreateUpdateInput, "risks"> }) {
     return (
       <FormItem>
         <FormLabel>Risks</FormLabel>
@@ -72,7 +72,7 @@ export function UpdateFormFields({ form, isOpen }: UpdateFormFieldsProps) {
     );
   }
 
-  function renderNextField({ field }: { field: React.ComponentProps<typeof Textarea> }) {
+  function renderNextField({ field }: { field: ControllerRenderProps<CreateUpdateInput, "next"> }) {
     return (
       <FormItem>
         <FormLabel>Next</FormLabel>
@@ -89,7 +89,7 @@ export function UpdateFormFields({ form, isOpen }: UpdateFormFieldsProps) {
     );
   }
 
-  function renderCitationsField({ field }: { field: React.ComponentProps<typeof Textarea> }) {
+  function renderCitationsField({ field }: { field: ControllerRenderProps<CreateUpdateInput, "citations"> }) {
     return (
       <FormItem>
         <FormLabel>Citations</FormLabel>

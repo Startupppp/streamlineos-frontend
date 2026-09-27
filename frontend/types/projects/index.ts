@@ -19,3 +19,4 @@ export * from "./portfolios";
 export * from "./workflow";
 export * from "./teams";
 export * from "./managed-products";
+export type { CursorPage } from "./client-portal";

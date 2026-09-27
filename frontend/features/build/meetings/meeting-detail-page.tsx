@@ -59,7 +59,8 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const { data: meeting, isLoading, isError, error, refetch } = useMeeting(projectId, meetingId);
-  const { data: projectMembers = [] } = useProjectMembers(projectId);
+  const { data: projectMembersPage } = useProjectMembers(projectId);
+  const projectMembers = projectMembersPage?.data ?? [];
 
   const updateMeeting = useUpdateMeeting(projectId);
   const deleteMeeting = useDeleteMeeting(projectId);

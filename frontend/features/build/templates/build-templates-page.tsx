@@ -99,7 +99,7 @@ export function BuildTemplatesPage() {
   const [deleteTarget, setDeleteTarget] = useState<ProjectTemplate | null>(null);
 
   const templates = useMemo(
-    () => templatePages?.pages.flatMap((p) => p.data) ?? [],
+    () => templatePages?.pages.flatMap((p) => Array.isArray(p) ? p : p.data) ?? [],
     [templatePages],
   );
 

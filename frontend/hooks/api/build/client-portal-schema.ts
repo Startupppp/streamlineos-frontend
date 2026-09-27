@@ -77,7 +77,7 @@ const milestoneVisibilityItemContract = z.object({
   clientVisible: z.boolean(),
 });
 
-function visibilityPageContract<T extends z.ZodTypeAny>(rowContract: T) {
+function visibilityPageContract<T>(rowContract: ResponseContract<T>) {
   return cursorPageContract(rowContract).or(
     z.array(rowContract).transform((rows) => ({
       data: rows,
