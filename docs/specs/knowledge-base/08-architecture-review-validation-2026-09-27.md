@@ -99,7 +99,37 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 
 - [ ] Pass requested space/source/type/owner/status/verified filters consistently into candidate and passage queries. Current page candidate calls do not receive `spaceId` in `retrieveTopArticles`; source retrieval is given source IDs but no selected-space argument. Reject unsupported UI scope fields instead of implying they are applied.
 - [ ] Return typed per-channel outcomes for empty, disabled, degraded and failed. `retrieveDocumentPassages`/`retrieveTopSources` catch and return `[]`; a successful embedding then makes the facade report non-degraded results. An empty authorized result means no matching accessible evidence, not proof of an empty tenant corpus.
-- [ ] Persist actual source content/ACL revisions and provider context provenance. `buildAskSourceRecords` and the original `buildSourceRecords` write `aclRevision: null`. A JSON field called `sourceIdsWithRevisions` is not reconstruction evidence.
+- [ ] **PARTLY — ACL revisions done; provider provenance is genuinely absent and cannot be fixed from inside KB.** Persist actual source content/ACL revisions and provider context provenance.
+      **ACL revisions — the claim is stale.** ~~`buildAskSourceRecords` and the original
+      `buildSourceRecords` write `aclRevision: null`.~~ `buildSourceRecords` **does not exist**
+      anywhere in the repo. `buildAskSourceRecords` (`kb-ask-context.ts:61-85`) writes
+      `aclRevision: item.aclRevision ?? null` for `top` items, and the retrieval query really does
+      project it (`kb-search-retrieval.service.ts:250-261`, `aclRevision: kbPages.aclRevision`).
+      `null` for the `sources` and `linked` arms is **correct, not a gap**: `kb_sources` has no
+      `acl_revision` column at all (`db/schema/kb/sources.ts` — verified, no revision column), and
+      linked company documents have no ACL-revision concept.
+      **The `sourceIdsWithRevisions` criticism no longer holds.** `kb-ask-acl-revision.spec.ts`
+      (8 tests) asserts the persisted entry carries the real revision end to end, proves the SQL
+      projection by walking `queryChunks` rather than touching `Column.table` (which would pass
+      vacuously), and pairs the page/article positives with deliberate-null negatives for the
+      source and document arms. **Mutation-tested:** reverting `item.aclRevision ?? null` to
+      `null` fails 5 of 8 — the 3 survivors are exactly the null arms that do not depend on the
+      threading, which is the right signature.
+      **Provider provenance — a real gap, and a live always-null read.** `kb_ai_interactions`
+      has a `provider` column (`db/schema/kb/ai-interactions.ts:42`) that **nothing ever writes**,
+      and `kb-research-brief.handler.ts:117` **selects it**, so every research brief reports
+      `provider: null` forever, indistinguishable from "no provider". It breaks no contract —
+      both schemas declare it `z.string().nullable()` (`kb-retrieval-response.schemas.ts:111`,
+      frontend `kb-research-schema.ts:20`) — and no UI renders it.
+      **A correction to note:** joining `ai_usage_logs` on `gatewayCorrelationId` does **not**
+      recover it — that table has no provider column either (`db/schema/common/ai-usage.ts:4-19`).
+      The provider name is stored nowhere in the database. `model` **is** written
+      (`kb-ask.service.ts:343`), so the provider is inferable from the model string but not recorded.
+      **Why this stays open:** the value does not exist at the KB call site — `AiUsageMeta`
+      (`modules/ai/gateway/ai-gateway.types.ts:9-16`) carries `model` and costs, no provider.
+      Populating it means changing the AI module, which another session owns. **Not attempted.**
+      The two honest options for whoever owns it: add `provider` to `AiUsageMeta` and write it, or
+      drop the column and the always-null field from the brief response.
 
 ### AV-05 — P1: correct embedding-cache isolation and cost behavior
 
