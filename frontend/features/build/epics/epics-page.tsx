@@ -161,7 +161,7 @@ export function EpicsPage({ params }: PageProps) {
           {canUpdate && selectedIds.size > 0 && (
             <BulkActionBar
               selectedCount={selectedIds.size}
-              members={members?.data ?? []}
+              members={members}
               cycles={cycles ?? []}
               statuses={project?.statuses}
               projectId={projectId}
