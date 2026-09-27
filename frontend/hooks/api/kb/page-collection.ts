@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { KbPageCollectionResponse } from "./kb-page-collection-schema";
 
 export type { KbPageCollectionItem } from "./kb-page-collection-schema";
@@ -78,6 +79,7 @@ export function useKbPageCollection(
   const queryParams = buildKbPageCollectionQueryParams(params);
 
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(params),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageCollectionResponse>(

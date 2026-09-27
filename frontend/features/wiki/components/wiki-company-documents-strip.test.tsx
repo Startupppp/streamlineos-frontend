@@ -54,7 +54,7 @@ describe("WikiCompanyDocumentsStrip", () => {
     const { container } = render(<WikiCompanyDocumentsStrip />);
 
     expect(container).toBeEmptyDOMElement();
-    expect(mockList).toHaveBeenCalledWith({ limit: 6 }, { enabled: false });
+    expect(mockList).toHaveBeenCalledWith({ limit: 6 }, { enabled: false, throwOnError: false });
   });
 
   it("renders nothing when there is nothing to show, rather than an empty heading", () => {

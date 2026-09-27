@@ -98,14 +98,14 @@ export function EmptyChat({
           Answers are grounded in your uploaded files, notes and wiki pages.
         </p>
       </div>
-      <div className="flex flex-wrap justify-center gap-2">
+      <div className="flex w-full max-w-full flex-wrap justify-center gap-2 px-2">
         {KB_SUGGESTIONS.map((s) => (
           <button
             key={s}
             type="button"
             data-suggestion={s}
             onClick={onSuggestion}
-            className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
+            className="max-w-full whitespace-normal rounded-full border border-border bg-background px-3 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
           >
             {s}
           </button>

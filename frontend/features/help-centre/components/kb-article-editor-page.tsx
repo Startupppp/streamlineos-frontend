@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { notFound } from "next/navigation";
+import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -19,7 +19,15 @@ export function KbArticleEditorPage({ articleId }: { articleId: number }) {
     void articleQuery.refetch();
   }
 
-  if (articleQuery.isLoading) {
+  const missing =
+    (isApiError(articleQuery.error) && articleQuery.error.status === 404) ||
+    (!articleQuery.access.pending &&
+      !articleQuery.isLoading &&
+      !articleQuery.isFetching &&
+      !articleQuery.error &&
+      !articleQuery.data);
+
+  if (articleQuery.access.pending || articleQuery.isLoading) {
     return (
       <PageWrapper title="Edit Article">
         <LoadingState variant="form" />
@@ -27,10 +35,22 @@ export function KbArticleEditorPage({ articleId }: { articleId: number }) {
     );
   }
 
-  if (articleQuery.error) {
-    if (isApiError(articleQuery.error) && articleQuery.error.status === 404) {
-      notFound();
-    }
+  if (missing) {
+    return (
+      <PageWrapper title="Article not found" backHref="/support/kb">
+        <ErrorState
+          title="Article not found"
+          description="This article was deleted or the link is no longer valid."
+          onRetry={undefined}
+        />
+        <Link href="/support/kb" className="text-sm text-primary underline">
+          Back to Knowledge Base
+        </Link>
+      </PageWrapper>
+    );
+  }
+
+  if (articleQuery.error || !articleQuery.data) {
     return (
       <PageWrapper title="Edit Article">
         <ErrorState
@@ -40,10 +60,6 @@ export function KbArticleEditorPage({ articleId }: { articleId: number }) {
         />
       </PageWrapper>
     );
-  }
-
-  if (!articleQuery.data) {
-    notFound();
   }
 
   const article = articleQuery.data;

@@ -7,6 +7,7 @@ import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workf
 import type { SupportTicketStatus, SupportTicketPriority, SupportMessageAttachment } from "@/types/support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const portalTicketListC = lazyContract(() =>
   import("./support-portal-schema").then((m) => m.portalTicketListContract),
@@ -74,6 +75,7 @@ export function usePortalTickets() {
     queryKey: supportAndWorkflowsQueryKeys.supportPortalTickets.list(),
     queryFn: ({ signal }) => apiClient.get<PortalTicket[]>("/support/portal/tickets", undefined, signal, portalTicketListC),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

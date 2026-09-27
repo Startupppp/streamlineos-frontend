@@ -378,7 +378,16 @@ export default function KnowledgeBasePage() {
   const readyCount = sources.filter((s) => s.status === "ready").length;
   const scopeActive = scopeSourceIds.length > 0 || scopeVerifiedOnly || scopePageIds.length > 0;
   const scopeItemCount = scopeSourceIds.length + scopePageIds.length;
-  const baseDisplaySources = hasScopeFilters ? scopeSources : sources;
+  const clientFilteredSources = sources.filter((source) => {
+    if (scopeFilters.kind !== undefined && source.kind !== scopeFilters.kind) return false;
+    if (scopeFilters.createdById !== undefined && source.createdById !== scopeFilters.createdById) return false;
+    return true;
+  });
+  const baseDisplaySources = !hasScopeFilters
+    ? sources
+    : scopeSourcesQuery.isError
+      ? clientFilteredSources
+      : scopeSources;
   const scopeDisplaySources = scopeSpaceIdFilter !== null
     ? baseDisplaySources.filter((s) => s.spaceId === scopeSpaceIdFilter)
     : baseDisplaySources;
@@ -388,7 +397,7 @@ export default function KnowledgeBasePage() {
       title="Knowledge Base"
       subtitle="Chat with your files, notes and wiki — answers are grounded in your content."
       noInternalScroll
-      contentClassName="flex flex-col min-h-0 px-4 sm:px-6"
+      contentClassName="flex min-h-0 min-w-0 flex-col px-4 sm:px-6 md:pr-36"
       actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="gap-1.5" onClick={handleToggleConversations} aria-pressed={conversationsOpen}>
@@ -536,7 +545,7 @@ export default function KnowledgeBasePage() {
 
               <div className="shrink-0 border-t border-border bg-background/60 p-3">
                 <div className="flex items-center gap-2">
-                  <Input value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Ask anything about your files, notes and wiki…" className="h-11 rounded-xl text-sm" autoFocus />
+                  <Input value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Ask anything about your files, notes and wiki…" className="h-11 min-w-0 flex-1 rounded-xl text-sm" autoFocus />
                   {ask.isPending && <Button variant="outline" onClick={handleStop}>Stop</Button>}
                   <Button onClick={handleSend} disabled={ask.isPending || !input.trim()} className="h-11 w-11 shrink-0 rounded-xl p-0" aria-label="Send">
                     <motion.span whileTap={reduce ? undefined : { scale: 0.85 }}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -32,6 +32,7 @@ import {
   FILTER_TOOLBAR_ROW,
 } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
+import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
 import { LoadingState } from "@/components/shared/loading-state";
 import {
   EmptyDocumentsIllustration,
@@ -76,6 +77,8 @@ export function KbManagerContent() {
   const searchParams = useSearchParams();
 
   const tab = searchParams.get("tab") ?? "articles";
+  const filterRowRef = useRef<HTMLDivElement>(null);
+  const filterOverflow = useHorizontalOverflow(filterRowRef, tab);
   const statusParam = searchParams.get("status") ?? "all";
   const visibilityParam = searchParams.get("visibility") ?? "all";
   const categoryParam = searchParams.get("category") ?? "all";
@@ -267,7 +270,12 @@ export function KbManagerContent() {
   }
 
   const filters = (
-    <div className={FILTER_TOOLBAR_ROW}>
+    <div
+      ref={filterRowRef}
+      data-hidden-left={filterOverflow.hiddenLeft}
+      data-hidden-right={filterOverflow.hiddenRight}
+      className={`${FILTER_TOOLBAR_ROW} ${OVERFLOW_EDGE_FADE_CLASS}`}
+    >
       <SearchInput
         placeholder="Search…"
         value={localSearch}
