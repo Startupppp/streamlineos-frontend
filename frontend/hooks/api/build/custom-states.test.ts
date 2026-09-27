@@ -29,6 +29,7 @@ function makeState(id: number, order: number): CustomState {
     name: `State ${id}`,
     color: null,
     order,
+    type: null,
   };
 }
 

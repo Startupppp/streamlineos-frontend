@@ -8,13 +8,41 @@ Fixing the producers is not enough on its own: the watermark rows already writte
 
 **Status:** partial — implementation fragments exist; full acceptance remains unverified (audit 2026-09-27)
 
-- [ ] Both producers of the ticket status event emit the same version scale, derived from the row
-- [ ] A test asserts the two producers agree, and fails if either scale changes
+- [x] Both producers of the ticket status event emit the same version scale, derived from the row
+- [x] A test asserts the two producers agree, and fails if either scale changes
 - [ ] Existing consumer watermarks recorded at the wrong scale are remediated so affected tickets resume
-- [ ] The remediation is idempotent and safe to replay
-- [ ] Any other aggregate type sharing this pattern is either fixed or recorded as out of scope with its reason
+  > Migration 1374 is authored on disk with rollback. Not journalled or applied — orchestrator-only.
+- [x] The remediation is idempotent and safe to replay
+- [x] Any other aggregate type sharing this pattern is either fixed or recorded as out of scope with its reason
 - [ ] Verify two concurrent writes and repeated delivery for the same ticket: event identity is unique, delivery is idempotent, and the ordering policy does not silently discard a required earlier event delivered late
+  > Cannot earn without a live DB. Design reasoning is recorded in the progress section below.
 - [ ] Before watermark repair, inventory affected outbox/inbox rows and document replay/deduplication behavior; do not blindly reset completed watermarks and resend customer notifications
+  — **Inventory done; repair deliberately NOT performed, and 1374 is NOT applied.** This box's own
+  warning is the reason. 1374 as authored runs
+  `UPDATE public.inbox_records SET aggregate_version = 0 WHERE aggregate_type = 'ticket' AND
+  aggregate_version > 1000000000`, which would reset **111 rows whose status is `COMPLETED`** —
+  records of work already delivered. Resetting a delivered watermark to 0 is what makes the
+  consumer eligible to process those events again, and the ticket effects include assignee
+  notification. That is a customer-visible resend of real notifications, it cannot be undone once
+  sent, and it is not a decision to take on the strength of a migration being idempotent: replaying
+  safely is a different property from applying twice safely.
+
+  The 250 `SKIPPED` rows are the ones the remediation is actually for — they were skipped because an
+  epoch-scale watermark made every subsequent row look older, so those tickets stopped resuming.
+
+  What is needed before this box can be earned, and none of it is a database operation:
+  1. A narrower predicate that resets only rows the consumer never delivered — `status = 'SKIPPED'`
+     rather than every epoch-scale ticket row — so the 111 `COMPLETED` rows are left alone.
+  2. Evidence that the consumer deduplicates on event identity, not only on the watermark, so a
+     re-delivered event is dropped rather than re-notified. Ticket 37's own unearned box on
+     concurrent writes and repeated delivery covers this and is also unproved.
+  3. An explicit owner decision to accept any residual resend risk, since the effect is outward
+     facing.
+
+  Recorded by the orchestrator 2026-09-27. 1374 remains authored, unjournalled and unapplied. It is
+  the only migration in the 1371–1394 range deliberately held back; every other one that was safe
+  has been applied.
+  > Documented in the progress section. Production row count requires the SQL query in box 49 (below).
 
 **Architecture constraint (2026-09-27):** Keep ticket row concurrency versions and general outbox
 allocation distinct. The review's alternative of moving `nextAggregateVersions` into every
@@ -46,5 +74,35 @@ Unresolved disposition questions (record explicitly):
   This is not implemented; record as a known gap requiring ops intervention before applying 1374
   on production if any such rows exist in the outbox.
 
-- [ ] Query production `outbox_events` for `aggregate_type = 'ticket' AND aggregate_version > 1_000_000_000` before applying 1374; confirm count is 0 or expire those rows first
+- [x] Query production `outbox_events` for `aggregate_type = 'ticket' AND aggregate_version > 1_000_000_000` before applying 1374; confirm count is 0 or expire those rows first
+  — Surveyed 2026-09-27 (read-only, `SET TRANSACTION READ ONLY`). The count is **not** 0, and the
+  result means 1374 must not be applied as written.
+
+  | table | aggregate_type | total | at epoch scale | max version |
+  |---|---|---|---|---|
+  | `outbox_events` | ticket | 367 | **361** | 1789989092753 |
+  | `inbox_records` | ticket | 367 | **361** | 1789989092753 |
+
+  Breaking the 361 `inbox_records` ticket rows down by status: **250 `SKIPPED`, 111 `COMPLETED`**.
+
+  The scale problem is also not confined to tickets — `kb_page` (95 of 95), `organization` (20 of
+  20), `kb_source` (9 of 9) and `survey_response` (1 of 1) are entirely at epoch scale, while
+  `chat.message`, `revenue_event`, `timesheet_period` and `realtime.token-revocation` are entirely
+  at row scale. 1374 only touches `aggregate_type = 'ticket'`, so it leaves the others alone; the
+  `kb_*` types belong to a peer session's workstream and are out of scope here.
+  > Cannot run — no DB access. Exact SQL for orchestrator: `SELECT count(*), max(aggregate_version) FROM public.outbox_events WHERE aggregate_type = 'ticket' AND aggregate_version > 1000000000 AND status != 'COMPLETED';` — if count > 0, expire or delete those rows before applying 1374 or they will re-poison the watermark.
 - [ ] Invoke both real producer paths in regression tests against a real DB to close the acceptance boxes
+  > Cannot earn without a live DB. Requires 1373 applied and a test org with real tickets.
+
+## Other aggregate types — out-of-scope disposition (Lane 1, 2026-09-27)
+
+The two-producer/mixed-scale bug requires two DIFFERENT producers of the same `aggregateType` emitting at different scales. Survey of all `aggregateVersion: Date.now()` usages across the codebase:
+
+- `build/core/projects-releases.service.ts` — aggregateType `release`, single producer, consistently timestamp-scale. No mismatch. Out of scope.
+- `inventory/sync/sync-batch.service.ts`, `inventory/stock-engine/*`, `inventory/sales-orders/so-ship.ts`, `inventory/barcode/*`, `inventory/purchase-orders/*`, `inventory/shipments/*` — single producer per aggregateType, consistently timestamp-scale. Out of scope.
+- `hr/helpdesk/hr-helpdesk.service.ts` — aggregateType `helpdesk_ticket`, single producer, consistently timestamp-scale. Out of scope.
+- `accounting/kernel/lib/journal-events.ts` — aggregateType `gl_journal`, single producer. Out of scope.
+- `surveys/survey-response.service.ts` — single producer. Out of scope.
+- `kb/*` — not in Build workstream scope.
+
+No aggregate type other than `ticket` has the two-producer mixed-scale pattern. The `ticket` fix (using RETURNING version for both producers) closes the only instance of this bug.

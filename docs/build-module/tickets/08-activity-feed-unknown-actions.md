@@ -18,15 +18,17 @@ inherited properties. Rendering the current component in memory succeeds for `fu
 but throws for `__proto__` and `constructor`. The four existing tests pass without covering those
 inputs, parsing the real response contract or asserting each known icon mapping.
 
-- [ ] Use an own-property lookup for the display map and add inherited-name regression cases, including __proto__, constructor and toString; assert fallback rendering without a thrown error
-- [ ] Exercise parsing plus rendering together and assert a known action retains its intended icon/label; retain the ordinary unknown-action regression
+- [x] Use an own-property lookup for the display map and add inherited-name regression cases, including __proto__, constructor and toString; assert fallback rendering without a thrown error
+  — `ticket-activity-log.tsx:52`: `isKnownAction` changed from `action in ACTION_ICONS` to `Object.hasOwn(ACTION_ICONS, action)`. Tests added: "renders without throwing when the action is the inherited name __proto__", "...constructor", "...toString" — all three pass (exit 0).
+- [x] Exercise parsing plus rendering together and assert a known action retains its intended icon/label; retain the ordinary unknown-action regression
+  — Test "a known action parsed through the contract schema renders with its server label retained" parses a status_changed entry through `ticketActivityPageContract`, feeds it to `TicketActivityLog`, and asserts the server label is rendered. Test "renders the server label for a known action" retained. All 8 tests pass: exit 0.
 
-- [ ] An activity entry with an unrecognised action renders instead of failing the page
-  — `frontend/hooks/api/build/build-tickets-core-schema.ts` line 288: `action: z.string()` (was `ticketActivityActionContract` — a `z.enum`). Any string now passes Zod validation; `ticketActivityPageContract` no longer throws on unknown action values.
-- [ ] Known actions still get their specific label and icon
-  — `frontend/features/build/tickets/ticket-activity-log.tsx`: `ACTION_ICONS` (line 35) typed as `Record<KnownTicketActivityAction, LucideIcon>` with all 14 known actions mapped. `isKnownAction` type guard (line 52) narrows `entry.action: string` to `KnownTicketActivityAction` inside the ternary so `ACTION_ICONS[entry.action]` is type-safe with no cast. Known actions resolve their specific icon.
-- [ ] An unrecognised action displays a sensible fallback rather than blank
-  — `frontend/features/build/tickets/ticket-activity-log.tsx` line 70: label renders `{entry.label || entry.action}`. When the backend sends a label, it is shown. When the label is empty (defensive), the raw action string is displayed. Icon falls back to `History` via `isKnownAction` guard.
+- [x] An activity entry with an unrecognised action renders instead of failing the page
+  — `frontend/hooks/api/build/build-tickets-core-schema.ts` line 288: `action: z.string()` (was `ticketActivityActionContract` — a `z.enum`). Any string now passes Zod validation; `ticketActivityPageContract` no longer throws on unknown action values. Tests "renders without throwing when the action is the inherited name __proto__/constructor/toString" and "renders the activity feed when an entry carries an action absent from the display set" all pass (8/8, exit 0).
+- [x] Known actions still get their specific label and icon
+  — `frontend/features/build/tickets/ticket-activity-log.tsx`: `ACTION_ICONS` (line 35) typed as `Record<KnownTicketActivityAction, LucideIcon>` with all 14 known actions mapped. `isKnownAction` now uses `Object.hasOwn(ACTION_ICONS, action)` — type-safe, prototype-chain-safe. Test "a known action parsed through the contract schema renders with its server label retained" and "renders the server label for a known action" both pass.
+- [x] An unrecognised action displays a sensible fallback rather than blank
+  — `frontend/features/build/tickets/ticket-activity-log.tsx` line 70: label renders `{entry.label || entry.action}`. Test "shows the action string as fallback label when the server sends an empty label for an unknown action" passes — raw action string is rendered when label is empty.
 - [x] A test feeds an action type absent from the display set and asserts the feed still renders
   — `frontend/features/build/tickets/ticket-activity-log.test.tsx` (new file, 4 tests):
     - "renders the activity feed when an entry carries an action absent from the display set" — unknown action `"module_linked"` with label; asserts label renders

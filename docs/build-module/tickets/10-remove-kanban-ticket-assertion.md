@@ -8,10 +8,13 @@ The repository enforces a hard zero on assertions; this is a Build-module offend
 
 **Status:** partial — code exists, but acceptance gaps or required verification remain (audit 2026-09-27)
 
-- [ ] The assertion is gone, replaced by a type the compiler can check structurally
+- [x] The assertion is gone, replaced by a type the compiler can check structurally
+  — `frontend/features/build/views/execution-core-gallery.tsx`: `STUB_TICKET` is annotated as `KanbanTicket & { id: number }` — a structural intersection type, not an assertion. No `as KanbanTicket` in the file. Verified by reading the source and running `execution-core-gallery.test.tsx` (2/2 pass, exit 0).
 - [ ] Any field the card reads but the contract omits now surfaces as a type error
+  — Premise correction: `COLUMNS` is a hardcoded stub literal, not response data, so no response contract crosses this seam. This criterion cannot be met here — stays unticked per the premise correction above.
 - [x] The type-assertion gate carries no Build-module offender from this file
 - [ ] The gallery renders unchanged
+  — Gallery component tests (2/2) pass. Browser/visual comparison requires a real browser — out of scope.
 
 **Premise correction (2026-09-26).** This ticket was written on the belief that the gallery
 passes *response* data to the card. It does not: `COLUMNS` is a hardcoded stub literal, so no

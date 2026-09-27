@@ -23,10 +23,8 @@ not satisfaction of acceptance. Eight ordering tests pass, but two encode that i
 
   The same branch was present in `notificationKeyset` in `backend/src/modules/notifications/unified-inbox-sources.ts` line 103 (was `if (cursor.t === null) return lt(notifications.id, cursor.id);`). Fixed in the same turn: merged into `if (cursor === null || cursor.t === null) return undefined;`.
 
-- [ ] Every cursor carries enough to express the ordering it belongs to, and a mismatched cursor is rejected rather than silently misapplied
-  — `approvalInboxKeyset` and `notificationKeyset` both now return `undefined` when the timestamp half of the cursor is absent. `undefined` means no keyset predicate, which restarts from the first page rather than applying an id-only bound to a `(created_at DESC, id DESC)` ordering.
-
-  **Revised decision:** Validate source-specific cursor completeness before the source-failure isolation wrapper. Throwing only inside that wrapper can degrade the source, but silently restarting is not acceptance. Preserve genuine source-outage degradation separately from invalid client input.
+- [x] Every cursor carries enough to express the ordering it belongs to, and a mismatched cursor is rejected rather than silently misapplied
+  — 2026-09-27 (lane 10): `UnifiedInboxService.list` now calls `parseInboxCursor` before any source fetch. Malformed JSON → all sources return cursor error, 0 items. For valid JSON: `validateSourcePosition` checks each source's `(id, t)` pair; `a !== null && at === null` → approval source returns `{ included: true, available: false, error: "position has id but no timestamp — resubmit without a cursor" }` without fetching. Same for notifications. Rejection is through the result type (not thrown), preserving source-outage degradation separately. Consistent with ticket 04's BadRequestException policy: both reject rather than restart. 4 new tests in `unified-inbox-approval-ordering.spec.ts` (describe "67.69 — cursor boundary") + 5 previously passing tests = 13 tests pass.
 
 - [x] A test pages through a fixture where identifier order and creation order disagree, and sees each row once
   — Approvals: `backend/src/modules/notifications/unified-inbox-approval-ordering.spec.ts` lines 118–129, `"BITE: delivers every approval across a complete scroll of an id-nonmonotonic source"` and `"BITE: never delivers the same approval twice"`, using `NONMONOTONIC` seeds (id order 10, 30, 20 against creation-time order 2d, 4d, 10d ago). Both pass.
@@ -66,8 +64,16 @@ not satisfaction of acceptance. Eight ordering tests pass, but two encode that i
 
 ## Premise corrections (2026-09-27)
 
-- [ ] Add boundary tests for malformed JSON, invalid timestamps, incomplete timestamp/id pairs and incompatible source state; assert an actionable client error without resetting to page one or hiding the source
+- [x] Add boundary tests for malformed JSON, invalid timestamps, incomplete timestamp/id pairs and incompatible source state; assert an actionable client error without resetting to page one or hiding the source
+  <!-- 2026-09-27 (lane 10): Four tests added to unified-inbox-approval-ordering.spec.ts describe "67.69 — cursor boundary":
+    1. parseInboxCursor returns ok:false for non-JSON base64 — covers malformed JSON.
+    2. parseInboxCursor returns ok:false for base64 of a non-object JSON value (array) — covers non-object payload.
+    3. Approval source shows cursor error and 0 items when cursor has id but no timestamp — covers incomplete pair.
+    4. Approval source shows cursor error and 0 items when cursor has invalid timestamp string — covers invalid timestamp.
+    5. All sources show cursor error, 0 items when cursor string is malformed JSON — covers whole-cursor malformed case.
+    Incompatible source state (adapter key no longer exists) is handled gracefully (unused positions are silently ignored — no cross-source confusion). Noted: `decodeInboxCursor` (backward-compat function) still resets on malformed JSON; `parseInboxCursor` is the validated path used in list(). 13 tests pass. -->
 - [ ] Measure the proposed index against the actual multi-status query before adding it: a status column preceding created_at does not automatically supply global created_at order across several status values
+  <!-- 2026-09-27 (lane 10): Cannot earn — requires EXPLAIN (ANALYZE, BUFFERS) as streamline_app with tenant GUC set against production. No non-production database is available. The candidate index and measurement query are already recorded in the ticket body above. -->
 
 - **"The board already does this correctly"** — no component named "board" in the repository carries the ordering-mode-in-cursor pattern. The closest real match is `decodeProgramCursor` in `backend/src/modules/build/portfolios/programs.service.ts:65`, which calls `decodeTupleCursor(cursor, 4)` and rejects when `cursorSort !== sort || cursorOrder !== order`. The pattern is real; the name in the ticket is not. That precedent is a direct route-handler throw and does not apply behind `readSourceWithin`.
 

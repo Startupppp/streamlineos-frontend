@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { TicketActivityLog } from "./ticket-activity-log";
+import { ticketActivityPageContract } from "@/hooks/api/build/build-tickets-core-schema";
 
 jest.mock("@/components/illustrations", () => ({
   EmptyActivityIllustration: () => null,
@@ -66,4 +67,56 @@ it("does not show an error state when the only entry has an unknown action", () 
   render(<TicketActivityLog projectId={1} ticketId={1} />);
   expect(screen.queryByText("Could not load activity history.")).not.toBeInTheDocument();
   expect(screen.getByText("did something")).toBeInTheDocument();
+});
+
+it("renders without throwing when the action is the inherited name __proto__", () => {
+  mockWithEntries([makeEntry("__proto__", "prototype manipulation")]);
+  expect(() => render(<TicketActivityLog projectId={1} ticketId={2} />)).not.toThrow();
+  expect(screen.getByText("prototype manipulation")).toBeInTheDocument();
+});
+
+it("renders without throwing when the action is the inherited name constructor", () => {
+  mockWithEntries([makeEntry("constructor", "construction event")]);
+  expect(() => render(<TicketActivityLog projectId={1} ticketId={3} />)).not.toThrow();
+  expect(screen.getByText("construction event")).toBeInTheDocument();
+});
+
+it("renders without throwing when the action is the inherited name toString", () => {
+  mockWithEntries([makeEntry("toString", "string coercion")]);
+  expect(() => render(<TicketActivityLog projectId={1} ticketId={4} />)).not.toThrow();
+  expect(screen.getByText("string coercion")).toBeInTheDocument();
+});
+
+it("a known action parsed through the contract schema renders with its server label retained", () => {
+  const rawPage = {
+    data: [
+      {
+        id: 10,
+        action: "status_changed",
+        label: "changed status to Done",
+        fromValue: "TODO",
+        toValue: "DONE",
+        createdAt: "2026-09-27T12:00:00.000Z",
+        user: { id: "u2", name: "Bob", image: null },
+      },
+    ],
+    pagination: { nextCursor: null, hasMore: false, limit: 25 },
+  };
+  const parsed = ticketActivityPageContract.parse(rawPage);
+  const entry = parsed.data[0];
+
+  mockUseTicketActivity.mockReturnValue({
+    data: [entry],
+    isLoading: false,
+    isError: false,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    isFetchNextPageError: false,
+    fetchNextPage: jest.fn(),
+    refetch: jest.fn(),
+  });
+
+  render(<TicketActivityLog projectId={1} ticketId={5} />);
+  expect(screen.getByText("changed status to Done")).toBeInTheDocument();
+  expect(screen.queryByText("Could not load activity history.")).not.toBeInTheDocument();
 });

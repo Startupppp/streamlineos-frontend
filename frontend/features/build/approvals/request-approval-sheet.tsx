@@ -53,6 +53,8 @@ const ENTITY_TYPES: { value: ApprovalEntityType; label: string; searchLabel: str
   { value: "budget", label: "Budget", searchLabel: "" },
   { value: "change_request", label: "Change Request", searchLabel: "change requests" },
   { value: "timesheet", label: "Timesheet Entry", searchLabel: "timesheet entries" },
+  { value: "document", label: "Document", searchLabel: "documents" },
+  { value: "client_approval", label: "Client Approval", searchLabel: "client approvals" },
 ];
 
 interface RequestApprovalSheetProps {
@@ -238,7 +240,7 @@ export function RequestApprovalSheet({
     onOpenChange(next);
   }
 
-  const showEntityPicker = ["task", "milestone", "release", "change_request", "timesheet"].includes(entityType);
+  const showEntityPicker = ["task", "milestone", "release", "change_request", "timesheet", "document", "client_approval"].includes(entityType);
   const isBudgetType = entityType === "budget";
   const activeEntityType = ENTITY_TYPES.find((t) => t.value === entityType);
 

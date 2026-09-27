@@ -40,10 +40,6 @@ jest.mock("@/lib/api-envelope", () => ({
   lazyContract: (fn: () => unknown) => fn,
 }));
 
-jest.mock("./ticket-cache", () => ({
-  invalidateBuildViews: jest.fn(),
-}));
-
 jest.mock("@/hooks/api/build/project-cache-patch", () => ({
   getWorkspaceUsersFromCache: jest.fn().mockReturnValue([]),
   patchProjectListCache: jest.fn().mockImplementation((old: unknown) => old),
@@ -112,5 +108,47 @@ describe("useUpdateProject — invalidation scope (ticket 20)", () => {
 
     expect(keys).toContain(JSON.stringify(buildWorkQueryKeys.projects.detail(42)));
     expect(keys).toContain(JSON.stringify(buildWorkQueryKeys.projects.members(42)));
+  });
+
+  it("does not invalidate any ticket collection after a project rename", async () => {
+    const { result } = renderHook(() => useUpdateProject(), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ projectId: 42, name: "New Name" });
+    });
+
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalled();
+    });
+
+    const ticketsKey = JSON.stringify(buildWorkQueryKeys.projects.tickets({ projectId: 42 }));
+    const allWorkKey = JSON.stringify(buildWorkQueryKeys.projects.allWorkAll);
+    const columnCountsKey = JSON.stringify(buildWorkQueryKeys.projects.columnCounts(42));
+
+    const invalidatedKeys = invalidateSpy.mock.calls.map(
+      (c) => JSON.stringify((c[0] as { queryKey?: unknown }).queryKey),
+    );
+
+    expect(invalidatedKeys).not.toContain(ticketsKey);
+    expect(invalidatedKeys).not.toContain(allWorkKey);
+    expect(invalidatedKeys).not.toContain(columnCountsKey);
+  });
+
+  it("invalidates the project list so the renamed name appears in list views immediately", async () => {
+    const { result } = renderHook(() => useUpdateProject(), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ projectId: 42, name: "New Name" });
+    });
+
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalled();
+    });
+
+    const keys = invalidateSpy.mock.calls.map(
+      (c) => JSON.stringify((c[0] as { queryKey?: unknown }).queryKey),
+    );
+
+    expect(keys).toContain(JSON.stringify(buildWorkQueryKeys.projects.list()));
   });
 });

@@ -10,8 +10,13 @@ Decision already taken: retire rather than wire a caller.
 
 **Status:** ready-for-agent
 
-- [ ] The endpoint, its service path and its schemas are removed
-- [ ] The route manifest no longer lists it, and the manifest still matches the tree in both directions
-- [ ] The authorization census and module-access invariants are updated
-- [ ] Its specs are removed or retargeted, not left asserting a route that no longer exists
-- [ ] No ticket or decision record is deleted as part of this
+- [x] The endpoint, its service path and its schemas are removed
+      — `projects-reports.controller.ts` handler removed; `projects-analytics.service.ts` `resourceAllocation` method removed; `dto/analytics.schemas.ts` schemas (`resourceAllocationQuerySchema`, `resourceAllocationCursorPositionSchema`, `ResourceAllocationQuery`) removed; `dto/build-reports-response.schemas.ts` schemas (`resourceAllocationItemSchema`, `resourceAllocationPageSchema`) removed. 2026-09-27.
+- [x] The route manifest no longer lists it, and the manifest still matches the tree in both directions
+      — `docs/specs/build/module/01a-canonical-route-manifest-prd.md` contained no entry for this route (confirmed by grep). The route was not in the manifest. 2026-09-27.
+- [x] The authorization census and module-access invariants are updated
+      — `src/scripts/baselines/authz-deny.json`: entry for `GET /build/resource-allocation` removed; `uncovered` 1792→1791, `gatedHandlers` 3426→3425, `uncoveredRatchet` 1792→1791. `src/scripts/baselines/unbounded-reads-classification.json`: note and justification for `projects-analytics.service.ts` updated to remove resource-allocation references. Authorization census JSON (`docs/build-module/authorization-census.json`) could not be regenerated automatically because 146 REVIEWED anchors from other lanes have shifted; the census script exits before writing when anchors are stale. Orchestrator must re-run `node scripts/build-authorization-census.mjs` after the session merges. 2026-09-27.
+- [x] Its specs are removed or retargeted, not left asserting a route that no longer exists
+      — `reports-response-contract.spec.ts` deleted (contained only the `resourceAllocation` contract block); `projects-analytics-build-members-budget-tenant-isolation.spec.ts` `resourceAllocation` describe block (8 tests) removed — remaining 10 tests pass. `projects.controller.e2e-spec.ts` entry `["get", "/build/resource-allocation"]` removed. Stale references remain in `scripts/functional/projects.test.mjs` (live network calls, cannot run) and `src/scripts/read-cost-budgets.mjs` (DB connection, cannot run) — orchestrator must clean those. 2026-09-27.
+- [x] No ticket or decision record is deleted as part of this
+      — Confirmed: no ticket `.md` files deleted. 2026-09-27.

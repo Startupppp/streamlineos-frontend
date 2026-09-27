@@ -13,9 +13,17 @@ default but does not declare it NOT NULL. A default is not a guarantee against h
 explicit nulls. Expose the current nullable contract honestly, or survey/backfill/constrain before
 requiring it. Ticket custom status names remain text; do not replace them with a fixed enum.
 
-- [ ] The state group is present in the response contract, the frontend contract and the read hook's row type
-- [ ] The completed-status helper returns every status whose group is completed, and a test covers a renamed completed status
-- [ ] The field is required where the database guarantees it, not optional-and-ignored
-- [ ] The two schemas for this table agree, or one of them is deleted
+- [x] The state group is present in the response contract, the frontend contract and the read hook's row type
+  - `backend/src/modules/build/core/dto/build-project-detail-response.schemas.ts` — `projectStatusSchema` now exports `type: z.enum(DB_ENUMS.state_group).nullable()`
+  - `backend/src/modules/build/core/dto/build-core-response.schemas.ts` — `projectCustomStateSchema` and `orgCustomStateSchema` both use `z.enum(DB_ENUMS.state_group).nullable()`
+  - `frontend/hooks/api/build/build-project-schema.ts` — `projectStatusRowSchema` and `projectCustomStateSchema` both carry `type: z.enum(STATE_GROUP_VALUES).nullable()`
+- [x] The completed-status helper returns every status whose group is completed, and a test covers a renamed completed status
+  - 15 tests in `frontend/features/build/shared/completed-status.test.ts`; all pass; covers renamed "Shipped" with `type: "completed"`, null-type rows, and multi-completed projects
+- [x] The field is required where the database guarantees it, not optional-and-ignored
+  - Column has a default but no NOT NULL constraint (`core.ts:110`); exposed honestly as `.nullable()` without `.optional()`
+- [x] The two schemas for this table agree, or one of them is deleted
+  - Both `projectStatusSchema` (detail) and `projectCustomStateSchema` (core) now use `z.enum(DB_ENUMS.state_group).nullable()` — agrees with `orgCustomStateSchema`; no pass-through wrapper (BE-143)
 - [ ] Every surface that hides or counts completed work is checked against a project with a renamed completed column
-- [ ] Test existing null group rows and newly created/custom-renamed statuses through the actual response parser, not a cast that invents the missing field
+  - Requires a running dev server / browser; out of scope for this lane (rule 9). Report to orchestrator.
+- [x] Test existing null group rows and newly created/custom-renamed statuses through the actual response parser, not a cast that invents the missing field
+  - `completed-status.test.ts` parses null-type rows and "Shipped" (type="completed") through `projectDetailContract.parse()` with no `as X` cast

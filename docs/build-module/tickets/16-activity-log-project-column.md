@@ -17,6 +17,7 @@ not limited to a deployment window. Prior evidence notes below describe authored
 - [x] Cover every activity writer, including `projects-tickets-create.service.ts:191`, its feedback path, `build-entity.actions.ts:242` and `cron-projects.service.ts:187`; test correct tenant/project linkage
   — all four direct-insert sites now set `projectId`: `projects-tickets-create.service.ts:191` (main create path) and `:305` (feedback path, `createFromFeedback`); `build-entity.actions.ts:249` (`logActivity` private method now takes `projectId: number`, all three callers updated); `cron-projects.service.ts:187` (returning now includes `projectId: tickets.projectId`, used in activity push). `projects-activity.service.ts:160,290` already set via `resolveTicketProjectId` in previous session.
 - [ ] Use a bounded resumable backfill with row-count/reconciliation evidence, then enable the dependent reader after catalog verification; avoid one unmeasured full-table update as the scale strategy
+  — orchestrator-only: requires a live database (LANE RULES rule 2). 1378 backfill is a single UPDATE in the migration; at ~1,075 rows a Seq Scan is expected and a bounded batched approach is not the bottleneck risk. Reconciliation evidence requires: `SELECT COUNT(*) FROM build_events.ticket_activity_log WHERE project_id IS NULL;` as `streamline_app` with the tenant GUC set. Should return 0 if the backfill completed and no new rows wrote NULL after the migration was applied. If any NULL rows exist, a targeted re-backfill pass is in the ticket 16 migration ordering note.
 
 **Migration ordering:**
 
@@ -32,6 +33,6 @@ The writer update (`logTicketActivity` and `logTicketFieldChanges` now set `proj
 - [x] The migration is journalled with a rollback authored, and sets a lock timeout
   — Migration: `backend/migrations/1378_activity_log_project_column.sql` (`SET lock_timeout = '5s'` at line 24). Rollback: `backend/migrations/1378_activity_log_project_column_rollback.sql` (sibling, with precondition guard). Journal entry required: `{ "idx": 1122, "tag": "1378_activity_log_project_column" }`.
 - [ ] No reader depends on the new column yet
-  — ticket 17 is the only reader change. No other code in this PR reads `ticketActivityLog.projectId`.
+  — STATEMENT IS FALSE as of current HEAD: `backend/src/modules/build/core/projects-activity-feed.service.ts:60` reads `ticketActivityLog.projectId` directly via `eq(ticketActivityLog.projectId, projectId)`. The ticket-17 reader is already committed. This criterion is unmet; the column must have been applied and verified before this code shipped (it was — 1378 is at journal idx 1121), but the "no reader yet" assertion no longer holds.
 - [ ] Applied and independently verified before any code reads it
   — orchestrator's box; left unticked per ticket protocol.

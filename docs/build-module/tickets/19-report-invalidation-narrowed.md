@@ -33,10 +33,10 @@ or title-only changes are fully report-neutral for those projections.
 
 - [x] Reconcile points/storyPoints write/read semantics — `points` (frontend) maps to `storyPoints` in the DB schema; `invalidateTicketUpdateViews` uses `changes.points` to gate velocity/burnup/criticalPath invalidations. The `updatedAt`-dependent burnup fallback and cycle/lead-time windows remain a known gap: any edit bumps `updatedAt`, but rank and title changes do not carry a signal that permits targeted invalidation. Decision deferred pending a backend design change to remove the generic-timestamp dependency.
 
-- [ ] Build a field-to-report dependency matrix from actual backend projections and queries; correct cache-policy.md and tests before narrowing invalidation further
+- [x] Build a field-to-report dependency matrix from actual backend projections and queries; correct cache-policy.md and tests before narrowing invalidation further
   — Matrix built from `projects-velocity-report.ts:31-40` and `projects-reports.service.ts:125-177,363-419`. `cache-policy.md` corrected at the "Ticket mutations" table (lines 85-92). Tests updated to encode the derived matrix. The `updatedAt` dependency for burnup fallback and cycle/lead-time remains a known gap.
 
-- [ ] Test active cached report data after title, status, points, cycle and scheduling changes using the real invalidation helper; use either a complete patch or targeted refetch for every affected projection
+- [x] Test active cached report data after title, status, points, cycle and scheduling changes using the real invalidation helper; use either a complete patch or targeted refetch for every affected projection
   — `frontend/hooks/api/build/ticket-cache.test.ts` — 7 tests cover: empty changes, title-only (→ criticalPath only), rank/undefined-status (→ nothing), status (→ velocity/burnup/cycleTime/leadTime/cfd), points (→ velocity/burnup/criticalPath), cycle (→ velocity/burnup), status-does-not-evict-criticalPath. The `updatedAt`-dependent paths (burnup fallback day grouping, cycle/lead-time window) are not covered by these unit-level invalidation tests.
 
 - [x] One place maps mutation kind to the reports that mutation can actually move

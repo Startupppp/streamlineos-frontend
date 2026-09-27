@@ -50,7 +50,7 @@ const ACTION_ICONS: Record<KnownTicketActivityAction, LucideIcon> = {
 };
 
 function isKnownAction(action: string): action is KnownTicketActivityAction {
-  return action in ACTION_ICONS;
+  return Object.hasOwn(ACTION_ICONS, action);
 }
 
 interface ActivityItemProps {

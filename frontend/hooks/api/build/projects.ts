@@ -214,12 +214,14 @@ export function useUpdateProject(
       options?.onError?.(error, variables, context, mutFnCtx);
     },
     onSettled: (data, error, variables, context, mutFnCtx) => {
-      invalidateBuildViews(queryClient, variables.projectId);
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
       });
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.members(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.list(),
       });
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },

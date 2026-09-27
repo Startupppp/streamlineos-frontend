@@ -169,6 +169,7 @@ describe("projectDetailContract — GET /build/{projectId} response contract", (
         name: "Backlog",
         order: 1,
         color: "#94a3b8",
+        type: "unstarted" as const,
         wipLimit: null,
         createdAt: "2026-01-01T00:00:00.000Z",
         updatedAt: "2026-01-01T00:00:00.000Z",

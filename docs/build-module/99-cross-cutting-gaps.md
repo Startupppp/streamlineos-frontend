@@ -440,6 +440,113 @@ migration per table with its rollback.
 Until then this entry is the record. It does not block any acceptance box in the Build module — no box
 asserts RLS posture — which is precisely why it needed writing down somewhere that is not a box.
 
+### Audit — 2026-09-27 (tickets 29 and 30)
+
+Static call-path audit performed. No database connection was opened.
+
+#### build.project_updates
+
+Service: `backend/src/modules/build/updates/updates.service.ts`  
+Controller: `backend/src/modules/build/updates/updates.controller.ts`
+
+| Path | Direction | Context |
+|---|---|---|
+| `GET /build/:projectId/updates` → `UpdatesService.listUpdates()` | read | Inside tenant transaction — `TenantContextInterceptor` wraps every authenticated HTTP request and sets `app.organization_id` via `withTenant`; the DRIZZLE proxy routes `this.db` through the ambient `tx`. Explicit `eq(projectUpdates.orgId, u.orgId)` predicate also present. |
+| `POST /build/:projectId/updates` → `UpdatesService.createUpdate()` | write | Inside tenant transaction — same interceptor. Explicit `orgId: u.orgId` on insert. |
+| `PATCH /build/:projectId/updates/:updateId` → `UpdatesService.editUpdate()` | write | Inside tenant transaction. Explicit `eq(projectUpdates.orgId, u.orgId)` predicates on both the load and the update. |
+| `DELETE /build/:projectId/updates/:updateId` → `UpdatesService.softDeleteUpdate()` | write | Inside tenant transaction. Explicit `eq(projectUpdates.orgId, u.orgId)` predicates. |
+| `UpdatesService.loadUpdate()` / `selectFullRow()` | read (internal helpers) | Called only from within the above request paths; same tenant context. |
+
+Background sweeps: none found. Grepped all cron services and `build-due-sweep.service.ts`; none import or reference `projectUpdates`.
+
+After-commit hooks: none found for this table.
+
+Membership artifact posture (`build.artifacts.ts`): `project_updates_author` is `database-cascade`, `onRemoval: "blocks-removal"`. The FK (`fk_project_updates_org_author`) is `ON DELETE RESTRICT` and `author_membership_id` is NOT NULL, so a membership removal is blocked by the database until the row is handled. No explicit write into `project_updates` occurs during membership operations.
+
+**Verdict: every path is inside a tenant transaction. No path needs rework before the policy lands.**
+
+#### build.project_attachments
+
+Service: `backend/src/modules/build/files/files.service.ts`  
+Controller: `backend/src/modules/build/files/files.controller.ts`
+
+| Path | Direction | Context |
+|---|---|---|
+| `GET /build/:projectId/files` → `FilesService.listFiles()` | read | Inside tenant transaction. Explicit `eq(projectAttachments.orgId, u.orgId)` predicate. |
+| `POST /build/:projectId/files` → `FilesService.uploadFile()` | write | Inside tenant transaction. Explicit `orgId: u.orgId` on insert. The storage upload happens before the DB insert and is outside the transaction (correct per BE-84). |
+| `GET /build/:projectId/files/:fileId/url` → `FilesService.getSignedUrl()` | read | Inside tenant transaction. `loadFile()` uses explicit `eq(projectAttachments.orgId, orgId)`. |
+| `DELETE /build/:projectId/files/:fileId` → `FilesService.softDeleteFile()` | write | Inside tenant transaction. `loadFile()` uses explicit org predicate; update uses `eq(projectAttachments.orgId, u.orgId)`. |
+
+Background sweeps: none found.
+
+After-commit hooks: none found for this table.
+
+Membership artifact posture: `project_attachments_uploader` is `database-cascade`, `onRemoval: "blocks-removal"`. The FK (`fk_project_attachments_org_uploader`) is `ON DELETE RESTRICT` and `uploaded_by_membership_id` is NOT NULL. Same blocking pattern as project_updates.
+
+**Verdict: every path is inside a tenant transaction. No path needs rework before the policy lands.**
+
+#### build.managed_product_memberships
+
+Service: `backend/src/modules/build/scope-directory/scope-directory.service.ts`  
+Controller: `backend/src/modules/build/scope-directory/scope-directory.controller.ts`
+
+| Path | Direction | Context |
+|---|---|---|
+| `POST /build/scope-directory/resolve` → `ScopeDirectoryService.resolveScopeDirectory()` | read | Inside tenant transaction. Explicit `eq(managedProductMemberships.orgId, orgId)` and `eq(managedProductMemberships.organizationMembershipId, membershipId)` predicates at line 229–240 of service file. |
+| `GET /build/scope-directory/search` → `ScopeDirectoryService.searchScopeDirectory()` | read | Inside tenant transaction. Explicit `eq(managedProductMemberships.orgId, orgId)` and `eq(managedProductMemberships.organizationMembershipId, membershipId)` predicates at lines 345–354 of service file. |
+
+Background sweeps: none found.
+
+After-commit hooks: none found for this table.
+
+Membership artifact posture: `managed_product_memberships` is `database-cascade`, `onRemoval: "cascade"`. The FK (`fk_mp_members_org_membership`) is `ON DELETE CASCADE`. When a membership is removed, the database removes the `managed_product_memberships` row automatically; no explicit application write is required, and no application code path touches this table outside the request context.
+
+**Verdict: every path is inside a tenant transaction. No path needs rework before the policy lands.**
+
+#### How tenant context reaches all three tables
+
+`TenantContextInterceptor` (`src/common/tenant/tenant-context.interceptor.ts`) is registered globally and wraps every authenticated HTTP request: it calls `withTenant(db, resolved, tx => ...)`, which executes `set_config('app.organization_id', orgId, true)` at transaction start. The DRIZZLE token is a `Proxy` (`src/common/tenant/tenant-db.ts`) that routes every `this.db.select()` / `insert()` / `update()` call through the ambient tenant transaction when one is in flight. Services therefore never receive a raw pool connection during a request.
+
+After-commit hooks, if any were registered, run in a fresh tenant transaction via `drainAfterCommitHooks` → `runInNewTenantTransaction` → `openTenantTransaction` → `withTenant`. So even that path would carry a GUC — but none was found for any of the three tables.
+
+Background sweeps using `forEachOrg` open a fresh tenant transaction per organisation via `withTenant` before calling the callback. No sweep for any of the three tables was found.
+
+#### Migrations authored (ticket 30)
+
+One migration per table, each with a rollback. Apply in this order (no inter-dependency):
+
+1. `1390_rls_project_updates.sql` — `1390_rls_project_updates_rollback.sql`
+2. `1391_rls_project_attachments.sql` — `1391_rls_project_attachments_rollback.sql`
+3. `1392_rls_managed_product_memberships.sql` — `1392_rls_managed_product_memberships_rollback.sql`
+
+Each migration: sets `lock_timeout = '5s'`, pre-checks table existence, `ENABLE ROW LEVEL SECURITY`, `DROP POLICY IF EXISTS tenant_isolation`, `CREATE POLICY tenant_isolation FOR ALL USING/WITH CHECK (org_id = app.current_org_id())`, `GRANT SELECT, INSERT, UPDATE, DELETE TO streamline_app`, post-check via `DO $$ ASSERT $$`.
+
+Journal entries must be added by the orchestrator (`migrations/meta/_journal.json`). These files are not unjournalled and not self-applying.
+
+#### Probe SQL for the orchestrator (ticket 30 box 3)
+
+Each probe must run in its own savepoint; once an RLS statement errors the transaction enters state 25P02 and later statements falsely report "no rows" rather than "policy absent".
+
+For each table (substitute `build.project_updates`, `build.project_attachments`, `build.managed_product_memberships`):
+
+```sql
+-- Probe 1: with tenant context — must return rows belonging to that org
+SAVEPOINT probe_with_context;
+SELECT set_config('app.organization_id', '<real-org-id>', true);
+SELECT count(*) FROM build.project_updates WHERE org_id = '<real-org-id>';
+ROLLBACK TO SAVEPOINT probe_with_context;
+
+-- Probe 2: without tenant context — must raise 42501 (no tenant context)
+SAVEPOINT probe_no_context;
+SET LOCAL ROLE streamline_app;
+-- app.current_org_id() raises 42501 when app.organization_id GUC is absent
+SELECT count(*) FROM build.project_updates;
+-- If this returns a number rather than raising, the policy is absent or wrong.
+ROLLBACK TO SAVEPOINT probe_no_context;
+```
+
+The second probe is the assertion that matters. A row count rather than `42501` means the policy is absent or incorrectly predicated.
+
 ## CCG-3 addendum — the second drain was stopped by host memory, and 9 of 10 specs are unmeasured
 
 Run 2026-09-26, serial, one worker per spec, output under `D:/agent-work/drain-2026-09-26b/`.

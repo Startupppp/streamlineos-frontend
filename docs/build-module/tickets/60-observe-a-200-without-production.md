@@ -10,22 +10,68 @@ force isolated dependencies before executing this tier.
 
 **Blocked by:** None — can start immediately.
 
-**Status:** complete (2026-09-27)
+**Status:** partial (2026-09-27) — corrected after actually running the tier. Three boxes
+were ticked without the suite having been executed. The tier did not boot at all, and now
+boots but cannot authenticate. See the correction note at the foot of this ticket.
 
-- [x] A Build controller can be exercised with its data layer behind a seam, with no database connection opened
-  — All 15 specs override `DRIZZLE` with `{}` via `createE2eApp({ overrides: [{ provide: DRIZZLE, useValue: {} }, ...] })`. NestJS replaces the provider before `compile()`, so `postgres(DATABASE_URL)` is never called. The `{}` stub also fails `createE2eApp`'s seeding check, preventing any INSERT.
+- [ ] A Build controller can be exercised with its data layer behind a seam, with no database connection opened
+  — Half earned. **No connection is opened:** proved by running the tier with `DATABASE_URL`
+  pointed at an unroutable host and observing `TypeError: this.db.execute is not a function`
+  rather than `ECONNREFUSED` — the override is reached before any client is constructed.
+  **But the controller cannot be exercised:** every authenticated request returns 401, because
+  `JwtAuthGuard` resolves the session through `DRIZZLE` and the double cannot answer it.
+  The seam the ticket asks for does not exist yet. What is missing: a `DRIZZLE` double that
+  satisfies the guard's session lookup, or a `JwtKeyringService`/session stub in
+  `HARNESS_STUBS` alongside the existing membership, entitlements and access stubs.
 
-- [x] The fifteen specs missing a success assertion gain one, paired with their existing denial assertion per BE-141
-  — Each spec gains at least one `toBe(200)` (or `toBe(201)`) assertion using a `jest.fn()` stub, paired with `toHaveBeenCalled()` on the stub. The 14 specs that previously had only `not.toBe(401/403)` tests now have proper status codes. The 2 specs with `toBe(404)` tests (bugs, approvals) have those tests converted to `toBe(200)` with stub-backed data.
+- [ ] The fifteen specs missing a success assertion gain one, paired with their existing denial assertion per BE-141
+  — The assertions were added but **they do not pass.** Ran
+  `build-workflow.controller.e2e-spec.ts`: 13 tests, 6 pass, 7 fail. The 6 that pass are the
+  unauthenticated `401 without a token` cases, which pass trivially. Every case asserting 200
+  or 403 receives 401. A spec whose success assertion cannot pass is not coverage.
 
-- [x] A deliberately broken handler fails the new assertions — proved by breaking one and watching it go red
-  — `backend/src/modules/build/workflow/build-workflow.controller.e2e-spec.ts` contains `it.skip("BROKEN-HANDLER-proof: list-transitions returns 200 — remove skip to see failure when handler always throws", ...)`. Enable by removing `.skip`. Expected output: `FAIL — Expected: 200, Received: 500`. The case uses `mockRejectedValue(new Error("simulated handler failure"))` so the handler throws → 500 → `toBe(200)` fails.
+- [ ] A deliberately broken handler fails the new assertions — proved by breaking one and watching it go red
+  — Ran it. It fails, but **for the wrong reason**: `Expected: 200, Received: 401`, not the
+  500 the ticket predicted. The request never reaches the broken handler, so the case proves
+  nothing about whether a broken handler is detected. The `it.skip` has been replaced with an
+  enabled constructed bite (`does not reach 200 when the handler always throws`) asserting the
+  handler is called and the status is 500 rather than 200; it will earn this box once
+  authentication works in the tier.
 
 - [x] No spec in the tier writes to production, and none sends a real webhook, message or email
-  — DRIZZLE override prevents any DB connection. Worker services are stubbed by `createE2eApp` built-ins. No external side effects are possible.
+  — Earned, and now proved rather than reasoned. A connection is structurally impossible:
+  `DrizzleModule.onApplicationBootstrap` throws `TypeError: this.db.execute is not a function`
+  on a bare `{}` double, and `createE2eApp` skips seeding unless the double answers both
+  `transaction` and `insert`. Worker services are stubbed by `createE2eApp` built-ins.
 
 - [x] The tier's own documentation states what it can and cannot prove
   — `backend/src/modules/build/BUILD-CONTROLLER-E2E-TIER.md` documents: what the guard-chain, module-gate, fence, and Zod-validation assertions prove; what is NOT proved (RLS, business logic, side effects); why SprintsService is excluded; the broken-handler command; and the structural DRIZZLE override guarantee.
+
+## Correction — 2026-09-27, after running the tier
+
+The three boxes above were ticked from reading the code. Running it changed the answer.
+
+**What was found.** All 15 specs failed at `app.init()`, not at an assertion:
+`DrizzleModule.onApplicationBootstrap` calls `db.execute` to assert RLS is enforced, and
+`onApplicationShutdown` calls `db.__client.end`. A bare `{}` double answers neither, so every
+suite died before its first request with `TypeError: this.db.execute is not a function`. The
+tier had never run.
+
+**What was fixed.** `test/helpers/e2e-app.ts` now fills in `execute` and `__client.end` on a
+doubled `DRIZZLE` when the double omits them, using the double as the prototype so a double
+carrying its own methods keeps them. Pinned by
+`src/test/e2e-drizzle-double-boot-sweep.spec.ts` (5 tests). The 15 suites now boot and their
+tests run.
+
+**What is still broken.** Authentication. `JwtAuthGuard` reads the session through `DRIZZLE`,
+so with the double every authenticated request is 401 and the whole authorized half of the
+tier — every 200 and every 403 — cannot pass. This is the ticket's actual remaining work, and
+it is the same gap the ticket's own opening paragraph describes: Build's controllers still have
+no seam at which a 200 is observable without a database. Adding the success assertions did not
+create that seam.
+
+**Method note.** A runbook instruction is not evidence it ran. `it.skip` with "remove skip to
+see failure" cannot earn a box that says "proved by breaking one and watching it go red".
 
 ## Files modified
 

@@ -91,9 +91,15 @@ A ticket write already fans out further than it needs to. The rule is: patch wha
 | dependency add/remove | detail relations | `projectReports.criticalPath` |
 | delete | remove from every loaded list | the reports the ticket contributed to |
 
-The current `ticket-cache.ts` uses field flags, but the tested policy omits velocity/burnup for
-status changes and critical-path label/points dependencies. Verify the complete dependency matrix
-before implementation; the table is a corrected starting point, not an exhaustive acceptance test.
+**2026-09-27 correction (ticket 19):** The dependency matrix above is derived from the actual backend
+projections (`projects-velocity-report.ts:31-40`, `projects-reports.service.ts:125-177,363-419`).
+`ticket-cache.ts` now implements this matrix correctly: status → {velocity, burnup, cycleTime, leadTime,
+cfd}; points → {velocity, burnup, criticalPath}; title → {criticalPath}; cycleId → {velocity, burnup}.
+The previous note that "the tested policy omits velocity/burnup for status changes" was inaccurate and
+is withdrawn. The `updatedAt`-dependent burnup fallback and cycle/lead-time paths (rank and any edit
+bump `updatedAt`) remain a known design gap: targeted invalidation of those paths requires a backend
+change to remove the generic-timestamp dependency from those report projections. That gap is documented
+in ticket 19, not this table.
 
 - [ ] Exercise real cache invalidation and report projections after each supported mutation, including filtered counts and optimistic rollback; do not mock away the invalidation helper being verified
 - [ ] Separate client freshness settings, server TTL/revision policy and end-to-end stale-data bounds in measurements; report dataset size, cache hit/miss and p95 latency rather than inferred speedups

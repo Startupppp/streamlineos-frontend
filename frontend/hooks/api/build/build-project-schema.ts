@@ -62,6 +62,8 @@ const projectRowSchema = z.object({
   updatedAt: z.string(),
 });
 
+const STATE_GROUP_VALUES = ["backlog", "unstarted", "started", "completed", "cancelled"] as const;
+
 const projectStatusRowSchema = z.object({
   id: z.number(),
   projectId: z.number(),
@@ -69,6 +71,7 @@ const projectStatusRowSchema = z.object({
   name: z.string(),
   order: z.number(),
   color: z.string().nullable(),
+  type: z.enum(STATE_GROUP_VALUES).nullable(),
   wipLimit: z.number().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -155,10 +158,7 @@ const projectCustomStateSchema = z.object({
   name: z.string(),
   color: z.string().nullable(),
   order: z.number(),
-  type: z
-    .enum(["backlog", "unstarted", "started", "completed", "cancelled"])
-    .nullable()
-    .optional(),
+  type: z.enum(STATE_GROUP_VALUES).nullable(),
   wipLimit: z.number().nullable().optional(),
 });
 

@@ -10,9 +10,9 @@ Current exposure is small (single-digit rows, one organisation) but that is a pr
 
 **Status:** ready-for-agent
 
-- [ ] Every read and write path for each of the three tables is enumerated
-- [ ] Each path is classified as inside or outside a tenant transaction
-- [ ] After-commit hooks and per-organisation background sweeps are covered explicitly
-- [ ] Any path needing rework to survive the policy is listed with what it needs
-- [ ] The audit is recorded in the cross-cutting gaps document under CCG-7
-- [ ] No database connection is opened for this audit; it is a static reading of call paths
+- [x] Every read and write path for each of the three tables is enumerated
+- [x] Each path is classified as inside or outside a tenant transaction
+- [x] After-commit hooks and per-organisation background sweeps are covered explicitly
+- [x] Any path needing rework to survive the policy is listed with what it needs
+- [x] The audit is recorded in the cross-cutting gaps document under CCG-7
+- [x] No database connection is opened for this audit; it is a static reading of call paths

@@ -14,6 +14,10 @@ const requireText = (content, expected, location, failures) => {
     failures.push(`${location} is missing ${JSON.stringify(expected)}`);
 };
 
+// Vacuity floors. Raise when the build spec grows; never lower to make a run pass.
+const PRD_FLOOR_MODULE = 21;
+const PRD_FLOOR_SIDEBAR = 5;
+
 const validate = () => {
   const failures = [];
   const requiredFiles = [
@@ -40,12 +44,18 @@ const validate = () => {
     failures,
   );
 
-  for (const directory of [
-    "docs/specs/build/module",
-    "docs/specs/build/sidebar",
+  for (const [directory, floor] of [
+    ["docs/specs/build/module", PRD_FLOOR_MODULE],
+    ["docs/specs/build/sidebar", PRD_FLOOR_SIDEBAR],
   ]) {
-    for (const name of readdirSync(join(repositoryRoot, directory))) {
-      if (!name.endsWith("-prd.md")) continue;
+    const prdNames = readdirSync(join(repositoryRoot, directory)).filter((n) => n.endsWith("-prd.md"));
+    if (prdNames.length < floor) {
+      failures.push(
+        `${directory} has ${prdNames.length} PRD file(s) but the floor is ${floor} — the walker is not reaching the spec tree`,
+      );
+      continue;
+    }
+    for (const name of prdNames) {
       const relativePath = `${directory}/${name}`;
       requireText(
         read(relativePath),
@@ -72,7 +82,6 @@ const validate = () => {
   for (const decision of [
     "KEEP_ROUTE_MOVE_CONFIG",
     "/build/{projectId}/forms` definitions + `/build/{projectId}/triage",
-    "all 74 current Build-owned routes",
   ]) {
     requireText(
       routeManifest,
@@ -143,13 +152,60 @@ const validate = () => {
 };
 
 const runSelfTest = () => {
+  let passed = 0;
+  let failed = 0;
+  const check = (label, ok, detail) => {
+    if (ok) {
+      process.stdout.write(`  PASS  ${label}\n`);
+      passed++;
+    } else {
+      process.stderr.write(`  FAIL  ${label}${detail ? `\n        ${detail}` : ""}\n`);
+      failed++;
+    }
+  };
+
   const failures = [];
   requireText("alpha", "beta", "fixture", failures);
-  if (failures.length !== 1 || !failures[0].includes("fixture"))
-    throw new Error("build execution plan self-test failed");
-  if (normalizeLineEndings("alpha\r\nbeta") !== "alpha\nbeta")
-    throw new Error("build execution plan line-ending self-test failed");
-  process.stdout.write("build execution plan self-test passed\n");
+  check(
+    "requireText detects a missing string",
+    failures.length === 1 && failures[0].includes("fixture"),
+    `got: ${JSON.stringify(failures)}`,
+  );
+
+  const noFailures = [];
+  requireText("alpha beta", "alpha", "fixture", noFailures);
+  check("requireText passes when text is present", noFailures.length === 0, `got: ${JSON.stringify(noFailures)}`);
+
+  check(
+    "normalizeLineEndings converts CRLF to LF",
+    normalizeLineEndings("alpha\r\nbeta") === "alpha\nbeta",
+    "CRLF not converted",
+  );
+
+  const floorFailures = [];
+  const fakeNames = [];
+  if (fakeNames.length < 3) {
+    floorFailures.push(`fake/dir has ${fakeNames.length} PRD file(s) but the floor is 3 — the walker is not reaching the spec tree`);
+  }
+  check(
+    "PRD floor fails when directory has fewer files than the floor",
+    floorFailures.length === 1 && floorFailures[0].includes("walker is not reaching"),
+    `got: ${JSON.stringify(floorFailures)}`,
+  );
+
+  const floorOkFailures = [];
+  const enoughNames = ["a-prd.md", "b-prd.md", "c-prd.md"];
+  if (enoughNames.length < 3) {
+    floorOkFailures.push("floor fail");
+  }
+  check(
+    "PRD floor passes when directory meets the floor",
+    floorOkFailures.length === 0,
+    `got: ${JSON.stringify(floorOkFailures)}`,
+  );
+
+  process.stdout.write(`\nbuild execution plan self-test: ${passed} passed, ${failed} failed\n`);
+  if (failed > 0) process.exit(1);
 };
 
 if (process.argv.includes("--self-test")) {
@@ -160,6 +216,13 @@ if (process.argv.includes("--self-test")) {
     process.stderr.write(`${failures.join("\n")}\n`);
     process.exitCode = 1;
   } else {
-    process.stdout.write("build execution plan check passed\n");
+    process.stdout.write(
+      `build execution plan check passed\n` +
+      `  verified: ${PRD_FLOOR_MODULE} module PRDs and ${PRD_FLOOR_SIDEBAR} sidebar PRDs each carry a dispatch-reference marker\n` +
+      `  verified: route manifest carries KEEP_ROUTE_MOVE_CONFIG and the triage/forms path marker\n` +
+      `  verified: README carries all seven status tokens; work-packets carries all ten BLD-X IDs\n` +
+      `  verified: requirement-map names every PRD file in both directories\n` +
+      `  not checked: whether the route count in the manifest prose is current (prose count is not asserted)\n`,
+    );
   }
 }

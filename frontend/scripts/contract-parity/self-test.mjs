@@ -234,6 +234,97 @@ export function runSelfTest(evaluate, floorFailures, partitionFindings) {
     ["get /build/{projectId}/tickets data[].gone"],
   );
 
+  assert(
+    "a type mismatch is reported when the backend declares string but the frontend expects number",
+    evaluate(
+      [record(z.object({ count: z.number() }), "/x")],
+      document("/x", "get", {
+        type: "object",
+        properties: { count: { type: "string" } },
+        required: ["count"],
+      }),
+    ).typeMismatches.map((f) => `${f.fieldPath}:${f.kind}`),
+    ["count:type"],
+  );
+
+  assert(
+    "integer from the backend is accepted by a frontend number field — no false positive for the integer subtype",
+    evaluate(
+      [record(z.object({ count: z.number() }), "/x")],
+      document("/x", "get", {
+        type: "object",
+        properties: { count: { type: "integer" } },
+        required: ["count"],
+      }),
+    ).typeMismatches.length,
+    0,
+  );
+
+  assert(
+    "an enum mismatch is reported when the backend can send a value the frontend enum does not accept",
+    evaluate(
+      [record(z.object({ status: z.enum(["active", "archived"]) }), "/x")],
+      document("/x", "get", {
+        type: "object",
+        properties: { status: { type: "string", enum: ["active", "archived", "deleted"] } },
+        required: ["status"],
+      }),
+    ).typeMismatches.map((f) => `${f.fieldPath}:${f.kind}`),
+    ["status:enum"],
+  );
+
+  assert(
+    "no enum mismatch when the backend enum is a subset of the frontend enum",
+    evaluate(
+      [record(z.object({ status: z.enum(["active", "archived", "deleted"]) }), "/x")],
+      document("/x", "get", {
+        type: "object",
+        properties: { status: { type: "string", enum: ["active", "archived"] } },
+        required: ["status"],
+      }),
+    ).typeMismatches.length,
+    0,
+  );
+
+  assert(
+    "a nullability mismatch is reported when the backend can send null but the frontend contract does not accept null",
+    evaluate(
+      [record(z.object({ tag: z.string() }), "/x")],
+      document("/x", "get", {
+        type: "object",
+        properties: { tag: { anyOf: [{ type: "string" }, { type: "null" }] } },
+        required: ["tag"],
+      }),
+    ).typeMismatches.map((f) => `${f.fieldPath}:${f.kind}`),
+    ["tag:nullable"],
+  );
+
+  assert(
+    "no nullability mismatch when both frontend and backend allow null",
+    evaluate(
+      [record(z.object({ tag: z.string().nullable() }), "/x")],
+      document("/x", "get", {
+        type: "object",
+        properties: { tag: { anyOf: [{ type: "string" }, { type: "null" }] } },
+        required: ["tag"],
+      }),
+    ).typeMismatches.length,
+    0,
+  );
+
+  assert(
+    "an unconstrained z.unknown() field is not counted as a validated field",
+    evaluate(
+      [record(z.object({ id: z.number().int(), payload: z.unknown() }).strict(), "/x")],
+      document("/x", "get", {
+        type: "object",
+        properties: { id: { type: "integer" }, payload: { type: "string" } },
+        required: ["id", "payload"],
+      }),
+    ).typeMismatches.length,
+    0,
+  );
+
   for (const check of checks)
     console.log(
       `${check.ok ? "ok  " : "FAIL"}  ${check.label}${check.ok ? "" : `\n        expected ${JSON.stringify(check.expected)}\n        actual   ${JSON.stringify(check.actual)}`}`,

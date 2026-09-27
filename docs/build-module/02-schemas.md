@@ -33,6 +33,14 @@ Organization
 |---|---|---|---|
 | Project | `id`, `orgId`, `key`, `name`, `status`, dates | optional product/deal; manager/client memberships | soft delete |
 | WorkItem | `id`, `orgId`, `projectId`, number/key, type, title, status, priority, rank, reporter | parent, assignees, cycle, module, release, labels, relations | soft delete + version |
+
+**`WorkItem.version` is maintained by the database, in exactly one place.** The trigger
+`build.trg_tickets_version_bump` (migration 1373, journal idx 1124, applied 2026-09-27) is
+`BEFORE UPDATE … FOR EACH ROW` and assigns `NEW.version := OLD.version + 1`. No application code
+increments it, and none may — the assignment overwrites whatever the statement set, so a `SET
+version = version + 1` in a handler is silently discarded rather than doubling the token, and a
+client-supplied absolute version cannot take effect. Every update advances the token exactly once,
+including a soft delete, so a tombstoning write is never mistaken for no change.
 | Cycle | `id`, `orgId`, `projectId`, name, start/end, status | work items | archive/complete; no Sprint table after migration |
 | ManagedProduct | `id`, `orgId`, name, status | projects, feedback, goals | soft delete |
 | Portfolio/Program | `id`, `orgId`, name, status | projects or portfolios through mapping tables | soft delete |
