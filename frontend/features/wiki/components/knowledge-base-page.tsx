@@ -35,7 +35,9 @@ import {
   KbSourcesSheet,
   type SourceKindFilter,
   type OwnerFilter,
+  type SpaceIdFilter,
 } from "@/features/wiki/components/kb-sources-sheet";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";
 import {
@@ -118,6 +120,7 @@ export default function KnowledgeBasePage() {
 
   const [scopeKindFilter, setScopeKindFilter] = useState<SourceKindFilter>("all");
   const [scopeOwnerFilter, setScopeOwnerFilter] = useState<OwnerFilter>("all");
+  const [scopeSpaceIdFilter, setScopeSpaceIdFilter] = useState<SpaceIdFilter>(null);
 
   const scopeFilters: KbSourcesParams = {
     kind: scopeKindFilter !== "all" ? scopeKindFilter : undefined,
@@ -126,6 +129,9 @@ export default function KnowledgeBasePage() {
   const hasScopeFilters = scopeFilters.kind !== undefined || scopeFilters.createdById !== undefined;
   const scopeSourcesQuery = useKbSources(hasScopeFilters ? scopeFilters : undefined);
   const scopeSources = (scopeSourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
+
+  const spacesQuery = useKbSpaces();
+  const kbSpaces = spacesQuery.data?.data ?? [];
 
   const allConversations = useMemo(
     () => (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations),
@@ -358,6 +364,10 @@ export default function KnowledgeBasePage() {
   const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
   const readyCount = sources.filter((s) => s.status === "ready").length;
   const scopeActive = scopeSourceIds.length > 0 || scopeVerifiedOnly;
+  const baseDisplaySources = hasScopeFilters ? scopeSources : sources;
+  const scopeDisplaySources = scopeSpaceIdFilter !== null
+    ? baseDisplaySources.filter((s) => s.spaceId === scopeSpaceIdFilter)
+    : baseDisplaySources;
 
   return (
     <PageWrapper
@@ -556,7 +566,7 @@ export default function KnowledgeBasePage() {
           mode="scope"
           open
           onOpenChange={handleSourcesSheetOpenChange}
-          sources={hasScopeFilters ? scopeSources : sources}
+          sources={scopeDisplaySources}
           isLoading={hasScopeFilters ? scopeSourcesQuery.isLoading : sourcesQuery.isLoading}
           selectedIds={pendingScopeIds}
           onSelectionChange={handleScopeSelectionChange}
@@ -567,6 +577,9 @@ export default function KnowledgeBasePage() {
           onKindFilterChange={setScopeKindFilter}
           ownerFilter={scopeOwnerFilter}
           onOwnerFilterChange={setScopeOwnerFilter}
+          spaceIdFilter={scopeSpaceIdFilter}
+          onSpaceIdFilterChange={setScopeSpaceIdFilter}
+          spaces={kbSpaces}
           onConfirm={handleScopeConfirm}
         />
       )}

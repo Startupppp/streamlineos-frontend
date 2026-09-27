@@ -13,6 +13,7 @@ import {
   Check,
   ShieldCheck,
   UserIcon,
+  Layers,
 } from "lucide-react";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -47,6 +48,8 @@ interface KbSourcesSheetManageProps {
   isDeleting: boolean;
 }
 
+export type SpaceIdFilter = number | null;
+
 interface KbSourcesSheetScopeProps {
   mode: "scope";
   open: boolean;
@@ -62,6 +65,9 @@ interface KbSourcesSheetScopeProps {
   onKindFilterChange: (kind: SourceKindFilter) => void;
   ownerFilter: OwnerFilter;
   onOwnerFilterChange: (owner: OwnerFilter) => void;
+  spaceIdFilter: SpaceIdFilter;
+  onSpaceIdFilterChange: (spaceId: SpaceIdFilter) => void;
+  spaces: ReadonlyArray<{ id: number; name: string }>;
   onConfirm: () => void;
 }
 
@@ -207,6 +213,36 @@ function OwnerFilterButton({
   );
 }
 
+function SpaceFilterButton({
+  spaceId,
+  label,
+  active,
+  onSelect,
+}: {
+  spaceId: SpaceIdFilter;
+  label: string;
+  active: boolean;
+  onSelect: (spaceId: SpaceIdFilter) => void;
+}) {
+  function handleClick() {
+    onSelect(spaceId);
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "flex-1 rounded px-2 py-1 text-xs font-medium transition-colors",
+        active
+          ? "bg-background text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
 function KbSourcesScopeSheet({
   open,
   onOpenChange,
@@ -221,6 +257,9 @@ function KbSourcesScopeSheet({
   onKindFilterChange,
   ownerFilter,
   onOwnerFilterChange,
+  spaceIdFilter,
+  onSpaceIdFilterChange,
+  spaces,
   onConfirm,
 }: Omit<KbSourcesSheetScopeProps, "mode">) {
   const readyVisible = sources.filter((s) => s.status === "ready");
@@ -288,6 +327,27 @@ function KbSourcesScopeSheet({
             </div>
           )}
         </div>
+
+        {spaces.length > 0 && (
+          <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-1">
+            <Layers className="ml-1 h-3 w-3 shrink-0 text-muted-foreground" />
+            <SpaceFilterButton
+              spaceId={null}
+              label="All"
+              active={spaceIdFilter === null}
+              onSelect={onSpaceIdFilterChange}
+            />
+            {spaces.map((space) => (
+              <SpaceFilterButton
+                key={space.id}
+                spaceId={space.id}
+                label={space.name}
+                active={spaceIdFilter === space.id}
+                onSelect={onSpaceIdFilterChange}
+              />
+            ))}
+          </div>
+        )}
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2">
           <div className="flex items-center gap-2">
