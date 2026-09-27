@@ -14,7 +14,6 @@ const requireText = (content, expected, location, failures) => {
     failures.push(`${location} is missing ${JSON.stringify(expected)}`);
 };
 
-// Vacuity floors. Raise when the build spec grows; never lower to make a run pass.
 const PRD_FLOOR_MODULE = 21;
 const PRD_FLOOR_SIDEBAR = 5;
 

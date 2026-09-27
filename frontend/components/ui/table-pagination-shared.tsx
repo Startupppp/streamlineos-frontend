@@ -36,7 +36,6 @@ export interface TablePaginationOffsetProps extends TablePaginationChrome {
 
 export interface TablePaginationCursorProps extends TablePaginationChrome {
   mode: "cursor";
-  /** Rows on the page currently rendered. Never a total — a keyset list has none. */
   rowCount: number;
 
   pageNumber?: number;
@@ -45,13 +44,7 @@ export interface TablePaginationCursorProps extends TablePaginationChrome {
   onNext: () => void;
   onPrevious: () => void;
   pageSize?: number;
-  /**
-   * When true, hides the bar when both hasPrevious and hasMore are false
-   * (i.e. there is only a single page). Default hides only when rowCount is
-   * zero and hasPrevious is false.
-   */
   hideOnSinglePage?: boolean;
-  /** When true, prev/next buttons include a text label alongside the icon. */
   showLabels?: boolean;
   page?: never;
   total?: never;

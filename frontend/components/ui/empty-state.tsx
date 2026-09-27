@@ -27,9 +27,7 @@ interface EmptyStateProps {
   actionVariant?: "default" | "outline";
   className?: string;
   compact?: boolean;
-  /** When true, renders without card chrome (border, min-h, flex-1). Caller controls sizing via className or height. */
   bare?: boolean;
-  /** Inline pixel height applied to the container. Only meaningful when bare is true. */
   height?: number;
   /**
    * When true, one or more active filters are responsible for the empty result.
