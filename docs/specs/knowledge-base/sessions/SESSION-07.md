@@ -45,8 +45,36 @@ Migration: `backend/migrations/1212_kb_indexed_bytes_quota.sql` + its rollback.
 - [ ] Pre-send source scope sheet: pages, files and notes, filterable by space, owner, status and
       verified-only. Visible **and editable before send**, and what it shows is what is actually
       retrieved — not a decorative summary.
-- [ ] The scope the user chose is sent with the request and honoured server-side. A scope the actor
+- [x] **DONE 2026-09-27 — and settling it turned up a real widening defect, now fixed.** The scope the user chose is sent with the request and honoured server-side. A scope the actor
       cannot read is not silently widened.
+      **Sent:** `knowledge-base-page.tsx:233-234` puts the applied `sourceIds` and `verifiedOnly`
+      on the ask payload, having come through the pending → `handleScopeConfirm` → applied path.
+      **Honoured, proven in the rendered SQL** (`kb-ask-scope-honoured.spec.ts`, 8 tests, every
+      negative paired with a positive control): `verifiedOnly` becomes
+      `eq(kbPages.trustState, "verified")` in both the keyword and vector candidate queries
+      (`kb-candidate.service.ts:143`, `:161`) and appears as a bound parameter; `sourceIds` becomes
+      `inArray(kbSources.id, sourceIds)` (`kb-search-retrieval.service.ts:443-444`) with every
+      requested id in the parameters. Mutation-proven: deleting those two lines fails three tests
+      including the control.
+      **Not widened — the defect.** A *non-empty* list containing an unreadable id was already safe:
+      the `IN` filter still applies and composes with the ever-present `eq(kbSources.orgId, …)`, so
+      the intersection is empty and the query returns nothing rather than searching everything.
+      But the guard is `if (sourceIds && sourceIds.length > 0)`, and `askSchema` permitted
+      `sourceIds: []` — an **empty array took the false branch, dropped the `IN` filter entirely,
+      and searched every source the actor could read.** Select nothing, get everything. The UI never
+      sends `[]` (it omits the field when the selection is empty), so this was reachable only by a
+      direct API caller — but it is precisely the "silently widened" case this box is written
+      against, and being unreachable from our own UI is not a defence.
+      **Fixed** at the boundary per **BE-13**: `sourceIds` is now `.min(1).max(50)`, so an empty
+      scope is a 400 rather than a silent widening; omitting the field remains the way to ask across
+      everything readable. Written failing-first — `kb-ask-scope-schema.spec.ts` had exactly one
+      failing assertion (`[]` accepted) against four passing controls before the fix, five green
+      after, with the 50 cap asserted at both 50 (accepted) and 51 (rejected) so it is a boundary
+      and not an off-by-one.
+      **Contract note:** this narrows a published request schema, so `openapi.json` needs
+      re-vendoring. Deliberately **not** done here — the vendored copy is already stale from another
+      session's unrelated Build changes (58 vs 68 `rowVersion` entries), and regenerating would
+      sweep their contract into this commit. Carried as a handoff.
 - [x] All six answer parts render: citations, the source passage behind each citation, freshness,
       verification state, disagreement between sources, and an explicit insufficient-evidence
       result. Insufficient evidence is a first-class answer, not an empty state.

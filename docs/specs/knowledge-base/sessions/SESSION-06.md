@@ -75,17 +75,31 @@ the edit in `## Handoffs` so the orchestrator can check for a collision.
       the `runInTenantTransaction` writes both the interaction row and the event AFTER the gateway
       returns. BE-84 satisfied.
 
-- [ ] **OPEN —** Streaming path writes the same record as the non-streaming path. The streaming path writes the interaction row in `onCompleted` (after stream completes, `kb-ask.service.ts:343-368`), NOT before calling `streamTextWithUsage` as stated; the `onCompleted` payload omits `model`, `costCredits`, and `gatewayCorrelationId` that the non-streaming path sets; `kb-ask-stream-parity.spec.ts` mocks `KbAskService.streamAsk` entirely and does not exercise interaction-row field parity.
+- [x] **DONE 2026-09-27 — both halves fixed, and the spec now proves it.** The three missing fields (`model`, `costCredits`, `gatewayCorrelationId`) are written on the streaming `onCompleted` interaction row, so both paths record the same shape.
+      The more important fix is the spec. `kb-ask-stream-parity.spec.ts` was a controller-level test against a fully mocked `KbAskService.streamAsk`: the real method never ran, `onCompleted` was never invoked, and **no field of the interaction row was ever touched** — it asserted HTTP status codes and NDJSON framing while reading as interaction-row coverage. It now drives the real `ask` and `streamAsk`, mocking the boundary *beneath* them (`aiGateway.streamTextWithUsage`) so the genuine `onCompleted` closure fires and the real `tx.insert(kbAiInteractions)` is captured from both paths.
+      The parity assertion is structural, not a hand-listed field checklist: `expect(Object.keys(streamRow).sort()).toEqual(Object.keys(askRow).sort())`. A hand-written `expect(row.model).toBeDefined()` per field passes silently the day someone adds a ninth field to one path only; comparing key sets fails. Three fields legitimately differ in **value** and are excluded deliberately with the reason in the test name — `latencyMs` (per-call wall clock), `correlationId` (per-invocation UUID) and `gatewayCorrelationId` (provider-assigned); all three are still asserted **present** in both rows, so parity holds structurally.
+      **Mutation-proven:** deleting `costCredits` from the streaming insert made the spec fail on exactly the key-set comparison plus the `costCredits` value test; the line was restored by editing the text back and all 10 tests pass.
       **Evidence:** `streamAsk` in `kb-ask.service.ts` writes the interaction row and event in
       `runInTenantTransaction` BEFORE calling `streamTextWithUsage`. Token counts are not yet
       available at this point — see HANDOFF below for SESSION-07 to update them after stream.
 
-- [ ] Source ids are recorded with the ACL revision that was current at send time, so a later
+- [x] **DONE 2026-09-27.** Source ids are recorded with the ACL revision that was current at send time, so a later
       revocation is detectable rather than silently rewriting history.
-      **Evidence:** `kb-ask.service.ts` — `buildSourceRecords(top, sources, linked)` records each
-      source with `kind`, `id`, and `aclRevision: null` (null because `RetrievedSource` in
-      `kb-search.service.ts` does not expose `acl_revision`). See HANDOFF for SESSION-07/search
-      to surface `aclRevision` from `kb_pages.acl_revision`.
+      The handoff below is now discharged. `kb_pages.acl_revision` exists and always did
+      (`db/schema/kb/pages.ts:63`, `integer` NOT NULL default 1), and `KbAiSourceRecord.aclRevision`
+      was already typed `number | null` (`db/schema/kb/ai-interactions.ts:28`) — so **no migration and
+      no schema change were required**, only the projection. `kb-search-retrieval.service.ts` now
+      projects `aclRevision: kbPages.aclRevision` in both the article and page select lists, and
+      `buildAskSourceRecords` in `kb-ask-context.ts` records `item.aclRevision ?? null` instead of a
+      hard-coded `null`. Projected in the query that already runs, so no N+1 (**BE-47**) and explicit
+      rather than a raw row (**BE-07**).
+      **Honest nulls, deliberately.** `page` and `article` both resolve from `kb_pages` and carry a
+      real revision. `source` (`kb_sources`) and `document` (linked company document) have no
+      `acl_revision` column at all, so they record `null` — and that is the correct value, not a
+      gap; the reason is carried in the test names rather than a comment.
+      **Mutation-proven:** hard-coding `aclRevision: null` again fails 5 of the 8 tests in
+      `kb-ask-acl-revision.spec.ts`, while the 3 deliberate-null tests correctly still pass —
+      which is the positive control proving the suite is not simply rejecting every null.
 
 - [x] Cost and token counts land on the row, and `kb-credits.service.ts` reads from it rather than
       recomputing.
