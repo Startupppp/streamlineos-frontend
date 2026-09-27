@@ -290,6 +290,22 @@ Removal stays blocked under the owner's standing retain-don't-delete rule. Recor
 ### AV-10 — P1: contracts and reachable UI
 
 - [ ] Verify each migrated envelope through the real HTTP parser and query hook, not a hook mock that already returns an array. Include from-ticket create success/idempotent retry, grants create/list parity, export history and each response projection. Update `selectFlatPages` documentation to describe its actual selected result, and retain raw page metadata where needed.
+
+**Top-level shape parity measured 2026-09-27 — every KB list contract matches its backend `@ResponseSchema`.** This closes the array-vs-envelope class, which is the failure that put `/knowledge/wiki/import` behind the error boundary on an HTTP 200. `check:contract-parity` compares fields *within* an object and produces no finding at all for a top-level array-vs-envelope difference, so this had to be checked by hand.
+
+| Route | Backend `@ResponseSchema` | Frontend contract | |
+|---|---|---|---|
+| `/kb/pages/recent`, `/kb/pages/favorites` | `kbPageListSchema` = `z.array` | `kbPageListContract` = `z.array` | match |
+| `/kb/pages/:pageId/comments` | `kbPageCommentListSchema` = `z.array` | `kbPageCommentListContract` = `z.array` | match |
+| `/kb/pages/:pageId/record-links` | `kbRecordLinkListSchema` = `z.array` | `kbRecordLinkListContract` = `z.array` | match |
+| `/kb/spaces/:spaceId/members` | `kbSpaceMemberListSchema` = `z.array` | `kbSpaceMemberListContract` = `z.array` | match |
+| `/kb/import-jobs`, `/kb/export-jobs` | `cursorPageSchema` | `Page<T>` envelope, `pagination.nextCursor` | match, previously broken |
+
+Two things this specifically rules out. The `/kb/pages` collection cutover did **not** introduce a mismatch: that route returns the `kbPageCollectionPageSchema` envelope, and `kbPageListContract` — despite the name — is never applied to it, only to the two bare-array `recent`/`favorites` routes. And the four dead bare-array fossil contracts recorded earlier are gone; the four bare-array contracts that remain are all live and all correct.
+
+**Still open, and the box stays unchecked for it.** This is static shape parity, not the item's actual requirement. Nothing here exercised the real HTTP parser against a running backend, so an in-object field drift — which is what `check:contract-parity` *does* see, and therefore the weaker risk — is confirmed only as far as that gate reaches. The from-ticket idempotent-retry and export-history paths named in this item are untested by the above.
+
+`selectFlatPages` is confirmed to return `T[]` and to discard the envelope (`frontend/lib/api/select-flat-pages.ts:14-16`). That is correct **only** under `useInfiniteQuery`, where `hasNextPage` comes from the query rather than the selected result; all six consumers do use it that way. The item asks for its documentation to be updated, which cannot be done in source under the no-comments rule — the description belongs in a test name or here, and it is now here.
 - [x] **DONE 2026-09-27 — and it was nine overlays, not one.** Fix `SpaceMembersSheet`'s missing accessible description.
       `SheetDescription` added and a guard test written
       (`space-members-sheet.test.tsx`, "gives the dialog an accessible description…"). It asserts
@@ -339,6 +355,14 @@ Removal stays blocked under the owner's standing retain-don't-delete rule. Recor
 ### AV-13 — P1: migration and release proof
 
 - [ ] Reconcile new KB migration files, journal entries, rollback paths and actual database hashes/schema at the deployment being released. `1370_kb_chunk_acl_dead_index.sql` was on disk but not in the journal at this audit checkpoint. Authored, journalled, applied and verified are four separate states. The old 1174 cutover evidence remains historical; do not reapply it. Keep rejected 1347 outside execution until a new decision supersedes ADR-0001. Re-run targeted tests on the final source revision; do not declare another session's dirty changes deployed.
+
+**1370 re-checked 2026-09-27 — still unjournalled, and the journal has run past it.** `1370_kb_chunk_acl_dead_index.sql` and `1370_kb_chunk_acl_dead_index_rollback.sql` are both on disk. `migrations/meta/_journal.json` contains no `1370` tag, and its highest tags are now 1390–1395. Under BE-58 an unjournalled file never runs while `db:migrate` still prints success, so this migration has never executed and cannot execute as things stand.
+
+What it does: `DROP INDEX idx_kb_chunks_org_page_acl` on `kb_article_chunks`, guarded by two `DO`-block preconditions (the table must exist; the index must still exist) and an `ASSERT` post-check.
+
+Consequence of it never running is **write amplification, not an outage.** No reader depends on a dead index, so nothing 42P01s. But PostgreSQL still maintains every index on every insert and update, and `kb_article_chunks` is written in bulk on the reindex path — so the dead index is charged against exactly the operation that has to scale. This is a cost item, not a correctness one, and it should not be described as a live break.
+
+**Journalling it is not a free correctness fix, which is why it has not been done here.** The second precondition `RAISE`s if `idx_kb_chunks_org_page_acl` is already absent. Production is the only database and its current index state cannot be read from this repository, so whether that precondition holds is unknown. Journalling the file arms it for the next `db:migrate`; if the index was already dropped by any other path, that run fails and blocks every migration queued behind it. Authored and journalled are two of the four states this item names, and moving between them here is a production decision, not a cleanup. Left for the owner.
 
 ### AV-14 — P1: authorization cache and effective test coverage
 
