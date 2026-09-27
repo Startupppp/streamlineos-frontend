@@ -86,6 +86,21 @@ const nextConfig: NextConfig = {
       destination: "/signin",
       permanent: true,
     },
+    {
+      source: "/payroll/workers",
+      destination: "/payroll/employees",
+      permanent: false,
+    },
+    {
+      source: "/hr/payroll",
+      destination: "/payroll",
+      permanent: false,
+    },
+    {
+      source: "/hr/payroll/salary-structures",
+      destination: "/payroll/salary-structures",
+      permanent: false,
+    },
 
     // Recruitment OS moved out of HRMS. Old links (bookmarks, sent emails) keep working.
     {
