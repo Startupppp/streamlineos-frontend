@@ -32,6 +32,8 @@ it("accepts the unprojected ticket row listEpics actually returns, since the ser
     cycleId: null,
     sequenceId: null,
     estimate: null,
+    health: null,
+    dependencyCount: 0,
     createdAt: "2026-09-16T00:00:00.000Z",
     updatedAt: "2026-09-16T00:00:00.000Z",
   };
@@ -81,6 +83,7 @@ const baseCycleRow = {
   name: "Q4 Cycle",
   description: "Focus on checkout",
   goal: null,
+  capacity: null,
   status: "active" as const,
   version: 1,
   startDate: "2026-10-01",
