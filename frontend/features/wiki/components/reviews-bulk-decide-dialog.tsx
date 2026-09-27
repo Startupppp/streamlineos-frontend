@@ -7,6 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,9 @@ export function BulkDecideDialog({
           <DialogTitle>
             Decide {ids.length} review{ids.length !== 1 ? "s" : ""}
           </DialogTitle>
+          <DialogDescription className="text-xs">
+            Approve or reject every selected review in one action.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 px-0 py-2">
           <div className="space-y-1.5">

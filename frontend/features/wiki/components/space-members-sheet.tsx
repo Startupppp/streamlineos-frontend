@@ -16,6 +16,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetBody,
 } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -273,6 +274,9 @@ export function SpaceMembersSheet({
       <SheetContent side="right" className="sm:max-w-sm p-0 flex flex-col">
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>Members — {spaceName}</SheetTitle>
+          <SheetDescription className="text-xs mt-0.5">
+            People who can read or edit pages in this space.
+          </SheetDescription>
         </SheetHeader>
         <SheetBody className="px-6 py-4 flex-1 overflow-y-auto space-y-4">
           {canManage && <AddMemberForm spaceId={spaceId} />}

@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -197,6 +198,9 @@ export default function PageDocumentHeader({
         <DialogContent className="sm:max-w-md gap-3">
           <DialogHeader>
             <DialogTitle>Save as template</DialogTitle>
+            <DialogDescription className="text-xs">
+              Reuse this page's structure when creating new pages.
+            </DialogDescription>
           </DialogHeader>
           <Input
             value={templateName}

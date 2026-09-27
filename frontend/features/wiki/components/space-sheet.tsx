@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -122,6 +122,9 @@ export function SpaceSheet({
           <SheetTitle>
             {editingSpace ? "Edit space" : "Create space"}
           </SheetTitle>
+          <SheetDescription className="text-xs mt-0.5">
+            Name, audience and appearance of this space.
+          </SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form

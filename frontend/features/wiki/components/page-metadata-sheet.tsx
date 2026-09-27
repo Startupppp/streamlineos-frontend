@@ -13,6 +13,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet";
 import {
@@ -188,6 +189,9 @@ export default function PageMetadataSheet({
       <SheetContent side="right" className="gap-0 sm:max-w-md p-0 flex flex-col bg-background">
         <SheetHeader className="px-5 py-4 border-b shrink-0 bg-background">
           <SheetTitle className="text-sm">Page settings</SheetTitle>
+          <SheetDescription className="text-xs mt-0.5">
+            Visibility, review schedule and other properties of this page.
+          </SheetDescription>
         </SheetHeader>
 
         <ScrollArea className="flex-1 min-h-0">

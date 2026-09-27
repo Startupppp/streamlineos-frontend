@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,9 @@ export default function MovePageDialog({
             <KbMoveRightIcon className="h-4 w-4" />
             Move page
           </DialogTitle>
+          <DialogDescription className="text-xs">
+            Search for the page that should become the new parent.
+          </DialogDescription>
         </DialogHeader>
         <div className="relative">
           <KbSearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />

@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { KbImageIcon } from "@/features/wiki/lib/kb-icons";
 import { uploadKbMedia } from "@/features/wiki/lib/upload-kb-media";
@@ -77,6 +78,9 @@ export function PageCoverPickerDialog({
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Page cover</DialogTitle>
+          <DialogDescription className="text-xs">
+            Upload an image or choose a colour for the top of this page.
+          </DialogDescription>
         </DialogHeader>
         <input
           ref={fileInputRef}

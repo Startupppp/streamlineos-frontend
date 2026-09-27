@@ -12,7 +12,7 @@ import {
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -118,6 +118,9 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
               </Button>
             )}
           </div>
+          <SheetDescription className="text-xs mt-0.5">
+            Earlier saved versions of this page, newest first.
+          </SheetDescription>
         </SheetHeader>
 
         {!selectedVersion ? (

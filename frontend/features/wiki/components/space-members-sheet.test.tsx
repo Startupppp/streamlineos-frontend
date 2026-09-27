@@ -102,6 +102,20 @@ beforeEach(() => {
   mockRemoveMember.mockReturnValue(mutation());
 });
 
+describe("SpaceMembersSheet — accessible name and description", () => {
+  it("gives the dialog an accessible description, without which Radix warns and a screen reader announces the title with no explanation of what the sheet controls", () => {
+    renderSheet();
+
+    const dialog = screen.getByRole("dialog");
+    const describedBy = dialog.getAttribute("aria-describedby");
+
+    expect(describedBy).toBeTruthy();
+    expect(document.getElementById(describedBy ?? "")).toHaveTextContent(
+      /read or edit pages in this space/i,
+    );
+  });
+});
+
 describe("SpaceMembersSheet — permission gating", () => {
   it("shows the Add member form and Remove buttons for a user with kb:spaces:manage", () => {
     mockCan.mockImplementation((key) => key === "kb:spaces:manage");

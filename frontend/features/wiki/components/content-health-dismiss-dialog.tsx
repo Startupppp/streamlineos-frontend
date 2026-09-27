@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -81,6 +82,9 @@ export function ContentHealthDismissDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Dismiss signal</DialogTitle>
+          <DialogDescription className="text-xs">
+            Hide this content-health signal for the selected page.
+          </DialogDescription>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
           Dismissing the <span className="font-medium">{kind.replace(/_/g, " ")}</span> signal for{" "}
