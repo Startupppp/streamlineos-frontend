@@ -6,11 +6,11 @@ Both routes become callers that compute a change and delegate, so the effect set
 
 **Blocked by:** 43 — "Apply a change to a ticket" becomes a module, and the detail route goes through it.
 
-**Status:** ready-for-agent
+**Status:** blocked on ticket 43 — the change module does not exist yet; no boxes can be earned until ticket 43's boxes 1–4 are complete
 
-- [ ] The rank route and the bulk route delegate to the change module and perform no effect step themselves
-- [ ] A status change by drag produces the same effects as the same status change by panel edit, asserted side by side in one test
-- [ ] A bulk transition produces the per-ticket effects for every row it moved
-- [ ] Rank-only changes produce only the effects a rank change warrants — the diff decides, not the route
-- [ ] Webhook subscribers receive one event per changed ticket, at the right version scale
-- [ ] No production webhook is delivered while testing this
+- [ ] The rank route and the bulk route delegate to the change module and perform no effect step themselves — BLOCKED on ticket 43
+- [ ] A status change by drag produces the same effects as the same status change by panel edit, asserted side by side in one test — BLOCKED
+- [ ] A bulk transition produces the per-ticket effects for every row it moved — BLOCKED
+- [ ] Rank-only changes produce only the effects a rank change warrants — the diff decides, not the route — BLOCKED
+- [ ] Webhook subscribers receive one event per changed ticket, at the right version scale — BLOCKED
+- [ ] No production webhook is delivered while testing this — BLOCKED

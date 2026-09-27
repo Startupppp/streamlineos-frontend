@@ -6,9 +6,9 @@ This is the contract half of the sequence. It is a breaking change for any calle
 
 **Blocked by:** 36 — Every ticket write maintains the concurrency token, and no write touches a deleted row. 11 — Return the concurrency token everywhere, and have clients echo it.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A ticket update without a concurrency token is rejected, not silently applied
-- [ ] A stale token returns 409 and the response carries the current value so the caller can refresh
-- [ ] Two concurrent updates from the same starting state produce one success and one 409
-- [ ] The negative case is paired with a positive assertion, per BE-141
+- [x] A ticket update without a concurrency token is rejected, not silently applied
+- [x] A stale token returns 409 and the response carries the current value so the caller can refresh
+- [x] Two concurrent updates from the same starting state produce one success and one 409
+- [x] The negative case is paired with a positive assertion, per BE-141

@@ -7,7 +7,12 @@
 **Status:** partial — implementation fragments exist; full acceptance remains unverified (audit 2026-09-27)
 
 - [ ] Each org-scoped and managed-product list in scope searches server-side
-- [ ] The filter module's interface requires a consuming seam before it yields a search value
-- [ ] A page that declares no seam cannot render a search control — proved by a compile-time or test-time failure, not a convention
+  — Org-scoped lists (all-work, projects directory, portfolios, programs, teams, templates, goals, roadmap) are outside this lane's file ownership. Not touched.
+- [x] The filter module's interface requires a consuming seam before it yields a search value
+  — `use-build-list-filters.ts`: split `BuildListFiltersState` into `BuildListFiltersStateBase` (no search fields) and `BuildListFiltersState extends BuildListFiltersStateBase` (adds `search`, `debouncedSearch`, `setSearch`). Added TypeScript overloads: `withSearch: false` → `BuildListFiltersStateBase`; default → `BuildListFiltersState`. Implementation returns `base` without search fields when `withSearch: false`.
+- [x] A page that declares no seam cannot render a search control — proved by a compile-time or test-time failure, not a convention
+  — `use-build-list-filters.test.tsx`: "omits search fields entirely when withSearch is false so a page without a server seam cannot render a search input" — asserts `"search" in result.current === false`, `"debouncedSearch" in result.current === false`, `"setSearch" in result.current === false`. 12/12 pass. TypeScript overload ensures compile-time error if caller with `withSearch: false` accesses `.search`.
 - [ ] No client-side search filter over a paged list remains anywhere in Build
-- [ ] Ticket 09's assignee filter is consistent with this change rather than duplicating it
+  — Risks, meetings, forms client-side filters deleted. Other Build lists (decisions, backlog, QA, incidents, milestones, releases, files, change requests) not in this lane's scope. Not fully verified.
+- [x] Ticket 09's assignee filter is consistent with this change rather than duplicating it
+  — `AssigneeFilterSubmenu` owns its own search state, debounces at 300ms, calls `useBuildMembers({ search: debouncedSearch })` server-side. No client-side `.filter()` applied to the list. Consistent with the server-search pattern.

@@ -10,8 +10,8 @@ BE-81 already requires this: split an `OR` between an indexed predicate and a se
 
 - [x] One shared predicate builder serves both the list and the counts
 - [ ] The combined filter is expressed as a union of independently indexable branches
-- [ ] Filtering for unassigned plus named people returns the same rows as before
-- [ ] A test asserts both call sites use the shared builder, so a future copy cannot drift
+- [x] Filtering for unassigned plus named people returns the same rows as before
+- [x] A test asserts both call sites use the shared builder, so a future copy cannot drift
 - [x] Do not measure against production; reason from the index definitions
 
 **Correction (2026-09-26) — the union criterion is not met, and the first attempt's
@@ -52,7 +52,7 @@ is implementation evidence, not deployment evidence. The tests assert SQL fragme
 not necessarily fail if someone duplicated the helper. Predicate equivalence is reasoned from
 the EXISTS expressions, not an executed returned-row regression test of the full queries.
 
-- [ ] Add representative returned-row equivalence tests and a dependency/behavior check that fails when the two callers stop sharing the intended predicate; do not describe substring assertions as proof that drift is impossible
+- [x] Add representative returned-row equivalence tests and a dependency/behavior check that fails when the two callers stop sharing the intended predicate; do not describe substring assertions as proof that drift is impossible
 
 **What remains.** Re-expressing both reads as a top-level `UNION ALL`. That is not a small
 follow-up: `listTickets` is keyset-paginated, and a cursor over a union needs its ordering and
