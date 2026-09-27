@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -29,9 +29,6 @@ const decisionPageContract = lazyContract(() =>
 );
 const decisionRowContract = lazyContract(() =>
   import("@/hooks/api/build/governance-schema").then((m) => m.decisionRowContract),
-);
-const governanceSuccessContract = lazyContract(() =>
-  import("@/hooks/api/build/governance-schema").then((m) => m.governanceSuccessContract),
 );
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -64,6 +61,7 @@ export function useOrgRisks(filters?: OrgRiskFilters) {
     queryFn: ({ signal }) => apiClient.get<IdCursorPage<Risk>>("/build/risks", params, signal, riskPageContract),
     enabled: canState !== "denied",
     staleTime: 60_000,
+    throwOnError: false,
   });
 }
 

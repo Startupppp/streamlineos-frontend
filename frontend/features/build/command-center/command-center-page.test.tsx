@@ -210,7 +210,7 @@ it("renders the page skeleton and not the ready panels while the access snapshot
   expect(screen.queryByTestId("my-issues-panel")).not.toBeInTheDocument();
 });
 
-it("renders the plan upgrade link the backend sent with a 402 MODULE_NOT_ENABLED instead of a generic error when the projects query is rejected", () => {
+it("keeps the Command Center available when the projects query is rejected", () => {
   mockUseProjects.mockReturnValue(
     baseProjectsResult({
       data: undefined,
@@ -225,10 +225,8 @@ it("renders the plan upgrade link the backend sent with a 402 MODULE_NOT_ENABLED
   );
   render(<CommandCenterPage />);
   expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
-  expect(screen.getByRole("link", { name: /view plans/i })).toHaveAttribute(
-    "href",
-    "/settings/billing",
-  );
+  expect(screen.getByRole("heading", { name: "Command Center" })).toBeInTheDocument();
+  expect(screen.queryByText("Projects Error")).not.toBeInTheDocument();
 });
 
 it("renders the canonical Command Center heading", () => {
@@ -236,12 +234,8 @@ it("renders the canonical Command Center heading", () => {
   expect(screen.getByRole("heading", { name: "Command Center" })).toBeInTheDocument();
 });
 
-it("retries both server-derived summary queries with the page retry action", () => {
-  const refetchMyIssues = jest.fn();
-  const refetchOverdueIssues = jest.fn();
+it("keeps project failures out of the page-level error boundary", () => {
   const refetchProjects = jest.fn();
-  mockUseInfiniteAllWork.mockReturnValue(baseInfiniteResult({ refetch: refetchMyIssues }));
-  mockUseAllWork.mockReturnValue({ data: undefined, refetch: refetchOverdueIssues });
   mockUseProjects.mockReturnValue(
     baseProjectsResult({
       data: undefined,
@@ -251,12 +245,13 @@ it("retries both server-derived summary queries with the page retry action", () 
     }),
   );
   render(<CommandCenterPage />);
-  const retryButton = screen.getByRole("button", { name: /retry/i });
-  expect(retryButton).toBeInTheDocument();
-  retryButton.click();
-  expect(refetchProjects).toHaveBeenCalledTimes(1);
-  expect(refetchMyIssues).toHaveBeenCalledTimes(1);
-  expect(refetchOverdueIssues).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("heading", { name: "Command Center" })).toBeInTheDocument();
+  expect(screen.queryByText("Projects Error")).not.toBeInTheDocument();
+  expect(mockUseProjects).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({ throwOnError: false }),
+  );
+  expect(refetchProjects).not.toHaveBeenCalled();
 });
 
 it("uses the first My Work page total for the Open Issues statistic without a second summary request", () => {
@@ -357,6 +352,7 @@ it("passes the owner URL param as managerId to useProjects so the project list i
   render(<CommandCenterPage />);
   expect(mockUseProjects).toHaveBeenCalledWith(
     expect.objectContaining({ managerId: "user-abc" }),
+    expect.objectContaining({ throwOnError: false }),
   );
 });
 
@@ -364,6 +360,7 @@ it("passes no managerId to useProjects when the owner param is absent — paired
   render(<CommandCenterPage />);
   expect(mockUseProjects).toHaveBeenCalledWith(
     expect.objectContaining({ managerId: undefined }),
+    expect.objectContaining({ throwOnError: false }),
   );
 });
 

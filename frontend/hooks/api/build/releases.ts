@@ -66,6 +66,7 @@ export function useOrgReleases(filters?: OrgReleaseFilters) {
     queryFn: ({ signal }) => apiClient.get("/build/releases", Object.keys(params).length > 0 ? params : undefined, signal, projectReleaseListContract),
     enabled: canState !== "denied",
     staleTime: 60_000,
+    throwOnError: false,
   });
 }
 

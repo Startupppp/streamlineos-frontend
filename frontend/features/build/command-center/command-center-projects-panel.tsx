@@ -5,6 +5,8 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { ProjectListItem } from "@/types/projects";
 import { PmSection, PmPanel, PmStaggerList } from "@/components/pm-chrome";
 import { ProjectCard } from "./command-center-rows";
@@ -18,16 +20,22 @@ interface ProjectsPanelProps {
   projects: ProjectListItem[];
   canCreateProject: boolean;
   canCreateIssue: boolean;
+  isError: boolean;
+  error?: unknown;
   onCreateProject: () => void;
   onCreateForProject: (projectId: number) => void;
+  onRetry: () => void;
 }
 
 export function ProjectsPanel({
   projects,
   canCreateProject,
   canCreateIssue,
+  isError,
+  error,
   onCreateProject,
   onCreateForProject,
+  onRetry,
 }: ProjectsPanelProps) {
   return (
     <PmSection
@@ -59,7 +67,11 @@ export function ProjectsPanel({
         />
         <ScrollArea fill hideScrollbar className={COMMAND_CENTER_PANEL_BODY_SCROLL}>
           <div className="min-w-0 w-full max-w-full overscroll-contain p-1.5">
-            {projects.length === 0 ? (
+            {isError ? (
+              <div className="flex min-h-[12rem] items-center justify-center p-4">
+                <ErrorState description={getErrorMessage(error)} compact onRetry={onRetry} />
+              </div>
+            ) : projects.length === 0 ? (
               <EmptyState
                 illustrationPreset="projects"
                 title="No projects yet"

@@ -107,7 +107,7 @@ export function CommandCenterPage() {
     isError: projectsError,
     error: projectsRawError,
     refetch: refetchProjects,
-  } = useProjects({ status: "ACTIVE", managerId: urlOwner });
+  } = useProjects({ status: "ACTIVE", managerId: urlOwner }, { throwOnError: false });
 
   const myIssuesFilters = useMemo(
     () =>
@@ -208,8 +208,7 @@ export function CommandCenterPage() {
   const pageState = usePageState({
     permission: "build:view",
     isLoading: projectsLoading,
-    isError: projectsError,
-    error: projectsRawError,
+    isError: false,
   });
 
   const isReady = pageState.kind === "ready";
@@ -298,8 +297,11 @@ export function CommandCenterPage() {
                 projects={projects}
                 canCreateProject={canCreateProject}
                 canCreateIssue={canCreateIssue}
+                isError={projectsError}
+                error={projectsRawError}
                 onCreateProject={handleOpenWizard}
                 onCreateForProject={handleCreateForProject}
+                onRetry={() => void refetchProjects()}
               />
               <ApprovalsPanel />
               <AgentRunsPanel />
