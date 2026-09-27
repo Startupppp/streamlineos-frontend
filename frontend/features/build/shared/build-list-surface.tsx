@@ -1,0 +1,112 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@/components/ui/data-table";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import type { PermissionKey } from "@/lib/rbac/permissions";
+
+export interface BuildListSurfacePagination {
+  mode: "cursor";
+  pageSize: number;
+  hasMore: boolean;
+  hasPrevious: boolean;
+  onNext: () => void;
+  onPrevious: () => void;
+}
+
+export interface BuildListSurfaceProps<TRow> {
+  permission: PermissionKey;
+  rows: TRow[];
+  columns: DataTableColumn<TRow>[];
+  isLoading: boolean;
+  isError: boolean;
+  error?: unknown;
+  isFiltered?: boolean;
+  pagination?: BuildListSurfacePagination;
+  toolbar?: ReactNode;
+  empty: ReactNode;
+  filteredEmpty?: ReactNode;
+  loading?: ReactNode;
+  onRetry?: () => void;
+  getRowKey: (row: TRow, index: number) => string | number;
+  onRowClick?: (row: TRow) => void;
+  mobileCard?: (row: TRow, index: number) => ReactNode;
+  selection?: {
+    selected: ReadonlySet<string | number>;
+    onChange: (sel: Set<string | number>) => void;
+    getRowLabel?: (row: TRow, index: number) => string;
+  };
+  loadingRows?: number;
+  loadingHeaders?: readonly string[];
+  className?: string;
+}
+
+export function BuildListSurface<TRow>({
+  permission,
+  rows,
+  columns,
+  isLoading,
+  isError,
+  error,
+  isFiltered = false,
+  pagination,
+  toolbar,
+  empty,
+  filteredEmpty,
+  loading,
+  onRetry,
+  getRowKey,
+  onRowClick,
+  mobileCard,
+  selection,
+  loadingRows = 8,
+  loadingHeaders,
+  className,
+}: BuildListSurfaceProps<TRow>) {
+  const resolution = usePageState({
+    permission,
+    isLoading,
+    isError,
+    error,
+    isEmpty: rows.length === 0,
+  });
+
+  const resolvedEmpty =
+    isFiltered && filteredEmpty != null ? filteredEmpty : empty;
+
+  const resolvedLoading = loading ?? (
+    <DataTableSkeleton
+      rows={loadingRows}
+      headers={loadingHeaders}
+      mobileCards
+      className="flex-1"
+    />
+  );
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      {toolbar != null ? <div className="mb-3">{toolbar}</div> : null}
+      <PageState
+        resolution={resolution}
+        loading={resolvedLoading}
+        empty={resolvedEmpty}
+        onRetry={onRetry}
+        className={className ?? CONTENT_FILL_PANEL}
+      >
+        <DataTable<TRow>
+          data={rows}
+          columns={columns}
+          getRowKey={getRowKey}
+          onRowClick={onRowClick}
+          mobileCard={mobileCard}
+          selection={selection}
+          pagination={pagination}
+          className={CONTENT_FILL_PANEL}
+        />
+      </PageState>
+    </div>
+  );
+}

@@ -4,13 +4,11 @@ import { useCallback, useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { useChangeRequests, useDeleteChangeRequest, useUpdateChangeRequest } from "@/hooks/api/build/change-requests";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import type { ChangeRequest } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { PageState } from "@/components/shared/page-state";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SearchInput } from "@/components/ui/search-input";
 import { toast } from "sonner";
@@ -118,14 +116,6 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const crs = crPage?.data ?? [];
   const pagination = crPage?.pagination;
 
-  const pageState = usePageState({
-    permission: "build:changerequests:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty: !isLoading && crs.length === 0,
-  });
-
   const handleNew = useCallback(() => {
     setEditCr(null);
     setSheetOpen(true);
@@ -171,7 +161,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     onCreate: canCreate ? handleNew : undefined,
     onEdit: handleKeyboardOpen,
     onClearSelection: handleKeyboardClear,
-    enabled: pageState.kind === "ready",
+    enabled: !isLoading && !isError && crs.length > 0,
   });
 
   const handleBulkStatusChange = useCallback(
@@ -324,50 +314,51 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
               </div>
             </div>
           )}
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={12}
-                headers={CHANGE_REQUESTS_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<ChangeRequest>
+            permission="build:changerequests:view"
+            rows={crs}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            mobileCard={renderMobileCard}
+            selection={{
+              selected: selectedCrIds,
+              onChange: setSelectedCrIds,
+              getRowLabel: (row) => `CR-${row.crNumber}: ${row.title}`,
+            }}
+            pagination={{
+              mode: "cursor",
+              pageSize: PAGE_SIZE,
+              hasMore: Boolean(pagination?.hasMore),
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
+            }}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="ticket"
                 title="No change requests"
                 description="Create a change request to get started."
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
                 action={canCreate ? { label: "New Change Request", onClick: handleNew } : undefined}
               />
             }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="ticket"
+                title="No change requests match your filters"
+                description="Try adjusting or clearing the filters."
+                onClearFilters={listFilters.clearAll}
+              />
+            }
+            loadingHeaders={CHANGE_REQUESTS_TABLE_HEADERS}
+            loadingRows={12}
             onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <DataTable<ChangeRequest>
-              data={crs}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              selection={{
-                selected: selectedCrIds,
-                onChange: setSelectedCrIds,
-                getRowLabel: (row) => `CR-${row.crNumber}: ${row.title}`,
-              }}
-              className={CONTENT_FILL_PANEL}
-              mobileCard={renderMobileCard}
-              pagination={{
-                mode: "cursor",
-                pageSize: PAGE_SIZE,
-                hasMore: Boolean(pagination?.hasMore),
-                hasPrevious,
-                onNext: handleNextPage,
-                onPrevious: goPrevious,
-              }}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 

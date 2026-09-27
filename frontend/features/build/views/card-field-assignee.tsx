@@ -21,10 +21,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { useProjectMembers } from "@/hooks/api/build/projects";
-import {
-  getUserDisplayName,
-  getUserInitials,
-} from "@/lib/person-display";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { User, Check } from "lucide-react";
 import { InlineFieldWrapper } from "./card-field-wrapper";
 import { usePresenceMap } from "@/hooks/api/chat-core-read";
@@ -50,7 +47,10 @@ export const InlineAssignee = memo(function InlineAssignee({
   assignee,
 }: InlineAssigneeProps) {
   const [open, setOpen] = useState(false);
-  const { data: members = [] } = useProjectMembers(projectId);
+  const { data: membersResponse } = useProjectMembers(projectId);
+  const members = Array.isArray(membersResponse)
+    ? membersResponse
+    : (membersResponse?.data ?? []);
   const updateTicket = useUpdateTicket(projectId, {
     onError: (e) => toast.error(getErrorMessage(e)),
   });

@@ -13,7 +13,11 @@ import {
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
 import { useCan, useCanState } from "@/hooks/api/access";
-import { useViews, useUpdateView, useDeleteView } from "@/hooks/api/build/advanced";
+import {
+  useViews,
+  useUpdateView,
+  useDeleteView,
+} from "@/hooks/api/build/advanced";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { currentSearchParams } from "@/lib/current-search-params";
 import { parseViewType } from "@/lib/build/view-types";
@@ -40,7 +44,7 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
   const [renameSeq, setRenameSeq] = useState(0);
   const [renameTarget, setRenameTarget] = useState<ViewItem | null>(null);
 
-  const { data: views, isLoading } = useViews(projectId);
+  const { data: viewsResponse, isLoading } = useViews(projectId);
   const togglePinMutation = useUpdateView();
   const renameMutation = useUpdateView();
   const deleteMutation = useDeleteView();
@@ -116,8 +120,11 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
 
   const handleCreated = useCallback(() => {}, []);
 
-  const pinnedViews = (views ?? []).filter((v) => v.isPinned);
-  const unpinnedViews = (views ?? []).filter((v) => !v.isPinned);
+  const views = Array.isArray(viewsResponse)
+    ? viewsResponse
+    : (viewsResponse?.data ?? []);
+  const pinnedViews = views.filter((v) => v.isPinned);
+  const unpinnedViews = views.filter((v) => !v.isPinned);
 
   if (viewAccess === "denied") return null;
 

@@ -5,13 +5,10 @@ import { Plus, X } from "lucide-react";
 import { Tag, CheckCircle2, Archive, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageState } from "@/components/shared/page-state";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import {
   useReleases,
   useDeleteRelease,
@@ -22,8 +19,19 @@ import { useCan } from "@/hooks/api/access";
 import { ReleaseFormSheet } from "./release-form-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmSection, CONTENT_FILL_PANEL, PM_TOOLBAR } from "@/components/pm-chrome";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  PmPageShell,
+  PmSection,
+  CONTENT_FILL_PANEL,
+  PM_TOOLBAR,
+} from "@/components/pm-chrome";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
@@ -34,6 +42,7 @@ import {
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import {
   RELEASES_TABLE_HEADERS,
   ReleaseMobileCard,
@@ -64,22 +73,20 @@ interface ReleasesPageProps {
 }
 
 export function ReleasesPage({ projectId }: ReleasesPageProps) {
-  const listFilters = useBuildListFilters({ filters: RELEASE_FILTER_DEFINITIONS });
+  const listFilters = useBuildListFilters({
+    filters: RELEASE_FILTER_DEFINITIONS,
+  });
   const pager = useCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const statusFilterValue = listFilters.value("status");
-  const serverStatus = isReleaseStatus(statusFilterValue) ? statusFilterValue : undefined;
+  const serverStatus = isReleaseStatus(statusFilterValue)
+    ? statusFilterValue
+    : undefined;
   const fromValue = listFilters.value("from") || undefined;
   const toValue = listFilters.value("to") || undefined;
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useReleases(projectId, {
+  const { data, isLoading, isError, error, refetch } = useReleases(projectId, {
     cursor: pager.cursor,
     status: serverStatus,
     q: listFilters.debouncedSearch || undefined,
@@ -87,31 +94,29 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     to: toValue,
   });
 
-  const pageState = usePageState({
-    permission: "build:view",
-    isLoading,
-    isError,
-    error,
-  });
-
   const canManage = useCan("build:manage");
   const deleteRelease = useDeleteRelease(projectId);
   const updateRelease = useUpdateRelease(projectId);
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [selectedReleaseIds, setSelectedReleaseIds] = useState<Set<number>>(new Set<number>());
+  const [selectedReleaseIds, setSelectedReleaseIds] = useState<Set<number>>(
+    new Set<number>(),
+  );
   const [editTarget, setEditTarget] = useState<Release | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Release | null>(null);
 
   const releases = data?.data ?? [];
   const pagination = data?.pagination;
 
-  const stats = useMemo(() => ({
-    total: releases.length,
-    released: releases.filter((r) => r.status === "released").length,
-    draft: releases.filter((r) => r.status === "draft").length,
-    archived: releases.filter((r) => r.status === "archived").length,
-  }), [releases]);
+  const stats = useMemo(
+    () => ({
+      total: releases.length,
+      released: releases.filter((r) => r.status === "released").length,
+      draft: releases.filter((r) => r.status === "draft").length,
+      archived: releases.filter((r) => r.status === "archived").length,
+    }),
+    [releases],
+  );
 
   const handleOpenCreate = useCallback(() => {
     setEditTarget(null);
@@ -128,7 +133,10 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     setEditTarget(null);
   }, []);
 
-  const handleDeleteTarget = useCallback((r: Release) => setDeleteTarget(r), []);
+  const handleDeleteTarget = useCallback(
+    (r: Release) => setDeleteTarget(r),
+    [],
+  );
 
   const handleAlertOpenChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
@@ -172,9 +180,12 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     (status: string) => {
       if (!isReleaseStatus(status)) return;
       selectedReleaseIds.forEach((releaseId) => {
-        updateRelease.mutate({ releaseId, status }, {
-          onError: (err) => toast.error(getErrorMessage(err)),
-        });
+        updateRelease.mutate(
+          { releaseId, status },
+          {
+            onError: (err) => toast.error(getErrorMessage(err)),
+          },
+        );
       });
       setSelectedReleaseIds(new Set<number>());
     },
@@ -255,7 +266,8 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             {
               id: "date-range",
               label: "Date range",
-              active: listFilters.isActive("from") || listFilters.isActive("to"),
+              active:
+                listFilters.isActive("from") || listFilters.isActive("to"),
               control: (
                 <DateRangePicker
                   from={fromValue}
@@ -290,7 +302,13 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       <PmPageShell>
         <PmSection index={0}>
           <StatCardGrid cols={4}>
-            <StatCard label="This page" value={stats.total} icon={Tag} tone="default" index={0} />
+            <StatCard
+              label="This page"
+              value={stats.total}
+              icon={Tag}
+              tone="default"
+              index={0}
+            />
             <StatCard
               label="Released"
               value={stats.released}
@@ -298,7 +316,13 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
               tone="emerald"
               index={1}
             />
-            <StatCard label="Draft" value={stats.draft} icon={Clock} tone="amber" index={2} />
+            <StatCard
+              label="Draft"
+              value={stats.draft}
+              icon={Clock}
+              tone="amber"
+              index={2}
+            />
             <StatCard
               label="Archived"
               value={stats.archived}
@@ -311,8 +335,15 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           {selectedReleaseIds.size > 0 && (
-            <div className={cn(PM_TOOLBAR, "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2")}>
-              <span className="text-sm font-medium">{selectedReleaseIds.size} selected</span>
+            <div
+              className={cn(
+                PM_TOOLBAR,
+                "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2",
+              )}
+            >
+              <span className="text-sm font-medium">
+                {selectedReleaseIds.size} selected
+              </span>
               <div className="flex items-center gap-2">
                 <Select onValueChange={handleBulkStatusChange}>
                   <SelectTrigger className="h-8 w-[160px] text-sm">
@@ -324,61 +355,63 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
                     <SelectItem value="archived">Archived</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="ghost" size="sm" aria-label="Clear selection" onClick={handleClearSelection}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Clear selection"
+                  onClick={handleClearSelection}
+                >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>
           )}
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={8}
-                headers={RELEASES_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<Release>
+            permission="build:view"
+            rows={releases}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(r) => r.id}
+            onRowClick={handleOpenEdit}
+            mobileCard={renderMobileCard}
+            selection={{
+              selected: selectedReleaseIds,
+              onChange: handleSelectionChange,
+              getRowLabel: (r) => `${r.name} v${r.version}`,
+            }}
+            pagination={{
+              mode: "cursor",
+              pageSize: 25,
+              hasMore: pagination?.hasMore ?? false,
+              hasPrevious: pager.hasPrevious,
+              onNext: () => pager.goNext(pagination?.nextCursor),
+              onPrevious: pager.goPrevious,
+            }}
             empty={
               <EmptyState
                 illustrationPreset="projects"
                 title="No releases yet"
                 description="Create your first release to track shipped features and versions."
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
                 action={{ label: "New Release", onClick: handleOpenCreate }}
                 className={CONTENT_FILL_PANEL}
               />
             }
-            onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <>
-              <DataTable
+            filteredEmpty={
+              <EmptyState
+                illustrationPreset="projects"
+                title="No releases match your filters"
+                description="Try adjusting the filters to see more releases."
+                onClearFilters={listFilters.clearAll}
                 className={CONTENT_FILL_PANEL}
-                data={releases}
-                columns={columns}
-                getRowKey={(r) => r.id}
-                onRowClick={handleOpenEdit}
-                mobileCard={renderMobileCard}
-                selection={{
-                  selected: selectedReleaseIds,
-                  onChange: handleSelectionChange,
-                  getRowLabel: (r) => `${r.name} v${r.version}`,
-                }}
               />
-              {(pagination?.hasMore || pager.hasPrevious) ? (
-                <TablePagination
-                  mode="cursor"
-                  rowCount={releases.length}
-                  hasMore={pagination?.hasMore ?? false}
-                  hasPrevious={pager.hasPrevious}
-                  onNext={() => pager.goNext(pagination?.nextCursor)}
-                  onPrevious={pager.goPrevious}
-                />
-              ) : null}
-            </>
-          </PageState>
+            }
+            loadingHeaders={RELEASES_TABLE_HEADERS}
+            loadingRows={8}
+            onRetry={handleRetry}
+          />
         </PmSection>
 
         {sheetOpen ? (
