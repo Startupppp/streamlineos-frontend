@@ -17,7 +17,7 @@ import {
 import {
   useSkipOrgSetupMutation,
   useOrgSetupSessionQuery,
-} from "@/lib/api/hooks/org";
+} from "@/hooks/api/org-setup";
 import {
   STEP_TITLES,
   DEFAULT_DATA,

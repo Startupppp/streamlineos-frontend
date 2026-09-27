@@ -15,7 +15,7 @@
 
 **Files created (backend):**
 - `backend/migrations/1345_project_team_members_org_team_idx.sql` — adds `idx_project_team_members_org_team` ON `build.project_team_members(org_id, team_id)` to serve the bounded sub-query under RLS (BE-44, BE-79)
-- `backend/migrations/1345_project_team_members_org_team_idx_rollback.sql`
+- `backend/migrations/rollback/1345_project_team_members_org_team_idx.down.sql`
 
 **Files modified (frontend):**
 - `frontend/lib/query-keys/build-work.ts` — `workloadCapacity` key now accepts optional `teamId`; key includes it when present

@@ -8,7 +8,7 @@ Note this is an extension of an existing rule, not the enforcement of one alread
 
 **Status:** ready-for-agent
 
-- [ ] A gate fails when a Build file imports from either hooks aggregate
-- [ ] The gate's self-test proves it resolves files and would actually fire, rather than passing vacuously on zero matches
-- [ ] Test-only importers are permitted, explicitly
-- [ ] The rule is written down alongside the existing query-key rule
+- [x] A gate fails when a Build file imports from either hooks aggregate
+- [x] The gate's self-test proves it resolves files and would actually fire, rather than passing vacuously on zero matches
+- [x] Test-only importers are permitted, explicitly
+- [x] The rule is written down alongside the existing query-key rule

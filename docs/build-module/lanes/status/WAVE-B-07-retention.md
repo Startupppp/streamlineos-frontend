@@ -52,7 +52,7 @@ Total: 55/55
 - `backend/src/modules/build/core/projects-retention-settings.module.ts`
 - `backend/src/modules/build/core/dto/project-retention-settings.schemas.ts`
 - `backend/migrations/1295_build_project_retention_settings.sql`
-- `backend/migrations/1295_build_project_retention_settings_rollback.sql`
+- `backend/migrations/rollback/1295_build_project_retention_settings.down.sql`
 
 ## Files modified
 
@@ -69,7 +69,7 @@ Range used: 1295 (single migration; 1296–1299 remain free)
 Table: `build.project_retention_settings`
 Columns: `id`, `org_id`, `project_id`, `inherit_org_policy`, `closed_ticket_retention_days`, `attachment_retention_days`, `audit_log_retention_days`, `legal_hold`, `legal_hold_reason`, `legal_hold_set_at`, `version`, `updated_at`
 Guards: CHECK constraints on day values `IN (30, 60, 90, 180, 365)`, RLS tenant_isolation policy, GRANT to streamline_app
-Rollback: `backend/migrations/1295_build_project_retention_settings_rollback.sql`
+Rollback: `backend/migrations/rollback/1295_build_project_retention_settings.down.sql`
 
 NOTE: migration is journalled but unapplied — the backend service returns 404 until it is applied. The frontend handles this gracefully via `usePageState` error state.
 

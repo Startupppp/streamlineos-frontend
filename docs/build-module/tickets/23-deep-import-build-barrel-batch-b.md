@@ -7,5 +7,24 @@
 **Status:** ready-for-agent
 
 - [ ] No Build feature file imports from the Build hooks barrel
+  Deferred: `frontend/features/build/epics/epics-page.tsx` lines 5–15 (other lane owns this file — not edited). This one non-test production file still imports from `@/hooks/api/build`.
 - [ ] Remaining barrel importers are test files only, and that set is recorded
-- [ ] No behaviour or rendering changes
+  Not fully satisfied: `frontend/features/build/epics/epics-page.tsx` is a non-test barrel importer (deferred). The test-file barrel importers are:
+  - `frontend/features/build/cycles/cycle-form-sheet.test.tsx`
+  - `frontend/features/build/cycles/cycles-page.test.tsx`
+  - `frontend/features/build/epics/epics-page-bulk.test.tsx`
+  - `frontend/features/build/epics/epics-page.test.tsx`
+  - `frontend/features/build/forms/components/form-submissions-tab.test.tsx`
+  - `frontend/features/build/forms/form-detail-page.test.tsx`
+  - `frontend/features/build/forms/forms-list-page.test.tsx`
+  - `frontend/features/build/intake/intake-page.test.tsx`
+  - `frontend/features/build/meetings/meeting-detail-page.test.tsx`
+  - `frontend/features/build/meetings/meetings-list-page.test.tsx`
+  - `frontend/features/build/milestones/project-milestones-page.test.tsx`
+  - `frontend/features/build/modules/modules-page-url.test.tsx`
+  - `frontend/features/build/modules/modules-page.test.tsx`
+  - `frontend/features/build/templates/build-templates-page.test.tsx`
+  - `frontend/features/build/ticket-details/ticket-relations.test.tsx`
+  - `frontend/features/build/whiteboard/public-board-token-redaction.test.tsx`
+  - `frontend/features/build/whiteboard/public-board-view.test.tsx`
+- [x] No behaviour or rendering changes

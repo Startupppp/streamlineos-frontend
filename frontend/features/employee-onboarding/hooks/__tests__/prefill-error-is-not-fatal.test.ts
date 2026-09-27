@@ -47,7 +47,7 @@ jest.mock("@/hooks/api/onboarding-flow", () => ({
     mockUsePatchOnboardingSessionMutation(...args),
 }));
 
-jest.mock("@/lib/api/hooks/onboarding", () => ({
+jest.mock("@/hooks/api/onboarding/employee-onboarding", () => ({
   useBankDetailsQuery: (...args: unknown[]) => mockUseBankDetailsQuery(...args),
   usePersonalDetailsQuery: (...args: unknown[]) => mockUsePersonalDetailsQuery(...args),
 }));

@@ -515,9 +515,9 @@ Background sweeps using `forEachOrg` open a fresh tenant transaction per organis
 
 One migration per table, each with a rollback. Apply in this order (no inter-dependency):
 
-1. `1390_rls_project_updates.sql` — `1390_rls_project_updates_rollback.sql`
-2. `1391_rls_project_attachments.sql` — `1391_rls_project_attachments_rollback.sql`
-3. `1392_rls_managed_product_memberships.sql` — `1392_rls_managed_product_memberships_rollback.sql`
+1. `1390_rls_project_updates.sql` — `rollback/1390_rls_project_updates.down.sql`
+2. `1391_rls_project_attachments.sql` — `rollback/1391_rls_project_attachments.down.sql`
+3. `1392_rls_managed_product_memberships.sql` — `rollback/1392_rls_managed_product_memberships.down.sql`
 
 Each migration: sets `lock_timeout = '5s'`, pre-checks table existence, `ENABLE ROW LEVEL SECURITY`, `DROP POLICY IF EXISTS tenant_isolation`, `CREATE POLICY tenant_isolation FOR ALL USING/WITH CHECK (org_id = app.current_org_id())`, `GRANT SELECT, INSERT, UPDATE, DELETE TO streamline_app`, post-check via `DO $$ ASSERT $$`.
 

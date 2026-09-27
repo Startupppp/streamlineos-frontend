@@ -8,7 +8,7 @@ Be honest about the expected gain: nothing here was measured. The framework's ba
 
 **Status:** ready-for-agent
 
-- [ ] No file under the Build feature tree imports from the repository-wide hooks aggregate
-- [ ] Each import names the module that owns the hook
-- [ ] No behaviour or rendering changes
-- [ ] If a size claim is made, it is backed by a measurement, not inferred
+- [x] No file under the Build feature tree imports from the repository-wide hooks aggregate
+- [x] Each import names the module that owns the hook
+- [x] No behaviour or rendering changes
+- [x] If a size claim is made, it is backed by a measurement, not inferred

@@ -43,7 +43,7 @@ jest.mock("../hooks/use-setup-provisioning", () => ({
   useSetupProvisioning: jest.fn(() => mockProvisioning),
 }));
 
-jest.mock("@/lib/api/hooks/org", () => ({
+jest.mock("@/hooks/api/org-setup", () => ({
   useCompleteOrgSetupMutation: jest.fn(() => ({
     mutateAsync: mockMutateAsync,
     isPending: false,

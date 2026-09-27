@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isApiError } from "@/lib/api-client";
 import { CONTRACT_VIOLATION_CODE } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import { useOrgSetupStatusQuery } from "@/lib/api/hooks/org";
-import type { OrgSetupStatus, RecipientOutcome } from "@/lib/api/hooks/org-schema";
+import { useOrgSetupStatusQuery } from "@/hooks/api/org-setup";
+import type { OrgSetupStatus, RecipientOutcome } from "@/hooks/api/org-setup-schema";
 
 const POLL_INTERVAL_MS = 2_000;
 const POLL_DEADLINE_MS = 90_000;

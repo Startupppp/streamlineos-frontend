@@ -8,7 +8,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { PREVIEW_EASE } from "../lib/preview-motion";
 import type { ProvisioningIssue } from "../hooks/use-setup-provisioning";
-import type { RecipientOutcome } from "@/lib/api/hooks/org-schema";
+import type { RecipientOutcome } from "@/hooks/api/org-setup-schema";
 import type { SetupError } from "./generation-failure-stage";
 import { GenerationFailureStage } from "./generation-failure-stage";
 

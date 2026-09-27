@@ -40,7 +40,7 @@ Cite rules by ID in review (`FE-22`). `(gate: x)` names the `pnpm` check that fa
 **FE-26.** Forward the abort `signal` from every `queryFn`. (gate: check:query-signal)
 **FE-27.** Parse every response through its contract. (gate: check:response-contracts, check:contract-drift)
 **FE-28.** Match the contract to the backend field for field. *Why:* an omitted field is silently stripped and renders empty; a mis-typed one throws. (gate: check:contract-parity)
-**FE-29.** Name hooks `hooks/api/<module>/<entity>.ts` as `useThings` / `useThing` / `useCreateThing` / `useUpdateThing` / `useDeleteThing`.
+**FE-29.** Name hooks `hooks/api/<module>/<entity>.ts` as `useThings` / `useThing` / `useCreateThing` / `useUpdateThing` / `useDeleteThing`. A React Query hook module never lives under `lib/api/` — that path is for non-hook data-layer helpers only (FE-15 permits both, FE-29 decides which). (gate: check:hook-locality)
 **FE-30.** Spread `options` **before** the gate and never re-declare `enabled` after it — combine `enabled: !!orgId && (options?.enabled ?? true)`.
 **FE-31.** Never hardcode pagination params in a hook. Accept the endpoint's cursor/page/filter contract (BE-24, BE-25) and retain its envelope.
 **FE-32.** Never hydrate a collection through a parent-detail endpoint. Read the dedicated paginated endpoint.

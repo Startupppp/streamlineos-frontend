@@ -9,6 +9,26 @@ Split across two tickets deliberately: the blast radius is wide enough that one 
 **Status:** ready-for-agent
 
 - [ ] Every Build page-level module imports hooks by their owning module
-- [ ] The barrel itself is untouched and still works for remaining callers
-- [ ] No behaviour or rendering changes
-- [ ] The remaining callers are recorded so batch B has an exact list
+  Deferred: `frontend/features/build/epics/epics-page.tsx` lines 5–15 (other lane owns this file — not edited). Exact imports: `useProject, useUpdateTicket, useDeleteTicket, useCreateTicket, useProjectBoardTickets, useBulkUpdateTickets, useCycles, useProjectMembers` from `@/hooks/api/build`; and `type BulkUpdateTicketsInput` from `@/hooks/api/build`.
+- [x] The barrel itself is untouched and still works for remaining callers
+- [x] No behaviour or rendering changes
+- [x] The remaining callers are recorded so batch B has an exact list
+  Remaining barrel importers (all non-deferred callers are now fixed; these are deferred or test-only):
+  - `frontend/features/build/epics/epics-page.tsx` (deferred — other lane)
+  - `frontend/features/build/cycles/cycle-form-sheet.test.tsx`
+  - `frontend/features/build/cycles/cycles-page.test.tsx`
+  - `frontend/features/build/epics/epics-page-bulk.test.tsx`
+  - `frontend/features/build/epics/epics-page.test.tsx`
+  - `frontend/features/build/forms/components/form-submissions-tab.test.tsx`
+  - `frontend/features/build/forms/form-detail-page.test.tsx`
+  - `frontend/features/build/forms/forms-list-page.test.tsx`
+  - `frontend/features/build/intake/intake-page.test.tsx`
+  - `frontend/features/build/meetings/meeting-detail-page.test.tsx`
+  - `frontend/features/build/meetings/meetings-list-page.test.tsx`
+  - `frontend/features/build/milestones/project-milestones-page.test.tsx`
+  - `frontend/features/build/modules/modules-page-url.test.tsx`
+  - `frontend/features/build/modules/modules-page.test.tsx`
+  - `frontend/features/build/templates/build-templates-page.test.tsx`
+  - `frontend/features/build/ticket-details/ticket-relations.test.tsx`
+  - `frontend/features/build/whiteboard/public-board-token-redaction.test.tsx`
+  - `frontend/features/build/whiteboard/public-board-view.test.tsx`

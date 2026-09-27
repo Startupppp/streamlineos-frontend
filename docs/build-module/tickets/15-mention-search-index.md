@@ -56,7 +56,7 @@ Migration 1377 (`app.search_mention_user_ids`) must be applied **before** the up
 - [x] Mention resolution no longer uses a leading-wildcard match
   — `backend/src/modules/build/core/projects-activity.service.ts`: `processCommentMentions` now calls `app.search_mention_user_ids(${tokens})` via `this.db.execute(sql\`...\`)` and uses `inArray(users.id, candidateIds)` for the org-scoped detail fetch; `ilike` and `or` imports removed.
 - [x] The supporting index exists, is journalled, and has a rollback authored
-  — `idx_users_email_trgm` and `idx_users_name_trgm` already exist from migration 0007 and are retained. Migration 1377 (`backend/migrations/1377_mention_search_index.sql`) creates only the SECURITY DEFINER function; rollback is `backend/migrations/1377_mention_search_index_rollback.sql` (sibling, with precondition guard). Journalled at `{ "idx": 1124, "tag": "1377_mention_search_index" }` and applied 2026-09-27.
+  — `idx_users_email_trgm` and `idx_users_name_trgm` already exist from migration 0007 and are retained. Migration 1377 (`backend/migrations/1377_mention_search_index.sql`) creates only the SECURITY DEFINER function; rollback is `backend/migrations/rollback/1377_mention_search_index.down.sql` (with precondition guard). Journalled at `{ "idx": 1124, "tag": "1377_mention_search_index" }` and applied 2026-09-27.
 - [x] The migration is applied before the reading code can deploy
   — Earned 2026-09-27. Applied to production (ledger id 1005) while the call site is still
   unpushed: `origin/main` does not contain `search_mention_user_ids` and HEAD does, with 51

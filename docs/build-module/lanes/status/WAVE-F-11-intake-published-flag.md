@@ -48,7 +48,7 @@ Three oracle capabilities confirmed in current code before this wave's changes:
   - `UPDATE build.projects SET intake_published_at = now() WHERE deleted_at IS NULL` (backfill)
   - Post-check DO-block: asserts column exists and is nullable.
 
-- **Rollback:** `backend/migrations/1300_build_projects_intake_published_flag_rollback.sql`
+- **Rollback:** `backend/migrations/rollback/1300_build_projects_intake_published_flag.down.sql`
   - Precondition DO-block: asserts `intake_published_at` exists (cannot roll back what is not there).
   - `ALTER TABLE build.projects DROP COLUMN IF EXISTS intake_published_at`
 

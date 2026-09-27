@@ -5,7 +5,7 @@
 | File | Change |
 |---|---|
 | `backend/migrations/1310_build_project_automations_run_timestamps.sql` | NEW — adds `last_run_at` and `last_failure_at` nullable timestamptz columns to `build.project_automations` |
-| `backend/migrations/1310_build_project_automations_run_timestamps_rollback.sql` | NEW — rolls back the two columns |
+| `backend/migrations/rollback/1310_build_project_automations_run_timestamps.down.sql` | NEW — rolls back the two columns |
 | `backend/src/db/schema/build/ticket-integrations.ts` | Added `lastRunAt` and `lastFailureAt` Drizzle columns |
 | `backend/src/modules/build/core/dto/automation.schemas.ts` | Added `AUTOMATION_ACTION_TYPES` constant, `AutomationActionType` type, `listAutomationsQuerySchema` with `action` and `ownerId` optional params |
 | `backend/src/modules/build/core/dto/build-core-response.schemas.ts` | Updated `projectAutomationListItemSchema`: added `createdBy`, `createdByUser`, `lastRunAt`, `lastFailureAt`, `updatedAt` |

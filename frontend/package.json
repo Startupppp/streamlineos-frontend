@@ -79,6 +79,8 @@
     "check:gated-reads:self-test": "node scripts/check-gated-reads.mjs --self-test",
     "check:response-contracts": "node scripts/check-response-contracts.mjs",
     "check:response-contracts:self-test": "node scripts/check-response-contracts.mjs --self-test",
+    "check:hook-locality": "node scripts/check-hook-locality.mjs",
+    "check:hook-locality:self-test": "node scripts/check-hook-locality.mjs --self-test",
     "check:prd-traceability": "node scripts/check-prd-traceability.mjs",
     "check:prd-traceability:self-test": "node scripts/check-prd-traceability-self-test.mjs",
     "check:type-assertions": "node scripts/check-type-assertions.mjs",

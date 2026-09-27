@@ -10,7 +10,7 @@ Page: `10-project-updates.md`
 | File | Change |
 |------|--------|
 | `backend/migrations/1305_build_project_updates_content_fields.sql` | Adds `wins`, `risks`, `next`, `citations` (nullable text) to `build.project_updates` |
-| `backend/migrations/1305_build_project_updates_content_fields_rollback.sql` | Drops those four columns |
+| `backend/migrations/rollback/1305_build_project_updates_content_fields.down.sql` | Drops those four columns |
 | `backend/src/db/schema/build/project-updates.ts` | Four new nullable text columns in the Drizzle schema |
 | `backend/src/modules/build/updates/dto/updates-response.schemas.ts` | `updateRowSchema` extended: `authorName`, `wins`, `risks`, `next`, `citations` |
 | `backend/src/modules/build/updates/dto/updates.schemas.ts` | `createUpdateSchema` and `editUpdateSchema` extended with optional wins/risks/next/citations |

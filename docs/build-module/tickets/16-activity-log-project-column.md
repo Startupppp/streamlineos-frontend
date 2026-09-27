@@ -31,7 +31,7 @@ The writer update (`logTicketActivity` and `logTicketFieldChanges` now set `proj
 - [x] A partial index supports filtering by organisation and project in the feed's sort order
   — `idx_ticket_activity_log_org_project ON build_events.ticket_activity_log (org_id, project_id, id) WHERE project_id IS NOT NULL` created by migration 1378 and declared in `activity.ts`. Column order `(org_id, project_id, id)` matches the feed query plan: seek on `(org_id, project_id)`, range scan descending on `id`.
 - [x] The migration is journalled with a rollback authored, and sets a lock timeout
-  — Migration: `backend/migrations/1378_activity_log_project_column.sql` (`SET lock_timeout = '5s'` at line 24). Rollback: `backend/migrations/1378_activity_log_project_column_rollback.sql` (sibling, with precondition guard). Journal entry required: `{ "idx": 1122, "tag": "1378_activity_log_project_column" }`.
+  — Migration: `backend/migrations/1378_activity_log_project_column.sql` (`SET lock_timeout = '5s'` at line 24). Rollback: `backend/migrations/rollback/1378_activity_log_project_column.down.sql` (sibling, with precondition guard). Journal entry required: `{ "idx": 1122, "tag": "1378_activity_log_project_column" }`.
 - [ ] No reader depends on the new column yet
   — STATEMENT IS FALSE as of current HEAD: `backend/src/modules/build/core/projects-activity-feed.service.ts:60` reads `ticketActivityLog.projectId` directly via `eq(ticketActivityLog.projectId, projectId)`. The ticket-17 reader is already committed. This criterion is unmet; the column must have been applied and verified before this code shipped (it was — 1378 is at journal idx 1121), but the "no reader yet" assertion no longer holds.
 - [ ] Applied and independently verified before any code reads it

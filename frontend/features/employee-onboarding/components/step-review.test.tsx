@@ -35,7 +35,7 @@ jest.mock("@/hooks/common/auth-hooks", () => ({
   useSessionClaimsRefresh: () => mockRefreshSessionClaims,
 }));
 
-jest.mock("@/lib/api/hooks/onboarding", () => ({
+jest.mock("@/hooks/api/onboarding/employee-onboarding", () => ({
   useSubmitOnboardingMutation: () => ({ mutateAsync: mockSubmitOnboarding }),
 }));
 

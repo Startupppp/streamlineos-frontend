@@ -22,7 +22,7 @@ This is distinct from the workload capacity model in `backend/src/modules/build/
 
 `backend/migrations/1315_build_project_teams_capacity.sql` — adds `capacity INTEGER` (nullable) to `build.project_teams`.
 
-`backend/migrations/1315_build_project_teams_capacity_rollback.sql` — drops the column.
+`backend/migrations/rollback/1315_build_project_teams_capacity.down.sql` — drops the column.
 
 Both follow the house template: `SET lock_timeout = '5s'`, DO-block precondition check, idempotent `ALTER TABLE … ADD COLUMN IF NOT EXISTS`, DO-block `ASSERT` post-check.
 

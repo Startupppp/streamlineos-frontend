@@ -39,9 +39,9 @@ partial unique index. No database enforcement/race test was run in this audit.
   Nothing to report and nothing to coerce — both constraints can be created without remediation. Two things this does not establish, stated so the next reader does not over-read it: with zero currently-active cycles, the one-active-per-project index has no existing row exercising it, so the survey proves the index will build and not that it bites; and the whole table is 6 rows, so "clean" here is a property of a nearly-empty table rather than evidence the application was maintaining the invariant.
 
 - [x] The migration is journalled with a rollback authored and a lock timeout set, and is applied before the code relies on it
-  — Earned (2026-09-27, orchestrator). `1371_cycles_active_and_overlap_constraints` journalled at **idx 1125**, `when` 1803093614725. Rollback authored at `migrations/1371_cycles_active_and_overlap_constraints_rollback.sql`. `SET lock_timeout = '5s'` is the first statement. Applied to production; ledger row id 1006, hash `961a3f89679fc8c28b3dddf4a54cea50c627d6ca1a682daa6c69d9cb20199a26`, matching the file's sha256 and the journal `when`.
+  — Earned (2026-09-27, orchestrator). `1371_cycles_active_and_overlap_constraints` journalled at **idx 1125**, `when` 1803093614725. Rollback authored at `migrations/rollback/1371_cycles_active_and_overlap_constraints.down.sql`. `SET lock_timeout = '5s'` is the first statement. Applied to production; ledger row id 1006, hash `961a3f89679fc8c28b3dddf4a54cea50c627d6ca1a682daa6c69d9cb20199a26`, matching the file's sha256 and the journal `when`.
   - Migration: `backend/migrations/1371_cycles_active_and_overlap_constraints.sql` (`SET lock_timeout = '5s'`, precondition DO block, two constraints, postcondition assertions; no statement-breakpoint inside any DO block)
-  - Rollback: `backend/migrations/1371_cycles_active_and_overlap_constraints_rollback.sql`
+  - Rollback: `backend/migrations/rollback/1371_cycles_active_and_overlap_constraints.down.sql`
   - Journal entry for orchestrator to add (idx 1121 is now taken by `1378_activity_log_project_column`; use the next available idx above 1122): `{"idx":<next available>,"version":"7","when":<timestamp>,"tag":"1371_cycles_active_and_overlap_constraints","breakpoints":true}`
 
 - [x] Verified in a rolled-back transaction as the application role

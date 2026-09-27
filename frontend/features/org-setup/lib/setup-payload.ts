@@ -2,8 +2,8 @@ import {
   MAX_ORG_SETUP_INVITEES,
   orgSetupInviteeRoleSchema,
   type OrgSetupInvitee,
-} from "@/lib/api/hooks/org-schema";
-import type { OrgSetupPayload } from "@/lib/api/hooks/org";
+} from "@/hooks/api/org-setup-schema";
+import type { OrgSetupPayload } from "@/hooks/api/org-setup";
 import { DEFAULT_APPS } from "./constants";
 import type { Invitee, WizardData } from "./wizard-data-schema";
 

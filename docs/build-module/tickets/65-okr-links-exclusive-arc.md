@@ -51,7 +51,7 @@ and neither references, so the old "required DTO change" is now obsolete.
 
 - [x] The migration is journalled with a rollback authored
   — Earned (2026-09-27, orchestrator). `1372_okr_links_exclusive_arc` journalled at **idx 1126**, `when` 1803093615725, rollback authored alongside it. Applied to production; ledger row id 1007, hash `fca0624833b64221e37fd6797c12d651f6aeabbc2a26a3b855e17e76a5a9a81e` matching the file sha256 and the journal `when`.
-  — Migration: `backend/migrations/1372_okr_links_exclusive_arc.sql`; rollback: `backend/migrations/1372_okr_links_exclusive_arc_rollback.sql`
+  — Migration: `backend/migrations/1372_okr_links_exclusive_arc.sql`; rollback: `backend/migrations/rollback/1372_okr_links_exclusive_arc.down.sql`
 
   Journal entry for orchestrator to add to `backend/migrations/meta/_journal.json`:
   ```json

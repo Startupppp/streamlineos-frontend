@@ -7,7 +7,7 @@ import { writeGateCookie } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { useSubmitOnboardingMutation } from "@/lib/api/hooks/onboarding";
+import { useSubmitOnboardingMutation } from "@/hooks/api/onboarding/employee-onboarding";
 import { personalInfoSchema } from "@/lib/location/personal-info-validation";
 import { CompletionCelebration } from "@/components/celebration/completion-celebration";
 import { Button } from "@/components/ui/button";

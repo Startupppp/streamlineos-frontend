@@ -28,7 +28,7 @@ The same pass closes a second hole in the same shape: the epic update path filte
 - [x] The existing conflict behaviour on ticket update is unchanged and its spec still passes
 - [x] If a trigger is used, its migration is journalled with a rollback authored and is applied before any code depends on it
   — Earned 2026-09-27. `1373_tickets_version_trigger` journalled at **idx 1123**, `when`
-  1803093612725; rollback authored at `migrations/1373_tickets_version_trigger_rollback.sql`;
+  1803093612725; rollback authored at `migrations/rollback/1373_tickets_version_trigger.down.sql`;
   `SET lock_timeout = '5s'` is the first statement. Applied to production; ledger row id 1003, hash
   `681c0a0cc32b72ece0d4e42439a30816e217f5a875fd602559ab3447963cc85a`, matching the file sha256 and
   the journal `when`. Verified after applying: the trigger exists and is enabled, its function body

@@ -27,7 +27,7 @@ import {
   hasCompletionMarker,
   clearCompletionMarker,
 } from "@/features/org-setup/lib/draft";
-import { useCompleteOrgSetupMutation } from "@/lib/api/hooks/org";
+import { useCompleteOrgSetupMutation } from "@/hooks/api/org-setup";
 import { WELCOME_POP_KEY, WELCOME_POP_NAME_KEY } from "@/lib/welcome-pop";
 import { toast } from "sonner";
 import type { WizardData } from "../lib/wizard-data-schema";

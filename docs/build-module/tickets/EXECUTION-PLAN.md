@@ -24,9 +24,19 @@ readers did that. What follows is the partition their output supports — not a 
 3. **Never open a database connection.** Every connection string in this repo points at production
    and production is the default, so a "quick check" is a production query. No `psql`, no `EXPLAIN`,
    no `drizzle-kit`, no migration runner, no script importing `postgres`.
-4. **Migrations: author the files, never apply them.** Write `NNNN_name.sql` and
-   `NNNN_name_rollback.sql`. Do **not** touch `backend/migrations/meta/_journal.json` — the
-   orchestrator owns it exclusively, because six tickets across four lanes need it.
+4. **Migrations: author the files, never apply them.** Write `backend/migrations/NNNN_name.sql`
+   and put its rollback at **`backend/migrations/rollback/NNNN_name.down.sql`** — that path, not
+   a sibling `NNNN_name_rollback.sql`. `check:migration-rollback` reads only the `rollback/`
+   directory, so a sibling-named rollback is invisible to it and the gate reports the migration as
+   having no rollback at all. This instruction previously said the sibling form and 19 Build
+   migrations were authored that way; they have been moved. Do **not** touch
+   `backend/migrations/meta/_journal.json` — the orchestrator owns it exclusively, because six
+   tickets across four lanes need it.
+4a. **No comments in a migration.** Not a `--` header, not a rationale block, nothing. The only
+   permitted line beginning with `--` is the literal `--> statement-breakpoint` directive. An
+   applied migration's sha256 is its identity in `drizzle.__drizzle_migrations`, so a comment added
+   after it is applied changes that hash and a database at head re-runs its DDL — that has happened
+   here. Put the rationale in the ticket instead, at whatever length it needs.
 5. **No `pnpm build`, `pnpm type-check`, `pnpm check:*`, `pnpm test` without a path pattern,
    `pnpm test:e2e`, or Playwright.** No dev server. No `pnpm openapi:generate`.
 6. **Never hand-edit `frontend/contracts/openapi.json`** — vendored and sha-pinned.
@@ -45,9 +55,10 @@ Directory `backend/migrations/`. Journal `backend/migrations/meta/_journal.json`
 `idx: 1120`, tag `1366_user_sessions_mfa_satisfied_at`. Filename prefixes run to 1366 — the journal
 `idx` and the filename number are two different counters and only `idx` orders the run.
 
-Exemplar: `backend/migrations/1345_project_team_members_org_team_idx.sql` with its paired
-`_rollback.sql`. Shape is `SET lock_timeout = '5s';` → `--> statement-breakpoint` → a guarded
-`DO $$ ... $$` precondition → the DDL → a `DO $$ ... $$` postcondition assert.
+Exemplar: `backend/migrations/1345_project_team_members_org_team_idx.sql` with its rollback at
+`backend/migrations/rollback/1345_project_team_members_org_team_idx.down.sql`. Shape is
+`SET lock_timeout = '5s';` → `--> statement-breakpoint` → a guarded `DO $$ ... $$` precondition →
+the DDL → a `DO $$ ... $$` postcondition assert, and no comments anywhere in it.
 
 **A `--> statement-breakpoint` marker must never appear inside a `DO $$ ... $$` block.**
 `check-migration-discipline.mjs` fails the migration if it does, because Drizzle splits on that

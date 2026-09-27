@@ -58,7 +58,7 @@ jest.mock("@/hooks/common/use-confirmed-session-claims-refresh", () => ({
   }),
 }));
 
-jest.mock("@/lib/api/hooks/org", () => ({
+jest.mock("@/hooks/api/org-setup", () => ({
   useSkipOrgSetupMutation: jest.fn(() => ({ mutateAsync: mockSkipOrgSetup })),
   useOrgSetupSessionQuery: jest.fn((enabled: boolean) =>
     mockUseOrgSetupSessionQuery(enabled),

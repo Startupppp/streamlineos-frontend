@@ -10,7 +10,7 @@ F-09 reported the grant entity as absent. It exists in full at `backend/src/db/s
 
 ### Migration 1335
 - Forward: `backend/migrations/1335_build_portal_publication_state.sql` — adds `portal_published_at timestamptz` to `build.projects` (nullable, matching `intake_published_at` convention). Includes precondition and post-check DO blocks. `lock_timeout = '5s'`.
-- Rollback: `backend/migrations/1335_build_portal_publication_state_rollback.sql`
+- Rollback: `backend/migrations/rollback/1335_build_portal_publication_state.down.sql`
 - Schema: `backend/src/db/schema/build/core.ts` updated with `portalPublishedAt` column.
 
 **DEPLOY ORDERING RISK:** Migration 1335 adds `portal_published_at`. The management service reads and writes this column. Railway ships every backend push; Vercel deploys the frontend independently. Code referencing `portal_published_at` is **unsafe to deploy until migration 1335 is applied**. Apply the migration first, then deploy the backend, then the frontend.

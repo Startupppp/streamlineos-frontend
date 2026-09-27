@@ -63,7 +63,7 @@ jest.mock("@/lib/billing/use-feature", () => ({
   useFeature: () => ({ enabled: true, requiredPlan: null }),
 }));
 
-jest.mock("@/lib/api/hooks/executive-brief", () => ({
+jest.mock("@/hooks/api/executive-brief", () => ({
   useExecutiveBrief: () => ({
     data: { snapshot: null, isStale: false },
     isLoading: false,
