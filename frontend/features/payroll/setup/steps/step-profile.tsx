@@ -113,6 +113,12 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
 
   const watchFrequency = form.watch("payFrequency");
   const watchCountry = form.watch("country");
+  const watchEntity = form.watch("legalEntityName");
+  const watchStartMonth = form.watch("startMonth");
+  const canContinue =
+    watchCountry.trim() !== "" &&
+    watchEntity.trim() !== "" &&
+    watchStartMonth.trim() !== "";
 
   useEffect(() => {
     const defaultCurrency = COUNTRY_DEFAULT_CURRENCY[watchCountry];
@@ -289,7 +295,11 @@ export function StepProfile({ draft, updateDraft, goNext }: StepProfileProps) {
           />
         </div>
 
-        <NavButtons onNext={form.handleSubmit(handleSubmit)} isLoading={isPending} />
+        <NavButtons
+          onNext={form.handleSubmit(handleSubmit)}
+          isLoading={isPending}
+          disableNext={!canContinue}
+        />
       </form>
     </Form>
   );

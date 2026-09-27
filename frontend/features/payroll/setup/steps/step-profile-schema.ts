@@ -32,7 +32,7 @@ export const PAY_DAY_OPTIONS = Array.from({ length: 28 }, (_, i) => {
 export const stepProfileSchema = z.object({
   country: z.string().min(1, "Country is required"),
   state: z.string().optional(),
-  legalEntityName: z.string().optional(),
+  legalEntityName: z.string().trim().min(1, "Legal entity is required"),
   currency: z.string().min(1, "Currency is required"),
   payFrequency: z.enum(["MONTHLY", "SEMI_MONTHLY", "BI_WEEKLY", "WEEKLY"]),
   payDay: z.string().min(1, "Pay day is required"),
