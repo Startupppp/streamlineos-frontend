@@ -38,6 +38,7 @@ import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";
 import PageRightPanel from "./page-right-panel";
 import { PageDocumentPropertyActions } from "./page-document-property-actions";
+import { PageDocumentMetaFooter } from "./page-document-meta-footer";
 import { PageDocumentOutline } from "./page-document-outline";
 import {
   normalizePlateValue,
@@ -370,6 +371,18 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
                 isEditable={isEditable}
                 onIconChange={handleIconChange}
                 onOpenCover={handleOpenCover}
+              />
+            </div>
+
+            <div className="mb-4 mt-2">
+              <PageDocumentMetaFooter
+                status={page.status}
+                trustState={page.trustState}
+                visibility={page.visibility}
+                nextReviewAt={page.nextReviewAt}
+                updatedAt={page.updatedAt}
+                lastEditedById={page.lastEditedById}
+                ownerUserId={page.ownerUserId}
               />
             </div>
 

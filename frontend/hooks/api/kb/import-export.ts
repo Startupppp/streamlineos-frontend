@@ -7,7 +7,7 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { selectFlatPages } from "@/lib/api/select-flat-pages";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
 
 export type KbImportItem = {
   title: string;
@@ -82,21 +82,9 @@ const kbImportDryRunContractLazy = lazyContract(() =>
   import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportDryRunContract),
 );
 
-export type KbCursorPagination = {
-  limit: number;
-  hasMore: boolean;
-  nextCursor: string | null;
-};
+export type KbImportJobPage = Page<KbImportJob>;
 
-export type KbImportJobPage = {
-  data: KbImportJob[];
-  pagination: KbCursorPagination;
-};
-
-export type KbExportJobPage = {
-  data: KbExportJob[];
-  pagination: KbCursorPagination;
-};
+export type KbExportJobPage = Page<KbExportJob>;
 
 const kbImportJobListPageContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-import-schema").then((m) => m.kbImportJobListPageContract),

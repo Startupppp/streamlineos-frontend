@@ -6,7 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
-import { selectFlatPages } from "@/lib/api/select-flat-pages";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
 import type {
   KbAnalyticsOverview,
   KbAnalyticsRange,
@@ -73,10 +73,7 @@ export function useKbNoResults(range?: KbAnalyticsRange) {
   });
 }
 
-export interface PageAnalyticsPage {
-  data: KbPageAnalyticsRow[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-}
+export type PageAnalyticsPage = Page<KbPageAnalyticsRow>;
 
 export interface PageAnalyticsFilters {
   spaceId?: number;
@@ -139,10 +136,7 @@ export function useReviewSla(range?: KbAnalyticsRange) {
   });
 }
 
-export interface GapsPage {
-  data: KbGapRow[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-}
+export type GapsPage = Page<KbGapRow>;
 
 export function useKnowledgeGaps(range?: KbAnalyticsRange) {
   const canViewAnalytics = useCan("kb:analytics:view");
@@ -181,10 +175,7 @@ export function useKnowledgeGaps(range?: KbAnalyticsRange) {
   };
 }
 
-export interface GapRelatedPagesPage {
-  data: KbGapRelatedPageRow[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-}
+export type GapRelatedPagesPage = Page<KbGapRelatedPageRow>;
 
 export function useGapRelatedPages(searchQuery: string | undefined) {
   const canViewAnalytics = useCan("kb:analytics:view");

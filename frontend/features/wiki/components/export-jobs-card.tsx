@@ -11,14 +11,27 @@ import {
   KbDownloadIcon,
   KbFileTextIcon,
 } from "@/features/wiki/lib/kb-icons";
-import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
+import { kbTimeAgo, kbTimeUntil } from "@/features/wiki/lib/kb-date-utils";
 import type { KbExportJob } from "@/hooks/api/kb/import-export";
 
 function JobRow({ job }: { job: KbExportJob }) {
+  const expiryLabel =
+    job.status === "completed" && job.expiresAt !== null
+      ? kbTimeUntil(job.expiresAt)
+      : null;
+
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card text-sm">
       <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       <TruncatedText text={`${job.format} export`} className="flex-1 capitalize" />
+      {expiryLabel !== null ? (
+        <span
+          data-testid="export-expiry"
+          className={`text-xs shrink-0 tabular-nums ${expiryLabel === "Expired" ? "text-destructive" : "text-muted-foreground"}`}
+        >
+          {expiryLabel}
+        </span>
+      ) : null}
       <span className="text-xs text-muted-foreground shrink-0 capitalize">
         {job.status}
       </span>

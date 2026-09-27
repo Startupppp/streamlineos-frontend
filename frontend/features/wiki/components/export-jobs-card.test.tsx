@@ -69,6 +69,81 @@ afterEach(() => {
   Reflect.deleteProperty(globalThis, "IntersectionObserver");
 });
 
+describe("ExportJobsCard — expiring download indicator", () => {
+  const futureIso = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+  const pastIso = new Date(Date.now() - 60 * 1000).toISOString();
+
+  it("completed job with future expiresAt shows how long until the file disappears so users know they can still download", () => {
+    useKbExportJobs.mockReturnValue({
+      data: [{ ...mockJob, status: "completed", expiresAt: futureIso }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ExportJobsCard />);
+
+    expect(screen.getByTestId("export-expiry")).toBeInTheDocument();
+    expect(screen.getByTestId("export-expiry").textContent).not.toBe("Expired");
+  });
+
+  it("completed job with past expiresAt shows Expired so users know the download window has closed", () => {
+    useKbExportJobs.mockReturnValue({
+      data: [{ ...mockJob, status: "completed", expiresAt: pastIso }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ExportJobsCard />);
+
+    expect(screen.getByTestId("export-expiry")).toBeInTheDocument();
+    expect(screen.getByTestId("export-expiry").textContent).toBe("Expired");
+  });
+
+  it("completed job with no expiresAt shows no expiry indicator since the file is kept indefinitely", () => {
+    useKbExportJobs.mockReturnValue({
+      data: [{ ...mockJob, status: "completed", expiresAt: null }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ExportJobsCard />);
+
+    expect(screen.queryByTestId("export-expiry")).not.toBeInTheDocument();
+  });
+
+  it("pending job with a set expiresAt shows no expiry indicator because the export is not ready", () => {
+    useKbExportJobs.mockReturnValue({
+      data: [{ ...mockJob, status: "pending", expiresAt: futureIso }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ExportJobsCard />);
+
+    expect(screen.queryByTestId("export-expiry")).not.toBeInTheDocument();
+  });
+});
+
 describe("ExportJobsCard sentinel", () => {
   it("calls fetchNextPage when the sentinel scrolls into view instead of requiring a button click", () => {
     const fetchNextPage = jest.fn();

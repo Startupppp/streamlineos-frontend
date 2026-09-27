@@ -4,7 +4,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { selectFlatPages } from "@/lib/api/select-flat-pages";
+import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -40,10 +40,7 @@ export type UpdateKbPageTemplateInput = {
   description?: string | null;
 };
 
-export type KbPageTemplatePage = {
-  data: KbPageTemplate[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-};
+export type KbPageTemplatePage = Page<KbPageTemplate>;
 
 const kbPageTemplateListPageContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-templates-schema").then(
