@@ -86,6 +86,14 @@ export function hrStartHereSteps(signals: HrSetupSignals): HrSetupStep[] {
   });
 }
 
+/** A brand-new org: every settled signal is still zero. Unknown signals do not count. */
+export function hrSetupIsEmpty(signals: Partial<HrSetupSignals> | null | undefined): boolean {
+  if (!signals) return false;
+  const values = [signals.people, signals.leavePolicies, signals.shifts, signals.documents];
+  if (values.some((value) => value === undefined)) return false;
+  return values.every((value) => value === null || value === 0) && values.some((value) => value === 0);
+}
+
 export function hrSetupProgress(steps: readonly HrSetupStep[]): {
   done: number;
   known: number;

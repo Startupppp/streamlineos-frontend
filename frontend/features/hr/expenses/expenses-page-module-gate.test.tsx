@@ -4,11 +4,8 @@ import { useExpensePageData } from "@/hooks/api/hr";
 import { ExpensesPage } from "./expenses-page";
 
 /**
- * HRMS-E2E-008, the half that is not a plan decision. Expenses routes need the
- * `accounting` module. For an HR-only org the admin read is disabled, so the
- * page rendered an empty list with zero stats and no reason — and a real 402
- * fell to a hardcoded "Something went wrong". The page must say the module is
- * off, and still work for a member (self-service is not module-gated).
+ * Expenses are an HRMS surface. Turning Accounting off must not hide the list
+ * or mention Accounting.
  */
 
 jest.mock("next-auth/react", () => ({ useSession: () => ({ data: { user: { id: "u1" } } }) }));
@@ -54,12 +51,9 @@ const mockedPageData = useExpensePageData as jest.Mock;
 
 function setup({ admin, accounting }: { admin: boolean; accounting: boolean }) {
   useCan.mockReturnValue(admin);
-  mockedAccess.mockReturnValue({ data: { modules: { accounting } }, isLoading: false });
-  // The admin read is disabled without the module: not loading, not error, no data.
+  mockedAccess.mockReturnValue({ data: { modules: { accounting, hr: true } }, isLoading: false });
   mockedPageData.mockReturnValue(
-    admin && !accounting
-      ? { data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn() }
-      : {
+    {
           data: {
             expenses: [{ id: 1, status: "PENDING", amount: "10.00", date: "2026-09-01" }],
             pendingExpenses: [],
@@ -76,10 +70,11 @@ function setup({ admin, accounting }: { admin: boolean; accounting: boolean }) {
 }
 
 describe("ExpensesPage without the accounting module", () => {
-  it("tells an admin the module is not enabled instead of showing an empty list", () => {
+  it("shows the admin list when Accounting is off", () => {
     setup({ admin: true, accounting: false });
-    expect(screen.getByText("Module not enabled")).toBeInTheDocument();
-    expect(screen.queryByText("admin expense list")).not.toBeInTheDocument();
+    expect(screen.getByText("admin expense list")).toBeInTheDocument();
+    expect(screen.queryByText("Module not enabled")).not.toBeInTheDocument();
+    expect(screen.queryByText(/accounting/i)).not.toBeInTheDocument();
   });
 
   it("renders the admin list when the module is on", () => {

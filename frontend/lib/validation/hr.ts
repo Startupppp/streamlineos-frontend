@@ -119,11 +119,11 @@ export const onboardEmployeeInputSchema = z.object({
     .trim()
     .email("Invalid email address")
     .max(254, "Email must be at most 254 characters"),
-  gender: z.enum(["MALE", "FEMALE", "OTHER"]),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   phone: z
     .string()
-    .min(1, "Phone number is required")
-    .refine((val) => isValidPhoneNumber(val), "Please enter a valid phone number"),
+    .refine((val) => !val || isValidPhoneNumber(val), "Please enter a valid phone number")
+    .optional(),
   whatsappSameAsPhone: z.boolean(),
   whatsappNumber: z
     .string()
@@ -157,12 +157,13 @@ export const onboardEmployeeInputSchema = z.object({
   attachToExistingMember: z.boolean().optional(),
   joiningDate: z.date(),
   dateOfBirth: z
-    .date()
+    .date({ error: "Enter a valid date of birth" })
     .refine((d) => d < new Date(), "Date of birth cannot be in the future")
     .refine((d) => {
       const ageMs = Date.now() - d.getTime();
       return ageMs >= 16 * 365.25 * 24 * 3600 * 1000;
-    }, "Employee must be at least 16 years old"),
+    }, "Employee must be at least 16 years old")
+    .optional(),
   taxId: z
     .string()
     .trim()

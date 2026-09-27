@@ -24,6 +24,12 @@ import {
 import type { EmployeeData } from "@/features/hr/employees/detail/edit-employee-form";
 import { ResendInviteButton } from "@/components/hr/resend-invite-button";
 import { CopyInviteLinkButton } from "@/components/hr/copy-invite-link-button";
+import { useRef } from "react";
+import { toast } from "sonner";
+import { useCan } from "@/hooks/api/access";
+import { useUpdateProfile } from "@/hooks/api/hr";
+import { useUploadFile } from "@/hooks/api/use-upload-file";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   InviteDeliveryBadge,
   InviteDeliveryNote,
@@ -69,6 +75,25 @@ export function EmployeeHeaderCard({
   // `employee.name`, so a person carrying only a display name read "Employee"
   // and an owner read their email local part.
   const employeeName = getUserDisplayName(employee);
+  const canUpdate = useCan("hr:employees:update");
+  const uploadPhoto = useUploadFile();
+  const updateProfile = useUpdateProfile();
+  const photoInput = useRef<HTMLInputElement>(null);
+
+  async function onPhotoSelected(file: File | undefined) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Choose an image file");
+      return;
+    }
+    try {
+      const uploaded = await uploadPhoto.mutateAsync({ file, folder: "hr-photos" });
+      await updateProfile.mutateAsync({ userId: employee.id, image: uploaded.key });
+      toast.success("Photo updated");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
 
   const lifecycleBadge = lifecycleStatus
     ? LIFECYCLE_BADGE[lifecycleStatus] ?? {
@@ -89,7 +114,8 @@ export function EmployeeHeaderCard({
           <div className="min-w-0 flex-1 space-y-3.5">
             {/* V-023: one heading, not a mobile copy and a desktop copy. */}
             <div className="flex items-start gap-3">
-              <Avatar className="h-16 w-16 shrink-0 sm:h-20 sm:w-20">
+              <div className="flex shrink-0 flex-col items-center gap-1">
+              <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
                 <AvatarImage
                   src={resolveImageUrl(
                     typeof employee.image === "string" ? employee.image : null,
@@ -99,6 +125,31 @@ export function EmployeeHeaderCard({
                   {getInitials(undefined, employee.firstName, employee.lastName)}
                 </AvatarFallback>
               </Avatar>
+              {canUpdate ? (
+                <>
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-primary underline-offset-2 hover:underline disabled:opacity-50"
+                    disabled={uploadPhoto.isPending || updateProfile.isPending}
+                    onClick={() => photoInput.current?.click()}
+                  >
+                    {uploadPhoto.isPending || updateProfile.isPending ? "Uploading…" : "Upload photo"}
+                  </button>
+                  <input
+                    ref={photoInput}
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    aria-label={`Upload photo for ${employeeName}`}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      void onPhotoSelected(file);
+                    }}
+                  />
+                </>
+              ) : null}
+              </div>
               <div className="min-w-0 flex-1">
                 <h2 className="text-base font-bold leading-tight text-foreground sm:text-lg">
                   {employeeName}

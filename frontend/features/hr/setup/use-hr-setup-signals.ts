@@ -3,6 +3,7 @@
 import { useHrEmployeeCounts } from "@/hooks/api/hr/employee-list";
 import { useHrDocumentStats } from "@/hooks/api/hr/documents";
 import { useLeavePolicies } from "@/hooks/api/hr/leave-policies";
+import { useHrPolicies } from "@/hooks/api/hr/policies";
 import { useHrShifts } from "@/hooks/api/hr/shifts";
 import type { HrSetupSignals } from "./hr-start-here";
 
@@ -20,18 +21,22 @@ export function useHrSetupSignals(): HrSetupSignals | null {
   // Leave types are seeded for every org at creation, so counting them marked
   // this step done before anyone configured anything. Policies are not seeded.
   const leavePolicies = useLeavePolicies();
+  const starterPolicies = useHrPolicies({ type: "leave", limit: 1 });
   const shifts = useHrShifts();
   const documents = useHrDocumentStats();
 
-  if ([employees, leavePolicies, shifts, documents].some((query) => query.isLoading)) {
+  if ([employees, leavePolicies, starterPolicies, shifts, documents].some((query) => query.isLoading)) {
     return null;
   }
+
+  const leavePolicyCount = (leavePolicies.data?.length ?? 0) + (starterPolicies.data?.data.length ?? 0);
+  const leaveKnown = leavePolicies.data !== undefined || starterPolicies.data !== undefined;
 
   return {
     people: employees.data
       ? Math.max(0, employees.data.active + employees.data.pending - 1)
       : null,
-    leavePolicies: leavePolicies.data ? leavePolicies.data.length : null,
+    leavePolicies: leaveKnown ? leavePolicyCount : null,
     shifts: shifts.data ? shifts.data.length : null,
     documents: documents.data ? documents.data.total : null,
   };

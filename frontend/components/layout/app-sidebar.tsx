@@ -26,6 +26,8 @@ import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { WorkspaceSwitcher } from "./header/org-switcher";
 
 import { useAccess, useCan } from "@/hooks/api/access";
+import { useHrSettingsMode } from "@/features/hr/settings-hub/use-hr-settings-mode";
+import { applyHrWeekOneNav } from "./sidebar/hr-week-one-nav";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
 
@@ -109,15 +111,17 @@ export function AppSidebar({
   const { data: entitlements } = useEntitlements();
   const lockedModules = entitlements?.lockedModules ?? [];
 
+  const [showAdvancedHr] = useHrSettingsMode();
   const navGroups = useMemo(() => {
     if (isBuildProduct) return [];
-    return getNavGroupsForProduct(
+    const groups = getNavGroupsForProduct(
       activeProduct,
       effectiveRole,
       scopes,
       enabledModules,
       lockedModules,
     );
+    return activeProduct === "hrms" ? applyHrWeekOneNav(groups, showAdvancedHr) : groups;
   }, [
     isBuildProduct,
     activeProduct,
@@ -125,6 +129,7 @@ export function AppSidebar({
     scopes,
     enabledModules,
     lockedModules,
+    showAdvancedHr,
   ]);
 
   const activeGroupLabel = useMemo(() => {

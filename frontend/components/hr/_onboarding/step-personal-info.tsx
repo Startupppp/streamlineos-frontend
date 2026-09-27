@@ -124,7 +124,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
         name="phone"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Phone <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>Phone</FormLabel>
             <FormControl>
               <PhoneInput defaultCountry="IN" placeholder="Enter phone number" {...field} />
             </FormControl>
@@ -137,7 +137,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
         name="gender"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Gender <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>Gender</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
@@ -157,7 +157,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
         name="dateOfBirth"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Date of Birth <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>Date of Birth</FormLabel>
             <FormControl>
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}

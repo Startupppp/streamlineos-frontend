@@ -80,6 +80,14 @@ export function LetterGenerationSheet({ open, onOpenChange, onSaved }: LetterGen
 
   const handleSave = useCallback(() => {
     if (!previewHtml || !templateId) return;
+    if (!employeeId) {
+      toast.error("Select an employee");
+      return;
+    }
+    if (/\{\{[^}]+\}\}/.test(previewHtml)) {
+      toast.error("Fix the preview before saving. Some fields are still blank tokens.");
+      return;
+    }
     saveLetter.mutate(
       {
         templateId: parseInt(templateId, 10),

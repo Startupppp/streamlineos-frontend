@@ -60,12 +60,12 @@ export function ProfessionalInfoSection() {
                   onValueChange={(value) => field.onChange(value ?? undefined)}
                   placeholder="Select Department"
                 />
-        {/* HRM-15: managers change only through the Reporting line card, which carries the
-            effective date, reason and repeated-change guard this form cannot. */}
-        <p className="text-xs text-muted-foreground md:col-span-2">
-          Reporting managers are changed from the Reporting line card on the Overview tab.
-        </p>
               </FormControl>
+              {/* FormControl renders a Slot, which only accepts one child. The note
+                  has to sit beside the field or the Edit tab throws Children.only. */}
+              <p className="text-xs text-muted-foreground md:col-span-2">
+                Reporting managers are changed from the Reporting line card on the Overview tab.
+              </p>
               <FormDescription>
                 Organizational unit (e.g. Engineering, Sales)
               </FormDescription>
