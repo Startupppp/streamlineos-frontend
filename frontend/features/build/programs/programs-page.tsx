@@ -12,7 +12,7 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { ProgramFormSheet } from "./program-form-sheet";
 import type {
@@ -56,7 +56,7 @@ export function ProgramsPage() {
   const listFilters = useBuildListFilters({
     filters: PROGRAM_FILTER_DEFINITIONS,
   });
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 

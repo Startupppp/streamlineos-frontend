@@ -7,7 +7,7 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { useTestRuns, useDeleteTestRun } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import type { TestRunListItem } from "@/types/projects";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -167,7 +167,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     null,
   );
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 

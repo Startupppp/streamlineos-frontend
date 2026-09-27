@@ -23,7 +23,7 @@ import type {
 } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -106,7 +106,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const [editRisk, setEditRisk] = useState<Risk | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Risk | null>(null);
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 

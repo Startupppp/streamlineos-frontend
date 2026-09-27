@@ -2,7 +2,8 @@
 
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -82,8 +83,8 @@ function MilestoneVisibilityRow({ milestone, onToggle, isPending, canManage }: M
 
 export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPageProps) {
   const canManage = useCan("build:clientvisibility:manage");
-  const ticketPager = useCursorPager();
-  const milestonePager = useCursorPager();
+  const ticketPager = useBuildCursorPager();
+  const milestonePager = useBuildCursorPager();
   const { data, isLoading, isError, error, refetch } = useClientVisibility(projectId, {
     ticketCursor: ticketPager.cursor,
     milestoneCursor: milestonePager.cursor,

@@ -13,7 +13,7 @@ import {
 } from "@/hooks/api/build/build-members";
 import type { BuildMember } from "@/hooks/api/build/build-members";
 import { useCan } from "@/hooks/api/access";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { getUserDisplayName } from "@/lib/person-display";
 import { resolveImageUrl } from "@/lib/utils";
 import { PmAccessButton } from "@/features/build/members/pm-access-sheet";
@@ -50,7 +50,7 @@ export function MembersPage() {
   const isOnline = useOnlineStatus();
 
   const listFilters = useBuildListFilters({ searchParam: "search" });
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 

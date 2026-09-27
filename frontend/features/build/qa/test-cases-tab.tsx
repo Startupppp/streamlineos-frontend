@@ -5,7 +5,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { useTestCases, useTestSuites, useDeleteTestCase } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import type { TestCase } from "@/types/projects";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -74,7 +74,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
   const [deleteTarget, setDeleteTarget] = useState<TestCase | null>(null);
   const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 

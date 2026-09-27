@@ -32,13 +32,15 @@ jest.mock("@/components/shared/page-state", () => ({
 }));
 
 jest.mock("@/components/ui/table-pagination", () => ({
-  useCursorPager: () => ({
+  TablePagination: () => null,
+}));
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
+  useBuildCursorPager: () => ({
     cursor: undefined,
     hasPrevious: false,
     goNext: jest.fn(),
     goPrevious: jest.fn(),
   }),
-  TablePagination: () => null,
 }));
 
 const MOCK_MEMBERS = [

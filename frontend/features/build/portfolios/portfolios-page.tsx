@@ -14,7 +14,7 @@ import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PortfolioFormSheet } from "./portfolio-form-sheet";
@@ -44,7 +44,7 @@ const PAGE_SIZE = 20;
 export function PortfoliosPage() {
   const canManage = useCan("build:portfolios:manage");
   const listFilters = useBuildListFilters({ filters: PORTFOLIO_FILTER_DEFINITIONS });
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 

@@ -7,8 +7,11 @@ import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import Link from "next/link";
 import {
-  useDeletePortfolio, useLinkPortfolioProject, usePortfolio,
-  useUnlinkPortfolioProject, useUpdatePortfolio,
+  useDeletePortfolio,
+  useLinkPortfolioProject,
+  usePortfolio,
+  useUnlinkPortfolioProject,
+  useUpdatePortfolio,
 } from "@/hooks/api/build/portfolios";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useCan } from "@/hooks/api/access";
@@ -21,15 +24,36 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { PortfolioStatusBadge, PortfolioHealthBadge } from "./portfolio-status-badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  PortfolioStatusBadge,
+  PortfolioHealthBadge,
+} from "./portfolio-status-badge";
 import { PortfolioFormSheet } from "./portfolio-form-sheet";
 import type { UpdatePortfolioInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PmPageShell, PmPanel, PmSection, PM_PANEL, PM_ROW } from "@/components/pm-chrome";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_PANEL,
+  PM_ROW,
+} from "@/components/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
@@ -128,12 +152,15 @@ function PortfolioDetailContent({ portfolioId }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [linkProjectId, setLinkProjectId] = useState("");
 
-  const projectsPager = useCursorPager();
-  const programsPager = useCursorPager();
-  const { data, isLoading, isError, error, refetch } = usePortfolio(portfolioId, {
-    projectsCursor: projectsPager.cursor,
-    programsCursor: programsPager.cursor,
-  });
+  const projectsPager = useBuildCursorPager();
+  const programsPager = useBuildCursorPager();
+  const { data, isLoading, isError, error, refetch } = usePortfolio(
+    portfolioId,
+    {
+      projectsCursor: projectsPager.cursor,
+      programsCursor: programsPager.cursor,
+    },
+  );
 
   const linkedProjects = useMemo(
     () => data?.projects.data ?? [],
@@ -254,7 +281,11 @@ function PortfolioDetailContent({ portfolioId }: Props) {
       <PageWrapper title="Portfolio" backHref="/build/portfolios">
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <PageState resolution={resolution} loading={<DetailSkeleton />} onRetry={handleRetry}>
+            <PageState
+              resolution={resolution}
+              loading={<DetailSkeleton />}
+              onRetry={handleRetry}
+            >
               {null}
             </PageState>
           </PmSection>
@@ -274,8 +305,13 @@ function PortfolioDetailContent({ portfolioId }: Props) {
               <PortfolioActionsButton />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleOpenEdit}>Edit Portfolio</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={handleOpenDelete}>
+              <DropdownMenuItem onClick={handleOpenEdit}>
+                Edit Portfolio
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={handleOpenDelete}
+              >
                 Delete Portfolio
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -291,7 +327,9 @@ function PortfolioDetailContent({ portfolioId }: Props) {
               <PortfolioHealthBadge health={data.health} />
               <span className="text-sm text-muted-foreground">
                 Owner:{" "}
-                <span className="text-foreground">{memberName(data.ownerId)}</span>
+                <span className="text-foreground">
+                  {memberName(data.ownerId)}
+                </span>
               </span>
             </div>
 
@@ -300,7 +338,9 @@ function PortfolioDetailContent({ portfolioId }: Props) {
                 <p className="mb-1 text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                   Strategic Goal
                 </p>
-                <p className={cn(TEXT_BODY, "text-sm text-foreground")}>{data.strategicGoal}</p>
+                <p className={cn(TEXT_BODY, "text-sm text-foreground")}>
+                  {data.strategicGoal}
+                </p>
               </div>
             ) : null}
 
@@ -309,7 +349,9 @@ function PortfolioDetailContent({ portfolioId }: Props) {
                 <p className="mb-1 text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                   Description
                 </p>
-                <p className={cn(TEXT_BODY, "text-sm text-muted-foreground")}>{data.description}</p>
+                <p className={cn(TEXT_BODY, "text-sm text-muted-foreground")}>
+                  {data.description}
+                </p>
               </div>
             ) : null}
           </PmPanel>
@@ -370,7 +412,10 @@ function PortfolioDetailContent({ portfolioId }: Props) {
                   >
                     {proj.name}
                   </Link>
-                  <Badge variant="outline" className="shrink-0 px-1.5 py-0.5 text-micro">
+                  <Badge
+                    variant="outline"
+                    className="shrink-0 px-1.5 py-0.5 text-micro"
+                  >
                     {proj.status}
                   </Badge>
                   {canManage ? (
@@ -413,7 +458,12 @@ function PortfolioDetailContent({ portfolioId }: Props) {
             <PmPanel>
               {linkedPrograms.map((program) => (
                 <div key={program.id} className={PM_ROW}>
-                  <span className={cn(TEXT_ONE_LINE, "flex-1 text-sm font-medium text-foreground")}>
+                  <span
+                    className={cn(
+                      TEXT_ONE_LINE,
+                      "flex-1 text-sm font-medium text-foreground",
+                    )}
+                  >
                     {program.name}
                   </span>
                   <PortfolioStatusBadge status={program.status} />

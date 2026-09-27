@@ -15,7 +15,7 @@ import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ManagedProductFormSheet } from "./managed-product-form-sheet";
 import type {
@@ -77,7 +77,7 @@ export function ManagedProductsPage() {
   const canDelete = useCan("build:managed-products:delete");
 
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 

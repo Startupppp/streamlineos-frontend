@@ -103,8 +103,8 @@ jest.mock("@/hooks/api/build/teams", () => ({
   useUpdateProjectTeamMemberRole: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
-jest.mock("@/components/ui/table-pagination", () => ({
-  useCursorPager: () => ({
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
+  useBuildCursorPager: () => ({
     cursor: null,
     hasPrevious: false,
     goNext: jest.fn(),

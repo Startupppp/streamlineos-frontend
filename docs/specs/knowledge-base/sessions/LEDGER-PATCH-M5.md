@@ -303,3 +303,206 @@ node src/scripts/check-route-budgets.mjs
 **HANDOFF-M5-3 (Box 8 — `KbAccessService` identity):** `KbAccessService.resolveAclDimension` (`kb-access.service.ts:40`) uses `accountableMembershipId` for the cache key, while `KnowledgeAuthorizationService.computeStanding` uses `actingMembershipId`. For agent-token principals these differ. `actingMembershipId` is the correct identity for ACL decisions (agent acts with its own scope, not the issuer's membership). The fix is to change `accountableMembershipId(user.principal)` to `actingMembershipId(user.principal)` at `kb-access.service.ts:40`. This file is not in lane M5's allowed paths (`kb-standing-request-memo.ts` only). Assign to a lane with `kb-access.service.ts` in its paths.
 
 **HANDOFF-M5-4 (Box 8 — `cache.invalidation.dropped` alert):** `CacheService.droppedInvalidationCount` (public getter, `cache.service.ts:53`) is never read by any health check or metric emitter. A dropped invalidation means stale cache entries may be serving; this is silent today. Wire the counter into the health check (`health/health.controller.ts`) or emit it as a metric on each request.
+
+---
+
+## OBSERVABILITY CENSUS — 2026-09-27
+
+Census for boxes 08:363, REQ-1082, REQ-1098, REQ-1109, REQ-1115, REQ-1124, REQ-1134.
+All file:line citations were opened and read in this session.
+
+---
+
+### 1. Signal census table
+
+| Signal | Exists? | File:line | What emits it | What consumes it |
+|---|---|---|---|---|
+| `kb.read.operation` span | YES | `backend/src/modules/kb/analytics/kb-read-metrics.ts:50` | `KbReadMetrics.finish()` via `startSpan` | `alert-kb-read.mjs`, `SLO module:kb:read` |
+| `kb.write.operation` span | YES | `backend/src/modules/kb/analytics/kb-write-metrics.ts:50` | `KbWriteMetrics.finish()` via `startSpan` | `alert-kb-write.mjs`, `SLO module:kb:write` |
+| `kb.search.operation` span | YES | `backend/src/modules/kb/core/telemetry/kb-search-metrics.ts:34` | `KbSearchMetrics.finish()` via `startSpan` | `alert-kb-search.mjs`, `SLO module:kb:search` |
+| `kb.ask.operation` span | YES | `backend/src/modules/kb/core/telemetry/kb-ask-metrics.ts:54` | `KbAskMetrics.finish()` via `startSpan` | `alert-kb-ask.mjs`, `SLO module:kb:ask` |
+| `kb.indexing.operation` span | YES | `backend/src/modules/kb/core/telemetry/kb-indexing-metrics.ts:62` | `KbIndexingMetrics.finish()` via `startSpan` | `alert-kb-indexing.mjs`, `SLO module:kb:indexing` |
+| `cache.roundtrip` span | YES | `backend/src/common/cache/cache.service.ts:135` | `CacheService.timedRedis()` wraps every Redis op in `withSpan` | `alert-seam-latency.mjs`, `SEAM_BUDGETS.cache.roundtrip` |
+| `db.query.execute` span | YES | `backend/src/common/db/` (tenant transaction plumbing) | Tenant transaction infrastructure | `alert-seam-latency.mjs`, `SEAM_BUDGETS` |
+| Structured log line (logger) | YES | `backend/src/common/logger/logger.service.ts:22` | Every `logger.info/warn/error()` call | stdout/stderr → log aggregator |
+| SPAN line (LogSpanExporter) | YES | `backend/src/common/observability/log-span-exporter.ts:41` | Every `startSpan/withSpan` finish | alert scripts that `grep message="SPAN"` |
+| `correlationId` in log | YES | `backend/src/common/logger/logger.service.ts:27` | Every log line; stamped by correlation middleware | log aggregator join key |
+| `orgId` in log | YES | `backend/src/common/logger/logger.service.ts:30` | After auth, via `ObservabilityEnrichmentInterceptor:30` | log aggregator filter |
+| `actorId` in log | YES | `backend/src/common/logger/logger.service.ts:31` | After auth, via `ObservabilityEnrichmentInterceptor:33` | log aggregator filter |
+| `org.id` span attribute | YES | All 5 KB metric classes, begin() | Passed explicitly from `user.orgId` | All KB alert scripts |
+| `actor.standing` span attr | PARTIAL | `kb-search-metrics.ts:32`, `kb-ask-metrics.ts:51` | Search and Ask only; absent from Read and Write call sites | Search/Ask alert scripts |
+| `org.cell` span attribute | PARTIAL | `kb-search-metrics.ts:33`, `kb-ask-metrics.ts:52`, `kb-indexing-metrics.ts:61` | Search, Ask, Indexing; absent from Read+Write call sites | None (cell-level routing not yet deployed) |
+| `kb.*.cache_outcome` attr | PARTIAL | `kb-search-metrics.ts:49`, `kb-ask-metrics.ts:68` | Search and Ask finish() via `aclCacheOutcome`; Read defaults to `"miss"` | KB alert scripts |
+| `kb.*.db_role` attr | YES (defaulted) | All 5 KB metric finish() implementations | Hardcoded `"primary"` (no replica deployed) | KB alert scripts |
+| `kb.*.queue_lane` attr | YES | All 5 KB metric finish() implementations | Named constant per path (`sync`, `fast`, `background`) | KB alert scripts |
+| `kb.*.source_kind` attr | PARTIAL | `kb-search-metrics.ts:48`, `kb-ask-metrics.ts:67` | Search and Ask only; N/A for Read/Write/Indexing | KB alert scripts |
+| Redaction (key-based) | YES | `backend/src/common/observability/redact.ts:93` | `redactAttributes()` on every span; `redact()` on every log meta | Prevents PII reaching log aggregator |
+| Prompt text redaction | YES | `backend/src/common/observability/redact.ts:45` | `"prompt"` is in `SENSITIVE_SUBSTRINGS`; redacted if used as an attribute key | Auto-redacted |
+| Page content never written | YES | KB parity specs: `kb-ask-metric-alert-parity.spec.ts:247`, `kb-search-metric-alert-parity.spec.ts:150` | Parity specs assert no KB span attribute ever holds `contentText`, `title`, or a question body | Prevents content leaking to spans |
+| DB connection count | YES | `backend/src/scripts/alert-kb-db-health.mjs:25-27` | `pg_stat_activity` query in alert script | `alert-kb-db-health.mjs` → `alert-dispatch.mjs` |
+| DB lock-wait count | YES | `backend/src/scripts/alert-kb-db-health.mjs:30` | `pg_stat_activity` where `wait_event_type='Lock'` | `alert-kb-db-health.mjs` |
+| Slow queries (KB tables) | YES | `backend/src/scripts/alert-kb-db-health.mjs:33` | `pg_stat_statements` mean_exec_time > threshold | `alert-kb-db-health.mjs` |
+| Buffer cache hit rate | YES | `backend/src/scripts/alert-kb-db-health.mjs:37-41` | `pg_statio_user_tables` for `kb_%` tables | `alert-kb-db-health.mjs` |
+| Replica lag | BLOCKED | `backend/src/scripts/alert-kb-db-health.mjs:67-73` | `replicaLag: { status: "blocked", reason: "no-replica-endpoint" }` | Not measurable; no `DB_REPLICA_URL` |
+| Dropped cache invalidations | EXISTS (no consumer) | `backend/src/common/cache/cache.service.ts:40,53,79` | `DROPPED_MARKER = "cache.invalidation.dropped"` logged on failure; counter getter public | `alert-cache-invalidation-dropped.mjs` reads the log marker; counter getter has no caller |
+| Revocation lag | EXISTS-DEPENDS | `backend/src/common/slo/slo-kb-freshness.ts:27-47` | SLO defined; `alert-kb-revocation-lag.mjs` script exists | Requires `kb_pages.acl_revision_changed_at` + `kb_article_chunks.acl_synced_at` columns (migration 1229) |
+| Purge backlog | YES | `backend/src/scripts/alert-kb-purge-backlog.mjs` | Direct DB query on `kb_page_purge_ledger` | `alert-dispatch.mjs`, `SLO module:kb:purge-backlog` |
+| KB cost (noisy-neighbour) | YES | `backend/src/scripts/alert-tenant-cost.mjs` | `ai_usage_logs` query per org | `alert-dispatch.mjs`, severity "high" |
+| Operator alert delivery | EXISTS-UNDRILLED | `backend/src/scripts/alert-dispatch.mjs:21-101` | Registered: kb-read, kb-write, kb-search, kb-ask, kb-indexing, kb-revocation-lag, kb-purge-backlog, kb-db-health, kb-acl-anomaly, kb-index-freshness | Fires to `ALERT_WEBHOOK_URL`; never drilled against a live stream |
+| SLO catalogue | YES | `backend/src/common/slo/index.ts:81-92` | `SLO_CATALOGUE` array includes 10 KB SLOs | `check-timing-slo.mjs`, individual parity specs |
+
+---
+
+### 2. Answers to the six census questions
+
+**Q1 — Instrumentation on KB read / write / search / Ask / indexing paths**
+
+Every KB operation path now has a dedicated span emitter class.
+
+Read: `KbReadMetrics` wired at `backend/src/modules/kb/wiki/kb-pages.service.ts:217` and `backend/src/modules/kb/help-centre/kb-articles.service.ts:72`. Both call `KbReadMetrics.begin({ orgId: user.orgId })` without `actorStanding` or `orgCell`. The `finish()` call on the pages path is at line 245; on the articles path at line 99.
+
+Write: `KbWriteMetrics` wired at `backend/src/modules/kb/wiki/kb-page-writer.service.ts:63`. Calls `KbWriteMetrics.begin({ orgId: input.orgId })` without `actorStanding` or `orgCell`. `finish()` at line 122 (success) and line 124 (error).
+
+Search: `KbSearchMetrics` wired at `backend/src/modules/kb/retrieval/kb-search.service.ts:72`. Calls `KbSearchMetrics.begin({ orgId: user.orgId, actorStanding: user.isOrgOwner ? "owner" : "member", orgCell: PROCESS_CELL_ID })`. All six dimensions present.
+
+Ask: `KbAskMetrics` wired at `backend/src/modules/kb/retrieval/kb-ask.service.ts:213`. Full dimensions including `cacheOutcome` from `this.search.aclCacheOutcome(user)` at line 219, `dbRole = "primary"` at line 243, `queueLane = KB_ASK_QUEUE_LANE` at line 242. All `finish()` calls pass the full `KbAskFacts` object.
+
+Indexing: `KbIndexingMetrics` wired in `backend/src/modules/kb/retrieval/kb-indexing.service.ts` (passed to `embedChunksWithResumption` via the `metrics` arg). `KbIndexingMetrics.begin({ contentType, orgId, orgCell: PROCESS_CELL_ID })`.
+
+Shared plumbing: `CacheService.timedRedis()` at `backend/src/common/cache/cache.service.ts:135` wraps every Redis call in `withSpan("cache.roundtrip", ...)`. Logger at `backend/src/common/logger/logger.service.ts:22` emits structured JSON with context on every call.
+
+**Q2 — Tracing/span mechanism**
+
+YES. A custom W3C-traceparent-compatible port lives at `backend/src/common/observability/tracing.ts`. It is NOT the OpenTelemetry SDK — this is documented intentionally at lines 7-18 of that file: "Deliberately not the OpenTelemetry SDK. The SDK is a dependency, a collector endpoint and a deployment decision, none of which exist yet." The implementation uses `AsyncLocalStorage` for ambient context. `startSpan()` and `withSpan()` are the two entry points. The `LogSpanExporter` at `backend/src/common/observability/log-span-exporter.ts` writes each finished span as a JSON line with `message="SPAN"` to stdout. This exporter is wired at `backend/src/main.ts:73`: `setSpanExporter(new LogSpanExporter())`. The span carrier is the structured log stream; p95 is computed offline by reading that stream.
+
+**Q3 — Metrics backend / alerting mechanism**
+
+There is NO external metrics backend (no Prometheus, no Datadog, no CloudWatch metrics). The alerting mechanism is a set of Node.js scripts in `backend/src/scripts/alert-kb-*.mjs` that read the structured log stream (via journalctl pipe or `--log=` file), apply thresholds, and exit 0/1/2. `alert-dispatch.mjs` delivers a fired alert to `ALERT_WEBHOOK_URL` (Slack, PagerDuty, or any HTTP endpoint). All 10 KB SLOs are in `SLO_CATALOGUE` at `backend/src/common/slo/index.ts:81`. The alert scripts are tested by parity specs (e.g. `kb-ask-metric-alert-parity.spec.ts`) that run the scripts against synthetic log fixtures and assert exit codes and JSON output. The parity specs are in `backend/src/modules/kb/core/telemetry/` and `backend/src/modules/kb/analytics/`.
+
+**Q4 — Structured-log fields on KB requests**
+
+Fields emitted on every request log line (`backend/src/common/logger/logger.service.ts:22-37`): `timestamp`, `level`, `message`, `correlationId` (always), `orgId` (after auth), `actorId` (after auth), `method`, `route`, `release`, `cellId`. These are populated by `ObservabilityEnrichmentInterceptor` at `backend/src/common/observability/observability-enrichment.interceptor.ts:30-33`.
+
+For KB span attributes specifically:
+- `org.id` — present on all 5 KB span types (always passed from `user.orgId`)
+- `actor.standing` — present on Search and Ask spans; ABSENT from Read span (`kb-pages.service.ts:217`, `kb-articles.service.ts:72`) and Write span (`kb-page-writer.service.ts:63`) because `begin()` is called without `actorStanding`
+- `cache outcome` — `kb.*.cache_outcome` attribute: Search passes it via `aclCacheOutcome(user)` (returns `"hit"|"miss"|"bypass"` from `CacheService.cachedVersionedWithOutcome()`); Ask passes it at line 373; Read always defaults to `"miss"` (never passed)
+- `primary-vs-replica` (db_role) — attribute `kb.*.db_role` defaults to `"primary"` on all paths; `ReplicaRouter` exists at `backend/src/db/replica-router.ts:60` but has zero `@Inject(REPLICA_ROUTER)` call sites in KB service code and `route()` passes `isReplicaHealthy = true` unconditionally (line 82); no `DB_REPLICA_URL` in this deployment
+- `queue lane` — present on all 5 span types; named constants: `KB_READ_QUEUE_LANE = "sync"`, `KB_WRITE_QUEUE_LANE = "sync"`, `KB_SEARCH_QUEUE_LANE = "sync"`, `KB_ASK_QUEUE_LANE = "fast"`, `KB_INDEXING_QUEUE_LANE = "background"`
+
+**Q5 — Redaction**
+
+`backend/src/common/observability/redact.ts` is the single chokepoint. `truncateForLog()` (line 134) is called on every string reaching a log line. `redactAttributes()` (line 93) is called by `LogSpanExporter` on every span attribute set. `redact()` (line 152) is called on every `meta` object passed to the logger.
+
+The key `"prompt"` appears in `SENSITIVE_SUBSTRINGS` at line 45 — any attribute or log field keyed `prompt`, `promptText`, `systemPrompt`, etc. is replaced with `[redacted]` before emission. Page content (`contentText`, `title`) is never written to any KB span attribute — enforced structurally (the `KbReadMetrics.KbReadFacts` interface has no text field) and verified by parity specs at `kb-ask-metric-alert-parity.spec.ts:247` and `kb-search-metric-alert-parity.spec.ts:150`. `scrubBindParameters()` (line 123) redacts Drizzle bind values from error messages. The `"query"` key is in `SENSITIVE_EXACT` (line 65), redacting any logged query text.
+
+Gap: no redaction mechanism prevents a KB service from calling `logger.info("page loaded", { title: page.title })` — the logger would pass the title through `truncateForLog()` (which only truncates/scrubs bind params) without blanking it. The structural guard is "never log page content", which is a convention, not an enforced key-based rule, because `"title"` is not in `SENSITIVE_EXACT` or `SENSITIVE_SUBSTRINGS`. No KB span attribute writes content (enforced), but the plain logger has no such structural guarantee.
+
+**Q6 — Box verdicts**
+
+See section 3 below.
+
+---
+
+### 3. Box verdicts
+
+**08:363** — "Record current read/write/search/Ask and all indexing-path instrumentation, redaction coverage, query/connection budgets, revocation lag, purge backlog, KB cost and operator alert delivery."
+
+**VERDICT: PARTLY** — The instrument stack exists and is wired. The remaining gaps that prevent a full close:
+
+1. `actor.standing` and `org.cell` are absent from the Read call sites (`kb-pages.service.ts:217`, `kb-articles.service.ts:72`) and Write call site (`kb-page-writer.service.ts:63`). `KbReadMetrics.begin()` and `KbWriteMetrics.begin()` accept these fields; the call sites do not pass them. Two SPAN lines per KB read or write omit two of the seven required dimensions.
+2. Revocation lag alert (`alert-kb-revocation-lag.mjs`) depends on `kb_pages.acl_revision_changed_at` and `kb_article_chunks.acl_synced_at` columns introduced in migration 1229 (authored in the prior M5 session). Until that migration is applied and the indexing service sets those timestamps, the alert will always report 0 lagging pages and can fire exit-2.
+3. Operator alert delivery has never fired against a live stream. `ALERT_WEBHOOK_URL` is not set in this deployment; `drill-alert-system.mjs` exits 2 without it. The parity specs prove the scripts produce correct JSON for synthetic fixtures, but no live delivery has been confirmed.
+
+---
+
+**REQ-1082** — "Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source..."
+
+**VERDICT: PARTLY** — Five of the seven dimensions are fully covered on Search and Ask. On Read and Write, three are absent:
+
+- Tenant (`org.id`): fully covered (all 5 paths)
+- Tenant bucket/placement (`org.cell`): absent from Read (`kb-pages.service.ts:217`) and Write (`kb-page-writer.service.ts:63`) — the constructor parameter exists but is not passed at the call site
+- Actor standing: absent from Read and Write call sites for the same reason
+- Cache outcome: absent from Read (always defaults to `"miss"`; no `cachedVersionedWithOutcome` call on the read path)
+- Primary/replica: `db_role = "primary"` everywhere; technically accurate; ReplicaRouter is uninjected
+- Queue lane: fully covered (all 5 paths)
+- Source kind: present on Search and Ask; not applicable to Read, Write, Indexing
+
+Insertion points: `kb-pages.service.ts:217` → add `actorStanding: user.isOrgOwner ? "owner" : "member", orgCell: PROCESS_CELL_ID`. Same at `kb-articles.service.ts:72` and `kb-page-writer.service.ts:63`.
+
+---
+
+**REQ-1098** — "Not audited for the rest of the KB surface."
+
+**VERDICT: PARTLY** — Search and Ask paths are fully audited (parity specs in `core/telemetry/`; all six dimensions confirmed wired). The "rest of the KB surface" (Read and Write) has spans wired but the full dimension set is not passed at the call sites. The claim "not audited" was accurate at time of writing; it is now partly audited. Closable for Search/Ask; the Read+Write dimension gap (REQ-1082) keeps this box open for those paths.
+
+---
+
+**REQ-1109** — "Read/write/search/Ask latency and errors. No span exists on any of those paths."
+
+**VERDICT: CLOSABLE-WITH-THIS-EVIDENCE** — All four paths now have spans:
+
+- `kb.read.operation` wired at `kb-pages.service.ts:217` and `kb-articles.service.ts:72`
+- `kb.write.operation` wired at `kb-page-writer.service.ts:63`
+- `kb.search.operation` wired at `kb-search.service.ts:72`
+- `kb.ask.operation` wired at `kb-ask.service.ts:213`
+
+Each span emits `latencyMs` (computed as `Date.now() - startedAt`), `status` (`"ok"` or `"error"`), and `kb.*.outcome`. Parity specs for each span type verify the wiring is real and not merely imported. The old claim "no span exists on any of those paths" is false as of the current codebase.
+
+---
+
+**REQ-1115** — "DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations."
+
+**VERDICT: PARTLY** — Four of six sub-signals are covered. Two have caveats:
+
+- DB connections: `alert-kb-db-health.mjs:25-27` — `pg_stat_activity active+idle-in-transaction` vs threshold 80. Covered.
+- DB locks: `alert-kb-db-health.mjs:30` — `pg_stat_activity` where `wait_event_type='Lock'` vs threshold 5. Covered.
+- Slow queries: `alert-kb-db-health.mjs:33` — `pg_stat_statements` mean_exec_time > 100ms for KB tables. Covered (requires `pg_stat_statements` extension, already noted in SLO description).
+- Cache hit rate: `alert-kb-db-health.mjs:37-41` — `pg_statio_user_tables` for `kb_%` tables, hit rate below 90%. Covered.
+- Replica lag: `GENUINELY-BLOCKED-ON-NO-REPLICA-ENDPOINT`. The alert script returns `{ status: "blocked", reason: "no-replica-endpoint" }` explicitly at line 67-73 when queried. No `DB_REPLICA_URL` is configured. This is not a code gap; it is a deployment topology gap.
+- Dropped invalidations: `alert-cache-invalidation-dropped.mjs` reads the `cache.invalidation.dropped` log marker. The `CacheService.droppedInvalidationCount` public getter (line 53) has no consumer; it exists as a process-level counter only. The log-based alert is the operative signal. Coverage: adequate if the log stream is live; the process counter is an unread bonus.
+
+---
+
+**REQ-1124** — "Dashboards as such. There is no dashboard system in this repo — every alert here is a..."
+
+**VERDICT: CLOSABLE-WITH-THIS-EVIDENCE** — Confirmed in code. There is no Grafana, no Prometheus, no Kibana, no Datadog. Every "dashboard" is an alert script that reads the log stream and exits 0/1/2. The `SLO_CATALOGUE` at `backend/src/common/slo/index.ts:81` and the alert scripts in `backend/src/scripts/alert-kb-*.mjs` are the full surface. This is documented in the ledger prose ("every alert here is a [script]") and is accurate.
+
+---
+
+**REQ-1134** — "Drill-verified. Nothing here has fired against a live stream."
+
+**VERDICT: GENUINELY-BLOCKED-ON-ALERT_WEBHOOK_URL-AND-LIVE_LOG_STREAM** — Two blockers:
+
+1. `ALERT_WEBHOOK_URL` env var is not set in this deployment. `drill-alert-system.mjs` (line 27-37) exits 2 with "ALERT_WEBHOOK_URL is not set. This drill cannot run." No live delivery has occurred.
+2. There is no log aggregator or log stream this deployment can pipe to `alert-kb-ask.mjs`. The scripts read from `journalctl` pipe or `--log=` file. Production is on Railway; log retention and export are not configured.
+
+What IS verified: parity specs (`kb-ask-metric-alert-parity.spec.ts`, `kb-search-metric-alert-parity.spec.ts`, etc.) run the alert scripts against synthetic fixtures generated by the real emitters and assert the scripts produce correct JSON with the right exit codes. This is "synthetic drill-verified", not "live-stream drill-verified". The distinction matters for this box.
+
+---
+
+### 4. Cheap instrumentation additions (no deployed environment needed)
+
+These can be shipped from within the KB module without a live metrics system. Each is a code change at the named insertion point.
+
+**A. Add `actorStanding` and `orgCell` to Read call sites**
+Insertion points:
+- `backend/src/modules/kb/wiki/kb-pages.service.ts:217` — change `KbReadMetrics.begin({ orgId: user.orgId })` to `KbReadMetrics.begin({ orgId: user.orgId, actorStanding: user.isOrgOwner ? "owner" : "member", orgCell: PROCESS_CELL_ID })`; also import `PROCESS_CELL_ID` from `common/cell-resources/cell-id`
+- `backend/src/modules/kb/help-centre/kb-articles.service.ts:72` — same change
+
+**B. Add `actorStanding` and `orgCell` to Write call site**
+Insertion point:
+- `backend/src/modules/kb/wiki/kb-page-writer.service.ts:63` — change `KbWriteMetrics.begin({ orgId: input.orgId })` to `KbWriteMetrics.begin({ orgId: input.orgId, actorStanding: input.actor?.standing ?? "member", orgCell: PROCESS_CELL_ID })` — but note `commitPageChangeInput` has no `actorStanding` field; the minimal fix is to add `orgCell: PROCESS_CELL_ID` only (actorStanding is not available here without a schema change)
+
+**C. Pass `cacheOutcome` to the Read finish() call**
+The Read path (`kb-pages.service.ts:217-245`) calls `this.auth.visiblePagePredicate(user, "view")` which internally calls `resolveAccessibleSpaces` — that already returns `cacheOutcome`. Thread the `cacheOutcome` from that result through to `metrics.finish("found", { cacheOutcome })`. Insertion: `kb-pages.service.ts` around line 220.
+
+**D. Emit a log line when `droppedInvalidationCount` increments**
+Already done structurally — `CacheService.invalidateWithRetry` calls `logger.error(DROPPED_MARKER, ...)` at line 79. `alert-cache-invalidation-dropped.mjs` reads this marker. No additional code change is needed for the signal; only `ALERT_WEBHOOK_URL` is needed to deliver it.
+
+**E. Add parity spec assertions for actorStanding on Read and Write paths**
+File: `backend/src/modules/kb/analytics/kb-read-metric-alert-parity.spec.ts` — add a describe block mirroring the "ORCHESTRATOR CALL SITES" block at line 295 to assert that `kb-pages.service.ts` passes `actorStanding` and `orgCell` to `KbReadMetrics.begin()`. Currently those assertions are absent from the spec (the wiring spec only checks that `KbReadMetrics` is imported).
+
+---
+
+*Census compiled 2026-09-27 by lane M5 (read-only). No source files were modified in this section.*

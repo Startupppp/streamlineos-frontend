@@ -102,7 +102,9 @@ jest.mock("@/components/ui/skeleton", () => ({
 
 jest.mock("@/components/ui/table-pagination", () => ({
   TablePagination: () => <div data-testid="table-pagination" />,
-  useCursorPager: () => ({ cursor: null, hasPrevious: false, goNext: jest.fn(), goPrevious: jest.fn() }),
+}));
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
+  useBuildCursorPager: () => ({ cursor: null, hasPrevious: false, goNext: jest.fn(), goPrevious: jest.fn() }),
 }));
 
 jest.mock("@/components/ui/switch", () => ({

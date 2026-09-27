@@ -11,7 +11,8 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { Diamond, CheckCircle2, Clock, AlertCircle, X } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import {
@@ -77,7 +78,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   const canManage = useCan("build:manage");
   const updateMilestone = useUpdateMilestone(projectId);
   const listFilters = useBuildListFilters({ filters: MILESTONE_FILTER_DEFINITIONS });
-  const pager = useCursorPager(listFilters.resetKey);
+  const pager = useBuildCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const statusFilterValue = listFilters.value("status");

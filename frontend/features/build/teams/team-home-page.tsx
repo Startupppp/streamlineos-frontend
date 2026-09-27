@@ -14,7 +14,7 @@ import {
   useRemoveProjectTeamMember,
   useUpdateProjectTeamMemberRole,
 } from "@/hooks/api/build/teams";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { useBuildListFilters, BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
@@ -189,7 +189,7 @@ export function TeamHomePage({ teamId }: Props) {
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
 
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS, withSearch: true });
-  const memberPager = useCursorPager(listFilters.resetKey);
+  const memberPager = useBuildCursorPager(listFilters.resetKey);
 
   function handleAddMemberRoleChange(value: string): void {
     const role = TEAM_MEMBER_ROLES.find((candidate) => candidate === value);

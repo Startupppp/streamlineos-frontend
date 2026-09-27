@@ -204,6 +204,7 @@ export function usePublicChannels(enabled = true): ChannelListResult<PublicChann
 export function useChatChannel(channelId: number) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.channel(channelId),
     queryFn: ({ signal }) => apiClient.get<ChatChannelDetailWire>(`/chat/channels/${channelId}`, undefined, signal, channelDetailContract),
     staleTime: 2 * 60_000,
@@ -256,6 +257,7 @@ export function useChatPoll(
 ) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.poll(
       channelId,
       chatPollPositionKey(position),
@@ -305,6 +307,7 @@ export function useChatOnlineUsers(enabled = true) {
 export function useChatOrgUsers(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.orgUsers(),
     queryFn: ({ signal }) => apiClient.get<OrgUser[]>("/chat/users", undefined, signal, chatOrgUsersContract),
     staleTime: 2 * 60_000,

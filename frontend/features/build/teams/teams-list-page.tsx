@@ -15,7 +15,7 @@ import { useCan } from "@/hooks/api/access";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TeamFormSheet } from "./team-form-sheet";
@@ -51,7 +51,7 @@ export function TeamsListPage() {
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS, withSearch: true });
   const leadIdFilter = listFilters.value("leadId");
   const memberIdFilter = listFilters.value("memberId");
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 

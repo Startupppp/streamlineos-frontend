@@ -105,8 +105,8 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: () => null,
 }));
 
-jest.mock("@/components/ui/table-pagination", () => ({
-  useCursorPager: jest.fn(() => ({
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
+  useBuildCursorPager: jest.fn(() => ({
     cursor: undefined,
     hasPrevious: false,
     goNext: jest.fn(),

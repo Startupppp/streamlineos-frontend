@@ -26,8 +26,8 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
 }));
 
-jest.mock("@/components/ui/table-pagination", () => ({
-  useCursorPager: () => ({
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
+  useBuildCursorPager: () => ({
     cursor: undefined,
     hasPrevious: false,
     goNext: jest.fn(),

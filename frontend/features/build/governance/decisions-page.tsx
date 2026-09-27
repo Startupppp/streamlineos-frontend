@@ -18,7 +18,7 @@ import type {
   UpdateDecisionInput,
 } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -74,7 +74,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const [editDecision, setEditDecision] = useState<Decision | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Decision | null>(null);
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -188,11 +188,16 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const handleDeleteRow = useCallback((d: Decision) => setDeleteTarget(d), []);
 
   const handleEditDecisionByIndex = useCallback(
-    (index: number) => { if (allDecisions[index]) handleEditRow(allDecisions[index]); },
+    (index: number) => {
+      if (allDecisions[index]) handleEditRow(allDecisions[index]);
+    },
     [allDecisions, handleEditRow],
   );
   const handleOpenFocused = useCallback(
-    (index: number) => { setEditDecision(allDecisions[index]); setSheetOpen(true); },
+    (index: number) => {
+      setEditDecision(allDecisions[index]);
+      setSheetOpen(true);
+    },
     [allDecisions],
   );
   const handleClearKeyboardSelection = useCallback(() => {}, []);
