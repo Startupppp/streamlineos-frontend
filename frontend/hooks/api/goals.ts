@@ -157,6 +157,7 @@ export function useGoal(id: number) {
       apiClient.get<GoalDetail>(`/goals/${id}`, undefined, signal, goalDetailC),
     enabled: id > 0,
     staleTime: 30_000,
+    throwOnError: false,
   });
 }
 

@@ -42,9 +42,14 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/all-work", () => ({
   useAllWork: () => useAllWork(),
+}));
+jest.mock("@/hooks/api/build/projects", () => ({
   useProjects: () => useProjects(),
+}));
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({ data: undefined }),
 }));
 jest.mock("@/hooks/api/build/custom-states", () => ({
   useOrgCustomStates: () => ({ data: undefined }),

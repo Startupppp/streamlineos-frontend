@@ -1,7 +1,8 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { toast } from "sonner";
 import {
   Select,
@@ -117,7 +118,7 @@ export function ProjectMemberRolesSection({
   projectId,
 }: ProjectMemberRolesSectionProps) {
   const canManage = useCan("build:manage");
-  const pager = useCursorPager();
+  const pager = useBuildCursorPager();
   const {
     data: page,
     isLoading,

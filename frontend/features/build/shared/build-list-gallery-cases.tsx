@@ -2,10 +2,20 @@
 
 import { useCallback, useState, type ReactNode } from "react";
 import { Download, Plus, Upload } from "lucide-react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  PmPageShell,
+  PmSection,
+  CONTENT_FILL_PANEL,
+} from "@/components/pm-chrome";
+import { createAppQueryClient } from "@/components/providers/query-provider";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { BuildListSurface } from "./build-list-surface";
+import { GALLERY_STUB_ACCESS } from "./build-list-fixtures";
 import { Button } from "@/components/ui/button";
 import { BuildHeaderActions } from "./build-header-actions";
 import type { BuildHeaderAction } from "./build-header-actions-plan";
@@ -28,7 +38,8 @@ export const ROWS: GalleryRow[] = Array.from({ length: 14 }, (_, index) => ({
   id: index + 1,
   key: `PRJ-${100 + index}`,
   name: `Atlas migration workstream ${index + 1}`,
-  status: index % 3 === 0 ? "Active" : index % 3 === 1 ? "On hold" : "Completed",
+  status:
+    index % 3 === 0 ? "Active" : index % 3 === 1 ? "On hold" : "Completed",
   owner:
     index % 2 === 0
       ? { firstName: "Priya", lastName: "Nair" }
@@ -47,7 +58,11 @@ export const GALLERY_HEADERS = [
 ] as const;
 
 export const COLUMNS: DataTableColumn<GalleryRow>[] = [
-  { key: "key", header: "Key", cell: (row) => <span className="font-mono tabular-nums">{row.key}</span> },
+  {
+    key: "key",
+    header: "Key",
+    cell: (row) => <span className="font-mono tabular-nums">{row.key}</span>,
+  },
   { key: "name", header: "Name", cell: (row) => row.name },
   { key: "status", header: "Status", cell: (row) => row.status },
   {
@@ -58,7 +73,9 @@ export const COLUMNS: DataTableColumn<GalleryRow>[] = [
   {
     key: "progress",
     header: "Progress",
-    cell: (row) => <span className="font-mono tabular-nums">{row.progress}%</span>,
+    cell: (row) => (
+      <span className="font-mono tabular-nums">{row.progress}%</span>
+    ),
   },
   { key: "target", header: "Target", cell: (row) => row.target },
 ];
@@ -245,23 +262,51 @@ export function GalleryList({
   );
 }
 
-export function ReadyTable() {
+function ReadyTableInner() {
+  function handleNext() {
+    return undefined;
+  }
+  function handlePrevious() {
+    return undefined;
+  }
   return (
-    <DataTable
-      data={ROWS}
+    <BuildListSurface<GalleryRow>
+      permission="build:view"
+      rows={ROWS}
       columns={COLUMNS}
+      isLoading={false}
+      isError={false}
       getRowKey={getRowKey}
-      minWidth="780px"
       mobileCard={renderMobileCard}
-      className={CONTENT_FILL_PANEL}
+      minWidth="780px"
       pagination={{
         mode: "cursor",
         pageSize: 20,
         hasMore: true,
         hasPrevious: true,
-        onNext: () => undefined,
-        onPrevious: () => undefined,
+        onNext: handleNext,
+        onPrevious: handlePrevious,
       }}
+      empty={
+        <EmptyState
+          className={CONTENT_FILL_PANEL}
+          illustrationPreset="projects"
+          title="No projects yet"
+        />
+      }
     />
+  );
+}
+
+export function ReadyTable() {
+  const [queryClient] = useState(() => {
+    const client = createAppQueryClient("build-list-gallery-ready");
+    client.setQueryData(platformCoreQueryKeys.access.me(), GALLERY_STUB_ACCESS);
+    return client;
+  });
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ReadyTableInner />
+    </QueryClientProvider>
   );
 }

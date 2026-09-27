@@ -16,8 +16,10 @@ export function ReportsExportButton({ projectId }: ReportsExportButtonProps) {
   const { data } = useVelocityReport(projectId);
   const cycles = data?.pages.flatMap((page) => page.data) ?? [];
 
+  const cycles = data?.pages.flatMap((page) => page.data) ?? [];
+
   const handleExport = useCallback(() => {
-    if (!cycles.length) return;
+    if (cycles.length === 0) return;
     exportToCsv(
       "velocity-report.csv",
       cycles.map((cycle) => ({
@@ -39,7 +41,7 @@ export function ReportsExportButton({ projectId }: ReportsExportButtonProps) {
       variant="outline"
       size="sm"
       onClick={handleExport}
-      disabled={!cycles.length}
+      disabled={cycles.length === 0}
     >
       <Download className="h-4 w-4" />
       Export velocity CSV

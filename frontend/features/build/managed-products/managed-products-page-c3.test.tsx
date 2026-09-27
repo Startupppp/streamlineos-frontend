@@ -49,12 +49,11 @@ jest.mock("@/components/shared/page-state", () => ({
   },
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/managed-products", () => ({
   useManagedProducts: jest.fn(),
   useCreateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeleteManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
-  useBulkUpdateManagedProducts: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/common/use-query-param-open", () => ({
@@ -134,7 +133,7 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
-const { useManagedProducts } = jest.requireMock("@/hooks/api/build") as {
+const { useManagedProducts } = jest.requireMock("@/hooks/api/build/managed-products") as {
   useManagedProducts: jest.Mock;
 };
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {

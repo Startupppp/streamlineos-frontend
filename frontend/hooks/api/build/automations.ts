@@ -14,7 +14,7 @@ const projectAutomationListContract = lazyContract(() =>
 );
 const projectAutomationRowContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then(
-    (m) => m.projectAutomationRowContract,
+    (m) => m.projectAutomationListContract.element,
   ),
 );
 const noContentContract = lazyContract(() =>

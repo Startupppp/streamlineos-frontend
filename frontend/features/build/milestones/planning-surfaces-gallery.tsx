@@ -3,7 +3,13 @@
 import { useCallback, useState } from "react";
 import { Plus } from "lucide-react";
 import { Diamond, CheckCircle2, AlertCircle, Clock } from "lucide-react";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { GalleryCase } from "@/features/build/shared/build-list-gallery-cases";
+import { createAppQueryClient } from "@/components/providers/query-provider";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { GALLERY_STUB_ACCESS } from "@/features/build/shared/build-list-fixtures";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -152,28 +158,6 @@ const STUB_RELEASES: Release[] = [
 ];
 
 const STUB_NOOP = () => undefined;
-
-function GalleryCase({
-  id,
-  title,
-  children,
-}: {
-  id: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section data-case={id} aria-label={title}>
-      <h2 className="mb-1 text-sm font-semibold text-foreground">{title}</h2>
-      <div
-        data-case-frame={id}
-        className="flex h-[34rem] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-background"
-      >
-        {children}
-      </div>
-    </section>
-  );
-}
 
 function MilestoneListToolbar() {
   const [search, setSearch] = useState("");
@@ -376,27 +360,31 @@ function ReleasesReadyTable() {
     [],
   );
 
+  function getRowKey(row: Release) { return row.id; }
+
   return (
-    <DataTable
-      data={STUB_RELEASES}
+    <BuildListSurface<Release>
+      permission="build:view"
+      rows={STUB_RELEASES}
       columns={columns}
-      getRowKey={(r) => r.id}
+      isLoading={false}
+      isError={false}
+      getRowKey={getRowKey}
       mobileCard={renderMobileCard}
-      className={CONTENT_FILL_PANEL}
-      pagination={{
-        mode: "cursor",
-        pageSize: 25,
-        hasMore: false,
-        hasPrevious: false,
-        onNext: STUB_NOOP,
-        onPrevious: STUB_NOOP,
-      }}
+      pagination={{ mode: "cursor", pageSize: 25, hasMore: false, hasPrevious: false, onNext: STUB_NOOP, onPrevious: STUB_NOOP }}
+      empty={<EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No releases yet" />}
     />
   );
 }
 
 export function PlanningSurfacesGallery() {
+  const [queryClient] = useState(() => {
+    const client = createAppQueryClient("planning-surfaces-gallery");
+    client.setQueryData(platformCoreQueryKeys.access.me(), GALLERY_STUB_ACCESS);
+    return client;
+  });
   return (
+    <QueryClientProvider client={queryClient}>
     <div className="flex flex-col gap-8 p-4">
       <header>
         <h1 className="text-lg font-semibold tracking-tight">Planning surfaces</h1>
@@ -487,5 +475,6 @@ export function PlanningSurfacesGallery() {
         <NoPermissionState permission="build:view" />
       </GalleryCase>
     </div>
+    </QueryClientProvider>
   );
 }

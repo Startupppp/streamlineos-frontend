@@ -21,7 +21,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/advanced", () => ({
   useProjectAnalytics: (projectId: number) => useProjectAnalytics(projectId),
 }));
 

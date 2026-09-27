@@ -13,11 +13,9 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageState } from "@/components/shared/page-state";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PortfolioFormSheet } from "./portfolio-form-sheet";
 import type {
@@ -46,7 +44,7 @@ const PAGE_SIZE = 20;
 export function PortfoliosPage() {
   const canManage = useCan("build:portfolios:manage");
   const listFilters = useBuildListFilters({ filters: PORTFOLIO_FILTER_DEFINITIONS });
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -94,15 +92,6 @@ export function PortfoliosPage() {
   );
 
   const rows = useMemo(() => data?.data ?? [], [data]);
-  const displayed = rows;
-
-  const resolution = usePageState({
-    permission: "build:portfolios:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty: displayed.length === 0,
-  });
 
   const handleCreate = useCallback(
     (input: CreatePortfolioInput) => {
@@ -172,21 +161,21 @@ export function PortfoliosPage() {
   const handleClearSelection = useCallback(() => {}, []);
   const handleOpenByIndex = useCallback(
     (index: number) => {
-      const row = displayed[index];
+      const row = rows[index];
       if (row) handleEditRow(row);
     },
-    [displayed, handleEditRow],
+    [rows, handleEditRow],
   );
   const handleEditByIndex = useCallback(
     (index: number) => {
-      const row = displayed[index];
+      const row = rows[index];
       if (row && canManage) handleEditRow(row);
     },
-    [displayed, canManage, handleEditRow],
+    [rows, canManage, handleEditRow],
   );
   const searchInputRef = useRef<HTMLInputElement>(null);
   useBuildListKeyboard({
-    itemCount: displayed.length,
+    itemCount: rows.length,
     onOpen: handleOpenByIndex,
     onEdit: handleEditByIndex,
     onCreate: handleOpenCreate,
@@ -249,23 +238,31 @@ export function PortfoliosPage() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <PageState
-            resolution={resolution}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={12}
-                headers={PORTFOLIO_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<Portfolio>
+            permission="build:portfolios:view"
+            rows={rows}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            minWidth="780px"
+            mobileCard={renderMobileCard}
+            pagination={{
+              mode: "cursor",
+              pageSize: PAGE_SIZE,
+              hasMore: Boolean(data?.pagination.hasMore),
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
+            }}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No portfolios yet"
                 description="Create a portfolio to group and govern your projects."
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
                 action={
                   canManage
                     ? { label: "New portfolio", onClick: handleOpenCreate }
@@ -273,26 +270,19 @@ export function PortfoliosPage() {
                 }
               />
             }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="projects"
+                title="No portfolios match your filters"
+                description="Try adjusting the filters to see more portfolios."
+                onClearFilters={listFilters.clearAll}
+              />
+            }
+            loadingHeaders={PORTFOLIO_TABLE_HEADERS}
+            loadingRows={12}
             onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <DataTable
-              data={displayed}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="780px"
-              mobileCard={renderMobileCard}
-              className={CONTENT_FILL_PANEL}
-              pagination={{
-                mode: "cursor",
-                pageSize: PAGE_SIZE,
-                hasMore: Boolean(data?.pagination.hasMore),
-                hasPrevious,
-                onNext: handleNextPage,
-                onPrevious: goPrevious,
-              }}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 

@@ -29,6 +29,11 @@ let mockIsLoading = false;
 let mockIsError = false;
 const mockRefetch = jest.fn();
 const mockRevokeMutate = jest.fn();
+let mockCanWriteTokens = true;
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => mockCanWriteTokens,
+}));
 
 jest.mock("@/hooks/api/build/agent-tokens", () => ({
   useAgentTokens: () => ({
@@ -57,6 +62,7 @@ jest.mock("sonner", () => ({
 }));
 
 beforeEach(() => {
+  mockCanWriteTokens = true;
   mockData = undefined;
   mockIsLoading = false;
   mockIsError = false;
@@ -188,5 +194,35 @@ describe("AgentTokensSection — secret handling (BLD-X-FE-SETTINGS-AGENTS-S004)
     mockData = [REVOKED_TOKEN];
     render(<AgentTokensSection />);
     expect(screen.getByText("Revoked")).toBeInTheDocument();
+  });
+});
+
+describe("AgentTokensSection — token controls follow settings:api-tokens:write, not the page gate", () => {
+  it("offers no New token control to a member who cannot write api tokens", () => {
+    mockCanWriteTokens = false;
+    mockData = [];
+    render(<AgentTokensSection />);
+    expect(screen.queryByRole("button", { name: /new token/i })).toBeNull();
+  });
+
+  it("offers the New token control when the member can write api tokens, so the denial above is the gate and not a render failure", () => {
+    mockCanWriteTokens = true;
+    mockData = [];
+    render(<AgentTokensSection />);
+    expect(screen.getByRole("button", { name: /new token/i })).toBeInTheDocument();
+  });
+
+  it("offers no Revoke control on an active token to a member who cannot write api tokens", () => {
+    mockCanWriteTokens = false;
+    mockData = [ACTIVE_TOKEN];
+    render(<AgentTokensSection />);
+    expect(screen.queryByRole("button", { name: /revoke/i })).toBeNull();
+  });
+
+  it("offers Revoke on an active token when the member can write api tokens", () => {
+    mockCanWriteTokens = true;
+    mockData = [ACTIVE_TOKEN];
+    render(<AgentTokensSection />);
+    expect(screen.getByRole("button", { name: /revoke/i })).toBeInTheDocument();
   });
 });

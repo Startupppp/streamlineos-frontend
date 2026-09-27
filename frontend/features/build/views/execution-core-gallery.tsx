@@ -106,6 +106,8 @@ const STUB_FULL_TICKET: Ticket = {
   cycleId: null,
   sequenceId: "PROJ-101",
   estimate: null,
+  startDate: null,
+  dueDate: "2026-10-31",
   createdAt: "2026-09-01",
   updatedAt: "2026-09-20",
 };

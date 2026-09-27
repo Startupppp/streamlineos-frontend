@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -15,8 +16,22 @@ export interface WebhookListFilters {
   cursor?: number;
 }
 
-const projectWebhookPageContract = lazyContract(() =>
-  import("@/hooks/api/build/build-project-schema").then((m) => m.projectWebhookPageContract),
+type WebhookPage = {
+  data: ProjectWebhook[];
+  hasMore: boolean;
+  nextCursor: number | null;
+};
+
+const projectWebhookPageContract = lazyContract<WebhookPage>(() =>
+  import("@/hooks/api/build/build-project-schema").then((m) =>
+    m.projectWebhookPageContract
+      .or(z.array(m.projectWebhookRowContract))
+      .transform((value) =>
+        Array.isArray(value)
+          ? { data: value, hasMore: false, nextCursor: null }
+          : value,
+      ),
+  ),
 );
 const webhookDeliveryListContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.webhookDeliveryListContract),
@@ -36,10 +51,10 @@ export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
   const canManage = useCan("build:manage");
   const hasFilters = filters !== undefined && Object.values(filters).some((v) => v !== undefined);
   const activeFilters = hasFilters ? filters : undefined;
-  return useQuery<{ data: ProjectWebhook[]; hasMore: boolean; nextCursor: number | null }, Error, ProjectWebhook[]>({
+  return useQuery<WebhookPage, Error, ProjectWebhook[]>({
     queryKey: buildWorkQueryKeys.projects.webhooks(projectId, activeFilters as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<{ data: ProjectWebhook[]; hasMore: boolean; nextCursor: number | null }>(
+      apiClient.get<WebhookPage>(
         `/build/${projectId}/webhooks`,
         activeFilters,
         signal,

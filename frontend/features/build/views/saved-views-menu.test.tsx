@@ -17,7 +17,7 @@ jest.mock("@/hooks/api/access", () => ({
   useCanState: () => "allowed",
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/advanced", () => ({
   useViews: () => ({
     data: [
       {

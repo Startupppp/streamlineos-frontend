@@ -3,6 +3,7 @@ import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectSettingsAgentsPage } from "./project-settings-agents-page";
 
 let mockAccessState: AccessState = "denied";
+const mockUsePageState = jest.fn();
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (_permission: string) => mockAccessState === "granted",
@@ -10,7 +11,8 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: () => {
+  usePageState: (opts: unknown) => {
+    mockUsePageState(opts);
     if (mockAccessState === "denied") return "denied";
     if (mockAccessState === "loading") return "loading";
     return "ready";
@@ -100,7 +102,7 @@ describe("ProjectSettingsAgentsPage — keyboard shortcuts (Requirement C3)", ()
 });
 
 describe("ProjectSettingsAgentsPage — access control (BLD-X-FE-SETTINGS-AGENTS-001)", () => {
-  it("renders NoPermissionState when access is denied — PageState gates on build:update", () => {
+  it("renders NoPermissionState when access is denied — PageState gates on settings:api-tokens:read", () => {
     render(<ProjectSettingsAgentsPage projectId={1} />);
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
     expect(screen.queryByTestId("agent-tokens-section")).not.toBeInTheDocument();
@@ -139,5 +141,15 @@ describe("ProjectSettingsAgentsPage — URL search filter (BLD-X-FE-SETTINGS-AGE
     mockAccessState = "granted";
     render(<ProjectSettingsAgentsPage projectId={1} />);
     expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsAgentsPage — permission key (Criterion 3)", () => {
+  it("passes settings:api-tokens:read to usePageState, the key its own GET endpoint requires", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsAgentsPage projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "settings:api-tokens:read" }),
+    );
   });
 });

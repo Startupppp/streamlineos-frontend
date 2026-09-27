@@ -28,15 +28,17 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/governance", () => ({
   useProjectRisks: (projectId: number, filters?: { status?: string }) =>
     mockUseProjectRisks(projectId, filters),
   useProjectRiskStats: (...args: unknown[]) => mockUseProjectRiskStats(...args),
   useCreateRisk: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateRisk: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteRisk: () => ({ mutate: jest.fn(), isPending: false }),
-  useProjectMembers: () => ({ data: [] }),
   GOVERNANCE_PAGE_SIZE: 100,
+}));
+jest.mock("@/hooks/api/build/project-members", () => ({
+  useProjectMembers: () => ({ data: [] }),
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));

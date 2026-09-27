@@ -19,9 +19,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
-import { PageState } from "@/components/shared/page-state";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 
 const BACKLOG_TABLE_HEADERS = [
@@ -42,7 +41,7 @@ import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
-import { PmPageShell, PM_TOOLBAR, PmPanel } from "@/components/pm-chrome";
+import { PmPageShell, PM_TOOLBAR } from "@/components/pm-chrome";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";
@@ -111,7 +110,6 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     fetchNextPage: fetchMoreTickets,
     isFetchingNextPage: isFetchingMoreTickets,
   } = useProjectBoardTickets(projectId, backlogFilters);
-  const isLoading = projectLoading || ticketsLoading;
   const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
   const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
   const { data: cycles } = useCycles(projectId);
@@ -204,14 +202,6 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     (ticket: Ticket) => handleTicketSelect(ticket.id),
     [handleTicketSelect],
   );
-
-  const resolution = usePageState({
-    permission: "build:tickets:view",
-    isLoading,
-    isError: ticketsError,
-    error: ticketsErrorValue,
-    isEmpty: tickets.length === 0,
-  });
 
   const columns = useMemo<DataTableColumn<Ticket>[]>(
     () => [
@@ -308,7 +298,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     [data?.key],
   );
 
-  if (isLoading) {
+  if (projectLoading) {
     return (
       <PageWrapper title="Backlog" subtitle="Loading...">
         <DataTableSkeleton mobileCards rows={12} headers={BACKLOG_TABLE_HEADERS} className="flex-1 min-h-0" />
@@ -316,8 +306,6 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     );
   }
 
-  // A failure to READ the project is not a project that is gone: only the
-  // fallback's resolved 404 reaches notFound().
   if (projectError) {
     return (
       <ProjectLoadFallback
@@ -375,45 +363,49 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           />
         ) : null}
 
-        <PageState
-          resolution={resolution}
-          loading={<DataTableSkeleton mobileCards rows={12} headers={BACKLOG_TABLE_HEADERS} className="flex-1 min-h-0" />}
+        <BuildListSurface<Ticket>
+          permission="build:tickets:view"
+          rows={tickets}
+          columns={columns}
+          isLoading={ticketsLoading}
+          isError={ticketsError}
+          error={ticketsErrorValue}
+          isFiltered={filtersActive}
+          getRowKey={(ticket) => ticket.id}
+          onRowClick={handleRowClick}
+          mobileCard={renderMobileCard}
+          selection={canUpdate ? {
+            selected: selectedIds,
+            onChange: handleSelectionChange,
+            getRowLabel: (ticket) => ticket.title ?? "",
+          } : undefined}
+          minWidth="640px"
           empty={
             <EmptyState
               className="flex-1"
               illustrationPreset="projects"
               title="No tickets yet"
-              description={filtersActive ? undefined : "Create a ticket to get started."}
-              filtersActive={filtersActive}
+              description="Create a ticket to get started."
+            />
+          }
+          filteredEmpty={
+            <EmptyState
+              className="flex-1"
+              illustrationPreset="projects"
+              title="No tickets yet"
               onClearFilters={handleClearFilters}
             />
           }
           onRetry={handleRetryTickets}
-          className="flex-1 min-h-0"
-        >
-          <PmPanel className="min-w-0 flex-1 min-h-0 flex flex-col">
-            <DataTable
-              data={tickets}
-              columns={columns}
-              getRowKey={(ticket) => ticket.id}
-              onRowClick={handleRowClick}
-              selection={canUpdate ? {
-                selected: selectedIds,
-                onChange: handleSelectionChange,
-                getRowLabel: (ticket) => ticket.title ?? "",
-              } : undefined}
-              minWidth="640px"
-              mobileCard={renderMobileCard}
-              className="border-0 rounded-none flex-1 min-h-0"
-            />
-            <InfiniteScrollSentinel
-              hasNextPage={isTruncated}
-              isFetchingNextPage={isFetchingMoreTickets}
-              onLoadMore={fetchMoreTickets}
-              label="Load more tickets"
-            />
-          </PmPanel>
-        </PageState>
+          loadingHeaders={BACKLOG_TABLE_HEADERS}
+          loadingRows={12}
+        />
+        <InfiniteScrollSentinel
+          hasNextPage={isTruncated}
+          isFetchingNextPage={isFetchingMoreTickets}
+          onLoadMore={fetchMoreTickets}
+          label="Load more tickets"
+        />
       </PmPageShell>
     </PageWrapper>
   );

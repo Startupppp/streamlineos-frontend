@@ -3,6 +3,7 @@ import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectSettingsCredentialsPage } from "./project-settings-credentials-page";
 
 let mockAccessState: AccessState = "denied";
+const mockUsePageState = jest.fn();
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (_permission: string) => mockAccessState === "granted",
@@ -10,7 +11,8 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: () => {
+  usePageState: (opts: unknown) => {
+    mockUsePageState(opts);
     if (mockAccessState === "denied") return "denied";
     if (mockAccessState === "loading") return "loading";
     return "ready";
@@ -80,5 +82,14 @@ describe("ProjectSettingsCredentialsPage — access control (BLD-X-FE-SETTINGS-C
     mockAccessState = "granted";
     render(<ProjectSettingsCredentialsPage projectId={1} />);
     expect(screen.getByText(/credentials/i)).toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsCredentialsPage — permission key (Criterion 3)", () => {
+  it("passes the exact backend key settings:api-tokens:read to usePageState — asserted not assumed", () => {
+    render(<ProjectSettingsCredentialsPage projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "settings:api-tokens:read" }),
+    );
   });
 });

@@ -6,8 +6,6 @@ import { toast } from "sonner";
 import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { useApprovalInbox, useDecideApproval } from "@/hooks/api/build/approvals";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,11 +17,11 @@ import {
   StatCardGrid,
   StatCardGridSkeleton,
 } from "@/components/ui/stat-card";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DecideDialog } from "./decide-dialog";
 import { ApprovalBulkActionBar } from "./approval-bulk-action-bar";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
@@ -200,6 +198,8 @@ export function ApprovalsInboxPage() {
 
   const handleClearSelection = useCallback(() => setSelection(new Set()), []);
 
+  const handleNextPage = useCallback(() => void fetchNextPage(), [fetchNextPage]);
+
   const handleBulkCancel = useCallback(() => {
     const selectedItems = items.filter((item) =>
       selection.has(`${item.projectId}-${item.id}`),
@@ -262,13 +262,6 @@ export function ApprovalsInboxPage() {
     onClearSelection: handleKeyboardClear,
     searchInputRef,
     enabled: !isLoading,
-  });
-
-  const pageState = usePageState({
-    permission: "build:approvals:view",
-    isLoading,
-    isError,
-    error,
   });
 
   return (
@@ -358,51 +351,51 @@ export function ApprovalsInboxPage() {
             onCancelSelected={handleBulkCancel}
             onClear={handleClearSelection}
           />
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton
-                mobileCards
-                rows={12}
-                headers={INBOX_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<ApprovalInboxItem>
+            permission="build:approvals:view"
+            rows={filteredItems}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => `${row.projectId}-${row.id}`}
+            minWidth="680px"
+            mobileCard={renderMobileCard}
+            loadingHeaders={INBOX_TABLE_HEADERS}
+            loadingRows={12}
+            selection={{
+              selected: selection,
+              onChange: setSelection,
+              getRowLabel: (row) => row.title,
+            }}
+            pagination={{
+              mode: "cursor",
+              pageSize: 25,
+              hasMore: Boolean(hasNextPage),
+              hasPrevious: false,
+              onNext: handleNextPage,
+            }}
+            isFetchingMore={isFetchingNextPage}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="approval"
                 title="No approvals waiting"
                 description="You have no pending approvals across your projects."
-                filtersActive={listFilters.isFiltered}
+              />
+            }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="approval"
+                title="No approvals match your filters"
+                description="Try adjusting the filters to see more approvals."
                 onClearFilters={listFilters.clearAll}
               />
             }
             onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <DataTable
-              data={filteredItems}
-              columns={columns}
-              getRowKey={(row) => `${row.projectId}-${row.id}`}
-              selection={{
-                selected: selection,
-                onChange: setSelection,
-                getRowLabel: (row) => row.title,
-              }}
-              pagination={{
-                mode: "cursor",
-                pageSize: 25,
-                hasMore: Boolean(hasNextPage),
-                hasPrevious: false,
-                onNext: () => void fetchNextPage(),
-              }}
-              isLoading={isFetchingNextPage}
-              minWidth="680px"
-              mobileCard={renderMobileCard}
-              className={CONTENT_FILL_PANEL}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 

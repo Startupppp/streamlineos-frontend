@@ -24,7 +24,14 @@ jest.mock("@/hooks/api/feedbucket", () => ({
 
 const mockUseCan = jest.fn().mockReturnValue(false);
 
-jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockUseCan(key) }));
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => mockUseCan(key),
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {}, modules: {} }, isLoading: false }),
+}));
 jest.mock("@/hooks/common/use-animated-icon", () => mockInboxModules.animatedIconModule);
 jest.mock("date-fns", () => mockInboxModules.dateFnsModule);
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
@@ -35,6 +42,7 @@ jest.mock("@/components/ui/search-input", () => mockInboxModules.searchInputModu
 jest.mock("@/components/ui/user-combobox", () => mockInboxModules.userComboboxModule);
 jest.mock("@/components/ui/empty-state", () => mockInboxModules.emptyStateModule);
 jest.mock("@/components/shared", () => mockInboxModules.sharedModule);
+jest.mock("@/components/shared/error-state", () => mockInboxModules.errorStateLeafModule);
 jest.mock("@/components/ui/skeleton", () => mockInboxModules.skeletonModule);
 jest.mock("@/components/ui/confirm-dialog", () => mockInboxModules.confirmDialogModule);
 jest.mock("@/components/illustrations", () => mockInboxModules.illustrationsModule);

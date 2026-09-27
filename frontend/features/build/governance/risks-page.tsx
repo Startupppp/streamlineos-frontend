@@ -13,8 +13,6 @@ import {
 } from "@/hooks/api/build/governance";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
 import type {
   Risk,
   RiskProbability,
@@ -25,8 +23,7 @@ import type {
 } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -40,6 +37,7 @@ import {
   CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
@@ -108,7 +106,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const [editRisk, setEditRisk] = useState<Risk | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Risk | null>(null);
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -128,12 +126,6 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const { data: stats, isLoading: isStatsLoading } =
     useProjectRiskStats(projectId);
 
-  const pageState = usePageState({
-    permission: "build:risks:view",
-    isLoading,
-    isError,
-    error,
-  });
   const { data: membersPage } = useProjectMembers(projectId);
   const members = membersPage?.data ?? [];
 
@@ -269,10 +261,6 @@ export function RisksPage({ projectId }: RisksPageProps) {
 
   const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
 
-  const handleOpenFocused = useCallback(
-    (index: number) => { handleEditRow(filteredRisks[index]); },
-    [filteredRisks, handleEditRow],
-  );
   const handleEditRiskByIndex = useCallback(
     (index: number) => { if (filteredRisks[index]) handleEditRow(filteredRisks[index]); },
     [filteredRisks, handleEditRow],
@@ -280,7 +268,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const handleClearKeyboardSelection = useCallback(() => {}, []);
   useBuildListKeyboard({
     itemCount: filteredRisks.length,
-    onOpen: handleOpenFocused,
+    onOpen: handleEditRiskByIndex,
     onEdit: canManage ? handleEditRiskByIndex : undefined,
     onCreate: canManage ? handleNewRisk : undefined,
     onClearSelection: handleClearKeyboardSelection,
@@ -437,7 +425,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
           </StatCardGrid>
         </PmSection>
 
-        {!isStatsLoading && pageState.kind !== "loading" ? (
+        {!isStatsLoading && !isLoading ? (
           <PmSection index={1} className="shrink-0">
             <PmPanel className="p-3" solid>
               <RiskMatrix
@@ -459,23 +447,38 @@ export function RisksPage({ projectId }: RisksPageProps) {
               onClear={handleBulkClear}
             />
           )}
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={12}
-                headers={RISK_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<Risk>
+            permission="build:risks:view"
+            rows={displayed}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={isFiltered}
+            getRowKey={(row) => row.id}
+            minWidth="780px"
+            mobileCard={renderMobileCard}
+            loadingHeaders={RISK_TABLE_HEADERS}
+            loadingRows={12}
+            selection={{
+              selected: selectedIds,
+              onChange: setSelectedIds,
+              getRowLabel: (row) => row.title,
+            }}
+            pagination={{
+              mode: "cursor",
+              pageSize: GOVERNANCE_PAGE_SIZE,
+              hasMore: data?.hasMore ?? false,
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
+            }}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="alert"
                 title="No risks logged"
                 description="Log risks to track probability, impact, and mitigation plans."
-                filtersActive={isFiltered}
-                onClearFilters={handleClearAll}
                 action={
                   canManage
                     ? { label: "New Risk", onClick: handleNewRisk }
@@ -483,31 +486,17 @@ export function RisksPage({ projectId }: RisksPageProps) {
                 }
               />
             }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="alert"
+                title="No risks match your filters"
+                description="Try adjusting the filters to see more risks."
+                onClearFilters={handleClearAll}
+              />
+            }
             onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <DataTable
-              data={displayed}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="780px"
-              mobileCard={renderMobileCard}
-              className={CONTENT_FILL_PANEL}
-              selection={{
-                selected: selectedIds,
-                onChange: setSelectedIds,
-                getRowLabel: (row) => row.title,
-              }}
-              pagination={{
-                mode: "cursor",
-                pageSize: GOVERNANCE_PAGE_SIZE,
-                hasMore: data?.hasMore ?? false,
-                hasPrevious,
-                onNext: handleNextPage,
-                onPrevious: goPrevious,
-              }}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 

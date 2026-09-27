@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, isApiError } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
@@ -164,9 +164,21 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
 
 export function useTestRunDetail(projectId?: number, runId?: number) {
   const canView = useCan("build:qa:view");
-  return useQuery<TestRunDetail>({
+  return useQuery<TestRunDetail | null>({
     queryKey: buildWorkQueryKeys.projects.qa.run(projectId ?? 0, runId ?? 0),
-    queryFn: ({ signal }) => apiClient.get<TestRunDetail>(`/build/${projectId}/test-runs/${runId}`, undefined, signal, testRunDetailContract),
+    queryFn: async ({ signal }) => {
+      try {
+        return await apiClient.get<TestRunDetail>(
+          `/build/${projectId}/test-runs/${runId}`,
+          undefined,
+          signal,
+          testRunDetailContract,
+        );
+      } catch (error) {
+        if (!isApiError(error) || error.status !== 404) throw error;
+        return null;
+      }
+    },
     enabled: canView && !!projectId && !!runId,
     staleTime: 30_000,
     throwOnError: false,

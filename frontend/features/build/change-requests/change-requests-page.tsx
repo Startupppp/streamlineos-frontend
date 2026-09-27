@@ -2,7 +2,11 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
-import { useChangeRequests, useDeleteChangeRequest, useUpdateChangeRequest } from "@/hooks/api/build/change-requests";
+import {
+  useChangeRequests,
+  useDeleteChangeRequest,
+  useUpdateChangeRequest,
+} from "@/hooks/api/build/change-requests";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import type { ChangeRequest } from "@/types/projects";
@@ -22,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import {
   PmPageShell,
   PmSection,
@@ -76,12 +80,16 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const canManage = useCan("build:changerequests:manage");
 
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(listFilters.resetKey);
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
+    listFilters.resetKey,
+  );
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCr, setEditCr] = useState<ChangeRequest | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangeRequest | null>(null);
-  const [selectedCrIds, setSelectedCrIds] = useState<Set<string | number>>(new Set());
+  const [selectedCrIds, setSelectedCrIds] = useState<Set<string | number>>(
+    new Set(),
+  );
 
   const statusValue = listFilters.value("status");
   const clientVisibleValue = listFilters.value("clientVisible");
@@ -90,15 +98,24 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const approverIdValue = listFilters.value("approverId");
   const releaseIdValue = listFilters.value("releaseId");
 
-  const { data: crPage, isLoading, isError, error, refetch } = useChangeRequests(projectId, {
+  const {
+    data: crPage,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useChangeRequests(projectId, {
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     clientVisible:
       clientVisibleValue !== BUILD_FILTER_ALL
         ? clientVisibleValue === "true"
         : undefined,
-    impact: impactValue !== BUILD_FILTER_ALL && impactValue ? impactValue : undefined,
-    requesterId: requesterIdValue !== BUILD_FILTER_ALL ? requesterIdValue : undefined,
-    approverId: approverIdValue !== BUILD_FILTER_ALL ? approverIdValue : undefined,
+    impact:
+      impactValue !== BUILD_FILTER_ALL && impactValue ? impactValue : undefined,
+    requesterId:
+      requesterIdValue !== BUILD_FILTER_ALL ? requesterIdValue : undefined,
+    approverId:
+      approverIdValue !== BUILD_FILTER_ALL ? approverIdValue : undefined,
     releaseId:
       releaseIdValue !== BUILD_FILTER_ALL && releaseIdValue
         ? Number(releaseIdValue)
@@ -153,7 +170,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     [crs, handleEdit],
   );
 
-  const handleKeyboardClear = useCallback(() => setSelectedCrIds(new Set()), []);
+  const handleKeyboardClear = useCallback(
+    () => setSelectedCrIds(new Set()),
+    [],
+  );
 
   useBuildListKeyboard({
     itemCount: crs.length,
@@ -187,7 +207,8 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   );
 
   const handleImpactChange = useCallback(
-    (value: string) => listFilters.setValue("impact", value || BUILD_FILTER_ALL),
+    (value: string) =>
+      listFilters.setValue("impact", value || BUILD_FILTER_ALL),
     [listFilters],
   );
 
@@ -295,8 +316,15 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {selectedCrIds.size > 0 && (
-            <div className={cn(PM_TOOLBAR, "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2")}>
-              <span className="text-sm font-medium">{selectedCrIds.size} selected</span>
+            <div
+              className={cn(
+                PM_TOOLBAR,
+                "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2",
+              )}
+            >
+              <span className="text-sm font-medium">
+                {selectedCrIds.size} selected
+              </span>
               <div className="flex items-center gap-2">
                 <Select onValueChange={handleBulkStatusChange}>
                   <SelectTrigger className="h-8 w-[160px] text-sm">
@@ -304,11 +332,18 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {CR_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>{CR_STATUS_LABELS[s]}</SelectItem>
+                      <SelectItem key={s} value={s}>
+                        {CR_STATUS_LABELS[s]}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant="ghost" size="sm" aria-label="Clear selection" onClick={handleKeyboardClear}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Clear selection"
+                  onClick={handleKeyboardClear}
+                >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -343,7 +378,11 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
                 illustrationPreset="ticket"
                 title="No change requests"
                 description="Create a change request to get started."
-                action={canCreate ? { label: "New Change Request", onClick: handleNew } : undefined}
+                action={
+                  canCreate
+                    ? { label: "New Change Request", onClick: handleNew }
+                    : undefined
+                }
               />
             }
             filteredEmpty={

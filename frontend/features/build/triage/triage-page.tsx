@@ -76,8 +76,14 @@ export function TriagePage({ projectId }: TriagePageProps) {
   );
   const cursor = cursorTrail[cursorTrail.length - 1] ?? undefined;
   const hasPrevious = cursorTrail.length > 1;
-  const triageOwner = listFilters.value("ownerId") || undefined;
-  const triageSort = (listFilters.value("sort") as "created" | "updated" | "priority" | "dueDate" | undefined) || "created";
+  const ownerValue = listFilters.value("ownerId");
+  const triageOwner = ownerValue !== BUILD_FILTER_ALL ? ownerValue : undefined;
+  const sortValue = listFilters.value("sort");
+  const triageSort = (["created", "updated", "priority", "dueDate", "rank"] as const).includes(
+    sortValue as "created" | "updated" | "priority" | "dueDate" | "rank",
+  )
+    ? (sortValue as "created" | "updated" | "priority" | "dueDate" | "rank")
+    : "created";
   const urlStatus = listFilters.value("status");
   const triageStatus = urlStatus === BUILD_FILTER_ALL ? TRIAGE_STATUS : urlStatus;
   const {
@@ -268,7 +274,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
           ) : (
             <PmSection index={0}>
               {canUpdate && selectedIds.size > 0 && (
-                <BulkActionBar selectedCount={selectedIds.size} members={members ?? []} cycles={cycles ?? []} statuses={project?.statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkPriority} onBulkAssignee={handleBulkAssignee} onBulkCycle={handleBulkCycle} onClear={handleClearTriageKeyboard} />
+                <BulkActionBar selectedCount={selectedIds.size} members={members?.data ?? []} cycles={cycles ?? []} statuses={project?.statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkPriority} onBulkAssignee={handleBulkAssignee} onBulkCycle={handleBulkCycle} onClear={handleClearTriageKeyboard} />
               )}
               <PmStaggerList className="flex flex-col gap-2.5">
                 {tickets.map((ticket, index) => (

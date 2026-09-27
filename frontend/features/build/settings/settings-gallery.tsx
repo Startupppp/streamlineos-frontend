@@ -28,9 +28,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { TokenRow } from "./agent-token-list";
 
-function noop() {
-  return undefined;
-}
+const noop = () => undefined;
 
 const GALLERY_PROJECT_ID = 1;
 
@@ -42,10 +40,7 @@ const STUB_ACCESS: AccessResponse = {
   modules: {},
 };
 
-const STUB_ITERATION_SETTINGS: IterationSettings = {
-  defaultDurationWeeks: 2,
-  namingPrefix: "Sprint",
-};
+const STUB_ITERATION_SETTINGS: IterationSettings = { defaultDurationWeeks: 2, namingPrefix: "Sprint" };
 
 const STUB_RETENTION_SETTINGS: ProjectRetentionSettings = {
   projectId: GALLERY_PROJECT_ID,
@@ -254,9 +249,7 @@ function WorkflowReadyFrame() {
 
 export function SettingsGallery() {
   return (
-    <>
-      <h1>Settings surfaces</h1>
-      <div className="flex flex-col gap-8 p-6">
+    <div className="flex flex-col gap-8 p-6">
         <GalleryCase id="settings-views-ready" title="Views — ready state">
           <PageWrapper
             title="Saved Views"
@@ -493,13 +486,13 @@ export function SettingsGallery() {
                       revokedAt: null,
                     }}
                     onRevoke={noop}
+                    canRevoke={true}
                   />
                 </PmPanel>
               </PmSection>
             </PmPageShell>
           </PageWrapper>
         </GalleryCase>
-      </div>
-    </>
+    </div>
   );
 }

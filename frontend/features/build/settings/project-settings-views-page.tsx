@@ -15,7 +15,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { PmPageShell, PmPanel, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { ViewCard, type ViewItem } from "@/features/build/views/saved-views/view-card";
 import { CreateViewSheet } from "@/features/build/views/saved-views/create-view-sheet";
@@ -35,7 +36,7 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
   const canManage = useCan("build:workspace:manage");
   const listFilters = useBuildListFilters({ withSearch: true });
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const pager = useCursorPager();
+  const pager = useBuildCursorPager();
   const { data: viewPage, isLoading, isError, error, refetch } = useViews(projectId, { cursor: pager.cursor });
   const updateView = useUpdateView();
   const deleteView = useDeleteView();

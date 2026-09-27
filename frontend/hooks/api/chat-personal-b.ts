@@ -101,6 +101,7 @@ export function useEntityChannel(
 ) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: entityChannelQueryKey(entityType, entityId),
     queryFn: ({ signal }) =>
       apiClient.get<ChatChannelDetailWire | null>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal, chatEntityChannelLookupContract),

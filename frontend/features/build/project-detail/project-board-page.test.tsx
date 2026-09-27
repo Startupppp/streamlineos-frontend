@@ -35,9 +35,15 @@ const mockUseProject = jest.fn();
 const mockUseCycles = jest.fn(() => ({ data: [] }));
 const mockUseBulkUpdateTickets = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
 
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: (...args: unknown[]) => mockUseProject(...args),
+}));
+
+jest.mock("@/hooks/api/build/advanced", () => ({
   useCycles: (...args: unknown[]) => mockUseCycles(...args),
+}));
+
+jest.mock("@/hooks/api/build/tickets", () => ({
   useBulkUpdateTickets: (...args: unknown[]) => mockUseBulkUpdateTickets(...args),
 }));
 
@@ -469,6 +475,7 @@ describe("ProjectBoardPage — workload capacity", () => {
       expect.any(Number),
       expect.any(String),
       expect.any(String),
+      undefined,
       expect.objectContaining({ enabled: false }),
     );
   });
@@ -480,6 +487,7 @@ describe("ProjectBoardPage — workload capacity", () => {
       expect.any(Number),
       expect.any(String),
       expect.any(String),
+      undefined,
       expect.objectContaining({ enabled: true }),
     );
   });

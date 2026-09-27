@@ -21,13 +21,13 @@ jest.mock("next/navigation", () => ({
 
 const mockUseProject = jest.fn();
 
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: (...args: unknown[]) => mockUseProject(...args),
 }));
 
 const mockUseProjectBoardTickets = jest.fn();
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/tickets", () => ({
   useProjectBoardTickets: (...args: unknown[]) =>
     mockUseProjectBoardTickets(...args),
 }));

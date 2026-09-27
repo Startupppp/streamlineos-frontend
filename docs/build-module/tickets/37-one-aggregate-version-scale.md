@@ -14,8 +14,35 @@ Fixing the producers is not enough on its own: the watermark rows already writte
   > Migration 1374 is authored on disk with rollback. Not journalled or applied — orchestrator-only.
 - [x] The remediation is idempotent and safe to replay
 - [x] Any other aggregate type sharing this pattern is either fixed or recorded as out of scope with its reason
-- [ ] Verify two concurrent writes and repeated delivery for the same ticket: event identity is unique, delivery is idempotent, and the ordering policy does not silently discard a required earlier event delivered late
-  > Cannot earn without a live DB. Design reasoning is recorded in the progress section below.
+- [x] Verify two concurrent writes and repeated delivery for the same ticket: event identity is unique, delivery is idempotent, and the ordering policy does not silently discard a required earlier event delivered late
+  Earned 2026-09-27 on a real database. Instrument: PostgreSQL 18.0 at `127.0.0.1:5432`, database `replay2`,
+  cold-replayed from the journal. No production data, no production host. The earlier note said this could not be
+  earned without a live DB, which was true when it was written; this session stood one up.
+  `ticket-event-delivery-identity.db.spec.ts`, 8 tests, all pass.
+
+  **Event identity is unique.** Two concurrent `claim` calls for the same event leave exactly **one**
+  `inbox_records` row, enforced by `uniq_inbox_consumer_event` on `(producer_event_id, consumer_name)` rather
+  than by a read-then-write that a race could interleave.
+
+  **Delivery is idempotent, and the measurement corrected the test rather than the reverse.** The first version
+  of this spec asserted that exactly one of two concurrent claims is admitted. **Both are.** The unique index
+  gives one row, but the second caller finds that row `IN_FLIGHT` and reclaims it -- and the reclaim has no
+  lease: its `WHERE` clause is `status IN ('FAILED','IN_FLIGHT')` with no time predicate, and the table carries
+  no `claimed_at` column at all, only `created_at` and `processed_at`. So `claim` is **at-least-once delivery,
+  not mutual exclusion**, and the write that applies the event must be idempotent by itself; two workers racing
+  one event will both proceed, with `retry_count` incremented to 1. That matches the contract the class states
+  for itself, and it is now asserted explicitly instead of being assumed away by a test that wanted
+  exactly-once. A redelivery of an event already `COMPLETED` is refused.
+
+  **The ordering policy does not silently discard a superseded late event.** After version 9 completes, a late
+  version 4 is refused *and recorded* as `SKIPPED`, so the decision not to apply it is observable afterwards
+  rather than vanishing.
+
+  **Three controls, because each claim above passes for the wrong reason without one.** Two distinct events on
+  one ticket are both admitted, so none of this is a per-ticket lock. A later event after a completed one is
+  still admitted, so the skip is the ordering policy and not a stuck watermark. And the watermark is scoped per
+  ticket and per consumer -- a completed event on one ticket cannot skip an event on another, and one consumer
+  completing an event cannot skip the same event for a different consumer.
 - [ ] Before watermark repair, inventory affected outbox/inbox rows and document replay/deduplication behavior; do not blindly reset completed watermarks and resend customer notifications
   — **Inventory done; repair deliberately NOT performed, and 1374 is NOT applied.** This box's own
   warning is the reason. 1374 as authored runs

@@ -26,11 +26,8 @@ jest.mock("@/components/auth/require-module", () => ({
   RequireModule: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock("@/hooks/api/build", () => ({
-  useInfiniteProjects: (filters: unknown) => mockUseInfiniteProjects(filters),
-}));
-
 jest.mock("@/hooks/api/build/projects", () => ({
+  useInfiniteProjects: (filters: unknown) => mockUseInfiniteProjects(filters),
   useProject: () => ({ data: undefined, isError: false, error: null }),
 }));
 

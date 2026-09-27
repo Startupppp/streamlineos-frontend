@@ -172,16 +172,16 @@ Each completed slice includes:
 
 ## Release checklist
 
-- [ ] Every current/additional route is in `00-current-state-audit.md` and its page contract.
+- [ ] Every current/additional route is in `00-current-state-audit.md` and its page contract. **REFUTED 2026-09-27, census now corrected:** three shipped routes were absent from it entirely (`/knowledge/wiki/company-documents` and its `[linkedDocumentId]` detail, `/support/knowledge-gaps`); research briefs shipped at `/knowledge/research-briefs`, not the `/knowledge/wiki/research-briefs` the census specified; and `/knowledge/wiki/search` and `/knowledge/wiki/manage` were still recorded as observed 404s though both now exist. The census rows are fixed; the page contracts for the newly-listed routes are still missing, so this box stays open.
 - [ ] P0 customer jobs work without AI.
 - [ ] Detail, list, search, Ask, citations, analytics, exports, attachments, and notifications share authorization semantics.
 - [ ] Every collection is bounded and signals `hasMore`.
 - [ ] Expected revision protects content writes; idempotency protects retriable creates/bulk.
-- [ ] Revocation, restore, purge, queue replay, cache failure, replica lag, and provider outage drills pass.
-- [ ] Search relevance and citation correctness meet offline thresholds.
-- [ ] All page states pass keyboard/screen-reader/mobile review.
-- [ ] SLOs, alerts, runbooks, and cost limits are live before rollout.
-- [ ] Canary rollout has stop/rollback thresholds.
+- [ ] Revocation, restore, purge, queue replay, cache failure, replica lag, and provider outage drills pass. **BLOCKED 2026-09-27:** production is the only database; there is no non-production PostgreSQL to drill against, and a restore/failover rehearsal against production is prohibited. Revocation and cache-failure are unit-testable and partly covered; restore, replica lag and queue replay are not.
+- [ ] Search relevance and citation correctness meet offline thresholds. **BLOCKED 2026-09-27:** no labelled relevance set exists. Needs a judged query/answer corpus before a threshold means anything; a number without one is unfalsifiable.
+- [ ] All page states pass keyboard/screen-reader/mobile review. **BLOCKED 2026-09-27:** browser verification is out of scope for these sessions, and jsdom cannot observe focus order, screen-reader output or 375 px layout. Missing accessible descriptions were fixed on nine overlays from source, which is not the same as passing this review.
+- [ ] SLOs, alerts, runbooks, and cost limits are live before rollout. **BLOCKED 2026-09-27:** requires the deployed environment and an alerting backend; not assertable from this repository.
+- [ ] Canary rollout has stop/rollback thresholds. **BLOCKED 2026-09-27:** no canary mechanism exists — Railway ships every backend push to production directly. This gate needs a deploy pipeline first.
 - [ ] Superseded code is removed only after the evidence in `06-code-removal-and-reuse.md`.
 
 ## Stop-the-line conditions

@@ -15,6 +15,7 @@ let mockQuery: {
   error?: Error;
 } = { data: makePage([]), isLoading: false, isError: false };
 const mockDeleteMutate = jest.fn();
+const mockUsePageState = jest.fn();
 
 jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: { user: { id: "user-1" } } }),
@@ -28,15 +29,17 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanManage,
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/advanced", () => ({
   useViews: () => ({ ...mockQuery, refetch: jest.fn() }),
   useUpdateView: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteView: () => ({ mutate: mockDeleteMutate, isPending: false }),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: ({ isLoading, isError, isEmpty }: { isLoading: boolean; isError: boolean; isEmpty: boolean }) =>
-    isLoading ? "loading" : isError ? "error" : isEmpty ? "empty" : "ready",
+  usePageState: (opts: { isLoading: boolean; isError: boolean; isEmpty: boolean }) => {
+    mockUsePageState(opts);
+    return opts.isLoading ? "loading" : opts.isError ? "error" : opts.isEmpty ? "empty" : "ready";
+  },
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -84,7 +87,9 @@ jest.mock("@/components/ui/button", () => ({
 
 jest.mock("@/components/ui/table-pagination", () => ({
   TablePagination: () => <div data-testid="table-pagination" />,
-  useCursorPager: () => ({ cursor: null, hasPrevious: false, goNext: jest.fn(), goPrevious: jest.fn() }),
+}));
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
+  useBuildCursorPager: () => ({ cursor: null, hasPrevious: false, goNext: jest.fn(), goPrevious: jest.fn() }),
 }));
 
 jest.mock("@/features/build/views/saved-views/view-card", () => ({
@@ -355,6 +360,15 @@ describe("ProjectSettingsViewsPage — keyboard shortcuts (Requirement C3)", () 
     render(<ProjectSettingsViewsPage projectId={6} />);
     expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
       expect.objectContaining({ searchInputRef: expect.anything() }),
+    );
+  });
+});
+
+describe("ProjectSettingsViewsPage — permission key (Criterion 3)", () => {
+  it("passes the exact backend key build:view to usePageState — asserted not assumed", () => {
+    render(<ProjectSettingsViewsPage projectId={7} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:view" }),
     );
   });
 });

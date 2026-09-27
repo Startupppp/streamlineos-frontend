@@ -86,19 +86,48 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 ### AV-01 — P0: finish retrieval extraction and restore meaningful tests
 
 - [ ] Update production injection, imports, return types and tests to the final retrieval interface. The first audit run had **3 failing suites / 7 failing tests**: embedding TTL, search connection release, passage ACL fence. A later rerun after concurrent edits passed TTL, connection release and retrieval orchestration, but **the passage ACL fence still failed 2 tests** calling a removed method. Run affected Ask/search callers, a Nest registration/DI smoke test and both typechecks after the editing session settles. Do not silence failures or recreate pass-through wrappers to satisfy stale mocks.
+      **The failure list is stale, re-measured 2026-09-27.** `npx jest "kb-query-embedding-ttl|kb-search-connection-release|kb-search-acl-revision-passage-fence|kb-retrieval-facade-reports-channel-failure"` → 4 suites, 20 tests, 0 failing. The "passage ACL fence still failing" state was an intermediate artifact of concurrent editing, not a defect. Production injection now calls the outcome-returning methods; no pass-through wrapper was recreated. Whole module: `npx jest src/modules/kb/` → 282 suites, 2512 tests, 0 failing. **Remaining clauses: the Nest registration/DI smoke test and both typechecks have not been run on this revision** — the box stays open until they are.
 
 ### AV-02 — P0: make container policy consistent and test actual disclosure
 
 - [ ] Apply the agreed private-space/project rule to creator, owner, explicit member/role grant and ordinary visibility branches, with any privileged exception explicit. Cover restricted-space grant-only pages and revocation through detail, collection, FTS, vector candidates, prompt passages, citations, attachment download and export. Current SQL property tests are useful but insufficient; execute representative rows under the application DB role. Never authorize prompt content merely because its citation is hidden later.
+      **PARTLY — the rule is now applied; the real-row half is not.** A live gap was found and closed 2026-09-27: `buildIndexedBranch` carried two standalone container clauses added by `fe3d30809` — space membership and project membership — with **no visibility restriction at all**, so every member of a space or project could see `visibility = 'private'` pages inside it. Both now require `visibility IN ('org','public')` (`core/authorization/knowledge-page-scope.ts:115,121`). The creator, owner and created-by-membership clauses are unconditional and the explicit grant arm is a separate branch, so an author still reaches their own private page and a grantee still reaches a granted one — the tightening removes only access derived from container membership. 9 new tests in `knowledge-page-scope.spec.ts`; suite 98 passing. **Open clause: "execute representative rows under the application DB role"** — still unproven. SQL-shape tests cannot stand in for it, and the owner has authorized planting `[e2e]` fixtures inside a rolled-back production transaction to get it.
 
 ### AV-03 — P1: complete the write interface and atomicity proof
 
 - [ ] Make a page-change operation own or explicitly require the expected revision, revision increment, audit and outbox in the same transaction. Current `commitPageChange` accepts revisions already calculated by callers and does not write an audit. Replace constructor-injection-only coverage with behavioral checks for create, duplicate, move, restore, import, status/publication, support authoring and empty-content updates. Prove transaction rollback leaves neither a mutation nor an index event, and engagement does not reindex.
+      **PARTLY 2026-09-27.** One real defect found and fixed: the owner-change audit in `wiki/kb-pages.service.ts` ran as `audit.log` (best-effort, fire-and-forget) *outside* the `db.transaction` callback, so a crash between commit and dispatch dropped the audit record silently. It now runs `await this.audit.logCritical(...)` inside the transaction, which is what `common/audit/audit.service.ts:76` says transactional and security audit must use. The stale double in `kb-page-owner-change.spec.ts` declared only `log`; its two negative assertions would have passed vacuously against a method the service no longer calls, so they were re-pointed and a positive control added. New behavioural coverage in `wiki/kb-page-commit-atomicity.spec.ts` (7 tests). The "no provider call holds the transaction open" clause is CONFIRMED: `commitPageChange` defers notifications through `registerAfterCommit`, and `KbPageWriterService` has no embedding, AI or object-store dependency.
+      **Open clauses.** Seven other callers still write no audit at all — `kb-page-status.service.ts` (publish / archive / unarchive), `kb-page-public.service.ts` (setVisibility), `kb-page-tree.service.ts` (move / restore) and `kb-page-versions.service.ts` (restoreVersion). Consolidating them into `commitPageChange` needs an action string threaded through `CommitPageChangeInput`, which every caller must supply. The rollback proof ("neither a mutation nor an index event") is also not yet written.
 
 ### AV-04 — P1: preserve retrieval scope, provenance and failure state
 
-- [ ] Pass requested space/source/type/owner/status/verified filters consistently into candidate and passage queries. Current page candidate calls do not receive `spaceId` in `retrieveTopArticles`; source retrieval is given source IDs but no selected-space argument. Reject unsupported UI scope fields instead of implying they are applied.
-- [ ] Return typed per-channel outcomes for empty, disabled, degraded and failed. `retrieveDocumentPassages`/`retrieveTopSources` catch and return `[]`; a successful embedding then makes the facade report non-degraded results. An empty authorized result means no matching accessible evidence, not proof of an empty tenant corpus.
+- [x] **DONE 2026-09-27 — the claim was correct and current; four gaps, all `spaceId`.** Pass requested space/source/type/owner/status/verified filters consistently into candidate and passage queries.
+      **Why this mattered:** a filter accepted but not applied is worse than one rejected. The UI
+      told the user the answer was narrowed to one space while retrieval drew from every space.
+      **Measured coverage, after the fix:**
+
+      | Field | article keyword | article vector | page keyword | page vector | source retrieval |
+      |---|---|---|---|---|---|
+      | `spaceId` | already applied | already applied | **was missing → fixed** | **was missing → fixed** | **was missing → fixed** |
+      | `sourceIds` | n/a | n/a | n/a | n/a | already applied |
+      | `pageIds` | n/a | n/a | already applied | already applied | n/a |
+      | `verifiedOnly` | n/a | n/a | already applied | already applied | n/a |
+
+      A fourth gap turned up beyond the three above: the final wiki-page fetch in
+      `retrieveTopArticles` did not re-apply `spaceId` either, so it now does as a second gate.
+      **Threaded, not rejected** — `spaceId` is already honoured on the article paths, so
+      rejecting it would have broken working queries.
+      **Sources keep their global rows:** the filter is
+      `or(isNull(kbSources.spaceId), eq(kbSources.spaceId, spaceId))`, so org-wide sources stay
+      visible and only other specific spaces are excluded.
+      **The invariant that matters is preserved and tested:** every filter is ANDed with the
+      existing org and visibility predicates, so it can only narrow, never displace them.
+      **Tests:** `kb-space-scope-filter.spec.ts` (11). **Mutation-tested four ways** — removing
+      `spaceId` from each of the page keyword path, the page vector path, `retrieveTopSources`,
+      and the `retrieve → retrieveTopSources` hand-off each failed 2 of 11, so each guard bites
+      its own line rather than all four resting on one assertion.
+- [x] **DONE 2026-09-27.** Return typed per-channel outcomes for empty, disabled, degraded and failed. `retrieveDocumentPassages`/`retrieveTopSources` catch and return `[]`; a successful embedding then makes the facade report non-degraded results. An empty authorized result means no matching accessible evidence, not proof of an empty tenant corpus.
+      `RetrievalChannelKind` / `RetrievalChannelOutcome<T>` in `retrieval/kb-search-retrieval.service.ts`; all three channels now carry a kind. The documents channel was the last gap — `retrieveTopArticles` had no catch and no outcome, so `degraded.documents` derived only from `embedding.vectorLiteral === null` and a thrown article query escaped as an unhandled exception. `retrieveTopArticlesWithOutcome` closes it; `retrieval/kb-retrieval.service.ts` consumes all three via `channelSignalsDegradation`. Pinned by `kb-retrieval-facade-reports-channel-failure.spec.ts` (each failure assertion paired with an `empty` control, so the test reads the outcome kind rather than an empty array). `npx jest src/modules/kb/retrieval/` → 83 suites, 666 tests, 0 failing.
 - [ ] **PARTLY — ACL revisions done; provider provenance is genuinely absent and cannot be fixed from inside KB.** Persist actual source content/ACL revisions and provider context provenance.
       **ACL revisions — the claim is stale.** ~~`buildAskSourceRecords` and the original
       `buildSourceRecords` write `aclRevision: null`.~~ `buildSourceRecords` **does not exist**
@@ -169,24 +198,134 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 ### AV-06 — P1: finish measured query and search-quality evidence
 
 - [ ] Capture before/after app-role `EXPLAIN (ANALYZE, BUFFERS)` for collection UNION, full search, chunk semi-joins, facets and health queries. Use representative rows and grant density, including grant-only and restricted-space tenants; include query count, buffers, rows scanned, p95/p99 and minority-tenant retrieval recall. The historical 50k-page/100k-grant bad-plan record is useful but does not close the rewritten query. Use an isolated load environment; rollback fixtures in production still consume locks, WAL, CPU and storage and are not free.
-- [ ] Convert or explicitly time-bound the remaining `/kb/search` offset/count implementation and its whole-`contentText` fetch for snippets. Current `kb-search.service.ts` uses `.offset(offset)` and counts all matches. Produce bounded metadata/snippets in SQL and stable keysets. Preserve public contract compatibility during migration.
+- [ ] **PARTLY — the snippet fetch is fixed; the keyset cutover is deliberately NOT done, and should not be done without its client.** Convert or explicitly time-bound the remaining `/kb/search` offset/count implementation and its whole-`contentText` fetch for snippets.
+      **Fixed — the whole-`contentText` fetch, which was the real cost.** The rows query selected
+      the entire `contentText` column for up to 50 rows purely to build a 160-character snippet,
+      so every search shipped full TOASTed page bodies across the connection to Node and threw
+      almost all of it away. Now `left(contentText, KB_SNIPPET_CONTENT_CAP)` in SQL, capped at 500
+      — 3× the snippet length, so no snippet is truncated. `buildSnippet`, the response contract
+      and every ACL/org predicate are untouched.
+      `kb-search-snippet-bound.spec.ts` asserts the rendered projection contains `left(`, with a
+      control showing a raw column reference renders without it. Mutation-tested: reverting the
+      projection fails it alone, 1 of 2.
+      **Already fine — the offset.** `.offset()` is bounded at parse time by
+      `KB_SEARCH_MAX_PAGE = 200` × `pageSize ≤ 50`, so the worst case is offset 9,950, and
+      `kb-search-paging-bounds.spec.ts` already covers it. No change needed; the audit's concern
+      does not apply to this endpoint as configured.
+      **Deliberately NOT done — the keyset cutover.** `/kb/search` returns `total`, `page`,
+      `pageSize` and `totalPages`; the frontend parses all four through `kbSearchResponseContract`
+      and `useKbSearch` renders numbered pagination from them. Removing the total to produce a
+      keyset would be a pagination cutover shipped without its client — the exact regression
+      FE-125 and BE-25 exist to prevent — and the page would lose its pager the moment the
+      backend deployed. **The sequence, for whoever picks this up:** (1) add a cursor to the
+      response *alongside* `total`, a backward-compatible extension; (2) move `useKbSearch` to
+      `useInfiniteQuery` with `getNextPageParam` and ship it; (3) only then retire `total` and
+      `totalPages`. Steps 1 and 3 without 2 is the regression.
+      **Also still open:** the `COUNT(*)` over the full match set on every search, which the
+      keyset work would remove; it is the remaining unbounded piece of this endpoint.
 
 ### AV-07 — P0/P1: purge must respect holds and finish outside request occupancy
 
-- [ ] **P0:** Enforce holds on every descendant, not just the root. `hardDelete` checks the root's `legalHold`, then `collectSubtreeIds` includes all descendants and the delete targets them without a hold predicate. Lock/recheck the affected scope or abort the operation atomically; add held-child/unheld-root, concurrent hold, and bulk/retention cases. Verify allowed lifecycle state before hard deletion.
+- [x] **DONE 2026-09-27 — the finding was exactly right, and the bug was unrecoverable.** **P0:** Enforce holds on every descendant, not just the root.
+      **Confirmed as described.** `hardDelete` read `legalHold` on the root only, `collectSubtreeIds`
+      then gathered every descendant, and the delete targeted them with no hold predicate. Deleting
+      an unheld parent **permanently destroyed a child under legal hold** — no soft-delete, no
+      recovery, and a compliance breach rather than merely a data-loss bug.
+      **Fix, in two layers.** `assertNoLegalHoldInSubtree(orgId, subtreeIds)` runs over the whole
+      subtree immediately after `collectSubtreeIds` and **before any destructive store work**
+      (`kb-page-trash.service.ts`). Placement is the point: `openMultiStoreLedger`,
+      `recordPageAttachmentPurge` and `executePreDeleteStores` already purge chunks, blobs, grants
+      and caches, so a refusal raised after them would abort with the page row intact but its
+      dependent stores already gone. The error names each held page and its reason.
+      **The concurrent-hold race the audit asked about is closed atomically.** Inside the final
+      delete transaction a second check takes `.for("update")` on any held row in the subtree and
+      throws if one appeared mid-flight, and the delete predicate itself now carries
+      `eq(kbPages.legalHold, false)`. Belt and braces: the lock loses the race only if the hold
+      lands after the lock, and the predicate catches that.
+      **Tests:** `kb-page-trash-subtree-legal-hold.spec.ts` — written failing-first, bite plus
+      control. The bite (unheld parent, held child) failed and the **control passed**, which is
+      what proves the refusal is the hold and not a blanket block; the bite also asserts
+      `deletedRowSets === 0`, so a refusal that still deleted would fail. Both pass now.
+      **Collateral, repaired separately:** the new query broke 13 tests across 6 suites whose
+      doubles had no `select` chain. All repaired as test doubles only — no production file
+      touched, no assertion weakened. **Full KB suite: 275 suites / 2431 tests, 0 failing.**
+      **The bulk path, checked rather than assumed — and it had a smaller bug of its own.**
+      `emptyTrash` does **not** expand to subtrees: it lists trashed pages filtered by
+      `eq(kbPages.legalHold, false)` and deletes exactly those ids, so it never had the descendant
+      blind spot. What it did have was a **select-then-delete race** — the `DELETE` carried only
+      `orgId` and `inArray(id, ids)`, so a hold placed between listing the batch and deleting it
+      destroyed a held page anyway. The predicate now carries `eq(kbPages.legalHold, false)`.
+      `kb-empty-trash-hold-race.spec.ts` asserts it in the **rendered SQL of the page delete
+      specifically**, with a control proving the store-purge deletes in the same flow carry no
+      such predicate — otherwise the assertion would pass by reading any delete at all.
+      Mutation-tested: removing the predicate fails it alone, 1 of 2.
+      **Still not done, named rather than quietly dropped:** "verify allowed lifecycle state
+      before hard deletion" — `hardDelete` does not require the page to be in the trash first, so
+      a live page can be hard-deleted without passing through soft delete. That is a separate
+      lifecycle question, not a hold question, and is left open.
 - [ ] **P1:** Finish durable bounded purge commands, per-store retry and backpressure. Trace request transaction exit through blob/cache work; prove there is no nested second borrow or connection held during outbound I/O. Run a ten-concurrent-purge/provider-brown-out test against a small pool with interactive traffic and cancellation. Do not infer end-to-end safety from helper tests alone.
 
 ### AV-08 — P1: finish useful module interfaces, not mechanical file splits
 
 - [ ] Inventory remaining external table reads and give billing/lifecycle needs explicit bounded interfaces or documented privileged exceptions. Keep distinct authenticated, public, maintenance and linked-HR access contracts. Centralize variant selection without erasing HR/source/attachment identity. Replace `KbDocumentQueryService` leading-wildcard scans with indexed lexical retrieval; bound the merged result, escape search syntax consistently, and preserve the acyclic dependency graph.
 
+**`KbDocumentQueryService` half addressed 2026-09-27 — commit `9d4966d3d`. Three of the four sub-claims were true; the fourth was not.**
+
+- **Leading-wildcard scans — TRUE.** `searchDocuments` built `` `%${query}%` `` and fed it to `ILIKE` on *both* the article and page branches. A leading wildcard cannot use a btree index, so both degraded to sequential scans. BE-49 violation. Replaced with `to_tsvector('english', title) @@ websearch_to_tsquery('english', $query)`.
+- **Unbounded merge — TRUE.** Each branch was capped at `cap`, but the merged array was returned uncapped and could return `2 × cap` rows. Bounded.
+- **Escaping — TRUE, and the same root cause.** Because user text was concatenated into a LIKE pattern, a query of `100%` rendered the param `%100%%` and `my_field` left `_` as a single-character wildcard. `websearch_to_tsquery` takes the query as a bound parameter and tolerates arbitrary user text — including `a & b` and `C++` — without throwing.
+- **Acyclic graph — FALSE as a defect.** The graph was already acyclic and the change adds no imports. Nothing to fix.
+
+Verified by mutation, independently re-run: reverting the page predicate to `ILIKE` turns 5 of the 12 new tests red; reverting the merge cap turns 1 red. Every negative assertion is paired with a positive control that proves the SQL was actually produced. 16 tests pass in the directory; `modules/kb` holds 0 typecheck errors.
+
+**Two things this deliberately does not claim.** Index usage is *unverified and unverifiable here* — production is the only database, and a GIN expression index on `to_tsvector` is dead under RLS because the function is not leakproof. Both predicates are still sequential scans; what changed is correctness and escaping, not measured speed. Closing that properly needs the BE-80 pattern — a `SECURITY DEFINER` function returning bare ids, so the index is usable outside the caller's RLS, with the caller re-selecting those ids under RLS to enforce authorization. That migration is **described but not authored**, and applying it is a production decision.
+
+And the match semantics changed: word matching replaces substring matching, so an arbitrary fragment no longer matches mid-word. English stemming absorbs most of this, the caller is an LLM tool passing natural terms, and `z.string().min(1)` on the tool input means an empty query can no longer return the whole corpus — which is a bounded-read improvement. Recorded rather than left implicit.
+
+**Referred out — not KB's to fix.** The same tool, `modules/ai/core/tools/self-digest-tools.ts:206,223`, still builds `` `%${input.query}%` `` and runs `ILIKE` against `onboarding_documents.file_name`. That is a live BE-49 violation in the AI module, owned by another session. It also leaves one merged user-facing result set running **two different match semantics** — a substring hit on an onboarding document and a word hit on a KB page — so the same query can return one and not the other. KB's half is fixed; the AI half needs its owner.
+
 ### AV-09 — P1: retire only proven duplicates and keep needed UI
 
 - [ ] Record retained owner, route contract and callers for each R1-C10 candidate, including public/API consumers and scheduled jobs. Preserve grants/member management, useful verification and required redirects. Verify deregistered routes have no promised consumers, then remove dead controller/service/schema/test files together. Review current help-centre ownership and module registration after the concurrent changes; no wholesale deletion from the old 54-route count.
 
+**Module-registration census, 2026-09-27.** The module-registration half is now measured. KB declares 36 controllers. Six are referenced by **zero** `*.module.ts` anywhere under `backend/src` — not merely outside `modules/kb` — and there are no barrel files, so no spread could hide a registration:
+
+| Unregistered controller | File |
+|---|---|
+| `KbWikiAnalyticsController` | `analytics/kb-wiki-analytics.controller.ts` |
+| `KbArticlesController` | `help-centre/kb-articles.controller.ts` |
+| `KbAuthoringController` | `help-centre/kb-authoring.controller.ts` |
+| `KbCategoriesController` | `help-centre/kb-categories.controller.ts` |
+| `KbCommentsController` | `help-centre/kb-comments.controller.ts` |
+| `KbVerificationController` | `help-centre/kb-verification.controller.ts` |
+
+`kb-help-centre.module.ts:25-31` mounts only `KbArticleAiController`, `KbAiFeedbackController`, `KbFromTicketController`, `KbAnalyticsController` and `KbWidgetController`. Nest mounts nothing else, so these six define no reachable route. This confirms the duplicate-analytics finding: `KbWikiAnalyticsController` is the unreachable one; `help-centre/kb-analytics.controller.ts` is live.
+
+Two consequences, neither of which authorizes deletion:
+- Declaring `@Controller("kb")` does not make a route exist. Any audit item that inferred a route's existence from a controller file must be re-derived from the module arrays.
+- Deregistration did **not** make the underlying services dead. `KbArticlesService` is still injected by `support/kb-gap/support-kb-gap.service.ts`, exactly as `06-code-removal-and-reuse.md` records. The controllers are unreachable; their services are not.
+
+Removal stays blocked under the owner's standing retain-don't-delete rule. Recorded as a census, which is what this item asks for.
+
 ### AV-10 — P1: contracts and reachable UI
 
 - [ ] Verify each migrated envelope through the real HTTP parser and query hook, not a hook mock that already returns an array. Include from-ticket create success/idempotent retry, grants create/list parity, export history and each response projection. Update `selectFlatPages` documentation to describe its actual selected result, and retain raw page metadata where needed.
+
+**Top-level shape parity measured 2026-09-27 — every KB list contract matches its backend `@ResponseSchema`.** This closes the array-vs-envelope class, which is the failure that put `/knowledge/wiki/import` behind the error boundary on an HTTP 200. `check:contract-parity` compares fields *within* an object and produces no finding at all for a top-level array-vs-envelope difference, so this had to be checked by hand.
+
+| Route | Backend `@ResponseSchema` | Frontend contract | |
+|---|---|---|---|
+| `/kb/pages/recent`, `/kb/pages/favorites` | `kbPageListSchema` = `z.array` | `kbPageListContract` = `z.array` | match |
+| `/kb/pages/:pageId/comments` | `kbPageCommentListSchema` = `z.array` | `kbPageCommentListContract` = `z.array` | match |
+| `/kb/pages/:pageId/record-links` | `kbRecordLinkListSchema` = `z.array` | `kbRecordLinkListContract` = `z.array` | match |
+| `/kb/spaces/:spaceId/members` | `kbSpaceMemberListSchema` = `z.array` | `kbSpaceMemberListContract` = `z.array` | match |
+| `/kb/import-jobs`, `/kb/export-jobs` | `cursorPageSchema` | `Page<T>` envelope, `pagination.nextCursor` | match, previously broken |
+
+Two things this specifically rules out. The `/kb/pages` collection cutover did **not** introduce a mismatch: that route returns the `kbPageCollectionPageSchema` envelope, and `kbPageListContract` — despite the name — is never applied to it, only to the two bare-array `recent`/`favorites` routes. And the four dead bare-array fossil contracts recorded earlier are gone; the four bare-array contracts that remain are all live and all correct.
+
+**Still open, and the box stays unchecked for it.** This is static shape parity, not the item's actual requirement. Nothing here exercised the real HTTP parser against a running backend, so an in-object field drift — which is what `check:contract-parity` *does* see, and therefore the weaker risk — is confirmed only as far as that gate reaches. The from-ticket idempotent-retry and export-history paths named in this item are untested by the above.
+
+`selectFlatPages` is confirmed to return `T[]` and to discard the envelope (`frontend/lib/api/select-flat-pages.ts:14-16`). That is correct **only** under `useInfiniteQuery`, where `hasNextPage` comes from the query rather than the selected result; all six consumers do use it that way. The item asks for its documentation to be updated, which cannot be done in source under the no-comments rule — the description belongs in a test name or here, and it is now here.
 - [x] **DONE 2026-09-27 — and it was nine overlays, not one.** Fix `SpaceMembersSheet`'s missing accessible description.
       `SheetDescription` added and a guard test written
       (`space-members-sheet.test.tsx`, "gives the dialog an accessible description…"). It asserts
@@ -232,10 +371,26 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 ### AV-12 — P1: bound the PII decision and reconcile terminology
 
 - [ ] Amend ADR-0001's broad PostgreSQL claims while retaining the chosen application scan; document runtime/migration privileges and the controlled direct-write scan or quarantine path. Test every scanned field on every legitimate writer, plus linked-document revocation. Treat prompt-injection defenses separately from PII regexes. Reconcile the glossary with AV-02 and AV-04; a citation policy must never widen provider disclosure. This document supplies the corrected KB decision; the owning HR/backend ADR still needs its corresponding edit.
+      **PARTLY 2026-09-27 — the ADR is amended.** `backend/docs/adr/0001-no-db-trigger-for-scanned-document-field-pii-guard.md`, four changes. One of its claims was simply false: "`SET ROLE` defeats role-based checks for the same reason" — `SET ROLE` requires a granted membership, not a catalog builtin, so the escalation runs the other way (`streamline_admin` can assume `streamline_app`, not the reverse). The runtime/migration privilege split is now explicit — `APP_DATABASE_URL` → `streamline_app`, RLS-bound, no BYPASSRLS; `DATABASE_URL` → `streamline_admin`, BYPASSRLS, migrations only — together with the fact that production Aurora is the only Postgres environment. A new paragraph records that `app.current_org_id()` is not leakproof, that this kills GIN/trigram and expression indexes under RLS, that `LEAKPROOF` cannot be declared on Aurora, and that a missing GRANT and a missing RLS policy both surface as `42501`. The controlled direct-write / quarantine path is documented in Consequences.
+      **Open clauses: "test every scanned field on every legitimate writer, plus linked-document revocation" is not done, and the owning HR/backend ADR has not had its corresponding edit.** The box stays open on those two.
 
 ### AV-13 — P1: migration and release proof
 
 - [ ] Reconcile new KB migration files, journal entries, rollback paths and actual database hashes/schema at the deployment being released. `1370_kb_chunk_acl_dead_index.sql` was on disk but not in the journal at this audit checkpoint. Authored, journalled, applied and verified are four separate states. The old 1174 cutover evidence remains historical; do not reapply it. Keep rejected 1347 outside execution until a new decision supersedes ADR-0001. Re-run targeted tests on the final source revision; do not declare another session's dirty changes deployed.
+      **PARTLY 2026-09-27 — the paper reconciliation is complete.** All 28 KB migrations from 1196 to 1370 reconciled against `migrations/meta/_journal.json`: filename, journal entry, `idx`, `when`, rollback file, idempotency. `1370_kb_chunk_acl_dead_index` sits at `idx 1137`, `when 1803093626725`, with no new collision — the whole journal array was read, not its tail, which is precisely how the earlier collision with `1396_build_sprint_cycle_chain_repair` was missed. Two P2 defects found: `1350_kb_acl_branch_indexes` is **unjournalled and has no rollback**, and `1360_retire_app_search_kb_chunk_ids` is **unjournalled and not idempotent**. An unjournalled migration never runs while `db:migrate` still prints success (BE-58), so both are deploy landmines if a live call site already depends on them. The ordering violations at `0619` and `1155` are pre-existing, not introduced here. Full table in `sessions/LEDGER-PATCH-M6.md`.
+      **Open clause: the hash/schema comparison against the deployment being released.** That is a read-only probe of `drizzle.__drizzle_migrations` and is within the owner's authorization; it has not been run yet. Authored, journalled, applied and verified remain four separate states and only the first two are established here.
+
+**1370 re-checked 2026-09-27 — still unjournalled, and the journal has run past it.** `1370_kb_chunk_acl_dead_index.sql` and `1370_kb_chunk_acl_dead_index_rollback.sql` are both on disk. `migrations/meta/_journal.json` contains no `1370` tag, and its highest tags are now 1390–1395. Under BE-58 an unjournalled file never runs while `db:migrate` still prints success, so this migration has never executed and cannot execute as things stand.
+
+What it does: `DROP INDEX idx_kb_chunks_org_page_acl` on `kb_article_chunks`, guarded by two `DO`-block preconditions (the table must exist; the index must still exist) and an `ASSERT` post-check.
+
+Consequence of it never running is **write amplification, not an outage.** No reader depends on a dead index, so nothing 42P01s. But PostgreSQL still maintains every index on every insert and update, and `kb_article_chunks` is written in bulk on the reindex path — so the dead index is charged against exactly the operation that has to scale. This is a cost item, not a correctness one, and it should not be described as a live break.
+
+**Resolved 2026-09-27 (owner decision): made idempotent, then journalled — commit `4980aea28`.** Journalling it unchanged would not have been a free fix. The second precondition `RAISE`d when `idx_kb_chunks_org_page_acl` was already absent, so arming the file would have failed the next `db:migrate` and blocked every migration behind it — in exactly the case where the migration's desired end state had already been reached. That precondition is removed; `DROP INDEX IF EXISTS` plus the surviving `ASSERT` post-check already make it correct and idempotent, and the rollback was already `CREATE INDEX IF NOT EXISTS`. The table-exists precondition is retained, because an absent table is a real error rather than a reached end state.
+
+Editing the file was permissible only because it had never been applied — BE-60 protects applied migrations, whose hash is their identity. Journal entry is `idx` 1136, strictly increasing in both `idx` and `when`. The tag sorts below 1395, which is cosmetic: drizzle orders by journal position, not tag number.
+
+**Not applied, and deliberately so.** This item's own framing is the right one — authored, journalled, applied and verified are four separate states, and this advances only the first two. Production is the only database; applying it is a production change and remains the owner's call. Two pre-existing `idx`/`when` ordering violations elsewhere in the journal (`0619_chain_creates_what_production_has`, `1155_build_cycles_drift_reconcile`) were observed while validating this entry and are not introduced by it.
 
 ### AV-14 — P1: authorization cache and effective test coverage
 

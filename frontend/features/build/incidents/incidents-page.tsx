@@ -6,12 +6,9 @@ import { Plus, Siren } from "lucide-react";
 import { toast } from "sonner";
 import { useIncidents, useDeleteIncident } from "@/hooks/api/build/incidents";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IncidentSheet } from "./incident-sheet";
@@ -20,6 +17,7 @@ import type { Incident } from "@/hooks/api/build/incidents-schema";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
@@ -104,12 +102,6 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
 
   const { data: membersData } = useOrgMembers(1, 100);
   const deleteIncident = useDeleteIncident();
-  const pageState = usePageState({
-    permission: "build:incidents:view",
-    isLoading,
-    isError,
-    error,
-  });
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
   const all = useMemo(
@@ -182,6 +174,8 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     (value: string) => listFilters.setValue("severity", value),
     [listFilters],
   );
+
+  const handleNextPage = useCallback(() => void fetchNextPage(), [fetchNextPage]);
 
   const handleOpenFocused = useCallback(
     (index: number) => { router.push(`/build/${projectId}/incidents/${all[index].id}`); },
@@ -319,24 +313,32 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
               status or severity filter to see more.
             </p>
           ) : null}
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton
-                mobileCards
-                rows={12}
-                headers={INCIDENTS_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<Incident>
+            permission="build:incidents:view"
+            rows={displayed}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            mobileCard={renderMobileCard}
+            loadingHeaders={INCIDENTS_TABLE_HEADERS}
+            loadingRows={12}
+            pagination={{
+              mode: "cursor",
+              pageSize: 25,
+              hasMore: Boolean(hasNextPage),
+              hasPrevious: false,
+              onNext: handleNextPage,
+            }}
+            isFetchingMore={isFetchingNextPage}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="ticket"
                 title="No incidents found"
                 description="Create an incident to start tracking."
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
                 action={
                   canManage
                     ? { label: "New Incident", onClick: handleNew }
@@ -344,25 +346,17 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
                 }
               />
             }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="ticket"
+                title="No incidents match your filters"
+                description="Try adjusting the filters to see more incidents."
+                onClearFilters={listFilters.clearAll}
+              />
+            }
             onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <DataTable<Incident>
-              data={displayed}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              className={CONTENT_FILL_PANEL}
-              mobileCard={renderMobileCard}
-              pagination={{
-                mode: "cursor",
-                pageSize: 25,
-                hasMore: Boolean(hasNextPage),
-                hasPrevious: false,
-                onNext: () => void fetchNextPage(),
-              }}
-              isLoading={isFetchingNextPage}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 

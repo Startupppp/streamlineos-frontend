@@ -8,7 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import {
   useReleases,
   useDeleteRelease,
@@ -76,7 +76,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   const listFilters = useBuildListFilters({
     filters: RELEASE_FILTER_DEFINITIONS,
   });
-  const pager = useCursorPager(listFilters.resetKey);
+  const pager = useBuildCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const statusFilterValue = listFilters.value("status");

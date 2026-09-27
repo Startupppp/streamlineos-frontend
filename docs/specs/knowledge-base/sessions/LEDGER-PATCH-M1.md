@@ -416,3 +416,117 @@ No git state commands were run — `status`/`diff`/`log` only. `REQUIREMENT-LEDG
 8. **`openapi.json` regeneration** (inherited from L6). L6's HANDOFF still applies — the
    vendored contract at `frontend/contracts/openapi.json` needs regenerating after all lanes
    land, to pick up the new `dismiss` endpoint and `impact` field.
+
+---
+
+# LEDGER-PATCH-M1 — Session 2: AV-01 and AV-04 (retrieval channel outcomes)
+
+Lane M1. 2026-09-27. Scope: `backend/src/modules/kb/retrieval/**` only.
+
+---
+
+## AV-01 item at line 88 — finish retrieval extraction and restore meaningful tests
+
+**CONFIRMED-DONE (item is stale).**
+
+The first audit recorded 3 failing suites / 7 failing tests: embedding TTL, search connection release, passage ACL fence. A subsequent rerun after concurrent edits found 3 suites passed / 1 still failed (passage fence, 2 tests: `svc.retrieveDocumentPassages is not a function`).
+
+Run today:
+
+```
+cd D:/projects/personal/Streamlineos/backend
+npx jest "kb-query-embedding-ttl|kb-search-connection-release|kb-search-acl-revision-passage-fence|kb-retrieval-facade-reports-channel-failure" --silent
+Result: Test Suites: 4 passed, 4 total — Tests: 20 passed, 20 total
+```
+
+All four suites pass. The passage fence (`kb-search-acl-revision-passage-fence.spec.ts`) now calls the correct method (`svc.retrieveDocumentPassages` — which exists as a wrapper around `retrieveDocumentPassagesWithOutcome`). No changes were required to make these pass; the concurrent editing session had already landed the fix.
+
+**Interface verification.** The production injection in `kb-retrieval.service.ts` correctly calls:
+- `this.search.retrieveTopSourcesWithOutcome` (not the bare `retrieveTopSources`)
+- `this.search.retrieveDocumentPassagesWithOutcome` (not the bare `retrieveDocumentPassages`)
+
+Both methods are present in `kb-search-retrieval.service.ts` with proper `RetrievalChannelOutcome<T>` return types and catch blocks that return `{ kind: "failed", results: [] }`.
+
+**Item verdict:** CONFIRMED-DONE. The stale failure count was from an intermediate state during concurrent editing.
+
+---
+
+## AV-04 item at line 125 — typed per-channel outcomes for empty / disabled / degraded / failed
+
+**FIXED.**
+
+### Gap confirmed
+
+`retrieveTopArticles` in `kb-search-retrieval.service.ts` had no try/catch and returned `RetrievedSource[]` with no channel kind. The facade's `degraded.documents` was computed solely from `embedding.vectorLiteral === null` — meaning:
+
+1. If `retrieveTopArticles` threw a DB error, the entire `retrieve()` call threw rather than returning a gracefully degraded result.
+2. A successful embedding + thrown article query was indistinguishable from a successful embedding + empty authorized corpus.
+
+`retrieveDocumentPassages` and `retrieveTopSources` both already had `WithOutcome` variants (with `kind: "failed"` catch blocks); `retrieveTopArticles` did not.
+
+### Fix applied
+
+**`kb-search-retrieval.service.ts`:**
+- Added `retrieveTopArticlesWithOutcome(...)` containing the full implementation with a wrapping `try/catch`. Returns `{ kind: "disabled" }` for empty query, `{ kind: "empty" }` for no candidates or no results, `{ kind: "degraded" }` when keyword fallback (vector null), `{ kind: "ok" }` on success, `{ kind: "failed" }` on any thrown error.
+- `retrieveTopArticles` now delegates to `retrieveTopArticlesWithOutcome` and returns `.results` — preserving the existing interface for the many call sites (`kb-research-brief.graph.ts`, spec doubles, etc.) that do not need the kind.
+
+**`kb-retrieval.service.ts`:**
+- Changed the `Promise.all` from `this.search.retrieveTopArticles(...)` to `this.search.retrieveTopArticlesWithOutcome(...)`.
+- Extracts `documentsKind` from `docsOutcome.kind`.
+- `degraded.documents` is now `embeddingFailed || channelSignalsDegradation(documentsKind)`, so a `kind: "failed"` outcome sets `degraded.documents = true` even when the embedding succeeded.
+
+### Failing-first test methodology
+
+Three new tests added to `kb-retrieval-facade-reports-channel-failure.spec.ts` **before** fixing the service:
+
+```
+RED run (before fix):
+  Tests: 3 failed, 7 passed, 10 total
+  FAILED: "reports documents degraded when the documents channel FAILED..."
+  FAILED: "CONTROL: reports documents NOT degraded when genuinely returned nothing..."
+  FAILED: "consumes the outcome-returning articles method..."
+```
+
+Each failed for the right reason: the facade called `retrieveTopArticles` (which returned `[ARTICLE]` from the mock) rather than `retrieveTopArticlesWithOutcome`, so `documents !== []` and `degraded.documents` was `false` regardless of the outcome kind override.
+
+After fixing both service files:
+
+```
+GREEN run:
+  PASS src/modules/kb/retrieval/kb-retrieval-facade-reports-channel-failure.spec.ts
+  PASS src/modules/kb/retrieval/kb-retrieval.service.spec.ts
+  Tests: 22 passed, 22 total
+```
+
+### Collateral mock repairs
+
+The facade change from `retrieveTopArticles` to `retrieveTopArticlesWithOutcome` broke three other suites whose mocks did not include the new method:
+
+- `kb-space-scope-filter.spec.ts` — two inline mock objects (lines 230-241, 260-270); added `retrieveTopArticlesWithOutcome` to both.
+- `kb-retrieval-hot-path.spec.ts` — spy on `retrieveTopArticles` to capture the `embedding` arg; changed spy to `retrieveTopArticlesWithOutcome` with updated return type.
+- `kb-retrieval.service.spec.ts` — three references updated: the call count assertion (line 97), the embedding-capture spy (lines 112-118), and the empty-docs spy (line 252).
+
+All repairs are test-double only — no assertion was weakened.
+
+### Final suite run
+
+```
+cd D:/projects/personal/Streamlineos/backend
+npx jest "src/modules/kb/retrieval/"
+Result: Test Suites: 83 passed, 83 total — Tests: 666 passed, 666 total
+```
+
+(3 net new tests: the facade doc-channel tests; mock repairs restored the broken collateral suites.)
+
+### Referred-out findings
+
+None. All callers of `retrieveTopArticles` outside the retrieval module (e.g., `kb-research-brief.graph.ts:124`) use the unwrapping wrapper and are unaffected.
+
+### Files changed (this session)
+
+- `backend/src/modules/kb/retrieval/kb-search-retrieval.service.ts` — added `retrieveTopArticlesWithOutcome`; made `retrieveTopArticles` delegate to it
+- `backend/src/modules/kb/retrieval/kb-retrieval.service.ts` — call `retrieveTopArticlesWithOutcome`; propagate `documentsKind`; include it in `degraded.documents`
+- `backend/src/modules/kb/retrieval/kb-retrieval-facade-reports-channel-failure.spec.ts` — added `retrieveTopArticlesWithOutcome` to `makeSearch`; added 3 new tests (2 assertions + 1 method-consumption check)
+- `backend/src/modules/kb/retrieval/kb-retrieval.service.spec.ts` — added method to mock; updated 3 spy sites
+- `backend/src/modules/kb/retrieval/kb-space-scope-filter.spec.ts` — added method to 2 inline mocks
+- `backend/src/modules/kb/retrieval/kb-retrieval-hot-path.spec.ts` — updated spy to new method name

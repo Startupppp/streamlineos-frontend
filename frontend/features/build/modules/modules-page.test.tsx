@@ -9,7 +9,7 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/advanced", () => ({
   useModulePages: jest.fn(),
   useCreateModule: jest.fn(),
 }));
@@ -125,7 +125,7 @@ jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 
-import { useModulePages, useCreateModule } from "@/hooks/api/build";
+import { useModulePages, useCreateModule } from "@/hooks/api/build/advanced";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 

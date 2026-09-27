@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Pencil, IndianRupee, TrendingUp } from "lucide-react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { DataTableSkeleton, DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -10,9 +11,21 @@ import { CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { NamedUser } from "@/lib/person-display";
-import type { Risk, TestCase, Decision, Approval, ApprovalStatus, TestRunResult, TestResultStatus, TestCasePriority } from "@/types/projects";
+import type { Risk, TestCase, Decision, Approval, ApprovalStatus, TestRunResult } from "@/types/projects";
 import type { Incident } from "@/hooks/api/build/incidents-schema";
-import type { OrgMember } from "@/hooks/api/organization";
+import { createAppQueryClient } from "@/components/providers/query-provider";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import {
+  GALLERY_STUB_ACCESS,
+  GOVERNANCE_RISK_ROWS,
+  GOVERNANCE_QA_ROWS,
+  GOVERNANCE_INCIDENT_ROWS,
+  GOVERNANCE_INCIDENT_MEMBERS,
+  GOVERNANCE_DECISION_ROWS,
+  GOVERNANCE_APPROVAL_ROWS,
+  GOVERNANCE_QA_RUN_RESULTS,
+} from "@/features/build/shared/build-list-fixtures";
 import {
   buildTestCaseColumns,
   TestCaseMobileCard,
@@ -57,163 +70,6 @@ const OWNERS: Record<string, NamedUser> = {
   user_priya: { firstName: "Priya", lastName: "Nair" },
   user_daniel: { firstName: "Daniel", lastName: "Okafor" },
 };
-
-const RISK_LEVELS = ["low", "medium", "high"] as const;
-const RISK_STATUSES = [
-  "open",
-  "mitigating",
-  "monitoring",
-  "accepted",
-  "closed",
-] as const;
-
-const RISK_ROWS: Risk[] = Array.from({ length: 8 }, (_, i) => ({
-  id: i + 1,
-  orgId: "org_gallery",
-  projectId: 1,
-  riskNumber: 100 + i,
-  title: `Risk ${i + 1}: dependency on external vendor ${i + 1}`,
-  description: null,
-  probability: RISK_LEVELS[i % RISK_LEVELS.length],
-  impact: RISK_LEVELS[(i + 1) % RISK_LEVELS.length],
-  status: RISK_STATUSES[i % RISK_STATUSES.length],
-  ownerId: i % 2 === 0 ? "user_priya" : "user_daniel",
-  mitigation: null,
-  linkedTicketId: null,
-  createdBy: null,
-  createdAt: "2026-01-01T00:00:00.000Z",
-  updatedAt: "2026-01-01T00:00:00.000Z",
-  deletedAt: null,
-}));
-
-const TEST_CASE_PRIORITIES = ["low", "medium", "high"] as const;
-const AUTOMATION_STATUSES = ["manual", "automated", "planned"] as const;
-const COMPONENTS = ["Checkout", "Reporting", "Auth", null] as const;
-
-const QA_ROWS: TestCase[] = Array.from({ length: 8 }, (_, i) => ({
-  id: i + 1,
-  orgId: "org_gallery",
-  projectId: 1,
-  suiteId: null,
-  caseNumber: 200 + i,
-  title: `Test case ${i + 1}: verify ${["login", "checkout", "report", "filter"][i % 4]} flow`,
-  preconditions: null,
-  steps: null,
-  expectedResult: null,
-  priority: TEST_CASE_PRIORITIES[i % TEST_CASE_PRIORITIES.length],
-  component: COMPONENTS[i % COMPONENTS.length],
-  linkedTicketId: null,
-  automationStatus: AUTOMATION_STATUSES[i % AUTOMATION_STATUSES.length],
-  createdBy: null,
-  createdAt: "2026-01-01T00:00:00.000Z",
-  updatedAt: "2026-01-01T00:00:00.000Z",
-  deletedAt: null,
-}));
-
-const INCIDENT_SEVERITIES = ["critical", "high", "medium", "low"] as const;
-const INCIDENT_STATUSES = [
-  "detected",
-  "investigating",
-  "mitigating",
-  "resolved",
-  "postmortem",
-  "closed",
-] as const;
-
-const INCIDENT_MEMBERS: OrgMember[] = [
-  {
-    membershipId: 1,
-    userId: "user_priya",
-    role: "MEMBER",
-    joinedAt: "2026-01-01T00:00:00.000Z",
-    name: "Priya Nair",
-    email: "priya@example.com",
-    image: null,
-    totpEnabled: false,
-  },
-  {
-    membershipId: 2,
-    userId: "user_daniel",
-    role: "MEMBER",
-    joinedAt: "2026-01-01T00:00:00.000Z",
-    name: "Daniel Okafor",
-    email: "daniel@example.com",
-    image: null,
-    totpEnabled: false,
-  },
-];
-
-const INCIDENT_ROWS: Incident[] = Array.from({ length: 8 }, (_, i) => ({
-  id: i + 1,
-  orgId: "org_gallery",
-  projectId: 1,
-  incidentNumber: 300 + i,
-  title: `Incident ${i + 1}: ${["API timeout", "DB connection pool exhausted", "CDN outage", "Auth service down"][i % 4]}`,
-  description: null,
-  severity: INCIDENT_SEVERITIES[i % INCIDENT_SEVERITIES.length],
-  status: INCIDENT_STATUSES[i % INCIDENT_STATUSES.length],
-  impact: null,
-  ownerId: i % 2 === 0 ? "user_priya" : "user_daniel",
-  rootCause: null,
-  customerComms: null,
-  detectedAt: "2026-01-01T00:00:00.000Z",
-  respondedAt: null,
-  resolvedAt: null,
-  responseDueAt: null,
-  resolutionDueAt: null,
-  linkedTicketId: null,
-  releaseId: null,
-  createdBy: null,
-  createdAt: "2026-01-01T00:00:00.000Z",
-  updatedAt: "2026-01-01T00:00:00.000Z",
-  deletedAt: null,
-}));
-
-const DECISION_STATUSES = ["proposed", "accepted", "superseded", "revisit"] as const;
-
-const DECISION_ROWS: Decision[] = Array.from({ length: 8 }, (_, i) => ({
-  id: i + 1,
-  orgId: "org_gallery",
-  projectId: 1,
-  decisionNumber: 400 + i,
-  title: `Decision ${i + 1}: ${["Use PostgreSQL for main DB", "Adopt microservices", "Switch to Next.js", "Use Redis for caching"][i % 4]}`,
-  context: null,
-  decision: null,
-  optionsConsidered: null,
-  status: DECISION_STATUSES[i % DECISION_STATUSES.length],
-  ownerId: i % 2 === 0 ? "user_priya" : "user_daniel",
-  decidedAt: "2026-01-01T00:00:00.000Z",
-  revisitAt: null,
-  linkedTicketId: null,
-  createdBy: null,
-  createdAt: "2026-01-01T00:00:00.000Z",
-  updatedAt: "2026-01-01T00:00:00.000Z",
-  deletedAt: null,
-}));
-
-const APPROVAL_ENTITY_TYPES = ["task", "milestone", "release", "budget"] as const;
-const APPROVAL_STATUSES = ["requested", "pending", "approved", "rejected", "escalated"] as const;
-
-const APPROVAL_ROWS: Approval[] = Array.from({ length: 8 }, (_, i) => ({
-  id: i + 1,
-  orgId: "org_gallery",
-  projectId: 1,
-  entityType: APPROVAL_ENTITY_TYPES[i % APPROVAL_ENTITY_TYPES.length],
-  entityId: i + 1,
-  title: `Approval ${i + 1}: ${["Deploy v2.0 to production", "Milestone sign-off", "Budget increase request", "Release gate"][i % 4]}`,
-  reason: null,
-  requestedById: i % 2 === 0 ? "user_priya" : "user_daniel",
-  approverMembershipId: null,
-  status: APPROVAL_STATUSES[i % APPROVAL_STATUSES.length],
-  level: (i % 3) + 1,
-  dueAt: i % 2 === 0 ? "2026-02-01T00:00:00.000Z" : null,
-  decisionComment: null,
-  decidedAt: null,
-  createdBy: null,
-  deletedAt: null,
-  createdAt: "2026-01-01T00:00:00.000Z",
-  updatedAt: "2026-01-01T00:00:00.000Z",
-}));
 
 function ownerOf(userId: string | null): NamedUser | null {
   return userId ? (OWNERS[userId] ?? null) : null;
@@ -280,25 +136,6 @@ const MEMBER_COST_COLUMNS: DataTableColumn<GalleryMemberRow>[] = [
   },
 ];
 
-const RUN_RESULT_STATUSES: TestResultStatus[] = ["not_run", "passed", "failed", "not_run", "passed"];
-const RUN_RESULT_PRIORITIES: TestCasePriority[] = ["high", "medium", "low", "medium", "high"];
-
-const QA_RUN_RESULTS: TestRunResult[] = Array.from({ length: 5 }, (_, i) => ({
-  id: i + 1,
-  runId: 1,
-  testCaseId: i + 1,
-  status: RUN_RESULT_STATUSES[i % RUN_RESULT_STATUSES.length] ?? "not_run",
-  notes: null,
-  executedBy: null,
-  executedAt: null,
-  linkedWorkItemId: null,
-  testCase: {
-    caseNumber: 200 + i,
-    title: `Test case ${i + 1}: verify flow ${i + 1}`,
-    priority: RUN_RESULT_PRIORITIES[i % RUN_RESULT_PRIORITIES.length] ?? "medium",
-  },
-}));
-
 const RESULT_STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
   { value: "not_run", label: "Not Run" },
@@ -360,14 +197,23 @@ function RisksTable() {
   }
 
   return (
-    <DataTable
-      data={RISK_ROWS}
+    <BuildListSurface<Risk>
+      permission="build:risks:view"
+      rows={GOVERNANCE_RISK_ROWS}
       columns={columns}
+      isLoading={false}
+      isError={false}
       getRowKey={getRowKey}
-      minWidth="720px"
-      className={CONTENT_FILL_PANEL}
       mobileCard={renderMobileCard}
+      minWidth="720px"
       pagination={STATIC_PAGINATION}
+      empty={
+        <EmptyState
+          className={CONTENT_FILL_PANEL}
+          illustrationPreset="documents"
+          title="No risks recorded"
+        />
+      }
     />
   );
 }
@@ -395,14 +241,23 @@ function QaTestCasesTable() {
   }
 
   return (
-    <DataTable
-      data={QA_ROWS}
+    <BuildListSurface<TestCase>
+      permission="build:qa:view"
+      rows={GOVERNANCE_QA_ROWS}
       columns={columns}
+      isLoading={false}
+      isError={false}
       getRowKey={getRowKey}
-      minWidth="600px"
-      className={CONTENT_FILL_PANEL}
       mobileCard={renderMobileCard}
+      minWidth="600px"
       pagination={STATIC_PAGINATION}
+      empty={
+        <EmptyState
+          className={CONTENT_FILL_PANEL}
+          illustrationPreset="documents"
+          title="No test cases"
+        />
+      }
     />
   );
 }
@@ -410,7 +265,7 @@ function QaTestCasesTable() {
 function IncidentsTable() {
   const columns = buildIncidentsColumns({
     canManage: true,
-    members: INCIDENT_MEMBERS,
+    members: GOVERNANCE_INCIDENT_MEMBERS,
     projectId: 1,
     onEdit: noop,
     onDelete: noop,
@@ -425,7 +280,7 @@ function IncidentsTable() {
       <IncidentMobileCard
         incident={row}
         canManage
-        members={INCIDENT_MEMBERS}
+        members={GOVERNANCE_INCIDENT_MEMBERS}
         onEdit={noop}
         onDelete={noop}
       />
@@ -433,14 +288,23 @@ function IncidentsTable() {
   }
 
   return (
-    <DataTable
-      data={INCIDENT_ROWS}
+    <BuildListSurface<Incident>
+      permission="build:incidents:view"
+      rows={GOVERNANCE_INCIDENT_ROWS}
       columns={columns}
+      isLoading={false}
+      isError={false}
       getRowKey={getRowKey}
-      minWidth="760px"
-      className={CONTENT_FILL_PANEL}
       mobileCard={renderMobileCard}
+      minWidth="760px"
       pagination={STATIC_PAGINATION}
+      empty={
+        <EmptyState
+          className={CONTENT_FILL_PANEL}
+          illustrationPreset="documents"
+          title="No incidents"
+        />
+      }
     />
   );
 }
@@ -471,14 +335,23 @@ function DecisionsTable() {
   }
 
   return (
-    <DataTable
-      data={DECISION_ROWS}
+    <BuildListSurface<Decision>
+      permission="build:decisions:view"
+      rows={GOVERNANCE_DECISION_ROWS}
       columns={columns}
+      isLoading={false}
+      isError={false}
       getRowKey={getRowKey}
-      minWidth="720px"
-      className={CONTENT_FILL_PANEL}
       mobileCard={renderMobileCard}
+      minWidth="720px"
       pagination={STATIC_PAGINATION}
+      empty={
+        <EmptyState
+          className={CONTENT_FILL_PANEL}
+          illustrationPreset="documents"
+          title="No decisions recorded"
+        />
+      }
     />
   );
 }
@@ -514,14 +387,23 @@ function ApprovalsTable() {
   }
 
   return (
-    <DataTable
-      data={APPROVAL_ROWS}
+    <BuildListSurface<Approval>
+      permission="build:approvals:view"
+      rows={GOVERNANCE_APPROVAL_ROWS}
       columns={columns}
+      isLoading={false}
+      isError={false}
       getRowKey={getRowKey}
-      minWidth="720px"
-      className={CONTENT_FILL_PANEL}
       mobileCard={renderMobileCard}
+      minWidth="720px"
       pagination={STATIC_PAGINATION}
+      empty={
+        <EmptyState
+          className={CONTENT_FILL_PANEL}
+          illustrationPreset="documents"
+          title="No approvals"
+        />
+      }
     />
   );
 }
@@ -561,6 +443,10 @@ function RisksWithSelection() {
     );
   }
 
+  function handleClearSelection() {
+    setSelectedIds(new Set());
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       {selectedIds.size > 0 && (
@@ -575,24 +461,33 @@ function RisksWithSelection() {
             variant="ghost"
             size="icon"
             aria-label="Clear selection"
-            onClick={() => setSelectedIds(new Set())}
+            onClick={handleClearSelection}
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       )}
-      <DataTable
-        data={RISK_ROWS}
+      <BuildListSurface<Risk>
+        permission="build:risks:view"
+        rows={GOVERNANCE_RISK_ROWS}
         columns={columns}
+        isLoading={false}
+        isError={false}
         getRowKey={getRowKey}
-        minWidth="720px"
-        className={CONTENT_FILL_PANEL}
         mobileCard={renderMobileCard}
+        minWidth="720px"
         pagination={STATIC_PAGINATION}
         selection={{
           selected: selectedIds,
           onChange: setSelectedIds,
         }}
+        empty={
+          <EmptyState
+            className={CONTENT_FILL_PANEL}
+            illustrationPreset="documents"
+            title="No risks recorded"
+          />
+        }
       />
     </div>
   );
@@ -742,14 +637,23 @@ function QaRunExecutionCase() {
           />
         </div>
         <div className="flex min-h-0 flex-1 flex-col">
-          <DataTable
-            data={QA_RUN_RESULTS}
+          <BuildListSurface<(typeof GOVERNANCE_QA_RUN_RESULTS)[number]>
+            permission="build:qa:view"
+            rows={GOVERNANCE_QA_RUN_RESULTS}
             columns={columns}
+            isLoading={false}
+            isError={false}
             getRowKey={getRowKey}
-            minWidth="640px"
-            className={CONTENT_FILL_PANEL}
             mobileCard={renderMobileCard}
+            minWidth="640px"
             pagination={STATIC_PAGINATION}
+            empty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="documents"
+                title="No test results"
+              />
+            }
           />
         </div>
       </div>
@@ -792,7 +696,13 @@ function ReportsTabsCase() {
 }
 
 export function GovernanceQaGallery() {
+  const [queryClient] = useState(() => {
+    const client = createAppQueryClient("governance-qa-gallery");
+    client.setQueryData(platformCoreQueryKeys.access.me(), GALLERY_STUB_ACCESS);
+    return client;
+  });
   return (
+    <QueryClientProvider client={queryClient}>
     <div className="flex flex-col gap-8 p-4">
       <header>
         <h1 className="text-lg font-semibold tracking-tight">
@@ -945,5 +855,6 @@ export function GovernanceQaGallery() {
       <QaRunExecutionCase />
       <ReportsTabsCase />
     </div>
+    </QueryClientProvider>
   );
 }

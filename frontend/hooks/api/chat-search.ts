@@ -43,10 +43,12 @@ import type {
   SearchUserResult,
 } from "@/types/chat";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export function useChatPins(channelId: number) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.pins(channelId),
     queryFn: ({ signal }) =>
       apiClient.get<PinnedMessage[]>(`/chat/channels/${channelId}/pins`, undefined, signal, chatPinsContract),

@@ -1,65 +1,68 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import type { ReactNode } from "react";
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import { IncidentsPage } from "./incidents-page";
 import { ApiError } from "@/lib/api-envelope";
 
-const mockUseIncidents = jest.fn();
-const mockUseDeleteIncident = jest.fn();
-const mockUseOrgMembers = jest.fn();
-const mockUseCan = jest.fn();
-const mockUseAccess = jest.fn();
-
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
-  usePathname: () => "/build/1/incidents",
   useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  usePathname: () => "/build/1/incidents",
 }));
 
 jest.mock("@/hooks/api/build/incidents", () => ({
-  useIncidents: (...args: unknown[]) => mockUseIncidents(...args),
-  useDeleteIncident: () => mockUseDeleteIncident(),
-}));
-
-jest.mock("@/hooks/api/organization", () => ({
-  useOrgMembers: (...args: unknown[]) => mockUseOrgMembers(...args),
+  useIncidents: jest.fn(),
+  useDeleteIncident: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: (...args: unknown[]) => mockUseCan(...args),
-  useAccess: () => mockUseAccess(),
+  useCan: jest.fn(),
+  useAccess: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembers: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/common/use-animated-icon", () => ({
-  useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
-}));
-
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
-jest.mock("@animateicons/react/lucide", () => ({
-  EllipsisIcon: (props: React.HTMLAttributes<HTMLElement>) => <span {...props} />,
+jest.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => (
+      <div {...rest}>{children}</div>
+    ),
+  },
+  useReducedMotion: () => false,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock("next/link", () => ({
-  __esModule: true,
-  default: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a>,
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  BUILD_FILTER_ALL: "all",
+  useBuildListFilters: jest.fn(),
 }));
 
-jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: ReactNode; title?: string }) => (
-    <div>{title ? <h1>{title}</h1> : null}{children}</div>
-  ),
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: jest.fn(),
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
-  DataTable: () => <div data-testid="data-table" />,
+  DataTable: ({ data }: { data: unknown[] }) => (
+    <div data-testid="data-table" data-rows={data.length} />
+  ),
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => <div data-testid="empty-state">{title}</div>,
+  EmptyState: ({ title }: { title: string }) => (
+    <div data-testid="empty-state">{title}</div>
+  ),
+}));
+
+jest.mock("@/components/shared/no-permission-state", () => ({
+  NoPermissionState: () => <div data-testid="no-permission" />,
 }));
 
 jest.mock("@/components/shared/error-state", () => ({
@@ -67,47 +70,56 @@ jest.mock("@/components/shared/error-state", () => ({
 }));
 
 jest.mock("@/components/pm-chrome", () => ({
-  PmPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  PmSection: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   CONTENT_FILL_PANEL: "",
 }));
 
-jest.mock("@/components/ui/stat-card", () => ({
-  StatCard: () => <div data-testid="stat-card" />,
-  StatCardGrid: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+jest.mock("@/components/ui/page-wrapper", () => ({
+  PageWrapper: ({
+    children,
+    actions,
+  }: {
+    children: React.ReactNode;
+    actions?: React.ReactNode;
+  }) => (
+    <div>
+      {actions ? <div data-testid="page-actions">{actions}</div> : null}
+      {children}
+    </div>
+  ),
 }));
 
 jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: () => null,
 }));
 
-const mockIncidentSheet = jest.fn((_props: { open: boolean }) => null);
-jest.mock("./incident-sheet", () => ({
-  IncidentSheet: (props: { open: boolean }) => { mockIncidentSheet(props); return null; },
+jest.mock("@/components/ui/stat-card", () => ({
+  StatCard: () => <div data-testid="stat-card" />,
+  StatCardGrid: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
+jest.mock("./incident-sheet", () => ({ IncidentSheet: () => null }));
 jest.mock("./sla", () => ({
-  getSlaState: () => ({ label: "Met", responseBreached: false, resolutionBreached: false }),
+  getSlaState: jest.fn(() => ({ responseBreached: false, resolutionBreached: false })),
+}));
+jest.mock("./incidents-table-columns", () => ({
+  INCIDENTS_TABLE_HEADERS: ["Title", "Severity", "Status", "Owner"],
+  buildIncidentsColumns: jest.fn(() => []),
+  IncidentMobileCard: () => null,
 }));
 
-import { IncidentsPage } from "./incidents-page";
+import { useIncidents, useDeleteIncident } from "@/hooks/api/build/incidents";
+import { useCan, useAccess } from "@/hooks/api/access";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 
-const mockReplace = jest.fn();
-const mockRouterPush = jest.fn();
-let mockSearchParams = new URLSearchParams();
-
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mockReplace, push: mockRouterPush, refresh: jest.fn() }),
-  usePathname: () => "/build",
-  useSearchParams: () => mockSearchParams,
-}));
-
-beforeEach(() => {
-  mockReplace.mockClear();
-  mockRouterPush.mockClear();
-  mockSearchParams = new URLSearchParams();
-});
-
+const mockUseIncidents = useIncidents as jest.Mock;
+const mockUseDeleteIncident = useDeleteIncident as jest.Mock;
+const mockUseCan = useCan as jest.Mock;
+const mockUseAccess = useAccess as jest.Mock;
+const mockUseOrgMembers = useOrgMembers as jest.Mock;
+const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:incidents:view": "all" }, modules: {} },
@@ -119,49 +131,98 @@ const ACCESS_DENIED = {
 };
 const ACCESS_LOADING = { data: undefined, isLoading: true };
 
-function baseQuery(overrides = {}) {
+function baseQueryResult(overrides: Record<string, unknown> = {}) {
   return {
     data: undefined,
     isLoading: false,
     isError: false,
     error: undefined,
     refetch: jest.fn(),
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
     ...overrides,
   };
 }
 
+function incidentPages(rows: unknown[]) {
+  return { pages: [{ data: rows }] };
+}
+
+function defaultFilters(overrides: Record<string, unknown> = {}) {
+  return {
+    value: jest.fn(() => "all"),
+    isActive: jest.fn(() => false),
+    setValue: jest.fn(),
+    clearAll: jest.fn(),
+    isFiltered: false,
+    resetKey: "0",
+    search: "",
+    debouncedSearch: "",
+    setSearch: jest.fn(),
+    ...overrides,
+  };
+}
+
+const incidentRow = {
+  id: 1,
+  projectId: 1,
+  incidentNumber: 1,
+  title: "Database outage",
+  status: "detected",
+  severity: "critical",
+  ownerId: null,
+  detectedAt: "2026-09-01T00:00:00Z",
+  createdAt: "2026-09-01T00:00:00Z",
+  updatedAt: "2026-09-01T00:00:00Z",
+};
+
 beforeEach(() => {
-  jest.clearAllMocks();
-  mockUseCan.mockReturnValue(true);
+  mockUseCan.mockReturnValue(false);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseIncidents.mockReturnValue(baseQuery({ data: [] }));
-  mockUseOrgMembers.mockReturnValue(baseQuery({ data: { data: [], total: 0 } }));
+  mockUseIncidents.mockReturnValue(baseQueryResult({ data: incidentPages([]) }));
   mockUseDeleteIncident.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseOrgMembers.mockReturnValue({ data: { data: [] } });
+  mockUseBuildListFilters.mockReturnValue(defaultFilters());
 });
 
-it("renders NoPermissionState when build:incidents:view is denied instead of the no-incidents empty state", () => {
-  mockUseAccess.mockReturnValue(ACCESS_DENIED);
-  mockUseIncidents.mockReturnValue(baseQuery());
-  render(<IncidentsPage projectId={1} />);
-  expect(screen.getByText(/access restricted/i)).toBeInTheDocument();
-  expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
-});
-
-it("shows loading state while the access snapshot is still in flight rather than a false denial", () => {
+it("shows loading skeleton while access is loading and not error state", () => {
   mockUseAccess.mockReturnValue(ACCESS_LOADING);
-  mockUseIncidents.mockReturnValue(baseQuery());
+  mockUseIncidents.mockReturnValue(baseQueryResult());
   render(<IncidentsPage projectId={1} />);
-  expect(screen.queryByText(/access restricted/i)).toBeNull();
-  expect(screen.queryByTestId("empty-state")).toBeNull();
+  expect(screen.getByTestId("data-table-skeleton")).toBeInTheDocument();
+  expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
 });
 
-it("renders the upgrade path the backend sent with a 402 rather than a generic failure", () => {
-  const err = new ApiError("Build is not included in your current plan.", 402, "MODULE_NOT_ENABLED", {
-    moduleKey: "build",
-    reason: "not-in-plan",
-    upgradePath: "/settings/billing",
-  });
-  mockUseIncidents.mockReturnValue(baseQuery({ isError: true, error: err }));
+it("shows NoPermissionState when build:incidents:view is denied and not the data table", () => {
+  mockUseAccess.mockReturnValue(ACCESS_DENIED);
+  mockUseIncidents.mockReturnValue(baseQueryResult());
+  render(<IncidentsPage projectId={1} />);
+  expect(screen.getByTestId("no-permission")).toBeInTheDocument();
+  expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
+});
+
+it("shows error state when the query fails and not the skeleton", () => {
+  mockUseIncidents.mockReturnValue(
+    baseQueryResult({ isError: true, error: new Error("Network error") }),
+  );
+  render(<IncidentsPage projectId={1} />);
+  expect(screen.getByTestId("error-state")).toBeInTheDocument();
+  expect(screen.queryByTestId("data-table-skeleton")).not.toBeInTheDocument();
+});
+
+it("surfaces the 402 upgrade path from the backend rather than a generic error state (FE-41)", () => {
+  mockUseIncidents.mockReturnValue(
+    baseQueryResult({
+      isError: true,
+      error: new ApiError(
+        "Build is not included in your current plan.",
+        402,
+        "MODULE_NOT_ENABLED",
+        { moduleKey: "build", reason: "not-in-plan", upgradePath: "/settings/billing" },
+      ),
+    }),
+  );
   render(<IncidentsPage projectId={1} />);
   expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
   expect(screen.getByRole("link", { name: /plan|billing|upgrade/i })).toHaveAttribute(
@@ -170,62 +231,38 @@ it("renders the upgrade path the backend sent with a 402 rather than a generic f
   );
 });
 
-it("discloses the server's hard 100-row cap instead of presenting a truncated list as complete", () => {
-  const hundredIncidents = Array.from({ length: 100 }, (_, i) => ({
-    id: i + 1,
-    incidentNumber: i + 1,
-    title: `Incident ${i + 1}`,
-    severity: "low",
-    status: "detected",
-    ownerId: null,
-    detectedAt: null,
-  }));
-  mockUseIncidents.mockReturnValue(baseQuery({ data: hundredIncidents }));
+it("renders the data table when rows are present and not the empty state", () => {
+  mockUseIncidents.mockReturnValue(
+    baseQueryResult({ data: incidentPages([incidentRow]) }),
+  );
   render(<IncidentsPage projectId={1} />);
-  expect(screen.getByText(/most recent 100 incidents/i)).toBeInTheDocument();
+  expect(screen.getByTestId("data-table")).toBeInTheDocument();
+  expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
 });
 
-it("does not show the cap disclosure when the list is well under the cap", () => {
-  mockUseIncidents.mockReturnValue(baseQuery({ data: [{ id: 1, incidentNumber: 1, title: "Incident 1", severity: "low", status: "detected", ownerId: null, detectedAt: null }] }));
+it("shows 'No incidents found' empty state when there are no rows and no active filter", () => {
   render(<IncidentsPage projectId={1} />);
-  expect(screen.queryByText(/most recent 100 incidents/i)).not.toBeInTheDocument();
+  expect(screen.getByTestId("empty-state")).toHaveTextContent("No incidents found");
+  expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
 });
 
-it("pressing j then Enter navigates to the first incident's detail page so keyboard users can open it without a mouse", () => {
-  const incident = { id: 55, incidentNumber: 2, title: "API down", severity: "high", status: "investigating", ownerId: null, detectedAt: null };
-  mockUseIncidents.mockReturnValue(baseQuery({ data: [incident] }));
+it("shows 'No incidents match your filters' when filters are active and no rows match", () => {
+  mockUseBuildListFilters.mockReturnValue(defaultFilters({ isFiltered: true }));
   render(<IncidentsPage projectId={1} />);
-  fireEvent.keyDown(document, { key: "j" });
-  fireEvent.keyDown(document, { key: "Enter" });
-  expect(mockRouterPush).toHaveBeenCalledWith("/build/1/incidents/55");
+  expect(screen.getByTestId("empty-state")).toHaveTextContent(
+    "No incidents match your filters",
+  );
+  expect(screen.queryByText("No incidents found")).not.toBeInTheDocument();
 });
 
-it("pressing c opens the create incident sheet when build:incidents:manage is granted", () => {
-  mockUseCan.mockReturnValue(true);
-  mockUseIncidents.mockReturnValue(baseQuery({ data: [] }));
-  render(<IncidentsPage projectId={1} />);
-  fireEvent.keyDown(document, { key: "c" });
-  const lastCall = mockIncidentSheet.mock.calls[mockIncidentSheet.mock.calls.length - 1];
-  expect(lastCall[0].open).toBe(true);
-});
-
-it("pressing c does not open the sheet if build:incidents:manage is not granted", () => {
+it("hides the New Incident button when build:incidents:manage is denied", () => {
   mockUseCan.mockReturnValue(false);
-  mockUseIncidents.mockReturnValue(baseQuery({ data: [] }));
   render(<IncidentsPage projectId={1} />);
-  mockIncidentSheet.mockClear();
-  fireEvent.keyDown(document, { key: "c" });
-  const openCalls = mockIncidentSheet.mock.calls.filter((call) => call[0].open === true);
-  expect(openCalls).toHaveLength(0);
+  expect(screen.queryByRole("button", { name: /new incident/i })).not.toBeInTheDocument();
 });
 
-it("pressing e on the focused incident opens the edit sheet for that incident", () => {
-  const incident = { id: 77, incidentNumber: 3, title: "DB failure", severity: "critical", status: "detected", ownerId: null, detectedAt: null };
-  mockUseIncidents.mockReturnValue(baseQuery({ data: [incident] }));
+it("shows the New Incident button when build:incidents:manage is granted", () => {
+  mockUseCan.mockReturnValue(true);
   render(<IncidentsPage projectId={1} />);
-  fireEvent.keyDown(document, { key: "j" });
-  mockIncidentSheet.mockClear();
-  fireEvent.keyDown(document, { key: "e" });
-  const lastCall = mockIncidentSheet.mock.calls[mockIncidentSheet.mock.calls.length - 1];
-  expect(lastCall[0].open).toBe(true);
+  expect(screen.getAllByRole("button", { name: /new incident/i }).length).toBeGreaterThan(0);
 });

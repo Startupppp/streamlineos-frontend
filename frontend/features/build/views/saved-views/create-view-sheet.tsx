@@ -52,7 +52,7 @@ export function CreateViewSheet({ projectId, open, onOpenChange, onCreated }: Cr
   const createMutation = useCreateView();
   const form = useForm<CreateViewForm>({
     resolver: zodResolver(createViewSchema),
-    defaultValues: { layoutType: "board", visibility: "shared" },
+    defaultValues: { name: "", layoutType: "board", visibility: "shared" },
   });
   useRegisterDirtyState(open && form.formState.isDirty);
 

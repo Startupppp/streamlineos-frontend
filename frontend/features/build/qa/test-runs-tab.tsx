@@ -6,12 +6,9 @@ import { useRouter } from "next/navigation";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { useTestRuns, useDeleteTestRun } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import type { TestRunListItem } from "@/types/projects";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +22,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
@@ -168,7 +167,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     null,
   );
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -240,13 +239,6 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     onCreate: canManage ? handleNewRun : undefined,
     onClearSelection: handleClearKeyboardSelection,
     enabled: !sheetOpen && !deleteTarget,
-  });
-
-  const pageState = usePageState({
-    permission: "build:qa:view",
-    isLoading,
-    isError,
-    error,
   });
 
   const columns = useMemo<DataTableColumn<TestRunListItem>[]>(
@@ -358,49 +350,50 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
         {canManage ? <NewRunButton onClick={handleNewRun} /> : null}
       </div>
 
-      <PageState
-        resolution={pageState}
-        loading={
-          <DataTableSkeleton mobileCards
-            rows={12}
-            headers={TEST_RUN_TABLE_HEADERS}
-            className="flex-1"
-          />
-        }
+      <BuildListSurface<TestRunListItem>
+        permission="build:qa:view"
+        rows={runs}
+        columns={columns}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isFiltered={listFilters.isFiltered}
+        getRowKey={(row) => row.id}
+        mobileCard={renderMobileCard}
+        pagination={{
+          mode: "cursor",
+          pageSize: RUN_PAGE_SIZE,
+          hasMore: runsPage?.hasMore ?? false,
+          hasPrevious,
+          onNext: handleNextPage,
+          onPrevious: goPrevious,
+        }}
         empty={
           <EmptyState
             illustrationPreset="ticket"
             title="No test runs"
             description="Create a test run to start executing tests."
-            filtersActive={listFilters.isFiltered}
-            onClearFilters={listFilters.clearAll}
             action={
               canManage
                 ? { label: "New Test Run", onClick: handleNewRun }
                 : undefined
             }
-            className="flex-1"
+            className={CONTENT_FILL_PANEL}
           />
         }
+        filteredEmpty={
+          <EmptyState
+            illustrationPreset="ticket"
+            title="No test runs match your filters"
+            description="Try clearing the filters to see more."
+            onClearFilters={listFilters.clearAll}
+            className={CONTENT_FILL_PANEL}
+          />
+        }
+        loadingHeaders={TEST_RUN_TABLE_HEADERS}
+        loadingRows={12}
         onRetry={handleRetry}
-        className="flex-1 min-h-0"
-      >
-        <DataTable<TestRunListItem>
-          data={runs}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          mobileCard={renderMobileCard}
-          className="flex-1 min-h-0"
-          pagination={{
-            mode: "cursor",
-            pageSize: RUN_PAGE_SIZE,
-            hasMore: runsPage?.hasMore ?? false,
-            hasPrevious,
-            onNext: handleNextPage,
-            onPrevious: goPrevious,
-          }}
-        />
-      </PageState>
+      />
 
       <TestRunSheet
         projectId={projectId}

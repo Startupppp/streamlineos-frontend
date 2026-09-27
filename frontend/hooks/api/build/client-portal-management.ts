@@ -31,6 +31,8 @@ export function usePortalSettings(projectId: number) {
       ),
     enabled: !!projectId,
     staleTime: 30_000,
+    throwOnError: false,
+    retry: false,
   });
 }
 
@@ -86,5 +88,7 @@ export function usePortalPreview(projectId: number) {
       ),
     enabled: !!projectId,
     staleTime: 30_000,
+    throwOnError: false,
+    retry: false,
   });
 }

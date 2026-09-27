@@ -82,7 +82,7 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
   const { data: changeRequests, isFetching: crFetching } = useChangeRequests(projectId);
   const { data: timesheetData, isFetching: timesheetFetching } = useTimesheetEntries(
     { projectId, limit: 50 },
-    entityType === "timesheet",
+    entityType === "timesheet" && projectId > 0,
   );
   const { data: budget, isFetching: budgetFetching } = useProjectBudget(projectId);
   const { data: projectFiles, isFetching: filesFetching } = useProjectFiles(projectId);
@@ -211,7 +211,7 @@ export function RequestApprovalSheet({
   const entityType = form.watch("entityType");
   const entityId = form.watch("entityId");
 
-  const { items: entityItems, isFetching: entityFetching } = useEntityItems(projectId, entityType);
+  const { items: entityItems, isFetching: entityFetching } = useEntityItems(open ? projectId : 0, entityType);
 
   useEffect(() => {
     if (open) {

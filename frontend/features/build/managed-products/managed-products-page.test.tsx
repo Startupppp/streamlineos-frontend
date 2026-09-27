@@ -1,20 +1,183 @@
-import "./product-scope-pages.test-harness";
-import { fireEvent } from "@testing-library/react";
+import React from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ManagedProductsPage } from "./managed-products-page";
-import {
-  EMPTY_MANAGED_PRODUCTS_RESULT,
-  mockRouterPush,
-  render,
-  screen,
-  useManagedProducts,
-  usePageState,
-} from "./product-scope-pages.test-harness";
+
+const mockRouterPush = jest.fn();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: jest.fn(), push: mockRouterPush }),
+  usePathname: () => "/build/managed-products",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: jest.fn(() => true),
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: jest.fn(),
+}));
+
+jest.mock("@/components/shared/page-state", () => ({
+  PageState: ({
+    resolution,
+    loading,
+    empty,
+    children,
+  }: {
+    resolution: { kind: string; permission?: string | null };
+    loading: React.ReactNode;
+    empty?: React.ReactNode;
+    children: React.ReactNode;
+  }) => {
+    if (resolution.kind === "loading") return <div data-testid="page-state-loading">{loading}</div>;
+    if (resolution.kind === "denied")
+      return (
+        <div
+          data-testid="no-permission"
+          data-permission={resolution.permission ?? ""}
+        />
+      );
+    if (resolution.kind === "error") return <div data-testid="error-state" />;
+    if (resolution.kind === "empty") return <div data-testid="page-state-empty">{empty}</div>;
+    return <div data-testid="page-state-ready">{children}</div>;
+  },
+}));
+
+jest.mock("@/hooks/api/build/managed-products", () => ({
+  useManagedProducts: jest.fn(),
+  useCreateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useDeleteManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembers: jest.fn(() => ({ data: { data: [] } })),
+}));
+
+jest.mock("@/hooks/common/use-query-param-open", () => ({
+  useQueryParamOpen: () => ({ open: false, onOpenChange: jest.fn(), setOpen: jest.fn() }),
+}));
+
+jest.mock("@/hooks/common/use-debounce", () => ({
+  useDebouncedValue: (v: string) => v,
+}));
+
+jest.mock("@/components/ui/page-wrapper", () => ({
+  PageWrapper: ({
+    children,
+    filters,
+    actions,
+  }: {
+    children: React.ReactNode;
+    filters?: React.ReactNode;
+    actions?: React.ReactNode;
+  }) => (
+    <div>
+      {actions}
+      {filters}
+      {children}
+    </div>
+  ),
+}));
+
+jest.mock("@/components/pm-chrome", () => ({
+  PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PmSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CONTENT_FILL_PANEL: "",
+  PM_TOOLBAR: "",
+}));
+
+jest.mock("@/components/shared", () => ({
+  NoPermissionState: ({ permission }: { permission: string }) => (
+    <div data-testid="no-permission" data-permission={permission} />
+  ),
+}));
+
+jest.mock("@/components/ui/data-table", () => ({
+  DataTable: ({
+    data,
+    getRowKey,
+    onRowClick,
+  }: {
+    data?: Array<{ name?: string; id?: unknown }>;
+    getRowKey?: (row: { name?: string; id?: unknown }, i: number) => string | number;
+    onRowClick?: (row: { name?: string; id?: unknown }) => void;
+  }) => {
+    if (!data || data.length === 0) return <div data-testid="data-table" />;
+    return (
+      <div data-testid="data-table">
+        {data.map((row, i) => {
+          const key = getRowKey ? String(getRowKey(row, i)) : String(i);
+          return onRowClick ? (
+            <button key={key} type="button" onClick={() => onRowClick(row)}>
+              {row.name}
+            </button>
+          ) : (
+            <span key={key}>{row.name}</span>
+          );
+        })}
+      </div>
+    );
+  },
+  DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
+}));
+
+jest.mock("@/components/ui/empty-state", () => ({
+  EmptyState: () => <div data-testid="empty-state" />,
+}));
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: () => null,
+}));
+
+jest.mock("./managed-product-form-sheet", () => ({
+  ManagedProductFormSheet: () => null,
+}));
+
+jest.mock("./managed-product-bulk-toolbar", () => ({
+  ManagedProductBulkToolbar: () => <div data-testid="managed-product-bulk-toolbar" />,
+  MANAGED_PRODUCT_BULK_MAX: 100,
+}));
+
+jest.mock("@/hooks/common/use-animated-icon", () => ({
+  useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
+}));
+
+jest.mock("@animateicons/react/lucide", () => ({
+  PlusIcon: () => null,
+}));
+
+jest.mock("sonner", () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
+}));
+
+const { useManagedProducts } = jest.requireMock("@/hooks/api/build/managed-products") as {
+  useManagedProducts: jest.Mock;
+};
+const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
+  usePageState: jest.Mock;
+};
+const { useCan } = jest.requireMock("@/hooks/api/access") as {
+  useCan: jest.Mock;
+};
+
+const EMPTY_RESULT = {
+  data: { data: [], pagination: { hasMore: false, nextCursor: null, limit: 20 } },
+  isLoading: false,
+  isError: false,
+  error: null,
+  refetch: jest.fn(),
+};
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  useCan.mockReturnValue(true);
+  usePageState.mockReturnValue({ kind: "ready" });
+  useManagedProducts.mockReturnValue(EMPTY_RESULT);
+});
 
 describe("ManagedProductsPage — usePageState integration (BSN-01-027)", () => {
-  beforeEach(() => {
-    useManagedProducts.mockReturnValue(EMPTY_MANAGED_PRODUCTS_RESULT);
-  });
-
   it("calls usePageState with build:managed-products:view permission so 402 errors get classified correctly", () => {
     render(<ManagedProductsPage />);
     expect(usePageState).toHaveBeenCalledWith(

@@ -161,7 +161,7 @@ export function useInfiniteManagedProducts(
 
 export function useManagedProduct(
   managedProductId: number,
-  options?: { throwOnError?: boolean },
+  options?: Pick<UseQueryOptions<ManagedProduct | null>, "throwOnError">,
 ) {
   const canView = useCan("build:managed-products:view");
   return useQuery<ManagedProduct | null>({

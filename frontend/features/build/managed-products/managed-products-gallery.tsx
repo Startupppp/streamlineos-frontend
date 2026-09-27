@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { Plus, Archive } from "lucide-react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared";
@@ -14,6 +14,9 @@ import type { BuildHeaderAction } from "@/features/build/shared/build-header-act
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import type { ManagedProduct } from "@/types/projects";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { GalleryCase as SharedGalleryCase } from "@/features/build/shared/build-list-gallery-cases";
+import { MANAGED_PRODUCT_GALLERY_ROWS, GALLERY_STUB_ACCESS } from "@/features/build/shared/build-list-fixtures";
 import {
   MANAGED_PRODUCT_TABLE_HEADERS,
   buildManagedProductColumns,
@@ -31,28 +34,6 @@ import { createAppQueryClient } from "@/components/providers/query-provider";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { ManagedProductInsights } from "@/hooks/api/build/managed-products-schema";
-import type { AccessResponse } from "@/hooks/api/access-schema";
-
-const GALLERY_ROWS: ManagedProduct[] = Array.from({ length: 14 }, (_, i) => ({
-  id: i + 1,
-  orgId: "org-1",
-  name: `${["Payments Platform", "Identity Service", "Notification Hub", "Analytics Engine", "Search Service", "Cache Layer", "Auth Gateway", "Data Pipeline", "Event Bus", "Config Store", "Audit Trail", "Content Delivery", "API Gateway", "SDK Tooling"][i % 14]}`,
-  key: `MP-${100 + i}`,
-  description: i % 3 === 0 ? `Core service #${i + 1} for the platform` : null,
-  status: i % 3 === 0 ? "active" : i % 3 === 1 ? "active" : "archived",
-  ownerId: i % 2 === 0 ? "user-1" : null,
-  ownerMembershipId: i % 2 === 0 ? 1 : null,
-  vision: null,
-  missionStatement: null,
-  targetCustomer: null,
-  differentiators: null,
-  currentPhase: null,
-  targetLaunchDate: null,
-  successMetrics: null,
-  deletedAt: null,
-  createdAt: "2024-01-01T00:00:00Z",
-  updatedAt: "2024-11-01T00:00:00Z",
-}));
 
 function stubOwnerOf(_id: string | null) {
   return _id ? { name: "Priya Nair", email: "priya@example.com" } : null;
@@ -93,14 +74,6 @@ const STUB_CHANGE = () => undefined;
 
 const STUB_INSIGHTS_ID = 1;
 
-const STUB_ACCESS: AccessResponse = {
-  membershipId: null,
-  scopes: { "build:managed-products:view": "all" },
-  isOrgOwner: false,
-  canManageOrganizationMembership: false,
-  modules: {},
-};
-
 const STUB_INSIGHTS_DATA: ManagedProductInsights = {
   linkedProjectCount: 42,
   projectsByStatus: { active: 27, completed: 8, archived: 7 },
@@ -114,7 +87,7 @@ const STUB_INSIGHTS_DATA: ManagedProductInsights = {
 function InsightsReadyFrame() {
   const [queryClient] = useState(() => {
     const client = createAppQueryClient("insights-ready-gallery");
-    client.setQueryData(platformCoreQueryKeys.access.me(), STUB_ACCESS);
+    client.setQueryData(platformCoreQueryKeys.access.me(), GALLERY_STUB_ACCESS);
     client.setQueryData(
       buildWorkQueryKeys.projects.managedProducts.insights(STUB_INSIGHTS_ID),
       STUB_INSIGHTS_DATA,
@@ -125,34 +98,6 @@ function InsightsReadyFrame() {
     <QueryClientProvider client={queryClient}>
       <ProductInsightsPage managedProductId={STUB_INSIGHTS_ID} />
     </QueryClientProvider>
-  );
-}
-
-function GalleryCase({
-  id,
-  title,
-  children,
-  navActive = false,
-}: {
-  id: string;
-  title: string;
-  children: React.ReactNode;
-  navActive?: boolean;
-}) {
-  return (
-    <section
-      data-case={id}
-      aria-label={title}
-      className={navActive ? "mobile-nav-active" : undefined}
-    >
-      <h2 className="mb-1 text-sm font-semibold text-foreground">{title}</h2>
-      <div
-        data-case-frame={id}
-        className="flex h-[32rem] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-background"
-      >
-        {children}
-      </div>
-    </section>
   );
 }
 
@@ -177,22 +122,22 @@ function ManagedProductsReadyTable() {
     [],
   );
 
+  function getRowKey(row: ManagedProduct) { return row.id; }
+  function handleNext() { return undefined; }
+  function handlePrevious() { return undefined; }
+
   return (
-    <DataTable
-      data={GALLERY_ROWS}
+    <BuildListSurface<ManagedProduct>
+      permission="build:managed-products:view"
+      rows={MANAGED_PRODUCT_GALLERY_ROWS}
       columns={columns}
-      getRowKey={(row) => row.id}
-      minWidth="720px"
+      isLoading={false}
+      isError={false}
+      getRowKey={getRowKey}
       mobileCard={renderMobileCard}
-      className={CONTENT_FILL_PANEL}
-      pagination={{
-        mode: "cursor",
-        pageSize: 20,
-        hasMore: true,
-        hasPrevious: true,
-        onNext: () => undefined,
-        onPrevious: () => undefined,
-      }}
+      minWidth="720px"
+      pagination={{ mode: "cursor", pageSize: 20, hasMore: true, hasPrevious: true, onNext: handleNext, onPrevious: handlePrevious }}
+      empty={<EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No managed products yet" />}
     />
   );
 }
@@ -220,7 +165,7 @@ function ManagedProductsGalleryList({
   }, []);
 
   return (
-    <GalleryCase id={caseId} title={title} navActive={navActive}>
+    <SharedGalleryCase id={caseId} title={title} navActive={navActive}>
       <PageWrapper
         title="Managed Products"
         subtitle="Track products and link projects to them"
@@ -271,12 +216,18 @@ function ManagedProductsGalleryList({
           </PmSection>
         </PmPageShell>
       </PageWrapper>
-    </GalleryCase>
+    </SharedGalleryCase>
   );
 }
 
 export function ManagedProductsGallery() {
+  const [queryClient] = useState(() => {
+    const client = createAppQueryClient("managed-products-gallery");
+    client.setQueryData(platformCoreQueryKeys.access.me(), GALLERY_STUB_ACCESS);
+    return client;
+  });
   return (
+    <QueryClientProvider client={queryClient}>
     <div className="flex flex-col gap-8 p-4">
       <header>
         <h1 className="text-lg font-semibold tracking-tight">
@@ -357,9 +308,9 @@ export function ManagedProductsGallery() {
         }
       />
 
-      <GalleryCase id="denied" title="Access denied">
+      <SharedGalleryCase id="denied" title="Access denied">
         <NoPermissionState permission="build:managed-products:view" />
-      </GalleryCase>
+      </SharedGalleryCase>
 
       <ManagedProductsGalleryList
         caseId="mobile-nav-clearance"
@@ -369,15 +320,15 @@ export function ManagedProductsGallery() {
         body={<ManagedProductsReadyTable />}
       />
 
-      <GalleryCase id="feedback-loading" title="Feedback — loading skeleton">
+      <SharedGalleryCase id="feedback-loading" title="Feedback — loading skeleton">
         <DataTableSkeleton
           rows={8}
           headers={FEEDBACK_SKELETON_HEADERS}
           className="flex-1"
         />
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="feedback-empty" title="Feedback — empty">
+      <SharedGalleryCase id="feedback-empty" title="Feedback — empty">
         <EmptyState
           className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
@@ -385,15 +336,15 @@ export function ManagedProductsGallery() {
           description="Submissions from widgets linked to this product will appear here."
           action={{ label: "Clear filters" }}
         />
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="goals-loading" title="Goals — loading skeleton">
+      <SharedGalleryCase id="goals-loading" title="Goals — loading skeleton">
         <div className="overflow-y-auto p-4">
           <GoalsSkeleton />
         </div>
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="goals-empty" title="Goals — empty">
+      <SharedGalleryCase id="goals-empty" title="Goals — empty">
         <EmptyState
           className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
@@ -401,15 +352,15 @@ export function ManagedProductsGallery() {
           description="Create goals linked to this product."
           action={{ label: "New goal" }}
         />
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="roadmap-loading" title="Roadmap — loading skeleton">
+      <SharedGalleryCase id="roadmap-loading" title="Roadmap — loading skeleton">
         <div className="overflow-y-auto p-4">
           <RoadmapSkeleton />
         </div>
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="roadmap-empty" title="Roadmap — empty">
+      <SharedGalleryCase id="roadmap-empty" title="Roadmap — empty">
         <EmptyState
           className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
@@ -417,15 +368,15 @@ export function ManagedProductsGallery() {
           description="Add items to plan what this product is working toward."
           action={{ label: "Add item" }}
         />
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="overview-loading" title="Product overview — loading">
+      <SharedGalleryCase id="overview-loading" title="Product overview — loading">
         <div className="flex flex-1 min-h-0 flex-col overflow-y-auto p-4">
           <ManagedProductOverviewSkeleton />
         </div>
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="overview-empty" title="Product overview — not found">
+      <SharedGalleryCase id="overview-empty" title="Product overview — not found">
         <PageWrapper title="Payments Platform" backHref="/build/managed-products">
           <EmptyState
             className={CONTENT_FILL_PANEL}
@@ -434,9 +385,9 @@ export function ManagedProductsGallery() {
             description="This product may have been deleted or moved."
           />
         </PageWrapper>
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="insights-loading" title="Insights — loading">
+      <SharedGalleryCase id="insights-loading" title="Insights — loading">
         <PageWrapper
           title="Insights"
           subtitle="Aggregated activity for this product"
@@ -476,19 +427,19 @@ export function ManagedProductsGallery() {
             </PmSection>
           </PmPageShell>
         </PageWrapper>
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="insights-ready" title="Insights — ready (stub data)">
+      <SharedGalleryCase id="insights-ready" title="Insights — ready (stub data)">
         <InsightsReadyFrame />
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="projects-loading" title="Linked projects — loading">
+      <SharedGalleryCase id="projects-loading" title="Linked projects — loading">
         <div className="flex flex-1 min-h-0 flex-col overflow-y-auto p-4">
           <GridSkeleton />
         </div>
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="projects-empty" title="Linked projects — empty">
+      <SharedGalleryCase id="projects-empty" title="Linked projects — empty">
         <EmptyState
           className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
@@ -496,17 +447,17 @@ export function ManagedProductsGallery() {
           description="Link projects to this product to track delivery."
           action={{ label: "Link project" }}
         />
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="feedbucket-loading" title="Feedbucket — loading">
+      <SharedGalleryCase id="feedbucket-loading" title="Feedbucket — loading">
         <PmPageShell>
           <div className="flex flex-1 min-h-0 flex-col gap-3">
             <Skeleton className="h-48 w-full rounded-xl" />
           </div>
         </PmPageShell>
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="feedbucket-empty" title="Feedbucket — no widget">
+      <SharedGalleryCase id="feedbucket-empty" title="Feedbucket — no widget">
         <EmptyState
           className={CONTENT_FILL_PANEL}
           illustrationPreset="projects"
@@ -514,17 +465,17 @@ export function ManagedProductsGallery() {
           description="Create a widget to embed on your product and start collecting feedback."
           action={{ label: "Create feedback widget" }}
         />
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="submission-loading" title="Submission detail — loading">
+      <SharedGalleryCase id="submission-loading" title="Submission detail — loading">
         <div className="flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto p-4">
           <Skeleton className="h-64 w-full rounded-xl" />
           <Skeleton className="h-24 w-full rounded-xl" />
           <Skeleton className="h-32 w-full rounded-xl" />
         </div>
-      </GalleryCase>
+      </SharedGalleryCase>
 
-      <GalleryCase id="submission-empty" title="Submission detail — not found">
+      <SharedGalleryCase id="submission-empty" title="Submission detail — not found">
         <PageWrapper title="Submission" backHref="/build/1/feedbucket">
           <EmptyState
             className={CONTENT_FILL_PANEL}
@@ -533,7 +484,8 @@ export function ManagedProductsGallery() {
             description="This feedback submission was deleted, or the link is out of date."
           />
         </PageWrapper>
-      </GalleryCase>
+      </SharedGalleryCase>
     </div>
+    </QueryClientProvider>
   );
 }

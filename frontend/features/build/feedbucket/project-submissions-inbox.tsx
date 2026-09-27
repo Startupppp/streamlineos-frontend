@@ -3,11 +3,10 @@
 import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { type DataTableColumn } from "@/components/ui/data-table";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
@@ -132,7 +131,7 @@ export function ProjectSubmissionsInbox({
     });
   }
 
-  const { data, isLoading, isError, refetch } = useFeedbucketSubmissions({
+  const { data, isLoading, isError, error, refetch } = useFeedbucketSubmissions({
     limit: PAGE_SIZE,
     ...(walk.cursor ? { cursor: walk.cursor } : {}),
     ...serverFilters,
@@ -224,25 +223,22 @@ export function ProjectSubmissionsInbox({
 
   const selectionEnabled = canUpdate || canDelete;
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-1 min-h-0 h-full flex-col gap-2 p-3">
-        {Array.from({ length: 10 }).map((_, index) => (
-          <Skeleton key={`submission-skeleton-${index}`} className="h-14 w-full rounded-lg" />
-        ))}
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <ErrorState
-        className="flex flex-1 min-h-0 h-full"
-        description="Failed to load submissions."
-        onRetry={handleRetry}
+  const renderMobileCard = useCallback(
+    (row: SubmissionRow) => (
+      <SubmissionMobileCard
+        row={row}
+        actions={
+          canDelete ? (
+            <DeleteSubmissionButton
+              submissionId={row.id}
+              onRequestDelete={handleRequestDelete}
+            />
+          ) : undefined
+        }
       />
-    );
-  }
+    ),
+    [canDelete, handleRequestDelete],
+  );
 
   const filteredEmptyState = (
     <EmptyState
@@ -275,24 +271,17 @@ export function ProjectSubmissionsInbox({
         />
       ) : null}
 
-      <DataTable
-        data={rows}
+      <BuildListSurface<SubmissionRow>
+        permission="feedbucket:submissions:view"
+        rows={rows}
         columns={columns}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isFiltered={hasActiveFilters}
         getRowKey={getSubmissionRowKey}
         onRowClick={handleRowClick}
-        mobileCard={(row) => (
-          <SubmissionMobileCard
-            row={row}
-            actions={
-              canDelete ? (
-                <DeleteSubmissionButton
-                  submissionId={row.id}
-                  onRequestDelete={handleRequestDelete}
-                />
-              ) : undefined
-            }
-          />
-        )}
+        mobileCard={renderMobileCard}
         selection={
           selectionEnabled
             ? {
@@ -305,15 +294,15 @@ export function ProjectSubmissionsInbox({
         pagination={{
           mode: "cursor",
           pageSize: PAGE_SIZE,
-          pageNumber: walk.pageNumber,
           hasMore: data?.pagination.hasMore ?? false,
           hasPrevious: walk.hasPrevious,
           onNext: handleNextPage,
           onPrevious: handlePreviousPage,
         }}
-        className="flex flex-1 min-h-0 h-full border-0 rounded-none"
-        emptyState={hasActiveFilters ? filteredEmptyState : firstRunEmptyState}
         rowClassName={submissionRowClassName}
+        onRetry={handleRetry}
+        empty={firstRunEmptyState}
+        filteredEmpty={filteredEmptyState}
       />
 
       <ConfirmDialog

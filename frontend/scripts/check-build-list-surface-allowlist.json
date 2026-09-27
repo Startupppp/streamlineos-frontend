@@ -1,0 +1,14 @@
+[
+  {
+    "path": "features/build/shared/build-list-surface.tsx",
+    "reason": "the surface itself; it implements the canonical DataTable + usePageState assembly that this gate prevents pages from duplicating directly"
+  },
+  {
+    "path": "features/build/project-detail/project-budget-page.tsx",
+    "reason": "DataTable renders a subordinate member-cost breakdown sub-table inside a multi-section budget dashboard; the page primary surface is budget stats and a plan-budget edit form, not a list"
+  },
+  {
+    "path": "features/build/my-work/my-work-content.tsx",
+    "reason": "receives PageStateResolution as a prop so the parent owns the usePageState call; multi-view presentation component switching between table, bucket-list and kanban/board views that BuildListSurface does not cover"
+  }
+]

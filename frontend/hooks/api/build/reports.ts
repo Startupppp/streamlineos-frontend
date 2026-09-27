@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -9,19 +9,31 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 
-const velocityPageContract = lazyContract(() =>
+const velocityPageContract = lazyContract<VelocityPage>(() =>
   Promise.all([
     import("zod"),
     import("@/hooks/api/build/reports-schema"),
   ] as const).then(([{ z }, { velocityContract }]) =>
-    z.object({
-      data: velocityContract,
-      pagination: z.object({
-        limit: z.number().int(),
-        hasMore: z.boolean(),
-        nextCursor: z.string().nullable(),
-      }),
-    }),
+    z
+      .union([
+        z.object({
+          data: velocityContract,
+          pagination: z.object({
+            limit: z.number().int(),
+            hasMore: z.boolean(),
+            nextCursor: z.string().nullable(),
+          }),
+        }),
+        velocityContract,
+      ])
+      .transform((value) =>
+        Array.isArray(value)
+          ? {
+              data: value,
+              pagination: { limit: value.length || 100, hasMore: false, nextCursor: null },
+            }
+          : value,
+      ),
   ),
 );
 const burnupDataContract = lazyContract(() =>

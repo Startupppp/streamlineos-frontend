@@ -370,7 +370,7 @@ export function CycleDetailPage({
             {view === "list" && (
               <div className="h-full min-h-0 overflow-y-auto pb-2 pt-0">
                 {canUpdate && selectedIds.size > 0 && (
-                  <BulkActionBar selectedCount={selectedIds.size} members={members ?? []} cycles={cycles ?? []} statuses={statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkPriority} onBulkAssignee={handleBulkAssignee} onBulkCycle={handleBulkCycle} onClear={handleClearSelection} />
+                  <BulkActionBar selectedCount={selectedIds.size} members={members?.data ?? []} cycles={cycles ?? []} statuses={statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkPriority} onBulkAssignee={handleBulkAssignee} onBulkCycle={handleBulkCycle} onClear={handleClearSelection} />
                 )}
                 <ListView
                   tickets={cycleTickets}

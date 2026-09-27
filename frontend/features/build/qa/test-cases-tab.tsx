@@ -4,12 +4,9 @@ import { useCallback, useMemo, useState } from "react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useTestCases, useTestSuites, useDeleteTestCase } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useCursorPager } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import type { TestCase } from "@/types/projects";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -17,6 +14,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
@@ -75,7 +74,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
   const [deleteTarget, setDeleteTarget] = useState<TestCase | null>(null);
   const [selectedIds, setSelectedIds] = useState(new Set<string | number>());
 
-  const { cursor, hasPrevious, goNext, goPrevious } = useCursorPager(
+  const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
   );
 
@@ -184,13 +183,6 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     enabled: !sheetOpen && !deleteTarget,
   });
 
-  const pageState = usePageState({
-    permission: "build:qa:view",
-    isLoading,
-    isError,
-    error,
-  });
-
   const columns = useMemo(
     () =>
       buildTestCaseColumns({
@@ -270,61 +262,63 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
         {canManage ? <NewCaseButton onClick={handleNewCase} /> : null}
       </div>
 
-      <PageState
-        resolution={pageState}
-        loading={
-          <DataTableSkeleton mobileCards
-            rows={12}
-            headers={TEST_CASE_TABLE_HEADERS}
-            className="flex-1"
-          />
-        }
+      {selectedIds.size > 0 ? (
+        <QaBulkActionBar
+          projectId={projectId}
+          selectedIds={selectedIds}
+          onClear={handleClearSelection}
+        />
+      ) : null}
+
+      <BuildListSurface<TestCase>
+        permission="build:qa:view"
+        rows={cases}
+        columns={columns}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isFiltered={listFilters.isFiltered}
+        getRowKey={(row) => row.id}
+        mobileCard={renderMobileCard}
+        selection={{
+          selected: selectedIds,
+          onChange: setSelectedIds,
+          getRowLabel: (row) => row.title,
+        }}
+        pagination={{
+          mode: "cursor",
+          pageSize: CASE_PAGE_SIZE,
+          hasMore: casesPage?.hasMore ?? false,
+          hasPrevious,
+          onNext: handleNextPage,
+          onPrevious: goPrevious,
+        }}
         empty={
           <EmptyState
             illustrationPreset="ticket"
             title="No test cases"
             description="Create a test case to get started."
-            filtersActive={listFilters.isFiltered}
-            onClearFilters={listFilters.clearAll}
             action={
               canManage
                 ? { label: "New Test Case", onClick: handleNewCase }
                 : undefined
             }
-            className="flex-1"
+            className={CONTENT_FILL_PANEL}
           />
         }
-        onRetry={handleRetry}
-        className="flex-1 min-h-0"
-      >
-        {selectedIds.size > 0 ? (
-          <QaBulkActionBar
-            projectId={projectId}
-            selectedIds={selectedIds}
-            onClear={handleClearSelection}
+        filteredEmpty={
+          <EmptyState
+            illustrationPreset="ticket"
+            title="No test cases match your filters"
+            description="Try clearing the filters to see more."
+            onClearFilters={listFilters.clearAll}
+            className={CONTENT_FILL_PANEL}
           />
-        ) : null}
-        <DataTable<TestCase>
-          data={cases}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          mobileCard={renderMobileCard}
-          className="flex-1 min-h-0"
-          selection={{
-            selected: selectedIds,
-            onChange: setSelectedIds,
-            getRowLabel: (row) => row.title,
-          }}
-          pagination={{
-            mode: "cursor",
-            pageSize: CASE_PAGE_SIZE,
-            hasMore: casesPage?.hasMore ?? false,
-            hasPrevious,
-            onNext: handleNextPage,
-            onPrevious: goPrevious,
-          }}
-        />
-      </PageState>
+        }
+        loadingHeaders={TEST_CASE_TABLE_HEADERS}
+        loadingRows={12}
+        onRetry={handleRetry}
+      />
 
       <TestCaseSheet
         projectId={projectId}

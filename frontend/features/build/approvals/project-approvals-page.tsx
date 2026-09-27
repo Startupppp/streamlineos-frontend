@@ -11,12 +11,10 @@ import {
   useDeleteApproval,
 } from "@/hooks/api/build/approvals";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DecideDialog } from "./decide-dialog";
 import { DelegateDialog } from "./delegate-dialog";
@@ -282,6 +280,10 @@ export function ProjectApprovalsPage({
 
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
+  const handleNextPage = useCallback(() => void fetchNextPage(), [fetchNextPage]);
+
+  const isRowSelectable = useCallback(() => canManage, [canManage]);
+
   const handleDecideDialogChange = useCallback((open: boolean) => {
     if (!open) setDecideTarget(null);
   }, []);
@@ -346,13 +348,6 @@ export function ProjectApprovalsPage({
     [ownerOf],
   );
 
-  const pageState = usePageState({
-    permission: "build:approvals:view",
-    isLoading,
-    isError,
-    error,
-  });
-
   return (
     <PageWrapper
       title="Approvals"
@@ -392,51 +387,51 @@ export function ProjectApprovalsPage({
               onClear={handleClearSelection}
             />
           )}
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={12}
-                headers={APPROVALS_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<Approval>
+            permission="build:approvals:view"
+            rows={items}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            mobileCard={renderMobileCard}
+            selection={{
+              selected: selectedIds,
+              onChange: setSelectedIds,
+              isRowSelectable,
+              getRowLabel: (row) => row.title,
+            }}
+            pagination={{
+              mode: "cursor",
+              pageSize: 25,
+              hasMore: Boolean(hasNextPage),
+              onNext: handleNextPage,
+            }}
+            isFetchingMore={isFetchingNextPage}
+            minWidth="720px"
+            loadingHeaders={APPROVALS_TABLE_HEADERS}
+            loadingRows={12}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="approval"
                 title="No approvals yet"
                 description="Use approvals to get sign-off on tasks, milestones, and releases before they ship."
-                filtersActive={listFilters.isFiltered}
+              />
+            }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="approval"
+                title="No approvals match your filters"
+                description="Try adjusting the filters to see more approvals."
                 onClearFilters={listFilters.clearAll}
               />
             }
             onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <DataTable
-              data={items}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              selection={{
-                selected: selectedIds,
-                onChange: setSelectedIds,
-                isRowSelectable: () => canManage,
-                getRowLabel: (row) => row.title,
-              }}
-              pagination={{
-                mode: "cursor",
-                pageSize: 25,
-                hasMore: Boolean(hasNextPage),
-                hasPrevious: false,
-                onNext: () => void fetchNextPage(),
-              }}
-              isLoading={isFetchingNextPage}
-              minWidth="720px"
-              mobileCard={renderMobileCard}
-              className={CONTENT_FILL_PANEL}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 

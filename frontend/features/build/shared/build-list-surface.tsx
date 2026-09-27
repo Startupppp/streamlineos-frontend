@@ -3,19 +3,36 @@
 import type { ReactNode } from "react";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import type { DataTableSortState } from "@/components/ui/data-table.types";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
-export interface BuildListSurfacePagination {
+export interface BuildListSurfaceCursorPagination {
   mode: "cursor";
   pageSize: number;
   hasMore: boolean;
-  hasPrevious: boolean;
+  hasPrevious?: boolean;
   onNext: () => void;
-  onPrevious: () => void;
+  onPrevious?: () => void;
 }
+
+export interface BuildListSurfaceServerPagination {
+  mode: "server";
+  page: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: readonly number[];
+}
+
+export type BuildListSurfacePagination =
+  | BuildListSurfaceCursorPagination
+  | BuildListSurfaceServerPagination;
+
+const NO_PREVIOUS_PAGE = () => {};
 
 export interface BuildListSurfaceProps<TRow> {
   permission: PermissionKey;
@@ -37,8 +54,16 @@ export interface BuildListSurfaceProps<TRow> {
   selection?: {
     selected: ReadonlySet<string | number>;
     onChange: (sel: Set<string | number>) => void;
+    isRowSelectable?: (row: TRow) => boolean;
     getRowLabel?: (row: TRow, index: number) => string;
   };
+  isFetchingMore?: boolean;
+  compact?: boolean;
+  tableClassName?: string;
+  minWidth?: string;
+  footer?: ReactNode;
+  rowClassName?: (row: TRow, index: number) => string;
+  sortState?: DataTableSortState;
   loadingRows?: number;
   loadingHeaders?: readonly string[];
   className?: string;
@@ -62,6 +87,13 @@ export function BuildListSurface<TRow>({
   onRowClick,
   mobileCard,
   selection,
+  isFetchingMore,
+  compact,
+  tableClassName,
+  minWidth,
+  footer,
+  rowClassName,
+  sortState,
   loadingRows = 8,
   loadingHeaders,
   className,
@@ -94,6 +126,7 @@ export function BuildListSurface<TRow>({
         loading={resolvedLoading}
         empty={resolvedEmpty}
         onRetry={onRetry}
+        compact={compact}
         className={className ?? CONTENT_FILL_PANEL}
       >
         <DataTable<TRow>
@@ -103,8 +136,21 @@ export function BuildListSurface<TRow>({
           onRowClick={onRowClick}
           mobileCard={mobileCard}
           selection={selection}
-          pagination={pagination}
-          className={CONTENT_FILL_PANEL}
+          pagination={
+            pagination === undefined || pagination.mode === "server"
+              ? pagination
+              : {
+                  ...pagination,
+                  hasPrevious: pagination.hasPrevious ?? false,
+                  onPrevious: pagination.onPrevious ?? NO_PREVIOUS_PAGE,
+                }
+          }
+          isLoading={isFetchingMore}
+          minWidth={minWidth}
+          footer={footer}
+          rowClassName={rowClassName}
+          sortState={sortState}
+          className={tableClassName ?? CONTENT_FILL_PANEL}
         />
       </PageState>
     </div>

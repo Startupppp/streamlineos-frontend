@@ -11,10 +11,9 @@ import {
   useDeleteTransition,
 } from "@/hooks/api/build/workflow";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -120,13 +119,8 @@ export function TransitionsTable({
   const setSheetOpen = onSheetOpenChange ?? setInternalSheetOpen;
   const setEditTarget = onEditTargetChange ?? setInternalEditTarget;
 
-  const resolution = usePageState({
-    permission: "build:workflow:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty: transitions.length === 0,
-  });
+
+  const getTransitionRowKey = (row: WorkflowTransition) => row.id;
 
   const statusMap = new Map(statuses.map((s) => [s.id, s.name]));
 
@@ -315,8 +309,18 @@ export function TransitionsTable({
         {canManage ? <AddTransitionButton onClick={handleAddClick} /> : null}
       </div>
 
-      <PageState
-        resolution={resolution}
+      <BuildListSurface<WorkflowTransition>
+        permission="build:workflow:view"
+        rows={transitions}
+        columns={columns}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        getRowKey={getTransitionRowKey}
+        mobileCard={renderTransitionMobileCard}
+        minWidth="680px"
+        tableClassName="border-0"
+        compact
         loading={<DataTableSkeleton rows={12} headers={TRANSITION_TABLE_HEADERS} className="px-4 pb-4" mobileCards />}
         empty={
           <EmptyState
@@ -329,17 +333,7 @@ export function TransitionsTable({
           />
         }
         onRetry={handleRetry}
-        compact
-      >
-        <DataTable
-          data={transitions}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          minWidth="680px"
-          className="border-0"
-          mobileCard={renderTransitionMobileCard}
-        />
-      </PageState>
+      />
 
       <TransitionFormSheet
         open={sheetOpen}

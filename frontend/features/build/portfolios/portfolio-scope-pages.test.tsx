@@ -12,15 +12,18 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/portfolios", () => ({
   usePortfolios: jest.fn(),
   usePortfolio: jest.fn(),
-  useProjects: jest.fn(() => ({ data: undefined })),
   useCreatePortfolio: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdatePortfolio: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeletePortfolio: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useLinkPortfolioProject: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUnlinkPortfolioProject: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProjects: jest.fn(() => ({ data: undefined })),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
@@ -86,8 +89,46 @@ jest.mock("@/components/ui/data-table", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: () => <div data-testid="empty-state" />,
+  EmptyState: ({ title }: { title?: string }) => (
+    <div data-testid="empty-state">{title ? <span>{title}</span> : null}</div>
+  ),
 }));
+
+const mockPortfolioListFilters = {
+  search: "",
+  debouncedSearch: "",
+  resetKey: "0",
+  value: jest.fn((_p: string) => "all"),
+  isActive: jest.fn(() => false),
+  setValue: jest.fn(),
+  clearAll: jest.fn(),
+  isFiltered: false,
+  activeCount: 0,
+  isPending: false,
+  setSearch: jest.fn(),
+  cursor: null,
+  setCursor: jest.fn(),
+};
+jest.mock("@/features/build/shared/use-build-list-filters", () => ({
+  useBuildListFilters: () => mockPortfolioListFilters,
+  BUILD_FILTER_ALL: "all",
+}));
+
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => {
+  const { useState } = require("react");
+  return {
+    useBuildCursorPager: () => {
+      const [cursor, setCursor] = useState<string | undefined>(undefined);
+      return {
+        cursor,
+        hasPrevious: cursor !== undefined,
+        goNext: (next: string | null | undefined) => { if (next) setCursor(next); },
+        goPrevious: () => setCursor(undefined),
+        reset: () => setCursor(undefined),
+      };
+    },
+  };
+});
 
 jest.mock("@/components/ui/search-input", () => ({
   SearchInput: () => null,
@@ -148,9 +189,13 @@ jest.mock("./portfolio-form-sheet", () => ({
     open ? <div data-testid="portfolio-form-sheet" /> : null,
 }));
 
-const { usePortfolios, usePortfolio, useProjects } = jest.requireMock("@/hooks/api/build") as {
+const { usePortfolios } = jest.requireMock("@/hooks/api/build/portfolios") as {
   usePortfolios: jest.Mock;
+};
+const { usePortfolio } = jest.requireMock("@/hooks/api/build/portfolios") as {
   usePortfolio: jest.Mock;
+};
+const { useProjects } = jest.requireMock("@/hooks/api/build/projects") as {
   useProjects: jest.Mock;
 };
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
@@ -164,6 +209,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   usePageState.mockReturnValue({ kind: "ready" });
   mockPortfoliosUseCan.mockReturnValue(true);
+  mockPortfolioListFilters.isFiltered = false;
+  mockPortfolioListFilters.value.mockReturnValue("all");
 });
 
 describe("PortfoliosPage — denied state (BSN-FE-D1)", () => {
@@ -287,6 +334,58 @@ describe("PortfoliosPage — keyboard shortcuts (BSN-FE-K2)", () => {
     fireEvent.keyDown(document, { key: "e" });
 
     expect(screen.getByTestId("portfolio-form-sheet")).toBeInTheDocument();
+  });
+});
+
+describe("PortfoliosPage — empty states (BSN-FE-E1)", () => {
+  it("shows 'No portfolios yet' empty copy when there are no portfolios and no filters are active", () => {
+    usePortfolios.mockReturnValue({
+      data: { data: [], pagination: { nextCursor: null, hasMore: false } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<PortfoliosPage />);
+
+    expect(screen.getByText("No portfolios yet")).toBeInTheDocument();
+    expect(screen.queryByText("No portfolios match your filters")).not.toBeInTheDocument();
+  });
+
+  it("shows 'No portfolios match your filters' empty copy when filters are active and no portfolios match", () => {
+    mockPortfolioListFilters.isFiltered = true;
+    usePortfolios.mockReturnValue({
+      data: { data: [], pagination: { nextCursor: null, hasMore: false } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<PortfoliosPage />);
+
+    expect(screen.getByText("No portfolios match your filters")).toBeInTheDocument();
+    expect(screen.queryByText("No portfolios yet")).not.toBeInTheDocument();
+  });
+
+  it("passes error to usePageState so a MODULE_NOT_ENABLED 402 shows the upgrade path rather than a generic error (FE-41)", () => {
+    const err = new Error("MODULE_NOT_ENABLED");
+    usePortfolios.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: err,
+      refetch: jest.fn(),
+    });
+
+    render(<PortfoliosPage />);
+
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ error: err }),
+    );
   });
 });
 

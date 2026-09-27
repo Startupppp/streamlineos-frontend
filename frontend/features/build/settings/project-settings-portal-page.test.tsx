@@ -12,6 +12,7 @@ function makeMilestonePage(milestones: MilestoneRow[], hasMore = false) {
 }
 
 let mockCanManage = true;
+const mockUsePageState = jest.fn();
 let mockVisibilityQuery: {
   data?: { tickets: ReturnType<typeof makeTicketPage>; milestones: ReturnType<typeof makeMilestonePage> };
   isLoading: boolean;
@@ -27,28 +28,24 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanManage,
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/client-portal", () => ({
   useClientVisibility: () => ({ ...mockVisibilityQuery, refetch: jest.fn() }),
   useUpdateTicketVisibility: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateMilestoneVisibility: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: ({
-    permission,
-    isLoading,
-    isError,
-    isEmpty,
-  }: {
+  usePageState: (opts: {
     permission: string;
     isLoading: boolean;
     isError: boolean;
     isEmpty: boolean;
   }) => {
-    if (permission === "build:clientvisibility:manage" && !mockCanManage) return "denied";
-    if (isLoading) return "loading";
-    if (isError) return "error";
-    if (isEmpty) return "empty";
+    mockUsePageState(opts);
+    if (opts.permission === "build:clientvisibility:manage" && !mockCanManage) return "denied";
+    if (opts.isLoading) return "loading";
+    if (opts.isError) return "error";
+    if (opts.isEmpty) return "empty";
     return "ready";
   },
 }));
@@ -105,7 +102,9 @@ jest.mock("@/components/ui/skeleton", () => ({
 
 jest.mock("@/components/ui/table-pagination", () => ({
   TablePagination: () => <div data-testid="table-pagination" />,
-  useCursorPager: () => ({ cursor: null, hasPrevious: false, goNext: jest.fn(), goPrevious: jest.fn() }),
+}));
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
+  useBuildCursorPager: () => ({ cursor: null, hasPrevious: false, goNext: jest.fn(), goPrevious: jest.fn() }),
 }));
 
 jest.mock("@/components/ui/switch", () => ({
@@ -227,5 +226,14 @@ describe("ProjectSettingsPortalPage", () => {
 
     expect(screen.getAllByRole("switch")).toHaveLength(50);
     expect(screen.getByTestId("table-pagination")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsPortalPage — permission key (Criterion 3)", () => {
+  it("passes the exact backend key build:clientvisibility:manage to usePageState — asserted not assumed", () => {
+    render(<ProjectSettingsPortalPage projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:clientvisibility:manage" }),
+    );
   });
 });

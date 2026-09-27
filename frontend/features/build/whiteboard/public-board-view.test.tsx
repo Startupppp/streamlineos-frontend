@@ -6,7 +6,7 @@ jest.mock("next/dynamic", () => () => () => null);
 jest.mock("@excalidraw/excalidraw/index.css", () => ({}), { virtual: true });
 jest.mock("./whiteboard-theme.css", () => ({}), { virtual: true });
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/whiteboards-public", () => ({
   usePublicWhiteboard: jest.fn(),
   useUpdatePublicWhiteboard: jest.fn(),
 }));
@@ -30,7 +30,7 @@ jest.mock("next/link", () => ({
   ),
 }));
 
-import { usePublicWhiteboard, useUpdatePublicWhiteboard } from "@/hooks/api/build";
+import { usePublicWhiteboard, useUpdatePublicWhiteboard } from "@/hooks/api/build/whiteboards-public";
 import { PublicBoardView } from "./public-board-view";
 
 const mockUsePublicWhiteboard = usePublicWhiteboard as jest.MockedFunction<typeof usePublicWhiteboard>;

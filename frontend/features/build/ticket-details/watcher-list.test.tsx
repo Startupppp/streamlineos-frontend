@@ -14,7 +14,7 @@ let mockWatchersResult: {
 const mockToggleMutate = jest.fn();
 const mockAddMutate = jest.fn();
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/watchers", () => ({
   useWatchers: () => mockWatchersResult,
   useToggleWatch: () => ({ mutate: mockToggleMutate, isPending: false }),
   useAddWatcher: () => ({ mutate: mockAddMutate }),

@@ -259,6 +259,30 @@ describe("BSN-03-052 — internal management and external portal identity separa
       expect(screen.getByText(/No projects/i)).toBeInTheDocument();
     });
 
+    it("states the empty surface without implying that projects exist which this client may not see", () => {
+      mockUseAccess.mockReturnValue(ACCESS_GRANTED_PORTAL_ONLY);
+      mockUseCan.mockImplementation((p: string) => p === "build:portal:view");
+      mockUsePortalProjects.mockReturnValue({
+        data: [],
+        isLoading: false,
+        isError: false,
+        error: undefined,
+        refetch: jest.fn(),
+      });
+      const { container } = render(<PortalListPage />);
+      const copy = container.textContent ?? "";
+      for (const disclosure of [
+        /do(?:n't| not) have access/i,
+        /hidden/i,
+        /excluded/i,
+        /cannot see/i,
+        /not (?:been )?shared with you/i,
+        /no longer/i,
+      ]) {
+        expect(copy).not.toMatch(disclosure);
+      }
+    });
+
     it("does not call the internal management hook so an external client cannot access management data", () => {
       mockUseAccess.mockReturnValue(ACCESS_GRANTED_PORTAL_ONLY);
       mockUseCan.mockImplementation((p: string) => p === "build:portal:view");

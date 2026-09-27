@@ -37,6 +37,8 @@ export function useProjectRetentionSettings(projectId: number) {
       ),
     enabled: canView && !!projectId,
     staleTime: 60_000,
+    throwOnError: false,
+    retry: false,
   });
 }
 

@@ -8,7 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -78,7 +79,7 @@ const ROADMAP_FILTER_DEFS = [
 
 export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps) {
   const listFilters = useBuildListFilters({ filters: ROADMAP_FILTER_DEFS });
-  const pager = useCursorPager(listFilters.resetKey);
+  const pager = useBuildCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const statusValue = listFilters.value("status");

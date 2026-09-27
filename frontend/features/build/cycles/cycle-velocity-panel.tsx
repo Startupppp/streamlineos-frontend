@@ -17,8 +17,8 @@ export function CycleVelocityPanel({ projectId }: { projectId: number }) {
       <div className="rounded-lg border border-border bg-card p-4">
         {isLoading ? <Skeleton className="h-72 w-full" /> : null}
         {isError ? <p className="text-sm text-muted-foreground">Velocity is unavailable right now.</p> : null}
-        {!isLoading && !isError && cycles.length ? <VelocityChart data={cycles.map((cycle) => ({ name: cycle.name, Committed: cycle.committedPoints, Completed: cycle.completedPoints }))} /> : null}
-        {!isLoading && !isError && !cycles.length ? <p className="text-sm text-muted-foreground">Complete a cycle to see velocity here.</p> : null}
+        {!isLoading && !isError && cycles.length > 0 ? <VelocityChart data={cycles.map((cycle) => ({ name: cycle.name, Committed: cycle.committedPoints, Completed: cycle.completedPoints }))} /> : null}
+        {!isLoading && !isError && cycles.length === 0 ? <p className="text-sm text-muted-foreground">Complete a cycle to see velocity here.</p> : null}
       </div>
     </section>
   );
