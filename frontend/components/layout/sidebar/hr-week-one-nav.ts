@@ -30,6 +30,9 @@ const WEEK_ONE_HIDDEN_CHILD_HREFS = new Set([
   "/hr/work-logs",
   "/hr/handbook",
   "/hr/background-verification",
+  "/hr/document-types",
+  "/hr/document-review",
+  "/hr/email-templates",
 ]);
 
 function trimChildren(route: NavRoute): NavRoute {

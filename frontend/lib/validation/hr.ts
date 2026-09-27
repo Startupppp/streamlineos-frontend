@@ -119,11 +119,11 @@ export const onboardEmployeeInputSchema = z.object({
     .trim()
     .email("Invalid email address")
     .max(254, "Email must be at most 254 characters"),
-  gender: z.enum(["MALE", "FEMALE", "OTHER"]),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   phone: z
     .string()
-    .min(1, "Phone number is required")
-    .refine((val) => isValidPhoneNumber(val), "Please enter a valid phone number"),
+    .refine((val) => !val || isValidPhoneNumber(val), "Please enter a valid phone number")
+    .optional(),
   whatsappSameAsPhone: z.boolean(),
   whatsappNumber: z
     .string()

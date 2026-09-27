@@ -44,7 +44,7 @@ const STEPS = [
 // Exported so the Skills & Pay step's test can prove the gate actually covers
 // the fields that step marks required (V-135).
 export const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
-  1: ["firstName", "lastName", "email", "phone", "gender"],
+  1: ["firstName", "lastName", "email"],
   2: ["designation", "departmentId", "reportingManagerUserId", "secondaryManagers", "topLevelRole", "topLevelRoleReason", "role", "joiningDate"],
   3: ["taxId", "monthlySalary"],
   4: [],
@@ -74,7 +74,7 @@ export function OnboardingWizard() {
     resolver: zodResolver(onboardEmployeeInputSchema),
     defaultValues: {
       firstName: "", lastName: "", email: "", phone: "",
-      whatsappSameAsPhone: true, whatsappNumber: "", gender: "MALE",
+      whatsappSameAsPhone: true, whatsappNumber: "", gender: undefined,
       designation: "", departmentId: undefined,
       reportingManagerUserId: undefined, reportingManagerRef: null, secondaryManagers: [],
       topLevelRole: false, topLevelRoleReason: undefined,

@@ -275,7 +275,7 @@ export function UploadDocumentDialog({
             description: data.description,
             type: data.type,
             category: data.category,
-            userId: data.userId,
+            ...(data.userId?.trim() ? { userId: data.userId.trim() } : {}),
             isPublic: data.isPublic,
             expiryDate: data.expiryDate ? format(data.expiryDate, "yyyy-MM-dd") : undefined,
             tags: data.tags,

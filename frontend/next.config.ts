@@ -87,6 +87,11 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/login",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
       source: "/payroll/workers",
       destination: "/payroll/employees",
       permanent: false,
