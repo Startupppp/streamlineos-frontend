@@ -157,6 +157,79 @@ journalctl -u streamlineos-api --since "1 hour ago" -o cat | \
 
 ---
 
+## #kb-ask
+
+**What fires:** `kb-ask` (high, knowledge-team) when more than 5% of KB Ask operations end in `credits_exhausted`, `provider_unavailable` or `error` over a 1-hour window, measured on at least 2 faults. SLO `module:kb:ask`.
+
+**Detection signal:** `alert-kb-ask.mjs` reads spans named `kb.ask.operation` and buckets them by the `kb.ask.outcome` attribute. Note what is **not** a fault here: `degraded` is a recorded outcome but is deliberately excluded from the fault set, because a degraded answer is a successful answer drawn from a narrower retrieval — counting it as a fault would page on a working fallback.
+
+**First five minutes**
+
+```bash
+journalctl -u streamlineos-api --since "1 hour ago" -o cat | node backend/src/scripts/alert-kb-ask.mjs
+```
+
+Read which outcome dominates before acting; the three have different owners.
+
+**Containment:** `credits_exhausted` is a billing state, not an outage — Ask correctly refused to spend credits the tenant does not have, and it returns 402 rather than a wrong answer. Do not top up to silence the alert without checking what consumed the credits. `provider_unavailable` is upstream; the reservation is refunded on provider failure, so no credit is lost, and retrying in a tight loop makes it worse. Plain `error` is the only one that warrants immediate investigation.
+
+**Recovery:** For `provider_unavailable`, confirm the provider's status and let traffic recover on its own; there is no queue to drain because Ask is synchronous. For `error`, pull the `correlationId` from the span and join it to the `kb_ai_interactions` row — every Ask writes one, including the failure path, so the interaction row is the authoritative record of what was attempted.
+
+**Verification:** `alert-kb-ask.mjs` exits 0. An exit of **2** means it could not resolve a log stream — inconclusive, not a pass.
+
+---
+
+## #kb-search
+
+**What fires:** `kb-search` (high, knowledge-team). Three distinct conditions, and they mean different things:
+1. more than **5%** of search operations end in `error` (at least 2 faults) — a straightforward failure rate;
+2. access denials exceed **25%** of operations on at least 5 denials;
+3. empty results exceed **60%** of operations on at least 10.
+
+SLO `module:kb:search`.
+
+**Detection signal:** `alert-kb-search.mjs` reads spans named `kb.search.operation`, bucketed by `kb.search.outcome`. Conditions 2 and 3 are **anomaly** signals, not failure signals — the code is working correctly in both cases. A denial spike usually means an ACL change landed and is doing exactly what it was asked to do; an empty-result spike usually means the index is missing content, which is why `#kb-index-freshness` is the first thing to check rather than the search path itself.
+
+**First five minutes**
+
+```bash
+journalctl -u streamlineos-api --since "1 hour ago" -o cat | node backend/src/scripts/alert-kb-search.mjs
+
+node backend/src/scripts/alert-kb-index-freshness.mjs
+```
+
+**Containment:** Do not widen a search predicate to clear a denial spike. The denial ratio rising after a grant or space-membership change is the guard working; treating it as a bug and relaxing the predicate converts a correct denial into a cross-tenant read. Confirm what changed in access before touching any query.
+
+**Recovery:** For an empty-result spike, check index freshness first — unindexed pages are absent from vector search while still reachable by keyword search and their own route, which is exactly the shape a "search is broken" report takes. For a denial spike, identify the ACL change from `kb_pages.acl_revision_changed_at` and confirm it was intended. For `error`, treat as an ordinary failure and investigate the span.
+
+**Verification:** `alert-kb-search.mjs` exits 0. Exit **2** is inconclusive, not a pass.
+
+---
+
+## #kb-indexing
+
+**What fires:** `kb-indexing` (high, knowledge-team) when more than 5% of KB page indexing operations end in `embedding_unavailable`, `credits_exhausted` or `error` over a 1-hour window, measured on at least 2 faults. This SLO (`module:kb:indexing`) measures whether indexing **succeeds**, which is a different question from `#kb-index-freshness` below — that one measures whether indexing is **keeping up**. A run that fails fast and loudly breaches this one; a run that silently falls behind breaches that one.
+
+**Detection signal:** `alert-kb-indexing.mjs` reads the structured log stream for spans named `kb.indexing.operation` and buckets them by the `kb.outcome` attribute. The two-fault floor exists so a single transient embedding failure in a quiet hour does not page anyone — do not lower it to catch one-off errors, because the outcome is already recorded on the span and is queryable without an alert.
+
+**First five minutes**
+
+```bash
+journalctl -u streamlineos-api --since "1 hour ago" -o cat | node backend/src/scripts/alert-kb-indexing.mjs
+
+node backend/src/scripts/alert-kb-indexing.mjs --log=app.log --hours=24 --fault-ratio=0.1
+```
+
+Read which outcome dominates before acting — the three fault outcomes have different causes and opposite responses.
+
+**Containment:** `credits_exhausted` is a billing state, not an incident: indexing has correctly refused to spend credits the tenant does not have, and re-running it will refuse again. Do not top up credits to clear the alert without checking whether a runaway re-index caused the spend. `embedding_unavailable` means the provider is down or rate-limiting; the work is deferred, not lost, so the containment is to stop re-triggering indexing and let the backlog drain. Plain `error` is the only one that warrants immediate investigation.
+
+**Recovery:** For `embedding_unavailable`, confirm the provider is healthy and re-trigger via `POST /kb/pages/reindex-all`; checkpointed resumption re-pays only for chunks that never landed, so a re-run is not a full re-embed. For `error`, find the failing page from the span's `org.id` and content type, and reproduce against that page alone before re-running the sweep — a bad single document will otherwise re-break every sweep it is part of.
+
+**Verification:** `alert-kb-indexing.mjs` exits 0. Note it exits **2** when it cannot resolve a log stream at all — that is inconclusive, not a pass, and must not be read as the alert clearing.
+
+---
+
 ## #kb-index-freshness
 
 **What fires:** `kb-index-freshness` (high, knowledge-team) when 3 or more KB pages were modified in the last 24 hours, are older than 30 minutes, and have no indexed chunks. This SLO (`module:kb:index-freshness`) measures whether the ingestion consumer is keeping up with content changes.
