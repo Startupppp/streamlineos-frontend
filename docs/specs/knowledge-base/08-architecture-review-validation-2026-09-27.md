@@ -97,7 +97,31 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 
 ### AV-04 — P1: preserve retrieval scope, provenance and failure state
 
-- [ ] Pass requested space/source/type/owner/status/verified filters consistently into candidate and passage queries. Current page candidate calls do not receive `spaceId` in `retrieveTopArticles`; source retrieval is given source IDs but no selected-space argument. Reject unsupported UI scope fields instead of implying they are applied.
+- [x] **DONE 2026-09-27 — the claim was correct and current; four gaps, all `spaceId`.** Pass requested space/source/type/owner/status/verified filters consistently into candidate and passage queries.
+      **Why this mattered:** a filter accepted but not applied is worse than one rejected. The UI
+      told the user the answer was narrowed to one space while retrieval drew from every space.
+      **Measured coverage, after the fix:**
+
+      | Field | article keyword | article vector | page keyword | page vector | source retrieval |
+      |---|---|---|---|---|---|
+      | `spaceId` | already applied | already applied | **was missing → fixed** | **was missing → fixed** | **was missing → fixed** |
+      | `sourceIds` | n/a | n/a | n/a | n/a | already applied |
+      | `pageIds` | n/a | n/a | already applied | already applied | n/a |
+      | `verifiedOnly` | n/a | n/a | already applied | already applied | n/a |
+
+      A fourth gap turned up beyond the three above: the final wiki-page fetch in
+      `retrieveTopArticles` did not re-apply `spaceId` either, so it now does as a second gate.
+      **Threaded, not rejected** — `spaceId` is already honoured on the article paths, so
+      rejecting it would have broken working queries.
+      **Sources keep their global rows:** the filter is
+      `or(isNull(kbSources.spaceId), eq(kbSources.spaceId, spaceId))`, so org-wide sources stay
+      visible and only other specific spaces are excluded.
+      **The invariant that matters is preserved and tested:** every filter is ANDed with the
+      existing org and visibility predicates, so it can only narrow, never displace them.
+      **Tests:** `kb-space-scope-filter.spec.ts` (11). **Mutation-tested four ways** — removing
+      `spaceId` from each of the page keyword path, the page vector path, `retrieveTopSources`,
+      and the `retrieve → retrieveTopSources` hand-off each failed 2 of 11, so each guard bites
+      its own line rather than all four resting on one assertion.
 - [ ] Return typed per-channel outcomes for empty, disabled, degraded and failed. `retrieveDocumentPassages`/`retrieveTopSources` catch and return `[]`; a successful embedding then makes the facade report non-degraded results. An empty authorized result means no matching accessible evidence, not proof of an empty tenant corpus.
 - [ ] **PARTLY — ACL revisions done; provider provenance is genuinely absent and cannot be fixed from inside KB.** Persist actual source content/ACL revisions and provider context provenance.
       **ACL revisions — the claim is stale.** ~~`buildAskSourceRecords` and the original
@@ -169,11 +193,71 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 ### AV-06 — P1: finish measured query and search-quality evidence
 
 - [ ] Capture before/after app-role `EXPLAIN (ANALYZE, BUFFERS)` for collection UNION, full search, chunk semi-joins, facets and health queries. Use representative rows and grant density, including grant-only and restricted-space tenants; include query count, buffers, rows scanned, p95/p99 and minority-tenant retrieval recall. The historical 50k-page/100k-grant bad-plan record is useful but does not close the rewritten query. Use an isolated load environment; rollback fixtures in production still consume locks, WAL, CPU and storage and are not free.
-- [ ] Convert or explicitly time-bound the remaining `/kb/search` offset/count implementation and its whole-`contentText` fetch for snippets. Current `kb-search.service.ts` uses `.offset(offset)` and counts all matches. Produce bounded metadata/snippets in SQL and stable keysets. Preserve public contract compatibility during migration.
+- [ ] **PARTLY — the snippet fetch is fixed; the keyset cutover is deliberately NOT done, and should not be done without its client.** Convert or explicitly time-bound the remaining `/kb/search` offset/count implementation and its whole-`contentText` fetch for snippets.
+      **Fixed — the whole-`contentText` fetch, which was the real cost.** The rows query selected
+      the entire `contentText` column for up to 50 rows purely to build a 160-character snippet,
+      so every search shipped full TOASTed page bodies across the connection to Node and threw
+      almost all of it away. Now `left(contentText, KB_SNIPPET_CONTENT_CAP)` in SQL, capped at 500
+      — 3× the snippet length, so no snippet is truncated. `buildSnippet`, the response contract
+      and every ACL/org predicate are untouched.
+      `kb-search-snippet-bound.spec.ts` asserts the rendered projection contains `left(`, with a
+      control showing a raw column reference renders without it. Mutation-tested: reverting the
+      projection fails it alone, 1 of 2.
+      **Already fine — the offset.** `.offset()` is bounded at parse time by
+      `KB_SEARCH_MAX_PAGE = 200` × `pageSize ≤ 50`, so the worst case is offset 9,950, and
+      `kb-search-paging-bounds.spec.ts` already covers it. No change needed; the audit's concern
+      does not apply to this endpoint as configured.
+      **Deliberately NOT done — the keyset cutover.** `/kb/search` returns `total`, `page`,
+      `pageSize` and `totalPages`; the frontend parses all four through `kbSearchResponseContract`
+      and `useKbSearch` renders numbered pagination from them. Removing the total to produce a
+      keyset would be a pagination cutover shipped without its client — the exact regression
+      FE-125 and BE-25 exist to prevent — and the page would lose its pager the moment the
+      backend deployed. **The sequence, for whoever picks this up:** (1) add a cursor to the
+      response *alongside* `total`, a backward-compatible extension; (2) move `useKbSearch` to
+      `useInfiniteQuery` with `getNextPageParam` and ship it; (3) only then retire `total` and
+      `totalPages`. Steps 1 and 3 without 2 is the regression.
+      **Also still open:** the `COUNT(*)` over the full match set on every search, which the
+      keyset work would remove; it is the remaining unbounded piece of this endpoint.
 
 ### AV-07 — P0/P1: purge must respect holds and finish outside request occupancy
 
-- [ ] **P0:** Enforce holds on every descendant, not just the root. `hardDelete` checks the root's `legalHold`, then `collectSubtreeIds` includes all descendants and the delete targets them without a hold predicate. Lock/recheck the affected scope or abort the operation atomically; add held-child/unheld-root, concurrent hold, and bulk/retention cases. Verify allowed lifecycle state before hard deletion.
+- [x] **DONE 2026-09-27 — the finding was exactly right, and the bug was unrecoverable.** **P0:** Enforce holds on every descendant, not just the root.
+      **Confirmed as described.** `hardDelete` read `legalHold` on the root only, `collectSubtreeIds`
+      then gathered every descendant, and the delete targeted them with no hold predicate. Deleting
+      an unheld parent **permanently destroyed a child under legal hold** — no soft-delete, no
+      recovery, and a compliance breach rather than merely a data-loss bug.
+      **Fix, in two layers.** `assertNoLegalHoldInSubtree(orgId, subtreeIds)` runs over the whole
+      subtree immediately after `collectSubtreeIds` and **before any destructive store work**
+      (`kb-page-trash.service.ts`). Placement is the point: `openMultiStoreLedger`,
+      `recordPageAttachmentPurge` and `executePreDeleteStores` already purge chunks, blobs, grants
+      and caches, so a refusal raised after them would abort with the page row intact but its
+      dependent stores already gone. The error names each held page and its reason.
+      **The concurrent-hold race the audit asked about is closed atomically.** Inside the final
+      delete transaction a second check takes `.for("update")` on any held row in the subtree and
+      throws if one appeared mid-flight, and the delete predicate itself now carries
+      `eq(kbPages.legalHold, false)`. Belt and braces: the lock loses the race only if the hold
+      lands after the lock, and the predicate catches that.
+      **Tests:** `kb-page-trash-subtree-legal-hold.spec.ts` — written failing-first, bite plus
+      control. The bite (unheld parent, held child) failed and the **control passed**, which is
+      what proves the refusal is the hold and not a blanket block; the bite also asserts
+      `deletedRowSets === 0`, so a refusal that still deleted would fail. Both pass now.
+      **Collateral, repaired separately:** the new query broke 13 tests across 6 suites whose
+      doubles had no `select` chain. All repaired as test doubles only — no production file
+      touched, no assertion weakened. **Full KB suite: 275 suites / 2431 tests, 0 failing.**
+      **The bulk path, checked rather than assumed — and it had a smaller bug of its own.**
+      `emptyTrash` does **not** expand to subtrees: it lists trashed pages filtered by
+      `eq(kbPages.legalHold, false)` and deletes exactly those ids, so it never had the descendant
+      blind spot. What it did have was a **select-then-delete race** — the `DELETE` carried only
+      `orgId` and `inArray(id, ids)`, so a hold placed between listing the batch and deleting it
+      destroyed a held page anyway. The predicate now carries `eq(kbPages.legalHold, false)`.
+      `kb-empty-trash-hold-race.spec.ts` asserts it in the **rendered SQL of the page delete
+      specifically**, with a control proving the store-purge deletes in the same flow carry no
+      such predicate — otherwise the assertion would pass by reading any delete at all.
+      Mutation-tested: removing the predicate fails it alone, 1 of 2.
+      **Still not done, named rather than quietly dropped:** "verify allowed lifecycle state
+      before hard deletion" — `hardDelete` does not require the page to be in the trash first, so
+      a live page can be hard-deleted without passing through soft delete. That is a separate
+      lifecycle question, not a hold question, and is left open.
 - [ ] **P1:** Finish durable bounded purge commands, per-store retry and backpressure. Trace request transaction exit through blob/cache work; prove there is no nested second borrow or connection held during outbound I/O. Run a ten-concurrent-purge/provider-brown-out test against a small pool with interactive traffic and cancellation. Do not infer end-to-end safety from helper tests alone.
 
 ### AV-08 — P1: finish useful module interfaces, not mechanical file splits
