@@ -35,7 +35,7 @@ export function noApproverFix(
   if (!route || route.rung !== null) return null;
   const reasons = route.skipped.map((skip) => skip.reason);
   if (can.canSetManagers && reasons.some((reason) => MANAGER_REASONS.has(reason)))
-    return { href: "/hr/employees/manager-coverage", label: "Set a reporting manager" };
+    return { href: "/hr/settings/reporting-managers", label: "Set a reporting manager" };
   if (can.canAssignApprovers && reasons.some((reason) => QUEUE_REASONS.has(reason)))
     return { href: "/hr/access", label: "Choose who can approve" };
   return null;
