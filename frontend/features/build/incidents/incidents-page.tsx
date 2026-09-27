@@ -98,6 +98,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   } = useIncidents(projectId, {
     status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
     severity: severityValue !== BUILD_FILTER_ALL ? severityValue : undefined,
+    q: listFilters.debouncedSearch.trim() || undefined,
   });
 
   const { data: membersData } = useOrgMembers(1, 100);
@@ -111,16 +112,6 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         : (data?.pages.flatMap((page) => page.data) ?? []),
     [data],
   );
-
-  const displayed = useMemo(() => {
-    const q = listFilters.debouncedSearch.trim().toLowerCase();
-    if (!q) return all;
-    return all.filter(
-      (i) =>
-        i.title.toLowerCase().includes(q) ||
-        `inc-${i.incidentNumber}`.includes(q),
-    );
-  }, [all, listFilters.debouncedSearch]);
 
   const openCount = all.filter(
     (i) => i.status !== "resolved" && i.status !== "closed",
@@ -315,7 +306,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
           ) : null}
           <BuildListSurface<Incident>
             permission="build:incidents:view"
-            rows={displayed}
+            rows={all}
             columns={columns}
             isLoading={isLoading}
             isError={isError}

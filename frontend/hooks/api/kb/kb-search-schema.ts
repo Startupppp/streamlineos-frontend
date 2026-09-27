@@ -14,10 +14,6 @@ export const kbSearchItemContract = z.object({
 
 export const kbSearchResponseContract = z.object({
   items: z.array(kbSearchItemContract),
-  total: z.number().int(),
-  page: z.number().int(),
-  pageSize: z.number().int(),
-  totalPages: z.number().int(),
 });
 
 export type KbSearchItem = z.infer<typeof kbSearchItemContract>;

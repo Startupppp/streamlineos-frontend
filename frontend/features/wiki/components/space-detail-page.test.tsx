@@ -11,10 +11,19 @@ jest.mock("next/navigation", () => ({
 }));
 
 const mockCan = jest.fn<boolean, [string]>();
+const mockCanState = jest.fn<string, [string]>();
 const mockAccess = jest.fn();
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockCan(key),
+  useCanState: (key: string) => mockCanState(key),
   useAccess: () => mockAccess(),
+}));
+
+const mockKbTimeAgo = jest.fn<string, [string | Date]>();
+jest.mock("@/features/wiki/lib/kb-date-utils", () => ({
+  kbTimeAgo: (date: string | Date) => mockKbTimeAgo(date),
+  kbTimeUntil: jest.fn(),
+  kbFormatDate: jest.fn(),
 }));
 jest.mock("@/hooks/api/entitlements", () => ({ useEntitlements: () => ({ data: undefined }) }));
 
@@ -91,6 +100,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockAccess.mockReturnValue({ data: { isOrgOwner: true, scopes: {}, modules: {} }, isLoading: false });
   mockCan.mockReturnValue(false);
+  mockCanState.mockReturnValue("denied");
+  mockKbTimeAgo.mockReturnValue("1d ago");
   mockKbSpace.mockReturnValue(spaceQuery());
   mockArchive.mockReturnValue(mutation());
   mockRestore.mockReturnValue(mutation());
@@ -240,8 +251,10 @@ describe("SpaceDetailPage", () => {
     expect(screen.getByText(/Archiving "Engineering Hub" will hide it from users/)).toBeInTheDocument();
   });
 
-  it("BITE: shows the review-policy summary to a manager when pages carry a review policy", () => {
-    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+  it("BITE: shows the health summary stat cards to a manager when pages carry a review policy", () => {
+    mockCanState.mockImplementation((key: string) =>
+      key === "kb:spaces:manage" ? "allowed" : "denied",
+    );
     mockKbSpace.mockReturnValue(
       spaceQuery({
         data: spaceData({ pagesWithReviewPolicy: 8, pagesOverdueForReview: 3 }),
@@ -250,8 +263,60 @@ describe("SpaceDetailPage", () => {
 
     render(<SpaceDetailPage spaceId={5} />);
 
-    expect(screen.getByText(/8 pages under review policy/)).toBeInTheDocument();
-    expect(screen.getByText(/3 overdue/)).toBeInTheDocument();
+    expect(screen.getByText("Under review policy")).toBeInTheDocument();
+    expect(screen.getByText("Overdue for review")).toBeInTheDocument();
+    expect(screen.getByText("8")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+  });
+
+  it("BITE: renders the owner display name when ownerName is present (CONTROL: owner meta absent when ownerName is null)", () => {
+    mockKbSpace.mockReturnValue(
+      spaceQuery({ data: spaceData({ ownerName: "Alice Chen" }) }),
+    );
+
+    const { unmount } = render(<SpaceDetailPage spaceId={5} />);
+    expect(screen.getByText(/Alice Chen/)).toBeInTheDocument();
+    expect(screen.getByText(/Owner:/i)).toBeInTheDocument();
+    unmount();
+
+    mockKbSpace.mockReturnValue(
+      spaceQuery({ data: spaceData({ ownerName: null }) }),
+    );
+    render(<SpaceDetailPage spaceId={5} />);
+    expect(screen.queryByText(/Alice Chen/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Owner:/i)).not.toBeInTheDocument();
+  });
+
+  it("renders the last-updated time through kbTimeAgo, not an inline toLocaleDateString call", () => {
+    mockKbSpace.mockReturnValue(
+      spaceQuery({ data: spaceData({ updatedAt: "2026-09-25T12:00:00.000Z" }) }),
+    );
+
+    render(<SpaceDetailPage spaceId={5} />);
+
+    expect(mockKbTimeAgo).toHaveBeenCalledWith("2026-09-25T12:00:00.000Z");
+    expect(screen.getByText(/Updated 1d ago/i)).toBeInTheDocument();
+  });
+
+  it("BITE: shows manager health stat cards to a manager with review policy pages (CONTROL: absent when permission is denied)", () => {
+    mockCanState.mockImplementation((key: string) =>
+      key === "kb:spaces:manage" ? "allowed" : "denied",
+    );
+    mockKbSpace.mockReturnValue(
+      spaceQuery({
+        data: spaceData({ pagesWithReviewPolicy: 12, pagesOverdueForReview: 4 }),
+      }),
+    );
+
+    const { unmount } = render(<SpaceDetailPage spaceId={5} />);
+    expect(screen.getByText("Under review policy")).toBeInTheDocument();
+    expect(screen.getByText("Overdue for review")).toBeInTheDocument();
+    unmount();
+
+    mockCanState.mockReturnValue("denied");
+    render(<SpaceDetailPage spaceId={5} />);
+    expect(screen.queryByText("Under review policy")).not.toBeInTheDocument();
+    expect(screen.queryByText("Overdue for review")).not.toBeInTheDocument();
   });
 
   it("S07: renders an access badge showing the viewer's role when viewerSpaceRole is present (CONTROL: badge absent when viewerSpaceRole is null)", () => {

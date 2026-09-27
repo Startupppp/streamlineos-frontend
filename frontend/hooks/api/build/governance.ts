@@ -141,6 +141,7 @@ export function useProjectDecisions(projectId: number, filters?: ListFilters) {
   if (filters?.status) params["status"] = filters.status;
   if (filters?.ownerId) params["ownerId"] = filters.ownerId;
   if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
+  if (filters?.search) params["search"] = filters.search;
 
   return useQuery<IdCursorPage<Decision>>({
     queryKey: buildWorkQueryKeys.projects.decisions.list(

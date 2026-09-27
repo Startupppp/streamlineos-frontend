@@ -86,6 +86,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       status: statusValue !== BUILD_FILTER_ALL ? statusValue : undefined,
       ownerId: ownerIdValue !== BUILD_FILTER_ALL ? ownerIdValue : undefined,
       cursor: cursor === undefined ? undefined : Number(cursor),
+      search: listFilters.debouncedSearch.trim() || undefined,
     },
   );
   const { data: membersPage } = useProjectMembers(projectId);
@@ -125,16 +126,6 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   );
 
   const allDecisions = useMemo(() => data?.data ?? [], [data]);
-
-  const search = listFilters.debouncedSearch.trim().toLowerCase();
-  const displayed = useMemo(() => {
-    if (!search) return allDecisions;
-    return allDecisions.filter(
-      (d) =>
-        d.title.toLowerCase().includes(search) ||
-        `dec-${d.decisionNumber}`.includes(search),
-    );
-  }, [allDecisions, search]);
 
   const handleCreate = useCallback(
     (input: CreateDecisionInput) => {
@@ -320,7 +311,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           <BuildListSurface<Decision>
             permission="build:decisions:view"
-            rows={displayed}
+            rows={allDecisions}
             columns={columns}
             isLoading={isLoading}
             isError={isError}

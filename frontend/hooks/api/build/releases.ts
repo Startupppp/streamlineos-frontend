@@ -46,8 +46,12 @@ interface ReleaseListQuery {
   to?: string;
 }
 
+function releaseBaseKey(projectId: number) {
+  return [...queryKeyBase, "projects", projectId, "releases"] as const;
+}
+
 function releaseKey(projectId: number, query?: ReleaseListQuery) {
-  return [...queryKeyBase, "projects", projectId, "releases", query ?? {}] as const;
+  return [...releaseBaseKey(projectId), query ?? {}] as const;
 }
 
 interface OrgReleaseFilters {
@@ -86,7 +90,7 @@ export function useCreateRelease(projectId: number) {
     mutationKey: ["projects", projectId, "releases", "create"],
     mutationFn: (data: CreateReleaseInput) =>
       apiClient.post<Release>(`/build/${projectId}/releases`, data, undefined, projectReleaseRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeyBase, "projects", projectId, "releases"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: releaseBaseKey(projectId) }),
   });
 }
 
@@ -96,7 +100,7 @@ export function useUpdateRelease(projectId: number) {
     mutationKey: ["projects", projectId, "releases", "update"],
     mutationFn: ({ releaseId, ...data }: UpdateReleaseInput) =>
       apiClient.patch<Release>(`/build/${projectId}/releases/${releaseId}`, data, undefined, projectReleaseRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeyBase, "projects", projectId, "releases"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: releaseBaseKey(projectId) }),
   });
 }
 
@@ -106,6 +110,6 @@ export function useDeleteRelease(projectId: number) {
     mutationKey: ["projects", projectId, "releases", "delete"],
     mutationFn: (releaseId: number) =>
       apiClient.delete<void>(`/build/${projectId}/releases/${releaseId}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeyBase, "projects", projectId, "releases"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: releaseBaseKey(projectId) }),
   });
 }

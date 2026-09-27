@@ -18,12 +18,13 @@ import {
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { pageHref } from "@/lib/knowledge-routes";
+import { getUserDisplayName } from "@/lib/person-display";
+import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
   KbArchiveIcon,
   KbLayoutGridIcon,
   KbPlusIcon,
   KbRotateCcwIcon,
-  KbTriangleAlertIcon,
   KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -32,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { WikiPageCollectionTable } from "./wiki-page-collection-table";
 import { SpaceMembersSheet } from "./space-members-sheet";
+import { SpaceManagerHealthSummary } from "./space-manager-health-summary";
 import { SpaceArchiveImpact } from "./space-archive-impact";
 import PageTree from "./page-tree";
 import { SpaceBreadcrumb } from "./page-document-breadcrumb";
@@ -248,26 +250,26 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
                   {space.description}
                 </p>
               )}
-              {canManage && pagesWithReviewPolicy > 0 && (
-                <div
-                  className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground"
-                  suppressHydrationWarning
-                >
-                  {pagesOverdueForReview > 0 && (
-                    <KbTriangleAlertIcon className="h-3.5 w-3.5 text-status-warning-ink-strong" />
-                  )}
+              <div
+                className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground"
+                suppressHydrationWarning
+              >
+                {space?.ownerName != null && (
                   <span>
-                    {pagesWithReviewPolicy}{" "}
-                    {pagesWithReviewPolicy === 1 ? "page" : "pages"} under
-                    review policy
-                    {pagesOverdueForReview > 0
-                      ? ` · ${pagesOverdueForReview} overdue`
-                      : ""}
+                    Owner: {getUserDisplayName({ name: space.ownerName })}
                   </span>
-                </div>
-              )}
+                )}
+                {space?.updatedAt && (
+                  <span>Updated {kbTimeAgo(space.updatedAt)}</span>
+                )}
+              </div>
             </div>
           </div>
+
+          <SpaceManagerHealthSummary
+            pagesWithReviewPolicy={pagesWithReviewPolicy}
+            pagesOverdueForReview={pagesOverdueForReview}
+          />
 
           <div className="flex min-h-0 flex-1 gap-4">
             <div className="hidden w-56 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card/50 p-2 md:flex">

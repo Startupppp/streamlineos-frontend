@@ -84,14 +84,12 @@ interface MilestoneListQuery {
   to?: string;
 }
 
+function milestoneBaseKey(projectId: number) {
+  return [...queryKeyBase, "projects", projectId, "milestones"] as const;
+}
+
 function milestoneKey(projectId: number, query?: MilestoneListQuery) {
-  return [
-    ...queryKeyBase,
-    "projects",
-    projectId,
-    "milestones",
-    query ?? {},
-  ] as const;
+  return [...milestoneBaseKey(projectId), query ?? {}] as const;
 }
 
 export function useProjectMilestones(
@@ -145,7 +143,7 @@ export function useUpdateMilestone(projectId: number) {
       ),
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: [...queryKeyBase, "projects", projectId, "milestones"],
+        queryKey: milestoneBaseKey(projectId),
       }),
   });
 }
@@ -163,7 +161,7 @@ export function useDeleteMilestone(projectId: number) {
       ),
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: [...queryKeyBase, "projects", projectId, "milestones"],
+        queryKey: milestoneBaseKey(projectId),
       }),
   });
 }

@@ -24,6 +24,7 @@ export interface KbSpace {
   createdAt: string;
   updatedAt: string;
   archivedAt?: string | null;
+  ownerName?: string | null;
   pagesOverdueForReview?: number;
   pagesWithReviewPolicy?: number;
   viewerSpaceRole?: KbSpaceRole | null;
@@ -87,7 +88,6 @@ export interface KbAskResponse {
 export interface KbSearchParams {
   q: string;
   spaceId?: number;
-  page?: number;
   pageSize?: number;
 }
 

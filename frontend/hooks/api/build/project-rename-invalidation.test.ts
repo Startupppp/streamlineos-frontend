@@ -1,12 +1,17 @@
 "use client";
 
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { createAppQueryClient } from "@/components/providers/query-provider";
 import { useUpdateProject } from "./projects";
+import { invalidateBuildViews } from "./ticket-cache";
 import type { ProjectWithDetails, ProjectListResponse } from "@/types/projects";
+
+jest.mock("@/lib/dom-mutation-guard", () => ({}));
+jest.mock("next-auth/react", () => ({ useSession: jest.fn() }));
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -207,5 +212,72 @@ describe("useUpdateProject — invalidation scope (ticket 20)", () => {
 
     const cached = client.getQueryData<ProjectListResponse>(listKey);
     expect(cached?.data[0].name).toBe("New Name");
+  });
+});
+
+describe("useUpdateProject — ticket queryFn refetch guard (ticket 20)", () => {
+  const TICKETS_KEY = buildWorkQueryKeys.projects.tickets({ projectId: 42 });
+
+  function makeWrapper(client: QueryClient) {
+    return function Wrap({ children }: { children: ReactNode }) {
+      return createElement(QueryClientProvider, { client }, children);
+    };
+  }
+
+  function ticketQueryFn(counter: { count: number }) {
+    return () => {
+      counter.count += 1;
+      return Promise.resolve({ data: [], hasMore: false as const, nextCursor: null });
+    };
+  }
+
+  it("rename does not call the board ticket queryFn — negative assertion", async () => {
+    const client = createAppQueryClient();
+    const counter = { count: 0 };
+    const Wrap = makeWrapper(client);
+
+    const { unmount: unmountObserver } = renderHook(
+      () => useQuery({ queryKey: TICKETS_KEY, queryFn: ticketQueryFn(counter), staleTime: Infinity }),
+      { wrapper: Wrap },
+    );
+
+    await waitFor(() => expect(counter.count).toBe(1));
+
+    const { result, unmount: unmountMutation } = renderHook(
+      () => useUpdateProject(),
+      { wrapper: Wrap },
+    );
+
+    await act(async () => {
+      await result.current.mutateAsync({ projectId: 42, name: "New Name" });
+    });
+
+    await act(async () => new Promise<void>((r) => setTimeout(r, 50)));
+
+    expect(counter.count).toBe(1);
+
+    unmountObserver();
+    unmountMutation();
+  });
+
+  it("invalidateBuildViews DOES call the board ticket queryFn — positive control proving the counter works", async () => {
+    const client = createAppQueryClient();
+    const counter = { count: 0 };
+    const Wrap = makeWrapper(client);
+
+    const { unmount } = renderHook(
+      () => useQuery({ queryKey: TICKETS_KEY, queryFn: ticketQueryFn(counter), staleTime: Infinity }),
+      { wrapper: Wrap },
+    );
+
+    await waitFor(() => expect(counter.count).toBe(1));
+
+    await act(async () => {
+      invalidateBuildViews(client, 42);
+    });
+
+    await waitFor(() => expect(counter.count).toBe(2));
+
+    unmount();
   });
 });

@@ -50,6 +50,7 @@ export const kbSpaceFullContract = z.object({
   defaultVisibility: z.string(),
   owningTeamId: z.string().nullable(),
   archivedAt: z.string().nullable(),
+  ownerName: z.string().nullable(),
   pagesOverdueForReview: z.number().int().optional(),
   pagesWithReviewPolicy: z.number().int().optional(),
   viewerSpaceRole: z

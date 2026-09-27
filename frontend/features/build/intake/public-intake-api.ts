@@ -7,17 +7,10 @@ import {
 } from "./public-intake-schema";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 
-/**
- * Unauthenticated intake submit. The response goes through `parseApiResponse`
- * so the backend's `{ success, data }` envelope is unwrapped; reading
- * `res.json()` directly resolved to the envelope, leaving both declared fields
- * undefined while the type said otherwise.
- */
-export async function submitIntake(
-  projectId: string,
+async function postIntake(
+  path: string,
   body: IntakeFormOutput,
 ): Promise<IntakeSubmitResponse> {
-  const path = `/public/intake/${projectId}`;
   const res = await fetch(buildUrl(path), {
     method: "POST",
     headers: withCorrelation(new Headers({ "Content-Type": "application/json" })),
@@ -43,4 +36,18 @@ export async function submitIntake(
     throw new Error(message);
   }
   return parseApiResponse(res, intakeSubmitResponseContract, path);
+}
+
+export function submitIntake(
+  projectId: string,
+  body: IntakeFormOutput,
+): Promise<IntakeSubmitResponse> {
+  return postIntake(`/public/intake/${projectId}`, body);
+}
+
+export function submitIntakeByToken(
+  intakeToken: string,
+  body: IntakeFormOutput,
+): Promise<IntakeSubmitResponse> {
+  return postIntake(`/public/intake/t/${intakeToken}`, body);
 }

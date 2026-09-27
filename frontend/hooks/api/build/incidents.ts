@@ -59,6 +59,7 @@ const noContentContract = lazyContract(() =>
 type IncidentFilters = {
   status?: string;
   severity?: string;
+  q?: string;
 };
 
 type IncidentPageParam = {
@@ -74,6 +75,7 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
   if (filters?.severity) params["severity"] = filters.severity;
+  if (filters?.q) params["q"] = filters.q;
 
   return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.incidents.list(

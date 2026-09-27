@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { PublicBoardView } from "@/features/build/whiteboard/public-board-view";
 import { PublicFormView } from "@/features/build/forms/public-form-view";
 import { PublicIntakeView } from "@/features/build/intake/public-intake-view";
@@ -152,7 +153,7 @@ function useGalleryQueryClient() {
     );
 
     client.setQueryData(
-      ["streamlineos", "roadmap", "publicBoard", undefined] as const,
+      knowledgeAndSurveysQueryKeys.roadmap.publicBoard(undefined as string),
       STUB_ROADMAP_BOARD,
     );
 
