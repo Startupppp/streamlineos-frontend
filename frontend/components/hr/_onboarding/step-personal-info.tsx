@@ -157,7 +157,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
         name="dateOfBirth"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Date of Birth <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>Date of Birth</FormLabel>
             <FormControl>
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
