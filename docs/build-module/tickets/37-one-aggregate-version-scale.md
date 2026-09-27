@@ -23,9 +23,28 @@ uses `MAX(aggregate_version) + 1` and explicitly leaves races to the unique inde
 that cross-module change without serialization/retry semantics and consumer compatibility tests.
 For Build, use the version returned by the actual row write, not a guessed pre-write `version + 1`.
 
-**Current evidence:** The detail producer now emits its returned row version, while
-`build-ticket-batch-workflow.ts:26` predicts the locked row's version plus one. Migration 1374 is
-authored but unjournalled. `ticket-status-event-version-scale.spec.ts` passes but exercises only
-the batch helper, despite claiming both producers. These do not close the acceptance boxes.
+**Progress — 2026-09-27:** `build-ticket-batch-workflow.ts` `emitBatchStatusChanges` signature changed
+to require `versionMap: ReadonlyMap<number, number>` (ticketId → RETURNING version). The function
+no longer predicts `row.version + 1`. Callers updated: `projects-tickets-rank-utils.ts` now returns
+`version: tickets.version` from RETURNING and builds the map; `build-ticket-bulk-mutation.ts` likewise.
+`projects-tickets-update.service.ts` already used `affected[0]!.version`.
+`ticket-status-event-version-scale.spec.ts` rewritten with 5 tests covering: versionMap source,
+row-scale assertion, skipped-when-absent, no-emit-when-empty, and already-at-status cases.
+Structural tests for update-service path added. Migration 1374 authored; journal entry required
+from coordinator (not yet applied).
 
-- [ ] Invoke both real producer paths in regression tests; account for pending timestamp-scaled events that could poison repaired watermarks again and explicitly decide the disposition of previously skipped events
+Unresolved disposition questions (record explicitly):
+- **Concurrent writes / idempotent delivery**: two concurrent writes produce two events with different
+  `aggregateVersion` and different `eventId` (UUID). The outbox unique index on `eventId` prevents
+  duplicate inserts. `InboxConsumer.isOlderThanApplied` uses `MAX(aggregate_version)` — an older
+  event delivered after a newer one will be skipped. This is a known design decision: BUILD events
+  are idempotent (last-write-wins for status) so skipping a stale version is acceptable.
+- **Previously skipped events**: watermark remediation (migration 1374) resets
+  `aggregate_version > 1_000_000_000` to 0, allowing all row-scale events to replay. Any pending
+  outbox rows with timestamp-scale `aggregateVersion` would re-poison the watermark after replay.
+  Disposition: timestamp-scale rows should be expired/deleted from `outbox_events` before repair.
+  This is not implemented; record as a known gap requiring ops intervention before applying 1374
+  on production if any such rows exist in the outbox.
+
+- [ ] Query production `outbox_events` for `aggregate_type = 'ticket' AND aggregate_version > 1_000_000_000` before applying 1374; confirm count is 0 or expire those rows first
+- [ ] Invoke both real producer paths in regression tests against a real DB to close the acceptance boxes

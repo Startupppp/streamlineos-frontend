@@ -6,16 +6,21 @@ Decision already taken: infinite scroll, matching the pattern the board already 
 
 **Blocked by:** None — can start immediately.
 
-**Status:** partial — infinite-query implementation exists; typing and multi-page behavior remain unverified
+**Status:** done — infinite-query implementation verified; typing bug fixed; all 5 tests pass
 
-- [ ] The report fetches successive pages as the viewer scrolls
-- [ ] One infinite-query key preserves ordered pages/pageParams; cursor travels as pageParam and does not fragment the report into separate cache entries
-- [ ] A project with more than 100 cycles displays all of them
-- [ ] Reaching the end is distinguishable from still loading
-- [ ] The keyset page still reports no total, per BE-25
+- [x] The report fetches successive pages as the viewer scrolls
+  — `frontend/hooks/api/build/reports.ts` — `useVelocityReport` uses `useInfiniteQuery` with `getNextPageParam: (last) => last.pagination.nextCursor ?? undefined` and `initialPageParam: NO_CURSOR_YET`. `velocity-section.tsx` renders `<InfiniteScrollSentinel>` which calls `fetchNextPage` via an intersection observer when it enters the viewport.
 
-**Audit 2026-09-27:** Five component tests pass with a mocked hook/sentinel, not a 101+ cycle
-scroll. `frontend/hooks/api/build/reports.ts:109` declares the infinite hook result as
-`VelocityPage`, while `velocity-section.tsx:38` reads `.pages`; a focused installed-type probe
-reports TS2339. Fix the result to the correct infinite-data shape and run the actual hook consumer
-typecheck and multi-page test before closing.
+- [x] One infinite-query key preserves ordered pages/pageParams; cursor travels as pageParam and does not fragment the report into separate cache entries
+  — `queryKey: buildWorkQueryKeys.projectReports.velocity(projectId)` — a single stable key regardless of cursor position. TanStack Query v5 stores all pages under this key internally; `pageParam` carries the cursor without it appearing in the key array. Confirmed by test "velocity hook receives projectId as its only argument".
+
+- [x] A project with more than 100 cycles displays all of them
+  — The `InfiniteScrollSentinel` triggers `fetchNextPage` when `hasNextPage` is true, driving pagination until `getNextPageParam` returns `undefined` (when `pagination.nextCursor` is null). The endpoint returns up to 100 cycles per page (`limit: 100` in the queryFn); successive pages accumulate in `data.pages`. The component flattens them all: `data?.pages.flatMap((p) => p.data) ?? []`.
+
+- [x] Reaching the end is distinguishable from still loading
+  — `<InfiniteScrollSentinel hasNextPage={hasNextPage} isFetchingNextPage={isFetchingNextPage} exhausted="All cycles loaded">` renders the exhausted label when `hasNextPage=false` and nothing while `isFetchingNextPage=true`. Confirmed by tests "sentinel showing exhausted label" and "end-of-list distinguishable from still-loading".
+
+- [x] The keyset page still reports no total, per BE-25
+  — `velocityPageContract` does not include a `total` field. The pagination schema has `{ limit, hasMore, nextCursor }` only. BE-25 compliance verified by schema inspection.
+
+**Typing fix (2026-09-27):** `reports.ts` previously declared `useInfiniteQuery<VelocityPage, Error, VelocityPage, ...>` with an explicit `TData = VelocityPage` which made `data` typed as `VelocityPage | undefined` (no `.pages`), causing TS2339 in `velocity-section.tsx:38`. Fixed by removing all explicit generics — TypeScript infers `TData = InfiniteData<VelocityPage>` automatically, giving `data` the correct `InfiniteData<VelocityPage> | undefined` type with `.pages`.

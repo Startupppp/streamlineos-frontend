@@ -50,7 +50,7 @@ describe("19 — invalidateTicketUpdateViews narrows report eviction per cache-p
     jest.clearAllMocks();
   });
 
-  it("title-only change evicts no report cache (status/points/cycleId all undefined)", () => {
+  it("empty changes (no fields at all) evict no report cache", () => {
     const client = makeClient();
     seedReports(client);
     const spy = jest.spyOn(client, "invalidateQueries");
@@ -58,9 +58,35 @@ describe("19 — invalidateTicketUpdateViews narrows report eviction per cache-p
     invalidateTicketUpdateViews(client, PROJECT_ID, TICKET_ID, {});
 
     const keys = invalidatedKeys(spy);
-    const reportPrefix = JSON.stringify(buildWorkQueryKeys.projectReports.all);
-    expect(keys.some((k) => k.startsWith(reportPrefix.slice(0, -1)))).toBe(false);
     expect(keys.some((k) => k.includes("projectReports"))).toBe(false);
+  });
+
+  it("title-only change evicts only criticalPath (title is projected in the critical-path query)", () => {
+    const client = makeClient();
+    seedReports(client);
+    const spy = jest.spyOn(client, "invalidateQueries");
+
+    invalidateTicketUpdateViews(client, PROJECT_ID, TICKET_ID, { title: "Renamed ticket" });
+
+    const keys = invalidatedKeys(spy);
+    expect(keys).toContain(
+      JSON.stringify(buildWorkQueryKeys.projectReports.criticalPath(PROJECT_ID)),
+    );
+    expect(keys).not.toContain(
+      JSON.stringify(buildWorkQueryKeys.projectReports.velocity(PROJECT_ID)),
+    );
+    expect(keys).not.toContain(
+      JSON.stringify(buildWorkQueryKeys.projectReports.burnup(PROJECT_ID)),
+    );
+    expect(keys).not.toContain(
+      JSON.stringify(buildWorkQueryKeys.projectReports.cycleTime(PROJECT_ID)),
+    );
+    expect(keys).not.toContain(
+      JSON.stringify(buildWorkQueryKeys.projectReports.leadTime(PROJECT_ID)),
+    );
+    expect(keys).not.toContain(
+      JSON.stringify(buildWorkQueryKeys.projectReports.cfd(PROJECT_ID)),
+    );
   });
 
   it("rank change with undefined status evicts no report cache", () => {
@@ -74,7 +100,7 @@ describe("19 — invalidateTicketUpdateViews narrows report eviction per cache-p
     expect(keys.some((k) => k.includes("projectReports"))).toBe(false);
   });
 
-  it("status transition evicts cycleTime, leadTime, cfd — and no other report", () => {
+  it("status transition evicts cycleTime, leadTime, cfd, velocity, burnup — but not criticalPath", () => {
     const client = makeClient();
     seedReports(client);
     const spy = jest.spyOn(client, "invalidateQueries");
@@ -91,10 +117,10 @@ describe("19 — invalidateTicketUpdateViews narrows report eviction per cache-p
     expect(keys).toContain(
       JSON.stringify(buildWorkQueryKeys.projectReports.cfd(PROJECT_ID)),
     );
-    expect(keys).not.toContain(
+    expect(keys).toContain(
       JSON.stringify(buildWorkQueryKeys.projectReports.velocity(PROJECT_ID)),
     );
-    expect(keys).not.toContain(
+    expect(keys).toContain(
       JSON.stringify(buildWorkQueryKeys.projectReports.burnup(PROJECT_ID)),
     );
     expect(keys).not.toContain(
@@ -102,7 +128,7 @@ describe("19 — invalidateTicketUpdateViews narrows report eviction per cache-p
     );
   });
 
-  it("points change evicts velocity and burnup — and no other report", () => {
+  it("points change evicts velocity, burnup, and criticalPath — but not cycleTime, leadTime, cfd", () => {
     const client = makeClient();
     seedReports(client);
     const spy = jest.spyOn(client, "invalidateQueries");
@@ -116,6 +142,9 @@ describe("19 — invalidateTicketUpdateViews narrows report eviction per cache-p
     expect(keys).toContain(
       JSON.stringify(buildWorkQueryKeys.projectReports.burnup(PROJECT_ID)),
     );
+    expect(keys).toContain(
+      JSON.stringify(buildWorkQueryKeys.projectReports.criticalPath(PROJECT_ID)),
+    );
     expect(keys).not.toContain(
       JSON.stringify(buildWorkQueryKeys.projectReports.cycleTime(PROJECT_ID)),
     );
@@ -124,9 +153,6 @@ describe("19 — invalidateTicketUpdateViews narrows report eviction per cache-p
     );
     expect(keys).not.toContain(
       JSON.stringify(buildWorkQueryKeys.projectReports.cfd(PROJECT_ID)),
-    );
-    expect(keys).not.toContain(
-      JSON.stringify(buildWorkQueryKeys.projectReports.criticalPath(PROJECT_ID)),
     );
   });
 

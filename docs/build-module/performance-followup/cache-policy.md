@@ -70,7 +70,7 @@ Every one of these factories lives in `frontend/lib/query-keys/build-work.ts` to
 
 **Decision — velocity cursor in key (2026-09-27):** cache-policy.md previously prescribed `velocity(projectId, { limit, cursor })` — a cursor literally in the query key. The board (`useProjectBoardTickets`) manages pagination via `useInfiniteQuery`'s internal `pageParam` with no cursor in the key, per the pattern ticket 33 explicitly requires to match. Following the board: `useVelocityReport` uses `useInfiniteQuery`; all pages accumulate under `projectReports.velocity(projectId)` without a cursor segment. "Pages do not collide" is satisfied by TanStack storing each page at a distinct offset within one cache entry, not by a literal cursor in the key. The cursor-in-key row above is corrected accordingly.
 
-`staleTime` is a client-side freshness floor, not a staleness bound. With a 300 s server cache behind a 60 s client stale time, a refetch the client considers fresh can still return data five minutes old. Raising the client stale time to `2 * 60_000` narrows the gap between what the two layers promise; the revision key is what actually bounds correctness.
+`staleTime` controls when the client considers a query stale; it neither triggers a refetch by itself nor bounds the age of the server response. Raising it can delay freshness. Validate revision advancement, all read dependencies and refetch triggers together before claiming an end-to-end freshness bound.
 
 ---
 
@@ -85,8 +85,8 @@ A ticket write already fans out further than it needs to. The rule is: patch wha
 | title, description | detail and rendered list rows; patch matching report labels where the projection is known | affected search counts; critical-path title projection unless patched; account for current burnup updatedAt fallback |
 | status transition | detail, list row, board membership and counts only where patching is exact | cycleTime, leadTime, cfd, velocity and current burnup fallback |
 | assignee | detail, list row | `projects.analytics` only when the board groups by assignee |
-| rank | board order | nothing |
-| story points, estimate | detail, list row | velocity, burnup and critical-path projections where the changed field is consumed |
+| rank | board order | current updatedAt-dependent burnup fallback and cycle/lead-time results when affected; not automatically report-neutral |
+| points, storyPoints, estimate | detail, list row | map the actual persisted field first: points and storyPoints are distinct; invalidate only the projections consuming it or updatedAt |
 | cycle membership | detail, list row, both cycles' membership lists | `projectReports.velocity`, `projectReports.burnup` |
 | dependency add/remove | detail relations | `projectReports.criticalPath` |
 | delete | remove from every loaded list | the reports the ticket contributed to |

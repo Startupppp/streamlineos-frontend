@@ -233,6 +233,7 @@ export function invalidateTicketUpdateViews(
   projectId: number,
   ticketId: number,
   changes: {
+    title?: unknown;
     status?: unknown;
     cycleId?: unknown;
     points?: unknown;
@@ -267,13 +268,14 @@ export function invalidateTicketUpdateViews(
     refetchType: "none",
   });
 
+  const titleChanged = changes.title !== undefined;
   const statusChanged = changes.status !== undefined;
   const cycleChanged = changes.cycleId !== undefined;
   const pointsChanged = changes.points !== undefined;
   const schedulingChanged =
     changes.startDate !== undefined || changes.dueDate !== undefined;
 
-  if (!statusChanged && !cycleChanged && !pointsChanged && !schedulingChanged)
+  if (!titleChanged && !statusChanged && !cycleChanged && !pointsChanged && !schedulingChanged)
     return;
 
   if (statusChanged) {
@@ -291,6 +293,14 @@ export function invalidateTicketUpdateViews(
     });
     void client.invalidateQueries({
       queryKey: buildWorkQueryKeys.projectReports.cfd(projectId),
+      refetchType: "none",
+    });
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.velocity(projectId),
+      refetchType: "none",
+    });
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.burnup(projectId),
       refetchType: "none",
     });
   }
@@ -317,6 +327,17 @@ export function invalidateTicketUpdateViews(
     });
     void client.invalidateQueries({
       queryKey: buildWorkQueryKeys.projectReports.burnup(projectId),
+      refetchType: "none",
+    });
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.criticalPath(projectId),
+      refetchType: "none",
+    });
+  }
+
+  if (titleChanged) {
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.criticalPath(projectId),
       refetchType: "none",
     });
   }

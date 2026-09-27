@@ -17,16 +17,26 @@ The same pass closes a second hole in the same shape: the epic update path filte
 - [ ] If a trigger is used, its migration is journalled with a rollback authored and is applied before any code depends on it
 - [ ] The mechanism is named in the module's notes as the single place the token is maintained
 
-## Verified remaining work — 2026-09-27
+## Progress — 2026-09-27
 
-`backend/migrations/1373_tickets_version_trigger.sql` exists but is absent from the journal, while
-`projects-tickets-update.service.ts:290-296` no longer increments the version itself. Deployment
-must not rely on an unapplied trigger. The trigger condition only replaces an unchanged version,
-so a caller-provided lower or arbitrarily higher value bypasses the intended increment.
+Trigger made unconditional (`NEW.version := OLD.version + 1` — no conditional). All hand-written
+`version: sql\`${tickets.version} + 1\`` increments removed from: `projects-tickets-update.service.ts`,
+`build-ticket-bulk-mutation.ts`, `projects-tickets-rank-utils.ts`, `build-automation-actions.service.ts`.
+`updateEpic` now rejects soft-deleted epics via `isNull(tickets.deletedAt)`.
 
-- [ ] Make the trigger own `NEW.version = OLD.version + 1` unconditionally and verify explicit-version writes cannot decrease or skip the token
-- [ ] Journal, apply and behaviorally verify 1373 before deploying code that removes application increments; record the deployed backend identity and rollback ordering
-- [ ] Re-enumerate actual writers instead of the historical eleven; include `cycles.service.ts:161` unlinking and other writes to deleted rows, with deliberate lifecycle exceptions documented
+Census of all UPDATE paths on `build.tickets` (18 call sites across 12 files):
+`cron-projects.service.ts`, `bugs.service.ts` (×2), `build-entity.actions.ts` (×3),
+`entries-period.service.ts`, `build/execution/timesheets.service.ts`, `modules.service.ts`,
+`epics.service.ts` (×2), `projects-write.service.ts` (×2), `cycles.service.ts`,
+`projects-tickets.service.ts` (×3), `projects-tickets-update.service.ts`, `projects-tickets-rank-utils.ts`,
+`projects-members.service.ts`, `projects-custom-states.service.ts` (×2), `build-automation-actions.service.ts` (×3),
+`build-ticket-bulk-mutation.ts`, `client-visibility.service.ts`.
+All covered by the unconditional trigger. Lifecycle exceptions: `epics.service.ts:92` and
+`cycles.service.ts:161` null out FKs on parent delete — these are intentional and trigger still fires.
+Hard-deletes (`tx.delete(tickets)`) do not fire an UPDATE trigger, which is intentional.
 
-Epic deleted-row guard unit tests pass, but mocked version results are not evidence that this
-trigger executes. The original five-of-eleven description is historical, not a current census.
+Migration 1373 authored with rollback; journal entry required from coordinator (not yet applied).
+
+- [ ] Journal 1373, apply to DB, and verify behaviorally before removing application-level increments from deployment
+- [ ] Per-path tests for each write path showing version increases (integration tests against real DB are authoritative; unit tests with mocks do not prove trigger fires)
+- [ ] Name the mechanism in module notes

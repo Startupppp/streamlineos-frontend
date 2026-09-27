@@ -106,7 +106,7 @@ interface CriticalPathReport {
 
 export function useVelocityReport(projectId: number) {
   const canView = useCan("build:view");
-  return useInfiniteQuery<VelocityPage, Error, VelocityPage, readonly unknown[], string | undefined>({
+  return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projectReports.velocity(projectId),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<VelocityPage>(
