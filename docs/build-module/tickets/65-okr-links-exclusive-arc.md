@@ -14,13 +14,21 @@ pass using mocked database errors; they do not prove enforcement. The DTO alread
 and neither references, so the old "required DTO change" is now obsolete.
 
 - [ ] A link with neither reference, or with both, is rejected by the database
-  — `backend/migrations/1372_okr_links_exclusive_arc.sql`: `ADD CONSTRAINT chk_okr_links_exclusive_arc CHECK (num_nonnulls(ticket_id, project_id) = 1) NOT VALID` then `VALIDATE CONSTRAINT`; `backend/src/db/schema/build/goals.ts:107` (Drizzle schema reflects the constraint at the next line); `backend/src/modules/goals/goal-links.service.ts` catches `23514` and throws `ConflictException`
+  — Migration 1372 authors the exclusive-arc CHECK; backend/src/db/schema/build/goals.ts does not yet declare that CHECK. goal-links.service.ts translates the expected constraint error. Database enforcement remains unverified.
 
 - [ ] A goal cannot be linked to the same project twice
   — `backend/migrations/1372_okr_links_exclusive_arc.sql`: `CREATE UNIQUE INDEX IF NOT EXISTS uniq_okr_links_goal_project ON build.okr_links (goal_id, project_id) WHERE project_id IS NOT NULL`; `backend/src/db/schema/build/goals.ts:108` reflects `uniqueIndex("uniq_okr_links_goal_project")`; `backend/src/modules/goals/goal-links.service.ts` catches `23505` and throws `ConflictException`
 
-- [ ] Existing duplicate and malformed links are surveyed and reported before the constraints are added
-  — Orchestrator responsibility. Survey SQL in EXECUTION-PLAN.md §"65 — links with neither arm or both, and duplicate project links":
+- [x] Existing duplicate and malformed links are surveyed and reported before the constraints are added
+  — **Surveyed 2026-09-27** by the orchestrator, read-only inside a `SET TRANSACTION READ ONLY` block that was then rolled back, against production Aurora over IAM auth. Results:
+  ```
+  links with neither arm, or with both : 0 rows
+  duplicate (org_id, goal_id, project_id) links : 0 rows
+  build.okr_links total : 0 rows
+  ```
+  The table is empty, so neither constraint can fail to build and no remediation is required. Note what this does and does not establish: it proves the constraints are safe to add, and it proves nothing about whether the defect was reachable — a link to neither arm or to both was representable, and the project arm had no uniqueness guard. The survey found no victims, not no hole.
+
+  Survey SQL, for reproduction:
   ```sql
   SELECT count(*) FROM build.okr_links
   WHERE (ticket_id IS NULL AND project_id IS NULL) OR (ticket_id IS NOT NULL AND project_id IS NOT NULL);
@@ -37,7 +45,7 @@ and neither references, so the old "required DTO change" is now obsolete.
 
   The constraints are still correct: a link to neither arm or both arms is genuinely representable, and the project arm genuinely has no uniqueness guard. This criterion is void because no code path makes link row count affect progress.
 
-  Observation (not a fix — out of territory): `keyResultPercent` and `recomputeGoalProgress` are duplicated in full — once as a standalone export in `goals-progress.ts` and once as a private method in `goals.service.ts` (lines 89-151). The standalone export is what `goal-key-results.service.ts` calls; the private copy is used only internally by `GoalsService.checkIn`. This is the wrapper pattern prohibited by BE-143.
+  Observation: progress computation is duplicated between goals-progress.ts and goals.service.ts. This is duplicated behavior to consolidate behind the existing helper if tests establish equivalent semantics, not necessarily a pure pass-through wrapper.
 
 - [ ] The migration is journalled with a rollback authored
   — Migration: `backend/migrations/1372_okr_links_exclusive_arc.sql`; rollback: `backend/migrations/1372_okr_links_exclusive_arc_rollback.sql`

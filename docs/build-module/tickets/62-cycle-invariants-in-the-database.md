@@ -27,8 +27,14 @@ partial unique index. No database enforcement/race test was run in this audit.
   - `23P01` was absent from the global `CONSTRAINT_FAILURE` map in `all-exceptions.filter.ts`; the service-level catch is required. `23505` was mapped globally with a generic message; the service-level catch overrides with the specific message.
   - Proved by `backend/src/modules/build/execution/cycle-constraint-translation.spec.ts` (8 tests, all pass)
 
-- [ ] Existing rows are checked for violations before the constraint is added, and any found are reported rather than silently coerced
-  - **Orchestrator task** — survey SQL below.
+- [x] Existing rows are checked for violations before the constraint is added, and any found are reported rather than silently coerced
+  - **Surveyed 2026-09-27** by the orchestrator, read-only inside a `SET TRANSACTION READ ONLY` block that was then rolled back, against production Aurora over IAM auth. Results:
+  ```
+  projects with more than one active, non-deleted cycle : 0 rows
+  overlapping non-deleted cycle date ranges in a project : 0 rows
+  build.cycles: total 6, live 6, active-and-live 0
+  ```
+  Nothing to report and nothing to coerce — both constraints can be created without remediation. Two things this does not establish, stated so the next reader does not over-read it: with zero currently-active cycles, the one-active-per-project index has no existing row exercising it, so the survey proves the index will build and not that it bites; and the whole table is 6 rows, so "clean" here is a property of a nearly-empty table rather than evidence the application was maintaining the invariant.
 
 - [ ] The migration is journalled with a rollback authored and a lock timeout set, and is applied before the code relies on it
   - Migration: `backend/migrations/1371_cycles_active_and_overlap_constraints.sql` (`SET lock_timeout = '5s'`, precondition DO block, two constraints, postcondition assertions; no statement-breakpoint inside any DO block)
@@ -38,6 +44,10 @@ partial unique index. No database enforcement/race test was run in this audit.
 - [ ] Verified in a rolled-back transaction as the application role
   - **Orchestrator task** — run after migration is applied.
 - [ ] Repair the lifecycle test to recognize the intended live-only unique predicate, then prove concurrent activation and overlapping insertion rejection using database transactions
+  - **First half done 2026-09-27** by the orchestrator, since the spec sits outside lane 5's territory. `backend/src/modules/build/execution/cycle-delete-lifecycle-invariant.spec.ts` now walks each unique's `where` predicate via a `predicateExcludesTombstones` helper and accepts a unique that either carries `id` **or** excludes deleted rows by predicate, which is the invariant its own name states. The predicate is read by walking `queryChunks`, not by stringifying the `sql` object.
+  - A bite proof was added alongside it, because a widened check that accepts anything is worse than the narrow one it replaced: `predicateExcludesTombstones` returns false for `undefined`, false for `status = 'active'` (a predicate that ignores the tombstone), false for `deleted_at IS NOT NULL`, and true only for a predicate containing `deleted_at IS NULL`.
+  - `npx jest cycle-delete-lifecycle-invariant.spec.ts cycle-constraint-translation.spec.ts` → 2 suites, 18 tests, all pass.
+  - **Second half still open:** proving concurrent activation and overlapping insertion are actually rejected needs the migration applied and a real transaction pair. That is orchestrator work and is not done.
 
 ---
 
