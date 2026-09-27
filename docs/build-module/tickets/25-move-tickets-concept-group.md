@@ -34,11 +34,29 @@ green again.
 
 ## Why the third criterion is not ticked
 
-Inside the Build module it holds: ten callers in `entity`, `execution`,
-`forms`, `import-export` and `meetings` were converted to the barrel, and
-no file under `build/` reaches past it.
+Ten callers in `entity`, `execution`, `forms`, `import-export` and
+`meetings` were converted to the barrel. Two groups still reach past it.
 
-Eleven files in **other** modules still import individual ticket files —
+**Nine `core/` siblings cannot use the barrel without creating a cycle**,
+so criterion 3 and criterion 4 are in direct tension here.
+`core/tickets/*` imports thirteen distinct `core/` siblings — among them
+`build-automation-runner.service`, `projects-activity.service`,
+`projects-webhooks-dispatch.service` and `project-access`. Concretely:
+`core/build-automation-actions.service.ts` reaches in for
+`reserveTicketCapacity`; route that through the barrel and the chain
+becomes barrel → `projects-tickets-create.service` →
+`build-automation-runner.service` → `build-automation-actions.service`,
+which is a cycle BE-10 forbids. The other eight are
+`build-notification-context.service`, `build-project-aggregate-access`,
+`projects-custom-fields.service`, `projects-custom-states.service`,
+`projects-query.service`, `projects-releases.service`,
+`projects-reports.service` and `projects-roadmap.service`. A group that
+depends back on its own directory's peers cannot be entered only through
+its front door; closing this properly means moving the shared pieces
+(`project-access`, the activity and webhook seams) somewhere both sides can
+depend on, which is ticket 01's job, not this one.
+
+**Eleven files in other modules** still import individual ticket files —
 `agent-access/agent.controller.ts`, three under `ai/core`,
 `cron/cron-projects.service.ts`, five under `feedbucket`, and
 `integrations/git/integrations-git.service.ts`. Converting them was not

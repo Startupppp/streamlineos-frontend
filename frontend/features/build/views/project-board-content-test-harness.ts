@@ -39,6 +39,7 @@ export const WORKLOAD_FILTERS: WorkloadFilterState = {
   type: "all",
   status: "all",
   assigneeId: "all",
+  teamId: "all",
   showUnassigned: true,
 };
 

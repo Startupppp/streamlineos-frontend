@@ -31,7 +31,7 @@ export function useIterationSettings(
     throwOnError: false,
     retry: false,
     ...options,
-    enabled: canView && !!projectId && (options?.enabled ?? true),
+    enabled: canView && !!projectId,
   });
 }
 

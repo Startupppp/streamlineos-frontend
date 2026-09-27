@@ -273,7 +273,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
           ) : (
             <PmSection index={0}>
               {canUpdate && selectedIds.size > 0 && (
-                <BulkActionBar selectedCount={selectedIds.size} members={members ?? []} cycles={cycles ?? []} statuses={project?.statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkPriority} onBulkAssignee={handleBulkAssignee} onBulkCycle={handleBulkCycle} onClear={handleClearTriageKeyboard} />
+                <BulkActionBar selectedCount={selectedIds.size} members={members?.data ?? []} cycles={cycles ?? []} statuses={project?.statuses} onBulkStatus={handleBulkStatus} onBulkPriority={handleBulkPriority} onBulkAssignee={handleBulkAssignee} onBulkCycle={handleBulkCycle} onClear={handleClearTriageKeyboard} />
               )}
               <PmStaggerList className="flex flex-col gap-2.5">
                 {tickets.map((ticket, index) => (

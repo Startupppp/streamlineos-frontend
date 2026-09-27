@@ -88,7 +88,8 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       cursor: cursor === undefined ? undefined : Number(cursor),
     },
   );
-  const { data: members = [] } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
 
   const ownerOptions = useMemo(
     () => [

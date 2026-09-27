@@ -14,6 +14,7 @@ import { WorkloadFilterBar } from "@/features/build/views/workload-filter-bar";
 import { BugQaFilters } from "@/features/build/views/bug-qa-filters";
 import { SavedViewsMenu } from "@/features/build/views/saved-views-menu";
 import type { FilterState as WorkloadFilterState } from "@/features/build/views/workload-types";
+import type { TeamOption } from "@/features/build/views/workload-filter-types";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { useCan } from "@/hooks/api/access";
 
@@ -69,6 +70,7 @@ interface ProjectViewsToolbarProps {
   isUpdatingView?: boolean;
   projectId: number;
   members: Member[];
+  teams?: TeamOption[];
   statuses?: StatusOption[];
   hideCompleted: boolean;
   onHideCompletedChange: (checked: boolean) => void;
@@ -98,6 +100,7 @@ export function ProjectViewsToolbar({
   isUpdatingView = false,
   projectId,
   members,
+  teams = [],
   statuses,
   hideCompleted,
   onHideCompletedChange,
@@ -189,6 +192,7 @@ export function ProjectViewsToolbar({
         projectId={projectId}
         filters={workloadFilters}
         members={members}
+        teams={teams}
         projectStatuses={statuses}
         onFilterChange={onWorkloadFilterChange}
         onClearFilters={onClearWorkloadFilters}

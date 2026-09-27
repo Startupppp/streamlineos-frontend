@@ -7,7 +7,11 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
+import {
+  PmPageShell,
+  PmSection,
+  CONTENT_FILL_PANEL,
+} from "@/components/pm-chrome";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { BuildListSurface } from "./build-list-surface";
@@ -34,7 +38,8 @@ export const ROWS: GalleryRow[] = Array.from({ length: 14 }, (_, index) => ({
   id: index + 1,
   key: `PRJ-${100 + index}`,
   name: `Atlas migration workstream ${index + 1}`,
-  status: index % 3 === 0 ? "Active" : index % 3 === 1 ? "On hold" : "Completed",
+  status:
+    index % 3 === 0 ? "Active" : index % 3 === 1 ? "On hold" : "Completed",
   owner:
     index % 2 === 0
       ? { firstName: "Priya", lastName: "Nair" }
@@ -53,7 +58,11 @@ export const GALLERY_HEADERS = [
 ] as const;
 
 export const COLUMNS: DataTableColumn<GalleryRow>[] = [
-  { key: "key", header: "Key", cell: (row) => <span className="font-mono tabular-nums">{row.key}</span> },
+  {
+    key: "key",
+    header: "Key",
+    cell: (row) => <span className="font-mono tabular-nums">{row.key}</span>,
+  },
   { key: "name", header: "Name", cell: (row) => row.name },
   { key: "status", header: "Status", cell: (row) => row.status },
   {
@@ -64,7 +73,9 @@ export const COLUMNS: DataTableColumn<GalleryRow>[] = [
   {
     key: "progress",
     header: "Progress",
-    cell: (row) => <span className="font-mono tabular-nums">{row.progress}%</span>,
+    cell: (row) => (
+      <span className="font-mono tabular-nums">{row.progress}%</span>
+    ),
   },
   { key: "target", header: "Target", cell: (row) => row.target },
 ];

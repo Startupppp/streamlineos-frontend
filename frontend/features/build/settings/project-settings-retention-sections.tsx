@@ -106,13 +106,13 @@ export function PolicySection({ settings, projectId, canEdit }: PolicySectionPro
   const updatePolicy = useUpdateRetentionPolicy(projectId);
   const [inheritOrgPolicy, setInheritOrgPolicy] = useState(settings.inheritOrgPolicy);
   const [closedTicketDays, setClosedTicketDays] = useState<RetentionDaysOptionValue | null>(
-    settings.closedTicketRetentionDays,
+    RETENTION_DAYS_OPTIONS.find((o) => o.value === settings.closedTicketRetentionDays)?.value ?? null,
   );
   const [attachmentDays, setAttachmentDays] = useState<RetentionDaysOptionValue | null>(
-    settings.attachmentRetentionDays,
+    RETENTION_DAYS_OPTIONS.find((o) => o.value === settings.attachmentRetentionDays)?.value ?? null,
   );
   const [auditLogDays, setAuditLogDays] = useState<RetentionDaysOptionValue | null>(
-    settings.auditLogRetentionDays,
+    RETENTION_DAYS_OPTIONS.find((o) => o.value === settings.auditLogRetentionDays)?.value ?? null,
   );
 
   const handleInheritToggle = useCallback((checked: boolean) => {

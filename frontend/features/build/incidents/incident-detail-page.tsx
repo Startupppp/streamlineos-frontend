@@ -93,7 +93,8 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
     hasNextPage,
     isFetchingNextPage,
   } = useIncident(projectId, incidentId);
-  const { data: members = [] } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
   const releasesPage = useReleases(projectId);
   const releases = releasesPage.data?.data ?? [];
   const releasesLoading = releasesPage.isLoading;

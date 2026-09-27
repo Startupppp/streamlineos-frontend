@@ -119,6 +119,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     projectId,
     capacityWindow.start,
     capacityWindow.end,
+    undefined,
     { enabled: view === "workload" },
   );
 

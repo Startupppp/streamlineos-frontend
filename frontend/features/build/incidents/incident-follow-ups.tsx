@@ -513,12 +513,10 @@ export function IncidentFollowUps({
           </Badge>
         ) : null}
         <BuildFilterSelect
-          filterId="followUpStatus"
           label="Status"
           value={listFilters.value("followUpStatus")}
           options={STATUS_FILTER_OPTIONS}
-          isActive={listFilters.isActive("followUpStatus")}
-          onChange={(v) => listFilters.setValue("followUpStatus", v)}
+          onValueChange={(v) => listFilters.setValue("followUpStatus", v)}
         />
       </div>
 

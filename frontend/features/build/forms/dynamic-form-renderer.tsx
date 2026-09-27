@@ -182,7 +182,7 @@ export function DynamicFormRenderer({
               <Select value={strVal} onValueChange={(v) => setFieldValue(field.key, v)}>
                 <SelectTrigger className="text-sm"><SelectValue placeholder="Select user…" /></SelectTrigger>
                 <SelectContent>
-                  {(members ?? []).map((m) => (
+                  {(members?.data ?? []).map((m) => (
                     <SelectItem key={m.id} value={m.id}>
                       {getUserDisplayName(m)}
                     </SelectItem>

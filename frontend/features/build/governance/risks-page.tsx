@@ -126,7 +126,8 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const { data: stats, isLoading: isStatsLoading } =
     useProjectRiskStats(projectId);
 
-  const { data: members = [] } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
 
   const createRisk = useCreateRisk(projectId);
   const updateRisk = useUpdateRisk(projectId);

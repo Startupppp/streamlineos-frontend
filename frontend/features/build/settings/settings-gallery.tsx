@@ -486,6 +486,7 @@ export function SettingsGallery() {
                       revokedAt: null,
                     }}
                     onRevoke={noop}
+                    canRevoke={true}
                   />
                 </PmPanel>
               </PmSection>

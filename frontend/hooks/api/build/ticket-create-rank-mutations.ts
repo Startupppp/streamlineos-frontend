@@ -319,9 +319,9 @@ export function useBulkUpdateTickets(projectId: number) {
         return {
           previousDetail: undefined,
           optimisticDetail: undefined,
-          previousTickets: new Map(),
-          optimisticTickets: new Map(),
-          listSnapshots: new Map(),
+          previousTickets: new Map<number, Ticket | null | undefined>(),
+          optimisticTickets: new Map<number, Ticket | null | undefined>(),
+          listSnapshots: [],
         };
       }
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);

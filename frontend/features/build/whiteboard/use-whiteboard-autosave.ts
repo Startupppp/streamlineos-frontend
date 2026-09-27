@@ -2,8 +2,9 @@
 
 import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import type { ExcalidrawProps } from "@excalidraw/excalidraw/types";
-import type { WhiteboardAccess } from "@/hooks/api/build/whiteboards-public";
 import type { ExcalidrawSceneData } from "@/hooks/api/build/whiteboards";
+
+export type WhiteboardAccess = "view" | "edit";
 
 type ExcalidrawModule = typeof import("@excalidraw/excalidraw");
 
