@@ -379,7 +379,22 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
   **2026-09-27 audit:** AV-10: final route/browser state evidence remains open.
 - [ ] Every desktop capability has a mobile (375 px) and keyboard-accessible path; no action is context-menu-only.
   **2026-09-27 audit:** AV-10: accessibility warning and real mobile/keyboard proof remain open.
-- [ ] No code comments, TODO/FIXME/HACK, commented-out code, or placeholder prose in source files.
+- [x] **DONE 2026-09-27 — measured on both sides, 0 remaining.** No code comments, TODO/FIXME/HACK, commented-out code, or placeholder prose in source files.
+      **Backend `src/modules/kb/**`:** 0. Three comment sites were found and removed —
+      `kb-page-writer-coverage.spec.ts` (two blocks, both describing state that had already
+      changed: an empty `NOT_YET_MIGRATED` set whose branch could never run, and a `BLIND SPOT`
+      note about `support-kb-articles.ts::updateArticle` that now takes the writer and calls
+      `commitPageChange`), `kb-content-health-keyset.spec.ts` (a helper docblock, folded into the
+      name `applyCursorPredicateFromRenderedSql`), and `kb-linked-documents-schema.db.spec.ts`
+      (two trailing comments, folded into test names, one extracted into its own `it` so the
+      reason attaches to the assertion it explains).
+      **Frontend `features/wiki/**` and `hooks/api/kb/**`:** 0 leading-line comments and 0
+      trailing `//` comments.
+      The only grep hits that remain in either tree are false positives: route globs inside
+      string literals (`/kb/articles/*`, `/support/kb/*`, `/kb/wiki/analytics/*`), a
+      `/* bound: */` marker inside a template literal, and regex literals such as
+      `/from ['"]openai['"]/`. No license notice or tooling directive was removed; there were
+      none in scope.
   **2026-09-27 audit:** AV-15: explanatory comments remain in KB source tests.
 
 ## Slices
