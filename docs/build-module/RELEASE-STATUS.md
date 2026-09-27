@@ -19,15 +19,21 @@ complete product definition of done.
 
 ## Checkout reconciliation
 
-The working checkout is ahead of the configured remote on more than one repository;
-this is not deployment evidence. The current local Build evidence includes backend
-commits `121c1727e` and `bb1f175fb`, plus frontend commits `6ffc21b48`,
-`cae206a6c`, and `b41041440`.
-The frontend and backend branches also contain unrelated Knowledge Base work that
-must remain separate. Treat a Build commit as deployed only after the deployment
-identity is read from the running service. Older commit hashes elsewhere in this
-document are retained as historical evidence for the release they describe and do
-not prove that the current checkout is deployed.
+The top-level frontend repository and nested backend repository are both on `main`
+and pushed to their configured remotes. The current Build fixes are frontend
+`1cd642429` and backend `5f6c91db8`. The backend working tree still contains
+unrelated uncommitted changes in `migrations/meta/_journal.json` and
+`test/helpers/e2e-app.ts`; they were preserved and are not part of the Build fix.
+Treat a commit as deployed only after the deployment identity is read from the
+running service. Older commit hashes elsewhere in this document are retained as
+historical evidence for the release they describe and do not prove that the current
+checkout is deployed.
+
+## Current verified delta
+
+- The production migration source-hash audit reports `pendingCount=0`, `watermarkAhead=false`, and no duplicate ledger rows. Twenty-one historical ledger rows have hashes not represented by the current migration journal; they remain an open ledger-reconciliation item and were not deleted.
+- Local browser verification on `http://localhost:1000/build/command-center` confirmed the Command Center remains usable when the projects request fails and auxiliary risks/releases requests return validation errors; those panels show local error states instead of replacing the whole route.
+- The live backend still returned the pre-fix `projectId=NaN` response during this browser pass, so the backend route fix is pushed but deployment identity and rollout completion remain unverified.
 
 ## Scope
 
@@ -42,13 +48,13 @@ not prove that the current checkout is deployed.
 | Phase | Current state | Evidence |
 |---|---|---|
 | 0. Baseline and control | Needs reconciliation | 2026-09-27 census check fails with 139 stale anchors; historical manifests/status evidence must be reconciled to the current checkout. |
-| 1. Data and security foundation | Partially verified | Historical contraction/application evidence remains below. Current architecture migrations 1371/1372/1373/1374/1377/1378/1380/1381 are absent from the journal; application state was not queried in this audit. Tickets 29/30/36/62-66 remain open or partial. |
+| 1. Data and security foundation | Partially verified | The current production migration source-hash audit has zero pending journal rows, but 21 historical unknown ledger rows remain and the architecture tickets 29/30/36/62-66 remain open or partial. |
 | 2. Core daily workflow | Partially verified | Implementations exist, but filtered-count refresh, assignee pagination, required concurrency tokens and invalid-cursor handling remain incomplete in architecture tickets 05/09/11-13/67. |
 | 3. Planning and product management | Partially verified | Earlier parent-route smoke evidence remains historical. Roadmap timestamp cursors, report invalidation and velocity infinite-query typing/pagination remain open in tickets 04/19/33. |
 | 4. Collaboration and external workflows | Partially verified | Earlier route smoke checks do not close the missing approval picker types or portal parent-visibility checks in tickets 06/35. Browser workflow re-verification remains required after fixes. |
 | 5. Execution and governance | Partially verified | Shared writer/version/effect invariants, status-group contracts and database constraints remain open in tickets 36-45/62-66; one focused cycle lifecycle test fails. |
 | 6. Performance and UX hardening | Partially verified | Fresh build `egn5C-y4teNVJ5D_PFOui` measured all 13 declared route bundles with zero pending measurements and confirmed seven first-load JS breaches, including `/build/inbox` at 610,731 bytes and `/build/my-work` at 645,663 bytes against the 524,288-byte ceiling. Chromium responsive UI coverage passed 31/31 gallery checks at 375px, 768px, and 1280px; the latest rerun is hydration-clean after the SearchInput boundary fix. |
-| 7. Release verification | Partially verified | Authenticated production smoke passed for the ticket-detail route observed in this audit. Migration `1197` is verified; the live migration ledger has zero pending rows but still fails its orphan-row integrity gate, and current deployment identity and the full browser matrix remain open. |
+| 7. Release verification | Partially verified | Authenticated production smoke passed for the ticket-detail route observed in this audit. The current source-hash audit has zero pending rows but still has 21 historical unknown ledger rows; current deployment identity and the full browser matrix remain open. |
 
 The previously completed phase labels were reopened using the 2026-09-27 architecture evidence.
 Neither that review nor the historical smoke checks certify full phase completion. Future P1/P2
