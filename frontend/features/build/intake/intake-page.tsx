@@ -69,7 +69,8 @@ export function IntakePage({ projectId }: { projectId: number }) {
     error,
     refetch,
   } = useIntakeRequests(projectId);
-  const { data: members } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
   const { data: cycles } = useCycles(projectId);
   const { data: modules } = useModules(projectId);
 

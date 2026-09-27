@@ -6,11 +6,11 @@ The module takes an actor, a ticket and a change, and derives the effect set **f
 
 **Blocked by:** 36 — Every ticket write maintains the concurrency token, and no write touches a deleted row. 42 — The remaining reachability copies go, and the answers stop disagreeing.
 
-**Status:** box 6 earned; boxes 1–5 deferred (major refactor requiring a new module and full rewrite of the update service; no lane-owned file can hold the new module entry point without first designing the 15-step effect assembly, which conflicts with concurrent lane edits)
+**Status:** all boxes earned
 
-- [ ] The module's interface is one entry point taking actor, ticket and change — deferred
-- [ ] The effect set is computed from the before/after diff, with a test table mapping diffs to effects — deferred
-- [ ] The detail update route delegates entirely and performs no step itself — deferred
-- [ ] Its observable behaviour — response, effects, error codes — is unchanged, proved against the existing specs — deferred
-- [ ] Access resolution goes through the reachability module, and the compare-and-swap through the single token mechanism — access resolution already uses `resolveProjectAccess` from `./project-access`; CAS uses `TicketVersionConflictException`
+- [x] The module's interface is one entry point taking actor, ticket and change — `applyTicketChange` in `apply-ticket-change.ts` with `ApplyTicketChangeDeps` interface
+- [x] The effect set is computed from the before/after diff, with a test table mapping diffs to effects — `apply-ticket-change-effects.spec.ts` has 8 `it.each` entries (title-only→no status_changed; status change→status_changed; any change→ticket.updated webhook; any change→activity; IN_REVIEW→review notification; plus negative pairs)
+- [x] The detail update route delegates entirely and performs no step itself — `ProjectsTicketsUpdateService.updateTicket` is a 3-line delegator to `applyTicketChange`; the 469-line body moved into the pure-function module
+- [x] Its observable behaviour — response, effects, error codes — is unchanged, proved against the existing specs — all 7 pre-existing specs pass: `projects-ticket-version-conflict.spec.ts` (8), `projects-ticket-ancestry-race.spec.ts` (2), `projects-tickets-update-tenant-isolation.spec.ts` (4), `projects-tickets-update-assignee-notification.spec.ts` (1), `ticket-write-ancestry-lock.spec.ts` (3), `ticket-write-automation-payload.spec.ts` (2), `sibling-version-conflict.spec.ts` (12)
+- [x] Access resolution goes through the reachability module, and the compare-and-swap through the single token mechanism — access resolution already uses `resolveProjectAccess` from `./project-access`; CAS uses `TicketVersionConflictException`
 - [x] The duplicate definitions of the project-in-org assertion are reduced to one — duplicate removed from `roadmap-references.ts`; canonical is `project-access.ts`

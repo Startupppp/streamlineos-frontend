@@ -39,7 +39,7 @@ const intakeListSchema = z.object({
   pagination: z.object({ limit: z.number(), hasMore: z.boolean(), nextCursor: z.string().nullable() }),
 });
 
-const viewRowSchema = z.object({
+export const viewRowSchema = z.object({
   id: z.number(),
   projectId: z.number().nullable(),
   orgId: z.string(),

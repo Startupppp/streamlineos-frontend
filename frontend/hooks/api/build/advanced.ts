@@ -6,6 +6,7 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { z } from "zod";
 
 const epicListContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.epicListContract),
@@ -28,6 +29,9 @@ const viewPageContract = lazyContract(() =>
 const viewRowContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.viewRowContract),
 );
+const viewListContract = lazyContract(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) => m.viewListContract),
+);
 const intakeListContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.intakeListContract),
 );
@@ -39,6 +43,18 @@ const analyticsContract = lazyContract(() =>
 );
 const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
+);
+const viewResponseLazy = lazyContract<{
+  data: ProjectView[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+}>(() =>
+  import("@/hooks/api/build/workspace-schema").then((m) =>
+    m.viewPageContract.or(z.array(m.viewRowSchema)).transform((value) =>
+      Array.isArray(value)
+        ? { data: value, pagination: { limit: value.length, hasMore: false, nextCursor: null } }
+        : value,
+    ),
+  ),
 );
 import type {
   Epic,
@@ -229,7 +245,7 @@ export function useViews(
   const cursor = params?.cursor ?? undefined;
   return useQuery<{ data: ProjectView[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>({
     queryKey: buildWorkQueryKeys.projects.views(projectId, cursor),
-    queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/views`, cursor ? { cursor } : undefined, signal, viewPageContract),
+    queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/views`, cursor ? { cursor } : undefined, signal, viewResponseLazy),
     staleTime: 60_000,
     ...options,
     enabled: canView && !!projectId,

@@ -115,7 +115,7 @@ const projectDetailSchema = projectRowSchema.extend({
   members: z.array(projectDetailMemberContract),
 });
 
-const projectMemberSchema = z.object({
+export const projectMemberSchema = z.object({
   id: z.string(),
   name: z.string().nullable(),
   firstName: z.string().nullable(),

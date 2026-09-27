@@ -22,8 +22,32 @@ import {
   useKnowledgeGaps,
   useGapRelatedPages,
 } from "./analytics";
+import { kbAnalyticsGapsContract } from "./kb-analytics-schema";
 
 const PAGINATION = { limit: 50, hasMore: false, nextCursor: null };
+
+describe("kbAnalyticsGapsContract", () => {
+  it("normalizes the legacy bare-array response into one cursor page", () => {
+    const parsed = kbAnalyticsGapsContract.parse([
+      {
+        query: "reset password",
+        count: 3,
+        lastOccurredAt: "2026-09-25T00:00:00.000Z",
+      },
+    ]);
+
+    expect(parsed).toEqual({
+      data: [
+        {
+          query: "reset password",
+          count: 3,
+          lastOccurredAt: "2026-09-25T00:00:00.000Z",
+        },
+      ],
+      pagination: { limit: 1, hasMore: false, nextCursor: null },
+    });
+  });
+});
 
 const PAGE_ANALYTICS_ROW = {
   id: 1,

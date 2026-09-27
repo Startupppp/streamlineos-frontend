@@ -8,6 +8,7 @@ import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chro
 import { useManagedProductInsights } from "@/hooks/api/build/managed-products";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
@@ -50,6 +51,7 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
     isLoading,
     isError,
     error,
+    isEmpty: !data,
   });
 
   function handleRetry() {
@@ -98,6 +100,13 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
               </div>
             }
             onRetry={handleRetry}
+            empty={
+              <EmptyState
+                title="Product not found"
+                description="This product may have been deleted or moved."
+                className="flex-1"
+              />
+            }
             className={CONTENT_FILL_PANEL}
           >
             <div className="space-y-6">

@@ -85,6 +85,10 @@ product investments remain listed in `06-prioritized-backlog.md` in addition to 
 
 ## Frontend verification
 
+### Local browser verification, 2026-09-27
+
+The authenticated frontend was exercised on local port `1000` with isolated browser tabs across all 68 canonical `/build*` routes in the generated Build route snapshot, including project, organization, settings, product, portfolio, team, and dynamic detail routes. The sweep rendered each route shell and captured zero browser error logs after fixing the optional activity fallback, legacy array responses for members, saved views, milestones, and releases, managed-product not-found normalization, and project-member page consumers. Dynamic records without fixtures rendered their recoverable shells without data mutation. This is route-shell smoke evidence only; it does not close the full 83-route portal/public matrix, state-matrix, mobile, production-deployment, or migration gates below.
+
 Current release-candidate checks:
 
 - `pnpm type-check`: pass.

@@ -54,9 +54,10 @@ export function useMemberOptions(
       placeholderData: (prev) => prev,
     },
   );
-  const { data: projectMembers = [] } = useProjectMembers(projectId ?? 0, {
+  const { data: projectMembersPage } = useProjectMembers(projectId ?? 0, {
     enabled: enabled && !explicit && projectId !== undefined,
   });
+  const projectMembers = useMemo(() => projectMembersPage?.data ?? [], [projectMembersPage?.data]);
   const { data: moduleData } = useModuleMemberCandidates(
     moduleKey ?? "",
     50,

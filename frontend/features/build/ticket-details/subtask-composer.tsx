@@ -57,7 +57,8 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
   const [statusOpen, setStatusOpen] = useState(false);
   const [assigneeOpen, setAssigneeOpen] = useState(false);
 
-  const { data: members = [] } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
 
   const resolvedConfig =
     projectStatuses.length > 0 ? buildStatusConfig(projectStatuses) : buildStatusConfig([]);

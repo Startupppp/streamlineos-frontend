@@ -7,6 +7,7 @@ import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-sur
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type {
   KbAnalyticsOverview,
   KbAnalyticsRange,
@@ -121,6 +122,7 @@ export function useCitationReuse(range?: KbAnalyticsRange) {
       apiClient.get<KbCitationReuseRow[]>("/kb/analytics/citation-reuse", queryParams, signal, kbAnalyticsCitationReuseContract),
     staleTime: 5 * 60_000,
     enabled: canViewAnalytics,
+    ...INLINE_READ_ERROR,
   });
 }
 

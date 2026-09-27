@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type {
   ContentHealthSignalType,
   DismissHealthItemParams,
@@ -205,5 +206,6 @@ export function useContentHealthTrend() {
       ),
     staleTime: 5 * 60_000,
     enabled: canManage,
+    ...INLINE_READ_ERROR,
   });
 }

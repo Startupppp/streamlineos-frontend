@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, isApiError } from "@/lib/api-client";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import type {
   RoadmapStatus,
@@ -418,8 +418,14 @@ export function useRoadmapPublication() {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.roadmap.publication,
-    queryFn: ({ signal }) =>
-      apiClient.get<RoadmapPublication>("/build/roadmap-publication", undefined, signal, roadmapPublicationLazy),
+    queryFn: async ({ signal }) => {
+      try {
+        return await apiClient.get<RoadmapPublication>("/build/roadmap-publication", undefined, signal, roadmapPublicationLazy);
+      } catch (error) {
+        if (isApiError(error) && error.status === 400) return null;
+        throw error;
+      }
+    },
     enabled: canView,
     staleTime: 5 * 60_000,
   });

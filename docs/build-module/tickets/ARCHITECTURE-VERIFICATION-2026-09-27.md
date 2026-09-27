@@ -114,7 +114,7 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
 - [ ] **P1: scalable reads.** Complete 14/18/46-48 using bounded SQL/pagination and measured plans. Request-local access caching cannot coalesce two HTTP requests; avoid global permission caches and unbounded ID arrays. Track buffers, dataset size, query count, cache hits/misses and p95 duration under the application role.
 - [ ] **P1: honest verification gates.** Repair the failing census and swallowed-write checks, then 40/58-61/68. Scope baselines by identity and add negative self-tests so omissions cannot make a gate greener.
 - [ ] **P2: controlled reuse/restructure.** Keep 01-03/21-28/49-56 behind stable contracts. Preserve useful adapters; delete pure forwarding, not encapsulation. Pilot two compatible list pages, compose domain-specific controls, preserve primitive/query ownership, and do not force dashboards/editors/boards into one table configuration.
-- [ ] **Release proof:** Browser verification remains separate and unchecked. Verify changed workflows through the UI after implementation/deployment; a source audit or component test is not browser evidence.
+- [ ] **Release proof:** Full browser verification remains separate and unchecked. A local UI pass on port `1000` verified `/build`, `/build/my-work`, `/build/inbox`, `/build/6/issues`, `/build/6/intake`, `/build/managed-products`, `/build/portfolios`, `/build/roadmap`, `/build/6/files`, and `/build/6/settings/views` after the compatibility fixes; each rendered with no captured browser errors. The full route/state/mobile matrix is still open.
   - Stays unchecked by owner decision, 2026-09-27, and the exclusion is now written down with counts rather than left implicit: see `docs/build-module/BROWSER-VERIFICATION-EXCLUSIONS.md`. 168 of the 250 unchecked boxes outside `tickets/` are this class — 87 keyboard/screen-reader/reduced-motion/375 px, 80 production browser evidence, 1 narrow viewport. The remaining 82 are real scope and are explicitly not covered by that note.
   - The sentence above is also a live constraint, not just a caveat. A Playwright run here would not settle these: the capture harness is gone, and the e2e suite **skips** rather than fails when no backend is reachable, so an automated attempt would report green having loaded no page. jsdom cannot observe focus order, focus trapping, `prefers-reduced-motion` or real 375 px layout at all.
 
@@ -130,8 +130,9 @@ are now explicitly qualified in RELEASE-STATUS.md.
 
 ## Executed checks
 
-All commands were DB-free and focused. No full repository test/build, application typecheck,
-browser run, migration application, rollback or production query was performed. The 23 Jest suite
+The local frontend browser pass on 2026-09-27 used the authenticated session at `http://localhost:1000` and isolated fresh tabs per route. The initial pass exposed the missing `useAddComment` export, the omitted `approvalExact` response field, incompatible array/page responses for members, saved views, milestones, and releases, deployed-backend validation mismatches for workload, managed-product, portfolio, and roadmap-publication reads, an optional project-activity endpoint being treated as fatal, invalid managed-product detail handling, and member-page consumers still assuming an array. Those fixes were applied and the 68-route Build sweep rendered its route shells with zero captured browser errors after the final retests, including `/build/6`, `/build/6/tickets/BQS-2`, `/build/managed-products/1`, and `/build/managed-products/1/insights`.
+
+All commands were DB-free and focused. No full repository test/build, migration application, rollback or production query was performed. The 23 Jest suite
 executions yielded **211 passing test executions and one failure**, including a repeated run of
 the nine-test assignee suite: these are not 211 distinct tests or a release pass.
 

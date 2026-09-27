@@ -73,7 +73,7 @@ const kbAnalyticsGapItemContract = z.object({
   lastOccurredAt: z.string(),
 });
 
-export const kbAnalyticsGapsContract = z.object({
+const kbAnalyticsGapsPageContract = z.object({
   data: z.array(kbAnalyticsGapItemContract),
   pagination: z.object({
     limit: z.number().int(),
@@ -81,6 +81,21 @@ export const kbAnalyticsGapsContract = z.object({
     nextCursor: z.string().nullable(),
   }),
 });
+
+export const kbAnalyticsGapsContract = z.preprocess(
+  (value) =>
+    Array.isArray(value)
+      ? {
+          data: value,
+          pagination: {
+            limit: value.length,
+            hasMore: false,
+            nextCursor: null,
+          },
+        }
+      : value,
+  kbAnalyticsGapsPageContract,
+);
 
 export const kbAnalyticsGapRelatedPagesContract = z.object({
   data: z.array(
