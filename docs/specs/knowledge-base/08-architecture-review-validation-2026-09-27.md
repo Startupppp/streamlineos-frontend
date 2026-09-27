@@ -133,7 +133,38 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 
 ### AV-05 — P1: correct embedding-cache isolation and cost behavior
 
-- [ ] Replace the global key with the tenant/provider/model/dimension/preprocessing/input contract above; use identical input normalization for key and provider. Test cross-tenant separation, case-sensitive queries, cache outage, model change, expiry and concurrent misses. Meter actual provider work once and report cache hits separately; prove budget checks still apply. Keep TTL configurable and document deletion/retention behavior.
+- [ ] **PARTLY — the cross-tenant half is fixed and shipped; the metering half needs the AI module.** Replace the global key with the tenant/provider/model/dimension/preprocessing/input contract above.
+      **Tenant separation — was genuinely broken, now fixed.** `CACHE_KEYS.kbQueryEmbedding` was
+      `kb:qembed:${model}:${queryHash}` — no `orgId`, while every neighbouring key in the same
+      file carries one (`search:${orgId}:${userId}:${hash}` two lines above it). That is a direct
+      **BE-123** violation ("never share a cached result across tenants"). Now
+      `kb:qembed:${orgId}:${model}:${queryHash}` (`common/cache/cache-keys.ts:78-79`,
+      `kb-embedding-cache.ts:23-28`). Only one call site existed, so the arity change is contained.
+      **Why it mattered beyond tidiness.** `embedOrDegrade` calls `embedQueryWithCredit` **only on
+      a miss** (`kb-embedding-cache.ts:30-40`), and `/kb/search` carries no credit or rate-limit
+      guard of its own — `kb-search.controller.ts:27-31` is `@RequirePermission("kb:articles:view")`
+      and nothing else. So a cache hit skipped **three** things at once: the credit reservation,
+      the per-org concurrency limiter (`ai-gateway.service.ts:119-123`), and the usage-log row.
+      With a global key and a `CACHE_TTL.WEEK`, one org's paid embedding served every other org's
+      identical query for a week, and an org with exhausted credits kept getting semantic search
+      for any warmed query.
+      **Severity, stated honestly:** this is metering and tenant coupling, **not** content
+      exposure. The cached value is a vector derived purely from the caller's own query string
+      and the model; it encodes nothing about any other tenant's documents. The one information
+      channel it did open was a weak timing oracle — a hit returns fast — letting a tenant infer
+      that *somebody* on the platform had searched a given phrase. Both close with the key change.
+      **Tests:** `kb-embedding-cache-tenant-isolation.spec.ts` (3). Written failing-first: 2 failed,
+      1 passed before the fix — and the one that passed was the **control**, which pins that a
+      same-org repeat query is still served from cache, so the fix cannot degenerate into simply
+      disabling caching. All 3 pass now; `src/common/cache` stays green at 9 suites / 263 tests.
+      **Still open, and not attempted here:** "meter actual provider work once and report cache
+      hits separately; prove budget checks still apply." There is no check-only entry point —
+      `charge: false` still runs the provider call (`ai-gateway-runner-call.ts:179`), so a
+      cache-hit budget check needs a new capability in `modules/ai`, which another session owns.
+      Also untested here: case-sensitivity, cache outage, model change, expiry, concurrent misses.
+      `normalizeEmbeddableQuery` lowercases and collapses whitespace (`kb-embedding-cache.ts:11-13`)
+      and is used for the key but **not** for the provider input, so key and provider
+      normalization are not identical — the audit's point stands and is unaddressed.
 
 ### AV-06 — P1: finish measured query and search-quality evidence
 
