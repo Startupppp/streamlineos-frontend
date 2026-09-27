@@ -114,6 +114,22 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   BUILD_FILTER_ALL: "all",
 }));
 
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => {
+  const { useState } = require("react");
+  return {
+    useBuildCursorPager: () => {
+      const [cursor, setCursor] = useState<string | undefined>(undefined);
+      return {
+        cursor,
+        hasPrevious: cursor !== undefined,
+        goNext: (next: string | null | undefined) => { if (next) setCursor(next); },
+        goPrevious: () => setCursor(undefined),
+        reset: () => setCursor(undefined),
+      };
+    },
+  };
+});
+
 jest.mock("@/components/ui/search-input", () => ({
   SearchInput: () => null,
 }));
