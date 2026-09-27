@@ -138,13 +138,17 @@ function idleMembers() {
   };
 }
 
-function resolvePageState(access: typeof ACCESS_GRANTED | typeof ACCESS_DENIED | typeof ACCESS_LOADING, opts: { isLoading: boolean; isError: boolean; isEmpty: boolean }) {
-  if (access.isLoading) return "loading";
-  if (!access.data || !("build:members:view" in access.data.scopes)) return "denied";
-  if (opts.isLoading) return "loading";
-  if (opts.isError) return "error";
-  if (opts.isEmpty) return "empty";
-  return "ready";
+function resolvePageState(
+  access: typeof ACCESS_GRANTED | typeof ACCESS_DENIED | typeof ACCESS_LOADING,
+  opts: { isLoading: boolean; isError: boolean; isEmpty: boolean; error?: unknown },
+) {
+  if (access.isLoading) return { kind: "loading" as const };
+  if (!access.data || !("build:members:view" in access.data.scopes))
+    return { kind: "denied" as const, permission: "build:members:view" };
+  if (opts.isLoading) return { kind: "loading" as const };
+  if (opts.isError) return { kind: "error" as const, error: opts.error };
+  if (opts.isEmpty) return { kind: "empty" as const };
+  return { kind: "ready" as const };
 }
 
 beforeEach(() => {
@@ -161,7 +165,7 @@ beforeEach(() => {
     refetch: jest.fn(),
   });
   mockUsePageState.mockImplementation(
-    (opts: { isLoading: boolean; isError: boolean; isEmpty: boolean }) =>
+    (opts: { isLoading: boolean; isError: boolean; isEmpty: boolean; error?: unknown }) =>
       resolvePageState(mockUseAccess(), opts),
   );
 });

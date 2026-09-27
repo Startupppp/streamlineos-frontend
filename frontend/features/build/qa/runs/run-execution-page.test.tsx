@@ -199,6 +199,13 @@ it("shows loading state while the access snapshot is still in flight rather than
   expect(screen.queryByTestId("error-state")).toBeNull();
 });
 
+it("renders a not-found state when the test run no longer exists", () => {
+  mockUseTestRunDetail.mockReturnValue(baseQuery({ data: null }));
+  render(<RunExecutionPage projectId={1} runId={1} />);
+  expect(screen.getByText("Test run not found")).toBeInTheDocument();
+  expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+});
+
 it("renders the upgrade path the backend sent with a 402 rather than a generic error", () => {
   const err = new ApiError("Build is not included in your current plan.", 402, "MODULE_NOT_ENABLED", {
     moduleKey: "build",

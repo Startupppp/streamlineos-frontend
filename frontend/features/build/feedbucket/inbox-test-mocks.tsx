@@ -24,6 +24,13 @@ interface MockDataTableProps {
 }
 
 export const dataTableModule = {
+  DataTableSkeleton: ({ rows = 8 }: { rows?: number }) => (
+    <div data-testid="data-table-skeleton">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} data-testid="skeleton" />
+      ))}
+    </div>
+  ),
   DataTable: ({ data, emptyState, selection, pagination }: MockDataTableProps) => (
     <div
       data-testid="data-table"
@@ -101,19 +108,6 @@ export const emptyStateModule = {
       {action && (
         <button data-testid="empty-action" onClick={action.onClick}>
           {action.label}
-        </button>
-      )}
-    </div>
-  ),
-};
-
-export const sharedModule = {
-  ErrorState: ({ description, onRetry }: { description: string; onRetry?: () => void }) => (
-    <div data-testid="error-state">
-      <span>{description}</span>
-      {onRetry && (
-        <button data-testid="retry-button" onClick={onRetry}>
-          Retry
         </button>
       )}
     </div>

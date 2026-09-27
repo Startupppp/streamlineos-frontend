@@ -258,7 +258,13 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     [projectId, canExecute, canCreateBug, handleOpenCreateBug],
   );
 
-  const pageState = usePageState({ permission: "build:qa:view", isLoading, isError, error });
+  const pageState = usePageState({
+    permission: "build:qa:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: run === null,
+  });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
     return (
@@ -281,6 +287,22 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
               <Skeleton key={i} className={cn("h-20 rounded-xl", PM_PANEL)} />
             ))}
           </div>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (pageState.kind === "empty") {
+    return (
+      <PageWrapper title="Run not found" backHref={`/build/${projectId}/qa`}>
+        <PmPageShell>
+          <EmptyState
+            className="flex-1"
+            illustrationPreset="ticket"
+            title="Test run not found"
+            description="This test run no longer exists, or you no longer have access to it."
+            action={{ label: "Back to QA", href: `/build/${projectId}/qa` }}
+          />
         </PmPageShell>
       </PageWrapper>
     );

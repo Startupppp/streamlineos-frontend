@@ -15,7 +15,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/approvals", () => ({
   useApprovalInbox: () => mockUseApprovalInbox(),
   useDecideApproval: () => ({ mutate: jest.fn(), isPending: false }),
   useProjectApprovals: () => mockUseProjectApprovals(),
@@ -47,6 +47,13 @@ jest.mock("@/lib/query-keys/build-work", () => ({
       approvals: {
         inbox: () => ["approvals", "inbox"],
         inboxCount: () => ["approvals", "inbox", "count"],
+        list: (projectId: number) => ["approvals", "list", projectId],
+        detail: (projectId: number, approvalId: number) => [
+          "approvals",
+          "detail",
+          projectId,
+          approvalId,
+        ],
       },
     },
   },

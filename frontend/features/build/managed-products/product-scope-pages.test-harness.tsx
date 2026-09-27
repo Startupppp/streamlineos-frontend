@@ -58,9 +58,6 @@ jest.mock("@/hooks/api/feedbucket", () => ({
 
 jest.mock("@/hooks/api/build/managed-products", () => ({
   useManagedProductInsights: jest.fn(),
-}));
-
-jest.mock("@/hooks/api/build", () => ({
   useManagedProducts: jest.fn(),
   useCreateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateManagedProduct: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
@@ -271,7 +268,7 @@ export const { useManagedProductInsights } = jest.requireMock(
 export const { useRoadmapItems } = jest.requireMock("@/hooks/api/build/roadmap") as {
   useRoadmapItems: jest.Mock;
 };
-export const { useManagedProducts } = jest.requireMock("@/hooks/api/build") as {
+export const { useManagedProducts } = jest.requireMock("@/hooks/api/build/managed-products") as {
   useManagedProducts: jest.Mock;
 };
 

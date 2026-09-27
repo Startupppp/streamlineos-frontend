@@ -6,13 +6,17 @@ let mockCanManage = true;
 let mockResolution: { kind: string } = { kind: "ready" };
 let mockTransitions: unknown[] = [];
 let mockIsLoading = false;
+const mockUsePageState = jest.fn();
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanManage,
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: () => mockResolution,
+  usePageState: (opts: unknown) => {
+    mockUsePageState(opts);
+    return mockResolution;
+  },
 }));
 
 jest.mock("@/hooks/api/build/workflow", () => ({
@@ -152,4 +156,13 @@ it("does not show the add button to a user without workflow manage permission", 
   render(<TransitionsTable projectId={1} statuses={mockStatuses} />);
 
   expect(screen.queryByRole("button", { name: /add/i })).not.toBeInTheDocument();
+});
+
+describe("TransitionsTable — permission key (Criterion 3)", () => {
+  it("passes the exact backend key build:workflow:view to usePageState — asserted not assumed", () => {
+    render(<TransitionsTable projectId={1} statuses={mockStatuses} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:workflow:view" }),
+    );
+  });
 });

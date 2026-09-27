@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { WorkflowPage } from "./workflow-page";
 
 let mockResolution: "loading" | "denied" | "error" | "empty" | "ready" = "ready";
+const mockUsePageState = jest.fn();
 let mockStatuses: Array<{ id: number; name: string; type?: string; color?: string | null; order: number; wipLimit?: number | null }> = [];
 let mockTransitions: Array<{ id: number; fromStatusId: number | null; toStatusId: number; name?: string; requiresApproval: boolean; requiredFields: string[]; allowedRoles: string[] }> = [];
 let mockCanManage = true;
@@ -11,7 +12,10 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: () => ({ kind: mockResolution }),
+  usePageState: (opts: unknown) => {
+    mockUsePageState(opts);
+    return { kind: mockResolution };
+  },
 }));
 
 jest.mock("@/hooks/api/build/custom-states", () => ({
@@ -231,5 +235,14 @@ describe("WorkflowPage keyboard shortcuts (C3)", () => {
 
     const lastCall = mockUseBuildListKeyboard.mock.calls.at(-1) as [{ itemCount: number }];
     expect(lastCall?.[0]?.itemCount).toBe(1);
+  });
+});
+
+describe("WorkflowPage — permission key (Criterion 3)", () => {
+  it("passes the exact backend key build:workflow:view to usePageState — asserted not assumed", () => {
+    render(<WorkflowPage projectId={7} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:workflow:view" }),
+    );
   });
 });
