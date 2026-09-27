@@ -13,7 +13,10 @@ const STRIP_LIMIT = 6;
 
 export function WikiCompanyDocumentsStrip() {
   const flags = useHrKbLinkFlags();
-  const { data } = useLinkedDocuments({ limit: STRIP_LIMIT }, { enabled: flags.link });
+  const { data } = useLinkedDocuments(
+    { limit: STRIP_LIMIT },
+    { enabled: flags.link, throwOnError: false },
+  );
   const rows = data?.data ?? [];
   if (!flags.link || rows.length === 0) return null;
 

@@ -8,6 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export interface KbSource {
   id: number;
@@ -87,6 +88,7 @@ export function useKbSources(filters?: KbSourcesParams) {
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 15_000,
     enabled: canView,
+    ...INLINE_READ_ERROR,
     refetchInterval: (query) =>
       kbSourcePollInterval((query.state.data?.pages ?? []).flatMap((page) => page.data)),
   });

@@ -12,6 +12,7 @@ import type {
 } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const RESEARCH_BRIEFS_PAGE_SIZE = 20;
 
@@ -52,6 +53,7 @@ export function useKbResearchBriefs() {
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -62,6 +64,7 @@ export function useKbResearchBrief(briefId: number | undefined) {
     queryFn: ({ signal }) => apiClient.get<KbResearchBrief>(`/kb/research-briefs/${briefId}`, undefined, signal, kbResearchBriefDetailContract),
     enabled: canViewPages && briefId !== undefined,
     staleTime: 10_000,
+    ...INLINE_READ_ERROR,
     refetchInterval: (query) => {
       const data = query.state.data;
       if (data?.status === "queued" || data?.status === "running") return 3_000;

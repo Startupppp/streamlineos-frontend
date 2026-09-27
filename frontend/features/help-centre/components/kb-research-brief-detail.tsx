@@ -151,7 +151,10 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
   }
 
   function handleCancel() {
-    cancelMutation.mutate(briefId, { onError: (e) => toast.error(getErrorMessage(e)) });
+    cancelMutation.mutate(briefId, {
+      onSuccess: () => router.push(basePath),
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
   }
 
   function handleConvertToPage() {
@@ -247,18 +250,16 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
             </LoadingButton>
           )}
 
-          {brief.status === "queued" && (
-            <LoadingButton
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs text-destructive hover:text-destructive"
-              onClick={handleCancel}
-              isPending={cancelMutation.isPending}
-              loadingText="Cancelling…"
-            >
-              Cancel
-            </LoadingButton>
-          )}
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs text-destructive hover:text-destructive"
+            onClick={handleCancel}
+            isPending={cancelMutation.isPending}
+            loadingText="Deleting…"
+          >
+            Delete
+          </LoadingButton>
 
           {brief.status === "completed" && brief.approvedAt === null && canManagePages && (
             <LoadingButton

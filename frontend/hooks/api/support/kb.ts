@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import type { z } from "zod";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
@@ -167,6 +168,7 @@ export function useSupportKbArticle(id: number) {
     queryFn: ({ signal }) => apiClient.get<KbArticleDetail>(`/support/kb/articles/${id}`, undefined, signal, kbArticleDetailC),
     enabled: Number.isFinite(id) && id > 0,
     staleTime: 15_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

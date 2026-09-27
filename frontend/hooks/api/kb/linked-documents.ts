@@ -51,7 +51,10 @@ export interface LinkedDocumentList {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export function useLinkedDocuments(params?: LinkedDocumentListParams, options?: { enabled?: boolean }) {
+export function useLinkedDocuments(
+  params?: LinkedDocumentListParams,
+  options?: { enabled?: boolean; throwOnError?: false },
+) {
   const queryParams: Record<string, unknown> = {
     limit: params?.limit ?? 30,
     ...(params?.cursor ? { cursor: params.cursor } : {}),

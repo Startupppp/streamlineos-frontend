@@ -196,6 +196,7 @@ export function useKbPageChildrenLevel(
 export function useKbPagesRecent() {
   const canView = useCan("kb:pages:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageListItem[]>(
