@@ -29,11 +29,16 @@ const NotificationBellPanel = dynamic(
   { ssr: false },
 );
 
-function BellBadge({ count }: { count: number }) {
+function badgeLabel(count: number, exact: boolean): string {
+  if (count > 99) return "99+";
+  return exact ? String(count) : `${count}+`;
+}
+
+function BellBadge({ count, exact }: { count: number; exact: boolean }) {
   if (count === 0) return null;
   return (
     <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-micro font-bold leading-none text-primary-foreground">
-      {count > 99 ? "99+" : count}
+      {badgeLabel(count, exact)}
     </span>
   );
 }
@@ -66,6 +71,8 @@ export function NotificationBell() {
 
   const { data: unifiedCountData } = useUnifiedInboxCount();
   const unreadCount = unifiedCountData?.total ?? 0;
+  const unreadExact =
+    unifiedCountData?.mailExact !== false && unifiedCountData?.approvalExact !== false;
 
   const handleOpenChange = useCallback((next: boolean) => {
     if (next) setPanelMounted(true);
@@ -117,13 +124,15 @@ export function NotificationBell() {
       ) : (
         <BellIcon ref={bellIconRef} size={16} />
       )}
-      <BellBadge count={unreadCount} />
+      <BellBadge count={unreadCount} exact={unreadExact} />
     </button>
   );
 
   const liveRegion = (
     <span className="sr-only" role="status" aria-live="polite">
-      {unreadCount > 0 ? `${unreadCount} unread items in inbox` : ""}
+      {unreadCount > 0
+        ? `${unreadExact ? unreadCount : `at least ${unreadCount}`} unread items in inbox`
+        : ""}
     </span>
   );
 

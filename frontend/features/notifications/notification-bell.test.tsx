@@ -44,6 +44,7 @@ jest.mock("@/hooks/api/inbox", () => ({
       approval: 0,
       total: mockUnreadCount,
       mailExact: true,
+      approvalExact: true,
     },
   }),
   useUnifiedInbox: () => ({

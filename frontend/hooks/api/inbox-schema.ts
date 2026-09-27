@@ -82,4 +82,5 @@ export const unifiedInboxCountContract = z.object({
   approval: z.number().int(),
   total: z.number().int(),
   mailExact: z.boolean(),
+  approvalExact: z.boolean(),
 });

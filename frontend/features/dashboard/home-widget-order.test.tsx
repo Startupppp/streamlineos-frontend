@@ -125,7 +125,7 @@ jest.mock("@/hooks/api/payroll/command-center", () => ({
 }));
 jest.mock("@/hooks/api/inbox", () => ({
   useUnifiedInboxCount: () => ({
-    data: { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true },
+    data: { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true, approvalExact: true },
     isLoading: false,
   }),
 }));

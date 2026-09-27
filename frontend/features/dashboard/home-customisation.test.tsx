@@ -103,7 +103,7 @@ jest.mock("@/hooks/api/notifications", () => ({
 
 jest.mock("@/hooks/api/payroll/ess", () => ({ useEssOverview: () => ({ data: null, isLoading: false }) }));
 jest.mock("@/hooks/api/payroll/command-center", () => ({ useCommandCenter: () => ({ data: null, isLoading: false }) }));
-jest.mock("@/hooks/api/inbox", () => ({ useUnifiedInboxCount: () => ({ data: { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true }, isLoading: false }) }));
+jest.mock("@/hooks/api/inbox", () => ({ useUnifiedInboxCount: () => ({ data: { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true, approvalExact: true }, isLoading: false }) }));
 
 jest.mock("@/features/hr/attendance/attendance-regularization-dialog", () => ({
   AttendanceRegularizationDialog: () => null,

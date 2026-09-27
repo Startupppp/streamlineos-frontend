@@ -83,4 +83,5 @@ export type UnifiedInboxCount = {
   approval: number;
   total: number;
   mailExact: boolean;
+  approvalExact: boolean;
 };

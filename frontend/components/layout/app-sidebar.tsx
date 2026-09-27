@@ -201,13 +201,16 @@ export function AppSidebar({
     throwOnError: false,
   });
   const unreadInboxCount = unifiedCountData?.total ?? 0;
+  const unreadInboxExact =
+    unifiedCountData?.mailExact !== false && unifiedCountData?.approvalExact !== false;
 
   useEffect(() => {
     const base = "StreamlineOS";
     const total = unreadChatCount + unreadInboxCount;
-    document.title =
-      total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
-  }, [unreadChatCount, unreadInboxCount]);
+    const shown =
+      total > 99 ? "99+" : unreadInboxExact ? String(total) : `${total}+`;
+    document.title = total > 0 ? `(${shown}) ${base}` : base;
+  }, [unreadChatCount, unreadInboxCount, unreadInboxExact]);
 
   const effectiveCollapsed = isMobile ? false : isCollapsed;
 

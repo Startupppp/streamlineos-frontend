@@ -64,7 +64,7 @@ jest.mock("@/hooks/api/dashboard", () => ({
 }));
 
 jest.mock("@/hooks/api/inbox", () => ({
-  useUnifiedInboxCount: () => ({ data: { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true }, isLoading: false }),
+  useUnifiedInboxCount: () => ({ data: { notification: 0, mail: 0, approval: 0, total: 0, mailExact: true, approvalExact: true }, isLoading: false }),
 }));
 
 jest.mock("./use-dashboard-access", () => ({
