@@ -12,7 +12,6 @@ import {
   EmptyTasksIllustration,
   EmptyActivityIllustration,
 } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
 import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
@@ -128,7 +127,13 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [canManage]);
 
-  const pageState = usePageState({ permission: "build:goals:view", isLoading, isError, error });
+  const pageState = usePageState({
+    permission: "build:goals:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !goal,
+  });
 
   function handleDelete() {
     deleteGoal.mutate(goalId, {
@@ -147,43 +152,35 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
     });
   }
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+  if (pageState.kind !== "ready") {
     return (
       <PageWrapper title="Goal" backHref="/build/goals">
-        <PmPageShell>
-          <PmSection index={0} className={PM_FILL_SECTION}>
-            <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
-              {null}
-            </PageState>
-          </PmSection>
-        </PmPageShell>
+        <PageState
+          resolution={pageState}
+          loading={<GoalDetailSkeleton />}
+          empty={
+            <PmPageShell>
+              <PmSection index={0} className={PM_FILL_SECTION}>
+                <EmptyState
+                  className="flex-1"
+                  illustrationPreset="projects"
+                  title="Goal not found"
+                  description="This goal may have been deleted or the link is invalid."
+                  action={{ label: "Back to goals", href: "/build/goals" }}
+                />
+              </PmSection>
+            </PmPageShell>
+          }
+          onRetry={handleRetry}
+          className="flex-1"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }
 
-  if (pageState.kind === "loading") {
-    return (
-      <PageWrapper title="Goal" backHref="/build/goals">
-        <GoalDetailSkeleton />
-      </PageWrapper>
-    );
-  }
-
-  if (!goal) {
-    return (
-      <PageWrapper title="Goal" backHref="/build/goals">
-        <PmPageShell>
-          <PmSection index={0} className={PM_FILL_SECTION}>
-            <ErrorState
-              title="Failed to load goal"
-              description="This goal may have been removed or is unavailable."
-              onRetry={handleRetry}
-            />
-          </PmSection>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
+  if (!goal) return null;
 
   const detail: GoalDetail = goal;
   const cfg = STATUS_CONFIG[detail.status];

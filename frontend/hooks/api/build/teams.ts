@@ -106,6 +106,7 @@ export function useTeamMembers(
       ),
     enabled: !!teamId,
     staleTime: 30_000,
+    throwOnError: false,
   });
 }
 
