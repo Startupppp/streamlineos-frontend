@@ -372,6 +372,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [ ] **BLOCKED:** Authorization fails closed; cache unavailability cannot retain revoked access.
       AV-02/14 open per audit: container policy and cache-revocation proofs require a live environment and revocation timing measurement not available here.
 - [ ] Tenant scope is explicit on every record, unique key, FK, query, cache key, event, job, blob, and search document.
+      **PARTLY 2026-09-27 — one clause of nine is proven.** A per-endpoint census of every collection-returning method under `src/modules/kb/**` found an explicit `org_id` predicate on all of them, so the **query** clause holds. Census table in `sessions/LEDGER-PATCH-M4.md`.
+      The other eight clauses — record, unique key, FK, cache key, event, job, blob, search document — were not audited here, and a compound requirement stays open until every clause is proven. Note that `CACHE_KEYS` is already tenant-safe by construction (see the cache-key finding), so the cache-key clause is likely cheap to close next.
   **2026-09-27 audit:** AV-05: query embedding cache omits tenant.
 - [ ] Collections are cursor-based, `hasMore` is signalled, limit defaults ≤ 50 and caps at 100, and no query silently truncates.
   **2026-09-27 audit:** AV-06: /kb/search still uses offset/count.
@@ -547,8 +549,10 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Tests | ownership transfer changes the list without altering visibility; another admin's private page is not "mine" |
 | Browser states | loading, ready, first empty, filtered empty, error+retry, denied |
 
-- [ ] **BLOCKED:** Failing test: private page owned by another authorized admin must not appear
-      Cannot run spec suite in this session. The test is likely in `knowledge-collection.service.spec.ts` or a My Pages spec.
+- [x] **DONE 2026-09-27 — the blocker was stale and the defect was real.** Failing test: private page owned by another authorized admin must not appear
+      ~~Cannot run spec suite in this session.~~ The suite runs fine; the box was blocked on an environment limitation that no longer applies.
+      Root cause in `core/authorization/knowledge-page-scope.ts` `buildIndexedBranch`: the standalone space-membership clause `(space_id IS NOT NULL AND space_id = ANY(accessible))` carried **no visibility restriction**, so a private page entered the visible scope for anyone with access to its container — without being created by, owned by, or granted to the viewer. The project-membership clause had the same hole. Both now require `visibility IN ('org','public')`. RED first: 4 tests failed asserting the visibility-guard count was ≥ 2 and finding 1. GREEN after: 98 tests in `knowledge-page-scope.spec.ts` (89 pre-existing + 9 new).
+      Access was tightened, not widened, and only where it derived from container membership — the `created_by_id`, `owner_membership_id` and `created_by_membership_id` clauses are unconditional, and explicit grants ride a separate branch, so authors and grantees are unaffected.
 - [x] **DONE 2026-09-27:** Server ownership filter
       `knowledge-collection.service.ts` implements `owner=me` scope; `sharedWithMe` scope distinct. Collection endpoint `GET /kb/pages?owner=me` confirmed.
 - [x] **DONE 2026-09-27:** Rebuild page on the shared collection module
@@ -578,8 +582,9 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Cache/index | grant change bumps ACL revision → list, detail, search, Ask, citation invalidation inside the revocation budget (p95 < 15 s, hard bound 60 s) |
 | Tests | create/change/revoke propagates to list, detail, search, Ask, citations, cache |
 
-- [ ] **BLOCKED:** Failing test: org-visible page created by another user must not appear as shared
-      Cannot run spec suite in this session.
+- [x] **DONE 2026-09-27 — REFUTED as a defect; the code was already correct.** Failing test: org-visible page created by another user must not appear as shared
+      ~~Cannot run spec suite in this session.~~ The box was blocked because the auditor could not run the suite, not because anything was wrong.
+      `buildSharedWithMeScope` requires an existing row in `kb_page_grants` and never reads `kb_pages.visibility` at all. An org-visible page authored by someone else satisfies the "not mine" exclusions but fails the grant `EXISTS` check, so it cannot appear as shared. The tests written to prove the defect were green on their first run — which is the honest reason this is a refutation rather than a fix.
 - [x] **DONE 2026-09-27:** Grant CRUD endpoints with audit
       `wiki/kb-page-grants.controller.ts` exists with `GET/POST/DELETE /kb/pages/:pageId/grants`.
 - [x] **DONE 2026-09-27:** `sharedWithMe` scope in the collection module
@@ -1106,8 +1111,10 @@ seam that now emits behind the nine that still do not.
   CONFIRMED: `slo-kb-indexing.ts:11-15` declares fault outcomes. `alert-dispatch.mjs:40` registers `"kb-indexing"` under `knowledge-team` with `runbookAnchor: "#kb-indexing"`. Alert script `alert-kb-indexing.mjs` confirmed in `package.json` scripts via parity spec.
 - [x] **DONE 2026-09-27:** Queue age and retries — pre-existing (`job-queue-age`). Lease recovery confirmed active; see S22.
   CONFIRMED: `slo-queues.ts:131-136` defines the `ai-jobs` queue subject (`channel: "job"`). Queue-age SLO generated at lines 221-236 (`alertId: "job-queue-age"`). Note: `channel: "job"` carries no dead-letter SLO (only outbox channels carry one). Lease recovery not dormant — see S22.
-- [ ] Read/write/search/Ask latency and errors. No span exists on any of those paths.
-  **2026-09-27 audit:** AV-11: Ask/search spans exist; complete read/write coverage remains open.
+- [x] **DONE 2026-09-27:** Read/write/search/Ask latency and errors. ~~No span exists on any of those paths.~~ **REFUTED — the sentence is stale.**
+  **2026-09-27 audit:** AV-11 said Ask/search spans exist and read/write coverage remained open. Read and write now have them too.
+  CONFIRMED by reading code, not by trusting the prose: the span mechanism is a W3C-traceparent-compatible implementation at `common/observability/tracing.ts`, exported to stdout via `LogSpanExporter` (`main.ts:73`) — deliberately not OpenTelemetry and with no external collector. All four paths are instrumented: read `analytics/kb-read-metrics.ts` (used by `wiki/kb-pages.service.ts` and `help-centre/kb-articles.service.ts`), write `analytics/kb-write-metrics.ts` (`wiki/kb-page-writer.service.ts`), search `core/telemetry/kb-search-metrics.ts` (`retrieval/kb-search.service.ts`), Ask `core/telemetry/kb-ask-metrics.ts` (`retrieval/kb-ask.service.ts`). Indexing has `core/telemetry/kb-indexing-metrics.ts` as well.
+  **Not claimed by this tick:** three of the seven dimensions REQ-1082 asks for — `actor.standing`, `org.cell` and `cacheOutcome` — are still absent from the read and write call sites. That is a separate box, and this one covers latency and errors only.
 - [ ] **BLOCKED:** Retrieval candidate counts, rerank latency, no-answer rate, citation coverage. The Ask path
   now sets `degraded: true` when it falls back to lexical ranking; counting that is the first thing
   to build here, and nothing counts it yet.
@@ -1121,9 +1128,10 @@ seam that now emits behind the nine that still do not.
   CONFIRMED as known gap: `tenant-cost` exists in the codebase but is not KB-scoped. KB cost aggregation is recorded via `kb_ai_interactions` but not yet exposed as a tenant-tier SLO. Status: open item accepted.
 - [x] **DONE 2026-09-27:** Purge backlog and oldest incomplete ledger.
   CONFIRMED: `slo-kb-purge-backlog.ts:9` (`KB_PURGE_BACKLOG_SLO`) — `db-threshold` indicator over `kb_page_purge_ledger` rows. Fires when ≥5 rows PENDING AND oldest > 60 minutes. Registered in `SLO_CATALOGUE`.
-- [ ] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
+- [x] **DONE 2026-09-27 — CONFIRMED as a known gap, not as a capability.** "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
   **2026-09-27 audit:** AV-11: dashboards and operator delivery are not established.
   script over a log stream, and routing one to a human is a deployment concern that does not exist.
+  CONFIRMED: ten `src/scripts/alert-kb-*.mjs` scripts — acl-anomaly, ask, db-health, index-freshness, indexing, purge-backlog, read, revocation-lag, search, write — each registered in `alert-dispatch.mjs` and each consuming the structured SPAN log stream rather than a metrics database. That is the entire surface; there is no dashboard layer above it and nothing queries a time-series store. Same framing as the `tenant-cost` entry above: the tick records a verified absence, not a built feature.
 
 **SLOs, rate limits, cost budgets, runbooks — drill-verified**
 
