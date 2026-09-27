@@ -2,7 +2,12 @@
 
 import { useCallback, useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
+import { createAppQueryClient } from "@/components/providers/query-provider";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { GALLERY_STUB_ACCESS } from "@/features/build/shared/build-list-fixtures";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared";
@@ -66,10 +71,27 @@ function PortfoliosGalleryWrapper({ caseId, title, children }: { caseId: string;
 }
 
 function PortfoliosReadyTable() {
-  const columns = buildPortfolioColumns({ canManage: true, ownerOf: () => null, onEdit: NOOP, onDelete: NOOP });
-  const renderMobileCard = useCallback((row: Portfolio) => <PortfolioMobileCard portfolio={row} canManage ownerOf={() => null} onEdit={NOOP} onDelete={NOOP} />, []);
+  function stubOwnerOf(_id: string | null) { return null; }
+  function getRowKey(row: Portfolio) { return row.id; }
+  const columns = buildPortfolioColumns({ canManage: true, ownerOf: stubOwnerOf, onEdit: NOOP, onDelete: NOOP });
+  const renderMobileCard = useCallback(
+    (row: Portfolio) => (
+      <PortfolioMobileCard portfolio={row} canManage ownerOf={stubOwnerOf} onEdit={NOOP} onDelete={NOOP} />
+    ),
+    [],
+  );
   return (
-    <DataTable data={STUB_PORTFOLIOS} columns={columns} getRowKey={(r) => r.id} mobileCard={renderMobileCard} className={CONTENT_FILL_PANEL} pagination={{ mode: "cursor", pageSize: 20, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }} />
+    <BuildListSurface<Portfolio>
+      permission="build:portfolios:view"
+      rows={STUB_PORTFOLIOS}
+      columns={columns}
+      isLoading={false}
+      isError={false}
+      getRowKey={getRowKey}
+      mobileCard={renderMobileCard}
+      pagination={{ mode: "cursor", pageSize: 20, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }}
+      empty={<EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No portfolios yet" />}
+    />
   );
 }
 
@@ -101,16 +123,39 @@ function ProgramsGalleryWrapper({ caseId, title, children }: { caseId: string; t
 }
 
 function ProgramsReadyTable() {
-  const columns = buildProgramColumns({ canManage: true, ownerOf: () => null, portfolioName: () => "—", onEdit: NOOP, onDelete: NOOP });
-  const renderMobileCard = useCallback((row: Program) => <ProgramMobileCard program={row} canManage ownerOf={() => null} portfolioName={() => "—"} onEdit={NOOP} onDelete={NOOP} />, []);
+  function stubOwnerOf(_id: string | null) { return null; }
+  function stubPortfolioName(_id: number | null) { return "—"; }
+  function getRowKey(row: Program) { return row.id; }
+  const columns = buildProgramColumns({ canManage: true, ownerOf: stubOwnerOf, portfolioName: stubPortfolioName, onEdit: NOOP, onDelete: NOOP });
+  const renderMobileCard = useCallback(
+    (row: Program) => (
+      <ProgramMobileCard program={row} canManage ownerOf={stubOwnerOf} portfolioName={stubPortfolioName} onEdit={NOOP} onDelete={NOOP} />
+    ),
+    [],
+  );
   return (
-    <DataTable data={STUB_PROGRAMS} columns={columns} getRowKey={(r) => r.id} mobileCard={renderMobileCard} className={CONTENT_FILL_PANEL} pagination={{ mode: "cursor", pageSize: 25, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }} />
+    <BuildListSurface<Program>
+      permission="build:programs:view"
+      rows={STUB_PROGRAMS}
+      columns={columns}
+      isLoading={false}
+      isError={false}
+      getRowKey={getRowKey}
+      mobileCard={renderMobileCard}
+      pagination={{ mode: "cursor", pageSize: 25, hasMore: false, hasPrevious: false, onNext: NOOP, onPrevious: NOOP }}
+      empty={<EmptyState className={CONTENT_FILL_PANEL} illustrationPreset="projects" title="No programs yet" />}
+    />
   );
 }
 
 export function PortfoliosProgramsGalleryCases() {
+  const [queryClient] = useState(() => {
+    const client = createAppQueryClient("portfolios-programs-gallery");
+    client.setQueryData(platformCoreQueryKeys.access.me(), GALLERY_STUB_ACCESS);
+    return client;
+  });
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <PortfoliosGalleryWrapper caseId="portfolios-ready" title="Portfolios — populated">
         <PortfoliosReadyTable />
       </PortfoliosGalleryWrapper>
@@ -192,6 +237,6 @@ export function PortfoliosProgramsGalleryCases() {
       <GalleryCase id="programs-denied" title="Programs — access denied">
         <NoPermissionState permission="build:programs:view" />
       </GalleryCase>
-    </>
+    </QueryClientProvider>
   );
 }

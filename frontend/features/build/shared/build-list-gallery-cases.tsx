@@ -2,10 +2,16 @@
 
 import { useCallback, useState, type ReactNode } from "react";
 import { Download, Plus, Upload } from "lucide-react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
+import { createAppQueryClient } from "@/components/providers/query-provider";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { BuildListSurface } from "./build-list-surface";
+import { GALLERY_STUB_ACCESS } from "./build-list-fixtures";
 import { Button } from "@/components/ui/button";
 import { BuildHeaderActions } from "./build-header-actions";
 import type { BuildHeaderAction } from "./build-header-actions-plan";
@@ -245,23 +251,51 @@ export function GalleryList({
   );
 }
 
-export function ReadyTable() {
+function ReadyTableInner() {
+  function handleNext() {
+    return undefined;
+  }
+  function handlePrevious() {
+    return undefined;
+  }
   return (
-    <DataTable
-      data={ROWS}
+    <BuildListSurface<GalleryRow>
+      permission="build:view"
+      rows={ROWS}
       columns={COLUMNS}
+      isLoading={false}
+      isError={false}
       getRowKey={getRowKey}
-      minWidth="780px"
       mobileCard={renderMobileCard}
-      className={CONTENT_FILL_PANEL}
+      minWidth="780px"
       pagination={{
         mode: "cursor",
         pageSize: 20,
         hasMore: true,
         hasPrevious: true,
-        onNext: () => undefined,
-        onPrevious: () => undefined,
+        onNext: handleNext,
+        onPrevious: handlePrevious,
       }}
+      empty={
+        <EmptyState
+          className={CONTENT_FILL_PANEL}
+          illustrationPreset="projects"
+          title="No projects yet"
+        />
+      }
     />
+  );
+}
+
+export function ReadyTable() {
+  const [queryClient] = useState(() => {
+    const client = createAppQueryClient("build-list-gallery-ready");
+    client.setQueryData(platformCoreQueryKeys.access.me(), GALLERY_STUB_ACCESS);
+    return client;
+  });
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ReadyTableInner />
+    </QueryClientProvider>
   );
 }
