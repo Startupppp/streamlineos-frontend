@@ -31,6 +31,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound } from "next/navigation";
 import type { ViewType } from "@/features/build/views/view-switcher";
 import { PageState } from "@/components/shared/page-state";
+import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
@@ -134,6 +135,8 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     [filteredTickets, handleTicketSelect],
   );
 
+  const canCreateTicket = useCan("build:tickets:create");
+
   const handleKeyboardCreate = useCallback(
     () => handleCreateOpenChange(true),
     [handleCreateOpenChange],
@@ -146,7 +149,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     onOpen: handleOpenFocusedTicket,
     onEdit: handleOpenFocusedTicket,
     onClearSelection: handleClearSelection,
-    onCreate: handleKeyboardCreate,
+    onCreate: canCreateTicket ? handleKeyboardCreate : undefined,
     onShortcutHelp: handleShortcutHelp,
     searchInputRef,
     enabled: view === "list",

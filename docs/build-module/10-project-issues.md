@@ -92,7 +92,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - **P0:** Verify route renders this contract rather than another page; add route/access/parent identity tests and complete loading/error/denied behavior.
 - **P0:** Verify server/client Zod parity, bounded pagination, composite tenant predicates, and exact cache keys for every endpoint above.
-- **P1:** The `c` keyboard shortcut in `project-board-page.tsx` wires `onCreate: handleKeyboardCreate` unconditionally; the webhooks pattern explicitly sets `onCreate` to `undefined` when `useCan("build:tickets:create")` returns false. The shortcut fires the create dialog but `CreateTicketDialog` is internally gated on `useCan`. No test verifies the shortcut is suppressed when permission is denied. `project-board-page.tsx` is fenced; fix and test must land from a session with write access to that file.
+- ~~**P1:** The `c` keyboard shortcut in `project-board-page.tsx` wires `onCreate: handleKeyboardCreate` unconditionally; the webhooks pattern explicitly sets `onCreate` to `undefined` when `useCan("build:tickets:create")` returns false. The shortcut fires the create dialog but `CreateTicketDialog` is internally gated on `useCan`. No test verifies the shortcut is suppressed when permission is denied.~~ **CLOSED 2026-09-27.** The claim was accurate. `project-board-page.tsx` now reads `useCan("build:tickets:create")` — the same key `CreateTicketDialog` checks — and passes `onCreate: canCreateTicket ? handleKeyboardCreate : undefined`, matching `project-webhooks-page.tsx:262`. Four tests in `project-board-page.test.tsx` cover it, including the FE-122 pair: a denied viewer pressing `c` does not reach `handleCreateOpenChange`, and a permitted viewer does. The suite's `useBuildListKeyboard` mock now delegates to the real hook, so both halves of the pair are driven by a real `keydown` rather than a prop assertion. Mutation-checked: forcing `onCreate` back to unconditional fails exactly the two denial tests.
 - **P1:** Complete URL-backed filters, saved views, keyboard/context actions, bulk semantics, mobile layout, and accessible chart/table alternatives.
 - **P2:** Add realtime or AI only when it reduces a measured user delay and preserves deterministic non-AI operation.
 
@@ -104,4 +104,18 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
+  - Keyboard, create-shortcut permission gate: verified in jsdom.
+
+    ```text
+    $ cd frontend && npx jest --silent features/build/project-detail features/build/views features/build/shared/use-build-list-keyboard
+    Test Suites: 20 passed, 20 total
+    Tests:       181 passed, 181 total
+    Snapshots:   0 total
+    Time:        14.485 s
+
+    $ cd frontend && npx tsc -p tsconfig.json --noEmit
+    (no output, exit 0)
+    ```
+
+  - **BROWSER-ONLY** and NOT ticked: `Tab` focus order, focus management in overlays, screen-reader output, `prefers-reduced-motion`, real 375 px layout, and high-density desktop. jsdom cannot observe any of them (FE-123).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.

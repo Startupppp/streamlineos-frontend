@@ -27,8 +27,9 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
+const mockUseCan = jest.fn((_key: string) => false);
 jest.mock("@/hooks/api/access", () => ({
-  useCan: jest.fn(() => false),
+  useCan: (...args: [string]) => mockUseCan(...args),
 }));
 
 const mockUseProject = jest.fn();
@@ -72,9 +73,20 @@ jest.mock("@/features/build/views/use-board-url-state", () => ({
   useBoardUrlState: (...args: unknown[]) => mockUseBoardUrlState(...args),
 }));
 
-const mockUseBuildListKeyboard = jest.fn(() => ({ focusedIndex: null }));
+const actualBuildListKeyboard = jest.requireActual<
+  typeof import("@/features/build/shared/use-build-list-keyboard")
+>("@/features/build/shared/use-build-list-keyboard");
+
+type BuildListKeyboardOptions = Parameters<
+  typeof actualBuildListKeyboard.useBuildListKeyboard
+>[0];
+
+const mockUseBuildListKeyboard = jest.fn((options: BuildListKeyboardOptions) =>
+  actualBuildListKeyboard.useBuildListKeyboard(options),
+);
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
-  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+  useBuildListKeyboard: (...args: [BuildListKeyboardOptions]) =>
+    mockUseBuildListKeyboard(...args),
 }));
 
 const mockUsePageState = jest.fn();
@@ -258,6 +270,7 @@ beforeEach(() => {
   mockUseProject.mockReturnValue(READY_PROJECT);
   mockUseBoardUrlState.mockReturnValue({ ...BOARD_URL_STATE_DEFAULT });
   mockUsePageState.mockReturnValue({ kind: "ready" });
+  mockUseCan.mockReturnValue(false);
 });
 
 function renderPage() {
@@ -511,6 +524,7 @@ describe("ProjectBoardPage — keyboard navigation", () => {
   });
 
   it("passes an onCreate handler to useBuildListKeyboard so the c keyboard shortcut opens the create-ticket dialog without a separate keydown listener", () => {
+    mockUseCan.mockReturnValue(true);
     renderPage();
     expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
       expect.objectContaining({ onCreate: expect.any(Function) }),
@@ -535,6 +549,46 @@ describe("ProjectBoardPage — keyboard navigation", () => {
     renderPage();
     expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
       expect.objectContaining({ onShortcutHelp: expect.any(Function) }),
+    );
+  });
+});
+
+describe("ProjectBoardPage — create shortcut permission gate", () => {
+  function renderListView(handleCreateOpenChange: jest.Mock) {
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      view: "list",
+      handleCreateOpenChange,
+    });
+    return renderPage();
+  }
+
+  it("gates the c shortcut on build:tickets:create, the same key CreateTicketDialog itself checks, so the shortcut and the dialog cannot disagree", () => {
+    renderPage();
+    expect(mockUseCan).toHaveBeenCalledWith("build:tickets:create");
+  });
+
+  it("pressing c does not ask the create-ticket dialog to open when the viewer lacks build:tickets:create, so a denied viewer is never shown a dialog that cannot submit", () => {
+    const handleCreateOpenChange = jest.fn();
+    mockUseCan.mockReturnValue(false);
+    renderListView(handleCreateOpenChange);
+    fireEvent.keyDown(document, { key: "c" });
+    expect(handleCreateOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("pressing c asks the create-ticket dialog to open when the viewer holds build:tickets:create, the positive counterpart proving the denial test is not passing because the shortcut is dead (FE-122)", () => {
+    const handleCreateOpenChange = jest.fn();
+    mockUseCan.mockReturnValue(true);
+    renderListView(handleCreateOpenChange);
+    fireEvent.keyDown(document, { key: "c" });
+    expect(handleCreateOpenChange).toHaveBeenCalledWith(true);
+  });
+
+  it("passes onCreate undefined to useBuildListKeyboard when create is denied, matching the suppression the webhooks page already uses", () => {
+    mockUseCan.mockReturnValue(false);
+    renderPage();
+    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({ onCreate: undefined }),
     );
   });
 });
