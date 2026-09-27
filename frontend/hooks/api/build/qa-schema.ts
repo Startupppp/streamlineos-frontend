@@ -86,8 +86,16 @@ export const testRunResultRowContract = z.object({
   updatedAt: z.string(),
 });
 
+export const testRunDetailResultContract = testRunResultRowContract.extend({
+  testCase: z.object({
+    caseNumber: z.number().int(),
+    title: z.string(),
+    priority: z.enum(["low", "medium", "high"]),
+  }),
+});
+
 export const testRunDetailContract = testRunRowContract.extend({
-  results: z.array(testRunResultRowContract),
+  results: z.array(testRunDetailResultContract),
 });
 
 export const bugRowContract = z.object({

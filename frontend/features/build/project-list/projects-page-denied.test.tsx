@@ -27,11 +27,8 @@ jest.mock("@/components/auth/require-module", () => ({
   RequireModule: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock("@/hooks/api/build", () => ({
-  useInfiniteProjects: () => infiniteProjects(),
-}));
-
 jest.mock("@/hooks/api/build/projects", () => ({
+  useInfiniteProjects: () => infiniteProjects(),
   useProject: () => project(),
 }));
 

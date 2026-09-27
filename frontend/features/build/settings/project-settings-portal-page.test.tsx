@@ -28,7 +28,7 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanManage,
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/client-portal", () => ({
   useClientVisibility: () => ({ ...mockVisibilityQuery, refetch: jest.fn() }),
   useUpdateTicketVisibility: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateMilestoneVisibility: () => ({ mutate: jest.fn(), isPending: false }),

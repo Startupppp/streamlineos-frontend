@@ -20,7 +20,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: jest.fn().mockReturnValue({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/whiteboards", () => ({
   useWhiteboards: jest.fn().mockReturnValue({
     data: undefined,
     isLoading: false,

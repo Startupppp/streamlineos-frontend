@@ -29,7 +29,7 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockCanManage,
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/advanced", () => ({
   useViews: () => ({ ...mockQuery, refetch: jest.fn() }),
   useUpdateView: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteView: () => ({ mutate: mockDeleteMutate, isPending: false }),

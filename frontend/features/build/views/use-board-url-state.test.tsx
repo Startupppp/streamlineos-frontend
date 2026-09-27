@@ -17,16 +17,19 @@ let mockViews: unknown[] = [];
 let mockBoardTickets: unknown[] = [];
 let mockBoardFilters: Record<string, unknown> | undefined;
 
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: () => ({
     data: { id: 1, key: "TEST", name: "Test", members: [], statuses: [] },
   }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/advanced", () => ({
   useViews: () => ({ data: mockViews }),
   useCreateView: () => ({ mutate: mockCreateViewMutate, isPending: false }),
   useUpdateView: () => ({ mutate: mockUpdateViewMutate, isPending: false }),
+}));
+
+jest.mock("@/hooks/api/build/tickets", () => ({
   useProjectBoardTickets: (_projectId: number, filters: Record<string, unknown>) => {
     mockBoardFilters = filters;
     return {

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { useProjectBoardTickets } from "@/hooks/api/build";
+import { useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import { TicketRelations } from "./ticket-relations";
 
 let mockCanUpdate = true;
@@ -12,14 +12,14 @@ let mockRelationsResult: {
   refetch?: () => void;
 } = { data: [], isLoading: false, refetch: jest.fn() };
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/tickets", () => ({
   useTicketRelations: () => mockRelationsResult,
   useProjectBoardTickets: jest.fn(() => ({ data: [] })),
   useAddTicketRelation: () => ({ mutate: jest.fn(), isPending: false }),
   useRemoveTicketRelation: () => ({ mutate: jest.fn() }),
 }));
 
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: () => ({ data: { key: "BLD", statuses: [] } }),
 }));
 

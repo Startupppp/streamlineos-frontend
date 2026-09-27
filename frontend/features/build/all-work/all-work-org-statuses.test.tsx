@@ -28,7 +28,7 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/all-work", () => ({
   useAllWork: () => ({
     data: undefined,
     isLoading: true,
@@ -36,7 +36,12 @@ jest.mock("@/hooks/api/build", () => ({
     error: null,
     refetch: jest.fn(),
   }),
+}));
+jest.mock("@/hooks/api/build/projects", () => ({
   useProjects: () => ({ data: undefined }),
+}));
+jest.mock("@/hooks/api/build/build-members", () => ({
+  useBuildMembers: () => ({ data: undefined }),
 }));
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => true,

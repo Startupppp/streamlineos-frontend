@@ -17,20 +17,23 @@ let mockUpdateOptions: {
   onError?: (error: unknown, variables: Record<string, unknown>) => void;
 } = {};
 
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/build/tickets", () => ({
   useTicket: () => ({
     data: mockTicket,
     isLoading: false,
     error: null,
     refetch: mockRefetchTicket,
   }),
-  useProject: () => ({ data: { members: [], statuses: [] } }),
   useSubtasks: () => ({ data: [] }),
   useUpdateTicket: (_projectId: number, options: typeof mockUpdateOptions) => {
     mockUpdateOptions = options;
     return { mutateAsync: mockMutateAsync };
   },
   useDeleteTicket: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProject: () => ({ data: { members: [], statuses: [] } }),
 }));
 
 jest.mock("sonner", () => ({

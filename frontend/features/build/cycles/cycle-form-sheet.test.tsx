@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { CycleFormSheet } from "./cycle-form-sheet";
-import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build";
+import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
 import type { Cycle } from "@/types/projects";
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/advanced", () => ({
   useCreateCycle: jest.fn(),
   useUpdateCycle: jest.fn(),
 }));

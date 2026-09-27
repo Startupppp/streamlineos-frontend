@@ -11,11 +11,14 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParamsContainer.current,
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/advanced", () => ({
   useCycles: jest.fn(),
   useCreateCycle: jest.fn(),
   useUpdateCycle: jest.fn(),
   useDeleteCycle: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/tickets", () => ({
   useProjectBoardTickets: jest.fn(() => ({ data: [] })),
   useBulkUpdateTickets: jest.fn(() => ({ mutateAsync: jest.fn(), isPending: false })),
 }));
@@ -173,7 +176,7 @@ jest.mock("@/components/ui/date-picker", () => ({
   DatePicker: () => <input data-testid="date-picker" />,
 }));
 
-import { useCycles, useCreateCycle, useDeleteCycle, useUpdateCycle } from "@/hooks/api/build";
+import { useCycles, useCreateCycle, useDeleteCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseCycles = useCycles as jest.Mock;

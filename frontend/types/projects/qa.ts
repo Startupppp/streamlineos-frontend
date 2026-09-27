@@ -42,6 +42,8 @@ export type TestRunListItem = z.infer<typeof testRunListItemContract>;
 
 export interface TestRunResult {
   id: number;
+  orgId: string;
+  projectId: number;
   runId: number;
   testCaseId: number;
   status: TestResultStatus;
@@ -49,7 +51,7 @@ export interface TestRunResult {
   executedBy: string | null;
   executedAt: string | null;
   linkedWorkItemId: number | null;
-  testCase?: {
+  testCase: {
     caseNumber: number;
     title: string;
     priority: TestCasePriority;

@@ -31,7 +31,7 @@ const MOCK_PROJECT = {
   members: [],
 };
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: () => ({
     data: MOCK_PROJECT,
     isLoading: false,

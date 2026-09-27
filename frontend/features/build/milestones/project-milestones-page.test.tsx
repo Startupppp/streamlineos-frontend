@@ -11,7 +11,7 @@ jest.mock("@/hooks/common/use-debounce", () => ({
   useDebouncedValue: (v: string) => v,
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/milestones", () => ({
   useProjectMilestones: jest.fn(),
   useDeleteMilestone: jest.fn(),
   useUpdateMilestone: jest.fn(),
@@ -107,7 +107,7 @@ jest.mock("./milestone-card", () => ({
   ),
 }));
 
-import { useProjectMilestones, useDeleteMilestone, useUpdateMilestone } from "@/hooks/api/build";
+import { useProjectMilestones, useDeleteMilestone, useUpdateMilestone } from "@/hooks/api/build/milestones";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseProjectMilestones = useProjectMilestones as jest.Mock;

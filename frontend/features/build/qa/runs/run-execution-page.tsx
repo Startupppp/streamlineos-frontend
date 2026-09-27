@@ -55,7 +55,7 @@ import { buildResultColumns } from "./result-columns";
 import { ResultRow } from "./result-row";
 import { RunResultBulkActionBar } from "./run-result-bulk-action-bar";
 import { useUpdateTestResult } from "@/hooks/api/build/qa";
-import type { TestRunStatus, TestRunCounts, TestRunResult } from "@/types/projects";
+import type { TestRunCounts, TestRunResult } from "@/types/projects";
 
 const STATUS_STYLES: Record<string, string> = {
   not_started: "text-muted-foreground border-border",

@@ -29,16 +29,18 @@ jest.mock("@/components/ui/page-wrapper", () => ({
     </main>
   ),
 }));
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: () => ({ data: { key: "TEST" }, isLoading: false }),
 }));
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/tickets", () => ({
   useTicketByKey: () => ({
     data: mockByKeyError ? undefined : mockByKeyTicket,
     error: mockByKeyError,
     isLoading: false,
     refetch: mockRetryByKey,
   }),
+}));
+jest.mock("@/hooks/api/build/advanced", () => ({
   useEpics: jest.fn(),
   useModules: jest.fn(),
   useCycles: jest.fn(),

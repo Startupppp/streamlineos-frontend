@@ -1,8 +1,8 @@
 "use client";
-import type { z } from "zod";
+import { z } from "zod";
 import type { templateRowContract as templateRowContractDef } from "@/hooks/api/build/roadmap-schema";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -10,8 +10,29 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-const templateListContract = lazyContract(() =>
-  import("@/hooks/api/build/roadmap-schema").then((m) => m.templateListContract),
+type TemplateListPage = {
+  data: ProjectTemplate[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
+
+export function normalizeTemplateListResponse(
+  response: TemplateListPage | ProjectTemplate[],
+): TemplateListPage {
+  if (Array.isArray(response)) {
+    return {
+      data: response,
+      pagination: { limit: response.length || 100, hasMore: false, nextCursor: null },
+    };
+  }
+  return response;
+}
+
+const templateListContract = lazyContract<TemplateListPage>(() =>
+  import("@/hooks/api/build/roadmap-schema").then((m) =>
+    m.templateListContract
+      .or(z.array(m.templateRowContract))
+      .transform(normalizeTemplateListResponse),
+  ),
 );
 const templateRowContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.templateRowContract),
@@ -22,18 +43,6 @@ const noContentContract = lazyContract(() =>
 const applyTemplateResultContract = lazyContract(() =>
   import("@/hooks/api/build/roadmap-schema").then((m) => m.applyTemplateResultContract),
 );
-
-interface ProjectTemplateTicket {
-  id: number;
-  templateId: number;
-  title: string;
-  description: string | null;
-  type: string;
-  priority: string;
-  estimatedHours: string | null;
-  order: number;
-  phase: string | null;
-}
 
 export type ProjectTemplate = z.infer<typeof templateRowContractDef>;
 
@@ -79,7 +88,7 @@ export function useProjectTemplates(filters?: TemplateFilters) {
       if (q) params["q"] = q;
       if (category) params["category"] = category;
       if (sort) params["sort"] = sort;
-      return apiClient.get(
+      return apiClient.get<TemplateListPage | ProjectTemplate[]>(
         "/build/templates",
         Object.keys(params).length > 0 ? params : undefined,
         signal,

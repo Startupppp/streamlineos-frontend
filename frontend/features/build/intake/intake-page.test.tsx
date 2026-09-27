@@ -2,13 +2,16 @@ import { render, screen } from "@testing-library/react";
 import { IntakePage } from "./intake-page";
 import { ApiError } from "@/lib/api-envelope";
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/advanced", () => ({
   useIntakeRequests: jest.fn(),
   useCreateIntakeRequest: jest.fn(),
   useUpdateIntakeRequest: jest.fn(),
-  useProjectMembers: jest.fn(),
   useCycles: jest.fn(),
   useModules: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/project-members", () => ({
+  useProjectMembers: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -284,10 +287,10 @@ import {
   useIntakeRequests,
   useCreateIntakeRequest,
   useUpdateIntakeRequest,
-  useProjectMembers,
   useCycles,
   useModules,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/advanced";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 

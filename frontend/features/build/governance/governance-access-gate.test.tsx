@@ -21,7 +21,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/governance", () => ({
   GOVERNANCE_PAGE_SIZE: 100,
   useProjectRisks: () => mockUseProjectRisks(),
   useProjectRiskStats: () => ({ data: undefined, isLoading: false }),
@@ -32,6 +32,8 @@ jest.mock("@/hooks/api/build", () => ({
   useCreateDecision: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateDecision: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteDecision: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: () => ({ data: [] }),
 }));
 

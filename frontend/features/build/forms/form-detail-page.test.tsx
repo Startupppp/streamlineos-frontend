@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { FormDetailPage } from "./form-detail-page";
 import { ApiError } from "@/lib/api-envelope";
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/forms", () => ({
   useForm: jest.fn(),
   useDeleteForm: jest.fn(),
   useSubmitForm: jest.fn(),
@@ -103,7 +103,7 @@ jest.mock("./field-type-meta", () => ({
   FORM_TYPE_LABELS: { generic: "Generic" },
 }));
 
-import { useForm, useDeleteForm, useSubmitForm } from "@/hooks/api/build";
+import { useForm, useDeleteForm, useSubmitForm } from "@/hooks/api/build/forms";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseForm = useForm as jest.Mock;

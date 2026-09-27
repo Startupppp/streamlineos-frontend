@@ -38,7 +38,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/whiteboards", () => ({
   useWhiteboards: () => ({
     data: {
       pages: [

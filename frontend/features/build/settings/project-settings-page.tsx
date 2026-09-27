@@ -218,7 +218,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
         },
       );
     },
-    [updateMutation, projectId, router],
+    [updateMutation, projectId],
   );
 
   return (

@@ -15,7 +15,7 @@ jest.mock("./use-whiteboard-autosave", () => ({
   }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/whiteboards", () => ({
   useWhiteboards: () => ({
     data: { pages: [{ data: [], hasMore: false, nextCursor: null }], pageParams: [undefined] },
     isLoading: false,

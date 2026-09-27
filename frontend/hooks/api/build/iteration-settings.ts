@@ -28,6 +28,8 @@ export function useIterationSettings(
         iterationSettingsContract,
       ),
     staleTime: 60_000,
+    throwOnError: false,
+    retry: false,
     ...options,
     enabled: canView && !!projectId && (options?.enabled ?? true),
   });

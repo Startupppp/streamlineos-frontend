@@ -77,9 +77,18 @@ const milestoneVisibilityItemContract = z.object({
   clientVisible: z.boolean(),
 });
 
+function visibilityPageContract<T extends z.ZodTypeAny>(rowContract: T) {
+  return cursorPageContract(rowContract).or(
+    z.array(rowContract).transform((rows) => ({
+      data: rows,
+      pagination: { limit: rows.length || 100, hasMore: false, nextCursor: null },
+    })),
+  );
+}
+
 export const visibilitySummaryContract = z.object({
-  tickets: cursorPageContract(ticketVisibilityItemContract),
-  milestones: cursorPageContract(milestoneVisibilityItemContract),
+  tickets: visibilityPageContract(ticketVisibilityItemContract),
+  milestones: visibilityPageContract(milestoneVisibilityItemContract),
 });
 
 export const toggleVisibilityContract = z

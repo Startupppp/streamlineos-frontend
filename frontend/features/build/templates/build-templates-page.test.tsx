@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { BuildTemplatesPage } from "./build-templates-page";
 import { ApiError } from "@/lib/api-envelope";
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/templates", () => ({
   useProjectTemplates: jest.fn(),
   useDeleteProjectTemplate: jest.fn(),
 }));
@@ -155,7 +155,7 @@ jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => mockUseOnlineStatus(),
 }));
 
-import { useProjectTemplates, useDeleteProjectTemplate } from "@/hooks/api/build";
+import { useProjectTemplates, useDeleteProjectTemplate } from "@/hooks/api/build/templates";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockUseProjectTemplates = useProjectTemplates as jest.Mock;
