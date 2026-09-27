@@ -91,6 +91,22 @@ omitted two of `ProjectsTicketsQueryService`'s five constructor arguments,
 so 28 tests — workflow fail-open enforcement and bulk fail-whole
 authorization among them — errored before reaching an assertion.
 
+## Premise correction 2026-09-27
+
+The eleven files count is accurate for non-spec application code.
+Remeasured: 11 non-spec files across agent-access (1), ai/core (3), cron (1),
+feedbucket (5), integrations/git (1) — unchanged from the original count.
+An additional 8 spec files in the same modules also import deep into
+`core/tickets/`, not counted in the ticket's tally.
+
+Criterion 3 (nothing outside the group reaches in except through the shared
+surface) is now split in two:
+- Sibling build submodules (`src/modules/build/**` outside `core/`): 0 violations,
+  enforced going forward by `check:build-core-surface` (ticket 28, 2026-09-27).
+- External modules (agent-access, ai/core, cron, feedbucket, integrations/git):
+  11 non-spec callers remain, all in fenced territory belonging to other lanes.
+  Criterion 3 stays unticked for this reason.
+
 ## Verification
 
 `tsc` reports zero unresolved modules. `check:module-di` finds every ticket

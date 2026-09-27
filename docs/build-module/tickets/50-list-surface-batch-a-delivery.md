@@ -42,6 +42,10 @@ Batched by blast radius so each batch fits one fresh context window. Land them i
   and create button -- with a skeleton while *tickets* loaded, not just while the project loaded. Only the
   table region is replaced now.
   The empty-state differences are separately recorded under the criterion below, which sanctions them.
+  LANE-50 adjudication: the prior lane's decision is confirmed. All three visible differences are
+  correctness fixes (FE-47, FE-49, FE-41), not regressions. The box stays permanently unchecked rather than
+  reworded, because the changes were intentional improvements, not accidental drift — rewording to
+  "no unintended change" after the fact would change the standard retroactively to earn the tick.
 - [x] Any page that was resolving its empty state differently now matches the module's rule, and the difference is called out in the commit
   Earned 2026-09-27. Both pages resolved the empty state by passing a single `EmptyState` a `filtersActive`
   flag and letting it decide its own copy internally -- the backlog through `<PageState empty={...}>` with a
@@ -52,6 +56,8 @@ Batched by blast radius so each batch fits one fresh context window. Land them i
   **Left unchecked because the criterion has no subject: no file in this batch exceeded 500 lines before the
   migration.** Measured, rather than asserted either way -- `project-backlog-page.tsx` 421 -> 412,
   `project-submissions-inbox.tsx` 345 -> 333, `views/table-view.tsx` 284 (untouched),
-  `project-detail/project-budget-page.tsx` 278 (untouched). The migration did shrink both files it touched,
-  but nothing crossed 500 in either direction, so treating this as earned would be counting a threshold that
-  was never breached.
+  `project-detail/project-budget-page.tsx` 278 (untouched). `releases/releases-page.tsx` 438 (migrated as
+  ticket 49's first adopter; unmeasured by the prior lane, measured now: `wc -l releases/releases-page.tsx`
+  → 438, also under 500). The migration did shrink both files it touched, but nothing crossed 500 in either
+  direction, so treating this as earned would be counting a threshold that was never breached.
+  LANE-50 re-measurement confirms no file in the batch exceeded 500 either before or after migration.

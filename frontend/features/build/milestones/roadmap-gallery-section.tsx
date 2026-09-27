@@ -15,8 +15,8 @@ import { GalleryCase } from "./goals-gallery-section";
 const NOOP = () => undefined;
 
 const STUB_ROADMAP_ITEMS: ScorableRoadmapItem[] = [
-  { id: 10, orgId: "org-1", title: "Self-serve billing portal", description: "Let customers upgrade, downgrade and cancel without contacting support.", status: "planned", category: "billing", isPublic: true, projectId: null, epicTicketId: null, targetQuarter: "Q3 2027", sortOrder: 1, votes: 47, createdBy: "u1", createdAt: "2027-01-01T00:00:00Z", updatedAt: "2027-09-01T00:00:00Z" },
-  { id: 11, orgId: "org-1", title: "Mobile app for iOS and Android", description: null, status: "in_progress", category: "mobile", isPublic: true, projectId: 1, epicTicketId: null, targetQuarter: "Q4 2027", sortOrder: 2, votes: 31, createdBy: "u1", createdAt: "2027-02-01T00:00:00Z", updatedAt: "2027-09-05T00:00:00Z" },
+  { id: 10, orgId: "org-1", title: "Self-serve billing portal", description: "Let customers upgrade, downgrade and cancel without contacting support.", status: "planned", category: "billing", isPublic: true, projectId: null, epicTicketId: null, targetQuarter: "Q3 2027", sortOrder: 1, votes: 47, version: 1, createdBy: "u1", createdAt: "2027-01-01T00:00:00Z", updatedAt: "2027-09-01T00:00:00Z" },
+  { id: 11, orgId: "org-1", title: "Mobile app for iOS and Android", description: null, status: "in_progress", category: "mobile", isPublic: true, projectId: 1, epicTicketId: null, targetQuarter: "Q4 2027", sortOrder: 2, votes: 31, version: 1, createdBy: "u1", createdAt: "2027-02-01T00:00:00Z", updatedAt: "2027-09-05T00:00:00Z" },
 ];
 
 function RoadmapToolbarGallery() {

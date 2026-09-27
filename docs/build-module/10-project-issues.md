@@ -92,6 +92,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - **P0:** Verify route renders this contract rather than another page; add route/access/parent identity tests and complete loading/error/denied behavior.
 - **P0:** Verify server/client Zod parity, bounded pagination, composite tenant predicates, and exact cache keys for every endpoint above.
+- **P1:** The `c` keyboard shortcut in `project-board-page.tsx` wires `onCreate: handleKeyboardCreate` unconditionally; the webhooks pattern explicitly sets `onCreate` to `undefined` when `useCan("build:tickets:create")` returns false. The shortcut fires the create dialog but `CreateTicketDialog` is internally gated on `useCan`. No test verifies the shortcut is suppressed when permission is denied. `project-board-page.tsx` is fenced; fix and test must land from a session with write access to that file.
 - **P1:** Complete URL-backed filters, saved views, keyboard/context actions, bulk semantics, mobile layout, and accessible chart/table alternatives.
 - **P2:** Add realtime or AI only when it reduces a measured user delay and preserves deterministic non-AI operation.
 

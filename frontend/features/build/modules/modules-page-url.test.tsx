@@ -13,6 +13,19 @@ jest.mock("@/hooks/api/build/advanced", () => ({
   useCreateModule: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/build/modules", () => ({
+  useDeleteModule: jest.fn(),
+  useUpdateModule: jest.fn(),
+}));
+
+jest.mock("@/features/build/modules/module-form-sheet", () => ({
+  ModuleFormSheet: ({ mode }: { mode: string }) => <div data-testid={`module-form-sheet-${mode}`} />,
+}));
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: ({ open }: { open: boolean }) => open ? <div data-testid="confirm-dialog" /> : null,
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
   useAccess: jest.fn(),
@@ -96,13 +109,15 @@ jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 
-import { useModulePages, useCreateModule } from "@/hooks/api/build/advanced";
+import { useModulePages } from "@/hooks/api/build/advanced";
+import { useDeleteModule, useUpdateModule } from "@/hooks/api/build/modules";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
 const mockUseModulePages = useModulePages as jest.Mock;
-const mockUseCreateModule = useCreateModule as jest.Mock;
+const mockUseDeleteModule = useDeleteModule as jest.Mock;
+const mockUseUpdateModule = useUpdateModule as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
@@ -132,7 +147,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseCreateModule.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseDeleteModule.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseUpdateModule.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
   mockUseBuildListFilters.mockReturnValue(defaultFilters);
 });

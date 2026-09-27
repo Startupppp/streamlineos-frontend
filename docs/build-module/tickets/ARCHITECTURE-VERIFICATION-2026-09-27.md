@@ -520,8 +520,127 @@ Verbatim output (selected rows — all others confirmed 0 remaining by same scri
 
 **P1: honest verification gates.** The swallowed-write gate now passes: 2 findings, ratchet 2, exit 0 (ran `node src/scripts/check-build-swallowed-writes.mjs --list` from `backend/`; self-test 7 of 7 pass). But the authorization census gate still fails (exit 1): ran `node scripts/build-authorization-census.mjs --check` from `backend/`; result: 53 controller files, 342 HTTP handlers, **259 stale REVIEWED anchors**. Many anchor lines have moved. The gate cannot pass until the census file is updated with current line numbers. This block is independent of the gate-related tickets (40, 58–61, 68 are all complete).
 
-**P2: controlled reuse/restructure.** Tickets 26, 27, 28 each have 4–5 remaining boxes; tickets 01, 02, 25 also have remaining boxes. The list-surface tickets 50, 51, 54, 55 each have 1–2 remaining boxes. These cannot be checked from this lane; owner scheduling is the unblock.
+**P2: controlled reuse/restructure.** Tickets 26, 27, 28 each have 4–5 remaining boxes; tickets 01, 02, 25 also have remaining boxes. The list-surface tickets 50, 51, 54, 55 each have 1–2 remaining boxes. These cannot be checked from this lane; owner scheduling is the unblock. (Addendum 3 correction: tickets 01, 02, and 28 are now complete.)
 
 **Release proof.** Owner decision recorded 2026-09-27: stays unchecked.
 
-**All 68 tickets implemented, verified and tested.** 53 of 68 are complete; 15 tickets retain at least one unchecked box (see table above). Cannot be earned.
+**All 68 tickets implemented, verified and tested.** 53 of 68 are complete; 15 tickets retain at least one unchecked box (see table above). Cannot be earned. (Addendum 3 correction: 56 of 68 are complete as of this pass; 12 tickets retain unchecked boxes.)
+
+---
+
+## Addendum 3 — 2026-09-27, Lane A2 verification pass
+
+**Supersedes addendum 2 for current ticket count and architecture box verdicts.**
+
+### Count correction
+
+**56 of 68 tickets now have every box ticked** (was 53 in addendum 2). Tickets 01, 02, and 28 are newly complete (28 was completed by a peer lane during this pass).
+
+Disk measurement from `D:/projects/personal/Streamlineos/` (second run, after peer-lane completion of ticket 28):
+```
+python3 -c "
+import glob, re, os
+tickets = {}
+for f in glob.glob('docs/build-module/tickets/*.md'):
+    m = re.match(r'^(\d+)-', os.path.basename(f))
+    if not m: continue
+    n = int(m.group(1))
+    content = open(f, 'rb').read()
+    u = len(re.findall(b'- \\[ \\]', content))
+    x = len(re.findall(b'- \\[x\\]', content))
+    tickets[n] = (u, x)
+complete = sorted([n for n,(u,x) in tickets.items() if u == 0])
+print(f'Complete: {len(complete)} — {complete}')
+"
+```
+Result: **Complete: 56** — `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 24, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 39, 40, 41, 42, 43, 45, 46, 47, 48, 49, 52, 53, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68]`
+
+Newly complete since addendum 2: **01, 02, 28**.
+
+**Corrected remaining-box table** (tickets with at least one unchecked box):
+
+| ticket | remaining | note |
+|---|---|---|
+| 11 | 1 of 4 boxes remain | N/A-decision — criterion voided by ticket 12; verified |
+| 14 | 1 of 6 boxes remain | Union criterion not met; box correctly unchecked |
+| 16 | 1 of 7 boxes remain | N/A-decision — expand-phase precondition; ordering was honoured |
+| 25 | 1 of 6 boxes remain | |
+| 26 | 4 of 4 boxes remain | |
+| 27 | 5 of 5 boxes remain | |
+| 38 | 1 of 7 boxes remain | N/A-decision — no site chose to propagate; all use savepoints; verified |
+| 44 | 1 of 6 boxes remain | N/A-decision — transaction boundary blocks direct delegation; verified |
+| 50 | 2 of 5 boxes remain | |
+| 51 | 1 of 5 boxes remain | |
+| 54 | 1 of 5 boxes remain | |
+| 55 | 1 of 5 boxes remain | |
+
+### Architecture box verdicts — Lane A2, 2026-09-27
+
+**None of the 7 unchecked architecture boxes can be earned in this pass.** Blockers per box:
+
+**P0: transaction and event correctness.** Tickets 36, 37, 12, 13, 43, 45 are complete. Tickets 11, 38, 44 each carry one permanently unchecked N/A box. Per programme rule, N/A is a decision not completed functionality — unchecked boxes are unchecked boxes regardless of their N/A status. Box cannot be earned while any child ticket has an unchecked box.
+
+**P1: repair current wrong answers.** Tickets 04–07, 09, 15, 17, 19, 20, 33, 39, 67 are all complete. Ticket 16 has one permanently unchecked N/A box ("No reader depends on the new column yet" — false at HEAD, N/A decision recorded). Box cannot be earned.
+
+**P1: scalable reads.** Ticket 18, 46, 47, 48 are complete. Ticket 14 box 2 is correctly unchecked (union criterion not met; correlated EXISTS, not query-level UNION ALL; confirmed by ticket's own correction at line 17 and Status line "BE-81 not satisfied"). Box cannot be earned.
+
+**P1: honest verification gates.** Tickets 40, 58, 59, 60, 61, 68 are all complete. Swallowed-write gate: self-test 7/7, main gate exit 0, 2 findings = ratchet 2. Census gate: main gate exit 0 (changed from exit 1 in addendum 2); but self-test exits 0 with **2 internal failures** — "REVIEWED anchors all still match source" and "every REVIEWED key matches a real handler". From `backend/`: `node scripts/build-authorization-census.mjs --self-test` → "30 passed, 2 failed", exit 0; `node scripts/build-authorization-census.mjs --check` → "53 controller files, 342 HTTP handlers, **174 REVIEWED anchor(s) no longer match source:**", exit 0. The brief expected 147 stale anchors (all in `build/core/`); I measured 174. The self-test failures mean the test assertions detecting stale anchors do not propagate to a non-zero exit, which undermines the criterion "add negative self-tests so omissions cannot make a gate greener." Box cannot be earned.
+
+**P2: controlled reuse/restructure.** Tickets 01, 02, 03, 21–24, 28, 49, 52, 53, 56 are complete. Tickets 25, 26, 27 retain 1–5 remaining boxes each; tickets 50, 51, 54, 55 retain 1–2 remaining boxes each. Box cannot be earned.
+
+**Release proof.** Owner decision: stays unchecked.
+
+**All 68 remediation tickets are implemented, verified and tested.** 55 of 68 complete; 13 tickets have unchecked boxes. Cannot be earned.
+
+### Five adjudications — permanent decisions
+
+**Ticket 16 — "No reader depends on the new column yet"**
+Decision: **Permanent N/A.** Do not reword. The box was a temporal sequencing guard. The ordering it protected (1378 applied before ticket-17 reader ships) was honoured — migration 1378 at journal idx 1121, `projects-activity-feed.service.ts:60` reads the column and is after. Rewording to "migration was applied before reader shipped" duplicates the already-checked "Applied and independently verified" box, which records the same fact with journal and catalog evidence. N/A box stays unchecked; reasoning written into ticket 16 box 5 (this pass).
+
+**Ticket 38 — "A failing effect that was chosen to propagate produces an error response"**
+Decision: **Permanent N/A.** Verified claim: no site was chosen to propagate. Source confirmed — `ticket-import.service.ts:201–228` and `:239–260` both use `try { await this.db.transaction(callback) } catch` where the Drizzle ROLLBACK TO SAVEPOINT mechanism makes the outer transaction intact; the catch converts to application outcomes, not a propagated error. All other fixed sites use `withSavepoint`. Swallowed-write gate confirms: exit 0, 2 findings = ratchet 2, both flagged sites are the safe-without-change ones. The criterion is permanently void — no propagating site exists and none was ever chosen. N/A box stays unchecked; evidence written into ticket 38 box 5 (this pass).
+
+**Ticket 44 — "Rank and bulk delegate to the change module"**
+Decision: **Permanent N/A, not a future deferral.** Ticket 43 is now complete (all 6 boxes checked — verified on disk). However, the architectural blocking reason is independent of ticket 43's state. Source confirmed: `apply-ticket-change.ts:255` opens `deps.db.transaction(...)`, `projects-tickets-rank-utils.ts:81` opens `db.transaction(...)`, `build-ticket-bulk-mutation.ts:72` opens `db.transaction(...)`. These are three independent transaction contexts. Merging them into a single `applyTicketChange` call requires refactoring `applyTicketChange`'s interface to accept an existing transaction and a pre-authorized actor — a scope expansion beyond this ticket. The criterion as written is permanently architecturally blocked, not deferred pending ticket 43. N/A box stays unchecked; verification note written into ticket 44 box 1 (this pass).
+
+**Ticket 11 — "Nothing rejects a request for omitting the token yet"**
+Decision: **N/A confirmed.** Ticket 12 is complete (all 4 boxes checked, status "done"). `dto/ticket.schemas.ts:174`: `version: z.number().int().positive()` — required, no `.optional()` or `.nullable()`. Omission is rejected. The "expand half" criterion is permanently void because the "contract half" (ticket 12) is applied and the desired state described ("nothing rejects omission yet") is now permanently wrong to restore. N/A box stays unchecked; verification note added to ticket 11 box 3 (this pass).
+
+**Ticket 14 — box 2 "The combined filter is expressed as a union of independently indexable branches"**
+Decision: **Correctly unchecked; confirm my read.** The implemented predicate is a correlated EXISTS subquery with two branches, not a query-level UNION ALL. Ticket's own correction at lines 17–39 explains: no FROM clause in the first branch, opaque correlated EXISTS cannot drive index row selection, no proof the current form is better than a hash join on an IN-list. Ticket Status line: "partial — locality done, BE-81 not satisfied". What remains section: "Re-expressing both reads as a top-level UNION ALL." The three statements are consistent. The box was marked `[x]` in error; it was unticked in addendum 2. Read confirmed — box stays unchecked, nothing regressed.
+
+### Gate commands and outputs (this pass)
+
+From `backend/`:
+```
+node src/scripts/check-build-swallowed-writes.mjs --self-test
+→ check-build-swallowed-writes self-tests: 7 passed
+
+node src/scripts/check-build-swallowed-writes.mjs --list
+→ Scanned 90 service files ... 2 swallowed-write site(s) found
+→ src\modules\build\import-export\ticket-import.service.ts:201
+→ src\modules\build\import-export\ticket-import.service.ts:239
+→ OK — 2 swallowed-write site(s) (ratchet 2).
+
+node scripts/build-authorization-census.mjs --self-test
+→ build-authorization-census self-test: 30 passed, 2 failed
+→ FAIL  REVIEWED anchors all still match source
+→ FAIL  every REVIEWED key matches a real handler
+→ exit 0
+
+node scripts/build-authorization-census.mjs --check
+→ Controller files found: 53, HTTP handlers found: 342
+→ 174 REVIEWED anchor(s) no longer match source:
+→ exit 0
+```
+
+### Pre-existing failures not addressed
+
+- Census self-test 2 internal failures: pre-existing, architecture-doc territory only.
+- `check:type-assertions` 3 stale KB ledger entries: pre-existing, KB-owned.
+- `check:file-sizes`/`check:over-300`: pre-existing, named files.
+- 38 KB typecheck errors: pre-existing, KB-owned.
+
+### What was not run
+
+Full `pnpm typecheck` (10 GB constraint). E2e suite against live DB (production-connection constraint). Any test suite against a live database (all DB verification used the existing replay2 evidence from prior passes).

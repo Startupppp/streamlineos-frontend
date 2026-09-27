@@ -100,6 +100,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+  - 2026-09-27: Core fields, edit/delete actions, URL-backed filters (scope, ownerId, status, health, due, q via `GOAL_FILTER_DEFINITIONS`), states, and keyboard shortcuts are all implemented and tested. NOT-EARNED: the `cursor` URL param listed in the URL state section is not implemented — the page uses `const [page, setPage] = useState(1)` (React state, not URL-backed). Either add a URL-backed `page` param via `useBuildCursorPager` / a URL-backed page number, or confirm that numbered pagination without URL-backed page satisfies the spec and remove `cursor` from the URL state section.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.

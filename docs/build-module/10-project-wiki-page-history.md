@@ -88,7 +88,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 ## Gaps
 
-- **P0:** Verify route renders this contract rather than another page; confirm `enforceRouteAccess` resolves this path correctly via the wiki nav prefix, or register an explicit route-access extension.
+- **P0 RESOLVED:** `enforceRouteAccess("/build/[projectId]/wiki/[pageId]/history")` resolves correctly. No extension entry is needed: the generic project nav entry covers all `/build/[projectId]/**` paths, yielding `module:build + build:view`. Pinned in `build-route-access-deny.test.ts` EXPECTED_ACCESS table (entry 50 of 75).
 - **P0:** Verify server/client Zod parity, bounded pagination, composite tenant predicates, and exact cache keys for every endpoint above.
 - **P1:** Complete URL-backed version/compare parameters, keyboard actions, restore semantics, and accessible diff view.
 - **P2:** Add AI-assisted change summary or semantic diff only when it reduces a measured user delay and preserves deterministic non-AI operation.
@@ -97,8 +97,8 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
-- [ ] Lists are bounded/virtualized and remain usable at 1k revisions.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] Lists are bounded/virtualized and remain usable at 1k revisions.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.

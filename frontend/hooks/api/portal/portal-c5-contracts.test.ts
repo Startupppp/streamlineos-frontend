@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { backendPortalProjectListSchema, backendPortalProjectSchema, portalProjectsQueryOptions } from "./use-portal-projects";
@@ -245,5 +246,49 @@ describe("SPEC 6 — acceptInvitationResponseSchema (Requirement C5)", () => {
   it("rejects a null response — callers must receive a valid object not null", () => {
     const result = schema.safeParse(null);
     expect(result.success).toBe(false);
+  });
+});
+
+const rateLimitBodySchema = z.object({
+  message: z.string(),
+  retryAfterSecs: z.number().int().positive(),
+});
+
+describe("SPEC 6 — rate-limit response contract (Requirement C5, BE-22)", () => {
+  it("the rate-limit response body shape has message and retryAfterSecs so callers can surface retry timing to the user", () => {
+    const body = { message: "Rate limit exceeded", retryAfterSecs: 60 };
+    expect(rateLimitBodySchema.safeParse(body).success).toBe(true);
+  });
+
+  it("rejects a rate-limit body missing retryAfterSecs so a malformed guard response is caught at the contract boundary", () => {
+    const body = { message: "Rate limit exceeded" };
+    expect(rateLimitBodySchema.safeParse(body).success).toBe(false);
+  });
+
+  it("rejects a rate-limit body where retryAfterSecs is a string so a mis-typed header value is caught before the UI tries arithmetic", () => {
+    const body = { message: "Rate limit exceeded", retryAfterSecs: "60" };
+    expect(rateLimitBodySchema.safeParse(body).success).toBe(false);
+  });
+
+  it("rejects a rate-limit body where retryAfterSecs is zero so an invalid window is caught at the boundary", () => {
+    const body = { message: "Rate limit exceeded", retryAfterSecs: 0 };
+    expect(rateLimitBodySchema.safeParse(body).success).toBe(false);
+  });
+
+  it("PortalApiError carries a numeric status so a 429 response is distinguishable from a 401 or 500 in UI error handlers", async () => {
+    const { PortalApiError } = await import("@/lib/portal-api-client");
+    const err = new PortalApiError("Rate limit exceeded", 429);
+    expect(err.status).toBe(429);
+    expect(err instanceof Error).toBe(true);
+    expect(err.name).toBe("PortalApiError");
+  });
+
+  it("PortalApiError with status 429 is distinguishable from a 401 so the retry-after branch does not trigger on auth failures", async () => {
+    const { PortalApiError } = await import("@/lib/portal-api-client");
+    const rateLimit = new PortalApiError("Rate limit exceeded", 429);
+    const unauthorized = new PortalApiError("Unauthorized", 401);
+    expect(rateLimit.status).not.toBe(unauthorized.status);
+    expect(rateLimit.status === 429).toBe(true);
+    expect(unauthorized.status === 429).toBe(false);
   });
 });

@@ -34,6 +34,7 @@ import {
   KNOWLEDGE_BASE,
 } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
+import { useCan } from "@/hooks/api/access";
 
 interface BlockDiffViewProps {
   versionContent: Record<string, unknown> | Record<string, unknown>[] | null;
@@ -275,6 +276,7 @@ export default function PageHistoryPage({
   const { data: versionBDetail, isLoading: detailBLoading } =
     useKbPageVersionDetail(pageId, selectedB ?? 0);
   const restoreVersion = useRestoreKbVersion();
+  const canUpdate = useCan("kb:pages:update");
 
   function syncUrl(a: number | null, b: number | null) {
     const params = new URLSearchParams();
@@ -599,7 +601,8 @@ export default function PageHistoryPage({
                       disabled={
                         detailALoading ||
                         !versionADetail?.content ||
-                        selectedA === currentVersionNumber
+                        selectedA === currentVersionNumber ||
+                        !canUpdate
                       }
                       isPending={restoreVersion.isPending}
                       loadingText="Restoring…"

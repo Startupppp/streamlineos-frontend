@@ -99,7 +99,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
-  - Reopened 2026-09-27: the blanket CCG-1 concurrency exemption was based on a false premise. Verify this page's read token, stale-write handling and conflict UX against architecture tickets 36/11/12/13 before closing; existing non-conflict evidence remains valid only for the behavior it exercised.
+  - Reopened 2026-09-27: the blanket CCG-1 concurrency exemption was based on a false premise. Verified 2026-09-27: `use-ticket-detail.ts` sends `expectedUpdatedAt` as the version token on every save (stale-write guard present); a 409 returns a toast with a "Reapply" action that re-fetches the latest version and re-applies the pending change (`use-ticket-detail.test.tsx` lines 75/136/190). Remaining gap: the spec requires "field-level server/current comparison for version conflicts" (a side-by-side diff of what the server changed vs what the user changed); the implementation shows a toast and reapply only. Box stays unchecked until the field-level comparison UI is implemented and tested.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.

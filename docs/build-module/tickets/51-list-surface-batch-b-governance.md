@@ -43,6 +43,8 @@ This batch holds the page the review singled out: a 545-line risks page with no 
   violation that pre-dated this ticket, the migration removed it, and the toolbar is now visible as soon as
   access resolves. It is a visible change, so this box cannot be honestly ticked -- and putting the bug back
   to earn the tick would be the wrong trade.
+  LANE-50 adjudication: confirmed. The FE-40 violation is a pre-existing correctness defect; fixing it
+  during migration is the right trade. Box stays permanently unchecked.
 - [x] Each page's rows can be supplied as props, so its fixtures are shareable
   Earned 2026-09-27, checked per page rather than claimed for the batch. All ten migrated surfaces feed a
   plain array into the surface's `rows` prop: `risks`, `displayed`, `displayed`, `meetings`, `items`, `items`,

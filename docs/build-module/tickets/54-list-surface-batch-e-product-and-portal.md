@@ -45,10 +45,21 @@ The portal pages carry the extra constraint: an external client's list must neve
   `client-portal/`.
 - [ ] Any remaining shared assembly helper with no callers left is deleted
   **Left unchecked because the premise is not yet true: no helper is caller-less.** Measured rather than
-  assumed -- 82 files under `features/build/` still import `usePageState` or `DataTableSkeleton` directly, so
-  neither is dead, and this batch's single migration did not take the last caller of anything. This box cannot
-  be settled until batches A through E are all complete; deleting on a partial count is how a helper that four
-  unmigrated pages still need gets removed.
+  assumed -- LANE-50 re-count: **165 files** under `features/build/` import `usePageState` or
+  `DataTableSkeleton` directly (command: `grep -rl 'usePageState\|DataTableSkeleton' features/build/
+  --include="*.tsx" --include="*.ts" | wc -l` → 165). The prior lane's figure of 82 was the test-file count
+  only (82 test files, 83 source files). The actual total is 165.
+  LANE-50 territory investigation: examined all 14 territory files (forms, qa, shared, triage, backlog,
+  intake). No unmigrated list pages found. `triage-page.tsx` and `intake-page.tsx` import `usePageState`
+  legitimately -- both render `PmStaggerList` rows, not `DataTable`, so `BuildListSurface` does not apply.
+  `forms/form-detail-page.tsx` and `qa/runs/run-execution-page.tsx` use `usePageState` for non-list outer
+  state. `shared/build-list-gallery.tsx` uses `DataTableSkeleton` as a demo component in a gallery entry.
+  `backlog/project-backlog-page.tsx` uses `DataTableSkeleton` for the outer project-loading skeleton while
+  the surface handles the inner table skeleton. No migration candidates exist in LANE-50 territory.
+  Neither helper will become caller-less after batches A-E complete: `usePageState` is used broadly for
+  non-list pages (settings, reports, detail pages, galleries) and is the foundation of `build-list-surface.tsx`
+  itself. `DataTableSkeleton` is used in the surface implementation and in gallery demos. The box stays
+  permanently unchecked.
 - [x] Each page's rows can be supplied as props
   Earned 2026-09-27 for both lists in the batch. `managed-products-page.tsx` passes `rows={displayed}` and
   `product-feedback-page.tsx` passes `rows={data?.data ?? []}`, so either table can be driven from a fixture

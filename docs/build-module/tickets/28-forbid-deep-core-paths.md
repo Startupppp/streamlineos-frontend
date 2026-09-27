@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] A gate fails when a sibling submodule imports a core internal by deep path
-- [ ] The gate's self-test proves it resolves files and would fire, rather than passing vacuously
-- [ ] The shared surface exports everything siblings legitimately need, so nothing is forced to violate the gate
-- [ ] The gate runs on Windows paths correctly
+- [x] A gate fails when a sibling submodule imports a core internal by deep path
+- [x] The gate's self-test proves it resolves files and would fire, rather than passing vacuously
+- [x] The shared surface exports everything siblings legitimately need, so nothing is forced to violate the gate
+- [x] The gate runs on Windows paths correctly

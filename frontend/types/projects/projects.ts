@@ -145,7 +145,7 @@ export interface Module {
   createdBy: string;
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
-  version?: number;
+  version: number;
   totalItems?: number;
   completedItems?: number;
   progress?: number;

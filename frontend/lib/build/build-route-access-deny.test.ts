@@ -130,6 +130,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/[projectId]/whiteboard", "module:build + build:view"],
     ["/build/[projectId]/wiki", "module:build + build:view"],
     ["/build/[projectId]/wiki/[pageId]", "module:build + build:view"],
+    ["/build/[projectId]/wiki/[pageId]/history", "module:build + build:view"],
     ["/build/[projectId]/workload", "module:build + build:tickets:view"],
     ["/build/all-work", "module:build + build:tickets:view"],
     ["/build/approvals", "module:build + build:approvals:view"],
@@ -157,7 +158,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/templates", "module:build + build:create"],
   ];
 
-  it("pins all 74 manifest routes so this table cannot drift out of step with the manifest", () => {
+  it("pins all 75 manifest routes so this table cannot drift out of step with the manifest", () => {
     expect(EXPECTED_ACCESS).toHaveLength(BUILD_ROUTE_MANIFEST.length);
     expect(EXPECTED_ACCESS.map(([route]) => route).sort()).toEqual(
       BUILD_ROUTE_MANIFEST.map((entry) => entry.route).sort(),

@@ -196,6 +196,7 @@ const baseModuleListItem = {
   leadId: null,
   endDate: null,
   startDate: null,
+  version: 1,
   createdBy: "user-1",
   projectId: 7,
   createdAt: "2026-09-01T00:00:00.000Z",
@@ -227,5 +228,14 @@ it("modulePageContract rejects a module with an invalid status enum — status i
 
 it("modulePageContract rejects a missing pagination field — the client uses hasMore to decide whether to offer more pages", () => {
   const response = { data: [baseModuleListItem] };
+  expect(modulePageContract.safeParse(response).success).toBe(false);
+});
+
+it("modulePageContract rejects a module list item missing version — the module edit sheet disables itself when version is undefined, so an optional contract would silently remove the edit action instead of failing", () => {
+  const { version: _v, ...withoutVersion } = baseModuleListItem;
+  const response = {
+    data: [withoutVersion],
+    pagination: { limit: 20, hasMore: false, nextCursor: null },
+  };
   expect(modulePageContract.safeParse(response).success).toBe(false);
 });

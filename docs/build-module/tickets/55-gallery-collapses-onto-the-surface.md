@@ -31,6 +31,13 @@ The deletion test says it must not simply go: delete the gallery and the complex
   the loading-qa skeleton moved to `qa-execution-gallery.tsx` (route `/design-system/qa-execution`).
   No visual case was deleted. Overflow column widths, computed control heights and focus order require a real
   browser to verify; jsdom cannot see those.
+  LANE-50 static verification: confirmed present by grep. `governance-qa-gallery.tsx`: `RisksTable` (line 79),
+  `IncidentsTable` (line 126), `DecisionsTable` (line 173), `ApprovalsTable` (line 220),
+  `RisksWithSelection` (line 272), four `DataTableSkeleton` loading entries (lines 413, 427, 441, 455+),
+  `EmptyState` and `ErrorState` entries. `qa-execution-gallery.tsx`: `QaTestCasesTable` (line 112),
+  `BudgetOverview` (line 156), `IncidentDetailCase` (line 204), `QaRunExecutionCase` (line 235),
+  `ReportsTabsCase` (line 324), one `DataTableSkeleton` loading entry (line 386). The browser-only exclusion
+  is legitimate: overflow, focus order and computed heights are not observable in jsdom.
 - [x] No gallery file exceeds 500 lines, and the total harness size is recorded before and after
   Earned 2026-09-27. The split was necessary because `governance-qa-gallery.tsx` was 860 lines.
   Before this session: 12 gallery files totalling ~4,087 lines; `governance-qa-gallery.tsx` at 860 was the

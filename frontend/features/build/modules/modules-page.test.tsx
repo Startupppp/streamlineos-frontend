@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ModulesPage } from "./modules-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -11,7 +11,19 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/build/advanced", () => ({
   useModulePages: jest.fn(),
-  useCreateModule: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/modules", () => ({
+  useDeleteModule: jest.fn(),
+}));
+
+jest.mock("@/features/build/modules/module-form-sheet", () => ({
+  ModuleFormSheet: ({ mode }: { mode: string }) => <div data-testid={`module-form-sheet-${mode}`} />,
+}));
+
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: ({ open, title }: { open: boolean; title?: string }) =>
+    open ? <div data-testid="confirm-dialog">{title}</div> : null,
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -72,8 +84,28 @@ jest.mock("@/components/ui/stat-card", () => ({
 }));
 
 jest.mock("@/features/build/modules/module-card", () => ({
-  ModuleCard: ({ module: mod }: { module: { name: string } }) => (
-    <div data-testid="module-card">{mod.name}</div>
+  ModuleCard: ({
+    module: mod,
+    onEdit,
+    onDelete,
+  }: {
+    module: { name: string; id: number };
+    onEdit?: (module: { name: string; id: number }) => void;
+    onDelete?: (module: { name: string; id: number }) => void;
+  }) => (
+    <div data-testid="module-card">
+      {mod.name}
+      {onEdit ? (
+        <button type="button" data-testid="edit-btn" onClick={() => onEdit(mod)}>
+          Edit
+        </button>
+      ) : null}
+      {onDelete ? (
+        <button type="button" data-testid="delete-btn" onClick={() => onDelete(mod)}>
+          Delete
+        </button>
+      ) : null}
+    </div>
   ),
   ModuleCardSkeleton: () => <div data-testid="module-card-skeleton" />,
 }));
@@ -125,12 +157,13 @@ jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 
-import { useModulePages, useCreateModule } from "@/hooks/api/build/advanced";
+import { useModulePages } from "@/hooks/api/build/advanced";
+import { useDeleteModule } from "@/hooks/api/build/modules";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
 const mockUseModulePages = useModulePages as jest.Mock;
-const mockUseCreateModule = useCreateModule as jest.Mock;
+const mockUseDeleteModule = useDeleteModule as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
@@ -174,13 +207,14 @@ const MODULE_ROW = {
   totalItems: 5,
   completedItems: 2,
   progress: 40,
+  version: 1,
 };
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseCreateModule.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseDeleteModule.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
 });
 
@@ -246,7 +280,7 @@ it("renders module cards when modules are present", () => {
   );
   render(<ModulesPage projectId={7} />);
   expect(screen.getByTestId("module-card")).toBeInTheDocument();
-  expect(screen.getByTestId("module-card").textContent).toBe("Auth Module");
+  expect(screen.getByTestId("module-card").textContent).toContain("Auth Module");
 });
 
 it("does not render the create sheet trigger when the user lacks build:workspace:manage", () => {
@@ -284,4 +318,52 @@ it("enables keyboard navigation bound to the module count when modules are prese
   const lastArgs = calls[calls.length - 1]?.[0];
   expect(lastArgs?.enabled).toBe(true);
   expect(lastArgs?.itemCount).toBe(1);
+});
+
+it("passes onEdit and onDelete to ModuleCard when user has manage permission", () => {
+  mockUseModulePages.mockReturnValue(
+    basePages({ data: { pages: [{ data: [MODULE_ROW] }] } }),
+  );
+  render(<ModulesPage projectId={7} />);
+  expect(screen.getByTestId("edit-btn")).toBeInTheDocument();
+  expect(screen.getByTestId("delete-btn")).toBeInTheDocument();
+});
+
+it("does not pass onEdit or onDelete to ModuleCard when user lacks manage permission", () => {
+  mockUseCan.mockReturnValue(false);
+  mockUseModulePages.mockReturnValue(
+    basePages({ data: { pages: [{ data: [MODULE_ROW] }] } }),
+  );
+  render(<ModulesPage projectId={7} />);
+  expect(screen.queryByTestId("edit-btn")).not.toBeInTheDocument();
+  expect(screen.queryByTestId("delete-btn")).not.toBeInTheDocument();
+});
+
+it("shows the edit sheet when edit action is triggered", () => {
+  mockUseModulePages.mockReturnValue(
+    basePages({ data: { pages: [{ data: [MODULE_ROW] }] } }),
+  );
+  render(<ModulesPage projectId={7} />);
+  expect(screen.queryByTestId("module-form-sheet-edit")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("edit-btn"));
+  expect(screen.getByTestId("module-form-sheet-edit")).toBeInTheDocument();
+});
+
+it("opens the confirm dialog when delete action is triggered", () => {
+  mockUseModulePages.mockReturnValue(
+    basePages({ data: { pages: [{ data: [MODULE_ROW] }] } }),
+  );
+  render(<ModulesPage projectId={7} />);
+  expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("delete-btn"));
+  expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
+  expect(screen.getByTestId("confirm-dialog").textContent).toContain("Auth Module");
+});
+
+it("renders ModuleFormSheet in create mode unconditionally so create sheet is available without a prior action", () => {
+  mockUseModulePages.mockReturnValue(
+    basePages({ data: { pages: [{ data: [MODULE_ROW] }] } }),
+  );
+  render(<ModulesPage projectId={7} />);
+  expect(screen.getByTestId("module-form-sheet-create")).toBeInTheDocument();
 });

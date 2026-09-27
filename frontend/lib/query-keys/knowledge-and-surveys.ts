@@ -139,7 +139,7 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "roadmap", "changelog"] as const)
         : ([...base, "roadmap", "changelog", params] as const),
-    publicBoard: (orgId: string) =>
+    publicBoard: (orgId: string | undefined) =>
       [...base, "roadmap", "publicBoard", orgId] as const,
     publication: [...base, "roadmap", "publication"] as const,
   },

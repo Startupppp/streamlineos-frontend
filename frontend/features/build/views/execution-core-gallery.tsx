@@ -128,6 +128,9 @@ const STUB_CYCLE_ACTIVE: Cycle = {
   orgId: "org-1",
   name: "Sprint 42",
   description: null,
+  goal: null,
+  capacity: null,
+  version: 1,
   status: "active",
   startDate: "2026-09-01",
   endDate: "2026-09-30",
@@ -163,6 +166,7 @@ const STUB_MODULE_A: Module = {
   createdBy: "user-1",
   createdAt: "2026-01-01",
   updatedAt: "2026-09-01",
+  version: 1,
   progress: 65,
 };
 

@@ -153,7 +153,7 @@ function useGalleryQueryClient() {
     );
 
     client.setQueryData(
-      knowledgeAndSurveysQueryKeys.roadmap.publicBoard(undefined as string),
+      knowledgeAndSurveysQueryKeys.roadmap.publicBoard(undefined),
       STUB_ROADMAP_BOARD,
     );
 

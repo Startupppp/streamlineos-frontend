@@ -63,6 +63,10 @@ jest.mock("@/hooks/api/kb/page-versions", () => ({
   useRestoreKbVersion: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCan: jest.fn(),
+}));
+
 jest.mock("@/features/wiki/lib/kb-icons", () => ({
   KbArrowRightIcon: ({ className }: { className?: string }) => <span className={className} />,
   KbClockIcon: ({ className }: { className?: string }) => <span className={className} />,
@@ -101,6 +105,9 @@ const {
   useKbPageVersionsInfinite: jest.Mock;
   useKbPageVersionDetail: jest.Mock;
   useRestoreKbVersion: jest.Mock;
+};
+const { useCan: mockUseCan } = jest.requireMock("@/hooks/api/access") as {
+  useCan: jest.Mock;
 };
 
 const mockVersion = {
@@ -144,6 +151,7 @@ beforeEach(() => {
   useKbPageVersionDetail.mockReturnValue({ data: null, isLoading: false });
 
   useRestoreKbVersion.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseCan.mockReturnValue(true);
 });
 
 afterEach(() => {
@@ -315,6 +323,16 @@ describe("PageHistoryPage — restore gate", () => {
     fireEvent.click(screen.getByRole("button", { name: "Select version 1" }));
 
     expect(screen.getByRole("button", { name: /restore/i })).toBeEnabled();
+  });
+
+  it("disables restore when the viewer lacks kb:pages:update so the action fails closed before a server 403", () => {
+    mockUseCan.mockReturnValue(false);
+    useKbPageVersionDetail.mockReturnValue({ data: mockVersion, isLoading: false });
+
+    render(<PageHistoryPage pageId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Select version 1" }));
+
+    expect(screen.getByRole("button", { name: /restore/i })).toBeDisabled();
   });
 });
 

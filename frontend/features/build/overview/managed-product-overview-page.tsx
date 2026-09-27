@@ -26,6 +26,9 @@ import { cn } from "@/lib/utils";
 
 const OVERVIEW_FILTER_DEFINITIONS = [
   { param: "q" },
+  { param: "ownerId" },
+  { param: "status" },
+  { param: "cursor" },
 ] as const;
 
 interface ManagedProductOverviewPageProps {
@@ -46,10 +49,27 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
   const listFilters = useBuildListFilters({ filters: OVERVIEW_FILTER_DEFINITIONS, withSearch: false });
   const rawQ = listFilters.value("q");
   const searchValue = rawQ === BUILD_FILTER_ALL ? undefined : rawQ;
+  const rawOwner = listFilters.value("ownerId");
+  const managerId = rawOwner && rawOwner !== BUILD_FILTER_ALL ? rawOwner : undefined;
+  const rawStatus = listFilters.value("status");
+  const statusParam =
+    rawStatus === "ACTIVE" || rawStatus === "COMPLETED" || rawStatus === "ARCHIVED" || rawStatus === "ALL"
+      ? rawStatus
+      : undefined;
+  const rawCursor = listFilters.value("cursor");
+  const afterId =
+    rawCursor && rawCursor !== BUILD_FILTER_ALL ? parseInt(rawCursor, 10) : undefined;
 
   const productQuery = useManagedProduct(managedProductId);
   const projectsQuery = useProjects(
-    { managedProductId, limit: 10, search: searchValue },
+    {
+      managedProductId,
+      limit: 10,
+      search: searchValue,
+      managerId,
+      status: statusParam,
+      afterId,
+    },
     { enabled: !!managedProductId },
   );
   const insightsQuery = useManagedProductInsights(managedProductId);

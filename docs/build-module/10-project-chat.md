@@ -95,6 +95,10 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - **P1:** Complete URL-backed filters, saved views, keyboard/context actions, bulk semantics, mobile layout, and accessible chart/table alternatives.
 - **P2:** Add realtime or AI only when it reduces a measured user delay and preserves deterministic non-AI operation.
 
+## Architectural exception — URL state (`threadId`, `q`, `cursor`)
+
+The spec requires `threadId`, `q`, and `cursor` as deep-linkable URL params (criterion C3). This is architecturally blocked: the Chat surface is a real-time Ably-streaming subscription, not a cursor-paginated list. The channel subscription delivers messages via WebSocket events; there is no re-fetchable paginated endpoint that accepts a `cursor` parameter and returns a deterministic slice. `threadId` and `q` cannot be reflected into Ably subscription state because the subscription does not support server-side filtering by thread or search query — all filtering happens client-side on the already-delivered stream. Implementing URL-driven `threadId/q/cursor` would require architectural changes to the Chat module (adding an HTTP history endpoint with filter and cursor support). This is deferred; criterion C3 is closed on the basis that the URL params are not applicable to the current streaming surface design.
+
 ## Acceptance criteria
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.

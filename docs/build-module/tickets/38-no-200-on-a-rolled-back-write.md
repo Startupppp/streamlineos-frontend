@@ -21,6 +21,12 @@ does not mean the source gate passes. Indirect calls and promise `.catch()` need
 - [x] Each of the five swallowing sites either propagates or runs behind a savepoint, with the choice stated in the call <!-- lane 14 extended this to all eleven sites (five original + six later findings = eleven total; nine fixed with withSavepoint or .catch(); two confirmed safe) -->
 - [x] A failing effect behind a savepoint leaves the outer transaction able to commit, proved by a test that makes the effect fail
 - [ ] A failing effect that was chosen to propagate produces an error response, not a 200 <!-- 2026-09-27: All fixed sites use savepoints (all are best-effort effects: audit logging, mention recording, chunk imports). No site was chosen to propagate, so this criterion does not apply. -->
+  **N/A — DECISION 2026-09-27 (Lane A2):** Permanent N/A. Verified against source:
+  `ticket-import.service.ts:201–228` (`runAtomic`): `try { return await this.db.transaction(async (tx) => { … }) } catch (error) { return all.map(…ROLLED_BACK…) }` — the callback throws on failure; Drizzle calls ROLLBACK TO SAVEPOINT and rethrows; the outer transaction is intact; the catch converts to `ROLLED_BACK` row outcomes. No 200-over-silent-rollback possible.
+  `ticket-import.service.ts:239–260` (`runPartial` per batch): same mechanism per chunk; a batch failure becomes `FAILED` rows; subsequent batches proceed; outer transaction intact.
+  All other fixed sites (`build-automation-run-history.service.ts:75`, `:129`; `projects-activity.service.ts:428`; `projects-tickets-transfer.service.ts:197`) use `withSavepoint`.
+  Gate verification — from `backend/`: `node src/scripts/check-build-swallowed-writes.mjs --self-test` → "7 passed"; `node src/scripts/check-build-swallowed-writes.mjs --list` → "2 swallowed-write site(s) found … OK — 2 swallowed-write site(s) (ratchet 2)", exit 0. Both flagged sites are the `ticket-import.service.ts` ones confirmed safe above.
+  No site was chosen to let an effect failure propagate to the HTTP caller. The criterion is permanently void: propagation was never chosen at any of the eleven sites; every site is either a best-effort savepoint or a safe-without-change nested transaction. Stays unchecked.
 - [x] A gate rejects a bare catch around a database write while a request transaction is ambient, with a self-test for the shape it must catch
 - [x] The gate's output says what it scans and what it cannot see
 

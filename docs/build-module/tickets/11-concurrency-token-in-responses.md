@@ -22,4 +22,5 @@ One thing the note above does not cover, found later: the compare-and-swap is co
   `projects-ticket-version-conflict.spec.ts` test "version is required — a body without it fails
   schema validation (ticket-12 box-1)" at line 158 proves rejection is live. Leaving unticked per
   programme rule: an N/A is a decision, not completed functionality.
+  **Verified 2026-09-27 (Lane A2):** Ticket 12 confirmed complete (0 unchecked boxes, status "done"). `backend/src/modules/build/core/dto/ticket.schemas.ts:174`: `version: z.number().int().positive()` — required field with no `.optional()` or `.nullable()` modifier. Omission of `version` is rejected by Zod schema validation before any handler logic runs. N/A decision confirmed: the "expand half" criterion is permanently void because the contract half is applied and cannot be undone without breaking ticket 12. Stays unchecked.
 - [x] The existing ticket conflict behaviour is unchanged

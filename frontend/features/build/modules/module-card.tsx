@@ -1,12 +1,20 @@
 ﻿"use client";
 
-import { memo, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Calendar, User } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import type { Module } from "@/types/projects/projects";
 import type { ModuleStatus } from "@/types/projects/shared";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getModuleAvatarDisplay } from "@/features/build/modules/lib/module-name";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
@@ -80,16 +88,53 @@ function formatModuleDate(value: string | null): string {
   });
 }
 
+interface ModuleCardActionsProps {
+  mod: Module;
+  onEdit?: (module: Module) => void;
+  onDelete?: (module: Module) => void;
+}
+
+function ModuleCardActions({ mod, onEdit, onDelete }: ModuleCardActionsProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const handleEdit = useCallback(() => onEdit?.(mod), [mod, onEdit]);
+  const handleDelete = useCallback(() => onDelete?.(mod), [mod, onDelete]);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Module actions"
+          className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+          {...hoverHandlers}
+        >
+          <EllipsisIcon ref={iconRef} size={14} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {onEdit ? <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem> : null}
+        {onDelete ? (
+          <DropdownMenuItem variant="destructive" onClick={handleDelete}>Delete</DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export interface ModuleCardProps {
   module: Module;
   projectId: number;
   index?: number;
+  onEdit?: (module: Module) => void;
+  onDelete?: (module: Module) => void;
 }
 
 export const ModuleCard = memo(function ModuleCard({
   module: mod,
   projectId,
   index = 0,
+  onEdit,
+  onDelete,
 }: ModuleCardProps) {
   const prefersReducedMotion = useReducedMotion();
   const progress = mod.progress ?? 0;
@@ -116,10 +161,7 @@ export const ModuleCard = memo(function ModuleCard({
       }}
       className="h-full"
     >
-      <Link
-        href={`/build/${projectId}/issues?module=${mod.id}`}
-        className="group block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
-      >
+      <div className="group relative h-full rounded-xl">
         <article
           className={cn(
             PM_PANEL,
@@ -152,17 +194,27 @@ export const ModuleCard = memo(function ModuleCard({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className={cn(TEXT_TWO_LINES, "text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary")}>
-                    {mod.name}
-                  </h3>
-                  <span
-                    className={cn(
-                      "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-micro font-semibold",
-                      style.badge,
-                    )}
+                  <Link
+                    href={`/build/${projectId}/issues?module=${mod.id}`}
+                    className="min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-sm"
                   >
-                    {style.label}
-                  </span>
+                    <h3 className={cn(TEXT_TWO_LINES, "text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary")}>
+                      {mod.name}
+                    </h3>
+                  </Link>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <span
+                      className={cn(
+                        "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-micro font-semibold",
+                        style.badge,
+                      )}
+                    >
+                      {style.label}
+                    </span>
+                    {(onEdit || onDelete) ? (
+                      <ModuleCardActions mod={mod} onEdit={onEdit} onDelete={onDelete} />
+                    ) : null}
+                  </div>
                 </div>
 
                 {mod.description ? (
@@ -231,7 +283,7 @@ export const ModuleCard = memo(function ModuleCard({
             />
           ) : null}
         </article>
-      </Link>
+      </div>
     </motion.div>
   );
 });

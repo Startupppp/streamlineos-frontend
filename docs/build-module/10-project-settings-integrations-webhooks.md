@@ -92,6 +92,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - **P0:** Verify route renders this contract rather than another page; add route/access/parent identity tests and complete loading/error/denied behavior.
 - **P0:** Verify server/client Zod parity, bounded pagination, composite tenant predicates, and exact cache keys for every endpoint above.
+- **P1 BLOCKED (BE-13):** `from` and `to` are listed as URL parameters above but `listWebhooksQuerySchema` at `backend/src/modules/build/core/dto/webhook.schemas.ts` uses `.strict()` and declares only `state`, `event`, `q`, and `cursor`. Wiring `from`/`to` client-side returns 400. Backend is fenced. Box stays unchecked until backend adds these fields.
 - **P1:** Complete URL-backed filters, saved views, keyboard/context actions, bulk semantics, mobile layout, and accessible chart/table alternatives.
 - **P2:** Add realtime or AI only when it reduces a measured user delay and preserves deterministic non-AI operation.
 

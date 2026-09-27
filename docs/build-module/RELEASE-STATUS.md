@@ -37,8 +37,8 @@ checkout is deployed.
 
 ## Scope
 
-- The authenticated route manifest contains 74 canonical Build pages, all marked `KEEP`.
-- The complete Build route census contains 83 routes: 74 authenticated pages and nine portal/public collaboration routes.
+- The authenticated route manifest contains 75 canonical Build pages, all marked `KEEP`.
+- The complete Build route census contains 84 routes: 75 authenticated pages and nine portal/public collaboration routes.
 - The normative route-count prose is reconciled to that generated census; the older 93/84 figures were stale authored counts, not additional live pages.
 - PM Workspace is retired from the UI, API, contracts, permissions, routes, source tree, and production database. Organization is the tenancy boundary; products and projects are the working scopes.
 - `/build/[projectId]/intake`, `/forms`, and `/triage` remain separate canonical jobs.
@@ -259,10 +259,18 @@ Completed:
 - [x] PM Workspace is absent from source, bundles, APIs, and production storage.
 - [x] Build authorization census is `VULNERABLE=0` and `NEEDS-REVIEW=0`.
 - [ ] Production migration ledger has zero pending migrations and includes migration `1197` (1197 is complete; the unrelated mixed-module backlog remains).
+  <!-- 2026-09-27 NOT EARNED. Gate run: `cd backend && node --env-file-if-exists=.env src/scripts/check-migration-ledger.mjs --self-test` → "Self-tests passed." Then `node --env-file-if-exists=.env src/scripts/check-migration-ledger.mjs` output (verbatim):
+  "Ledger: 1040 applied row(s) against 1019 journal entr(ies).
+  Watermark 1803093634725; 0 migration(s) pending.
+  NOTE [orphan-below-watermark] 13 row(s): 909@1790099730252, 910@1790099743830, 911@1790099768782, 912@1790099773934, 913@1790103617483, 1040@1803093625726, 1042@1803093625727, 1043@1803093625728, 1045@1803093625729, 1046@1803093625730, 1047@1803093625731, 1048@1803093625732, 1049@1803093625733
+  check:migration-ledger FAILED
+    9 duplicate row(s): 1019, 1020, 1021, 1022, 1023, 1024, 1025, 1026, 1052
+    1 entr(ies) below the watermark that will NEVER apply: 1396_build_sprint_cycle_chain_repair"
+  Sub-claim verdict: "zero pending" is TRUE — "0 migration(s) pending" confirmed. "Includes 1197" is confirmed by the 2026-09-25 historical ledger check (see § Production migrations) and not contradicted by the current run. The gate FAILS on two separate findings: (a) 9 duplicate ledger rows (1019–1026, 1052) and (b) journal entry `1396_build_sprint_cycle_chain_repair` is stranded below the watermark and will never be applied — this is a Build migration, not HR/KB-owned. Settles when the 9 duplicate rows are resolved and the stranded `1396_build_sprint_cycle_chain_repair` entry is either applied (if still needed), removed from the journal (if superseded), or explicitly recorded as deliberately bypassed with the work carried by another migration. -->
 - [x] Frontend and backend focused tests and typechecks pass.
 - [ ] Authenticated desktop and mobile browser matrices pass for the full Build route census against the production API.
-  <!-- 2026-09-27: Desktop 74-route sweep passed 2026-09-25; mobile matrix explicitly open (see § Browser verification "The mobile matrix remains open"). Settles when the mobile matrix is executed against the production API without console errors. -->
+  <!-- BROWSER-EXCLUDED (2026-09-27). Desktop 74-route sweep passed 2026-09-25 (75 routes now — the wiki/[pageId]/history page was added); mobile matrix explicitly open (see § Browser verification "The mobile matrix remains open"). Settles when the mobile matrix is executed against the production API without console errors. -->
 - [x] Frontend candidate is merged into `origin/main`.
 - [ ] Deployment status for the latest frontend and backend commits is verified.
-  <!-- 2026-09-27: Backend deployment identity unverified — Railway ships every push, but the running service must be probed to confirm it carries the release commit. Frontend deployment source is an external service not represented in `.github/workflows/` (see § External repository debt). Settles when `https://api.streamlineos.in/health` is probed and the build/commit identity returned matches the release commit, and the frontend deployment source is identified and its build identity confirmed. -->
+  <!-- 2026-09-27 NOT EARNED. Probed: `curl -s --max-time 10 https://api.streamlineos.in/health` → `{"success":true,"data":{"status":"ok"}}` — backend is alive. Probed `/health/version` and `/version` → both 404. No commit identity is exposed by the health endpoint; Railway deployment is confirmed running but the release commit cannot be read from this repository. Frontend: `.github/workflows/frontend.yml` contains lint, type-check, and build jobs only — no deployment step. The frontend deployment source is external to this repository and unidentified; `-frontend` Vercel project serves production but its build identity is not readable here. What cannot be settled from this repository: (a) which backend commit the running Railway service carries — the health endpoint exposes no build SHA; (b) which frontend commit Vercel last deployed — no deployment pipeline exists in the repo. Settles when the backend `/health` (or equivalent) endpoint is extended to return the deployed commit SHA and that SHA is confirmed to match the release commit, and the frontend Vercel project deployment history is consulted to confirm the last successful deployment commit. -->
 - [x] Production-domain Build smoke passes without current console errors.

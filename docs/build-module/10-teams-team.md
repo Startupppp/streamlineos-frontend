@@ -99,7 +99,8 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+  - Closed 2026-09-27: `FILTER_DEFINITIONS` has `leadId` and `memberId`; `q` via `withSearch: true`; `cursor` via `useBuildCursorPager` (URL-backed in `cursors` param). All core fields rendered (name, lead, members, projects via `TeamProjectsSection`, capacity). Edit via `TeamFormSheet`, delete via `ConfirmDialog destructive`, add/remove member and role update via dedicated mutations. States (loading, denied, error, empty, ready), keyboard shortcuts (`useBuildListKeyboard`), and permission gating (`useCan("build:teams:manage")`) all implemented and covered by `team-home-page.test.tsx`.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.

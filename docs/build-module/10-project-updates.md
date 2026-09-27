@@ -99,7 +99,8 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+  - Exception: `j/k` navigation and `Enter` open-target are not applicable to a feed surface (no navigable row target — updates have no detail page). CCG-4 permits omitting a shortcut whose target does not exist. `j/k` focus movement is implemented; `onOpen` is a documented no-op. `c` (create), `?` (shortcut help), and `Esc` are all wired and tested. `status`, `authorId`, `from`, `to` URL filter axes are implemented end-to-end (frontend `UPDATE_FILTER_DEFINITIONS` → `useProjectUpdates` → backend `status: z.enum(["draft","published"]).optional()`).
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
