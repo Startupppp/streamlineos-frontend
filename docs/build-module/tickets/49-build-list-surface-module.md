@@ -15,15 +15,35 @@ Nine things an author must currently get right in order: the permission key matc
 - [x] The module owns gate, toolbar, state branch, table and pager, and callers supply only what differs
 - [x] A list renders from rows passed as props, with no fetch
 - [x] The branch-order test is written once at the module: no-permission, loading, error, 402, empty, filtered-empty, rows
-- [ ] Two pages adopt it with no visible change, one of them a page that currently has no test
-  Partly earned 2026-09-27. `releases-page.tsx` and `change-requests-page.tsx` both render through
-  `BuildListSurface` and their pre-existing tests pass unchanged (7/7 and full suite), so the
-  no-visible-change half holds for both. The second half does not: **both adopters already had tests.**
-  The lane recorded that no untested table page exists; that is wrong. Seven untested Build pages render
-  a table or pager: `approvals/project-approvals-page.tsx`, `governance/decisions-page.tsx`,
-  `governance/risks-page.tsx`, `portfolios/portfolio-detail-page.tsx`, `portfolios/portfolios-page.tsx`,
-  `programs/programs-page.tsx`, `project-list/projects-page.tsx`. One of them must adopt the surface and
-  gain a test before this box is earned.
+- [x] Two pages adopt it with no visible change, one of them a page that currently has no test
+  Fully earned 2026-09-27. `releases-page.tsx` and `change-requests-page.tsx` supply the first adopter
+  pair (pre-existing tests pass unchanged). `approvals/project-approvals-page.tsx` supplies the
+  "no prior test" half: it had zero tests before this session. It now renders through `BuildListSurface`
+  and has 10 new tests (`project-approvals-page.test.tsx`, all passing). The migration removes the
+  manual `usePageState` + `PageState` + `DataTable` assembly and replaces it with `BuildListSurface`;
+  the permission key (`build:approvals:view`), columns, `empty` copy ("No approvals yet"), and
+  `filteredEmpty` copy ("No approvals match your filters") are each covered by at least one paired
+  positive/negative assertion. One pre-migration behavioral difference is noted: the old page called
+  `usePageState` without `isEmpty`, so the `PageState.empty` slot was never reached and the empty
+  state was never shown. The migration fixes this as a side-effect; that correction is observable
+  but is not a regression — it is the correct behavior the surface enforces.
+
+  **"No visible change" was not true when this migration was first written, and the box is ticked only
+  because the gap was closed rather than accepted.** The first pass dropped three capabilities the old
+  `DataTable` call site had: `minWidth="720px"`, `isLoading={isFetchingNextPage}` (the in-table
+  next-page indicator), and `selection.isRowSelectable` — the last replaced by omitting `selection`
+  entirely when the viewer lacks `build:approvals:manage`, which removes the whole checkbox column
+  instead of making its rows unselectable. All three already existed on `DataTable`; the surface simply
+  did not forward them. It now does, via `minWidth`, `isFetchingMore` and `selection.isRowSelectable`,
+  and the page passes all three again. `isFetchingMore` is deliberately not named `isLoading`: on the
+  surface `isLoading` means the initial load and drives the skeleton, so forwarding a next-page fetch
+  into it would replace the table with a skeleton on every page turn.
+
+  The prop set was widened once, from measurement rather than anticipation: across the 38 Build files
+  that render a `DataTable`, the props actually passed are `minWidth` (26 call sites), `isLoading` (27),
+  `selection` (21), `onRowClick` (9), `footer` (5), `rowClassName` (3) and `sortState` (2). All are now
+  forwarded. `emptyState` is deliberately **not** forwarded — the surface owns the empty branch through
+  `PageState`, which is the defect this module exists to fix.
 - [x] A 402 surfaces as the upgrade path per FE-41, and pagination state stays in the URL per FE-86
 - [x] Query keys come from the single factory per FE-18
 - [x] The two adopters retain their domain-specific interactions and focused integration tests; shared state tests do not replace tests that each page wires the right permission, contract, filters and actions

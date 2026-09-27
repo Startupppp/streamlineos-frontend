@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import type { DataTableSortState } from "@/components/ui/data-table.types";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
@@ -12,10 +13,12 @@ export interface BuildListSurfacePagination {
   mode: "cursor";
   pageSize: number;
   hasMore: boolean;
-  hasPrevious: boolean;
+  hasPrevious?: boolean;
   onNext: () => void;
-  onPrevious: () => void;
+  onPrevious?: () => void;
 }
+
+const NO_PREVIOUS_PAGE = () => {};
 
 export interface BuildListSurfaceProps<TRow> {
   permission: PermissionKey;
@@ -37,8 +40,14 @@ export interface BuildListSurfaceProps<TRow> {
   selection?: {
     selected: ReadonlySet<string | number>;
     onChange: (sel: Set<string | number>) => void;
+    isRowSelectable?: (row: TRow) => boolean;
     getRowLabel?: (row: TRow, index: number) => string;
   };
+  isFetchingMore?: boolean;
+  minWidth?: string;
+  footer?: ReactNode;
+  rowClassName?: (row: TRow, index: number) => string;
+  sortState?: DataTableSortState;
   loadingRows?: number;
   loadingHeaders?: readonly string[];
   className?: string;
@@ -62,6 +71,11 @@ export function BuildListSurface<TRow>({
   onRowClick,
   mobileCard,
   selection,
+  isFetchingMore,
+  minWidth,
+  footer,
+  rowClassName,
+  sortState,
   loadingRows = 8,
   loadingHeaders,
   className,
@@ -103,7 +117,18 @@ export function BuildListSurface<TRow>({
           onRowClick={onRowClick}
           mobileCard={mobileCard}
           selection={selection}
-          pagination={pagination}
+          pagination={
+            pagination && {
+              ...pagination,
+              hasPrevious: pagination.hasPrevious ?? false,
+              onPrevious: pagination.onPrevious ?? NO_PREVIOUS_PAGE,
+            }
+          }
+          isLoading={isFetchingMore}
+          minWidth={minWidth}
+          footer={footer}
+          rowClassName={rowClassName}
+          sortState={sortState}
           className={CONTENT_FILL_PANEL}
         />
       </PageState>

@@ -25,7 +25,7 @@ jest.mock("@/hooks/api/build/ticket-search", () => ({
   useTicketSearch: jest.fn(() => ({ data: [] })),
 }));
 
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: () => ({ data: { key: "CR", statuses: [] } }),
 }));
 
