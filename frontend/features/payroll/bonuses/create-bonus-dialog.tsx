@@ -71,6 +71,10 @@ export function CreateBonusDialog({ open, onOpenChange }: CreateBonusDialogProps
     form.setValue("taxable", checked);
   }
 
+  const userId = form.watch("userId");
+  const amount = form.watch("amount");
+  const canCreate = userId.trim().length > 0 && Number(amount) > 0;
+
   const handleSubmit = form.handleSubmit((values) => {
     createBonus.mutate(
       {
@@ -224,6 +228,7 @@ export function CreateBonusDialog({ open, onOpenChange }: CreateBonusDialogProps
                 type="submit"
                 isPending={createBonus.isPending}
                 loadingText="Creating…"
+                disabled={!canCreate}
               >
                 Create Bonus
               </LoadingButton>
