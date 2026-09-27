@@ -141,7 +141,7 @@ deploy landmine, and I may not journal or apply. To finish:
 - [x] Lazy tree-children endpoint — SATISFIED: `backend/src/modules/kb/wiki/kb-pages.controller.ts:112`
 - [x] Indexes + migration + `EXPLAIN` evidence — SATISFIED: `backend/migrations/1169_kb_page_collection_indexes.sql:11`
 - [x] Migrate every consumer off the tree — SATISFIED: `frontend/features/wiki/components/wiki-home-all-pages.tsx:317`
-- [ ] Contract tests pinned to shared fixtures — DEFECT FIXED: `backend/src/modules/kb/core/dto/kb-core-response.schemas.ts:87`; test `declares the owner facet in the route's @ResponseSchema, because an undeclared key is stripped by the contract and openapi never learns the field exists` (`backend/src/modules/kb/core/collection/knowledge-collection.service.spec.ts:380`); bite-tested (failed before — `declared.facets?.owner` was `undefined`; passed after)
+- [x] Contract tests pinned to shared fixtures — DEFECT FIXED: `backend/src/modules/kb/core/dto/kb-core-response.schemas.ts:87`; test `declares the owner facet in the route's @ResponseSchema, because an undeclared key is stripped by the contract and openapi never learns the field exists` (`backend/src/modules/kb/core/collection/knowledge-collection.service.spec.ts:380`); bite-tested (failed before — `declared.facets?.owner` was `undefined`; passed after)
 
 **Evidence:** *Cursor codec* — `kb-page-collection-cursor.ts` (88 lines) plus five `fc.property` fuzz
 assertions at `kb-page-collection-cursor.spec.ts:163,176,189,203,222`: round-trips every
@@ -226,10 +226,10 @@ those files are being edited by other lanes.
 ### S05 — Full Search (new route, P0)
 
 - [ ] Shared search/citation result projection (consumed by S16 too) — DECISION-REQUIRED
-- [ ] `GET /kb/search` — DEFECT FIXED: `backend/src/modules/kb/core/collection/kb-page-text-query.ts:27`; test `also asks the parser for the untouched query, because stripping punctuation turns ERR-500 into err500 and no document ever produces that lexeme` (`backend/src/modules/kb/core/collection/kb-page-text-query.spec.ts:22`); bite-tested (failed before, passed after)
-- [ ] Route + facets + cursor + URL codec — DEFECT FIXED: `frontend/features/wiki/components/wiki-search-page.tsx:138`; test `forwards the verified filter from the URL to the search request, because the backend already accepts it and the counts are otherwise computed and thrown away` (`frontend/features/wiki/components/wiki-search-page.test.tsx`); bite-tested (3 of 5 new tests failed before, 26 pass after)
+- [x] `GET /kb/search` — DEFECT FIXED: `backend/src/modules/kb/core/collection/kb-page-text-query.ts:27`; test `also asks the parser for the untouched query, because stripping punctuation turns ERR-500 into err500 and no document ever produces that lexeme` (`backend/src/modules/kb/core/collection/kb-page-text-query.spec.ts:22`); bite-tested (failed before, passed after)
+- [x] Route + facets + cursor + URL codec — DEFECT FIXED: `frontend/features/wiki/components/wiki-search-page.tsx:138`; test `forwards the verified filter from the URL to the search request, because the backend already accepts it and the counts are otherwise computed and thrown away` (`frontend/features/wiki/components/wiki-search-page.test.tsx`); bite-tested (3 of 5 new tests failed before, 26 pass after)
 - [x] Quick find "View all" handoff preserving the query — SATISFIED: `frontend/features/wiki/components/quick-find-dialog.tsx:61`
-- [ ] Leakage and recall suites — DEFECT FIXED: `backend/src/modules/kb/retrieval/kb-page-search.spec.ts`; test `sends the untouched query to the parser alongside the prefix terms, because stripping the hyphen turns ERR-500 into err500 and no document produces that lexeme`; bite-tested (failed with the tokenizer reverted, passes restored)
+- [x] Leakage and recall suites — DEFECT FIXED: `backend/src/modules/kb/retrieval/kb-page-search.spec.ts`; test `sends the untouched query to the parser alongside the prefix terms, because stripping the hyphen turns ERR-500 into err500 and no document produces that lexeme`; bite-tested (failed with the tokenizer reverted, passes restored)
 - [x] All six states + keyboard navigation evidence — SATISFIED: `frontend/features/wiki/components/wiki-search-page.tsx:203`
 
 **Evidence:** *Route path deviation, confirmed by reading both handlers.* The slice asks for

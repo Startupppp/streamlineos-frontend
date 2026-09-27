@@ -17,10 +17,10 @@ no migration, no database write.
 - [x] URL-backed `status`, `spaceId`, owner, view controls — SATISFIED: `frontend/features/wiki/components/wiki-home-all-pages.tsx:294`
 - [x] Card/list toggle, result count, cursor for All pages — SATISFIED: `frontend/features/wiki/components/wiki-home-all-pages.tsx:478`
 - [x] Page-card menu via the single action descriptor model — SATISFIED: `frontend/features/wiki/lib/page-action-descriptors.ts:270`
-- [ ] Trust badges (draft/published/archived, verified/stale, owner missing) — DEFECT FIXED: `frontend/features/wiki/components/kb-collection-badges.tsx:49` + `frontend/features/wiki/components/wiki-home-all-pages.tsx:110`; test `BITE: the list view flags a page whose owner membership is missing` in `frontend/features/wiki/components/wiki-home-all-pages.test.tsx:416`; bite-tested (failed before, passed after)
+- [x] Trust badges (draft/published/archived, verified/stale, owner missing) — DEFECT FIXED: `frontend/features/wiki/components/kb-collection-badges.tsx:49` + `frontend/features/wiki/components/wiki-home-all-pages.tsx:110`; test `BITE: the list view flags a page whose owner membership is missing` in `frontend/features/wiki/components/wiki-home-all-pages.test.tsx:416`; bite-tested (failed before, passed after)
 - [x] First-run path: blank, template, or import — SATISFIED: `frontend/features/wiki/components/wiki-home-all-pages.tsx:405`
 - [x] Remove tree rendering for All pages; children load only on expand — SATISFIED: `frontend/features/wiki/components/wiki-home-all-pages.tsx:317` + `frontend/features/wiki/components/page-tree-item.tsx:90`
-- [ ] Acceptance: responsive at 100,000 tenant pages without downloading the tree — DEFECT FIXED: `backend/src/modules/kb/wiki/kb-page-tree.service.ts:149`; test `BITE: the probe is a DISTINCT over the parent ids, so it cannot return one row per child page` in `backend/src/modules/kb/wiki/kb-page-tree-child-probe-bound.spec.ts:71`; bite-tested (failed before, passed after)
+- [x] Acceptance: responsive at 100,000 tenant pages without downloading the tree — DEFECT FIXED: `backend/src/modules/kb/wiki/kb-page-tree.service.ts:149`; test `BITE: the probe is a DISTINCT over the parent ids, so it cannot return one row per child page` in `backend/src/modules/kb/wiki/kb-page-tree-child-probe-bound.spec.ts:71`; bite-tested (failed before, passed after)
 
 **Evidence:** Six boxes verified in source unchanged. **Box 5 was a real gap the prior audit missed:**
 `wiki-home-all-pages.tsx` rendered the "Owner missing" badge only in the card grid, and `view` defaults
@@ -54,7 +54,7 @@ and the tree level likewise (`kb-page-tree.service.ts:138`).
 ### S07 — Spaces + Space detail
 
 - [x] Server-projected page/member counts — SATISFIED: `backend/src/modules/kb/wiki/kb-spaces.service.ts:194`
-- [ ] Search, audience/status filters, cursor, list view — DEFECT FIXED: `frontend/features/wiki/components/spaces-list-table.tsx:208` + `frontend/features/wiki/components/spaces-page.tsx:333`; test `BITE: renders the spaces as a table when the URL asks for the list view` in `frontend/features/wiki/components/spaces-page.test.tsx:236`; bite-tested (failed before, passed after)
+- [x] Search, audience/status filters, cursor, list view — DEFECT FIXED: `frontend/features/wiki/components/spaces-list-table.tsx:208` + `frontend/features/wiki/components/spaces-page.tsx:333`; test `BITE: renders the spaces as a table when the URL asks for the list view` in `frontend/features/wiki/components/spaces-page.test.tsx:236`; bite-tested (failed before, passed after)
 - [x] Members sheet; owner; last updated; manager health summary — SATISFIED: `frontend/features/wiki/components/space-card.tsx:104` + `frontend/features/wiki/components/spaces-page.tsx:422`
 - [x] Archive/restore replacing customer-facing hard delete; restore idempotent — SATISFIED: `backend/src/modules/kb/wiki/kb-spaces.service.ts:448`
 - [x] Archive impact preview: pages, public links, Ask index impact, record links — SATISFIED: `backend/src/modules/kb/wiki/kb-spaces.service.ts:467`
