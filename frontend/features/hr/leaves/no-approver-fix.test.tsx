@@ -38,9 +38,9 @@ const member = { canSetManagers: false, canAssignApprovers: false };
 describe("noApproverFix", () => {
   it("sends an admin to set a reporting manager when the manager rung is what failed", () => {
     expect(noApproverFix(unrouted("no-manager", "queue-empty"), admin)?.href).toBe(
-      "/hr/employees/manager-coverage",
+      "/hr/settings/reporting-managers",
     );
-    expect(noApproverFix(unrouted("manager-exited"), admin)?.href).toBe("/hr/employees/manager-coverage");
+    expect(noApproverFix(unrouted("manager-exited"), admin)?.href).toBe("/hr/settings/reporting-managers");
   });
 
   it("sends an admin to HR access when only the approver queue failed", () => {
@@ -80,7 +80,7 @@ describe("ApprovalRoutePanel with a way out", () => {
     expect(screen.getByText(/Nobody can approve this request/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Set a reporting manager" })).toHaveAttribute(
       "href",
-      "/hr/employees/manager-coverage",
+      "/hr/settings/reporting-managers",
     );
     expect(screen.queryByText(/Ask an HR administrator/)).not.toBeInTheDocument();
   });

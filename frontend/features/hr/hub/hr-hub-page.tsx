@@ -16,6 +16,7 @@ import { useHrHubSnapshot } from "@/hooks/api/hr/hub";
 import { EMPTY_HR_HUB_ACCESS } from "@/hooks/api/hr/hub-types";
 import {
   HrStartHereChecklist,
+  hrSetupIsEmpty,
   useHrSetupSignals,
 } from "@/features/hr/setup";
 import { HrHubQueues } from "./hr-hub-queues";
@@ -47,6 +48,7 @@ const RECRUITMENT_CAPABILITIES = new Set([
 export function HrHubPage() {
   const hub = useHrHubSnapshot();
   const setupSignals = useHrSetupSignals();
+  const setupEmpty = hrSetupIsEmpty(setupSignals);
   const access = hub.data?.capabilities ?? EMPTY_HR_HUB_ACCESS;
   const handleRetry = () => {
     void hub.refetch();
@@ -67,7 +69,7 @@ export function HrHubPage() {
       subtitle="People operations hub — manage your team, track time, and run the full employee lifecycle"
       variant="display"
       actions={
-        access.canOnboarding || access.canWorkflowsApprove || access.canAnnouncements ? (
+        !setupEmpty && (access.canOnboarding || access.canWorkflowsApprove || access.canAnnouncements) ? (
           <div className="flex flex-wrap items-center gap-2">
             {access.canAnnouncements ? (
               <Button size="sm" variant="outline" asChild>
@@ -90,7 +92,7 @@ export function HrHubPage() {
     >
       <div className="flex flex-1 min-h-0 flex-col">
         <HrPageContent>
-          {visibleActions.length > 0 ? (
+          {!setupEmpty && visibleActions.length > 0 ? (
             <HrHero>
               <div
                 className={cn(
@@ -137,7 +139,7 @@ export function HrHubPage() {
             </div>
           ) : null}
 
-          {!hub.isLoading && !hub.isError && !hasAnyPanel ? (
+          {!setupEmpty && !hub.isLoading && !hub.isError && !hasAnyPanel ? (
             <EmptyState
               className="flex-1"
               illustrationPreset="team"
@@ -146,6 +148,8 @@ export function HrHubPage() {
             />
           ) : null}
 
+          {!setupEmpty ? (
+            <>
           <HrHubQueues
             access={access}
             snapshot={hub.data}
@@ -170,6 +174,8 @@ export function HrHubPage() {
             isLoading={hub.isLoading}
             onRetry={handleRetry}
           />
+            </>
+          ) : null}
         </HrPageContent>
       </div>
     </PageWrapper>

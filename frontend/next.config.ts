@@ -87,6 +87,11 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/login",
+      destination: "/signin",
+      permanent: true,
+    },
+    {
       source: "/payroll/workers",
       destination: "/payroll/employees",
       permanent: false,
@@ -117,6 +122,21 @@ const nextConfig: NextConfig = {
       source: "/hr/configuration",
       destination: "/hr/settings",
       permanent: false,
+    },
+    {
+      source: "/hr/leave-policies",
+      destination: "/hr/settings/policies",
+      permanent: true,
+    },
+    {
+      source: "/hr/leave-policies/:path*",
+      destination: "/hr/settings/policies",
+      permanent: true,
+    },
+    {
+      source: "/hr/settings/managers",
+      destination: "/hr/settings/reporting-managers",
+      permanent: true,
     },
     {
       source: "/build/:projectId(\\d+)",

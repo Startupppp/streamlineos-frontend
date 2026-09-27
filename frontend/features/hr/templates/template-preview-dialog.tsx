@@ -59,6 +59,11 @@ export function TemplatePreviewDialog({ template }: TemplatePreviewDialogProps) 
             <LoadingButton isPending loadingText="Rendering..." disabled />
           </div>
         )}
+        {outputHtml && !render.isPending && /missing:/i.test(outputHtml) ? (
+          <p className="text-sm text-destructive">
+            This preview still has unfilled fields. Fix the template before sending it.
+          </p>
+        ) : null}
         {outputHtml && !render.isPending && (
           <iframe
             srcDoc={outputHtml}

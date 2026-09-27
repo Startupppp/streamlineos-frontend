@@ -149,16 +149,19 @@ export function ReviewTable({ list, canReview, onOpenReview, pagination }: Revie
     {
       key: "status",
       header: "Status",
-      cell: (emp) => (
+      cell: (emp) => {
+        const status = emp.totalRequired === 0 ? null : emp.onboardingDocStatus;
+        return (
         <span
           className={cn(
             "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
-            getStatusBadgeClass(emp.onboardingDocStatus),
+            getStatusBadgeClass(status),
           )}
         >
-          {getStatusLabel(emp.onboardingDocStatus)}
+          {emp.totalRequired === 0 ? "Not started" : getStatusLabel(status)}
         </span>
-      ),
+        );
+      },
     },
     {
       key: "actions",

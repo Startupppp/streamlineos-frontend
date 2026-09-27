@@ -17,6 +17,7 @@ jest.mock("@/hooks/api/hr/hub", () => ({
 jest.mock("@/features/hr/setup", () => ({
   HrStartHereChecklist: () => null,
   useHrSetupSignals: () => ({}),
+  hrSetupIsEmpty: () => false,
 }));
 
 describe("HR hub without recruitment", () => {

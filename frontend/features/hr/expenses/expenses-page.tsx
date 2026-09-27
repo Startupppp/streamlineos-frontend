@@ -227,9 +227,8 @@ export function ExpensesPage() {
     setIsCreateOpen(false);
   }, [refetch]);
 
-  // The org-wide read needs the accounting module; self-service does not (HRMS-E2E-008).
+  // Expenses are HRMS-owned. Accounting is not a prerequisite.
   const pageState = usePageState({
-    module: isAdmin ? "accounting" : undefined,
     isLoading: isLoading && !pageData,
     isError: isError && !pageData,
     error,
