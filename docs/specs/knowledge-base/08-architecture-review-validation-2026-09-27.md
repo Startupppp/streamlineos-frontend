@@ -264,6 +264,21 @@ These are the new canonical review items. Ledger checkboxes reference these IDs;
 
 - [ ] Inventory remaining external table reads and give billing/lifecycle needs explicit bounded interfaces or documented privileged exceptions. Keep distinct authenticated, public, maintenance and linked-HR access contracts. Centralize variant selection without erasing HR/source/attachment identity. Replace `KbDocumentQueryService` leading-wildcard scans with indexed lexical retrieval; bound the merged result, escape search syntax consistently, and preserve the acyclic dependency graph.
 
+**`KbDocumentQueryService` half addressed 2026-09-27 — commit `9d4966d3d`. Three of the four sub-claims were true; the fourth was not.**
+
+- **Leading-wildcard scans — TRUE.** `searchDocuments` built `` `%${query}%` `` and fed it to `ILIKE` on *both* the article and page branches. A leading wildcard cannot use a btree index, so both degraded to sequential scans. BE-49 violation. Replaced with `to_tsvector('english', title) @@ websearch_to_tsquery('english', $query)`.
+- **Unbounded merge — TRUE.** Each branch was capped at `cap`, but the merged array was returned uncapped and could return `2 × cap` rows. Bounded.
+- **Escaping — TRUE, and the same root cause.** Because user text was concatenated into a LIKE pattern, a query of `100%` rendered the param `%100%%` and `my_field` left `_` as a single-character wildcard. `websearch_to_tsquery` takes the query as a bound parameter and tolerates arbitrary user text — including `a & b` and `C++` — without throwing.
+- **Acyclic graph — FALSE as a defect.** The graph was already acyclic and the change adds no imports. Nothing to fix.
+
+Verified by mutation, independently re-run: reverting the page predicate to `ILIKE` turns 5 of the 12 new tests red; reverting the merge cap turns 1 red. Every negative assertion is paired with a positive control that proves the SQL was actually produced. 16 tests pass in the directory; `modules/kb` holds 0 typecheck errors.
+
+**Two things this deliberately does not claim.** Index usage is *unverified and unverifiable here* — production is the only database, and a GIN expression index on `to_tsvector` is dead under RLS because the function is not leakproof. Both predicates are still sequential scans; what changed is correctness and escaping, not measured speed. Closing that properly needs the BE-80 pattern — a `SECURITY DEFINER` function returning bare ids, so the index is usable outside the caller's RLS, with the caller re-selecting those ids under RLS to enforce authorization. That migration is **described but not authored**, and applying it is a production decision.
+
+And the match semantics changed: word matching replaces substring matching, so an arbitrary fragment no longer matches mid-word. English stemming absorbs most of this, the caller is an LLM tool passing natural terms, and `z.string().min(1)` on the tool input means an empty query can no longer return the whole corpus — which is a bounded-read improvement. Recorded rather than left implicit.
+
+**Referred out — not KB's to fix.** The same tool, `modules/ai/core/tools/self-digest-tools.ts:206,223`, still builds `` `%${input.query}%` `` and runs `ILIKE` against `onboarding_documents.file_name`. That is a live BE-49 violation in the AI module, owned by another session. It also leaves one merged user-facing result set running **two different match semantics** — a substring hit on an onboarding document and a word hit on a KB page — so the same query can return one and not the other. KB's half is fixed; the AI half needs its owner.
+
 ### AV-09 — P1: retire only proven duplicates and keep needed UI
 
 - [ ] Record retained owner, route contract and callers for each R1-C10 candidate, including public/API consumers and scheduled jobs. Preserve grants/member management, useful verification and required redirects. Verify deregistered routes have no promised consumers, then remove dead controller/service/schema/test files together. Review current help-centre ownership and module registration after the concurrent changes; no wholesale deletion from the old 54-route count.
