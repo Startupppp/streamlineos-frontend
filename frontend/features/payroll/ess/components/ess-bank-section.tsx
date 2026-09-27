@@ -367,7 +367,7 @@ export function EssBankSection({
       {!hideToolbar ? (
         <div className="flex shrink-0 items-center justify-end gap-3">
           <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleOpen}>
-            Update
+            {data?.hasBank ? "Update" : "Add Bank Details"}
           </Button>
         </div>
       ) : null}

@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { formatINR } from "@/lib/format-utils";
 import type { SalaryStructureTemplate, CreateSalaryTemplateInput } from "@/hooks/api/hr/salary-structures";
+import { estimateTemplateNet } from "./salary-structure-template-preview";
 
 const templateSchema = z.object({
   name: z
@@ -55,19 +56,19 @@ function FieldGroup({ label, children }: { label: React.ReactNode; children: Rea
 }
 
 function CtcPreview({ values }: { values: TemplateFormValues }) {
-  const basic = parseFloat(values.basicSalary || "0");
-  const hraPercent = parseFloat(values.hraPercent || "0");
-  const special = parseFloat(values.specialAllowance || "0");
-  const medical = parseFloat(values.medicalAllowance || "0");
-  const travel = parseFloat(values.travelAllowance || "0");
-  const other = parseFloat(values.otherAllowances || "0");
-  const pfPercent = parseFloat(values.pfDeductionPercent || "0");
-  const profTax = parseFloat(values.professionalTax || "0");
+  const basic = parseFloat(values.basicSalary || "0") || 0;
+  const hraPercent = parseFloat(values.hraPercent || "0") || 0;
+  const special = parseFloat(values.specialAllowance || "0") || 0;
+  const medical = parseFloat(values.medicalAllowance || "0") || 0;
+  const travel = parseFloat(values.travelAllowance || "0") || 0;
+  const other = parseFloat(values.otherAllowances || "0") || 0;
+  const pfPercent = parseFloat(values.pfDeductionPercent || "0") || 0;
+  const profTax = parseFloat(values.professionalTax || "0") || 0;
 
   const hra = basic * hraPercent / 100;
   const gross = basic + hra + special + medical + travel + other;
   const pfDeduction = basic * pfPercent / 100;
-  const estimatedNet = gross - pfDeduction - profTax;
+  const preview = estimateTemplateNet(values);
 
   const rows: Array<{ label: string; value: string; highlight?: boolean }> = [
     { label: "Basic", value: formatINR(basic) },
@@ -79,7 +80,11 @@ function CtcPreview({ values }: { values: TemplateFormValues }) {
     { label: "Gross", value: formatINR(gross), highlight: true },
     { label: "PF Deduction", value: `− ${formatINR(pfDeduction)}` },
     { label: "Professional Tax", value: `− ${formatINR(profTax)}` },
-    { label: "Estimated Net", value: formatINR(estimatedNet), highlight: true },
+    {
+      label: "Estimated Net",
+      value: preview.valid ? formatINR(preview.net) : "Invalid",
+      highlight: true,
+    },
   ];
 
   return (
@@ -97,6 +102,13 @@ function CtcPreview({ values }: { values: TemplateFormValues }) {
           </span>
         </div>
       ))}
+      {!preview.valid && (
+        <p className="text-xs text-destructive pt-1">
+          {values.basicSalary.trim() === ""
+            ? "Enter a basic salary before this preview is a payable estimate."
+            : "Estimated net cannot be negative. Raise basic salary or lower deductions."}
+        </p>
+      )}
     </div>
   );
 }
@@ -136,6 +148,11 @@ export function SalaryStructureTemplateSheet({
 
   const watchedValues = watch();
   const isActiveValue = watch("isActive");
+  const preview = estimateTemplateNet(watchedValues);
+  const canSubmit =
+    watchedValues.name.trim() !== "" &&
+    watchedValues.effectiveFrom.trim() !== "" &&
+    preview.valid;
 
   useEffect(() => {
     if (open) {
@@ -203,6 +220,7 @@ export function SalaryStructureTemplateSheet({
       onSubmit={handleSubmit(handleFormSubmit)}
       submitLabel={template ? "Save Changes" : "Create Template"}
       isPending={isPending}
+      submitDisabled={!canSubmit}
     >
       <FieldGroup label={<>Template Name <span className="text-destructive">*</span></>}>
         <Input

@@ -57,7 +57,7 @@ export function ErrorState({
 
       <p
         className={cn(
-          "text-status-neutral-ink-strong mt-1 max-w-xs leading-relaxed",
+          "text-status-neutral-ink-strong mt-1 w-full min-w-0 max-w-xs break-words leading-relaxed [overflow-wrap:anywhere]",
           compact ? "text-xs" : "text-sm"
         )}
       >

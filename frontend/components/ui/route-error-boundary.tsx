@@ -151,7 +151,7 @@ export function RouteErrorBoundary({
       <h1 id={headingId} className="text-xl font-bold text-foreground">
         {resolvedTitle}
       </h1>
-      <p className="text-sm text-muted-foreground max-w-md">{displayMessage}</p>
+      <p className="w-full max-w-md break-words px-4 text-sm text-muted-foreground [overflow-wrap:anywhere]">{displayMessage}</p>
       {!isAutoRetrying && (
         <Button onClick={handleRetry} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -180,7 +180,7 @@ export function RouteErrorBoundary({
     );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center py-12">
+        <div className="flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col items-center justify-center overflow-x-hidden px-4 py-12">
       {content}
     </div>
   );

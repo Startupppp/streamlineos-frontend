@@ -135,7 +135,7 @@ export const PAYROLL_NAV_GROUPS: NavGroup[] = [
             requiredPermission: "payroll:settings:manage",
           },
           {
-            label: "Import / Export",
+            label: "Export",
             icon: FileText,
             href: "/payroll/settings/import-export",
             requiredPermission: "payroll:reports:view",

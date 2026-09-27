@@ -38,6 +38,7 @@ import {
   useEssFnf,
   useEssPayslips,
   useEssTaxDeclaration,
+  useEssBank,
   useManagerInbox,
 } from "@/hooks/api/payroll/ess";
 import { downloadFnfStatement } from "@/hooks/api/payroll/fnf";
@@ -78,6 +79,7 @@ export function MyPayrollPageContent() {
   const payrollModuleEnabled = useModuleEnabled("payroll");
   const { data: fnf, isError: fnfFailed } = useEssFnf();
   const { data: payslips } = useEssPayslips();
+  const { data: bankDetails } = useEssBank();
   const { data: managerInbox } = useManagerInbox(payrollModuleEnabled);
   const {
     data: overview,
@@ -207,7 +209,7 @@ export function MyPayrollPageContent() {
         title="Pay"
         subtitle={`${formatMonth(currentYearMonth())} · Your payroll data only`}
         noInternalScroll
-        contentClassName="flex min-h-0 flex-1 flex-col"
+        contentClassName="flex min-h-0 flex-1 flex-col max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
         state={pageState}
         onRetry={handleRetryOverview}
         filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
@@ -350,7 +352,7 @@ export function MyPayrollPageContent() {
                     className="h-8 text-xs"
                     onClick={handleOpenBankSheet}
                   >
-                    Update
+                    {bankDetails?.hasBank ? "Update" : "Add Bank Details"}
                   </AnimatedIconButton>
                 ) : null}
 
