@@ -26,7 +26,59 @@ Re-journalling is safe because the create statements are already conditional. Th
   - Earned 2026-09-27 (Lane 4). The stray directory `backend/migrations/sql/` was retired in full: all 31 files deleted, the directory itself removed. A new check (`stray-subdirectory`, Check 8) was added to `check-migration-discipline.mjs` that fires on any `.sql` file in a subdirectory other than `rollback/` and `meta/`. The 10 pre-existing files in `pending/` and `verify/` are baselined in `BASELINE_STRAY_SUBDIRECTORY`. Self-test: 29/29 PASS, including two cases proving the new check fires on a violation (sql/ subdirectory) and passes on a permitted directory (rollback/). Gate run: `node src/scripts/check-migration-discipline.mjs` found 0 stray-subdirectory violations; the 25 violations present are all pre-existing from other lanes (HR and KB migration numbering collisions, concurrently flags) and none are from the `sql/` directory.
   — **Files deleted 2026-09-27:** All 31 files in `backend/migrations/sql/` were classified and deleted. See the Lane 4 report for the full table. Two were DDL superseded by journalled migrations (a-sprint-cycle-06 → 1394, b-qa-bug-01 → 1393, c-confdelsetcols-05 → 1144). The rest were verification scripts, proof scripts, or planning DDL that was never applied to production. The directory no longer exists on disk. `check-migration-discipline.mjs` now has an assertion preventing any new stray directory from silently accumulating `.sql` files.
 
-- [ ] Replaying the chain on an empty database produces a schema the bug service and burnup report can read
+- [x] Replaying the chain on an empty database produces a schema the bug service and burnup report can read
+  Earned 2026-09-27 by actually doing it. Instrument: PostgreSQL 18.0 at `127.0.0.1:5432`, a genuinely
+  non-production cluster stood up for this, with the five extensions BE-67 requires created first
+  (`vector` needed a third-party Windows build of pgvector 0.8.6; it only ever touches this local
+  throwaway cluster).
+  
+  **The replay was broken, and not for the reason this ticket assumed.** A cold replay into an empty
+  database reached **1000 of 1008** entries with **8 failures**, four of them Build:
+  `1155_build_cycles_drift_reconcile`, `1156_build_cycles_org_led_status_index`,
+  `1197_build_cycle_permissions` and `1371_cycles_active_and_overlap_constraints`.
+  
+  Root cause: **the sprint-to-cycle rename was never journalled.** Its expand, backfill, constrain,
+  detach and drop steps lived only in the off-journal `migrations/sql/a-sprint-cycle-01..05` files that
+  box 1 retired. So production's `build.cycles` carried three columns (`deleted_at`, `goal`,
+  `legacy_sprint_id`), three archive tables and one partial unique index that **no migration creates**,
+  and four `sprint_id` columns that production had renamed to `cycle_id` by hand. Migration 1155 then
+  died on `column "cycle_id" does not exist`, and 1156 and 1371 were cascades of its rolled-back
+  transaction, not independent defects.
+  
+  Fix: `1396_build_sprint_cycle_chain_repair.sql`, journalled at idx 1136 and inserted at **array
+  position 910**, immediately before 1155. Array order governs a cold replay while `when` governs
+  production, so its `when` sits above the production watermark and production still treats it as
+  pending. Everything in it is guarded (`ADD COLUMN IF NOT EXISTS`, `CREATE TABLE IF NOT EXISTS`, and
+  renames conditional on the old column existing and the new one not), so it is a no-op against a
+  database that already has the objects.
+  
+  **After the repair: 1005 of 1009 applied, and zero Build failures.** The four that remain are all
+  Knowledge Base and belong to another session: `1174_kb_articles_cutover_contract`,
+  `1205_kb_page_tree_children_index`, `1206_kb_space_member_counts` (both `CREATE INDEX CONCURRENTLY`,
+  which cannot run inside the replay runner's per-migration transaction) and
+  `1226_kb_pages_drop_source_article_bridge` (a cascade of 1174). None of them is a Build migration and
+  none was touched.
+  
+  Schema parity against production, measured the same day: `build.cycles` columns **identical, 15 of
+  15**; partial unique indexes **identical, 9 of 9**; all **90** of production's Build tables present.
+  The replayed schema is a strict superset -- it additionally holds `build.bugs` and `build.sprints`
+  with three triggers, plus three `okr_links` FK constraints, because those objects' *drops* were also
+  off-journal. Leaving them is deliberate: a `DROP TABLE` here would buy cosmetic parity at the cost of
+  a data-loss statement in a migration.
+  
+  Both surfaces this box names were then verified as `streamline_app` (`rolbypassrls = false`) under a
+  tenant GUC, in a rolled-back read-only transaction -- **14 of 14 checks passed**:
+    - bug service: `build.work_item_qa_details`, `build.bug_work_item_map`, `build.tickets`,
+      `build.test_run_results` all present and readable; `test_run_results.linked_work_item_id` present;
+      all three indexes from 1393 present
+    - burnup report: `build.cycles`, `build_events.cycle_scope_events`, `build.tickets`,
+      `build.project_statuses` all present and readable
+    - 1394 completed: `build_events.sprint_scope_events` and `public.sprint_scope_event_type` are both
+      gone and `public.cycle_scope_event_type` exists
+  
+  Note for BE-111a: 1197 is recorded there as unable to replay on an empty database. That is no longer
+  true. 1396 seeds the two legacy `build:sprints:*` rows 1197 renames, but only when neither
+  `build:cycles:*` row already exists, so it cannot resurrect retired permissions on production.
   - Not earned, and blocked by something outside this ticket. There is no non-production Postgres in this environment, so a cold replay cannot be attempted at all. Independently of that, BE-111a records that `1197_build_cycle_permissions.sql` **cannot** replay on an empty database - its own precondition raises when the legacy `build:sprints:*` rows are absent, which they are on an empty database. So the chain cannot reach head from cold today regardless of 1393 and 1394, and this box cannot be earned until 1197 is made replay-safe. That is separate work and deserves its own ticket.
   — **BE-111a caveat:** `1197_build_cycle_permissions.sql` raises on replay against an empty database (its own precondition requires legacy `build:sprints:*` rows that only exist after earlier migrations have seeded role data). A clean cold replay of the full chain cannot be claimed without first verifying that 1197's precondition is satisfied on an empty DB, which it is not. This box is orchestrator work; it requires either a workaround for 1197 or an explicit decision to treat 1197 as an accepted cold-replay failure.
 
