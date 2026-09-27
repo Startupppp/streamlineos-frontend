@@ -62,16 +62,7 @@ with `file:line` evidence or BLOCKED with the concrete reason.
   fails against unfixed code (`received correlationId: null`), passes after; a companion test
   proves a background sweep with no ambient context still inserts `null` (no fabricated id); a
   third proves an explicit value still overrides the ambient one.
-- [ ] DONE (unmeasured, real SLO needs live traffic) — Interactive index and access-revocation
-  freshness SLOs. Structurally, ACL revocation propagation exists and is mostly synchronous:
-  `bumpSpaceAclRevision` → `syncAclRevisionForSpace` runs via `registerAfterCommit`, inline if no
-  deferred hook is available (`kb-indexing.service.ts:229-251`), and `indexPageMeasured`'s
-  `acl_only` branch (`:159-179`) keeps snapshot ACL fields on `kb_article_chunks` current whenever
-  a page is next touched. But retrieval (`kb-search.service.ts`) filters on the chunk's *stored*
-  ACL snapshot, not a live join against `kb_pages.acl_revision`, so the real bound is "as fast as
-  the next sync fires," and no numeric SLO target or freshness alert exists to hold that to a
-  number. Setting a credible threshold needs production traffic timing this environment cannot
-  produce (no local Postgres, no capture stack). Recording as open rather than inventing a number.
+- [ ] **GAP:** No numeric freshness SLO target or alert defined for interactive index or access-revocation propagation — `common/slo/` has no `module:kb:freshness` entry; `backend/scripts/` has no `alert-kb-freshness.mjs`; nothing would fire if propagation started lagging. The code mechanism IS built (`kb-indexing.service.ts:229-251` runs `syncAclRevisionForSpace` via `registerAfterCommit`, inline if deferred is unavailable; `indexPageMeasured`'s `acl_only` branch at `:159-179` keeps chunk snapshots current), but setting a credible numeric threshold requires production traffic timing this environment cannot provide. Decision: code mechanism is done; leave the SLO target open until live-traffic data is available to set a defensible number.
 - DONE (stale claim) — **Embedding budgets.** The ledger says the reservation is "a flat per-call
   estimate regardless of batch size." Checked `AiGatewayEmbedHelper.reserve` — outside my file
   territory (`ai/core/gateway/ai-gateway-embed.helper.ts`, not `ai/jobs/**` or `kb/**`), so I did
@@ -138,15 +129,7 @@ with `file:line` evidence or BLOCKED with the concrete reason.
   listed on the buildable list I was given, and `kb-search.service.ts` is outside my file
   territory (only the telemetry file, `kb-search-metrics.ts`, is mine) — noted as a handoff, not
   fabricated as done.
-- [ ] Real gap, partially blocked by territory — **Tenant bucket/placement, actor standing, cache
-  outcome, primary/replica, queue lane, source kind.** Confirmed by reading all three telemetry
-  files: none of `kb-indexing-metrics.ts`, `kb-ask-metrics.ts`, `kb-search-metrics.ts` declare any
-  of these. `source kind` is arguably already covered for indexing by `kb.content_type`
-  (page/article/attachment); the rest have no natural home in the write-only indexing path (always
-  primary, no cache, no queue lane in the synchronous call path). Where they matter most —
-  actor standing and cache outcome on the interactive Ask/Search paths — wiring them requires
-  editing `kb-ask.service.ts` (explicitly barred, lane L7 owns it) and `kb-search.service.ts` (not
-  in my allowlist). Did not add speculative attributes with no caller to populate them. Handoff.
+- [ ] **GAP:** Span attributes for tenant bucket/placement, actor standing, cache outcome, primary/replica routing, queue lane, and source kind absent from all three KB telemetry files — confirmed by reading `backend/src/modules/kb/core/telemetry/kb-indexing-metrics.ts`, `kb-ask-metrics.ts`, and `kb-search-metrics.ts`: none declare these fields. (`source kind` is covered for indexing by the existing `kb.content_type` attribute.) Where they matter most — actor standing and cache outcome on Ask/Search paths — the call sites are in `kb-ask.service.ts` (L7 territory) and `kb-search.service.ts` (unassigned). Currently these signals are silently absent from all emitted spans.
 - FIXED-capability / handoff on wiring — **Retrieval counters (degraded/lexical-fallback).** The
   counting *infrastructure* is already complete and tested: `KB_ASK_OUTCOMES` includes
   `"degraded"`, `KbAskFacts.degraded` is a real field written to `kb.ask.degraded` on every finish
@@ -183,11 +166,8 @@ with `file:line` evidence or BLOCKED with the concrete reason.
   those paths" is false for search and ask (see above); it remains true for plain page *reads*
   (no span on a GET) and for raw DB *writes* outside indexing, which is consistent with "DB
   connections, locks, slow queries... all need a live database" being separately BLOCKED below.
-- [ ] Real gap — DB connections, locks, slow queries, replica lag, cache hit rate, dropped
-  invalidations — BLOCKED (env), needs a live database, unchanged from the ledger.
-- [ ] Real gap, not on the buildable list — ACL denial and not-found anomalies, revocation lag —
-  no counter exists for either; building one is a new-alert-surface project I was not asked to
-  scope and did not fabricate.
+- [ ] **GAP:** No metrics for DB connections, locks, slow queries, replica lag, cache hit rate, or dropped cache invalidations — these would require a live database with active traffic and an external monitoring layer (no `alert-db-kb.mjs` exists in `backend/scripts/`). Currently none of these signals are observed; gap is environment-blocked (no live DB available in this environment).
+- [ ] **GAP:** No counter for ACL denial/not-found anomalies and no revocation lag measurement — would need new span attributes on the authorization call path and a new `alert-kb-acl.mjs`; neither exists in `backend/scripts/`. Currently denials and not-founds reach callers as HTTP 403/404 with no aggregate signal. Not on the buildable list for this session.
 - DONE (stale claim, but incomplete) — SLO and runbook for KB indexing **and KB Ask**:
   `module:kb:indexing` and `module:kb:ask` both exist in `common/slo/`, both resolve against
   `FAILURE-RUNBOOKS.md` (`#kb-indexing`, `#kb-ask`), both are registered in `alert-dispatch.mjs`
@@ -197,12 +177,8 @@ with `file:line` evidence or BLOCKED with the concrete reason.
   spec), which is a bigger unit of work than the time remaining in this pass allowed to do
   honestly with a real bite-tested self-test; recording as a handoff rather than shipping a
   half-built alert script.
-- [ ] Storage/index/embedding/AI cost by tenant tier — `tenant-cost` exists
-  (`alert-tenant-cost.mjs`) but is not KB-scoped, exactly as the ledger says. Not stale; not
-  fixed — building a KB-scoped cost breakdown needs `kb-purge-ledger.ts`/`kb/wiki/**` cost data
-  outside my file territory. Handoff.
-- [ ] Purge backlog and oldest incomplete ledger — `kb-purge-ledger.ts` exists under `kb/wiki/**`,
-  outside my territory; no alert reads it. Not stale; not fixed. Handoff.
+- [ ] **GAP:** KB-scoped storage/index/embedding/AI cost breakdown per tenant tier absent — `backend/scripts/alert-tenant-cost.mjs` exists but aggregates tenant totals with no KB-module breakdown. Building a KB cost view requires reading cost data from `backend/src/modules/kb/wiki/kb-purge-ledger.ts` and KB-specific tables, outside L8's file territory. Currently KB's share of storage and AI spend is invisible in the cost alert.
+- [ ] **GAP:** No alert for purge backlog depth or oldest incomplete purge ledger entry — `backend/src/modules/kb/wiki/kb-purge-ledger.ts` tracks ledger state but no `backend/scripts/alert-*.mjs` reads it. Would need a new `alert-kb-purge.mjs`. Currently purge backlogs accumulate silently with no monitoring signal.
 - BLOCKED (env) — "Dashboards" as such. No dashboard system in this repo. Unchanged.
 - BLOCKED (env) — Drill-verified alerting. Nothing can fire against a live stream here. Unchanged.
 

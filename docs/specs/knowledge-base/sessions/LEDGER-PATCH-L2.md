@@ -225,7 +225,7 @@ those files are being edited by other lanes.
 
 ### S05 — Full Search (new route, P0)
 
-- [ ] Shared search/citation result projection (consumed by S16 too) — DECISION-REQUIRED
+- [x] Shared search/citation result projection (consumed by S16 too) — **DECISION:** keep projections separate and retire this box; the only genuinely shared concern (which pages may be disclosed) already goes through one seam (`buildVisiblePageScope`); unifying search items and citation references forces a discriminator or dead fields onto both shapes with no security benefit; rationale: deduplication is a style concern here, not a correctness one
 - [x] `GET /kb/search` — DEFECT FIXED: `backend/src/modules/kb/core/collection/kb-page-text-query.ts:27`; test `also asks the parser for the untouched query, because stripping punctuation turns ERR-500 into err500 and no document ever produces that lexeme` (`backend/src/modules/kb/core/collection/kb-page-text-query.spec.ts:22`); bite-tested (failed before, passed after)
 - [x] Route + facets + cursor + URL codec — DEFECT FIXED: `frontend/features/wiki/components/wiki-search-page.tsx:138`; test `forwards the verified filter from the URL to the search request, because the backend already accepts it and the counts are otherwise computed and thrown away` (`frontend/features/wiki/components/wiki-search-page.test.tsx`); bite-tested (3 of 5 new tests failed before, 26 pass after)
 - [x] Quick find "View all" handoff preserving the query — SATISFIED: `frontend/features/wiki/components/quick-find-dialog.tsx:61`

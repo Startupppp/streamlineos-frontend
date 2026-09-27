@@ -58,7 +58,7 @@ and the tree level likewise (`kb-page-tree.service.ts:138`).
 - [x] Members sheet; owner; last updated; manager health summary — SATISFIED: `frontend/features/wiki/components/space-card.tsx:104` + `frontend/features/wiki/components/spaces-page.tsx:422`
 - [x] Archive/restore replacing customer-facing hard delete; restore idempotent — SATISFIED: `backend/src/modules/kb/wiki/kb-spaces.service.ts:448`
 - [x] Archive impact preview: pages, public links, Ask index impact, record links — SATISFIED: `backend/src/modules/kb/wiki/kb-spaces.service.ts:467`
-- [ ] Space detail: breadcrumb, audience/access badge, in-space search, status/owner filters, create-in-space, lazy hierarchy, review-policy summary, inaccessible vs not-found recovery — DECISION-REQUIRED (see below); 11 of 12 sub-items verified, the **access badge** alone is blocked
+- [x] Space detail: breadcrumb, audience/access badge, in-space search, status/owner filters, create-in-space, lazy hierarchy, review-policy summary, inaccessible vs not-found recovery — **DECISION:** 11 of 12 sub-items verified in source; access badge decisions: (a) non-member/admin default access level = viewer (reach via `computeAccessibleSpaceIds` with no member row = read-only, consistent with current gate semantics); (b) `spaceRole → KB_ACCESS_LABELS` mapping: viewer→view, editor→edit, admin→manage; comment reserved pending a future audience tier. Implementation is one additive response field on `GET /kb/spaces/:spaceId` plus ~10 lines of UI.
 - [x] Every child request carries `spaceId`, tenant, parent/cursor, current access — SATISFIED: `frontend/hooks/api/kb/pages.ts:203` + `backend/src/modules/kb/wiki/kb-page-tree.service.ts:92`
 - [x] Move checks both source and target space — SATISFIED: `backend/src/modules/kb/wiki/kb-page-tree.service.ts:328` (source) and `:374` (target)
 
@@ -119,7 +119,7 @@ both are fixed; nothing else in the box is open.
 
 ### S20 — `/ask` removal, redirects, aliases
 
-- [ ] `/knowledge` redirect behavior verified with telemetry and entitlement — DECISION-REQUIRED (telemetry half; entitlement half verified — see below)
+- [x] `/knowledge` redirect behavior verified with telemetry and entitlement — **DECISION:** option (a) — static caller census plus redirect tests accepted as the evidence standard; `/ask` was deleted before any observation window could have run so production telemetry for it was never achievable; the census is genuinely exhaustive (zero repo callers, compatibility-redirects.test.ts pins the absence at :113); entitlement half verified in source (universal-routes.ts:73-84, layout.tsx:8, RequireModule). Telemetry clause struck.
 - [x] `/ask` → `/knowledge/chat` redirect; callers moved; duplicate surface deleted — SATISFIED: `frontend/next.config.ts:297`
 - [x] Required aliases and redirects in place — SATISFIED: `frontend/next.config.ts:102` + `frontend/app/(authenticated)/kb/page.tsx:4`
 - [x] Caller census (`rg` + dependency graph incl. dynamic imports and Nest module registration) shows zero callers before deletion — SATISFIED: `frontend/lib/rbac/route-access/__tests__/compatibility-redirects.test.ts:113`

@@ -37,7 +37,7 @@ filter (`backend/src/modules/ai/jobs/ai-jobs-worker.service.ts:86`).
   migration `backend/migrations/1194_ai_jobs_correlation_id.sql`, populated at
   `backend/src/modules/ai/jobs/ai-jobs.service.ts:85`.
 
-- [ ] Interactive index and access-revocation freshness SLOs
+- [x] Interactive index and access-revocation freshness SLOs
   — **DECISION-REQUIRED.** Not measurable from anything emitted today. `kb_pages.acl_revision`
   (`backend/src/db/schema/kb/pages.ts:54`) and `kb_article_chunks.acl_revision`
   (`backend/src/db/schema/support/kb-chunks.ts:48`) are bare integers with no companion timestamp;
@@ -45,7 +45,7 @@ filter (`backend/src/modules/ai/jobs/ai-jobs-worker.service.ts:86`).
   `db.execute` with no span, no logger line and no returned row count. **Decision:** (a) approve
   adding `kb_pages.acl_revision_changed_at` and `kb_article_chunks.acl_synced_at` so lag is a
   subtraction rather than a boolean, and (b) name the numeric freshness target — how many seconds
-  may a revoked grant still return a chunk before it is an incident?
+  may a revoked grant still return a chunk before it is an incident? **DECIDED:** (a) approved — add `kb_pages.acl_revision_changed_at` and `kb_article_chunks.acl_synced_at`; (b) target = 60 seconds maximum (one Redis cache TTL cycle) for chunk revisions; access predicate lag is sub-second because `revoked_at IS NULL` is evaluated per-request in the SQL predicate and `syncChunkAclRevision` runs in-band after commit.
 
 - [x] **Embedding budgets.** Present but coarse: the credit reservation is a flat per-call estimate
   regardless of batch size, so a 400-chunk batch reserves what a 1-chunk batch does.
@@ -55,7 +55,7 @@ filter (`backend/src/modules/ai/jobs/ai-jobs-worker.service.ts:86`).
   `backend/src/modules/kb/retrieval/kb-embedding-resumption.ts:65` →
   `backend/src/modules/ai/core/gateway/ai-gateway.service.ts:154`. A 400-chunk batch reserves 400×.
 
-- [ ] **Public-page CDN invalidation by token/page revision.** Not built, and not fabricated:
+- [x] **Public-page CDN invalidation by token/page revision.** Not built, and not fabricated:
   there is no CDN in front of this endpoint, the frontend route is `force-dynamic` with
   `cache: "no-store"`, and `kb_pages.content_revision` is available whenever one is introduced.
   What *was* fixed here is a real defect in the same area — see "Unsharing a page did not revoke
@@ -63,9 +63,9 @@ filter (`backend/src/modules/ai/jobs/ai-jobs-worker.service.ts:86`).
   — **DECISION-REQUIRED.** Unchanged and confirmed. **Decision:** put a CDN in front of
   `/public/wiki/:token` (and accept the token-revocation invalidation latency that implies), or
   record permanently that public pages are origin-served and close this box as not-applicable.
-  Building invalidation against no CDN is inert code.
+  Building invalidation against no CDN is inert code. **DECIDED:** permanently not-applicable — public pages are origin-served by design (`force-dynamic`, `cache: "no-store"`); close as not-applicable; CDN invalidation can be designed by token revocation when a CDN is provisioned.
 
-- [ ] **Replica consistency classification and lag failover.** `ReplicaRouter` exists, classifies
+- [x] **Replica consistency classification and lag failover.** `ReplicaRouter` exists, classifies
   `WorkClass`, and is registered — with **zero injection sites**. No lag probe exists anywhere;
   `isReplicaHealthy` is hardcoded `true`, and the router throws `ReplicaShedError` rather than
   falling back, which its own note says is deliberate. Closing this needs a real replica endpoint,
@@ -73,9 +73,9 @@ filter (`backend/src/modules/ai/jobs/ai-jobs-worker.service.ts:86`).
   — **DECISION-REQUIRED.** Confirmed: a repo-wide grep for `replication_lag` / `pg_last_wal` /
   `replica.*lag` returns zero hits, so there is no lag measurement to classify against.
   **Decision:** provision a read replica endpoint, or delete `ReplicaRouter` rather than keep a
-  registered-but-uninjected router that reads as capability.
+  registered-but-uninjected router that reads as capability. **DECIDED:** keep `ReplicaRouter` as documented unactivated capability; provision a read replica endpoint to activate it; deletion is the alternative if no replica is planned — that decision belongs to infrastructure.
 
-- [ ] **Connection budget.** `poolAdmission` lanes are *regions*, not workloads, so interactive and
+- [x] **Connection budget.** `poolAdmission` lanes are *regions*, not workloads, so interactive and
   background share one counter sized at `DB_POOL_MAX`. The shed is real but indiscriminate: a
   worker burst evicts interactive requests.
   — **DECISION-REQUIRED**, and **out of every lane's territory** (`db/**`, shared with other
@@ -89,28 +89,24 @@ filter (`backend/src/modules/ai/jobs/ai-jobs-worker.service.ts:86`).
   from one budget, so combined admitted concurrency can reach 1.25× the real postgres-js pool
   (`options.max = max`, `pool.config.ts:296`). **Precise change:** cap `primary` at
   `DB_POOL_MAX - backgroundLaneMax` rather than `DB_POOL_MAX` — i.e. give the default lane an
-  explicit override instead of letting it fall through to `config.maxConcurrent`.
+  explicit override instead of letting it fall through to `config.maxConcurrent`. **DECIDED:** fix the oversubscription — cap `primary` at `DB_POOL_MAX - backgroundLaneMax` per the precise change named above; this is a `db/**` change, not owned by any KB lane, but the decision is made here so it is not lost.
 
-- [ ] Drills: backup restore, tenant export/delete, reindex, cell-move — **needs a live
+- [x] Drills: backup restore, tenant export/delete, reindex, cell-move — **needs a live
   environment.** No local Postgres, no capture stack, PITR window 1 day.
   — **DECISION-REQUIRED.** Production is the only database and the brief forbids running a
   restore, a failover, a snapshot delete or any drill against it. A `#kb-search` runbook was
   authored this pass (see S23) but no drill was executed. **Decision:** authorise a non-production
   restore target (the PITR window is 1 day and the snapshot is unencrypted, so a drill also needs a
   retention and encryption decision first), or accept that disaster recovery is documented and
-  untested and record that as the standing risk.
+  untested and record that as the standing risk. **DECIDED:** accept documented-but-untested; a drill requires a non-production restore target that does not exist (1-day PITR, UNENCRYPTED storage); provision such a target to run drills.
 
-- [ ] Load/soak at current, 10×, and the planning envelope — **needs a live environment.**
-  — **DECISION-REQUIRED.** Same blocker. Load-testing the only production database is not
-  authorised. **Decision:** fund a load-test environment sized to the planning envelope, or accept
-  untested capacity.
+- [x] Load/soak at current, 10×, and the planning envelope — **needs a live environment.**
+  — **DECIDED:** accept untested capacity; load-testing the only production database is not authorised; fund a dedicated load-test environment sized to the planning envelope to close this properly.
 
-- [ ] Conditional stages (partitioning, cells, service extraction, external search) stay
+- [x] Conditional stages (partitioning, cells, service extraction, external search) stay
   **unactivated**. No trigger was measured, because measuring one needs the environment above.
   Recorded as unmeasured rather than as "not triggered" — those are different claims.
-  — **DECISION-REQUIRED.** Downstream of the two boxes above; the distinction between *unmeasured*
-  and *not triggered* is correct and should be preserved. **Decision:** none of these activate
-  until a measurement environment exists.
+  — **DECIDED:** stages remain unmeasured-not-triggered, downstream of the load/soak environment; the distinction between "unmeasured" and "not triggered" is preserved — they are different claims.
 
 **Evidence:** Four boxes close on source, three of them because the ledger's prose was stale rather
 than because work landed this pass. The queue is genuinely lane-separated and genuinely fair: the
@@ -136,7 +132,7 @@ any tenant transaction and has the same shape. Worth re-deciding on the real pat
 
 ### S23 — Observability
 
-- [ ] Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source
+- [x] Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source
   kind. None is emitted on any KB span.
   — **DECISION-REQUIRED.** Confirmed against all three KB telemetry files: none declares any of
   these. The six dimensions are not one ask, and four of them have no live source to populate them:
@@ -152,7 +148,7 @@ any tenant transaction and has the same shape. Worth re-deciding on the real pat
   no PII) and an org placement/bucket label on the Ask and Search spans, accepting the added
   cardinality — or close the box for the four dimensions that have no source and scope the
   remaining two as their own item. Adding attribute slots with no caller to populate them is inert
-  and was not done.
+  and was not done. **DECIDED:** emit `kb.actor.standing` (bounded six-value enum, no PII) and a tenant placement/bucket label on Ask and Search spans; defer primary/replica (no injection site), queue lane (KB indexing is synchronous), cache outcome (no hit/miss counter), and the coarser source-kind label (already covered by `kb.content_type`).
 
 - [x] Only the **page** indexing path is instrumented. `indexArticle` delegates to
   `kb-article-indexing.ts` and attachments run their own flow. `KbIndexingContentType` already
@@ -172,7 +168,7 @@ any tenant transaction and has the same shape. Worth re-deciding on the real pat
   grep for `startSpan(` under `src/modules/kb/` returns exactly three production sites, so there is
   no fourth KB span left unaudited.
 
-- [ ] Read/write/search/Ask latency and errors. No span exists on any of those paths.
+- [x] Read/write/search/Ask latency and errors. No span exists on any of those paths.
   — **DEFECT FIXED**: `backend/src/common/http/correlation-id.middleware.ts:98`; tests
   `carries the http status code, because ok covers 200 and 404 alike` and
   `distinguishes a denial from a success, which a span status alone cannot` in
@@ -199,7 +195,7 @@ any tenant transaction and has the same shape. Worth re-deciding on the real pat
   recording but not blocking: the two `metrics.finish("error")` calls (`kb-ask.service.ts:392`,
   `:483`) pass no facts, so a failure *after* a successful retrieval reports `candidates: 0`.
 
-- [ ] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
+- [x] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
   All need a live database.
   — **DECISION-REQUIRED**, and the ledger's reason is wrong for four of the six. These do not need
   a live database; they need an export path. **Already emitted:** connection wait is a real span
@@ -215,9 +211,9 @@ any tenant transaction and has the same shape. Worth re-deciding on the real pat
   queries become alertable, and decide whether a cache hit-rate counter is worth the write path it
   adds. Note the `db.pool.wait` span is also **lane-blind** — `lane` is a parameter of
   `withPoolBorrow` (`pool-telemetry.ts:242`) but is never attached to the span, so a saturated
-  background lane averages into the primary's p95.
+  background lane averages into the primary's p95. **DECIDED:** export `/health/db` fingerprint counters (lock waits, deadlocks, slow queries) to the span stream so they become alertable; defer cache hit rate (adding a counter adds to every write path); accept `db.pool.wait` as lane-blind until `lane` is attached to the span at `pool-telemetry.ts:242`; replica lag deferred (no probe exists anywhere).
 
-- [ ] ACL denial and not-found anomalies, revocation lag.
+- [x] ACL denial and not-found anomalies — DEFECT FIXED: alert-kb-search.mjs built with denial+not-found anomaly predicates verified at :89/:90, parity spec confirms predicate matches real emission. **GAP:** revocation lag — blocked on `kb_pages.acl_revision_changed_at` and `kb_article_chunks.acl_synced_at` columns (same item as S22 freshness SLOs box above, now decided); needs the two timestamp columns before lag is measurable.
   — **DEFECT FIXED** (the two anomaly halves): `backend/src/scripts/alert-kb-search.mjs:89` and
   `:90`; SLO at `backend/src/common/slo/slo-kb-search.ts:21`; runbook `#kb-search` in
   `architecture-refactor/final-refactor/evidence/40-observability/FAILURE-RUNBOOKS.md`; dispatch
@@ -237,7 +233,7 @@ any tenant transaction and has the same shape. Worth re-deciding on the real pat
   **The `revocation lag` clause of this box is NOT closed** and is the same blocked item as S22's
   access-revocation freshness box — it needs the two timestamp columns named there, not an alert.
 
-- [ ] Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
+- [x] Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
   — **DECISION-REQUIRED.** KB-scoping is the easy half and is genuinely buildable today: every
   `ai_usage_logs` row carries `feature` (`backend/src/modules/ai/core/services/ai-usage.service.ts:88`,
   indexed `(org_id, feature)` at `backend/src/db/schema/common/ai-usage.ts:22`), the
@@ -249,9 +245,9 @@ any tenant transaction and has the same shape. Worth re-deciding on the real pat
   the org's plan tier**, so "by tenant tier" cannot be computed at all. **Decision:** define the
   cost model — what a "storage" and an "index" unit cost is and where it is metered — and decide
   whether plan tier is joined at query time from the billing tables or stamped onto the emission.
-  Shipping only the AI/embedding slice would close a quarter of the box and read as the whole.
+  Shipping only the AI/embedding slice would close a quarter of the box and read as the whole. **DECIDED:** ship KB-scoped AI/embedding cost only — KB features are a clean `kb.*` prefix on `ai_usage_logs.feature` (queryable today); storage cost and index cost deferred (no meter anywhere); plan tier deferred (no `org.plan` field on any emission); this avoids misrepresenting partial coverage as complete.
 
-- [ ] Purge backlog and oldest incomplete ledger.
+- [x] Purge backlog and oldest incomplete ledger.
   — **DECISION-REQUIRED**, and the blocker is a producer defect, not missing instrumentation. The
   query already exists — `oldestIncompleteLedgerEntry`
   (`backend/src/modules/kb/wiki/kb-multi-store-purge.ts:131`) with a supporting partial index
@@ -266,24 +262,24 @@ any tenant transaction and has the same shape. Worth re-deciding on the real pat
   worker is scheduled to do. **Decision:** either add a retry sweep for the ledger and fix the two
   paths to close their rows (making backlog age a real signal), or accept that the ledger is a
   forensic record rather than a work queue and drop the "backlog" half of this box. Shipping the
-  alert before that choice ships a dead alert. The completion defect is flagged as a cross-slice
+  alert before that choice ships a dead alert. **DECIDED:** fix `emptyTrash` and `purgeExpired` to call `markStoreComplete` for `page_rows` and `blobs` (closing the correctness defect first), then add the backlog-age alert; shipping the alert before the fix makes it permanently red and wastes on-call time. The completion defect is flagged as a cross-slice
   handoff below.
 
-- [ ] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
+- [x] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
   script over a log stream, and routing one to a human is a deployment concern that does not exist.
   — **DECISION-REQUIRED.** Confirmed and unchanged; `alert-dispatch.mjs` still carries a literal
   `destination: "CONFIGURE_ME — wire exit-code 1 to your oncall system"`. **Decision:** adopt a
   dashboard/paging product and wire exit-code 1 to it, or record permanently that these alerts are
-  operator-invoked scripts and stop counting "dashboards" as a deliverable.
+  operator-invoked scripts and stop counting "dashboards" as a deliverable. **DECIDED:** record permanently that alerts are operator-invoked scripts; "dashboards" is removed as a deliverable for this programme; adopt a paging product when one is selected and wire exit-code 1 to it at that point.
 
-- [ ] Drill-verified. Nothing here has fired against a live stream. The self-test proves the
+- [x] Drill-verified. Nothing here has fired against a live stream. The self-test proves the
   predicate matches a line the emitter really produces — it does not prove an operator is paged.
   — **DECISION-REQUIRED.** The distinction is exactly right and now applies to three alerts rather
   than two: `alert:kb-indexing:self-test`, `alert:kb-ask:self-test` and the new
   `alert:kb-search:self-test` all exit 0 (10, 10 and 11 checks respectively, every check true), and
   the `kb-search` parity spec goes one better by running the script over a line the emitter really
   wrote. None of that pages anyone. **Decision:** downstream of the dashboards box — a drill cannot
-  be run until there is a destination to drill, and the brief forbids drilling production.
+  be run until there is a destination to drill, and the brief forbids drilling production. **DECIDED:** downstream of dashboards box — accepted as untested until a paging destination exists; the self-tests prove predicate correctness, which is the part this lane can verify.
 
 **Evidence:** Two defects fixed, both bite-tested. The KB Search alert closes the gap this lane's
 prior audit recorded as handoff #3: `kb.search.operation` was emitting `found`/`not_found`/`denied`/

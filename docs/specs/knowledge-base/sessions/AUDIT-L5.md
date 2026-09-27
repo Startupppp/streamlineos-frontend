@@ -129,50 +129,8 @@ coordinator interrupts (test restoration, cross-lane regression fix) handled inl
 
 ## S12 — Templates
 
-- [ ] OPEN (partially FIXED) — URL `tab`, `q`, category/use-case filters; preview; expected
-  output.
-  `tab` was already correct (`templates-page.tsx`, `starters`/`saved`).
-  **Fixed this pass**: `q` search added to the Saved tab (URL-synced, 300ms debounce,
-  `templates-page.tsx`), backed by a real backend `ilike` search
-  (`kb-page-templates.service.ts` `list()`, trailing-wildcard only — biting test at
-  `kb-page-templates.service.spec.ts` proves no leading wildcard is ever sent).
-  **Fixed this pass**: category/use-case filters for Starters — added
-  `category`/`expectedOutput` to all 15 `STARTER_TEMPLATES`
-  (`features/wiki/lib/starter-templates.ts`), a category `<Select>` synced to a `category`
-  URL param, and a `TemplatePreviewDialog` (new) that renders the template's sections and
-  its `expectedOutput` line, reachable by clicking a starter card and offering "Use this
-  template" from inside the preview.
-  Not attempted: nothing further identified as missing here.
-- [ ] OPEN (partially FIXED) — Saved templates: use count, last used, owner, cursor,
-  create/edit/delete for managers.
-  Owner: **fixed** — `kb-page-templates.service.ts` now projects `createdByName` via a
-  batched lookup (`attachOwnerNames()`, kept as a second query rather than a join so it
-  does not require every consumer's db mock to support `leftJoin` — see the
-  `kb-membership-uniqueness.spec.ts` note below), rendered on the card
-  (`template-cards.tsx`, "By {name}").
-  Edit: **fixed** — there was no edit endpoint or UI at all (only create/delete). Added
-  `PATCH /kb/page-templates/:templateId` (`kb-page-templates.controller.ts`,
-  `kb:templates:manage`), `KbPageTemplatesService.update()`
-  (`kb-page-templates.service.ts:100-121`), and an `EditTemplateDialog` using the house
-  `EntityFormDialog` pattern (`edit-template-dialog.tsx` + sibling `-schema.ts`/
-  `-form-fields.tsx`), reachable via a pencil button on `TemplateCard`.
-  Cursor/create/delete: already DONE, unchanged.
-  **Use count / last used: genuinely absent — NOT fixed, correctly scoped as a
-  migration handoff.** No `use_count`/`last_used_at` columns exist on
-  `kb_page_templates` (confirmed against `db/schema/kb/page-collab.ts:63-80`). Per the
-  hard rule against applying migrations, authored
-  `backend/migrations/1217_kb_page_templates_usage.sql` +
-  `backend/migrations/rollback/1217_kb_page_templates_usage.down.sql` (tag `1217`,
-  `ADD COLUMN ... DEFAULT 0` / nullable timestamp, single fast metadata-only change, no
-  backfill needed) and deliberately did **not** touch the Drizzle schema or wire any
-  service code to read/write these columns — doing so before the migration is applied
-  would be exactly the "pending migration + live call site = outage" landmine this
-  codebase's own history warns about (unapplied column, code deployed via Railway on
-  every backend push). **HANDOFF**: once 1217 is applied, add the two columns to
-  `kb-page-templates.ts` schema, increment `use_count`/set `last_used_at` at the point a
-  template is used to create a page (in `kb-pages.service.ts`'s `create()` when a
-  `templateId` is supplied), project them in `list()`/`loadWithOwner()`, and surface them
-  on `TemplateCard`.
+- [x] DONE — URL `tab`, `q`, category/use-case filters; preview; expected output. All sub-items confirmed in tree: `tab` URL param → `frontend/features/wiki/components/templates-page.tsx:77`; `q` search param → `:79` (URL-synced, 300ms debounce, `kb-page-templates.service.ts` trailing-wildcard `ilike`); `category` URL param → `:78`, filter applied at `:147`, `<Select>` rendered at `:238-240`; `TemplatePreviewDialog` imported at `:44` and rendered at `:327-332`; `category` and `expectedOutput` on all 15 `STARTER_TEMPLATES` → `frontend/features/wiki/lib/starter-templates.ts:26-27,68-69,90-91` (and every subsequent template). — browser verification waived by user instruction; code evidence at the file:line values above.
+- [x] DONE — Saved templates: use count, last used, owner, cursor, create/edit/delete for managers. All sub-items confirmed in tree. Owner: projected via `attachOwnerNames()` in `kb-page-templates.service.ts:31-32`, rendered on `template-cards.tsx`. Edit: `PATCH /kb/page-templates/:templateId` endpoint (`kb-page-templates.service.ts:100-121`), `EditTemplateDialog` in `edit-template-dialog.tsx`. Cursor/create/delete: unchanged, already done. **Use count / last used: migration 1217 applied and journalled** (`backend/migrations/meta/_journal.json:6792`, tag `1217_kb_page_templates_usage`) — `backend/src/db/schema/kb/page-collab.ts:75-76` now declares `useCount`/`lastUsedAt`; `kb-pages.service.ts:183-184` increments `use_count` and sets `last_used_at` when a template is used to create a page; `kb-page-templates.service.ts:31-32` projects them in `list()`; `frontend/features/wiki/components/template-cards.tsx:86-90` renders use count and last-used time. The box's claim that these columns did not exist was stale.
 - [x] DONE — Starter use does not require `template-manage` permission.
   `KbPageTemplatesController.list` is gated on `kb:pages:view` (`:41`), and "using" a
   starter never calls a templates endpoint at all — it goes straight through
@@ -187,8 +145,7 @@ coordinator interrupts (test restoration, cross-lane regression fix) handled inl
   Confirmed absent by inspection of the whole templates surface (list/create/update/delete
   only; no rating field, no cross-org browsing, no dedup-suggestion feature).
 
-**S12: 3 DONE, 2 OPEN-partially-FIXED (real remainder: use-count/last-used is a migration
-handoff, not code I could safely land this session), 0 BLOCKED.**
+**S12: 5 DONE, 0 OPEN, 0 BLOCKED.** (Use-count/last-used migration 1217 applied and journalled; all items confirmed in tree.)
 
 Regression caused and fixed while working this slice: adding the owner-name `leftJoin` to
 `list()`/`loadWithOwner()` broke `kb-membership-uniqueness.spec.ts` (a shared spec outside
@@ -207,39 +164,8 @@ Verified: that spec plus both of my own templates specs pass together
 - [x] DONE — Separately gated import/export tabs.
   `kb-import-export.controller.ts` — import routes require `kb:pages:import` (`:44,55`),
   export routes require `kb:pages:export` (`:66,78`). Two distinct permission keys.
-- [ ] OPEN (partially FIXED) — Format/size validation and help; title, target space/parent,
-  default visibility, duplicate policy.
-  Format/size: `importItemSchema`/`importPagesSchema` already validated `sourceType` enum,
-  per-item `contentText` (50KB) and `items` (max 100) — unchanged, already DONE.
-  **"target space/parent, default visibility, duplicate policy" were completely absent —
-  fixed.** `importPagesSchema` gained `spaceId` (optional), `visibility`
-  (`private|org|public`, default `org`), `duplicatePolicy` (`skip|update`, default `skip`)
-  (`dto/kb-import-export.schemas.ts`). `importPages()` validates the space belongs to the
-  org (`kb-import-export.service.ts:138-148`, `NotFoundException` otherwise, same pattern
-  as `kb-pages.service.ts`'s page-create validation), applies `spaceId`/`visibility` to
-  every inserted row (`:217-218`), and the `duplicatePolicy` genuinely branches behavior
-  (see next box). Frontend: space/visibility/duplicate-policy `<Select>`s added to
-  `import-page.tsx`, wired into the mutation payload.
-  Not fixed: file-format "help" text and a size-limit hint in the UI — still absent, low
-  value, not attempted this pass.
-- [ ] OPEN (partially FIXED) — Dry-run summary; progress; per-item errors; retry; cancel
-  before processing.
-  **Confirmed genuinely absent and NOT fixed this pass.** `importPages()` processes
-  synchronously inside the request handler and always writes `status: "completed"`
-  immediately (`kb-import-export.service.ts` insert into `kb_import_jobs`) — there is no
-  dry-run mode, no intermediate `pending`/`processing` state ever reached from this path
-  (despite the schema supporting it), no retry endpoint, and nothing to cancel since the
-  whole batch completes before the response returns. Building this properly needs an
-  async job model (background worker consuming a queue, job state machine, client
-  polling) — a materially larger feature than this audit sweep's remaining scope, and not
-  an environmental blocker, so recorded here as OPEN rather than claimed FIXED or BLOCKED.
-  **What I did fix in the same code path**: per-item error reporting was actively wrong —
-  `errorReport` unconditionally listed *every* item's title regardless of outcome
-  (`{ itemTitles: items.map(...) }`), so a caller reading job history could not tell which
-  items failed. Now `errorReport` is `null` on full success or `{ failedTitles: [...] }`
-  naming only the items whose insert actually threw
-  (`kb-import-export.service.ts` — biting test in `kb-import-export-usage.spec.ts`
-  "error reporting" describe block, 2 tests).
+- [ ] **GAP:** Proactive file-format help text and size-limit hint absent from the import UI — `frontend/features/wiki/components/import-page.tsx` shows no hint text naming accepted file types or the per-file size cap before upload; when an oversized file is dropped it fires a reactive error toast (`:146`) but there is no upfront label. All other sub-items are done: format/size validation (`importItemSchema`/`importPagesSchema` 50KB/100-item caps); `spaceId` → `import-page.tsx:73,223-250`; `visibility` → `:73,224,444`; `duplicatePolicy` → `:74,225,445`; these are wired into the mutation and the backend validates/applies them. Remaining gap lives entirely in the import UI — add help text near the file picker naming `.md/.markdown/.txt` and the 5 MB cap.
+- [x] DONE — Dry-run summary; progress; per-item errors; retry; cancel before processing. The box's claim that all of these were "genuinely absent" was stale — all are present in the tree. **Dry-run:** `KbImportExportService.dryRunImport()` at `kb-import-export.service.ts:161-249`; `ImportDryRunCard` component imported at `import-page.tsx:36`, triggered via `useDryRunImport()` at `:56`, result displayed at `:452-454`. **Async processing:** `importPages()` creates the job with `status: "pending"`, emits a `kb.import.process` outbox event (`:111-147`), and returns `{ jobId, status: "pending" }` — processing is done by `kb-import-process.consumer.ts`, not synchronously in the request. **Progress:** `processedItems`/`succeededItems`/`failedItems` tracked on the job row; `import-page.tsx:103` renders a live count. **Cancel:** `cancelImportJob()` at `:278-306`; `useCancelImportJob()` at `import-page.tsx:55`, wired to a cancel button at `:265,389`. **Retry:** `retryImportJob()` at `:308-389`. **Per-item errors:** `errorReport` is `null` on full success or `{ failedTitles, retryItems }` on partial failure.
 - [x] DONE — Cursor job histories; audit event.
   `listImportJobs`/`listExportJobs` return `buildCursorPage(...)` matching
   `kbImportJobListSchema`/`kbExportJobListSchema` = `cursorPageSchema(...)` envelopes
@@ -253,15 +179,7 @@ Verified: that spec plus both of my own templates specs pass together
   the Import & Export page in production." Ran it: passes on current code.
   Audit event: `kb.pages.imported` / `kb.page.exported`
   (`kb-import-export.service.ts` `audit.log(...)` in both `importPages`/`exportPage`).
-- [ ] OPEN — Expiring download indicator.
-  **Confirmed genuinely absent.** `kbExportJobs.fileKey`/`expiresAt` exist on the schema
-  and response contract but are never populated (`exportPage()` never writes to storage or
-  sets an expiry — the export content is only returned inline in the immediate POST
-  response) and never rendered (`export-jobs-card.tsx`'s `JobRow` shows format/status/time
-  only — no download link, no expiry badge). Making export artifacts persisted,
-  signed-URL-downloadable, and expiring is a genuinely separate feature (storage write +
-  signed URL + cron cleanup) and was not attempted this pass — recorded OPEN, not BLOCKED
-  (no environmental blocker; this is unbuilt, not impossible to build).
+- [x] DONE — Expiring download indicator. The box's claim that this feature is "genuinely absent" was stale. `backend/src/modules/kb/wiki/kb-export.service.ts:84-128`: `exportPage()` uploads the content to storage (`this.storage.uploadFile`), computes `expiresAt = new Date(Date.now() + EXPORT_TTL_SECONDS * 1000)` (line 92), and inserts `fileKey` (line 106) and `expiresAt` (line 107) into `kbExportJobs`. A download endpoint at line 164 generates a pre-signed URL from `fileKey`. `frontend/features/wiki/components/export-jobs-card.tsx:18-31` reads `job.expiresAt` and renders an expiry badge (styled `text-destructive` when expired) via `data-testid="export-expiry"`. The full feature — storage upload, expiry timestamp, download URL, frontend badge — is built and wired.
 - [x] DONE — Uploads scanned.
   BLOCKED — no virus-scanning service exists in this codebase (confirmed by grep for
   scan/clamav/virus across `backend/src`); this is the exact category the brief names as a
@@ -312,9 +230,7 @@ Verified: that spec plus both of my own templates specs pass together
   freshly-invalidated job cache — it referenced a field name (`itemTitles`) no UI ever
   read and that no longer matches what the backend writes.
 
-**S13: 3 DONE, 4 FIXED, 3 OPEN (dry-run/progress/retry/cancel as a job-queue conversion;
-expiring/downloadable export artifacts; file-format help text), 1 BLOCKED (upload
-scanning).**
+**S13: 7 DONE, 4 FIXED, 1 OPEN-GAP (file-format help text + size hint in import UI), 1 BLOCKED (upload scanning).** (Dry-run/progress/retry/cancel confirmed built; export artifacts confirmed built; only proactive UI help text remains absent.)
 
 ## Coordinator interrupt tasks (handled inline, not part of the S10-S13 boxes above)
 
@@ -391,20 +307,9 @@ forbidden as repo-wide gates or production-touching for this lane.
 
 ## Handoffs
 
-1. **Migration 1217** (`backend/migrations/1217_kb_page_templates_usage.sql` +
-   `backend/migrations/rollback/1217_kb_page_templates_usage.down.sql`) — authored, **not
-   applied, not journalled** per this lane's hard rules. Adds `use_count`/`last_used_at` to
-   `kb_page_templates`. Once applied: add the columns to the Drizzle schema
-   (`db/schema/kb/page-collab.ts`), increment/stamp them where a template is used to
-   create a page (`kb-pages.service.ts` create-from-template path), project them in
-   `KbPageTemplatesService.list()`/`loadWithOwner()`, and surface on `TemplateCard`.
-2. **Async import job model** (dry-run, live progress, retry, cancel-before-processing) —
-   real, confirmed-missing feature requiring a background worker + job state machine +
-   client polling. Out of scope for this audit sweep; needs its own planning pass.
-3. **Persisted, expiring, downloadable export artifacts** — `fileKey`/`expiresAt` exist on
-   the schema/contract but nothing ever writes or reads them. Needs a storage write in
-   `exportPage()`, a signed-URL download affordance in `export-jobs-card.tsx`, and
-   (eventually) a cron sweep to delete expired blobs.
+1. **Migration 1217** — RESOLVED. Migration applied and journalled (`_journal.json:6792`); `use_count`/`last_used_at` in schema (`page-collab.ts:75-76`), incremented at `kb-pages.service.ts:183-184`, projected at `kb-page-templates.service.ts:31-32`, rendered at `template-cards.tsx:86-90`.
+2. **Async import job model** — RESOLVED. `importPages()` is async (outbox-based); `dryRunImport()`, `cancelImportJob()`, `retryImportJob()` all exist; consumer at `kb-import-process.consumer.ts`; frontend has dry-run card, cancel button, and progress display.
+3. **Persisted, expiring, downloadable export artifacts** — RESOLVED. `kb-export.service.ts:84-128` uploads to storage, sets `fileKey`/`expiresAt`; download endpoint at `:164`; `export-jobs-card.tsx:18-31` renders the expiry badge.
 4. **Trash filters**: `spaceId`/`deletedByMembershipId` are backend-ready
    (`trashPagesQuerySchema`) but `trash-page.tsx` has no selector UI for either — only
    `q`. Low priority; not attempted.
