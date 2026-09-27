@@ -475,6 +475,7 @@ describe("ProjectBoardPage — workload capacity", () => {
       expect.any(Number),
       expect.any(String),
       expect.any(String),
+      undefined,
       expect.objectContaining({ enabled: false }),
     );
   });
@@ -486,6 +487,7 @@ describe("ProjectBoardPage — workload capacity", () => {
       expect.any(Number),
       expect.any(String),
       expect.any(String),
+      undefined,
       expect.objectContaining({ enabled: true }),
     );
   });

@@ -24,7 +24,12 @@ jest.mock("@/hooks/api/build/projects", () => ({
 }));
 
 jest.mock("@/hooks/api/build/advanced", () => ({
-  useViews: () => ({ data: mockViews }),
+  useViews: () => ({
+    data: {
+      data: mockViews,
+      pagination: { limit: 100, hasMore: false, nextCursor: null },
+    },
+  }),
   useCreateView: () => ({ mutate: mockCreateViewMutate, isPending: false }),
   useUpdateView: () => ({ mutate: mockUpdateViewMutate, isPending: false }),
 }));

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
+import type { ResponseContract } from "@/lib/api-envelope";
 
 export const portalProjectItemContract = z.object({
   id: z.number().int(),
@@ -77,7 +78,7 @@ const milestoneVisibilityItemContract = z.object({
   clientVisible: z.boolean(),
 });
 
-function visibilityPageContract<T extends z.ZodTypeAny>(rowContract: T) {
+function visibilityPageContract<T>(rowContract: ResponseContract<T>) {
   return cursorPageContract(rowContract).or(
     z.array(rowContract).transform((rows) => ({
       data: rows,
