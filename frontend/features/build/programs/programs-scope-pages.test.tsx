@@ -14,13 +14,19 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/programs", () => ({
   usePrograms: jest.fn(),
-  usePortfolios: jest.fn(() => ({ data: undefined })),
-  useProjects: jest.fn(() => ({ data: undefined })),
   useCreateProgram: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateProgram: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeleteProgram: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/build/portfolios", () => ({
+  usePortfolios: jest.fn(() => ({ data: undefined })),
+}));
+
+jest.mock("@/hooks/api/build/projects", () => ({
+  useProjects: jest.fn(() => ({ data: undefined })),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
@@ -86,7 +92,9 @@ jest.mock("@/components/ui/data-table", () => ({
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: () => <div data-testid="empty-state" />,
+  EmptyState: ({ title }: { title?: string }) => (
+    <div data-testid="empty-state">{title ? <span>{title}</span> : null}</div>
+  ),
 }));
 
 jest.mock("@/components/ui/search-input", () => ({
@@ -189,7 +197,7 @@ jest.mock("./program-form-sheet", () => ({
     open ? <div data-testid="program-form-sheet" /> : null,
 }));
 
-const { usePrograms } = jest.requireMock("@/hooks/api/build") as {
+const { usePrograms } = jest.requireMock("@/hooks/api/build/programs") as {
   usePrograms: jest.Mock;
 };
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
@@ -394,5 +402,57 @@ describe("ProgramsPage — keyboard shortcuts (BSN-FE-K1)", () => {
     fireEvent.keyDown(document, { key: "e" });
 
     expect(screen.getByTestId("program-form-sheet")).toBeInTheDocument();
+  });
+});
+
+describe("ProgramsPage — empty states (BSN-FE-E2)", () => {
+  it("shows 'No programs yet' empty copy when there are no programs and no filters are active", () => {
+    usePrograms.mockReturnValue({
+      data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<ProgramsPage />);
+
+    expect(screen.getByText("No programs yet")).toBeInTheDocument();
+    expect(screen.queryByText("No programs match your filters")).not.toBeInTheDocument();
+  });
+
+  it("shows 'No programs match your filters' empty copy when filters are active and no programs match", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("status=active");
+    usePrograms.mockReturnValue({
+      data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<ProgramsPage />);
+
+    expect(screen.getByText("No programs match your filters")).toBeInTheDocument();
+    expect(screen.queryByText("No programs yet")).not.toBeInTheDocument();
+  });
+
+  it("passes error to usePageState so a MODULE_NOT_ENABLED 402 shows the upgrade path rather than a generic error (FE-41)", () => {
+    const err = new Error("MODULE_NOT_ENABLED");
+    usePrograms.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: err,
+      refetch: jest.fn(),
+    });
+
+    render(<ProgramsPage />);
+
+    expect(usePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ error: err }),
+    );
   });
 });

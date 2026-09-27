@@ -4,9 +4,13 @@ import { ProjectSettingsIterationsPage } from "./project-settings-iterations-pag
 type MockPageState = "ready" | "denied" | "loading" | "error";
 
 let mockPageState: MockPageState = "ready";
+const mockUsePageState = jest.fn();
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: () => mockPageState,
+  usePageState: (opts: unknown) => {
+    mockUsePageState(opts);
+    return mockPageState;
+  },
 }));
 
 jest.mock("@/components/shared/page-state", () => ({
@@ -183,4 +187,13 @@ it("has no data table or paginated list — singleton settings form satisfies bo
   expect(screen.queryByRole("grid")).not.toBeInTheDocument();
   expect(screen.getByTestId("duration-select")).toBeInTheDocument();
   expect(screen.getByLabelText("Naming prefix")).toBeInTheDocument();
+});
+
+describe("ProjectSettingsIterationsPage — permission key (Criterion 3)", () => {
+  it("passes build:update to usePageState — backend GET uses build:view; key mismatch to resolve", () => {
+    render(<ProjectSettingsIterationsPage projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:update" }),
+    );
+  });
 });

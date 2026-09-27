@@ -1,29 +1,24 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { MeetingsListPage } from "./meetings-list-page";
+import { DecisionsPage } from "./decisions-page";
 import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({ replace: jest.fn() }),
-  usePathname: () => "/build/1/meetings",
+  usePathname: () => "/build/1/decisions",
 }));
 
-jest.mock("@/hooks/api/build/meetings", () => ({
-  useMeetings: jest.fn(),
-  useCreateMeeting: jest.fn(),
+jest.mock("@/hooks/api/build/governance", () => ({
+  useProjectDecisions: jest.fn(),
+  useCreateDecision: jest.fn(),
+  useUpdateDecision: jest.fn(),
+  useDeleteDecision: jest.fn(),
+  GOVERNANCE_PAGE_SIZE: 25,
 }));
 
 jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: jest.fn(),
-}));
-
-jest.mock("@/hooks/api/build/advanced", () => ({
-  useCycles: jest.fn(),
-}));
-
-jest.mock("@/hooks/api/build/tickets", () => ({
-  useProjectBoardTickets: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -47,9 +42,22 @@ jest.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+jest.mock("@/components/ui/table-pagination", () => ({
+  useCursorPager: jest.fn(() => ({
+    cursor: undefined,
+    hasPrevious: false,
+    goNext: jest.fn(),
+    goPrevious: jest.fn(),
+  })),
+}));
+
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   BUILD_FILTER_ALL: "all",
   useBuildListFilters: jest.fn(),
+}));
+
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: jest.fn(),
 }));
 
 jest.mock("@/components/ui/data-table", () => ({
@@ -80,55 +88,52 @@ jest.mock("@/components/pm-chrome", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
-jest.mock("@/components/ui/infinite-scroll-sentinel", () => ({
-  InfiniteScrollSentinel: () => null,
-}));
-
-jest.mock("@/components/ui/combobox", () => ({
-  Combobox: () => null,
-}));
-
-jest.mock("./meeting-form-sheet", () => ({ MeetingFormSheet: () => null }));
-jest.mock("./new-meeting-button", () => ({
-  NewMeetingButton: ({ onBlank }: { onBlank: () => void }) => (
-    <button onClick={onBlank}>Schedule Meeting</button>
+  PageWrapper: ({
+    children,
+    actions,
+  }: {
+    children: React.ReactNode;
+    actions?: React.ReactNode;
+  }) => (
+    <div>
+      {actions ? <div data-testid="page-actions">{actions}</div> : null}
+      {children}
+    </div>
   ),
-  MEETING_TEMPLATES: [
-    { id: "standup", label: "Standup" },
-    { id: "planning", label: "Planning" },
-  ],
-}));
-jest.mock("./next-meeting-strip", () => ({ NextMeetingStrip: () => null }));
-jest.mock("./meetings-columns", () => ({
-  MEETINGS_TABLE_HEADERS: ["Title", "Type", "Status", "Date"],
-  buildMeetingsColumns: jest.fn(() => []),
-  MeetingMobileCard: () => null,
-}));
-jest.mock("./generate-agenda", () => ({
-  generateAgenda: jest.fn(() => ""),
 }));
 
-import { useMeetings, useCreateMeeting } from "@/hooks/api/build/meetings";
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: () => null,
+}));
+
+jest.mock("./decision-form-sheet", () => ({ DecisionFormSheet: () => null }));
+jest.mock("./decisions-table-columns", () => ({
+  DECISION_TABLE_HEADERS: ["Title", "Status", "Owner", "Date"],
+  buildDecisionColumns: jest.fn(() => []),
+  DecisionMobileCard: () => null,
+}));
+
+import {
+  useProjectDecisions,
+  useCreateDecision,
+  useUpdateDecision,
+  useDeleteDecision,
+} from "@/hooks/api/build/governance";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
-import { useCycles } from "@/hooks/api/build/advanced";
-import { useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 
-const mockUseMeetings = useMeetings as jest.Mock;
-const mockUseCreateMeeting = useCreateMeeting as jest.Mock;
+const mockUseProjectDecisions = useProjectDecisions as jest.Mock;
+const mockUseCreateDecision = useCreateDecision as jest.Mock;
+const mockUseUpdateDecision = useUpdateDecision as jest.Mock;
+const mockUseDeleteDecision = useDeleteDecision as jest.Mock;
 const mockUseProjectMembers = useProjectMembers as jest.Mock;
-const mockUseCycles = useCycles as jest.Mock;
-const mockUseProjectBoardTickets = useProjectBoardTickets as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
 
 const ACCESS_GRANTED = {
-  data: { isOrgOwner: false, scopes: { "build:meetings:view": "all" }, modules: {} },
+  data: { isOrgOwner: false, scopes: { "build:decisions:view": "all" }, modules: {} },
   isLoading: false,
 };
 const ACCESS_DENIED = {
@@ -144,15 +149,12 @@ function baseQueryResult(overrides: Record<string, unknown> = {}) {
     isError: false,
     error: undefined,
     refetch: jest.fn(),
-    hasNextPage: false,
-    fetchNextPage: jest.fn(),
-    isFetchingNextPage: false,
     ...overrides,
   };
 }
 
-function meetingPages(rows: unknown[]) {
-  return { pages: [{ data: rows }] };
+function decisionsPage(rows: unknown[]) {
+  return { data: rows, hasMore: false, nextCursor: null };
 }
 
 function defaultFilters(overrides: Record<string, unknown> = {}) {
@@ -170,54 +172,56 @@ function defaultFilters(overrides: Record<string, unknown> = {}) {
   };
 }
 
-const meetingRow = {
+const decisionRow = {
   id: 1,
   projectId: 1,
-  title: "Weekly Standup",
-  type: "standup",
-  status: "scheduled",
-  scheduledAt: "2026-09-28T09:00:00Z",
+  decisionNumber: 1,
+  title: "Use PostgreSQL",
+  status: "accepted",
+  rationale: "Proven reliability",
+  ownerId: null,
   createdAt: "2026-09-01T00:00:00Z",
+  updatedAt: "2026-09-01T00:00:00Z",
 };
 
 beforeEach(() => {
   mockUseCan.mockReturnValue(false);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseMeetings.mockReturnValue(baseQueryResult({ data: meetingPages([]) }));
-  mockUseCreateMeeting.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseProjectDecisions.mockReturnValue(baseQueryResult({ data: decisionsPage([]) }));
+  mockUseCreateDecision.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseUpdateDecision.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseDeleteDecision.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseProjectMembers.mockReturnValue({ data: [] });
-  mockUseCycles.mockReturnValue({ data: [] });
-  mockUseProjectBoardTickets.mockReturnValue({ data: undefined });
   mockUseBuildListFilters.mockReturnValue(defaultFilters());
 });
 
 it("shows loading skeleton while access is loading and not error state", () => {
   mockUseAccess.mockReturnValue(ACCESS_LOADING);
-  mockUseMeetings.mockReturnValue(baseQueryResult());
-  render(<MeetingsListPage projectId={1} />);
+  mockUseProjectDecisions.mockReturnValue(baseQueryResult());
+  render(<DecisionsPage projectId={1} />);
   expect(screen.getByTestId("data-table-skeleton")).toBeInTheDocument();
   expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
 });
 
-it("shows NoPermissionState when build:meetings:view is denied and not the data table", () => {
+it("shows NoPermissionState when build:decisions:view is denied and not the data table", () => {
   mockUseAccess.mockReturnValue(ACCESS_DENIED);
-  mockUseMeetings.mockReturnValue(baseQueryResult());
-  render(<MeetingsListPage projectId={1} />);
+  mockUseProjectDecisions.mockReturnValue(baseQueryResult());
+  render(<DecisionsPage projectId={1} />);
   expect(screen.getByTestId("no-permission")).toBeInTheDocument();
   expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
 });
 
 it("shows error state when the query fails and not the skeleton", () => {
-  mockUseMeetings.mockReturnValue(
+  mockUseProjectDecisions.mockReturnValue(
     baseQueryResult({ isError: true, error: new Error("Network error") }),
   );
-  render(<MeetingsListPage projectId={1} />);
+  render(<DecisionsPage projectId={1} />);
   expect(screen.getByTestId("error-state")).toBeInTheDocument();
   expect(screen.queryByTestId("data-table-skeleton")).not.toBeInTheDocument();
 });
 
 it("surfaces the 402 upgrade path from the backend rather than a generic error state (FE-41)", () => {
-  mockUseMeetings.mockReturnValue(
+  mockUseProjectDecisions.mockReturnValue(
     baseQueryResult({
       isError: true,
       error: new ApiError(
@@ -228,7 +232,7 @@ it("surfaces the 402 upgrade path from the backend rather than a generic error s
       ),
     }),
   );
-  render(<MeetingsListPage projectId={1} />);
+  render(<DecisionsPage projectId={1} />);
   expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
   expect(screen.getByRole("link", { name: /plan|billing|upgrade/i })).toHaveAttribute(
     "href",
@@ -237,23 +241,35 @@ it("surfaces the 402 upgrade path from the backend rather than a generic error s
 });
 
 it("renders the data table when rows are present and not the empty state", () => {
-  mockUseMeetings.mockReturnValue(
-    baseQueryResult({ data: meetingPages([meetingRow]) }),
+  mockUseProjectDecisions.mockReturnValue(
+    baseQueryResult({ data: decisionsPage([decisionRow]) }),
   );
-  render(<MeetingsListPage projectId={1} />);
+  render(<DecisionsPage projectId={1} />);
   expect(screen.getByTestId("data-table")).toBeInTheDocument();
   expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
 });
 
-it("shows 'No meetings yet' empty state when there are no rows and no active filter", () => {
-  render(<MeetingsListPage projectId={1} />);
-  expect(screen.getByTestId("empty-state")).toHaveTextContent("No meetings yet");
+it("shows 'No decisions recorded' empty state when there are no rows and no active filter", () => {
+  render(<DecisionsPage projectId={1} />);
+  expect(screen.getByTestId("empty-state")).toHaveTextContent("No decisions recorded");
   expect(screen.queryByTestId("data-table")).not.toBeInTheDocument();
 });
 
-it("shows 'No meetings found' when filters are active and no rows match", () => {
+it("shows 'No decisions match your filters' when filters are active and no rows match", () => {
   mockUseBuildListFilters.mockReturnValue(defaultFilters({ isFiltered: true }));
-  render(<MeetingsListPage projectId={1} />);
-  expect(screen.getByTestId("empty-state")).toHaveTextContent("No meetings found");
-  expect(screen.queryByText("No meetings yet")).not.toBeInTheDocument();
+  render(<DecisionsPage projectId={1} />);
+  expect(screen.getByTestId("empty-state")).toHaveTextContent("No decisions match your filters");
+  expect(screen.queryByText("No decisions recorded")).not.toBeInTheDocument();
+});
+
+it("hides the New Decision button when build:decisions:manage is denied", () => {
+  mockUseCan.mockReturnValue(false);
+  render(<DecisionsPage projectId={1} />);
+  expect(screen.queryByRole("button", { name: /new decision/i })).not.toBeInTheDocument();
+});
+
+it("shows the New Decision button when build:decisions:manage is granted", () => {
+  mockUseCan.mockReturnValue(true);
+  render(<DecisionsPage projectId={1} />);
+  expect(screen.getAllByRole("button", { name: /new decision/i }).length).toBeGreaterThan(0);
 });

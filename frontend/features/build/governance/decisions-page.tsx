@@ -12,15 +12,12 @@ import {
 } from "@/hooks/api/build/governance";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
 import type {
   Decision,
   CreateDecisionInput,
   UpdateDecisionInput,
 } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -33,6 +30,7 @@ import {
   CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
@@ -91,12 +89,6 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     },
   );
   const { data: members = [] } = useProjectMembers(projectId);
-  const pageState = usePageState({
-    permission: "build:decisions:view",
-    isLoading,
-    isError,
-    error,
-  });
 
   const ownerOptions = useMemo(
     () => [
@@ -192,15 +184,16 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
 
   const handleNewDecision = useCallback(() => setSheetOpen(true), []);
 
-  const handleOpenFocused = useCallback(
-    (index: number) => { setEditDecision(allDecisions[index]); setSheetOpen(true); },
-    [allDecisions],
-  );
   const handleEditRow = useCallback((d: Decision) => setEditDecision(d), []);
   const handleDeleteRow = useCallback((d: Decision) => setDeleteTarget(d), []);
+
   const handleEditDecisionByIndex = useCallback(
     (index: number) => { if (allDecisions[index]) handleEditRow(allDecisions[index]); },
     [allDecisions, handleEditRow],
+  );
+  const handleOpenFocused = useCallback(
+    (index: number) => { setEditDecision(allDecisions[index]); setSheetOpen(true); },
+    [allDecisions],
   );
   const handleClearKeyboardSelection = useCallback(() => {}, []);
   useBuildListKeyboard({
@@ -319,23 +312,33 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={12}
-                headers={DECISION_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<Decision>
+            permission="build:decisions:view"
+            rows={displayed}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            minWidth="720px"
+            mobileCard={renderMobileCard}
+            loadingHeaders={DECISION_TABLE_HEADERS}
+            loadingRows={12}
+            pagination={{
+              mode: "cursor",
+              pageSize: GOVERNANCE_PAGE_SIZE,
+              hasMore: data?.hasMore ?? false,
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
+            }}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="documents"
                 title="No decisions recorded"
                 description="Record key project decisions to maintain a clear audit trail."
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
                 action={
                   canManage
                     ? { label: "Log Decision", onClick: handleNewDecision }
@@ -343,26 +346,17 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
                 }
               />
             }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="documents"
+                title="No decisions match your filters"
+                description="Try adjusting the filters to see more decisions."
+                onClearFilters={listFilters.clearAll}
+              />
+            }
             onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <DataTable
-              data={displayed}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="720px"
-              mobileCard={renderMobileCard}
-              className={CONTENT_FILL_PANEL}
-              pagination={{
-                mode: "cursor",
-                pageSize: GOVERNANCE_PAGE_SIZE,
-                hasMore: data?.hasMore ?? false,
-                hasPrevious,
-                onNext: handleNextPage,
-                onPrevious: goPrevious,
-              }}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 

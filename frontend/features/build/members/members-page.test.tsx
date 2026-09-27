@@ -9,10 +9,11 @@ const mockUseBuildListKeyboard = jest.fn(() => ({
   setFocusedIndex: jest.fn(),
 }));
 const mockUseOnlineStatus = jest.fn(() => true);
+const mockUsePageState = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn() }),
-  usePathname: () => "/build/settings/access",
+  usePathname: () => "/build/members",
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -90,6 +91,7 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 
 jest.mock("@/components/ui/data-table", () => ({
   DataTable: () => <div data-testid="data-table" />,
+  DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
 jest.mock("@/components/ui/empty-state", () => ({
@@ -110,16 +112,8 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: () => null,
 }));
 
-jest.mock("@/components/ui/search-input", () => ({
-  SearchInput: ({ value: _v, onValueChange: _ov, ...props }: Record<string, unknown>) => (
-    <input {...props as React.InputHTMLAttributes<HTMLInputElement>} />
-  ),
-}));
-
-jest.mock("@/components/ui/button", () => ({
-  Button: ({ children, ...props }: { children?: ReactNode } & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-    <button {...props}>{children}</button>
-  ),
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: (opts: unknown) => mockUsePageState(opts),
 }));
 
 import { MembersPage } from "./members-page";
@@ -144,6 +138,15 @@ function idleMembers() {
   };
 }
 
+function resolvePageState(access: typeof ACCESS_GRANTED | typeof ACCESS_DENIED | typeof ACCESS_LOADING, opts: { isLoading: boolean; isError: boolean; isEmpty: boolean }) {
+  if (access.isLoading) return "loading";
+  if (!access.data || !("build:members:view" in access.data.scopes)) return "denied";
+  if (opts.isLoading) return "loading";
+  if (opts.isError) return "error";
+  if (opts.isEmpty) return "empty";
+  return "ready";
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
@@ -156,6 +159,19 @@ beforeEach(() => {
     isError: false,
     error: null,
     refetch: jest.fn(),
+  });
+  mockUsePageState.mockImplementation(
+    (opts: { isLoading: boolean; isError: boolean; isEmpty: boolean }) =>
+      resolvePageState(mockUseAccess(), opts),
+  );
+});
+
+describe("MembersPage — permission key (Criterion 3)", () => {
+  it("passes the exact backend key build:members:view to usePageState — asserted not assumed", () => {
+    render(<MembersPage />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:members:view" }),
+    );
   });
 });
 

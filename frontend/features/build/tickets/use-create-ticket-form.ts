@@ -20,7 +20,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import type { CreateTicketPropertiesValue } from "./ticket-create-properties";
-import type { ProjectMemberRecord, ProjectStatusRecord, Cycle, TicketLabel } from "@/types/projects";
+import type {
+  ProjectMemberRecord,
+  ProjectStatusRecord,
+  Cycle,
+  TicketLabel,
+} from "@/types/projects";
 
 const storageUploadContract = lazyContract(() =>
   import("@/hooks/api/chat-extra-schema").then((m) => m.storageUploadContract),
@@ -29,7 +34,10 @@ const storageUploadContract = lazyContract(() =>
 const MAX_ATTACHMENT_MB = 10;
 const MAX_ATTACHMENT_BYTES = MAX_ATTACHMENT_MB * 1024 * 1024;
 
-const formSchema = createTicketInputSchema.omit({ projectId: true, labelIds: true });
+const formSchema = createTicketInputSchema.omit({
+  projectId: true,
+  labelIds: true,
+});
 
 export type CreateTicketFormValues = z.infer<typeof formSchema>;
 
@@ -80,12 +88,26 @@ export function useCreateTicketForm({
   });
   const { data: membersRaw } = useProjectMembers(queryProjectId);
 
-  const cycles = useMemo<Cycle[]>(() => (projectId != null ? cyclesRaw ?? [] : []), [cyclesRaw, projectId]);
-  const labels = useMemo<TicketLabel[]>(() => (projectId != null ? labelsRaw ?? [] : []), [labelsRaw, projectId]);
-  const members = useMemo<ProjectMemberRecord[]>(() => (projectId != null ? membersRaw ?? [] : []), [membersRaw, projectId]);
+  const cycles = useMemo<Cycle[]>(
+    () => (projectId != null ? (cyclesRaw ?? []) : []),
+    [cyclesRaw, projectId],
+  );
+  const labels = useMemo<TicketLabel[]>(
+    () => (projectId != null ? (labelsRaw ?? []) : []),
+    [labelsRaw, projectId],
+  );
+  const members = useMemo<ProjectMemberRecord[]>(
+    () =>
+      projectId != null
+        ? Array.isArray(membersRaw)
+          ? membersRaw
+          : (membersRaw?.data ?? [])
+        : [],
+    [membersRaw, projectId],
+  );
 
   const projectStatuses = useMemo<ProjectStatusRecord[]>(
-    () => (projectId != null ? projectData?.statuses ?? [] : []),
+    () => (projectId != null ? (projectData?.statuses ?? []) : []),
     [projectData, projectId],
   );
 
@@ -120,9 +142,12 @@ export function useCreateTicketForm({
   const addLabelMutation = useAddLabelToTicket();
   const addRelatedLinkMutation = useAddRelatedLink();
 
-  const handlePropertiesChange = useCallback((patch: Partial<CreateTicketPropertiesValue>) => {
-    setProperties((prev) => ({ ...prev, ...patch }));
-  }, []);
+  const handlePropertiesChange = useCallback(
+    (patch: Partial<CreateTicketPropertiesValue>) => {
+      setProperties((prev) => ({ ...prev, ...patch }));
+    },
+    [],
+  );
 
   useEffect(() => {
     pendingCycleDefaultRef.current = defaultCycleId === undefined;
@@ -147,36 +172,53 @@ export function useCreateTicketForm({
       return;
     }
     if (pendingCycleDefaultRef.current && activeCycleId != null) {
-      setProperties((prev) => (prev.cycleId === null ? { ...prev, cycleId: activeCycleId } : prev));
+      setProperties((prev) =>
+        prev.cycleId === null ? { ...prev, cycleId: activeCycleId } : prev,
+      );
       pendingCycleDefaultRef.current = false;
     }
   }, [activeCycleId, defaultCycleId]);
 
-  const resetForm = useCallback((preserveContext: boolean) => {
-    form.reset({ title: "", type: "TASK", description: "" });
-    setFiles([]);
-    setRelatedLinks([]);
-    if (!preserveContext) {
-      pendingCycleDefaultRef.current = defaultCycleId === undefined;
-      setProperties({
-        status: defaultStatusValue,
-        priority: null,
-        assigneeId: null,
-        points: null,
-        labelIds: [],
-        cycleId: resolveDefaultCycleId(defaultCycleId, activeCycleId),
-      });
-    } else {
-      setProperties((prev) => ({ ...prev, priority: null, assigneeId: null, points: null, labelIds: [] }));
-    }
-    setTimeout(() => titleRef.current?.focus(), 50);
-  }, [form, defaultStatusValue, activeCycleId, defaultCycleId]);
+  const resetForm = useCallback(
+    (preserveContext: boolean) => {
+      form.reset({ title: "", type: "TASK", description: "" });
+      setFiles([]);
+      setRelatedLinks([]);
+      if (!preserveContext) {
+        pendingCycleDefaultRef.current = defaultCycleId === undefined;
+        setProperties({
+          status: defaultStatusValue,
+          priority: null,
+          assigneeId: null,
+          points: null,
+          labelIds: [],
+          cycleId: resolveDefaultCycleId(defaultCycleId, activeCycleId),
+        });
+      } else {
+        setProperties((prev) => ({
+          ...prev,
+          priority: null,
+          assigneeId: null,
+          points: null,
+          labelIds: [],
+        }));
+      }
+      setTimeout(() => titleRef.current?.focus(), 50);
+    },
+    [form, defaultStatusValue, activeCycleId, defaultCycleId],
+  );
 
   const finishCreation = useCallback(() => {
     if (projectId != null) {
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.cycles(projectId) });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.detail(projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.cycles(projectId),
+      });
     }
     onCreated?.();
     if (createMore) {
@@ -200,9 +242,15 @@ export function useCreateTicketForm({
         pendingLabels.length > 0
           ? Promise.all(
               pendingLabels.map((labelId) =>
-                addLabelMutation.mutateAsync({ ticketId: data.id, projectId, labelId }),
+                addLabelMutation.mutateAsync({
+                  ticketId: data.id,
+                  projectId,
+                  labelId,
+                }),
               ),
-            ).catch(() => toast.error("Ticket created but some labels failed to attach"))
+            ).catch(() =>
+              toast.error("Ticket created but some labels failed to attach"),
+            )
           : Promise.resolve();
 
       const linksTask =
@@ -216,7 +264,9 @@ export function useCreateTicketForm({
                   label: link.label || undefined,
                 }),
               ),
-            ).catch(() => toast.error("Ticket created but some links failed to attach"))
+            ).catch(() =>
+              toast.error("Ticket created but some links failed to attach"),
+            )
           : Promise.resolve();
 
       if (pendingFiles.length > 0) {
@@ -244,13 +294,19 @@ export function useCreateTicketForm({
             }),
           );
 
-          const failed = pendingFiles.filter((_, index) => outcomes[index]?.status === "rejected");
+          const failed = pendingFiles.filter(
+            (_, index) => outcomes[index]?.status === "rejected",
+          );
           const succeeded = pendingFiles.length - failed.length;
 
           if (failed.length === 0) {
-            toast.success(`Issue created with ${succeeded} attachment${succeeded > 1 ? "s" : ""}`);
+            toast.success(
+              `Issue created with ${succeeded} attachment${succeeded > 1 ? "s" : ""}`,
+            );
           } else {
-            const firstRejection = outcomes.find((outcome) => outcome.status === "rejected");
+            const firstRejection = outcomes.find(
+              (outcome) => outcome.status === "rejected",
+            );
             const reason =
               firstRejection?.status === "rejected"
                 ? getErrorMessage(firstRejection.reason)
@@ -263,7 +319,9 @@ export function useCreateTicketForm({
             );
           }
         } catch (error) {
-          toast.error(`Issue created, but attachments failed: ${getErrorMessage(error)}`);
+          toast.error(
+            `Issue created, but attachments failed: ${getErrorMessage(error)}`,
+          );
         } finally {
           setIsUploading(false);
           finishCreation();
@@ -291,7 +349,9 @@ export function useCreateTicketForm({
         status: properties.status,
         priority: properties.priority ?? undefined,
         assigneeId: properties.assigneeId ?? undefined,
-        assigneeIds: properties.assigneeId ? [properties.assigneeId] : undefined,
+        assigneeIds: properties.assigneeId
+          ? [properties.assigneeId]
+          : undefined,
         points: properties.points ?? undefined,
         cycleId: properties.cycleId ?? undefined,
         link: values.link || undefined,
@@ -311,10 +371,13 @@ export function useCreateTicketForm({
     setFiles((prev) => [...prev, ...valid]);
   }, []);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    addFiles(Array.from(e.target.files ?? []));
-    e.target.value = "";
-  }, [addFiles]);
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      addFiles(Array.from(e.target.files ?? []));
+      e.target.value = "";
+    },
+    [addFiles],
+  );
 
   const handleRemoveFile = useCallback((idx: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== idx));

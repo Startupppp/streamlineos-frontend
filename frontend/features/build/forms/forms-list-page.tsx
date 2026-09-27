@@ -5,17 +5,15 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageState } from "@/components/shared/page-state";
 import { useCan } from "@/hooks/api/access";
 import { useForms, useCreateForm } from "@/hooks/api/build/forms";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { FORM_TYPE_LABELS, FORM_TYPES } from "./field-type-meta";
 import type { ProjectForm } from "@/types/projects/forms";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
@@ -82,15 +80,6 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
 
   const createForm = useCreateForm(projectId);
 
-  const pageState = usePageState({
-    permission: "build:forms:view",
-    isLoading,
-    isError,
-    error,
-  });
-
-  const isReady = pageState.kind === "ready";
-
   const handleNewForm = useCallback(() => {
     createForm.mutate(
       { name: "Untitled Form", fields: [], actions: [], isActive: false },
@@ -118,6 +107,8 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
     [listFilters],
   );
 
+  const handleNextPage = useCallback(() => void fetchNextPage(), [fetchNextPage]);
+
   const items = useMemo(
     () =>
       Array.isArray(data)
@@ -133,53 +124,51 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
     [],
   );
 
-  const toolbar = (
-    <BuildListToolbar
-      search={{
-        value: listFilters.search,
-        onValueChange: listFilters.setSearch,
-        placeholder: "Search forms…",
-        label: "Search forms",
-      }}
-      filters={[
-        {
-          id: "type",
-          label: "Type",
-          active: listFilters.isActive("type"),
-          control: (
-            <BuildFilterSelect
-              label="Type"
-              value={typeValue}
-              onValueChange={handleTypeChange}
-              options={TYPE_OPTIONS}
-            />
-          ),
-        },
-        {
-          id: "status",
-          label: "Status",
-          active: listFilters.isActive("status"),
-          control: (
-            <BuildFilterSelect
-              label="Status"
-              value={statusValue}
-              onValueChange={handleStatusChange}
-              options={ACTIVE_OPTIONS}
-            />
-          ),
-        },
-      ]}
-      onClearAll={listFilters.clearAll}
-    />
-  );
-
   return (
     <PageWrapper
       title="Forms"
       subtitle="Build and manage data collection forms for your project"
-      filters={isReady ? toolbar : undefined}
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search forms…",
+            label: "Search forms",
+          }}
+          filters={[
+            {
+              id: "type",
+              label: "Type",
+              active: listFilters.isActive("type"),
+              control: (
+                <BuildFilterSelect
+                  label="Type"
+                  value={typeValue}
+                  onValueChange={handleTypeChange}
+                  options={TYPE_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={statusValue}
+                  onValueChange={handleStatusChange}
+                  options={ACTIVE_OPTIONS}
+                />
+              ),
+            },
+          ]}
+          onClearAll={listFilters.clearAll}
+        />
+      }
       actions={
-        isReady && canManage ? (
+        canManage ? (
           <BuildHeaderActions
             actions={[
               {
@@ -196,64 +185,55 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
         ) : undefined
       }
     >
-      <PageState
-        resolution={pageState}
-        loading={
-          <PmPageShell>
-            <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-              <DataTableSkeleton
-                mobileCards
-                rows={12}
-                headers={FORMS_TABLE_HEADERS}
-                className="flex-1"
-              />
-            </PmSection>
-          </PmPageShell>
-        }
-        onRetry={handleRetry}
-        className="flex min-h-0 flex-1 flex-col"
-      >
-        <PmPageShell>
-          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            {items.length === 0 ? (
+      <PmPageShell>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          <BuildListSurface<ProjectForm>
+            permission="build:forms:view"
+            rows={items}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            minWidth="680px"
+            mobileCard={renderMobileCard}
+            loadingHeaders={FORMS_TABLE_HEADERS}
+            loadingRows={12}
+            pagination={{
+              mode: "cursor",
+              pageSize: 25,
+              hasMore: Boolean(hasNextPage),
+              hasPrevious: false,
+              onNext: handleNextPage,
+            }}
+            isFetchingMore={isFetchingNextPage}
+            empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="documents"
                 title="No forms yet"
-                description={
-                  listFilters.isFiltered
-                    ? undefined
-                    : "Create a form to collect structured data from your team or clients."
-                }
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
+                description="Create a form to collect structured data from your team or clients."
                 action={
-                  canManage && !listFilters.isFiltered
+                  canManage
                     ? { label: "New Form", onClick: handleNewForm }
                     : undefined
                 }
               />
-            ) : (
-              <DataTable
-                data={items}
-                columns={columns}
-                getRowKey={(row) => row.id}
-                minWidth="680px"
+            }
+            filteredEmpty={
+              <EmptyState
                 className={CONTENT_FILL_PANEL}
-                mobileCard={renderMobileCard}
-                pagination={{
-                  mode: "cursor",
-                  pageSize: 25,
-                  hasMore: Boolean(hasNextPage),
-                  hasPrevious: false,
-                  onNext: () => void fetchNextPage(),
-                }}
-                isLoading={isFetchingNextPage}
+                illustrationPreset="documents"
+                title="No forms match your filters"
+                description="Try adjusting the filters to see more forms."
+                onClearFilters={listFilters.clearAll}
               />
-            )}
-          </PmSection>
-        </PmPageShell>
-      </PageState>
+            }
+            onRetry={handleRetry}
+          />
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

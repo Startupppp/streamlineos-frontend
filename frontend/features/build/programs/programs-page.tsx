@@ -10,12 +10,10 @@ import { useProjects } from "@/hooks/api/build/projects";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageState } from "@/components/shared/page-state";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCursorPager } from "@/components/ui/table-pagination";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { ProgramFormSheet } from "./program-form-sheet";
 import type {
   Program,
@@ -166,14 +164,6 @@ export function ProgramsPage() {
   );
 
   const rows = useMemo(() => data?.data ?? [], [data]);
-
-  const resolution = usePageState({
-    permission: "build:programs:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty: rows.length === 0,
-  });
 
   const handleCreate = useCallback(
     (input: CreateProgramInput) => {
@@ -331,23 +321,31 @@ export function ProgramsPage() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <PageState
-            resolution={resolution}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={12}
-                headers={PROGRAM_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<Program>
+            permission="build:programs:view"
+            rows={rows}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            minWidth="780px"
+            mobileCard={renderMobileCard}
+            pagination={{
+              mode: "cursor",
+              pageSize: PAGE_SIZE,
+              hasMore: Boolean(data?.pagination.hasMore),
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
+            }}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No programs yet"
                 description="Create a program to coordinate related projects toward one outcome."
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
                 action={
                   canManage
                     ? { label: "New program", onClick: handleOpenCreate }
@@ -355,26 +353,19 @@ export function ProgramsPage() {
                 }
               />
             }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="projects"
+                title="No programs match your filters"
+                description="Try adjusting the filters to see more programs."
+                onClearFilters={listFilters.clearAll}
+              />
+            }
+            loadingHeaders={PROGRAM_TABLE_HEADERS}
+            loadingRows={12}
             onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <DataTable
-              data={rows}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="780px"
-              mobileCard={renderMobileCard}
-              className={CONTENT_FILL_PANEL}
-              pagination={{
-                mode: "cursor",
-                pageSize: PAGE_SIZE,
-                hasMore: Boolean(data?.pagination.hasMore),
-                hasPrevious,
-                onNext: handleNextPage,
-                onPrevious: goPrevious,
-              }}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 

@@ -12,13 +12,11 @@ import {
   useDeleteProjectTeam,
 } from "@/hooks/api/build/teams";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageState } from "@/components/shared/page-state";
 import { useCursorPager } from "@/components/ui/table-pagination";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TeamFormSheet } from "./team-form-sheet";
 import type {
@@ -77,14 +75,6 @@ export function TeamsListPage() {
   const deleteTeam = useDeleteProjectTeam();
 
   const teams = useMemo(() => data?.data ?? [], [data]);
-
-  const resolution = usePageState({
-    permission: "build:teams:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty: teams.length === 0,
-  });
 
   const handleCreate = useCallback(
     (input: CreateTeamInput) => {
@@ -245,16 +235,25 @@ export function TeamsListPage() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <PageState
-            resolution={resolution}
-            loading={
-              <DataTableSkeleton
-                mobileCards
-                rows={12}
-                headers={TEAM_TABLE_HEADERS}
-                className="flex-1"
-              />
-            }
+          <BuildListSurface<ProjectTeam>
+            permission="build:teams:view"
+            rows={teams}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            minWidth="560px"
+            mobileCard={renderMobileCard}
+            pagination={{
+              mode: "cursor",
+              pageSize: PAGE_SIZE,
+              hasMore: Boolean(data?.pagination.hasMore),
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
+            }}
             empty={
               !isOnline ? (
                 <EmptyState
@@ -269,32 +268,32 @@ export function TeamsListPage() {
                   illustrationPreset="projects"
                   title="No teams yet"
                   description="Create a team to group members and track work together."
-                  filtersActive={listFilters.isFiltered}
-                  onClearFilters={listFilters.clearAll}
                   action={canCreate ? { label: "New team", onClick: handleOpenCreate } : undefined}
                 />
               )
             }
+            filteredEmpty={
+              !isOnline ? (
+                <EmptyState
+                  className={CONTENT_FILL_PANEL}
+                  illustrationPreset="projects"
+                  title="You are offline"
+                  description="Reconnect to see the latest teams."
+                />
+              ) : (
+                <EmptyState
+                  className={CONTENT_FILL_PANEL}
+                  illustrationPreset="projects"
+                  title="No teams match your filters"
+                  description="Try adjusting the filters to see more teams."
+                  onClearFilters={listFilters.clearAll}
+                />
+              )
+            }
+            loadingHeaders={TEAM_TABLE_HEADERS}
+            loadingRows={12}
             onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <DataTable
-              data={teams}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="560px"
-              mobileCard={renderMobileCard}
-              className={CONTENT_FILL_PANEL}
-              pagination={{
-                mode: "cursor",
-                pageSize: PAGE_SIZE,
-                hasMore: Boolean(data?.pagination.hasMore),
-                hasPrevious,
-                onNext: handleNextPage,
-                onPrevious: goPrevious,
-              }}
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 

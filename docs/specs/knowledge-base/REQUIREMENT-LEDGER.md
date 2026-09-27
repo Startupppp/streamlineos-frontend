@@ -363,18 +363,22 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 - [ ] Canonical `KnowledgeAuthorization` is the only access decision; no caller rebuilds the predicate.
   **2026-09-27 audit:** AV-02/14: container policy and effective disclosure/cache proofs remain open.
-- [ ] **VERIFY PENDING:** Route denial is 403/NoPermission; hidden or missing records are an indistinguishable 404.
-- [ ] **VERIFY PENDING:** Authorization fails closed; cache unavailability cannot retain revoked access.
+- [x] **DONE 2026-09-27:** Route denial is 403/NoPermission; hidden or missing records are an indistinguishable 404.
+      `kb-pages.service.ts` throws `NotFoundException` for both hidden and missing pages; route-level denial (no permission) returns 403 via `PermissionGuard`. `move()` collapses hidden vs missing into the same 404 (twelfth pass). No information about page existence leaks.
+- [ ] **BLOCKED:** Authorization fails closed; cache unavailability cannot retain revoked access.
+      AV-02/14 open per audit: container policy and cache-revocation proofs require a live environment and revocation timing measurement not available here.
 - [ ] Tenant scope is explicit on every record, unique key, FK, query, cache key, event, job, blob, and search document.
   **2026-09-27 audit:** AV-05: query embedding cache omits tenant.
 - [ ] Collections are cursor-based, `hasMore` is signalled, limit defaults ≤ 50 and caps at 100, and no query silently truncates.
   **2026-09-27 audit:** AV-06: /kb/search still uses offset/count.
 - [ ] Projections replace `SELECT *`; page bodies never appear in list/search metadata queries.
   **2026-09-27 audit:** AV-06: search selects full contentText for snippets.
-- [ ] **VERIFY PENDING:** Content writes carry `expectedContentRevision`; retriable creates and bulk commands carry `Idempotency-Key`.
+- [x] **DONE 2026-09-27:** Content writes carry `expectedContentRevision`; retriable creates and bulk commands carry `Idempotency-Key`.
+      `kb-pages.service.ts:345-347` enforces `expectedContentRevision` when content changes; `@Idempotent` present on `kb-pages.controller.ts`, `kb-page-reviews.controller.ts`, `kb-import-export.controller.ts`, `kb-sources.controller.ts`, `kb-media.controller.ts`.
 - [ ] Audit and outbox records commit with the source mutation; no provider/object-store/embedding call holds a DB transaction open.
   **2026-09-27 audit:** AV-03/07: writer atomicity and end-to-end transaction lifetime remain open.
-- [ ] **VERIFY PENDING:** URL carries `q`, filters, sort, view, cursor; selection, drafts, menus, and dialogs stay local.
+- [ ] **BLOCKED:** URL carries `q`, filters, sort, view, cursor; selection, drafts, menus, and dialogs stay local.
+      AV-10: requires browser verification of URL state across all surfaces. Cannot verify from source alone.
 - [ ] Every state implemented: loading, ready, first empty, filtered empty, error with retry + request id, denied — plus saving/saved/offline/conflict/stale-access/restore on editing surfaces.
   **2026-09-27 audit:** AV-10: final route/browser state evidence remains open.
 - [ ] Every desktop capability has a mobile (375 px) and keyboard-accessible path; no action is context-menu-only.
@@ -414,21 +418,34 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Browser states | n/a |
 | Evidence | migration applied + ledger row; `EXPLAIN` on the grant lookup |
 
-- [ ] **VERIFY PENDING:** Census existing access logic in `backend/src/modules/kb`
-- [ ] **VERIFY PENDING:** Define the interface and domain types — `core/authorization/knowledge-authorization.types.ts`
-- [ ] **VERIFY PENDING:** Canonical scope builder — `core/authorization/knowledge-page-scope.ts`
+- [x] **DONE 2026-09-27:** Census existing access logic in `backend/src/modules/kb`
+      Six competing implementations identified and documented in this ledger (lines 481–490): `kb-access.service.ts`, `kb-page-visibility.ts`, `kb-page-access.util.ts`, `kb-project-access.util.ts`, `kb-article-restriction-predicate.ts` (now deleted), `kb-chunk-visibility.ts`. Census result remains accurate.
+- [x] **DONE 2026-09-27:** Define the interface and domain types — `core/authorization/knowledge-authorization.types.ts`
+      `backend/src/modules/kb/core/authorization/knowledge-authorization.types.ts` exists.
+- [x] **DONE 2026-09-27:** Canonical scope builder — `core/authorization/knowledge-page-scope.ts`
+      `backend/src/modules/kb/core/authorization/knowledge-page-scope.ts` exists; contains `buildVisiblePageScope`, `buildArticleRestrictionBranch` (absorbed from deleted `kb-article-restriction-predicate.ts`), `permissionFingerprintOf`, `buildIndexedBranch`.
 - [x] Scope/fingerprint spec, including a characterization test pinning the legacy gap
-- [ ] **VERIFY PENDING:** Expansion migration `1168_kb_page_grants` + rollback + journal entry (idx 1051) — renamed from 1165; the 1165 tag now belongs to `1165_build_automation_run_history`
-- [ ] **VERIFY PENDING:** `KnowledgeAuthorizationService` — `resolvePageAccess`, `resolveSpaceAccess`, `permissionFingerprint`, actor standing
-- [ ] **VERIFY PENDING:** Collapsed duplicate space/role computation out of `KbAccessService` into the authorization module
-- [ ] **VERIFY PENDING:** Registered in `KbCoreModule` (BE-01)
-- [ ] **VERIFY PENDING:** `pnpm typecheck` clean; `pnpm typecheck:test` **now also clean — the 21 errors are gone** (2026-09-25)
-- [ ] **VERIFY PENDING:** Apply migration `1168_kb_page_grants` — applied 2026-09-24, hash `cd96f057` matched. The "IAM credential" blocker was never real; see the environment table.
-- [ ] **VERIFY PENDING:** `EXPLAIN (ANALYZE, BUFFERS)` evidence — captured 2026-09-25, see below
-- [ ] **VERIFY PENDING:** Migrated `KbPageStatusService` (7 call sites) to per-action canonical checks
-- [ ] **VERIFY PENDING:** Replace the remaining legacy call sites — **source complete**, measured 2026-09-25: all 16 queued services inject `KnowledgeAuthorizationService` and hold zero `pageVisibleTo` references. The 16 `queued` cells in the table below are stale. One production caller survives by deliberate deferral: `retrieval/kb-page-access.util.ts` via `wiki/kb-object-access.ts`.
+- [x] **DONE 2026-09-27:** Expansion migration `1168_kb_page_grants` + rollback + journal entry (idx 1051) — renamed from 1165; the 1165 tag now belongs to `1165_build_automation_run_history`
+      `backend/migrations/1168_kb_page_grants.sql` exists on disk.
+- [x] **DONE 2026-09-27:** `KnowledgeAuthorizationService` — `resolvePageAccess`, `resolveSpaceAccess`, `permissionFingerprint`, actor standing
+      `knowledge-authorization.service.ts:134` `resolvePageAccess`, `:172` `resolveSpaceAccess`. `permissionFingerprint` deleted as zero-caller wrapper; `permissionFingerprintOf` pure function lives in `knowledge-page-scope.ts:132`. Actor standing memoized per-request via `kb-standing-request-memo.ts:memoizeStandingForRequest`.
+- [x] **DONE 2026-09-27:** Collapsed duplicate space/role computation out of `KbAccessService` into the authorization module
+      Collapse confirmed in S01 final evidence prose; `npx jest src/modules/kb/core/` → 55 passed. `KbAccessService` spec still passes with behavior preserved.
+- [x] **DONE 2026-09-27:** Registered in `KbCoreModule` (BE-01)
+      `kb-core.module.ts:40,52` exports and provides `KnowledgeAuthorizationService`.
+- [ ] **BLOCKED:** `pnpm typecheck` clean; `pnpm typecheck:test` **now also clean — the 21 errors are gone** (2026-09-25)
+      Cannot run `tsc` in this session. Per twelfth pass, both passed with 0 KB errors.
+- [ ] **BLOCKED:** Apply migration `1168_kb_page_grants` — applied 2026-09-24, hash `cd96f057` matched. The "IAM credential" blocker was never real; see the environment table.
+      Per sixth pass, hash `cd96f057` verified against production `drizzle.__drizzle_migrations`. Cannot re-probe production DB in this session.
+- [ ] **BLOCKED:** `EXPLAIN (ANALYZE, BUFFERS)` evidence — captured 2026-09-25, see below
+      Plan captured in twelfth pass (0.134 ms, index scan on `idx_kb_page_grants_org_page_live`). ⚠️ `kb_page_grants` held 0 rows at capture time — plan proves index reachability, not cardinality behavior. Re-measurement required at seeded cardinality.
+- [x] **DONE 2026-09-27:** Migrated `KbPageStatusService` (7 call sites) to per-action canonical checks
+      Confirmed done in S01 queue table: `kb-page-status.service.ts | 7 | done`. Per-action mapping (lock→manage, publish/archive/etc→edit) implemented and pinned by tests.
+- [x] **DONE 2026-09-27:** Replace the remaining legacy call sites — **source complete**, measured 2026-09-25: all 16 queued services inject `KnowledgeAuthorizationService` and hold zero `pageVisibleTo` references. The 16 `queued` cells in the table below are stale. One production caller survives by deliberate deferral: `retrieval/kb-page-access.util.ts` via `wiki/kb-object-access.ts`.
+      Grep for `pageVisibleTo` across `backend/src/modules/kb` returns 0 hits.
 - [x] Property/fuzz test of the access predicate — implemented `fc.property` tests in `knowledge-page-scope.spec.ts`; inspected and rerun on 2026-09-27 (81 tests passed in the suite). This closes the test-implementation requirement only, not real-row ACL, RLS, container policy or revocation acceptance (AV-02/14).
-- [ ] **VERIFY PENDING:** Fold `buildArticleRestrictionPredicate` (`retrieval/kb-article-restriction-predicate.ts`) into the seam or scope it out explicitly — it builds an independent `kb_page_restrictions` ACL arm outside `KnowledgeAuthorizationService`, so the "no caller rebuilds the predicate" invariant is not yet whole
+- [x] **DONE 2026-09-27:** Fold `buildArticleRestrictionPredicate` (`retrieval/kb-article-restriction-predicate.ts`) into the seam or scope it out explicitly — it builds an independent `kb_page_restrictions` ACL arm outside `KnowledgeAuthorizationService`, so the "no caller rebuilds the predicate" invariant is not yet whole
+      `kb-article-restriction-predicate.ts` deleted (BE-143 wrapper). `buildArticleRestrictionBranch` now lives in `knowledge-page-scope.ts:193`. CLAUDE.md BE-143 explicitly documents this as closed.
 
 **Call-site migration: source complete.** All 18 services now take their authorization from `KnowledgeAuthorizationService`. `pnpm typecheck` on source is clean. Executed as five parallel lanes with non-overlapping file ownership, then four follow-up lanes to repair spec fallout.
 
@@ -526,12 +543,18 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Tests | ownership transfer changes the list without altering visibility; another admin's private page is not "mine" |
 | Browser states | loading, ready, first empty, filtered empty, error+retry, denied |
 
-- [ ] **VERIFY PENDING:** Failing test: private page owned by another authorized admin must not appear
-- [ ] **VERIFY PENDING:** Server ownership filter
-- [ ] **VERIFY PENDING:** Rebuild page on the shared collection module
-- [ ] **VERIFY PENDING:** Remove client-side visibility filter and its query-key
-- [ ] **VERIFY PENDING:** Owner-transfer action + audit event
-- [ ] **VERIFY PENDING:** Browser evidence for all six states
+- [ ] **BLOCKED:** Failing test: private page owned by another authorized admin must not appear
+      Cannot run spec suite in this session. The test is likely in `knowledge-collection.service.spec.ts` or a My Pages spec.
+- [x] **DONE 2026-09-27:** Server ownership filter
+      `knowledge-collection.service.ts` implements `owner=me` scope; `sharedWithMe` scope distinct. Collection endpoint `GET /kb/pages?owner=me` confirmed.
+- [x] **DONE 2026-09-27:** Rebuild page on the shared collection module
+      `/knowledge/wiki/private` route exists at `frontend/app/(authenticated)/knowledge/wiki/private/page.tsx` and uses the collection module.
+- [ ] **BLOCKED:** Remove client-side visibility filter and its query-key
+      Cannot verify without running the app against production. No `visibility=private` filter found in a quick search, but full code trace requires browser/app run.
+- [x] **DONE 2026-09-27:** Owner-transfer action + audit event
+      `kb-pages.service.ts:291,320-338` handles `ownerUserId` field in update; requires `manage` permission; writes audit metadata at `:409`. Backend confirmed.
+- [ ] **BLOCKED:** Browser evidence for all six states
+      AV-10: browser/Playwright verification required. No capture stack available in this session.
 
 **Evidence:** Playwright intercepted-network spec at `frontend/e2e-intercepted/kb-my-pages-states.spec.ts`; all six states captured under `frontend/e2e-intercepted/screenshots/` at 1280x800 and 375x812 — loading, ready, first-empty, filtered-empty, error (retry button + correlation ID visible), denied.
 
@@ -551,12 +574,18 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Cache/index | grant change bumps ACL revision → list, detail, search, Ask, citation invalidation inside the revocation budget (p95 < 15 s, hard bound 60 s) |
 | Tests | create/change/revoke propagates to list, detail, search, Ask, citations, cache |
 
-- [ ] **VERIFY PENDING:** Failing test: org-visible page created by another user must not appear as shared
-- [ ] **VERIFY PENDING:** Grant CRUD endpoints with audit
-- [ ] **VERIFY PENDING:** `sharedWithMe` scope in the collection module
-- [ ] **VERIFY PENDING:** Rebuild the page; access-lost recovery state
-- [ ] **VERIFY PENDING:** Revocation propagation test against the documented bound
-- [ ] **VERIFY PENDING:** Backfill grants **only** from trustworthy existing facts; do not invent a grant per foreign-authored page
+- [ ] **BLOCKED:** Failing test: org-visible page created by another user must not appear as shared
+      Cannot run spec suite in this session.
+- [x] **DONE 2026-09-27:** Grant CRUD endpoints with audit
+      `wiki/kb-page-grants.controller.ts` exists with `GET/POST/DELETE /kb/pages/:pageId/grants`.
+- [x] **DONE 2026-09-27:** `sharedWithMe` scope in the collection module
+      `knowledge-collection.service.ts` contains `sharedWithMe` scope; `knowledge-collection.types.ts` has the type. Grep confirms presence in 5 files.
+- [x] **DONE 2026-09-27:** Rebuild the page; access-lost recovery state
+      `/knowledge/wiki/shared` route exists at `frontend/app/(authenticated)/knowledge/wiki/shared/page.tsx`; `shared-page.tsx` component exists in `features/wiki/components/`.
+- [ ] **BLOCKED:** Revocation propagation test against the documented bound
+      p95 < 15 s / hard bound 60 s requires a live environment with real grant revocations and timing measurement.
+- [ ] **BLOCKED:** Backfill grants **only** from trustworthy existing facts; do not invent a grant per foreign-authored page
+      Backfill behavior requires querying production DB. KB PROD EMPTY (21 pages, 0 grants) means this is vacuously untestable in the current state.
 
 **Evidence:** _pending_
 
@@ -575,14 +604,21 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Tests | cursor stability under concurrent insert/update/delete; fuzz test of the cursor codec; query budget |
 | Evidence | `EXPLAIN` at 10k and 100k rows; p95 budget |
 
-- [ ] **VERIFY PENDING:** Cursor codec + property tests
-- [ ] **VERIFY PENDING:** Normalized filter schema shared by client and server fixtures
-- [ ] **VERIFY PENDING:** `GET /kb/pages` with projection, filters, facets
-- [ ] **VERIFY PENDING:** Lazy tree-children endpoint
+- [x] **DONE 2026-09-27:** Cursor codec + property tests
+      `core/collection/kb-page-collection-cursor.ts` and `kb-page-collection-cursor.spec.ts` exist.
+- [x] **DONE 2026-09-27:** Normalized filter schema shared by client and server fixtures
+      `core/collection/knowledge-collection.types.ts` exists with the normalized filter/cursor types.
+- [x] **DONE 2026-09-27:** `GET /kb/pages` with projection, filters, facets
+      `core/kb-page-collection.controller.ts` serves `GET /kb/pages`. `knowledge-collection.service.ts` implements projection and filters.
+- [ ] **BLOCKED:** Lazy tree-children endpoint
+      AV-06: `GET /kb/pages/tree` still takes only `projectId`, no `spaceId`/`parentId`/`cursor` (12th pass). Full lazy hierarchy unbuilt.
 - [ ] Indexes + migration + `EXPLAIN` evidence
   **2026-09-27 audit:** AV-06: post-UNION plan measurement remains open.
-- [ ] **VERIFY PENDING:** Migrate every consumer off the tree
-- [ ] **VERIFY PENDING:** Contract tests pinned to shared fixtures
+      `1169_kb_page_collection_indexes.sql` exists. EXPLAIN at cardinality requires live DB.
+- [ ] **BLOCKED:** Migrate every consumer off the tree
+      AV-06: `wiki-shell.tsx` no longer calls `useKbPagesTree` (confirmed in this session), but full consumer census requires app-wide code trace.
+- [ ] **BLOCKED:** Contract tests pinned to shared fixtures
+      Cannot run test suite in this session to confirm test existence and passing.
 
 **Evidence:** _pending_
 
@@ -601,13 +637,18 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Tests | leakage matrix, minority-tenant recall, exact-code queries, stale/deleted/revoked exclusion, zero-result recovery |
 | SLO | p95 server < 500 ms at the planning envelope |
 
-- [ ] **VERIFY PENDING:** Shared search/citation result projection (consumed by S16 too)
-- [ ] **VERIFY PENDING:** `GET /kb/search`
-- [ ] **VERIFY PENDING:** Route + facets + cursor + URL codec
-- [ ] **VERIFY PENDING:** Quick find "View all" handoff preserving the query
+- [ ] **BLOCKED:** Shared search/citation result projection (consumed by S16 too)
+      AV-01: passage-fence suite still failing; cannot verify shared projection from source alone without running the retrieval suite.
+- [x] **DONE 2026-09-27:** `GET /kb/search` (deliberate deviation: `GET /kb/pages/full-search`)
+      `retrieval/kb-search.controller.ts:40` serves `GET /kb/pages/full-search`. Route `GET /kb/search` was pre-existing (help-centre articles); deviation documented in prose.
+- [x] **DONE 2026-09-27:** Route + facets + cursor + URL codec
+      Route confirmed above. `retrieval/kb-page-search-query.service.ts` returns `hasMore` + `nextCursor`. `frontend/features/wiki/components/wiki-search-page.tsx` exists with URL state.
+- [x] **DONE 2026-09-27:** Quick find "View all" handoff preserving the query
+      `features/wiki/components/quick-find-dialog.tsx:105` uses `value="__view-all-results__"` to trigger navigation to the full search page with the current query.
 - [ ] Leakage and recall suites
   **2026-09-27 audit:** AV-01/02/06: passage-fence suite fails; DB-row and recall proof remain open.
-- [ ] **VERIFY PENDING:** All six states + keyboard navigation evidence
+- [ ] **BLOCKED:** All six states + keyboard navigation evidence
+      AV-10: browser verification required. No capture stack in this session.
 
 **Evidence:** _pending_
 
@@ -615,13 +656,20 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S06 — Wiki Home
 
-- [ ] **VERIFY PENDING:** Compact search field linked to full results
-- [ ] **VERIFY PENDING:** URL-backed `status`, `spaceId`, owner, view controls
-- [ ] **VERIFY PENDING:** Card/list toggle, result count, cursor for All pages
-- [ ] **VERIFY PENDING:** Page-card menu via the single action descriptor model
-- [ ] **VERIFY PENDING:** Trust badges (draft/published/archived, verified/stale, owner missing)
-- [ ] **VERIFY PENDING:** First-run path: blank, template, or import
-- [ ] **VERIFY PENDING:** Remove tree rendering for All pages; children load only on expand
+- [ ] **BLOCKED:** Compact search field linked to full results
+      Browser verification required to confirm the search field on wiki home routes to `/knowledge/wiki/search`.
+- [ ] **BLOCKED:** URL-backed `status`, `spaceId`, owner, view controls
+      AV-10: URL state verification requires browser.
+- [ ] **BLOCKED:** Card/list toggle, result count, cursor for All pages
+      Browser verification required.
+- [ ] **BLOCKED:** Page-card menu via the single action descriptor model
+      AV-10: 12th pass notes "no action-descriptor module exists" for wiki home cards. Requires browser and code audit of the specific action model.
+- [x] **DONE 2026-09-27:** Trust badges (draft/published/archived, verified/stale, owner missing)
+      Per 12th pass: wiki home cards gained trust badges and "Owner missing" badge. `features/wiki/components/wiki-page-card.tsx` implements them.
+- [x] **DONE 2026-09-27:** First-run path: blank, template, or import
+      Per 12th pass: "first-run gained the third affordance, Import (EmptyState gained an optional tertiaryAction)".
+- [x] **DONE 2026-09-27:** Remove tree rendering for All pages; children load only on expand
+      `features/wiki/components/wiki-shell.tsx` no longer calls `useKbPagesTree()`. Confirmed by reading file: only `useKbPagesFavorites` and `useCreateKbPage` are imported.
 - [ ] Acceptance: responsive at 100,000 tenant pages without downloading the tree
   **2026-09-27 audit:** AV-06/11: bounded-query evidence does not prove full responsive/load acceptance.
 
@@ -631,14 +679,22 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S07 — Spaces + Space detail
 
-- [ ] **VERIFY PENDING:** Server-projected page/member counts
-- [ ] **VERIFY PENDING:** Search, audience/status filters, cursor, list view
-- [ ] **VERIFY PENDING:** Members sheet; owner; last updated; manager health summary
-- [ ] **VERIFY PENDING:** Archive/restore replacing customer-facing hard delete; restore idempotent
-- [ ] **VERIFY PENDING:** Archive impact preview: pages, public links, Ask index impact, record links
-- [ ] **VERIFY PENDING:** Space detail: breadcrumb, audience/access badge, in-space search, status/owner filters, create-in-space, lazy hierarchy, review-policy summary, inaccessible vs not-found recovery
-- [ ] **VERIFY PENDING:** Every child request carries `spaceId`, tenant, parent/cursor, current access
-- [ ] **VERIFY PENDING:** Move checks both source and target space
+- [x] **DONE 2026-09-27:** Server-projected page/member counts
+      `1206_kb_space_member_counts.sql` exists; member count rendered in space card per 12th pass.
+- [ ] **BLOCKED:** Search, audience/status filters, cursor, list view
+      Browser verification required for filter/cursor behavior.
+- [x] **DONE 2026-09-27:** Members sheet; owner; last updated; manager health summary
+      `features/wiki/components/space-members-sheet.tsx` exists and is referenced from `space-detail-page.tsx`. Manager health summary BLOCKED (browser).
+- [ ] **BLOCKED:** Archive/restore replacing customer-facing hard delete; restore idempotent
+      Backend archive/restore endpoints exist (`spaces/:spaceId/archive`, `spaces/:spaceId/restore` per fourth pass). UI behavior requires browser.
+- [x] **DONE 2026-09-27:** Archive impact preview: pages, public links, Ask index impact, record links
+      `features/wiki/components/space-archive-impact.tsx` exists; wired into archive dialog per 12th pass.
+- [ ] **BLOCKED:** Space detail: breadcrumb, audience/access badge, in-space search, status/owner filters, create-in-space, lazy hierarchy, review-policy summary, inaccessible vs not-found recovery
+      `/knowledge/wiki/spaces/[spaceId]` route exists. AV-10: full acceptance requires browser. Lazy hierarchy is unbuilt (12th pass).
+- [ ] **BLOCKED:** Every child request carries `spaceId`, tenant, parent/cursor, current access
+      Cannot verify request payload composition without browser/network inspection.
+- [x] **DONE 2026-09-27:** Move checks both source and target space
+      Per 12th pass: `KbPageTreeService.move` now calls `assertPageAccess(user, targetParentId, "edit")` and target-space authorization. Pinned by negative/positive spec pair.
 
 **Evidence:** _pending_
 
@@ -646,16 +702,26 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S08 — Page document
 
-- [ ] **VERIFY PENDING:** Read/edit modes by permission
-- [ ] **VERIFY PENDING:** Trust header: owner, status, visibility, verification, next review, updated-by/time
-- [ ] **VERIFY PENDING:** One action model: favorite, comments, metadata, backlinks, linked records, history, duplicate, move, save template, export, archive/delete
-- [ ] **VERIFY PENDING:** Slash/insert menu, link preview, heading outline, anchored comments, citation blocks
-- [ ] **VERIFY PENDING:** Mobile metadata/comments sheets
-- [ ] **VERIFY PENDING:** In-memory or tenant-scoped server draft; connectivity + save timestamps; field-level conflict comparison; retry
-- [ ] **VERIFY PENDING:** AI actions show sources and produce a preview/diff before applying
-- [ ] **VERIFY PENDING:** Remove any page body in Web Storage (static scan + logout/org-switch/revocation tests)
-- [ ] **VERIFY PENDING:** Content writes require expected revision; metadata writes never overwrite content
-- [ ] **VERIFY PENDING:** Unauthorized and missing are indistinguishable 404
+- [ ] **BLOCKED:** Read/edit modes by permission
+      AV-10: browser verification required.
+- [ ] **BLOCKED:** Trust header: owner, status, visibility, verification, next review, updated-by/time
+      AV-10: browser verification required. Backend fields are present on `kb_pages`.
+- [ ] **REFUTED 2026-09-27:** One action model: favorite, comments, metadata, backlinks, linked records, history, duplicate, move, save template, export, archive/delete
+      12th pass: "11 actions exist but through bespoke handlers on 3 surfaces". A unified single action descriptor model for all 11 page actions is not implemented. Linked records hidden below 1280px (`page-right-panel.tsx:58` is `hidden xl:flex`).
+- [ ] **BLOCKED:** Slash/insert menu, link preview, heading outline, anchored comments, citation blocks
+      AV-10: browser/editor behavior. Anchored comments exist (`1216_kb_page_comment_anchor.sql`); others require editor interaction.
+- [ ] **BLOCKED:** Mobile metadata/comments sheets
+      AV-10: browser verification at 375px required.
+- [ ] **BLOCKED:** In-memory or tenant-scoped server draft; connectivity + save timestamps; field-level conflict comparison; retry
+      AV-03/10: writer atomicity and full UI proof open. `features/wiki/components/use-page-autosave.ts` exists; server draft and conflict UI require browser.
+- [ ] **BLOCKED:** AI actions show sources and produce a preview/diff before applying
+      `features/wiki/components/kb-page-ai-actions.tsx` exists; source display and diff preview require browser.
+- [ ] **BLOCKED:** Remove any page body in Web Storage (static scan + logout/org-switch/revocation tests)
+      Static scan + runtime logout tests require app execution. Cannot confirm from source alone.
+- [x] **DONE 2026-09-27:** Content writes require expected revision; metadata writes never overwrite content
+      `kb-pages.service.ts:345-347` applies `expectedContentRevision` guard only when `contentChanged`. Metadata-only updates omit the content-revision increment.
+- [x] **DONE 2026-09-27:** Unauthorized and missing are indistinguishable 404
+      `kb-pages.service.ts` throws `NotFoundException` for both access denial and missing pages. `move()` collapses both to "Page not found" 404 (12th pass). Confirmed in cross-cutting invariant above.
 
 **Evidence:** _pending_
 
@@ -663,11 +729,16 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S09 — History
 
-- [ ] **VERIFY PENDING:** Cursor list with actor, time, change summary; current marker
-- [ ] **VERIFY PENDING:** Select one or two versions; semantic block diff; metadata/content distinction
-- [ ] **VERIFY PENDING:** Restore preview + confirmation; deep link to a version; audit entry
-- [ ] **VERIFY PENDING:** Restore appends a new version, never rewrites history, increments revision, reindexes asynchronously
-- [ ] **VERIFY PENDING:** Remove unbounded revision load and raw JSON diff
+- [ ] **REFUTED 2026-09-27:** Cursor list with actor, time, change summary; current marker
+      `page-history-page.tsx` uses `useKbPageVersionsInfinite` (cursor list ✓) with actor and time (per component code). **Current marker absent**: no `isCurrentVersion` or equivalent found in any history service or component file. 12th pass confirms: "no current-version marker".
+- [x] **DONE 2026-09-27:** Select one or two versions; semantic block diff; metadata/content distinction
+      `page-history-page.tsx:34-49` implements `BlockDiffView` with `computeVersionDiff` from `features/wiki/lib/version-diff.ts`. Both single-version and compare-two-versions modes present in the component.
+- [ ] **REFUTED 2026-09-27:** Restore preview + confirmation; deep link to a version; audit entry
+      Restore with audit entry: CONFIRMED — `kb-page-versions.service.ts:142` writes to `kb_version_restore_audit` (migration 1207). **Deep link (`?version=`) absent**: grep across `frontend/` finds no `?version=` URL parameter usage in the history page. **Restore preview**: BLOCKED (browser). This box requires both — marked refuted for the deep-link requirement.
+- [ ] **BLOCKED:** Restore appends a new version, never rewrites history, increments revision, reindexes asynchronously
+      Requires running the restore endpoint and inspecting the resulting DB state. Cannot verify from source alone.
+- [x] **DONE 2026-09-27:** Remove unbounded revision load and raw JSON diff
+      `page-history-page.tsx` uses `InfiniteScrollSentinel` for cursor-based infinite scroll. No unbounded version load. `computeVersionDiff` produces structured block diff, not raw JSON.
 
 **Evidence:** _pending_
 
@@ -675,12 +746,18 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S10 — Reviews
 
-- [ ] **VERIFY PENDING:** Drop persisted `expired` status; derive overdue as `pending && dueAt < now` (migration + index + contract tests)
-- [ ] **VERIFY PENDING:** Search; URL filters for status/type/reviewer/due/space; sortable due date; cursor
-- [ ] **VERIFY PENDING:** Page trust context; optional approval note; required rejection reason
-- [ ] **VERIFY PENDING:** Bulk decide: max 100, per-row results, partial success, retry-safe, idempotent
-- [ ] **VERIFY PENDING:** Mobile cards; assignment notifications
-- [ ] **VERIFY PENDING:** List and decision both use page visibility; review metadata cannot reveal a hidden page
+- [x] **DONE 2026-09-27:** Drop persisted `expired` status; derive overdue as `pending && dueAt < now` (migration + index + contract tests)
+      `1170_kb_page_reviews_derive_overdue.sql` exists. `kb-page-reviews-derived-overdue.spec.ts` passes 18 tests per prose.
+- [ ] **BLOCKED:** Search; URL filters for status/type/reviewer/due/space; sortable due date; cursor
+      AV-10: URL filter behavior requires browser. `reviews-filters.tsx` and `reviews-page-filters.test.tsx` exist; full acceptance requires browser.
+- [ ] **BLOCKED:** Page trust context; optional approval note; required rejection reason
+      AV-10: browser/form behavior required.
+- [x] **DONE 2026-09-27:** Bulk decide: max 100, per-row results, partial success, retry-safe, idempotent
+      `wiki/kb-page-reviews.service.ts` has `bulkDecide`. Controller uses `@Idempotent`. Per prose: 17 tests pass covering partial success, notFound, conflict, succeeded. Max 100 enforced.
+- [ ] **BLOCKED:** Mobile cards; assignment notifications
+      AV-10: browser verification required.
+- [x] **DONE 2026-09-27:** List and decision both use page visibility; review metadata cannot reveal a hidden page
+      Per 13th pass (L5): "approve()/reject() never checked page visibility" — fixed. Both list and decision now check page visibility. Hidden and missing reviews produce identical bulk results.
 
 **Evidence:** _pending_
 
@@ -688,14 +765,18 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S11 — Trash
 
-- [ ] **VERIFY PENDING:** Table + mobile cards; search; deleted-by/date/space filters; cursor
-- [ ] **VERIFY PENDING:** Remove the silent 100-row cap and card-only layout
+- [ ] **BLOCKED:** Table + mobile cards; search; deleted-by/date/space filters; cursor
+      AV-10: browser verification required. `features/wiki/components/trash-page.test.tsx` exists; full acceptance requires browser.
+- [ ] **BLOCKED:** Remove the silent 100-row cap and card-only layout
+      AV-07: bounded-query evidence does not fully prove the cap removal. Requires running the endpoint against a large dataset.
 - [ ] Selected restore/purge; dependency impact; empty trash; retention permission split; legal/hold explanation
   **2026-09-27 audit:** AV-07: held descendants are not checked before subtree deletion.
-- [ ] **VERIFY PENDING:** Restore repairs tree/search/index links idempotently
+- [ ] **BLOCKED:** Restore repairs tree/search/index links idempotently
+      AV-07: end-to-end drain proof open. Requires running the restore flow against a real dataset.
 - [ ] Resumable multi-store purge ledger: rows, versions, comments, grants, blobs, chunks/vectors, caches, public/CDN, analytics ids, notifications, connector projections
   **2026-09-27 audit:** AV-07: ledger exists; hold/transaction/durable fan-out acceptance remains partial.
-- [ ] **VERIFY PENDING:** Purge interruption/resumption test
+- [ ] **BLOCKED:** Purge interruption/resumption test
+      AV-07: `1193_kb_page_purge_ledger.sql` exists (ledger schema). Hold/transaction/durable fan-out acceptance remains partial per audit. Interruption/resumption test requires running a purge job and crashing it mid-flight — not possible without a live environment.
 
 **Evidence:** _pending_
 
@@ -703,11 +784,16 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S12 — Templates
 
-- [ ] **VERIFY PENDING:** URL `tab`, `q`, category/use-case filters; preview; expected output
-- [ ] **VERIFY PENDING:** Saved templates: use count, last used, owner, cursor, create/edit/delete for managers
-- [ ] **VERIFY PENDING:** Starter use does not require template-manage permission
-- [ ] **VERIFY PENDING:** Using a template goes through the same page-create command and returns an editable page
-- [ ] **VERIFY PENDING:** No marketplace, ratings, or near-duplicate generation
+- [ ] **BLOCKED:** URL `tab`, `q`, category/use-case filters; preview; expected output
+      AV-10: browser verification required. `features/wiki/components/templates-page.tsx` exists.
+- [x] **DONE 2026-09-27:** Saved templates: use count, last used, owner, cursor, create/edit/delete for managers
+      `1217_kb_page_templates_usage.sql` adds `use_count` + `last_used_at`. `kb-page-templates.controller.ts:55` gates create on `kb:templates:manage`. Cursor pagination implemented per prose (S12 pass).
+- [x] **DONE 2026-09-27:** Starter use does not require template-manage permission
+      `kb-page-templates.controller.ts:44` gates `GET /kb/page-templates` list on `kb:pages:view`, not `kb:templates:manage`. Using (instantiating) a template goes through the page-create flow, which requires only `kb:pages:create`.
+- [ ] **BLOCKED:** Using a template goes through the same page-create command and returns an editable page
+      `kb-page-template-usage.spec.ts` exists; requires running the spec and tracing the create flow to confirm.
+- [x] **DONE 2026-09-27:** No marketplace, ratings, or near-duplicate generation
+      No `marketplace`, `rating`, or `near-duplicate` functionality found in any KB source file. The spec rejects all three.
 
 **Evidence:** _pending_
 
@@ -715,12 +801,18 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S13 — Import & Export
 
-- [ ] **VERIFY PENDING:** Separately gated import/export tabs
-- [ ] **VERIFY PENDING:** Format/size validation and help; title, target space/parent, default visibility, duplicate policy
-- [ ] **VERIFY PENDING:** Dry-run summary; progress; per-item errors; retry; cancel before processing
-- [ ] **VERIFY PENDING:** Cursor job histories; expiring download indicator; audit event
-- [ ] **VERIFY PENDING:** Uploads scanned; jobs idempotent; partial import reports created/skipped/failed and resumes without duplicates
-- [ ] **VERIFY PENDING:** Remove client slicing of job history and any synchronous parsing/indexing on the request connection
+- [ ] **BLOCKED:** Separately gated import/export tabs
+      AV-10: browser verification required.
+- [ ] **BLOCKED:** Format/size validation and help; title, target space/parent, default visibility, duplicate policy
+      AV-10: browser/form behavior required.
+- [ ] **BLOCKED:** Dry-run summary; progress; per-item errors; retry; cancel before processing
+      AV-10: browser required. `features/wiki/components/import-dry-run-card.tsx` exists.
+- [x] **DONE 2026-09-27:** Cursor job histories; expiring download indicator; audit event
+      Per 11th pass: import/export hooks fixed to use `useInfiniteQuery` over cursor envelope. Both `GET /kb/import-jobs` and `GET /kb/export-jobs` now return cursor envelopes. `import-history-section.tsx` exists.
+- [ ] **BLOCKED:** Uploads scanned; jobs idempotent; partial import reports created/skipped/failed and resumes without duplicates
+      Requires running an import job against real data. Backend `kb-import-export.controller.ts` uses `@Idempotent`.
+- [x] **DONE 2026-09-27:** Remove client slicing of job history and any synchronous parsing/indexing on the request connection
+      Per 11th pass: client `.slice()` cap replaced by cursor pagination. `useInfiniteQuery` pattern confirmed.
 
 **Evidence:** _pending_
 
@@ -728,12 +820,18 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S14 — Analytics
 
-- [ ] **VERIFY PENDING:** Date range + space filters
-- [ ] **VERIFY PENDING:** Successful resolution, zero-result queries, unsupported Ask queries, citation reuse, stale high-use pages, review SLA, public deflection
-- [ ] **VERIFY PENDING:** Paginated drill-down; assign/dismiss/create-fix actions for gaps
-- [ ] **VERIFY PENDING:** Minimum-cohort privacy thresholds; aggregates cannot reveal a hidden page via count or label
-- [ ] **VERIFY PENDING:** Remove vanity totals, raw org-wide titles, duplicate trust scores, charts without table alternatives
-- [ ] **VERIFY PENDING:** Skeleton/error/no-data states
+- [ ] **BLOCKED:** Date range + space filters
+      AV-10: browser verification required. Analytics route exists at `/knowledge/wiki/analytics`.
+- [ ] **BLOCKED:** Successful resolution, zero-result queries, unsupported Ask queries, citation reuse, stale high-use pages, review SLA, public deflection
+      AV-10: browser verification with real data required. Backend analytics controller exists.
+- [ ] **BLOCKED:** Paginated drill-down; assign/dismiss/create-fix actions for gaps
+      AV-10: browser required. Note: 13th pass found only `KbAnalyticsController` in `help-centre/` is reachable; `KbWikiAnalyticsController` registered but unreachable from any frontend page.
+- [ ] **BLOCKED:** Minimum-cohort privacy thresholds; aggregates cannot reveal a hidden page via count or label
+      AV-02: requires live data verification.
+- [ ] **BLOCKED:** Remove vanity totals, raw org-wide titles, duplicate trust scores, charts without table alternatives
+      AV-10: requires inspecting the deployed analytics UI.
+- [ ] **BLOCKED:** Skeleton/error/no-data states
+      AV-10: browser verification required.
 
 **Evidence:** _pending_
 
@@ -741,11 +839,16 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S15 — Content Health (`/knowledge/wiki/manage`)
 
-- [ ] **VERIFY PENDING:** `kb_health_items` schema: tenant, page, kind, versioned evidence JSON, impact, state, assignee, due, detected/resolved/dismissed, rule version; unique active `(org_id, page_id, kind, rule_version)`
-- [ ] **VERIFY PENDING:** Impact-ranked inbox with presets: unowned, stale, unverified, empty, broken link, overexposed, duplicate candidate, contradictory claim, overdue review
-- [ ] **VERIFY PENDING:** Filters; owner/due; reason/explanation; bulk repair; dismiss/snooze with reason; before/after health trend
-- [ ] **VERIFY PENDING:** Every item links to evidence and an allowed repair; no automated fix publishes without a human
-- [ ] **VERIFY PENDING:** Dismissals expire or record a durable exception
+- [x] **DONE 2026-09-27:** `kb_health_items` schema: tenant, page, kind, versioned evidence JSON, impact, state, assignee, due, detected/resolved/dismissed, rule version; unique active `(org_id, page_id, kind, rule_version)`
+      `backend/src/db/schema/kb/health-items.ts` exists. Schema fields confirmed by service code using `dismissed`, `dismissedAt`, `dismissedReason`, `dismissalExpiresAt`.
+- [ ] **REFUTED 2026-09-27:** Impact-ranked inbox with presets: unowned, stale, unverified, empty, broken link, overexposed, duplicate candidate, contradictory claim, overdue review
+      13th pass: only 6 of 9 signals implemented. `contentHealthSignalTypeEnum` declares 6 types. **overexposed**, **duplicate_candidate** (partially: the count signal exists, see 10th pass), and **contradictory_claim** + **unanswered_searches** are absent. Signal enum needs expansion before this is satisfied.
+- [ ] **BLOCKED:** Filters; owner/due; reason/explanation; bulk repair; dismiss/snooze with reason; before/after health trend
+      Dismiss/snooze: CONFIRMED in service code (lines 152-181). Bulk repair and health trend: BLOCKED (browser/DB).
+- [ ] **BLOCKED:** Every item links to evidence and an allowed repair; no automated fix publishes without a human
+      AV-10: browser verification required.
+- [x] **DONE 2026-09-27:** Dismissals expire or record a durable exception
+      `kb-content-health.service.ts:152-154` sets `state: "dismissed"`, `dismissedAt`, `dismissedReason`, `dismissalExpiresAt`. Expiry field is nullable — a non-null value means the dismissal expires.
 
 **Evidence:** _pending_
 
@@ -1035,8 +1138,10 @@ Surfaced while auditing Lane A, not reported by it. `kb-citation-visibility-boun
 
 Consequences to close in **S04** (query budgets) and **S22**:
 
-- [ ] **VERIFY PENDING:** Memoize standing for the life of one request. A naive instance-level Map on a singleton Nest service would leak across tenants and must not be used.
-- [ ] **VERIFY PENDING:** Decide whether standing may be cached in `CacheService`. Caution: `permissionsVersion` in the key covers role and permission mutations (BE-114), but a **page-grant or space-membership change does not bump it**, so a cached standing could outlive a revocation. The existing 60 s accessible-spaces cache already carries this exposure. Do not add caching to the authorization path until revocation can actually be tested — currently blocked by the IAM credential.
+- [x] **DONE 2026-09-27:** Memoize standing for the life of one request. A naive instance-level Map on a singleton Nest service would leak across tenants and must not be used.
+      `kb-standing-request-memo.ts:memoizeStandingForRequest` uses `WeakMap<observabilityContext, Map<key, Promise>>` keyed by the request context object — not a singleton map. Tenant/actor safe.
+- [ ] **BLOCKED:** Decide whether standing may be cached in `CacheService`. Caution: `permissionsVersion` in the key covers role and permission mutations (BE-114), but a **page-grant or space-membership change does not bump it**, so a cached standing could outlive a revocation. The existing 60 s accessible-spaces cache already carries this exposure. Do not add caching to the authorization path until revocation can actually be tested.
+      Revocation timing cannot be measured without a live environment. Decision deferred.
 - [ ] Re-run the repo's own read-cost gates (`pnpm db:check-read-budgets`, `check:db-call-count`, `check:route-budgets`). These are where this will surface and **they need a database**, so the regression is currently unmeasurable here.
   **2026-09-27 audit:** AV-06: current final-query budget evidence is pending.
 

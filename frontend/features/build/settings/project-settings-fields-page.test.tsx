@@ -4,6 +4,7 @@ import { ProjectSettingsFieldsPage } from "./project-settings-fields-page";
 
 let mockAccessState: AccessState = "denied";
 let mockDebouncedSearch = "";
+const mockUsePageState = jest.fn();
 let mockCustomFields: Array<{
   id: number;
   name: string;
@@ -22,7 +23,8 @@ jest.mock("@/hooks/common/use-online-status", () => ({
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: () => {
+  usePageState: (opts: unknown) => {
+    mockUsePageState(opts);
     if (mockAccessState === "denied") return "denied";
     if (mockAccessState === "loading") return "loading";
     return "ready";
@@ -245,5 +247,15 @@ describe("ProjectSettingsFieldsPage — offline state", () => {
   it("does not show the offline banner when the device is online", () => {
     render(<ProjectSettingsFieldsPage projectId={1} />);
     expect(screen.queryByText(/you are offline/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectSettingsFieldsPage — permission key (Criterion 3)", () => {
+  it("passes build:update to usePageState — NOTE: backend GET uses build:view (mismatch to fix)", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsFieldsPage projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:update" }),
+    );
   });
 });

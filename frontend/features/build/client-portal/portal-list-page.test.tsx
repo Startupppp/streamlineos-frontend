@@ -151,3 +151,86 @@ describe("PortalListPage — page state correctness", () => {
     expect(screen.queryByText(/No projects/i)).not.toBeInTheDocument();
   });
 });
+
+describe("PortalListPage — portal security (BSN-PORTAL-SEC-01)", () => {
+  const project = {
+    id: 1,
+    name: "Alpha Project",
+    key: "ALP",
+    status: "active",
+    color: null,
+    startDate: null,
+    targetEndDate: null,
+  };
+
+  it("renders a navigation link to the project detail and no edit or delete button so external clients have no management controls", () => {
+    mockUseAccess.mockReturnValue(ACCESS_GRANTED);
+    mockUsePortalProjects.mockReturnValue({
+      data: [project],
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    render(<PortalListPage />);
+    expect(screen.getByRole("link")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /edit|delete|manage/i })).not.toBeInTheDocument();
+  });
+
+  it("— NEGATIVE — renders no edit or delete button when a second project is present so the absence is not vacuous", () => {
+    mockUseAccess.mockReturnValue(ACCESS_GRANTED);
+    mockUsePortalProjects.mockReturnValue({
+      data: [project, { ...project, id: 2, name: "Beta Project" }],
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    render(<PortalListPage />);
+    expect(screen.getAllByRole("link")).toHaveLength(2);
+    expect(screen.queryByRole("button", { name: /edit|delete|manage/i })).not.toBeInTheDocument();
+  });
+
+  it("empty state copy does not contain the phrase 'excluded' or 'hidden' so it does not disclose filtered-out rows", () => {
+    mockUseAccess.mockReturnValue(ACCESS_GRANTED);
+    mockUsePortalProjects.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    render(<PortalListPage />);
+    const body = document.body.textContent ?? "";
+    expect(body).not.toMatch(/excluded/i);
+    expect(body).not.toMatch(/hidden/i);
+    expect(body).not.toMatch(/cannot see/i);
+  });
+
+  it("actor with only build:portal:view sees the project list so external client access works correctly", () => {
+    mockUseAccess.mockReturnValue(ACCESS_GRANTED);
+    mockUsePortalProjects.mockReturnValue({
+      data: [project],
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    render(<PortalListPage />);
+    expect(screen.getByText("Alpha Project")).toBeInTheDocument();
+  });
+
+  it("actor without build:portal:view sees denial not the project list so an internal user without a portal grant cannot read portal data", () => {
+    mockUseAccess.mockReturnValue(ACCESS_DENIED);
+    mockUsePortalProjects.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    render(<PortalListPage />);
+    expect(screen.queryByText("Alpha Project")).not.toBeInTheDocument();
+    expect(screen.getByText("Access Restricted")).toBeInTheDocument();
+  });
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useCallback, useRef } from "react";
+import { use, useState, useCallback, useEffect, useRef } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -138,8 +138,14 @@ export function ProjectSettingsPage({ params }: PageProps) {
 
   const rawSection = searchParams.get("section") ?? "general";
   const parsedSection: SectionId = isSectionId(rawSection) ? rawSection : "general";
+  const [selectedSection, setSelectedSection] = useState<SectionId>(parsedSection);
+
+  useEffect(() => {
+    setSelectedSection(parsedSection);
+  }, [parsedSection]);
+
   const activeSection: SectionId =
-    parsedSection === "danger" && !isOwner ? "general" : parsedSection;
+    selectedSection === "danger" && !isOwner ? "general" : selectedSection;
 
   const navSections: NavSection[] = isOwner
     ? [...BASE_NAV, DANGER_SECTION]
@@ -149,6 +155,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const rawId = e.currentTarget.dataset.section;
       if (!rawId || !isSectionId(rawId)) return;
+      setSelectedSection(rawId);
       const next = new URLSearchParams(searchParams.toString());
       next.set("section", rawId);
       router.replace(`${pathname}?${next.toString()}`, { scroll: false });

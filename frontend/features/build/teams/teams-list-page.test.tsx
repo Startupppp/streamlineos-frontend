@@ -229,6 +229,7 @@ beforeEach(() => {
   usePageState.mockReturnValue({ kind: "ready" });
   mockUseBuildListKeyboard.mockReset();
   mockUseBuildListFilters.value.mockReturnValue("all");
+  mockUseBuildListFilters.isFiltered = false;
   mockUseOnlineStatus.mockReturnValue(true);
 });
 
@@ -393,6 +394,21 @@ describe("TeamsListPage — usePageState integration (FE-40, FE-41, FE-47, FE-49
     usePageState.mockReturnValue({ kind: "empty" });
     render(<TeamsListPage />);
     expect(screen.getByText("You are offline")).toBeInTheDocument();
+  });
+
+  it("shows 'No teams yet' empty copy when there are no teams and no filters are active", () => {
+    usePageState.mockReturnValue({ kind: "empty" });
+    render(<TeamsListPage />);
+    expect(screen.getByText("No teams yet")).toBeInTheDocument();
+    expect(screen.queryByText("No teams match your filters")).not.toBeInTheDocument();
+  });
+
+  it("shows 'No teams match your filters' empty copy when filters are active and no teams match", () => {
+    mockUseBuildListFilters.isFiltered = true;
+    usePageState.mockReturnValue({ kind: "empty" });
+    render(<TeamsListPage />);
+    expect(screen.getByText("No teams match your filters")).toBeInTheDocument();
+    expect(screen.queryByText("No teams yet")).not.toBeInTheDocument();
   });
 
   it("renders a search input via BuildListToolbar so the keyboard / shortcut has a reachable DOM target", () => {

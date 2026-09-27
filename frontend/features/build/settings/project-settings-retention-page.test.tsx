@@ -5,6 +5,7 @@ import type { ProjectRetentionSettings } from "./project-settings-retention-sche
 
 let mockAccessState: AccessState = "denied";
 const mockSearchParams = new URLSearchParams();
+const mockUsePageState = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn() }),
@@ -18,7 +19,8 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: () => {
+  usePageState: (opts: unknown) => {
+    mockUsePageState(opts);
     if (mockAccessState === "denied") return { kind: "denied", permission: "build:update" };
     if (mockAccessState === "loading") return { kind: "loading" };
     return { kind: "ready" };
@@ -279,5 +281,15 @@ describe("ProjectSettingsRetentionPage — schema type predicate (BLD-RETENTION-
       "./project-settings-retention-schema",
     ) as typeof import("./project-settings-retention-schema");
     expect(parseRetentionSection("danger")).toBe("policy");
+  });
+});
+
+describe("ProjectSettingsRetentionPage — permission key (Criterion 3)", () => {
+  it("passes build:update to usePageState — backend GET uses build:view; key mismatch to resolve", () => {
+    mockAccessState = "granted";
+    render(<ProjectSettingsRetentionPage projectId={1} />);
+    expect(mockUsePageState).toHaveBeenCalledWith(
+      expect.objectContaining({ permission: "build:update" }),
+    );
   });
 });

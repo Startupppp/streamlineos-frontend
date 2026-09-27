@@ -9,7 +9,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
-export interface BuildListSurfacePagination {
+export interface BuildListSurfaceCursorPagination {
   mode: "cursor";
   pageSize: number;
   hasMore: boolean;
@@ -17,6 +17,20 @@ export interface BuildListSurfacePagination {
   onNext: () => void;
   onPrevious?: () => void;
 }
+
+export interface BuildListSurfaceServerPagination {
+  mode: "server";
+  page: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: readonly number[];
+}
+
+export type BuildListSurfacePagination =
+  | BuildListSurfaceCursorPagination
+  | BuildListSurfaceServerPagination;
 
 const NO_PREVIOUS_PAGE = () => {};
 
@@ -118,11 +132,13 @@ export function BuildListSurface<TRow>({
           mobileCard={mobileCard}
           selection={selection}
           pagination={
-            pagination && {
-              ...pagination,
-              hasPrevious: pagination.hasPrevious ?? false,
-              onPrevious: pagination.onPrevious ?? NO_PREVIOUS_PAGE,
-            }
+            pagination === undefined || pagination.mode === "server"
+              ? pagination
+              : {
+                  ...pagination,
+                  hasPrevious: pagination.hasPrevious ?? false,
+                  onPrevious: pagination.onPrevious ?? NO_PREVIOUS_PAGE,
+                }
           }
           isLoading={isFetchingMore}
           minWidth={minWidth}

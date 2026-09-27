@@ -13,11 +13,8 @@ import {
 } from "@/hooks/api/build/managed-products";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageState } from "@/components/shared/page-state";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ManagedProductFormSheet } from "./managed-product-form-sheet";
@@ -36,6 +33,7 @@ import {
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import type { NamedUser } from "@/lib/person-display";
 import {
   MANAGED_PRODUCT_TABLE_HEADERS,
@@ -124,14 +122,6 @@ export function ManagedProductsPage() {
   );
 
   const displayed = useMemo(() => data?.data ?? [], [data]);
-
-  const resolution = usePageState({
-    permission: "build:managed-products:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty: displayed.length === 0,
-  });
 
   const handleCreate = useCallback(
     (input: CreateManagedProductInput) => {
@@ -342,24 +332,46 @@ export function ManagedProductsPage() {
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <PageState
-            resolution={resolution}
-            loading={
-              <DataTableSkeleton
-                mobileCards
-                rows={12}
-                headers={MANAGED_PRODUCT_TABLE_HEADERS}
-                className="flex-1"
-              />
+          {selectedIds.length > 0 && (
+            <ManagedProductBulkToolbar
+              selectedIds={selectedIds}
+              onClearSelection={handleClearKeyboardSelection}
+            />
+          )}
+          <BuildListSurface<ManagedProduct>
+            permission="build:managed-products:view"
+            rows={displayed}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            minWidth="720px"
+            mobileCard={renderMobileCard}
+            selection={
+              canUpdate
+                ? {
+                    selected,
+                    onChange: setSelected,
+                    getRowLabel: (row: ManagedProduct) => row.name,
+                  }
+                : undefined
             }
+            pagination={{
+              mode: "cursor",
+              pageSize: PAGE_SIZE,
+              hasMore: Boolean(data?.pagination.hasMore),
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
+            }}
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No managed products yet"
                 description="Create a managed product to track delivery across projects."
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
                 action={
                   canCreate
                     ? { label: "New product", onClick: handleOpenCreate }
@@ -367,41 +379,19 @@ export function ManagedProductsPage() {
                 }
               />
             }
-            onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            {selectedIds.length > 0 && (
-              <ManagedProductBulkToolbar
-                selectedIds={selectedIds}
-                onClearSelection={handleClearKeyboardSelection}
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="projects"
+                title="No managed products match your filters"
+                description="Try adjusting or clearing your filters."
+                onClearFilters={listFilters.clearAll}
               />
-            )}
-            <DataTable
-              data={displayed}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="720px"
-              mobileCard={renderMobileCard}
-              className={CONTENT_FILL_PANEL}
-              selection={
-                canUpdate
-                  ? {
-                      selected,
-                      onChange: setSelected,
-                      getRowLabel: (row: ManagedProduct) => row.name,
-                    }
-                  : undefined
-              }
-              pagination={{
-                mode: "cursor",
-                pageSize: PAGE_SIZE,
-                hasMore: Boolean(data?.pagination.hasMore),
-                hasPrevious,
-                onNext: handleNextPage,
-                onPrevious: goPrevious,
-              }}
-            />
-          </PageState>
+            }
+            loadingHeaders={MANAGED_PRODUCT_TABLE_HEADERS}
+            loadingRows={12}
+            onRetry={handleRetry}
+          />
         </PmSection>
       </PmPageShell>
 

@@ -17,7 +17,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
-import { DataTable } from "@/components/ui/data-table";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
@@ -47,11 +46,12 @@ import {
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
-import { buildResultColumns, RESULT_TABLE_HEADERS } from "./result-columns";
+import { buildResultColumns } from "./result-columns";
 import { ResultRow } from "./result-row";
 import { RunResultBulkActionBar } from "./run-result-bulk-action-bar";
 import { useUpdateTestResult } from "@/hooks/api/build/qa";
@@ -245,6 +245,19 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     [projectId, canExecute, canCreateBug, handleOpenCreateBug, handleOpenNotes],
   );
 
+  const handleRenderResultMobileCard = useCallback(
+    (result: TestRunResult) => (
+      <ResultRow
+        result={result}
+        projectId={projectId}
+        canExecute={canExecute}
+        canCreateBug={canCreateBug}
+        onCreateBug={handleOpenCreateBug}
+      />
+    ),
+    [projectId, canExecute, canCreateBug, handleOpenCreateBug],
+  );
+
   const pageState = usePageState({ permission: "build:qa:view", isLoading, isError, error });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
@@ -343,34 +356,37 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
             />
           ) : null}
 
-          {filteredResults.length === 0 ? (
-            <EmptyState
-              className={CONTENT_FILL_PANEL}
-              illustrationPreset="ticket"
-              title={listFilters.isFiltered ? "No results match the current filters" : "No test results"}
-              description={listFilters.isFiltered ? "Try clearing the filters." : "No test cases were added to this run."}
-            />
-          ) : (
-            <DataTable
-              data={filteredResults}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              selection={{
-                selected: selectedIds,
-                onChange: setSelectedIds,
-                getRowLabel: (row) => row.testCase?.title ?? `Result ${row.id}`,
-              }}
-              mobileCard={(result) => (
-                <ResultRow
-                  result={result}
-                  projectId={projectId}
-                  canExecute={canExecute}
-                  canCreateBug={canCreateBug}
-                  onCreateBug={handleOpenCreateBug}
-                />
-              )}
-            />
-          )}
+          <BuildListSurface<TestRunResult>
+            permission="build:qa:view"
+            rows={filteredResults}
+            columns={columns}
+            isLoading={false}
+            isError={false}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            mobileCard={handleRenderResultMobileCard}
+            selection={{
+              selected: selectedIds,
+              onChange: setSelectedIds,
+              getRowLabel: (row) => row.testCase?.title ?? `Result ${row.id}`,
+            }}
+            empty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="ticket"
+                title="No test results"
+                description="No test cases were added to this run."
+              />
+            }
+            filteredEmpty={
+              <EmptyState
+                className={CONTENT_FILL_PANEL}
+                illustrationPreset="ticket"
+                title="No results match the current filters"
+                description="Try clearing the filters."
+              />
+            }
+          />
         </PmSection>
       </PmPageShell>
 

@@ -110,7 +110,7 @@ export function PortalListPage() {
               className={CONTENT_FILL_PANEL}
               illustrationPreset="projects"
               title="No projects"
-              description="You don't have access to any projects yet. Contact your project manager."
+              description="No projects yet. Contact your project manager if you expect to see one here."
             />
           ) : (
             <PmStaggerList className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

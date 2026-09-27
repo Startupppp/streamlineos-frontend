@@ -7,10 +7,7 @@ import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCycles } from "@/hooks/api/build/advanced";
 import { useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { PageState } from "@/components/shared/page-state";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { Combobox } from "@/components/ui/combobox";
@@ -27,6 +24,7 @@ import {
   CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 import { getUserDisplayName } from "@/lib/person-display";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import {
@@ -148,8 +146,6 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     [data],
   );
 
-  const displayed = meetings;
-
   const handleOpenSheet = useCallback(() => {
     setSelectedTemplate(null);
     setSheetOpen(true);
@@ -232,8 +228,6 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     (value: string) => listFilters.setValue("attendee", value || BUILD_FILTER_ALL),
     [listFilters],
   );
-
-  const pageState = usePageState({ permission: "build:meetings:view", isLoading, isError, error });
 
   const memberOptions = useMemo(
     () =>
@@ -393,58 +387,56 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
         ) : null}
 
         <PmSection index={nextMeeting ? 1 : 0} className="flex min-h-0 flex-1 flex-col">
-          <PageState
-            resolution={pageState}
-            loading={
-              <DataTableSkeleton mobileCards
-                rows={12}
-                headers={MEETINGS_TABLE_HEADERS}
-                className="flex-1"
+          <BuildListSurface<Meeting>
+            permission="build:meetings:view"
+            rows={meetings}
+            columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            isFiltered={listFilters.isFiltered}
+            getRowKey={(row) => row.id}
+            minWidth="1020px"
+            mobileCard={renderMobileCard}
+            loadingHeaders={MEETINGS_TABLE_HEADERS}
+            loadingRows={12}
+            isFetchingMore={isFetchingNextPage}
+            footer={
+              <InfiniteScrollSentinel
+                hasNextPage={hasNextPage ?? false}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={handleLoadMore}
+                label="Load more meetings"
               />
             }
             empty={
               <EmptyState
-                illustrationPreset={listFilters.isFiltered ? "search" : "calendar"}
-                title={listFilters.isFiltered ? "No meetings found" : "No meetings yet"}
-                description={
-                  listFilters.isFiltered
-                    ? undefined
-                    : "Keep your team aligned with meetings, standups, and retros. Include agenda, notes, action items, and attendees."
-                }
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
+                illustrationPreset="calendar"
+                title="No meetings yet"
+                description="Keep your team aligned with meetings, standups, and retros. Include agenda, notes, action items, and attendees."
                 action={
-                  canManage && !listFilters.isFiltered
+                  canManage
                     ? { label: "Schedule Standup", onClick: handleScheduleStandup }
                     : undefined
                 }
                 secondaryAction={
-                  canManage && !listFilters.isFiltered
+                  canManage
                     ? { label: "Cycle Planning", onClick: handleSchedulePlanning }
                     : undefined
                 }
                 className={CONTENT_FILL_PANEL}
               />
             }
+            filteredEmpty={
+              <EmptyState
+                illustrationPreset="search"
+                title="No meetings found"
+                onClearFilters={listFilters.clearAll}
+                className={CONTENT_FILL_PANEL}
+              />
+            }
             onRetry={handleRetry}
-            className={CONTENT_FILL_PANEL}
-          >
-            <DataTable
-              className={CONTENT_FILL_PANEL}
-              data={displayed}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="1020px"
-              mobileCard={renderMobileCard}
-              pagination={{ pageSize: 25 }}
-            />
-            <InfiniteScrollSentinel
-              hasNextPage={hasNextPage ?? false}
-              isFetchingNextPage={isFetchingNextPage}
-              onLoadMore={handleLoadMore}
-              label="Load more meetings"
-            />
-          </PageState>
+          />
         </PmSection>
       </PmPageShell>
 

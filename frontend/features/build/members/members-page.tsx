@@ -5,8 +5,6 @@ import { Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { keepPreviousData } from "@tanstack/react-query";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -15,8 +13,6 @@ import {
 } from "@/hooks/api/build/build-members";
 import type { BuildMember } from "@/hooks/api/build/build-members";
 import { useCan } from "@/hooks/api/access";
-import { usePageState } from "@/hooks/api/use-page-state";
-import { PageState } from "@/components/shared/page-state";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { getUserDisplayName } from "@/lib/person-display";
 import { resolveImageUrl } from "@/lib/utils";
@@ -38,6 +34,7 @@ import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 
@@ -71,14 +68,6 @@ export function MembersPage() {
     );
 
   const members = data?.data ?? [];
-
-  const pageState = usePageState({
-    permission: "build:members:view",
-    isLoading,
-    isError,
-    error,
-    isEmpty: members.length === 0,
-  });
 
   const removeMember = useRemoveBuildMember();
 
@@ -217,66 +206,64 @@ export function MembersPage() {
       >
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            <PageState
-              resolution={pageState}
-              loading={
-                <DataTableSkeleton
-                  mobileCards
-                  rows={12}
-                  headers={MEMBER_TABLE_HEADERS}
-                  className="flex-1"
-                />
-              }
+            <BuildListSurface<BuildMember>
+              permission="build:members:view"
+              rows={members}
+              columns={columns}
+              isLoading={isLoading}
+              isError={isError}
+              error={error}
+              isFiltered={listFilters.isFiltered && isOnline}
+              getRowKey={(member) => member.id}
+              mobileCard={renderMobileCard}
+              minWidth="640px"
+              pagination={{
+                mode: "cursor",
+                pageSize: 25,
+                hasMore: hasNext,
+                hasPrevious,
+                onNext: handleNextPage,
+                onPrevious: goPrevious,
+              }}
+              loadingRows={12}
+              loadingHeaders={MEMBER_TABLE_HEADERS}
               empty={
-                !isOnline ? (
+                isOnline ? (
+                  <EmptyState
+                    className={CONTENT_FILL_PANEL}
+                    illustrationPreset="team"
+                    title="No members yet"
+                    description={
+                      canManage
+                        ? "Add the first person who should have access to Build."
+                        : "People with access to Build will appear here."
+                    }
+                    action={
+                      canManage
+                        ? { label: "Add member", onClick: handleOpenAddDialog }
+                        : undefined
+                    }
+                  />
+                ) : (
                   <EmptyState
                     className={CONTENT_FILL_PANEL}
                     illustrationPreset="team"
                     title="You are offline"
                     description="Reconnect to see the latest member list."
                   />
-                ) : (
+                )
+              }
+              filteredEmpty={
                 <EmptyState
                   className={CONTENT_FILL_PANEL}
                   illustrationPreset="team"
                   title="No members yet"
-                  description={
-                    listFilters.isFiltered
-                      ? undefined
-                      : canManage
-                        ? "Add the first person who should have access to Build."
-                        : "People with access to Build will appear here."
-                  }
-                  filtersActive={listFilters.isFiltered}
+                  filtersActive
                   onClearFilters={listFilters.clearAll}
-                  action={
-                    !listFilters.isFiltered && canManage
-                      ? { label: "Add member", onClick: handleOpenAddDialog }
-                      : undefined
-                  }
                 />
-                )
               }
               onRetry={handleRetry}
-              className={CONTENT_FILL_PANEL}
-            >
-              <DataTable
-                className={CONTENT_FILL_PANEL}
-                data={members}
-                columns={columns}
-                getRowKey={(member) => member.id}
-                mobileCard={renderMobileCard}
-                minWidth="640px"
-                pagination={{
-                  mode: "cursor",
-                  pageSize: 25,
-                  hasMore: hasNext,
-                  hasPrevious,
-                  onNext: handleNextPage,
-                  onPrevious: goPrevious,
-                }}
-              />
-            </PageState>
+            />
           </PmSection>
         </PmPageShell>
       </PageWrapper>
