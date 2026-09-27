@@ -23,7 +23,7 @@ export default function HrSettingsHubPage() {
   return (
     <PageWrapper
       title="HR configuration"
-      subtitle={isAdvanced ? "Every configuration surface, including workflows, automations and versioning" : "The guided essentials"}
+      subtitle={isAdvanced ? "Every configuration surface, including workflows, automations, versioning and the full HR sidebar" : "The guided essentials. Switch to Advanced to show the rest of the HR sidebar."}
       actions={
         <ViewToggle
           value={isAdvanced ? "advanced" : "simple"}

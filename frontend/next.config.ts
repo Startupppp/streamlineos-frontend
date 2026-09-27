@@ -119,6 +119,21 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      source: "/hr/leave-policies",
+      destination: "/hr/settings/policies",
+      permanent: true,
+    },
+    {
+      source: "/hr/leave-policies/:path*",
+      destination: "/hr/settings/policies",
+      permanent: true,
+    },
+    {
+      source: "/hr/settings/managers",
+      destination: "/hr/settings/reporting-managers",
+      permanent: true,
+    },
+    {
       source: "/build/:projectId(\\d+)",
       has: [{ type: "query", key: "view", value: "workload" }],
       destination: "/build/:projectId/workload",
