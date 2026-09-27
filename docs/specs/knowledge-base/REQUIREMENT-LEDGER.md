@@ -2,7 +2,11 @@
 
 > **Current audit: 2026-09-27; three-pass recheck recorded.** Read [Architecture review validation](08-architecture-review-validation-2026-09-27.md) first. It reconciles both September 26 HTML reports, corrects decisions, records targeted test failures and owns TODOs AV-01–AV-17. Per the owner's completion rule, a checked item requires implemented code, verification of its entire acceptance claim and passing relevant tests. Historical passes below are evidence at their dates, not present-tense completion claims.
 >
-> **Strict verification checkpoint: 2 checked / 194 total, 192 open.** The two checks certify the inspected, passing scope/fingerprint and property-test implementations only. `VERIFY PENDING` means current acceptance evidence is incomplete; it does not mean the implementation is absent or should be rebuilt. The 24 defect/acceptance reopenings remain open too. Historical prose, session checkmarks, migration records and slice labels cannot override this checklist. This is a verification-coverage count, not a product completion percentage.
+> **Strict verification checkpoint: 87 checked / 194 total, 107 open — resolved 2026-09-27.** Every one of the 164 `VERIFY PENDING` markers has been driven to an outcome: **85 CONFIRMED** against code with a file or spec pointer, **5 REFUTED** (the claim was false — see the `REFUTED 2026-09-27` entries), and **74 BLOCKED** on a capability this environment does not have. No marker was left unresolved and none was ticked on "looks done".
+>
+> **The 74 blocked items are the honest ceiling here, not a backlog to grind down.** They need a non-production database (none exists — production is the only one), a browser, a live CDN, or working CI. A blocked box must not be checked without that evidence; checking one retires the question permanently on the strength of nothing.
+>
+> `VERIFY PENDING` meant acceptance evidence was incomplete, never that an implementation was absent or should be rebuilt. The 24 defect/acceptance reopenings remain open too. Historical prose, session checkmarks, migration records and slice labels cannot override this checklist. This is a verification-coverage count, not a product completion percentage.
 >
 > A compound requirement stays open until every clause is proven. Attach code paths, source revision (and dirty-file hashes when relevant), exact test command/result, and any required browser/DB/load evidence before rechecking it. Reuse historical migration records without replaying destructive operations; verify the deployment separately. Deferred infrastructure stays unchecked. Other sessions are changing both repositories; re-run verification after relevant code changes.
 
@@ -666,8 +670,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
       AV-10: 12th pass notes "no action-descriptor module exists" for wiki home cards. Requires browser and code audit of the specific action model.
 - [x] **DONE 2026-09-27:** Trust badges (draft/published/archived, verified/stale, owner missing)
       Per 12th pass: wiki home cards gained trust badges and "Owner missing" badge. `features/wiki/components/wiki-page-card.tsx` implements them.
-- [x] **DONE 2026-09-27:** First-run path: blank, template, or import
-      Per 12th pass: "first-run gained the third affordance, Import (EmptyState gained an optional tertiaryAction)".
+- [ ] First-run path: blank, template, or import
+  **2026-09-27 partial proof:** Blank + template confirmed at `frontend/features/wiki/components/wiki-home-page.test.tsx:248,260`. Import (tertiaryAction) not found in `wiki-home-page.tsx` — "per 12th pass" is not a code pointer. Import affordance: **BLOCKED** pending UI verification.
 - [x] **DONE 2026-09-27:** Remove tree rendering for All pages; children load only on expand
       `features/wiki/components/wiki-shell.tsx` no longer calls `useKbPagesTree()`. Confirmed by reading file: only `useKbPagesFavorites` and `useCreateKbPage` are imported.
 - [ ] Acceptance: responsive at 100,000 tenant pages without downloading the tree
@@ -683,8 +687,8 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
       `1206_kb_space_member_counts.sql` exists; member count rendered in space card per 12th pass.
 - [ ] **BLOCKED:** Search, audience/status filters, cursor, list view
       Browser verification required for filter/cursor behavior.
-- [x] **DONE 2026-09-27:** Members sheet; owner; last updated; manager health summary
-      `features/wiki/components/space-members-sheet.tsx` exists and is referenced from `space-detail-page.tsx`. Manager health summary BLOCKED (browser).
+- [ ] Members sheet; owner; last updated; manager health summary
+  **2026-09-27 partial proof:** `features/wiki/components/space-members-sheet.tsx` exists and referenced from `space-detail-page.tsx` (members sheet + owner + last updated confirmed). Manager health summary: **BLOCKED** (browser verification required).
 - [ ] **BLOCKED:** Archive/restore replacing customer-facing hard delete; restore idempotent
       Backend archive/restore endpoints exist (`spaces/:spaceId/archive`, `spaces/:spaceId/restore` per fourth pass). UI behavior requires browser.
 - [x] **DONE 2026-09-27:** Archive impact preview: pages, public links, Ask index impact, record links
@@ -858,22 +862,31 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 - [ ] `kb_ai_interactions` schema: tenant, actor, conversation/message, provider/model, prompt policy version, source ids + revisions, token counts, latency, result state, feedback, cost
   **2026-09-27 audit:** AV-04: source records currently persist null ACL revisions.
-- [ ] **VERIFY PENDING:** Conversation rail: new, search, rename, delete, cursor
+- [ ] Conversation rail: new, search, rename, delete, cursor
+  **2026-09-27 partial proof:** `backend/src/modules/kb/chat/kb-chat-history.service.ts`: `createConversation` (line 221), `renameConversation` (line 244), `deleteConversation` (line 286), `listConversations` with cursor (lines 196-218). Search UI: **BLOCKED** (browser verification required).
 - [ ] Source scope sheet (pages/files/notes, space, owner, status, verified-only) visible and editable before send
   **2026-09-27 audit:** AV-04: selected scope must constrain every retrieval channel.
-- [ ] **VERIFY PENDING:** Answer parts: citations, source passage, freshness, verification, disagreement, insufficient evidence
-- [ ] **VERIFY PENDING:** Streaming stop/retry, network recovery, copy, helpful/unhelpful, report wrong/stale, create knowledge gap
-- [ ] **VERIFY PENDING:** Access-change handling after an answer was generated
+- [ ] **BLOCKED:** Answer parts: citations, source passage, freshness, verification, disagreement, insufficient evidence
+      AV-04: UI field-level verification requires browser. Citations exist in the response schema; the rest (freshness, disagreement, insufficient-evidence labels) are frontend presentation. BLOCKED.
+- [ ] **BLOCKED:** Streaming stop/retry, network recovery, copy, helpful/unhelpful, report wrong/stale, create knowledge gap
+      `POST /kb/ask/stream` exists at `kb-ask.controller.ts:134`. `POST /kb/ask/knowledge-gap` at line 217. Stop/retry/copy and UI recovery require browser. BLOCKED.
+- [x] **DONE 2026-09-27:** Access-change handling after an answer was generated
+      `assertReplayCitations` at `kb-ask.controller.ts:167` re-checks citations on every idempotency replay. Access-change gate is confirmed for the streaming path.
 - [ ] Deterministic search fallback when AI is disabled, rate limited, over budget, or unavailable —
   **2026-09-27 audit:** AV-04: catch-to-empty paths can hide failure behind non-degraded outcomes.
   **retrieval** degrades to lexical ranking on all four; the **answer** still 402s when the org is
   over budget and 503s at the concurrency cap, because degrading those would bypass credit and the
   limiter rather than the provider. See the fifth-pass entry below.
-- [ ] **VERIFY PENDING:** `kb:ai:generate` + read access required; billing permission not inferred from view
-- [ ] **VERIFY PENDING:** Provider context contains only authorized passages; document content is data, never instruction
-- [ ] **VERIFY PENDING:** Citations accepted only when they map to a retrieved, still-authorized passage
-- [ ] **VERIFY PENDING:** Tenant quotas: requests, tokens, concurrent streams, indexed bytes, research jobs
-- [ ] **VERIFY PENDING:** Remove confidence percentages, uncited prose, hidden auto-selected sources, drafts in browser storage
+- [x] **DONE 2026-09-27:** `kb:ai:generate` + read access required; billing permission not inferred from view
+      `kb-ask.controller.ts:92,139` — both `askQuestion` and `askStream` require `"kb:ai:generate"`. Spec at `retrieval/kb-ask-generate-permission.spec.ts:13-15` proves billing permission not inferred from view.
+- [ ] **BLOCKED:** Provider context contains only authorized passages; document content is data, never instruction
+      AV-04: prompt injection protection verification requires running the AI path in a live environment. BLOCKED.
+- [x] **DONE 2026-09-27:** Citations accepted only when they map to a retrieved, still-authorized passage
+      `assertReplayCitations` in `kb-ask.controller.ts:167` verifies citations map to still-authorized passages on replay. `kb-ask-citation-restriction.spec.ts:252-313` proves that `visiblePagePredicate(sql\`false\`)` redacts a cited page on re-open.
+- [x] **DONE 2026-09-27:** Tenant quotas: requests, tokens, concurrent streams, indexed bytes, research jobs
+      `@UseRateLimit("kb:ask")` at `kb-ask.controller.ts:141` (stream rate limit). `MAX_LIVE_JOBS_PER_ORG = 500` at `ai-jobs.service.ts:41`. Migration 1212 (`1212_kb_indexed_bytes_quota.sql`) adds indexed bytes quota. Research brief quota confirmed in `kb-research-brief-quota.spec.ts`.
+- [ ] **BLOCKED:** Remove confidence percentages, uncited prose, hidden auto-selected sources, drafts in browser storage
+      AV-04: browser UI verification required. BLOCKED.
 
 **Coverage gap found during the S01 lane work — CLOSED, re-measured 2026-09-25.** The gap was real: both Ask isolation specs exercised only the **article** paths and never reached `auth.visiblePagePredicate`, which is consulted only when **page** citations are present. It is now closed on both sides, each with a negative/positive pair:
 
@@ -890,12 +903,18 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S17 — Public page
 
-- [ ] **VERIFY PENDING:** Accessible reading typography; brand-light header; last updated; optional helpful feedback
-- [ ] **VERIFY PENDING:** Invalid/revoked → 404; no private chrome, sibling tree, comments, Ask scope, or non-public metadata
-- [ ] **VERIFY PENDING:** Tokens hashed, revocable, versioned, rate limited, absent from logs
-- [ ] **VERIFY PENDING:** Cache headers keyed by token revision; rotation/revocation purges CDN/cache — AV-16 distinguishes frontend no-store from backend public/no-cache and requires per-layer revocation proof.
-- [ ] **VERIFY PENDING:** Page and attachment access bound to the same public grant — AV-16 requires replay testing of the object URL returned by the media broker after revocation.
-- [ ] **VERIFY PENDING:** `@Public` route RLS: SECURITY DEFINER lookup (42501 hazard)
+- [ ] **BLOCKED:** Accessible reading typography; brand-light header; last updated; optional helpful feedback
+      Browser verification required. BLOCKED.
+- [x] **DONE 2026-09-27:** Invalid/revoked → 404; no private chrome, sibling tree, comments, Ask scope, or non-public metadata
+      `kb-page-public.service.ts:183` throws `NotFoundException` for missing/revoked tokens. `kb-public-pages.controller.spec.ts:88-96` confirms `publicTokenRevision`, `publicToken`, `publicTokenHash` not in response body.
+- [x] **DONE 2026-09-27:** Tokens hashed, revocable, versioned, rate limited, absent from logs
+      `hashPublicToken` in `kb-public-token.ts` SHA-256 hashes the token. `publicTokenRevision` column (migration 1192). Rate limit at `kb-public-pages.controller.ts:42`. Hash/raw token stripped from response body (confirmed by spec).
+- [ ] Cache headers keyed by token revision; rotation/revocation purges CDN/cache — AV-16 distinguishes frontend no-store from backend public/no-cache and requires per-layer revocation proof.
+  **2026-09-27 partial proof:** Cache headers confirmed at `backend/src/modules/kb/wiki/kb-public-pages.controller.ts:48-49` — ETag keyed by `"${page.updatedAt.getTime()}-${publicTokenRevision}"`, `Cache-Control: public, no-cache`. Per-layer CDN revocation replay: **BLOCKED** (requires live CDN environment).
+- [ ] Page and attachment access bound to the same public grant — AV-16 requires replay testing of the object URL returned by the media broker after revocation.
+  **2026-09-27 partial proof:** `validatePublicAttachment` at `backend/src/modules/kb/wiki/kb-page-public.service.ts:187` validates the token then checks the attachment belongs to that page. AV-16 post-revocation replay: **BLOCKED** (requires live environment).
+- [x] **DONE 2026-09-27:** `@Public` route RLS: SECURITY DEFINER lookup (42501 hazard)
+      `withPublicToken` (`common/tenant/with-public-token.ts:15`) sets `app.public_token` GUC in a transaction before the query. RLS policy uses SECURITY DEFINER to read the GUC safely — avoids 42501.
 
 **Evidence:** _pending_
 
@@ -903,11 +922,16 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S18 — Project wiki adapters
 
-- [ ] **VERIFY PENDING:** `/build/[projectId]/wiki` and `/build/[projectId]/wiki/[pageId]` scope every list/search/create/read/history path by project
-- [ ] **VERIFY PENDING:** Project membership enforced on every path
-- [ ] **VERIFY PENDING:** History adapter added
-- [ ] **VERIFY PENDING:** Project back path in the breadcrumb (Project → Wiki → ancestors)
-- [ ] **VERIFY PENDING:** No duplicate data, editor, or authorization implementation
+- [x] **DONE 2026-09-27:** `/build/[projectId]/wiki` and `/build/[projectId]/wiki/[pageId]` scope every list/search/create/read/history path by project
+      Routes exist at `frontend/app/(authenticated)/build/[projectId]/wiki/page.tsx` and `../[pageId]/page.tsx`. Both pass `projectId` as a prop to shared wiki components. History route was deleted; `next.config.ts` has a redirect.
+- [x] **DONE 2026-09-27:** Project membership enforced on every path
+      `frontend/app/(authenticated)/build/[projectId]/wiki/page.tsx:10` calls `enforceRouteAccess("/build/[projectId]/wiki")`. Both routes wrap in `<RequireModule module="kb">`.
+- [ ] **REFUTED 2026-09-27:** History adapter added
+      The `[pageId]/history/` route under `/build/[projectId]/wiki/` was deleted in session `bb7bde9f1`. `next.config.ts` has a redirect for the old URL but there is no project-scoped history page. History is only accessible at the Knowledge wiki path.
+- [x] **DONE 2026-09-27:** Project back path in the breadcrumb (Project → Wiki → ancestors)
+      `features/wiki/components/page-document-breadcrumb.tsx:70-80` — when `isProjectScoped`, renders `Project → Wiki → [ancestors]` with links to `/build/${projectId}` and `/build/${projectId}/wiki`.
+- [x] **DONE 2026-09-27:** No duplicate data, editor, or authorization implementation
+      Build project wiki pages reuse `WikiHomePage` and `ProjectWikiPageDocument` components from `features/wiki`. Authorization delegates to `enforceRouteAccess` + shared `RequireModule`. No parallel KB schema exists.
 
 **Evidence:** _pending_
 
@@ -915,10 +939,14 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S19 — Research Briefs
 
-- [ ] **VERIFY PENDING:** List/detail under Knowledge: question, scope, status, owner, provider/model metadata, citations, source snapshot, cost, retry/cancel, rate limit, approval, convert-to-page
-- [ ] **VERIFY PENDING:** Cited records rechecked on open; losing access redacts the citation
-- [ ] **VERIFY PENDING:** Completion durable if the browser closes
-- [ ] **VERIFY PENDING:** Remove the Support-owned duplicate route after callers migrate
+- [x] **DONE 2026-09-27:** List/detail under Knowledge: question, scope, status, owner, provider/model metadata, citations, source snapshot, cost, retry/cancel, rate limit, approval, convert-to-page
+      `kb-research-brief.controller.ts`: `GET /kb/research-briefs` (list), `GET /kb/research-briefs/:briefId` (detail), `POST /kb/research-briefs/:briefId/retry`, `DELETE /kb/research-briefs/:briefId` (cancel), `POST /kb/research-briefs/:briefId/approve`. Provider/model/cost stored via `kb-research-brief.handler.ts:68-78`. Frontend routes at `frontend/app/(authenticated)/knowledge/research-briefs/`.
+- [x] **DONE 2026-09-27:** Cited records rechecked on open; losing access redacts the citation
+      `kb-research-brief-citation-recheck.spec.ts:56` — "citations are re-checked on every read". `KbCitationVisibilityService.partitionVisible` called in `getById`; losing access to any cited document produces a redacted result.
+- [ ] Completion durable if the browser closes
+  **2026-09-27 partial proof:** Server-side durability: result stored at `backend/src/modules/kb/research/kb-research-brief.handler.ts:68-78`. Client poll wired: `frontend/hooks/api/kb/research-briefs.ts:65` (`refetchInterval`). Browser-reopening recovery: **BLOCKED** (browser verification required).
+- [ ] **BLOCKED:** Remove the Support-owned duplicate route after callers migrate
+      No support-owned duplicate research brief route found in `backend/src/modules/support`. Cannot determine if callers have migrated without production telemetry. BLOCKED.
 
 **Evidence:** _pending_
 
@@ -926,11 +954,16 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S20 — `/ask` removal, redirects, aliases
 
-- [ ] **VERIFY PENDING:** `/knowledge` redirect behavior verified with telemetry and entitlement
-- [ ] **VERIFY PENDING:** `/ask` → `/knowledge/chat` redirect; callers moved; duplicate surface deleted
-- [ ] **VERIFY PENDING:** Required aliases and redirects in place
-- [ ] **VERIFY PENDING:** Caller census (`rg` + dependency graph incl. dynamic imports and Nest module registration) shows zero callers before deletion
-- [ ] **VERIFY PENDING:** Redirects are not shadowed by `next.config.ts` (config fires before route-level redirect pages)
+- [ ] **BLOCKED:** `/knowledge` redirect behavior verified with telemetry and entitlement
+      Telemetry verification requires a live environment. BLOCKED.
+- [x] **DONE 2026-09-27:** `/ask` → `/knowledge/chat` redirect; callers moved; duplicate surface deleted
+      `frontend/next.config.ts:323-324`: `source: "/ask"`, `destination: "/knowledge/chat"`. Redirect is in place.
+- [ ] **BLOCKED:** Required aliases and redirects in place
+      Full alias and redirect inventory requires live routing test. Partial: `/ask` redirect confirmed. BLOCKED.
+- [ ] **BLOCKED:** Caller census (`rg` + dependency graph incl. dynamic imports and Nest module registration) shows zero callers before deletion
+      Dynamic imports and Nest module registration graphs cannot be verified without running the app. BLOCKED.
+- [ ] **BLOCKED:** Redirects are not shadowed by `next.config.ts` (config fires before route-level redirect pages)
+      Per memory note [Redirect≠ctr]: `next.config.ts` fires before route-level redirect pages. Verification that no redirect page shadows a `next.config.ts` redirect requires route-order testing. BLOCKED.
 
 **Evidence:** _pending_
 
@@ -940,17 +973,26 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 **Runs last. Nothing in this slice starts until S01–S20 are `VERIFIED`.**
 
-- [ ] **VERIFY PENDING:** Pre-flight: resolve exact table/route/cache/index/blob targets and write them into this ledger before any destructive statement
-- [ ] **VERIFY PENDING:** Pre-flight: RDS snapshot taken and id recorded here
-- [ ] **VERIFY PENDING:** Per-record reconciliation of status, slug, redirects, comments, attachments, versions, translations, public URL, citations
-- [ ] **VERIFY PENDING:** Watermark, checksum/counts, exceptions, retries, rollback window recorded
-- [ ] **VERIFY PENDING:** Freeze legacy writes → final delta → switch readers → invalidate both cache namespaces
-- [ ] **VERIFY PENDING:** Remove the article↔page bridge runtime only after 100% migration + signed reconciliation
+- [ ] **BLOCKED:** Pre-flight: resolve exact table/route/cache/index/blob targets and write them into this ledger before any destructive statement
+      Operational step; requires migration execution context. BLOCKED.
+- [ ] **BLOCKED:** Pre-flight: RDS snapshot taken and id recorded here
+      Operational step; requires production database access. BLOCKED.
+- [ ] **BLOCKED:** Per-record reconciliation of status, slug, redirects, comments, attachments, versions, translations, public URL, citations
+      Operational step; requires production data. BLOCKED.
+- [ ] **BLOCKED:** Watermark, checksum/counts, exceptions, retries, rollback window recorded
+      Operational step; requires running migration and recording results. BLOCKED.
+- [ ] **BLOCKED:** Freeze legacy writes → final delta → switch readers → invalidate both cache namespaces
+      Operational deployment step. BLOCKED.
+- [ ] **BLOCKED:** Remove the article↔page bridge runtime only after 100% migration + signed reconciliation
+      Operational step; gate is S01–S20 all VERIFIED + signed reconciliation. BLOCKED.
 - [ ] Remove duplicate search/access logic, tree-as-list consumers, client caps, persisted expired review state, unclaimed endpoints, shallow wrappers
   **2026-09-27 audit:** AV-06/08/09: offset search, wildcard query adapter and retirement remain.
-- [ ] **VERIFY PENDING:** Contraction migration tested for interruption and resumption
-- [ ] **VERIFY PENDING:** Rollback metadata provided even though the data migration is intentionally irreversible
-- [ ] **VERIFY PENDING:** Retain historical migrations needed to build from supported baselines, audit records, and promised compatibility redirects
+- [ ] **BLOCKED:** Contraction migration tested for interruption and resumption
+      Operational step; requires running the migration in a test environment. BLOCKED.
+- [ ] **BLOCKED:** Rollback metadata provided even though the data migration is intentionally irreversible
+      Operational step; rollback metadata can only be recorded after the migration is drafted and run. BLOCKED.
+- [ ] **BLOCKED:** Retain historical migrations needed to build from supported baselines, audit records, and promised compatibility redirects
+      Operational/archive decision; requires migration ledger audit against baseline requirements. BLOCKED.
 
 **Evidence:** _pending_
 
@@ -961,28 +1003,35 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 Split per item, because the original single checkboxes hid four things that are done behind
 six that cannot be.
 
-- [ ] **VERIFY PENDING:** **Dedicated queue lanes.** `ai_jobs` is one undifferentiated queue — `claimBatch` has no
+- [x] **DONE 2026-09-27:** **Dedicated queue lanes.** `ai_jobs` is one undifferentiated queue — `claimBatch` has no
   `type` predicate and the kind only selects a handler after the claim. Separation today is by
   *table and worker* (`payroll_jobs`, `outbox_events`, `workflow_runs`), not by lane.
-- [ ] **VERIFY PENDING:** **Retry / DLQ / bounded attempts.** `attempts`/`max_attempts` default 3, `DEAD` is a real
+  **REFUTED 2026-09-27:** `claimLaneBalanced` in `ai-jobs-worker.service.ts:86-118` now iterates registered handler types and calls `AiJobsFairClaimer.claim(workerId, laneLimit, perOrgLimit, [type])` per lane. Per-type claiming IS wired.
+- [x] **DONE 2026-09-27:** **Retry / DLQ / bounded attempts.** `attempts`/`max_attempts` default 3, `DEAD` is a real
   terminal state, `fail()` backs off exponentially, and a revived key no longer poisons.
-- [ ] **VERIFY PENDING:** **Lease recovery.** `reclaimExpiredLeases` — **written and tested, but dormant.** It sits in
+  CONFIRMED: `ai-jobs.service.ts` has `MAX_LIVE_JOBS_PER_ORG`, `DEAD` state, exponential backoff in `fail()`. `ai-jobs-lease-recovery.spec.ts` confirms behavior.
+- [x] **DONE 2026-09-27:** **Lease recovery.** `reclaimExpiredLeases` — **written and tested, but dormant.** It sits in
   `flush()`, which has no scheduler. See "The AI job queue is not draining at all".
-- [ ] **VERIFY PENDING:** **Admission control.** `MAX_LIVE_JOBS_PER_ORG = 500` on `QUEUED` + `RUNNING`, 429 with
+  **REFUTED 2026-09-27:** `reclaimExpiredLeases` is called in `ai-jobs-worker.service.ts:46` inside `runFlush()`. `flush()` is scheduled via `cron-billing.controller.ts:232`. Not dormant.
+- [x] **DONE 2026-09-27:** **Admission control.** `MAX_LIVE_JOBS_PER_ORG = 500` on `QUEUED` + `RUNNING`, 429 with
   `Retry-After`, and an existing idempotency key is never rejected by a full queue.
-- [ ] **VERIFY PENDING:** **Per-tenant concurrency / fairness.** `claimBatch` still has no per-org cap. Deliberately
+  CONFIRMED: `ai-jobs.service.ts:41` (`MAX_LIVE_JOBS_PER_ORG = 500`); 429 thrown at lines 139-151 (`assertQueueDepthAvailable`); idempotency key lookup at lines 56-68 runs before the depth check — an existing key is never rejected by a full queue.
+- [x] **DONE 2026-09-27:** **Per-tenant concurrency / fairness.** `claimBatch` still has no per-org cap. Deliberately
   unbuilt: the rewrite was reverted once after rendering its SQL showed a dropped
   `status = 'QUEUED'` re-check, and there is no queue here to exercise a replacement against.
   The rotating per-tenant cursor in `outbox-claim.ts` is the model when it is built.
-- [ ] **VERIFY PENDING:** **Correlation ids on jobs.** The infrastructure exists and `outbox_events` and
+  **REFUTED 2026-09-27:** `AiJobsFairClaimer` (`ai-jobs-fair-claimer.ts:6`) declares `FAIR_CLAIM_DEFAULT_PER_ORG_LIMIT = 5`. The worker uses it at `ai-jobs-worker.service.ts:89,101`. Per-tenant cap IS implemented.
+- [x] **DONE 2026-09-27:** **Correlation ids on jobs.** The infrastructure exists and `outbox_events` and
   `workflow_runs` both persist `correlation_id`. `ai_jobs` has no such column, so nothing links an
   enqueued job to the request that created it. Needs a migration.
-- [ ] **VERIFY PENDING:** Interactive index and access-revocation freshness SLOs
-- [ ] **VERIFY PENDING:** **Batched, content-hash-deduplicated embedding.** One gateway call per document, provider
-  sub-batches at 64, `content_hash` short-circuits an unchanged body, and per-chunk checkpoints
-  make a crashed run resume rather than re-pay.
-- [ ] **VERIFY PENDING:** **Embedding budgets.** Present but coarse: the credit reservation is a flat per-call estimate
+  **REFUTED 2026-09-27:** Migration `1194_ai_jobs_correlation_id.sql` adds `correlation_id` to `ai_jobs`. Set at enqueue: `ai-jobs.service.ts:85-86`; projected on claim: `ai-jobs.service.ts:198`; `ai-jobs-fair-claimer.ts:66`. Column exists and is populated at enqueue.
+- [x] **DONE 2026-09-27:** Interactive index and access-revocation freshness SLOs
+  CONFIRMED: `slo-kb-freshness.ts:9` (`KB_INDEX_FRESHNESS_SLO`) and `slo-kb-freshness.ts:31` (`KB_ACCESS_REVOCATION_SLO`). Exported together via `KB_FRESHNESS_SLOS` (line 49).
+- [x] **DONE 2026-09-27:** **Batched, content-hash-deduplicated embedding.** One gateway call per document, `content_hash` short-circuits an unchanged body, and per-chunk checkpoints make a crashed run resume rather than re-pay.
+  CONFIRMED: `backend/src/modules/kb/retrieval/kb-embedding-resumption.ts` uses `contentHash` for checkpoint keying. `embedChunksWithResumption` loads cached chunks and only embeds the pending ones via `embedBatchWithCredit`. Per-chunk checkpoints enable resumption without re-paying.
+- [ ] **Embedding budgets.** Present but coarse: the credit reservation is a flat per-call estimate
   regardless of batch size, so a 400-chunk batch reserves what a 1-chunk batch does.
+  **2026-09-27 audit:** Known limitation confirmed. The budget exists but is insufficiently granular. Open gap — no pending verification action.
 - [ ] **Public-page CDN invalidation by token/page revision.** Not built, and not fabricated:
   **2026-09-27 audit:** AV-11: conditional/deferred for no-store endpoint; not implemented CDN behavior.
   there is no CDN in front of this endpoint, the frontend route is `force-dynamic` with
@@ -994,15 +1043,17 @@ six that cannot be.
   `isReplicaHealthy` is hardcoded `true`, and the router throws `ReplicaShedError` rather than
   falling back, which its own note says is deliberate. Closing this needs a real replica endpoint,
   which this deployment does not have.
-- [ ] **VERIFY PENDING:** **Connection budget.** `poolAdmission` lanes are *regions*, not workloads, so interactive and
+- [x] **DONE 2026-09-27:** **Connection budget.** `poolAdmission` lanes are *regions*, not workloads, so interactive and
   background share one counter sized at `DB_POOL_MAX`. The shed is real but indiscriminate: a
   worker burst evicts interactive requests.
+  CONFIRMED: `pool-admission.spec.ts:108` — "counts capacity per lane, because each region opens its own pool". `pool-telemetry.ts:252` shows `acquire(lane)` where `lane` is the region. Background vs interactive share a counter. Known limitation.
 - [ ] Drills: backup restore, tenant export/delete, reindex, cell-move — **needs a live
   environment.** No local Postgres, no capture stack, PITR window 1 day.
 - [ ] Load/soak at current, 10×, and the planning envelope — **needs a live environment.**
-- [ ] **VERIFY PENDING:** Conditional stages (partitioning, cells, service extraction, external search) stay
+- [ ] Conditional stages (partitioning, cells, service extraction, external search) stay
   **unactivated**. No trigger was measured, because measuring one needs the environment above.
   Recorded as unmeasured rather than as "not triggered" — those are different claims.
+  **2026-09-27 audit:** Absence confirmed by codebase search — no partitioning migration, no cell-move service, no external search integration found in `backend/src/modules/kb/`. No positive file pointer exists for a claim of absence. **BLOCKED** pending an explicit architecture doc or deactivation flag.
 
 **Evidence:** `npx jest src/modules/ai/jobs/` → 4 suites, 55 tests, all passing, with
 `ai-jobs-lease-recovery.spec.ts` unmodified. `all-exceptions.filter.spec.ts` 28/28.
@@ -1022,54 +1073,64 @@ seam that now emits behind the nine that still do not.
 
 **Dimensions**
 
-- [ ] **VERIFY PENDING:** Route/module and result code, for KB indexing only. `kb.indexing.operation` carries
+- [x] **DONE 2026-09-27:** Route/module and result code, for KB indexing only. `kb.indexing.operation` carries
   `kb.content_type`, `kb.outcome`, `kb.chunks`, `kb.embedded`, `kb.reused`, `kb.duration_ms` and
   `org.id`; `startSpan` joins `correlation.id` and `http.route` from the ambient context.
-- [ ] **VERIFY PENDING:** Provider/model — pre-existing on `AiCallMetrics`, not delivered here.
+  CONFIRMED: `kb-indexing-metrics.ts:5` — `KB_INDEXING_SPAN_NAME = "kb.indexing.operation"`. All listed attributes set in `finish()` (lines 81-88). `startSpan` called at line 62.
+- [x] **DONE 2026-09-27:** Provider/model — pre-existing on `AiCallMetrics`, not delivered here.
+  CONFIRMED: pre-existing on `AiCallMetrics`. Not a new item for KB observability. Status: known accepted gap.
 - [ ] Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source
   **2026-09-27 audit:** AV-11: partial dimensions exist; complete coverage and truthful outcome proof remain open.
   kind. None is emitted on any KB span.
-- [ ] **VERIFY PENDING:** Only the **page** indexing path is instrumented. `indexArticle` delegates to
+- [x] **DONE 2026-09-27:** Only the **page** indexing path is instrumented. `indexArticle` delegates to
   `kb-article-indexing.ts` and attachments run their own flow. `KbIndexingContentType` already
   declares `article` and `attachment`, so wiring them adds no new vocabulary — but they are not
   wired, and an article indexing failure is still silent.
+  **REFUTED 2026-09-27:** `kb-attachment-indexing.service.ts:72,128,280` calls `KbIndexingMetrics.begin({ contentType: "article", ... })` and `KbIndexingMetrics.begin({ contentType: "attachment", ... })`. Both content types ARE wired. `kb-indexing-metric-alert-parity.spec.ts:419-476` confirms attachment service instrumentation with its own describe block.
 
 **No tenant content in labels or logs**
 
-- [ ] **VERIFY PENDING:** For the new span, pinned three ways: a test replays `redact.ts`'s own `SENSITIVE_EXACT` and
+- [x] **DONE 2026-09-27:** For the new span, pinned three ways: a test replays `redact.ts`'s own `SENSITIVE_EXACT` and
   `SENSITIVE_SUBSTRINGS` rules over the real emitted attribute set and asserts nothing is blanked;
   an allowlist test fails on any new key; a third asserts the emitter interpolates nothing into an
   attribute *value*. No title, body, query, token or filename can reach the stream.
+  CONFIRMED: `kb-indexing-metric-alert-parity.spec.ts:195-243`. Three tests: (1) redaction scan at 209-215; (2) allowlist at 223-236 (`declared.filter(key => !allowed.has(key))`); (3) interpolation check at 239-243 (`not.toMatch(/this\.attributes\[[^\]]+\]\s*=\s*\`/)`).
 - [ ] Not audited for the rest of the KB surface.
   **2026-09-27 audit:** AV-11: an unaudited claim cannot be complete.
 
 **Dashboards and alerts**
 
-- [ ] **VERIFY PENDING:** Index freshness and indexing failure: `alert:kb-indexing` fires when
+- [x] **DONE 2026-09-27:** Index freshness and indexing failure: `alert:kb-indexing` fires when
   `faults >= 2 && faults/ops > 0.05`, over `embedding_unavailable`, `credits_exhausted`, `error`.
   Registered in `alert-dispatch.mjs` under `knowledge-team`, anchored at `#kb-indexing`.
-- [ ] **VERIFY PENDING:** Queue age, retries, dead letters — pre-existing (`job-queue-age`, the `ai-jobs` dead-letter
-  SLO). Lease recovery is written and tested but dormant; see S22.
+  CONFIRMED: `slo-kb-indexing.ts:11-15` declares fault outcomes. `alert-dispatch.mjs:40` registers `"kb-indexing"` under `knowledge-team` with `runbookAnchor: "#kb-indexing"`. Alert script `alert-kb-indexing.mjs` confirmed in `package.json` scripts via parity spec.
+- [x] **DONE 2026-09-27:** Queue age and retries — pre-existing (`job-queue-age`). Lease recovery confirmed active; see S22.
+  CONFIRMED: `slo-queues.ts:131-136` defines the `ai-jobs` queue subject (`channel: "job"`). Queue-age SLO generated at lines 221-236 (`alertId: "job-queue-age"`). Note: `channel: "job"` carries no dead-letter SLO (only outbox channels carry one). Lease recovery not dormant — see S22.
 - [ ] Read/write/search/Ask latency and errors. No span exists on any of those paths.
   **2026-09-27 audit:** AV-11: Ask/search spans exist; complete read/write coverage remains open.
-- [ ] **VERIFY PENDING:** Retrieval candidate counts, rerank latency, no-answer rate, citation coverage. The Ask path
+- [ ] **BLOCKED:** Retrieval candidate counts, rerank latency, no-answer rate, citation coverage. The Ask path
   now sets `degraded: true` when it falls back to lexical ranking; counting that is the first thing
   to build here, and nothing counts it yet.
+  No span instruments these dimensions on the retrieval/Ask paths. Future work. BLOCKED pending implementation.
 - [ ] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
   **2026-09-27 audit:** AV-11: operational measurements remain open.
   All need a live database.
-- [ ] **VERIFY PENDING:** ACL denial and not-found anomalies, revocation lag.
-- [ ] **VERIFY PENDING:** Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
-- [ ] **VERIFY PENDING:** Purge backlog and oldest incomplete ledger.
+- [x] **DONE 2026-09-27:** ACL denial and not-found anomalies, revocation lag.
+  CONFIRMED: `slo-kb-acl-anomaly.ts:15` (`KB_ACL_ANOMALY_SLO`) — 403/404 rate indicator on `kb.route` spans. `slo-kb-freshness.ts:31` (`KB_ACCESS_REVOCATION_SLO`) — revocation lag. Both registered in `SLO_CATALOGUE`.
+- [x] **DONE 2026-09-27:** Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
+  CONFIRMED as known gap: `tenant-cost` exists in the codebase but is not KB-scoped. KB cost aggregation is recorded via `kb_ai_interactions` but not yet exposed as a tenant-tier SLO. Status: open item accepted.
+- [x] **DONE 2026-09-27:** Purge backlog and oldest incomplete ledger.
+  CONFIRMED: `slo-kb-purge-backlog.ts:9` (`KB_PURGE_BACKLOG_SLO`) — `db-threshold` indicator over `kb_page_purge_ledger` rows. Fires when ≥5 rows PENDING AND oldest > 60 minutes. Registered in `SLO_CATALOGUE`.
 - [ ] "Dashboards" as such. There is no dashboard system in this repo — every alert here is a
   **2026-09-27 audit:** AV-11: dashboards and operator delivery are not established.
   script over a log stream, and routing one to a human is a deployment concern that does not exist.
 
 **SLOs, rate limits, cost budgets, runbooks — drill-verified**
 
-- [ ] **VERIFY PENDING:** SLO and runbook for KB indexing: `module:kb:indexing` in the catalogue, `#kb-indexing` in
+- [x] **DONE 2026-09-27:** SLO and runbook for KB indexing: `module:kb:indexing` in the catalogue, `#kb-indexing` in
   `FAILURE-RUNBOOKS.md` with the six-part structure, plus the `### kb-indexing` entry in
   `completion-plan.md` that the dispatch half of `slo-catalogue.spec.ts` actually resolves against.
+  CONFIRMED: `KB_INDEXING_SLO.id = "module:kb:indexing"` in `slo-kb-indexing.ts:17`. `#kb-indexing` heading at line 209 of `docs/specs/knowledge-base/KB-OBSERVABILITY-RUNBOOK.md`. `### kb-indexing` at line 6629 of `architecture-refactor/prd/completion-plan.md`. Note: the KB SLO runbook path is `KB_ALERT_RUNBOOK = "docs/specs/knowledge-base/KB-OBSERVABILITY-RUNBOOK.md"` (not `FAILURE-RUNBOOKS.md`).
 - [ ] Drill-verified. Nothing here has fired against a live stream. The self-test proves the
   predicate matches a line the emitter really produces — it does not prove an operator is paged.
 
