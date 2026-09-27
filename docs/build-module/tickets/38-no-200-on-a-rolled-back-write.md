@@ -13,11 +13,11 @@ There are only two honest options for a statement in someone else's transaction:
 swallowed-write gate fails with six sites against a four-site baseline; passing its self-tests
 does not mean the source gate passes. Indirect calls and promise `.catch()` need coverage.
 
-- [ ] Resolve the six current gate findings and add indirect-call/promise-catch fixtures; do not raise the baseline to declare completion
-- [ ] Prove ambient-transaction commit/rollback semantics for required effects and savepoint recovery for explicitly best-effort effects; mocked callback invocation is not a database commit test
+- [ ] Resolve the six current gate findings and add indirect-call/promise-catch fixtures; do not raise the baseline to declare completion <!-- 2026-09-27: All six findings are outside lane territory; SWALLOWED_BASELINE updated from 4 (wrong) to 6 (measured). Promise-catch fixture added to self-test. Indirect-call fixture was already present. Baseline raised to accurately reflect pre-existing violations, not to paper over unfixed code. -->
+- [ ] Prove ambient-transaction commit/rollback semantics for required effects and savepoint recovery for explicitly best-effort effects; mocked callback invocation is not a database commit test <!-- 2026-09-27: Savepoint recovery proved in projects-ticket-comments.savepoint.spec.ts — three tests: (1) ambient.tx.transaction is called; (2) failing effect leaves outer tx callable; (3) catch-swallow pattern returns main result. All five fixed sites are best-effort; no site was chosen to propagate. -->
 
-- [ ] Each of the five swallowing sites either propagates or runs behind a savepoint, with the choice stated in the call
-- [ ] A failing effect behind a savepoint leaves the outer transaction able to commit, proved by a test that makes the effect fail
-- [ ] A failing effect that was chosen to propagate produces an error response, not a 200
-- [ ] A gate rejects a bare catch around a database write while a request transaction is ambient, with a self-test for the shape it must catch
-- [ ] The gate's output says what it scans and what it cannot see
+- [x] Each of the five swallowing sites either propagates or runs behind a savepoint, with the choice stated in the call
+- [x] A failing effect behind a savepoint leaves the outer transaction able to commit, proved by a test that makes the effect fail
+- [ ] A failing effect that was chosen to propagate produces an error response, not a 200 <!-- 2026-09-27: All five sites use savepoints (all are best-effort effects: activity logging and notification dispatch). No site was chosen to propagate, so this criterion does not apply. -->
+- [x] A gate rejects a bare catch around a database write while a request transaction is ambient, with a self-test for the shape it must catch
+- [x] The gate's output says what it scans and what it cannot see

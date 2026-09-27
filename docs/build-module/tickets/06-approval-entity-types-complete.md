@@ -23,7 +23,7 @@ not every live consumer. Derivation is not an end-to-end submission test.
 - [ ] The parallel hand-written type union is derived from the schema rather than maintained separately
   — `frontend/types/projects/approvals.ts` line 3: `ApprovalEntityType = DbEnumMember<"approval_entity_type">` imported from `@/contracts/db-enums.generated`; the eight-value hand-written union is removed. Also resolved: `APPROVAL_ENTITY_TYPE_VALUES` in `frontend/hooks/api/build/approvals-schema.ts` line 11 (a third copy that listed all eight) is now `DB_ENUMS.approval_entity_type` — same source, no longer a separate list.
 - [ ] Adding a ninth value to the database and regenerating the catalog makes it available with no further frontend edit
-  — All three derivation points (`APPROVAL_ENTITY_TYPES`, `APPROVAL_ENTITY_TYPE_VALUES`, `ApprovalEntityType`) are assigned or typed from `DB_ENUMS.approval_entity_type` / `DbEnumMember<"approval_entity_type">`. When `pnpm -C frontend generate:db-enums` regenerates `frontend/contracts/db-enums.generated.ts`, the `as const` object gains the ninth member; every consumer at build time receives the widened type and widened tuple without any further edit. Proved by construction: there is no other array or union in the three owned files that names the entity type members.
+  — Catalog regeneration widens these validation/type declarations. It does not implement labels or entity selection for a new approval kind. The current request sheet still needs work for existing missing types; future kinds require an explicit usable-UI contract.
 
 **Copies of the approval entity type enumeration before and after:**
 
@@ -37,4 +37,4 @@ test was run in this audit; they remain unchecked under the owner's test-evidenc
 | `frontend/types/projects/approvals.ts` | hand-written 8-value union | `DbEnumMember<"approval_entity_type">` |
 | `frontend/features/build/approvals/approvals-constants.ts` | display list with labels + sentinel; already had all 8 values | unchanged (display list, not a validation list; values were correct) |
 
-Total copies before: 4 (3 raw, 1 display). After: 1 canonical source (`DB_ENUMS`), 0 raw duplicates.
+The three validation/type declarations now derive from the catalog. This is not a complete consumer inventory: request-approval-sheet.tsx still has a six-choice picker and explicit label/entity handling.

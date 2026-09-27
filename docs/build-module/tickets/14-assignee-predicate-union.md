@@ -10,8 +10,8 @@ BE-81 already requires this: split an `OR` between an indexed predicate and a se
 
 - [x] One shared predicate builder serves both the list and the counts
 - [ ] The combined filter is expressed as a union of independently indexable branches
-- [x] Filtering for unassigned plus named people returns the same rows as before
-- [x] A test asserts both call sites use the shared builder, so a future copy cannot drift
+- [ ] Filtering for unassigned plus named people returns the same rows as before
+- [ ] A test asserts both call sites use the shared builder, so a future copy cannot drift
 - [x] Do not measure against production; reason from the index definitions
 
 **Correction (2026-09-26) — the union criterion is not met, and the first attempt's
@@ -47,11 +47,12 @@ UNION ALL
 SELECT ... FROM tickets WHERE org_id=? AND project_id=? AND assignee_membership_id IN (...)
 ```
 
-**What was kept and why.** The locality half is genuine and shipped: one
-`buildAssigneeFilter` now serves both `listTickets` and `getColumnCounts`, replacing two
-independently-maintained 16-line copies, with a test pinning both call sites so a future copy
-cannot drift. Row-set equivalence holds — `EXISTS(A UNION ALL B) = EXISTS(A) OR EXISTS(B)` —
-so nothing regressed.
+**What was kept and why.** Current source uses one `buildAssigneeFilter` for both reads. This
+is implementation evidence, not deployment evidence. The tests assert SQL fragments and would
+not necessarily fail if someone duplicated the helper. Predicate equivalence is reasoned from
+the EXISTS expressions, not an executed returned-row regression test of the full queries.
+
+- [ ] Add representative returned-row equivalence tests and a dependency/behavior check that fails when the two callers stop sharing the intended predicate; do not describe substring assertions as proof that drift is impossible
 
 **What remains.** Re-expressing both reads as a top-level `UNION ALL`. That is not a small
 follow-up: `listTickets` is keyset-paginated, and a cursor over a union needs its ordering and

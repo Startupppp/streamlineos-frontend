@@ -8,10 +8,10 @@ Ticket 57 lands first so the change-request spec has a real invoking double befo
 
 **Blocked by:** 57 — The change-request number counter becomes a module whose concurrency is testable.
 
-**Status:** ready-for-agent
+**Status:** complete (2026-09-27)
 
-- [ ] The gate's unit of judgement is the test block, not the file
-- [ ] An exemption assertion in one block does not exempt doubles in another, proved by a self-test with both in one fixture file
-- [ ] The counts change, and the new numbers are recorded as the baseline with the old ones noted as wrong rather than improved
-- [ ] The gate's output distinguishes "a double that invokes its callback" from "a file that mentions not being called"
-- [ ] The docblock states the unit it actually uses
+- [x] The gate's unit of judgement is the test block, not the file — fileVerdict now uses enclosingDescribeText per double (2026-09-27)
+- [x] An exemption assertion in one block does not exempt doubles in another, proved by a self-test with both in one fixture file — crossBlockFile fixture added, asserts VOID (2026-09-27)
+- [x] The counts change, and the new numbers are recorded as the baseline with the old ones noted as wrong rather than improved — VOID_FILE_BASELINE updated 2 (wrong) → 8 (measured) in ratchets.json with reason stating the old value was wrong due to file-wide UNREACHED_RE test misclassifying six files (2026-09-27)
+- [x] The gate's output distinguishes "a double that invokes its callback" from "a file that mentions not being called" — output already uses INVOKES vs DECLARED-UNREACHED verdict labels (2026-09-27)
+- [x] The docblock states the unit it actually uses — docblock updated to say "per test BLOCK" (2026-09-27)

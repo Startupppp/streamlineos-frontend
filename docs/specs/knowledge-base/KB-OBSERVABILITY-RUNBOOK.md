@@ -179,6 +179,54 @@ node backend/src/scripts/alert-kb-index-freshness.mjs --stale-minutes=60 --lookb
 
 ---
 
+## #kb-read
+
+**What fires:** `kb-read` (high, knowledge-team) when Document reads breach any of three ratios in the window — faults (`denied` + `error`) above 5%, `denied` alone above 25%, or `not_found` above 40%.
+
+**Detection signal:** `alert-kb-read.mjs` reads `kb.read.operation` spans and groups by `kb.read.outcome` (`found` · `not_found` · `denied` · `error`). Spans carry tenant bucket, actor standing, cache outcome, primary-vs-replica, queue lane and source kind, so a breach can be attributed before anything is changed.
+
+**Why three ratios and not one:** they fail differently. A fault spike is the service breaking. A `denied` spike is an authorization change — a Space audience edit or a revoked grant — and is the signal that catches an ACL regression in production. A `not_found` spike usually means links are pointing at Documents that moved or were purged, which no error rate would show.
+
+**First five minutes**
+
+```bash
+node backend/src/scripts/alert-kb-read.mjs
+
+node backend/src/scripts/alert-kb-read.mjs --denied-ratio=0.1 --not-found-ratio=0.25
+```
+
+**Containment:** A read breach does not corrupt data. Do not widen access to clear a `denied` spike — if the denials are correct, widening turns a visible signal into a silent exposure. Confirm against `#kb-acl-anomaly` first.
+
+**Recovery:** Split the breaching outcome by actor standing and source kind. A `denied` spike confined to one standing is an entitlement change; spread across all standings it is a scope regression.
+
+**Verification:** `pnpm alert:kb-read:self-test` exits 0.
+
+---
+
+## #kb-write
+
+**What fires:** `kb-write` (high, knowledge-team) when Document writes breach faults (`denied` + `error`) above 5%, or `denied` alone above 20%.
+
+**Detection signal:** `alert-kb-write.mjs` reads `kb.write.operation` spans grouped by `kb.write.outcome` (`created` · `updated` · `deleted` · `conflict` · `denied` · `error`).
+
+**`conflict` is not a fault.** It is the expected-revision check refusing a stale write, which is the mechanism working. A rising `conflict` ratio means concurrent editing, not breakage — treat it as a product signal.
+
+**First five minutes**
+
+```bash
+node backend/src/scripts/alert-kb-write.mjs
+
+node backend/src/scripts/alert-kb-write.mjs --denied-ratio=0.1
+```
+
+**Containment:** Writes are the path that emits Index events. A write fault spike means Documents are being changed without being re-indexed, so a quiet write failure shows up later as a search gap — check `#kb-index-freshness` alongside this one.
+
+**Recovery:** Attribute by queue lane and primary-vs-replica. Errors on one lane point at the consumer; errors across all lanes point at the pool.
+
+**Verification:** `pnpm alert:kb-write:self-test` exits 0.
+
+---
+
 ## #tenant-cost (KB-scoped)
 
 `alert-tenant-cost.mjs --feature=kb` filters `ai_usage_logs` to `feature LIKE 'kb%'` and reports `featureScope: "kb"`. The noisy-neighbour relative comparison requires at least 3 distinct orgs with KB AI usage in the window.

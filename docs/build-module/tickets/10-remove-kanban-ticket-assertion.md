@@ -11,7 +11,7 @@ The repository enforces a hard zero on assertions; this is a Build-module offend
 - [ ] The assertion is gone, replaced by a type the compiler can check structurally
 - [ ] Any field the card reads but the contract omits now surfaces as a type error
 - [x] The type-assertion gate carries no Build-module offender from this file
-- [x] The gallery renders unchanged
+- [ ] The gallery renders unchanged
 
 **Premise correction (2026-09-26).** This ticket was written on the belief that the gallery
 passes *response* data to the card. It does not: `COLUMNS` is a hardcoded stub literal, so no
@@ -22,5 +22,9 @@ cover for a structural gap. Removing `as const` made the stub assignable on its 
 The real contract check belongs where the board reads live data. That surface is a separate
 candidate, not this file.
 
-The remaining ticked boxes were verified by reading, not by running `tsc` — the typechecker
-needs an 8-10 GB heap and the tree was shared with concurrent agents.
+The original closeout was source-only and did not run compilation. A later focused audit ran
+component tests and the assertion gate, but not an application typecheck or browser comparison.
+
+**Recheck clarification:** The audit later ran two gallery component tests and the actual
+assertion gate (no offender in this file). Keep that scoped gate evidence, but component rendering
+alone does not establish unchanged visual/browser behavior. Compilation and visual parity remain open.

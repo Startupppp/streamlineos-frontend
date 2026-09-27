@@ -13,8 +13,9 @@ intended to be a narrow, independently verifiable change, not an automatic promi
 Check an acceptance box only when its implementation exists, has been verified, and its relevant
 tests pass. Record source paths, exact test command, result, date and checkout scope. A test file
 existing is not a test run; a mock matching the implementation is not proof of the requested behavior.
-For database criteria require application-role/catalog and behavioral evidence; for UI criteria
-require browser evidence. Journalled is not applied, applied is not deployed, and deployed is not
+For database criteria require application-role/catalog and behavioral evidence; browser-specific
+criteria require UI browser evidence. Component-test-only results must be labelled as such and
+cannot close browser acceptance. Journalled is not applied, applied is not deployed, and deployed is not
 workflow-verified. Keep unsupported claims unchecked and label them implemented/unverified rather
 than pretending the code is absent. N/A decisions are recorded separately and never counted as
 implemented requirements. Documentation-only decisions need consistency/source verification, not
@@ -22,7 +23,7 @@ invented runtime tests.
 
 Current evidence and reopenings: [Architecture verification, 2026-09-27](./ARCHITECTURE-VERIFICATION-2026-09-27.md).
 
-Numbers run in dependency order — blockers before the tickets they gate. A ticket whose "Blocked by" reads *None* can start immediately; 42 of the 68 can.
+Ticket numbers are identifiers, not a safe execution order. Follow dependencies plus the execution plan's file ownership and the current audit priorities; a historical "None" dependency does not override deployment prerequisites.
 
 ## Waves
 
@@ -35,7 +36,7 @@ Numbers run in dependency order — blockers before the tickets they gate. A tic
 | Invalidation | 19–20 | Stop evicting caches a mutation cannot have moved |
 | Bundle | 21–24 | Deep imports, then a gate so it cannot regress |
 | Restructure | 25–28 | Build core becomes named concepts, then the seam is enforced |
-| Security | 29–30 | Three tenant tables currently failing open get RLS |
+| Security | 29–30 | Verify and enforce RLS for three tenant tables; current production posture is unverified |
 | Settled decisions | 31–33 | Keep the 410 tombstone; retire the dead endpoint; page the velocity report |
 | Cleanup | 34 | A design record moves out of a production module |
 | **Second pass — correctness** | **35–40** | A portal visibility leak, a decorative compare-and-swap, an event scale that skips forever, a 200 over a rollback, a dropped column, and the gate that could not see it |
@@ -48,7 +49,7 @@ Numbers run in dependency order — blockers before the tickets they gate. A tic
 
 ## Which second-pass findings were already ticketed
 
-Four findings from the second review produced no new tickets because the first pass had them: the three tables with grants and no row-level security are **29** and **30**; the roadmap's dead keyset implementation is **04**; the assignee dropdown built from a capped project list is **09**; and the pass-through wrapper layers the ticket-change module makes removable are **02**.
+The second review overlaps existing tickets: three-table RLS is 29/30, roadmap keyset is 04, assignee directory is 09, and forwarding layers are 02. This mapping does not attribute RLS to the first HTML report.
 
 ## Four things to carry into the work
 
@@ -61,6 +62,6 @@ corrected cross-cutting gap and tickets 36/11/12/13, not the old header-only sea
 five-of-eleven count is historical and was itself disputed in the execution plan; re-enumerate
 current writers and test the trigger and deployment ordering instead of repeating that number.
 
-**Nothing in either review was measured.** No query plan was run: every connection string in this repository points at production, so `EXPLAIN` was not an option and index reasoning comes from index definitions and predicate shape. No bundle was built and no browser opened. Where a ticket implies a performance gain, it is an argument from structure, not a measurement — do not close one by asserting an improvement that was never observed. Three findings were deliberately left unticketed for this reason: the board's four unindexed sort combinations, the leading-wildcard searches against trigram indexes that are dead under row-level security, and the 62 hardcoded physical table names inside SQL templates. Ticket 67 is the one exception, because its defect is readable off the source rather than off a plan.
+**The original reviews did not measure runtime performance.** They reported no query plans, builds or browser runs. Their index/RLS claims are hypotheses until checked under the real role and query. The newer audit records focused test runs separately; those do not establish database plans, bundle gains or live browser behavior.
 
-**Two records in this module actively mislead, and ticket 68 exists because of them.** Open question 11 states four things about Build permissions that are all false, and the authorization census exists in two copies of which the stale one is the copy a search from the repository root finds first. Until 68 lands, do not cite either as evidence.
+**Ticket 68 remains partial.** Open question 11 has been retired and the root census replaced with a pointer, but the canonical census still fails its current-source check and other retired-key records remain. Canonical location does not imply verified contents.

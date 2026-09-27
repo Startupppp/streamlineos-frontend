@@ -20,9 +20,9 @@ Owner's instruction: checked means implemented, verified and tested. Test existe
 test run. A passing mock is only evidence for the behavior it exercises. Database and browser
 criteria need their own evidence. N/A is a decision, not completed functionality.
 
-**Result: 3 of 68 tickets supported as complete within their stated scope; 27 partial or
-awaiting verification; 38 open.** The three are 08, 31 and 34. Before this audit, 15 ticket
-headers said done; twelve were downgraded. This is not a percentage of the seven-phase product
+**Result after three-pass recheck: 2 of 68 tickets supported as complete within their stated
+scope; 28 partial or awaiting verification; 38 open.** The two are 31 and 34. Before this audit,
+15 ticket headers said done; thirteen were downgraded. This is not a percentage of the seven-phase product
 plan, and does not imply only three features work. Many partial tickets contain real code.
 
 ## Ticket-by-ticket disposition
@@ -41,7 +41,7 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
 | 05 | Partial | Shorter count key tested; old `{}` key already matched. Actual mutation/count refresh is incomplete. |
 | 06 | Partial | Enum derivation present; `request-approval-sheet.tsx:49,158` still lacks two selectable entity types. |
 | 07 | Partial | Schema rejection tested; SUBTASK remains in automation/filter/AI choices; HTTP validation unverified. |
-| 08 | Complete, component scope | Open action parsing and fallback rendering; four component tests pass. |
+| 08 | Partial | Four component tests pass, but inherited-property action names crash the display-map lookup; new regression coverage required. |
 | 09 | Partial | Server member search present; no picker cursor consumption or focused picker behavior evidence. |
 | 10 | Partial | Assertion removed and gallery rendering tested; application compilation not run. Contract criterion was inapplicable to static fixtures. |
 | 11 | Partial | Ticket response token exists; universal echo and sibling coverage absent. |
@@ -52,7 +52,7 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
 | 16 | Partial | Activity project column authored; reader already depends on it, journal/backfill/writer coverage incomplete. |
 | 17 | Partial | Direct project predicate tested structurally; omitted writers can lose activity; index/results unverified. |
 | 18 | Open | `core/project-access.ts:114` retains serial membership/team resolution and duplicate implementations. |
-| 19 | Partial | Tests pass an incomplete cache policy; status affects velocity/burnup and title/points affect critical path. |
+| 19 | Partial | Status affects velocity/burnup; critical path reads title/storyPoints, not the separate points field; rank changes updatedAt-dependent reports. |
 | 20 | Partial | Broad invalidation narrowed; real helper still invalidates ticket collections and is mocked by the test. |
 | 21 | Open | `frontend/features/build/backlog/project-backlog-page.tsx:4` retains aggregate hooks import. |
 | 22 | Open | Same page imports the Build hooks barrel at line 5. |
@@ -72,7 +72,7 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
 | 36 | Partial | Unjournalled trigger while app increments are removed; conditional trigger permits explicit token jumps. |
 | 37 | Partial | Row-scale producer/remediation fragments exist; batch predicts version; tests do not invoke both producers. |
 | 38 | Partial | Savepoints added at some sites; swallowed-write gate fails with six sites versus four allowed. |
-| 39 | Open | Status group omitted from backend/frontend detail schemas; actual DB column is nullable. |
+| 39 | Open | Status group omitted from backend/frontend detail schemas; authored schema permits null, deployed catalog unverified. |
 | 40 | Open | `frontend/scripts/contract-parity/schema-diff.mjs:86` still compares presence, not declared projection types. |
 | 41 | Open | Canonical access helper and divergent read-service helper both survive. |
 | 42 | Open | Work-query/scope-directory/entity reachability still independently constructed. |
@@ -100,7 +100,7 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
 | 64 | Partial | NOT NULL SQL exists, unjournalled; deleted null-project rows invalidate the live-only survey. |
 | 65 | Partial | SQL exists, unjournalled; Drizzle CHECK missing; DTO already rejects both/neither; no DB enforcement evidence. |
 | 66 | Open | QA expansion and scope-event rename remain off-journal; cold replay/existing-schema compatibility unverified. |
-| 67 | Partial | Valid-cursor fixture tests pass; malformed/incomplete cursors silently restart rather than reject. |
+| 67 | Partial | Valid-cursor fixture tests pass; malformed JSON/incomplete pairs restart, while invalid timestamp strings pass through instead of being rejected. |
 | 68 | Partial | Root census pointer cleanup present, but canonical checker fails and retired-key records remain. |
 
 ## Architecture rulings and ordered follow-up
@@ -175,6 +175,65 @@ self-test ran, not the full execution-plan gate. Additional read-only in-memory 
 - JavaScript Date truncates `.000900` to `.000`; skipped-row impact follows from the descending cursor predicate, not a live SQL test.
 - Installed TanStack types reproduce TS2339 when `useInfiniteQuery` specifies `TData = Page` but its consumer reads `.pages`; the probe succeeding means it reproduced the error, not that the application typechecks.
 - Four goal-link DTO cases pass: neither/both rejected, each single arm accepted. Database constraint enforcement was not tested by these assertions.
+
+## Three-pass recheck requested by owner
+
+Rechecked on 2026-09-27 against the live working tree. Root HEAD at recheck start was
+`3722e603c26bc86501555d5ec7f454964ea3adb6`; backend HEAD moved from
+`eeda40876e9b90dbb03a504a6a793b8e9351afa8` to `7e2e5f30e` during concurrent work.
+These are source-context markers, not deployment identities or an immutable whole-repo snapshot.
+
+### Pass 1 - Checked acceptance and tests
+
+The three previously done tickets were re-read and their narrow suites rerun:
+
+```powershell
+# From frontend
+node node_modules/jest/bin/jest.js --runInBand --no-cache --runTestsByPath features/build/tickets/ticket-activity-log.test.tsx
+# From backend
+node node_modules/jest/bin/jest.js --runInBand --no-cache --runTestsByPath src/modules/build/execution/sprint-create-frozen.spec.ts src/modules/build/phase-2/qa-bug-consolidation.spec.ts
+```
+
+All three suites passed: four frontend tests and 56 backend tests. These are additional
+executions, not additions to the earlier distinct-test coverage. Nevertheless, a separate
+in-memory rendering reproduction exposed ticket 08's `action in ACTION_ICONS` inherited-property
+bug: an ordinary unknown action renders, but `__proto__` and `constructor` throw. The coordinator
+independently reproduced both failures against the current transpiled component using real React
+and Lucide with mocked hook data. A probe that expects these exceptions passing is evidence of
+the defect, not application acceptance. No browser or response-parser behavior was exercised.
+
+Ticket 08 is reopened. Tickets 31 and 34 remain complete only within their decision/cleanup
+scope. Additional unsupported checked claims were reopened in 14 (row equivalence and drift
+protection), 10 (unchanged visual rendering) and 20 (immediate detail/list cache update). Prior
+ticket 10 assertion-gate evidence remains valid for that file, despite the whole gate failing.
+
+### Pass 2 - Architecture and source accuracy
+
+The journal was parsed again: all eight cited migration prefixes remain absent. This is not
+proof of absence from a deployed database. The actual census check still reports 139 stale
+anchors (54 controllers/343 handlers); the swallowed-write gate still finds six sites versus
+four allowed. Existing blocking findings remain open.
+
+Corrections to the earlier audit itself:
+
+- `points` and `storyPoints` are distinct columns. Critical path/velocity/burnup read storyPoints; a normal points edit must not be assumed to mutate it. Rank changes updatedAt, which existing burnup fallback and cycle/lead-time calculations consume.
+- Schema nullability is an authored-code observation, not a live catalog measurement.
+- Reusing a widget public key risks new submissions from an old embed resolving to a different widget, not reassignment of already stored submissions.
+- Malformed JSON/incomplete cursor pairs restart paging, whereas invalid timestamp strings pass through; these are different invalid-input paths to test.
+- A valid full unique index implies uniqueness for an equivalent subset index, not the reverse, and says nothing about unrelated operational build failures.
+
+### Pass 3 - Documentation reconciliation
+
+Parsed all 68 ticket status headers and compared them with all 68 ledger rows, checking unique
+ticket IDs, no done ticket with open acceptance, and all seven reopened C3 boxes. Replaced
+contradictory old paragraphs rather than relying only on later disclaimers: approval consumer
+counts, RLS/index guarantees, rank invalidation, prebuilt-index swapping, schema CHECK reflection,
+silent cursor restart, RLS provenance, cold replay and stale execution-plan instructions.
+
+Final ticket totals: **2 complete, 28 partial/unverified, 38 open**. These are architecture-ticket
+counts, not whole-module percentages. Only Markdown was edited; no migration, application fix,
+deployment or browser verification was performed. Whitespace validation uses the Windows-aware
+check `git -c core.autocrlf=false -c core.whitespace=cr-at-eol diff --check -- docs/build-module`.
 
 ## Audit acceptance
 

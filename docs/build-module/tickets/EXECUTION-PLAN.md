@@ -164,8 +164,8 @@ boxes, peer-owned).
 
 ## Premise corrections to carry into the work
 
-Facts the tickets assert that the source does not support. Each needs a dated correction in its
-ticket rather than a quiet reinterpretation.
+The following originated at the execution-plan baseline. Corrections below reflect the recheck;
+historical writer/call-site counts must not override a current source inventory.
 
 - **36** — the code has **4** writers bumping `tickets.version`, not 5: `updateTicket`,
   `rankTicket`, `bulkMutateTickets`, automation `set_status`. The ticket also describes rank and
@@ -175,13 +175,12 @@ ticket rather than a quiet reinterpretation.
 - **41 / 42** — the canonical access helper has **104 call sites across 27 files**, not 48. The
   eight reachability constructions span **three** folders (`core/`, `scope-directory/`, `entity/`),
   not one. And the tickets' own arithmetic gives 1 + 6 = 7 against a stated 8.
-- **04** — a correct per-sort cursor implementation already exists in
-  `core/projects-roadmap.service.ts` (`RoadmapSortMode`, `decodeRoadmapCursor`,
-  `buildRoadmapOrdering`) and is never called. The work is to wire up the dead seam and delete the
-  hardcoded path, not to build keyset logic. Also missing from the ticket: `sort=updated_at` and
-  `created_at` have no supporting index even after the cursor is fixed.
-- **63** — the survey criterion is unnecessary. Full unique index → partial on `deleted_at IS NULL`
-  is strictly weaker, so the new index cannot fail to build.
+- **04** — `buildRoadmapOrdering` is now called. Do not wire it a second time; close the
+  timestamp-precision and actual pagination-test gaps in ticket 04. Index recommendations remain
+  unmeasured and must not be presented as observed performance improvements.
+- **63** — reducing the indexed row set of an equivalent valid unique index cannot introduce
+  duplicate-key conflicts among remaining rows. That does not rule out other build failures or
+  justify reusing durable/public identifiers. Follow the revised per-identity policy and swap plan.
 - **65** — nothing computes goal progress from `okr_links`; both progress functions read
   `okr_key_results` only. The constraints are still right; the "recompute goal progress" criterion
   is void.
@@ -189,18 +188,17 @@ ticket rather than a quiet reinterpretation.
   (`frontend/hooks/api/build/build-project-schema.ts`), not the backend, which handles that column
   three different ways across three files. True blast radius is wider than its five known callers:
   ~27 more Build files contain a literal `"DONE"`, unseparated into real bypasses and coincidences.
-- **29** — the audit is already written as CCG-7 in `99-cross-cutting-gaps.md:378-434`, and its
-  answer is that there is nothing to rework: all paths for all three tables are already inside a
-  tenant transaction, no after-commit hook or background sweep touches them, and
-  `managed_product_memberships` has no write path at all.
+- **29** — CCG-7 is historical context, not a substitute for the ticket's current exhaustive
+  transaction/call-path inventory. Recheck hooks/background paths and application-role behavior
+  before enabling RLS; do not infer deployment state from this note.
 - **03** — `build/qa/phase-2/bug-consolidation-mapping.ts` is production code imported by
   `bugs.service.ts` and `test-runs.service.ts`, not a test guard. `backend/src/scripts/assertion-ceiling-ledger.json`
   pins its path as a JSON key.
-- **33** — `cache-policy.md` prescribes a cursor inside the query key; the board pattern the ticket
-  says to copy uses `useInfiniteQuery` with an internal `pageParam` and no cursor in the key. Follow
-  the board, per the ticket's own criterion, and correct the doc.
-- **cache-policy.md** — claims the six report query-key factories live in `accounting-and-support.ts`.
-  They already live in `frontend/lib/query-keys/build-work.ts`.
+- **33** — the infinite-query pageParam decision is now reflected in the ticket and cache policy.
+  Result typing and actual successive-page behavior are still open; do not count the policy edit
+  as implementation verification.
+- **cache-policy.md** — the report factories are now correctly documented in
+  `frontend/lib/query-keys/build-work.ts`; current report-dependency corrections remain open in 19.
 - **tickets/README.md** — the numbering is not a reliable review-provenance map. `213335` does not
   contain the three-table RLS finding, but `230544` explicitly does, in card 1 and its closing
   recommendation. The previous claim that no review contains it was false. Tickets 10 and 33
