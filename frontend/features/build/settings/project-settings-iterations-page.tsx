@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -64,6 +65,8 @@ export function ProjectSettingsIterationsPage({ projectId }: ProjectSettingsIter
       namingPrefix: "Cycle",
     },
   });
+
+  useRegisterDirtyState(form.formState.isDirty);
 
   useEffect(() => {
     if (settings) {

@@ -13,16 +13,12 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 jest.mock("@/hooks/api/build/projects", () => ({
+  useProject: () => ({ data: undefined }),
   useProjects: () => ({ data: { data: [] }, isLoading: false }),
   useProjectLabels: () => ({ data: [] }),
   useProjectMembers: () => ({ data: [] }),
 }));
 
-jest.mock("@/hooks/api", () => ({
-  useCreateTicket: () => ({ mutate: jest.fn(), isPending: false }),
-  useAddAttachment: () => ({ mutateAsync: jest.fn() }),
-  useProject: () => ({ data: undefined }),
-}));
 
 jest.mock("@/hooks/api/build/advanced", () => ({
   useCycles: () => ({ data: [] }),
@@ -30,6 +26,8 @@ jest.mock("@/hooks/api/build/advanced", () => ({
 
 jest.mock("@/hooks/api/build/tickets", () => ({
   useAddLabelToTicket: () => ({ mutateAsync: jest.fn() }),
+  useCreateTicket: () => ({ mutate: jest.fn(), isPending: false }),
+  useAddAttachment: () => ({ mutateAsync: jest.fn() }),
 }));
 
 jest.mock("@/hooks/api/build/ticket-related-links", () => ({

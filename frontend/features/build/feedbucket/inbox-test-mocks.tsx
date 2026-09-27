@@ -52,6 +52,32 @@ export const dataTableModule = {
   ),
 };
 
+export const sharedModule = {
+  ErrorState: ({ description, onRetry }: { description?: string; onRetry?: () => void }) => (
+    <div data-testid="error-state">
+      <span>{description}</span>
+      {onRetry && (
+        <button data-testid="retry-button" onClick={onRetry}>
+          Retry
+        </button>
+      )}
+    </div>
+  ),
+};
+
+export const errorStateLeafModule = {
+  ErrorState: ({ description, onRetry }: { description?: string; onRetry?: () => void }) => (
+    <div data-testid="error-state">
+      <span>{description}</span>
+      {onRetry && (
+        <button data-testid="retry-button" onClick={onRetry}>
+          Retry
+        </button>
+      )}
+    </div>
+  ),
+};
+
 export const bulkToolbarModule = {
   SubmissionBulkToolbar: ({ selectedIds }: { selectedIds: number[] }) => (
     <div data-testid="bulk-toolbar" data-selected-count={selectedIds.length} />
