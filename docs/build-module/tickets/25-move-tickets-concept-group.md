@@ -6,11 +6,81 @@ Move them under a named directory. Structure only; no logic changes.
 
 **Blocked by:** 01 — Publish the Build core shared surface.
 
-**Status:** ready-for-agent
+**Status:** done except the cross-module callers
 
-- [ ] Ticket files live under one named directory
-- [ ] Imports are updated; no file is orphaned
+- [x] Ticket files live under one named directory
+- [x] Imports are updated; no file is orphaned
 - [ ] Nothing outside the group reaches into it except through the shared surface
-- [ ] The import graph stays acyclic, per BE-10
-- [ ] Every route behaves identically and no logic changed
-- [ ] File names stay kebab-case, per BE-08
+- [x] The import graph stays acyclic, per BE-10
+- [x] Every route behaves identically and no logic changed
+- [x] File names stay kebab-case, per BE-08
+
+## What landed
+
+Seventy-six files under `core/tickets/`, behind `core/tickets/index.ts`
+exporting the 26 symbols the rest of the codebase consumes.
+`projects.module.ts` takes its seventeen ticket controllers and services
+from the barrel.
+
+The move stranded every path that named the old location. Repointed: twenty
+import specifiers in `agent-access`, `ai`, `cron`, `feedbucket` and
+`integrations/git` — until those were fixed the backend did not compile at
+all — and seventy-nine path strings across the gate scripts and ledgers
+that key their verdicts by file, including the raw-row and
+assertion-ceiling ledgers, the ticket-write ratchet, `authz-deny`,
+`db-call-count`, `unbounded-reads`, `relation-key-reach` and the contract
+registry generator. `check:ticket-write-module` and `check:authz-deny` are
+green again.
+
+## Why the third criterion is not ticked
+
+Inside the Build module it holds: ten callers in `entity`, `execution`,
+`forms`, `import-export` and `meetings` were converted to the barrel, and
+no file under `build/` reaches past it.
+
+Eleven files in **other** modules still import individual ticket files —
+`agent-access/agent.controller.ts`, three under `ai/core`,
+`cron/cron-projects.service.ts`, five under `feedbucket`, and
+`integrations/git/integrations-git.service.ts`. Converting them was not
+done for two reasons. Those modules belong to other sessions, and the
+compile-forced one-line repoint is already the minimum intrusion; a second
+discretionary rewrite of eleven files across five modules is a merge
+hazard, not an improvement. Separately, a cross-module barrel import pulls
+all seventeen ticket controllers and services into that module's graph,
+which is how a cycle gets introduced — the real seam for a cross-module
+caller is DI through `ProjectsModule`, not a file path. The deep imports
+predate this ticket.
+
+## Defects found while verifying
+
+Two the move introduced, both caught by `tsc` and neither by any test: the
+barrel re-exported `TICKETS_PERMISSION` from `ticket-status.util`, which
+does not export it, and the two key-route e2e specs resolved
+`test/helpers/sign-token` one directory short because `test/` sits at the
+repo root rather than under `src/`.
+
+One the move exposed: both copies of
+`ticket-event-delivery-identity.db.spec.ts` were tracked, and the surviving
+one was the stale version asserting exactly-once delivery. The database
+says otherwise — an `IN_FLIGHT` inbox row is reclaimable with no lease, so
+`claim()` is at-least-once. The corrected spec now lives at the new path
+and passes eight tests against local PostgreSQL 18.
+
+Three unrelated suites were red and are now green: the cycle binding scan
+read `projects-tickets-update.service.ts` for a guard that the write
+consolidation had moved into `apply-ticket-change`, and four test modules
+omitted two of `ProjectsTicketsQueryService`'s five constructor arguments,
+so 28 tests — workflow fail-open enforcement and bulk fail-whole
+authorization among them — errored before reaching an assertion.
+
+## Verification
+
+`tsc` reports zero unresolved modules. `check:module-di` finds every ticket
+controller and service registered and reachable from `AppModule`; its eight
+unregistered providers are all KB, expenses and billing. `check:cycles`
+finds one cycle, in KB. `check:kebab-case` is clean. The Build backend suite
+sits at 229 of 259 suites and 2314 of 2396 tests, unchanged by the barrel
+conversion; the 82 failures are pre-existing and none is a module
+resolution error — 68 are hand-rolled db doubles that lack a join the
+service now issues, and 6 are fixtures missing the `version` field a peer
+commit made required.
