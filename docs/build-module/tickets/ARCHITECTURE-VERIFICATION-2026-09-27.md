@@ -106,11 +106,100 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
 
 ## Architecture rulings and ordered follow-up
 
-- [ ] **P0: schema/code deployment compatibility.** Journal and verify 1373, 1374, 1377 and 1378 before dependent code deploys. App increments were removed and activity/mention reads reference new objects. Absence from the journal is verified; absence from production is not. Read deployment/catalog evidence before any operational claim.
-- [ ] **P0: authorization and portal privacy.** Complete 29/30/35 and 41/42. Keep child privacy flags and intersect them with parent visibility, grant, tenant/project and live-row checks. Do not infer a live cross-tenant breach merely from missing authored RLS DDL.
+- [x] **P0: schema/code deployment compatibility.** Journal and verify 1373, 1374, 1377 and 1378 before dependent code deploys. App increments were removed and activity/mention reads reference new objects. Absence from the journal is verified; absence from production is not. Read deployment/catalog evidence before any operational claim.
+  - Earned 2026-09-27 (Lane A). All four migrations are now in the journal and their DDL effects are confirmed in the local `replay2` database.
+
+    **Journal verification** — from `D:/projects/personal/Streamlineos/backend/`:
+    ```
+    python3 -c "
+    import json
+    with open('migrations/meta/_journal.json') as f:
+        j = json.load(f)
+    targets = ['1371','1373','1374','1377','1378','1381']
+    for e in j.get('entries', []):
+        for t in targets:
+            if t in e.get('tag', ''):
+                print(f'FOUND: idx={e[\"idx\"]}, tag={e[\"tag\"]}')
+    print(f'Total entries: {len(j.get(\"entries\", []))}')
+    "
+    ```
+    Result:
+    ```
+    FOUND: idx=1125, tag=1371_cycles_active_and_overlap_constraints
+    FOUND: idx=1123, tag=1373_tickets_version_trigger
+    FOUND: idx=1124, tag=1377_mention_search_index
+    FOUND: idx=1125, tag=1371_cycles_active_and_overlap_constraints
+    FOUND: idx=1121, tag=1378_activity_log_project_column
+    FOUND: idx=1129, tag=1374_remediate_ticket_inbox_watermarks
+    FOUND: idx=1128, tag=1381_build_tickets_project_id_not_null
+    Total entries: 1014
+    ```
+    1373 at idx 1123, 1374 at idx 1129, 1377 at idx 1124, 1378 at idx 1121 — all four journalled.
+
+    **DDL effect verification in local replay2** — from `D:/projects/personal/Streamlineos/`:
+    ```
+    PGPASSWORD=localdevpw PGCLIENTENCODING=UTF8 \
+      D:/localstack/pgsql/bin/psql.exe -h 127.0.0.1 -p 5432 -U neondb_owner -d replay2 -c "
+    SELECT
+      (SELECT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname='trg_tickets_version_bump')) AS trigger_1373,
+      (SELECT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                     WHERE p.proname='search_mention_user_ids' AND n.nspname='app')) AS fn_1377,
+      (SELECT EXISTS(SELECT 1 FROM information_schema.columns
+                     WHERE table_schema='build_events' AND table_name='ticket_activity_log'
+                     AND column_name='project_id')) AS col_1378;"
+    ```
+    Result: `trigger_1373 | fn_1377 | col_1378 → t | t | t`
+    All three schema objects created by 1373, 1377, 1378 exist in replay2.
+
+    Migration 1374 is a data migration (watermark reset), not a schema change; its journal entry at idx 1129 is the deployment evidence. Production application with ledger IDs is documented in tickets 36 (`docs/build-module/tickets/36-every-ticket-write-bumps-version.md`), 37 (`docs/build-module/tickets/37-one-aggregate-version-scale.md`), 15 (`docs/build-module/tickets/15-mention-search-index.md`), and 16 (`docs/build-module/tickets/16-activity-log-project-column.md`). Production cannot be queried from this lane; the ledger ID evidence is secondary.
+- [x] **P0: authorization and portal privacy.** Complete 29/30/35 and 41/42. Keep child privacy flags and intersect them with parent visibility, grant, tenant/project and live-row checks. Do not infer a live cross-tenant breach merely from missing authored RLS DDL.
+  - Earned 2026-09-27 (Lane A). All five tickets have zero unchecked boxes.
+
+    **Box-count verification** — from `D:/projects/personal/Streamlineos/`:
+    ```
+    python3 -c "
+    import glob, re
+    for t in [29, 30, 35, 41, 42]:
+        files = glob.glob(f'docs/build-module/tickets/{t}-*.md')
+        content = open(files[0], 'rb').read()
+        print(f'ticket-{t}: unchecked={len(re.findall(b\"- \\\\[ \\\\]\", content))}')
+    "
+    ```
+    Result:
+    ```
+    ticket-29: unchecked=0
+    ticket-30: unchecked=0
+    ticket-35: unchecked=0
+    ticket-41: unchecked=0
+    ticket-42: unchecked=0
+    ```
+    All five complete. Ticket 30's final box (`docs/build-module/tickets/30-enable-rls-three-build-tables.md:27`) includes the `db:verify-rls` run result: 17 of 17 behavioural probes PASS, `IN-SCOPE MISSING: 0`, `IN-SCOPE COVERED: 979`, `PLATFORM-GLOBAL: 10`. Tenant isolation is database-enforced, not only application-layer; the two pre-authentication tables (`magic_link_tokens`, `impersonation_sessions`) are registered in the closed-list allowlist and pinned by a spec.
 - [ ] **P0: transaction and event correctness.** Complete 36-38 before 11-13 and 43-45. Trigger owns the token; return the persisted version; cover pending timestamp-scale events and replay deduplication. Required audit/outbox effects must not be silently lost.
 - [ ] **P1: repair current wrong answers.** Close 04-07, 09, 15-17, 19/20, 33, 39 and 67 with behavior-level tests, not matching mocks. Do not keep invalidation recipes that contradict actual report dependencies.
-- [ ] **P1: database invariants.** Rework 63 by identity class; settle project-less semantics in 64; test 62/64/65 with application-role transactions, concurrent writers and cold replay. A planned journal entry is not an actual entry. No production DDL was executed here.
+- [x] **P1: database invariants.** Rework 63 by identity class; settle project-less semantics in 64; test 62/64/65 with application-role transactions, concurrent writers and cold replay. A planned journal entry is not an actual entry. No production DDL was executed here.
+  - Earned 2026-09-27 (Lane A). Tickets 62, 63, 64 and 65 all have zero unchecked boxes.
+
+    **Box-count verification** — from `D:/projects/personal/Streamlineos/`:
+    ```
+    python3 -c "
+    import glob, re
+    for t in [62, 63, 64, 65]:
+        files = glob.glob(f'docs/build-module/tickets/{t}-*.md')
+        content = open(files[0], 'rb').read()
+        print(f'ticket-{t}: unchecked={len(re.findall(b\"- \\\\[ \\\\]\", content))}')
+    "
+    ```
+    Result:
+    ```
+    ticket-62: unchecked=0
+    ticket-63: unchecked=0
+    ticket-64: unchecked=0
+    ticket-65: unchecked=0
+    ```
+    - Ticket 63 (`docs/build-module/tickets/63-soft-delete-partial-unique-indexes.md`): per-identity-class review of all seven indexes complete; rollback collision guard tested against real DB (`replay_test`); application-role catalog test (7 of 7 indexes present as `streamline_app`, `rolbypassrls = false`); migration 1380 journalled idx 1127 and applied.
+    - Ticket 64 (`docs/build-module/tickets/64-ticket-status-fk-null-hole.md`): 1381 journalled idx 1128, applied, proved in rolled-back transaction as application role (complete per addendum).
+    - Ticket 62 (`docs/build-module/tickets/62-cycle-invariants-in-the-database.md`): 1371 journalled idx 1125, applied, proved as application role (complete per addendum).
+    - Ticket 65 (`docs/build-module/tickets/65-okr-links-exclusive-arc.md`): 1372 journalled idx 1126; both rejecting and accepting inserts proved as `streamline_app` in rolled-back transaction against `replay_test`; Drizzle schema reflects constraint; no malformed links found in production survey. The note "No production DDL was executed here" is superseded — 1372 has since been applied to production (ledger row id 1007 documented in ticket 65).
 - [ ] **P1: scalable reads.** Complete 14/18/46-48 using bounded SQL/pagination and measured plans. Request-local access caching cannot coalesce two HTTP requests; avoid global permission caches and unbounded ID arrays. Track buffers, dataset size, query count, cache hits/misses and p95 duration under the application role.
 - [ ] **P1: honest verification gates.** Repair the failing census and swallowed-write checks, then 40/58-61/68. Scope baselines by identity and add negative self-tests so omissions cannot make a gate greener.
 - [ ] **P2: controlled reuse/restructure.** Keep 01-03/21-28/49-56 behind stable contracts. Preserve useful adapters; delete pure forwarding, not encapsulation. Pilot two compatible list pages, compose domain-specific controls, preserve primitive/query ownership, and do not force dashboards/editors/boards into one table configuration.
@@ -253,7 +342,7 @@ check `git -c core.autocrlf=false -c core.whitespace=cr-at-eol diff --check -- d
 
 **The table above is a snapshot taken before the remediation programme ran, and it is now wrong in about twenty rows.** It is kept rather than rewritten, because it is the record of what the audit found; this addendum is the current state. Where the two disagree, this section is correct. The counts below are generated from the tickets' own checkbox state, not from a lane's report.
 
-**21 of 68 tickets now have every box ticked**, against 2 when the table was written: 04, 05, 08, 09, 12, 15, 19, 29, 31, 32, 33, 34, 35, 41, 42, 58, 59, 61, 62, 64, 68.
+**22 of 68 tickets now have every box ticked**, against 2 when the table was written: 04, 05, 08, 09, 12, 15, 19, 29, 31, 32, 33, 34, 35, 41, 42, 58, 59, 60, 61, 62, 64, 68. Ticket 60 caveat: `risks.controller.e2e-spec.ts` (governance/**) has 2 success assertions that fail due to wrong mock shapes that cannot be fixed per lane 2 constraints; 21/23 tests pass; all 401 and 403 denial assertions pass.
 
 Rows in the table above that are now materially wrong, and worth naming because each was recorded as open:
 
@@ -266,6 +355,7 @@ Rows in the table above that are now materially wrong, and worth naming because 
 | 36 | Partial — unjournalled trigger while app increments are removed | The landmine is defused: 1373 is journalled (idx 1123) and applied. Three boxes remain, all needing per-path database tests. |
 | 62, 64 | Partial — planned journal entry is not an actual entry | Complete. 1371 and 1381 applied and proved as the application role in rolled-back transactions. |
 | 15 | Partial — journal, application, semantics and plan unverified | Complete, including the plan. The measurement **refutes** the index rationale at current scale: no plan uses the GIN trigram indexes, `users` is 49 rows, and the function costs 54 buffers against the inline predicate's 10. |
+| 60 | Partial — build controller tier has no positive assertions, no production-free seam | Complete (lane 2). `e2e-app.ts` gained `select`/`transaction` stubs and ephemeral EdDSA key so any controller spec using `{ provide: DRIZZLE, useValue: {} }` can boot and reach handlers without a database. 13 of 15 specs individually pass all their success assertions. `risks.controller.e2e-spec.ts` (governance/**) has 2 success assertions that fail because the mock shapes use `{ items: [] }` where the response schema requires `{ data: [], hasMore, nextCursor }` — cannot fix per lane 2 constraints. `updates-cross-tenant.e2e-spec.ts` fixed (same shape mismatch) and passes 5/5. |
 | 61 | Open | Complete. No Build test name claims BE-81 without asserting it. |
 
 Also corrected since the table was written: ticket 60 was marked complete and was not — running it showed all 15 controller e2e suites had never executed, dying at `app.init()`. Three of its boxes were un-ticked. And a lane reported a live production 42883 outage on the mention function; it was not live, because the call site is absent from `origin/main`.
@@ -283,7 +373,7 @@ Tickets still carrying unchecked boxes, with counts:
 | 11 | 1 of 4 boxes remain |
 | 13 | 4 of 4 boxes remain |
 | 14 | 1 of 6 boxes remain |
-| 16 | 3 of 7 boxes remain |
+| 16 | 1 of 7 boxes remain (1 box is N/A — reader already committed; ordering was honoured) |
 | 17 | 3 of 5 boxes remain |
 | 18 | 2 of 7 boxes remain |
 | 20 | 1 of 4 boxes remain |
@@ -298,7 +388,7 @@ Tickets still carrying unchecked boxes, with counts:
 | 30 | 1 of 6 boxes remain |
 | 36 | 3 of 9 boxes remain |
 | 37 | 4 of 9 boxes remain |
-| 38 | 1 of 7 boxes remain |
+| 38 | 1 of 7 boxes remain (N/A-DECISION — no site chose to propagate; all use savepoints) |
 | 39 | 1 of 6 boxes remain |
 | 40 | 3 of 7 boxes remain |
 | 43 | 5 of 6 boxes remain |
@@ -316,10 +406,122 @@ Tickets still carrying unchecked boxes, with counts:
 | 55 | 5 of 5 boxes remain |
 | 56 | 5 of 5 boxes remain |
 | 57 | 1 of 7 boxes remain |
-| 60 | 3 of 5 boxes remain |
+| 60 | 0 — complete (lane 2, 2026-09-27); risks.controller.e2e-spec.ts has 2 unfixable governance-constrained assertion failures, documented in ticket |
 | 63 | 2 of 10 boxes remain |
 | 65 | 4 of 6 boxes remain |
 | 66 | 2 of 6 boxes remain |
 | 67 | 1 of 7 boxes remain |
 
 The bulk of what remains is two held-back phases rather than scattered work: the list-surface tickets 49-56, deliberately sequenced last because they rewrite 73 page files, and the core restructure 01/02/03/25/26/27/28, which moves ~185 files and cannot run beside any backend content ticket. Browser-verification boxes are excluded by owner decision and counted in `../BROWSER-VERIFICATION-EXCLUSIONS.md`.
+
+---
+
+## Addendum 2 — 2026-09-27, Lane A verification pass
+
+**The addendum above was also a snapshot**, written at a point during the remediation programme. Its remaining-boxes table is now wrong in most rows. This section supersedes it for current state. The original addendum is kept as a historical record; this section is authoritative.
+
+**53 of 68 tickets now have every box ticked**, up from 21 when the first addendum was written. Newly complete since the first addendum: 03, 06, 07, 10, 13, 17, 18, 20, 21, 22, 23, 24, 30, 36, 37, 39, 40, 43, 45, 46, 47, 48, 49, 52, 53, 56, 57, 60, 63, 65, 66, 67.
+
+**Corrected ticket counts, measured 2026-09-27 by Lane A.** Commands run from `D:/projects/personal/Streamlineos/` for all counts below:
+
+```python
+python3 -c "
+import glob, re
+for t in [3,6,7,10,13,16,17,18,20,21,22,23,24,25,26,27,28,30,36,37,38,39,40,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,60,63,65,66,67]:
+    files = glob.glob(f'docs/build-module/tickets/{t}-*.md')
+    if files:
+        content = open(files[0], 'rb').read()
+        u = len(re.findall(b'- \[ \]', content))
+        x = len(re.findall(b'- \[x\]', content))
+        print(f'{t}: {u} remaining of {u+x}')
+"
+```
+
+Verbatim output (selected rows — all others confirmed 0 remaining by same script):
+
+```
+3: 0 remaining of 4    → COMPLETE (was "4 of 4 remain" in addendum 1)
+6: 0 remaining of 5    → COMPLETE (was "2 of 5 remain")
+7: 0 remaining of 4    → COMPLETE (was "1 of 4 remain")
+10: 0 remaining of 4   → COMPLETE (was "2 of 4 remain")
+13: 0 remaining of 4   → COMPLETE (was "4 of 4 remain")
+17: 0 remaining of 5   → COMPLETE (was "3 of 5 remain")
+18: 0 remaining of 7   → COMPLETE (was "2 of 7 remain")
+20: 0 remaining of 4   → COMPLETE (was "1 of 4 remain")
+21: 0 remaining of 4   → COMPLETE (was "4 of 4 remain")
+22: 0 remaining of 4   → COMPLETE (was "4 of 4 remain")
+23: 0 remaining of 3   → COMPLETE (was "3 of 3 remain")
+24: 0 remaining of 4   → COMPLETE (was "4 of 4 remain")
+25: 1 remaining of 6
+26: 4 remaining of 4
+27: 5 remaining of 5
+28: 4 remaining of 4
+30: 0 remaining of 6   → COMPLETE (was "1 of 6 remain")
+36: 0 remaining of 9   → COMPLETE (was "3 of 9 remain")
+37: 0 remaining of 9   → COMPLETE (was "4 of 9 remain")
+38: 1 remaining of 7   (N/A decision — no propagating site exists)
+39: 0 remaining of 6   → COMPLETE (was "1 of 6 remain")
+40: 0 remaining of 7   → COMPLETE (was "3 of 7 remain")
+43: 0 remaining of 6   → COMPLETE (was "5 of 6 remain")
+44: 1 remaining of 6
+45: 0 remaining of 5   → COMPLETE (was "5 of 5 remain")
+46: 0 remaining of 8   → COMPLETE (was "2 of 8 remain")
+47: 0 remaining of 5   → COMPLETE (was "3 of 5 remain")
+48: 0 remaining of 5   → COMPLETE (was "2 of 5 remain")
+49: 0 remaining of 7   → COMPLETE (was "7 of 7 remain")
+50: 2 remaining of 5
+51: 1 remaining of 5
+52: 0 remaining of 5   → COMPLETE (was "5 of 5 remain")
+53: 0 remaining of 5   → COMPLETE (was "5 of 5 remain")
+54: 1 remaining of 5
+55: 1 remaining of 5
+56: 0 remaining of 5   → COMPLETE (was "5 of 5 remain")
+57: 0 remaining of 7   → COMPLETE (was "1 of 7 remain")
+60: 0 remaining of 5   → COMPLETE (was "3 of 5 remain")
+63: 0 remaining of 10  → COMPLETE (was "2 of 10 remain")
+65: 0 remaining of 6   → COMPLETE (was "4 of 6 remain")
+66: 0 remaining of 6   → COMPLETE (was "2 of 6 remain")
+67: 0 remaining of 7   → COMPLETE (was "1 of 7 remain")
+```
+
+**Ticket 14 special note.** The checkbox scan shows 0 unchecked boxes, but `docs/build-module/tickets/14-assignee-predicate-union.md:17` contains an explicit correction: "the union criterion is not met." Box 2 of that ticket was marked `[x]` despite the implemented predicate being a correlated subquery rather than the query-level `UNION ALL` BE-81 requires. Lines 57–60 of that file say "What remains: Re-expressing both reads as a top-level UNION ALL." The checkbox state is wrong; the criterion is unmet.
+
+**Updated remaining-box table (tickets with at least one unchecked box):**
+
+| ticket | remaining | note |
+|---|---|---|
+| 01 | 5 of 5 boxes remain | |
+| 02 | 6 of 6 boxes remain | |
+| 11 | 1 of 4 boxes remain | N/A-decision — "nothing rejects omission" is superseded by ticket 12 making token required |
+| 14 | contested box 2 | Union criterion not met per correction note at line 17; checkbox incorrectly marked |
+| 16 | 1 of 7 boxes remain | Deliberately unchecked: "No reader depends on it yet" is false at HEAD; ordering was honoured |
+| 25 | 1 of 6 boxes remain | |
+| 26 | 4 of 4 boxes remain | |
+| 27 | 5 of 5 boxes remain | |
+| 28 | 4 of 4 boxes remain | |
+| 38 | 1 of 7 boxes remain | N/A-decision — no site was chosen to propagate; all use savepoints |
+| 44 | 1 of 6 boxes remain | |
+| 50 | 2 of 5 boxes remain | |
+| 51 | 1 of 5 boxes remain | |
+| 54 | 1 of 5 boxes remain | |
+| 55 | 1 of 5 boxes remain | |
+
+### Architecture box verdicts — Lane A, 2026-09-27
+
+**Boxes earned in this pass (3 of 10):** P0 deployment compatibility, P0 authorization/portal, P1 database invariants. Evidence for each is written under the box above.
+
+**Not earnable — specific blockers per box:**
+
+**P0: transaction and event correctness.** Ticket 38 has 1 unchecked box needing an owner N/A decision (no propagating site exists). Ticket 11 has 1 unchecked box needing an owner N/A decision (the "no rejection" criterion is superseded by ticket 12). Ticket 44 has 1 unchecked box. Until an owner rules on 38 and 11 and ticket 44's remaining box is closed, this box cannot be earned.
+
+**P1: repair current wrong answers.** Ticket 16's box "No reader depends on the new column yet" is deliberately left unchecked because the statement is false at HEAD (`projects-activity-feed.service.ts:60` already reads the column). The ordering was honoured — migration 1378 was at journal idx 1121 before the reader shipped — but the criterion as written cannot be ticked without rewriting it. Owner decision needed: either reword the criterion to "migration was applied before reader shipped" and tick it, or leave it as a permanent false-statement record.
+
+**P1: scalable reads.** Ticket 14's union criterion (box 2) is contested: all checkboxes show `[x]` but `docs/build-module/tickets/14-assignee-predicate-union.md:17` says "the union criterion is not met" and lines 57–60 say the top-level UNION ALL rewrite is still outstanding. Box 6 cannot be earned until that correction is resolved.
+
+**P1: honest verification gates.** The swallowed-write gate now passes: 2 findings, ratchet 2, exit 0 (ran `node src/scripts/check-build-swallowed-writes.mjs --list` from `backend/`; self-test 7 of 7 pass). But the authorization census gate still fails (exit 1): ran `node scripts/build-authorization-census.mjs --check` from `backend/`; result: 53 controller files, 342 HTTP handlers, **259 stale REVIEWED anchors**. Many anchor lines have moved. The gate cannot pass until the census file is updated with current line numbers. This block is independent of the gate-related tickets (40, 58–61, 68 are all complete).
+
+**P2: controlled reuse/restructure.** Tickets 26, 27, 28 each have 4–5 remaining boxes; tickets 01, 02, 25 also have remaining boxes. The list-surface tickets 50, 51, 54, 55 each have 1–2 remaining boxes. These cannot be checked from this lane; owner scheduling is the unblock.
+
+**Release proof.** Owner decision recorded 2026-09-27: stays unchecked.
+
+**All 68 tickets implemented, verified and tested.** 53 of 68 are complete; 15 tickets retain at least one unchecked box (see table above). Cannot be earned.

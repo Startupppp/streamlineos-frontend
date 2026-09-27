@@ -140,10 +140,10 @@ Build owns projects, work items, cycles, delivery planning, project governance, 
 
 ## Acceptance criteria
 
-- [ ] Every current Build route has a keep, move, consolidate, or delete decision with a user job.
-  <!-- 2026-09-27: Blocked by one unregistered route. Physical route `frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/history/page.tsx` exists (75 authenticated Build pages total) but has no entry in the route table, no manifest entry, and no `10-*.md` spec. All other 74 manifest routes have documented decisions. Settles when this route is added to the manifest with a disposition and user job — or removed if the KB workstream owns it and it belongs under a KB route group. -->
-- [ ] Every retained page has one self-contained `10-*.md` implementation specification.
-  <!-- 2026-09-27: Blocked by the same gap as the box above. `build/[projectId]/wiki/[pageId]/history` has no spec file. 83 spec files exist for the 74 authenticated Build pages + 9 portal/public pages in the manifest. The unregistered history page has none. Settles together with the box above. -->
+- [x] Every current Build route has a keep, move, consolidate, or delete decision with a user job.
+  <!-- Evidence: 75 physical pages under `frontend/app/(authenticated)/build/**/page.tsx`; 75 KEEP entries in `frontend/lib/build/build-route-manifest.ts`; every route including `/build/[projectId]/wiki/[pageId]/history` now appears in the route table in `01-ia-navigation.md` with a user job and primary persona. -->
+- [x] Every retained page has one self-contained `10-*.md` implementation specification.
+  <!-- Evidence: 84 spec files under `docs/build-module/10-*.md` for 75 authenticated Build pages + 9 portal/public pages. The previously unregistered `build/[projectId]/wiki/[pageId]/history` page now has `10-project-wiki-page-history.md`. -->
 - [x] Every production finding names a route, endpoint, or repository path.
   <!-- Evidence: verified production findings table at `00-overview.md:82–87`; each of the 6 rows cites at least one route and one repository path. -->
 - [x] No feature survives without a one-line user job.

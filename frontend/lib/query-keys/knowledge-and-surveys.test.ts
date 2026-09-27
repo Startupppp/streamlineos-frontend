@@ -137,3 +137,39 @@ describe("kb.search — ACL version embedded in params discriminates by space me
     qc.clear();
   });
 });
+
+describe("kb.pageCollection — filter isolation prevents cross-filter cache pollution", () => {
+  it("two entries with different status values produce distinct cache slots so a status=draft result does not overwrite status=published", () => {
+    const qc = new QueryClient();
+    qc.setQueryData(qk.kb.pageCollection({ status: "draft" }), { data: [] });
+    qc.setQueryData(qk.kb.pageCollection({ status: "published" }), { data: [] });
+    expect(qc.getQueriesData({ queryKey: qk.kb.pageCollection({ status: "draft" }) })).toHaveLength(1);
+    expect(qc.getQueriesData({ queryKey: qk.kb.pageCollection({ status: "published" }) })).toHaveLength(1);
+    qc.clear();
+  });
+
+  it("no-arg prefix matches all pageCollection slots so a post-delete invalidation flushes every status and project variant in one call", () => {
+    const qc = new QueryClient();
+    qc.setQueryData(qk.kb.pageCollection({ status: "draft" }), { data: [] });
+    qc.setQueryData(qk.kb.pageCollection({ status: "published" }), { data: [] });
+    qc.setQueryData(qk.kb.pageCollection({ projectId: 7 }), { data: [] });
+    expect(qc.getQueriesData({ queryKey: qk.kb.pageCollection() })).toHaveLength(3);
+    qc.clear();
+  });
+
+  it("projectId-scoped key differs from unscoped so org-wide pages never appear in a project wiki query", () => {
+    const qc = new QueryClient();
+    qc.setQueryData(qk.kb.pageCollection({ projectId: 7 }), { data: [] });
+    expect(qc.getQueriesData({ queryKey: qk.kb.pageCollection({ projectId: 99 }) })).toHaveLength(0);
+    qc.clear();
+  });
+
+  it("cursor-advanced key is a distinct slot from the first-page key so paginating forward does not overwrite the first page", () => {
+    const qc = new QueryClient();
+    qc.setQueryData(qk.kb.pageCollection({ status: "published" }), { data: ["first"] });
+    qc.setQueryData(qk.kb.pageCollection({ status: "published", cursor: "cursor-abc" }), { data: ["page2"] });
+    expect(qc.getQueryData(qk.kb.pageCollection({ status: "published" }))).toEqual({ data: ["first"] });
+    expect(qc.getQueryData(qk.kb.pageCollection({ status: "published", cursor: "cursor-abc" }))).toEqual({ data: ["page2"] });
+    qc.clear();
+  });
+});

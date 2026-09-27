@@ -98,7 +98,7 @@
 
 ## Complete existing-page inventory
 
-This table preserves the original 2026-09-21 route decisions while pointing every removed alias at its live owner. The current authenticated Build census is 74 physical pages and 74 `KEEP` entries in `frontend/lib/build/build-route-manifest.ts`. Rows marked **EXECUTED** are redirect-only compatibility paths, not page contracts. Each live route links to its canonical interaction, state, permission, component, API, gap, and acceptance contract.
+This table preserves the original 2026-09-21 route decisions while pointing every removed alias at its live owner. The current authenticated Build census is 75 physical pages and 75 `KEEP` entries in `frontend/lib/build/build-route-manifest.ts`. Rows marked **EXECUTED** are redirect-only compatibility paths, not page contracts. Each live route links to its canonical interaction, state, permission, component, API, gap, and acceptance contract.
 
 | Route | Purpose | Primary persona | Decision | Rationale |
 |---|---|---|---|---|
@@ -149,6 +149,7 @@ This table preserves the original 2026-09-21 route decisions while pointing ever
 | `/build/[projectId]/whiteboard` | Collaborate on one project canvas. | Product/project team. | [KEEP](./10-project-whiteboard.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/[projectId]/wiki` | Expose project-related Knowledge pages without duplicating Library. | Contributor. | [KEEP](./10-project-wiki.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/[projectId]/wiki/[pageId]` | Expose project-related Knowledge pages without duplicating Library. | Contributor. | [KEEP](./10-project-wiki-page.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
+| `/build/[projectId]/wiki/[pageId]/history` | Review revision history and compare versions of a project wiki page. | Contributor. | [KEEP](./10-project-wiki-page-history.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/[projectId]/workflow` | Configure statuses, transitions, WIP, and required fields. | Project administrator. | [MOVE — EXECUTED](./10-project-settings-workflow.md) | Job lives at `/build/[projectId]/settings/workflow`. Page deleted; the `next.config.ts` redirect preserves the deep link. |
 | `/build/[projectId]/workload` | Compare demand with team capacity. | Team/project manager. | [KEEP](./10-project-workload.md) | Retain as a canonical page, subject to the gaps and acceptance criteria below. |
 | `/build/access` | Administer Build access at organization scope. | Organization administrator. | [MOVE — EXECUTED](./10-settings-access.md) | Job lives at `/build/settings/access`. Page deleted; the `next.config.ts` redirect preserves the deep link. |

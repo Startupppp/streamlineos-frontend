@@ -9,7 +9,7 @@ BE-81 already requires this: split an `OR` between an indexed predicate and a se
 **Status:** partial — locality done, BE-81 not satisfied
 
 - [x] One shared predicate builder serves both the list and the counts
-- [x] The combined filter is expressed as a union of independently indexable branches
+- [ ] The combined filter is expressed as a union of independently indexable branches
 - [x] Filtering for unassigned plus named people returns the same rows as before
 - [x] A test asserts both call sites use the shared builder, so a future copy cannot drift
 - [x] Do not measure against production; reason from the index definitions
@@ -61,3 +61,19 @@ addresses for the roadmap. Sequence this after 04 lands so both use one keyset a
 
 Nothing here was measured: no `EXPLAIN` was run, because every connection string in this
 repository points at production.
+
+**Box 2 unticked 2026-09-27.** It was marked `[x]` while this ticket's own correction above
+states "the union criterion is not met", its **Status** line reads "BE-81 not satisfied", and
+its **What remains** section describes the top-level `UNION ALL` rewrite as still outstanding.
+The three statements cannot all be true. The box is the one that was wrong, so it is now `[ ]`:
+a ticked box that contradicts its own evidence is worse than an unchecked one, because it reads
+as proof to the next person. Nothing regressed — this corrects the record, it does not undo work.
+The remaining criterion is unchanged and still sequenced after ticket 04, because a keyset cursor
+over a union needs its ordering and boundary applied to the combined result rather than per branch.
+
+One premise in the paragraph above is now stale, though it does not change the deferral. A local
+PostgreSQL 18 on `127.0.0.1` with full-chain replay databases does exist, so "every connection
+string points at production" is no longer true and an `EXPLAIN` is now physically possible. It
+would still not settle this criterion: the replays hold **zero rows**, so the planner would choose
+from default statistics and the resulting plan would say nothing about which branch wins on real
+data. Measuring this honestly needs a seeded dataset, not merely a reachable database.

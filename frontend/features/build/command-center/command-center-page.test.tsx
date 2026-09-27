@@ -384,3 +384,26 @@ it("does not render the four new panels when the user lacks build:view — paire
   expect(screen.queryByTestId("risks-panel")).not.toBeInTheDocument();
   expect(screen.queryByTestId("releases-panel")).not.toBeInTheDocument();
 });
+
+describe("CommandCenterPage — FE-41: error forwarding to usePageState", () => {
+  it("shows the page-level error state and hides all panels when the projects query fails with a 500 so a broken query is not silently swallowed as an empty dashboard", () => {
+    mockUseProjects.mockReturnValue(
+      baseProjectsResult({
+        data: undefined,
+        isError: true,
+        error: new ApiError("Internal server error", 500, "INTERNAL_ERROR"),
+      }),
+    );
+    render(<CommandCenterPage />);
+    expect(screen.getByTestId("error-state")).toBeInTheDocument();
+    expect(screen.queryByTestId("my-issues-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("projects-panel")).not.toBeInTheDocument();
+  });
+
+  it("renders all panels without an error state when the projects query succeeds — positive control for the 500 error test above", () => {
+    render(<CommandCenterPage />);
+    expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+    expect(screen.getByTestId("my-issues-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("projects-panel")).toBeInTheDocument();
+  });
+});

@@ -32,8 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError, getApiErrorCode } from "@/lib/api-client";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import {
   useCreateRoadmapItem,
   useUpdateRoadmapItem,
@@ -53,6 +56,7 @@ function riceDefault(value: number | null | undefined): string {
 }
 
 export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
+  const queryClient = useQueryClient();
   const isEdit = !!item;
   const create = useCreateRoadmapItem();
   const update = useUpdateRoadmapItem();
@@ -94,6 +98,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
       update.mutate(
         {
           roadmapItemId: item.id,
+          version: item.version,
           title: payload.title,
           description: payload.description ?? null,
           status: payload.status,
@@ -104,7 +109,14 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
         },
         {
           onSuccess: () => { toast.success("Roadmap item updated"); onClose(); },
-          onError: (e) => toast.error(getErrorMessage(e)),
+          onError: (e) => {
+            if (isApiError(e) && getApiErrorCode(e) === "PROJECTS_TICKET_CONFLICT") {
+              void queryClient.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
+              toast.warning("This roadmap item was modified by another user. Your changes were not saved — the form shows the latest version.");
+              return;
+            }
+            toast.error(getErrorMessage(e));
+          },
         },
       );
     } else {

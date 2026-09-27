@@ -11,10 +11,12 @@ const mockUseBuildListKeyboard = jest.fn(() => ({
 const mockUseOnlineStatus = jest.fn(() => true);
 const mockUsePageState = jest.fn();
 
+let mockSearchParamsValue = new URLSearchParams();
+
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn() }),
   usePathname: () => "/build/members",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParamsValue,
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -27,7 +29,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
 }));
 
 jest.mock("@/hooks/api/build/build-members", () => ({
-  useBuildMembers: () => mockUseBuildMembers(),
+  useBuildMembers: (...args: unknown[]) => mockUseBuildMembers(...args),
   useRemoveBuildMember: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
@@ -153,6 +155,7 @@ function resolvePageState(
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSearchParamsValue = new URLSearchParams();
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseCan.mockReturnValue(true);
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
@@ -279,6 +282,21 @@ describe("MembersPage — keyboard shortcut wiring (BLD-X-FE-ACCESS-011)", () =>
     expect(typeof lastCallArgs.onShortcutHelp).toBe("function");
     await act(async () => { lastCallArgs.onShortcutHelp(); });
     expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
+  });
+});
+
+describe("MembersPage — search URL param (BLD-X-FE-ACCESS-013)", () => {
+  it("passes no search param when the URL has no search value — paired with the alice test below", () => {
+    render(<MembersPage />);
+    const lastArgs = mockUseBuildMembers.mock.calls.at(-1)?.[0] as { search?: string } | undefined;
+    expect(lastArgs?.search).toBeUndefined();
+  });
+
+  it("passes the search value from the URL search param to useBuildMembers when search=alice is in the URL", () => {
+    mockSearchParamsValue = new URLSearchParams("search=alice");
+    render(<MembersPage />);
+    const lastArgs = mockUseBuildMembers.mock.calls.at(-1)?.[0] as { search?: string } | undefined;
+    expect(lastArgs?.search).toBe("alice");
   });
 });
 

@@ -121,8 +121,10 @@ export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
 export interface UpdateCycleInput {
   projectId: number;
   cycleId: number;
+  version: number;
   name?: string;
   description?: string;
+  goal?: string;
   status?: "draft" | "active" | "completed";
   startDate?: string;
   endDate?: string;

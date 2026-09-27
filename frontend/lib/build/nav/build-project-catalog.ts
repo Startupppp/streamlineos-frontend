@@ -188,7 +188,7 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         label: "Chat",
         href: `${basePath}/chat`,
         icon: MessageCircle,
-        requiredPermission: "build:view",
+        requiredPermission: "chat:channels:read",
       },
       {
         id: "project-wiki",

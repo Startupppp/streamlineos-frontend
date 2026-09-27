@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { isApiError, getApiErrorCode } from "@/lib/api-client";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import {
   Sheet,
   SheetBody,
@@ -38,6 +41,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { Cycle } from "@/types/projects";
 
 const DESCRIPTION_MAX = 500;
+const GOAL_MAX = 500;
 
 const cycleFormSchema = z
   .object({
@@ -46,6 +50,7 @@ const cycleFormSchema = z
         .regex(/[A-Za-z0-9]/, "Name must contain at least one letter or number"),
     ),
     description: z.string().max(DESCRIPTION_MAX, `Description must be ${DESCRIPTION_MAX} characters or fewer`),
+    goal: z.string().max(GOAL_MAX, `Goal must be ${GOAL_MAX} characters or fewer`),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
   })
@@ -66,6 +71,7 @@ type CycleFormValues = z.infer<typeof cycleFormSchema>;
 const EMPTY_VALUES: CycleFormValues = {
   name: "",
   description: "",
+  goal: "",
   startDate: "",
   endDate: "",
 };
@@ -85,6 +91,7 @@ export function CycleFormSheet({
   open,
   onOpenChange,
 }: CycleFormSheetProps) {
+  const queryClient = useQueryClient();
   const createCycle = useCreateCycle();
   const updateCycle = useUpdateCycle();
   const isEdit = cycle !== null;
@@ -99,6 +106,7 @@ export function CycleFormSheet({
     form.reset(cycle ? {
       name: cycle.name,
       description: cycle.description ?? "",
+      goal: cycle.goal ?? "",
       startDate: cycle.startDate,
       endDate: cycle.endDate,
     } : EMPTY_VALUES);
@@ -137,8 +145,10 @@ export function CycleFormSheet({
         {
           projectId,
           cycleId: cycle.id,
+          version: cycle.version,
           name: values.name,
           description: values.description,
+          goal: values.goal || undefined,
           startDate: values.startDate,
           endDate: values.endDate,
         },
@@ -147,7 +157,16 @@ export function CycleFormSheet({
             toast.success("Cycle updated");
             onOpenChange(false);
           },
-          onError: (error) => toast.error(getErrorMessage(error)),
+          onError: (error) => {
+            if (isApiError(error) && getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT") {
+              void queryClient.invalidateQueries({
+                queryKey: buildWorkQueryKeys.projects.cycles(projectId),
+              });
+              toast.warning("This cycle was modified by another user. Your changes were not saved — the form shows the latest version.");
+              return;
+            }
+            toast.error(getErrorMessage(error));
+          },
         },
       );
       return;
@@ -162,7 +181,7 @@ export function CycleFormSheet({
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
-  }, [createCycle, cycle, onOpenChange, projectId, updateCycle]);
+  }, [createCycle, cycle, onOpenChange, projectId, queryClient, updateCycle]);
 
   const isPending = createCycle.isPending || updateCycle.isPending;
 
@@ -206,6 +225,19 @@ export function CycleFormSheet({
                     </div>
                     <FormControl>
                       <Textarea rows={3} placeholder="Optional description..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="goal"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Goal</FormLabel>
+                    <FormControl>
+                      <Textarea rows={2} placeholder="What should this cycle achieve?" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

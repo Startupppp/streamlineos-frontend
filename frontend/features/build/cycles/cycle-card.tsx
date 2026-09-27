@@ -125,6 +125,9 @@ export function CycleCard({
           </span>
         </div>
       ) : null}
+      {cycle.goal ? (
+        <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{cycle.goal}</p>
+      ) : null}
     </div>
   );
 }

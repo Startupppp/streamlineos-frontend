@@ -80,7 +80,9 @@ const baseCycleRow = {
   projectId: 7,
   name: "Q4 Cycle",
   description: "Focus on checkout",
+  goal: null,
   status: "active" as const,
+  version: 1,
   startDate: "2026-10-01",
   endDate: "2026-10-31",
   createdBy: "user-1",
@@ -100,6 +102,11 @@ it("cycleRowContract rejects a cycle with an invalid status — draft/active/com
   expect(cycleRowContract.safeParse(badRow).success).toBe(false);
 });
 
+it("cycleRowContract rejects a cycle missing version — version is required for stale-write detection on updates", () => {
+  const { version: _v, ...withoutVersion } = baseCycleRow;
+  expect(cycleRowContract.safeParse(withoutVersion).success).toBe(false);
+});
+
 it("cycleListContract preserves progress stats on list items — totalItems/completedItems/progress must survive the parse", () => {
   const listRow = {
     ...baseCycleRow,
@@ -112,6 +119,20 @@ it("cycleListContract preserves progress stats on list items — totalItems/comp
   expect(result[0]?.totalItems).toBe(12);
   expect(result[0]?.completedItems).toBe(4);
   expect(result[0]?.progress).toBe(33);
+});
+
+it("cycleListContract preserves version and goal on list items — version enables stale-write detection; goal is a core cycle field", () => {
+  const listRow = {
+    ...baseCycleRow,
+    totalItems: 3,
+    completedItems: 1,
+    progress: 33,
+    version: 4,
+    goal: "Ship login revamp",
+  };
+  const result = cycleListContract.parse([listRow]);
+  expect(result[0]?.version).toBe(4);
+  expect(result[0]?.goal).toBe("Ship login revamp");
 });
 
 it("cycleListContract rejects a list item missing progress — the iteration dashboard summary would silently show 0 without this guard", () => {

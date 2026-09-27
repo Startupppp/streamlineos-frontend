@@ -42,7 +42,7 @@ Priority is identity and next action first, filters/layout second, bounded conte
 
 ## URL state
 
-Deep-linkable query parameters: `q`, `spaceId`, `ownerId`, `status`, `cursor`. Cursor may be shared only when it is stable for the same normalized filter/sort/access revision. Selection, open menus, drafts, and unsaved form state are not placed in the URL.
+Deep-linkable query parameters: the page detail has no collection filters. `q` on the wiki home redirects to KB search (deliberate). Collection filter params (`space`, `owner`, `status`, `sort`, `cursor`) apply to the wiki home list, not this detail view. Selection, open menus, drafts, and unsaved form state are not placed in the URL.
 
 ## Bulk, keyboard, and context actions
 
@@ -100,7 +100,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
-- [ ] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
+- [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.

@@ -134,6 +134,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
       {
         projectId,
         cycleId: statusTarget.id,
+        version: statusTarget.version,
         status: nextCycleStatus(statusTarget.status),
       },
       {
@@ -156,7 +157,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
         await bulkUpdateTickets.mutateAsync({ ticketIds: incompleteTicketIds, cycleId: targetCycleId });
       }
       updateCycle.mutate(
-        { projectId, cycleId: completionTarget.id, status: "completed" },
+        { projectId, cycleId: completionTarget.id, version: completionTarget.version, status: "completed" },
         {
           onSuccess: () => {
             toast.success("Cycle completed");

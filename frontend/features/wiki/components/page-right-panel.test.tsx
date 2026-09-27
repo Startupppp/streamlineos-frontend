@@ -6,16 +6,27 @@ import PageRightPanel from "./page-right-panel";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 
 jest.mock("@/hooks/api/kb", () => ({
-  useKbPageBacklinks: () => ({ data: [] }),
+  useKbPageBacklinks: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/kb/record-links", () => ({
-  useKbPageRecordLinks: () => ({ data: [] }),
+  useKbPageRecordLinks: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembersByIds: () => ({ data: undefined }),
 }));
+
+import { useKbPageBacklinks } from "@/hooks/api/kb";
+import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
+
+const mockUseKbPageBacklinks = useKbPageBacklinks as jest.Mock;
+const mockUseKbPageRecordLinks = useKbPageRecordLinks as jest.Mock;
+
+beforeEach(() => {
+  mockUseKbPageBacklinks.mockReturnValue({ data: [] });
+  mockUseKbPageRecordLinks.mockReturnValue({ data: [] });
+});
 
 const basePage = {
   id: 1,
@@ -108,5 +119,57 @@ describe("PageRightPanel — backlinks section", () => {
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("No pages link here.")).toBeInTheDocument();
+  });
+});
+
+describe("PageRightPanel — backlinks bounded at BACKLINK_DISPLAY_LIMIT (FE-112)", () => {
+  it("renders at most 20 backlink buttons when the endpoint returns more than 20 so the panel stays usable at high link counts", async () => {
+    const manyBacklinks = Array.from({ length: 25 }, (_, i) => ({
+      id: i + 1,
+      title: `Page ${i + 1}`,
+      icon: null,
+    }));
+    mockUseKbPageBacklinks.mockReturnValue({ data: manyBacklinks });
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    const dialog = screen.getByRole("dialog");
+    const backlinkButtons = within(dialog).getAllByRole("button");
+    const navButtons = backlinkButtons.filter(
+      (btn) => btn.hasAttribute("data-page-id"),
+    );
+    expect(navButtons).toHaveLength(20);
+  });
+
+  it("shows the overflow count when more than 20 backlinks exist so the user knows links were truncated", async () => {
+    const manyBacklinks = Array.from({ length: 25 }, (_, i) => ({
+      id: i + 1,
+      title: `Page ${i + 1}`,
+      icon: null,
+    }));
+    mockUseKbPageBacklinks.mockReturnValue({ data: manyBacklinks });
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("+5 more")).toBeInTheDocument();
+  });
+
+  it("renders all backlink buttons when the count is at or below the limit — positive control confirming truncation is off at exactly 20", async () => {
+    const exactLimit = Array.from({ length: 20 }, (_, i) => ({
+      id: i + 1,
+      title: `Page ${i + 1}`,
+      icon: null,
+    }));
+    mockUseKbPageBacklinks.mockReturnValue({ data: exactLimit });
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    const dialog = screen.getByRole("dialog");
+    const navButtons = within(dialog)
+      .getAllByRole("button")
+      .filter((btn) => btn.hasAttribute("data-page-id"));
+    expect(navButtons).toHaveLength(20);
+    expect(within(dialog).queryByText(/\+\d+ more/)).not.toBeInTheDocument();
   });
 });

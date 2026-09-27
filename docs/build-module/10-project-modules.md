@@ -101,6 +101,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
   - Reopened 2026-09-27: the blanket CCG-1 concurrency exemption was based on a false premise. Verify this page's read token, stale-write handling and conflict UX against architecture tickets 36/11/12/13 before closing; existing non-conflict evidence remains valid only for the behavior it exercised.
+  - 2026-09-27 investigation: Backend modules service (`modules.service.ts:171,189`) throws `TicketVersionConflictException` on stale token; `sibling-version-conflict.spec.ts` covers module conflict (2/2 paired). BLOCKER: the modules page (`modules-page.tsx`) has NO edit or delete actions — only `useCreateModule` is consumed; the module card is a read-only link card. Without an edit mutation, Conflict state is unreachable and the spec's "Edit" action is unimplemented. This requires adding a module form sheet with update mutation before this box can be ticked.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.

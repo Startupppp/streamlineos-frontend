@@ -118,7 +118,9 @@ export interface Cycle {
   orgId: string;
   name: string;
   description: string | null;
+  goal: string | null;
   status: CycleStatus;
+  version: number;
   startDate: string;
   endDate: string;
   createdBy: string;

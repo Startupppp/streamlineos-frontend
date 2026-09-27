@@ -46,6 +46,7 @@ function baseRoadmapItem(status: string) {
     targetQuarter: null,
     sortOrder: 0,
     votes: 0,
+    version: 1,
     reach: null,
     impact: null,
     confidence: null,
@@ -109,6 +110,12 @@ it("accepts every roadmap_status value the roadmap_items pgEnum actually holds",
 
 it("rejects a roadmap status outside the roadmap_status pgEnum instead of accepting any string", () => {
   expect(() => roadmapItemContract.parse(baseRoadmapItem("archived"))).toThrow(ZodError);
+});
+
+it("rejects a roadmap item missing version — version is required for stale-write detection on updates", () => {
+  const raw: Record<string, unknown> = { ...baseRoadmapItem("planned") };
+  delete raw.version;
+  expect(() => roadmapItemContract.parse(raw)).toThrow(ZodError);
 });
 
 it("parses a GET /build/roadmap page whose rows carry status, matching the full row .returning() sends", () => {

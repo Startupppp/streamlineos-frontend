@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CycleFormSheet } from "./cycle-form-sheet";
 import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
 import type { Cycle } from "@/types/projects";
@@ -46,6 +47,8 @@ const COMPLETED_CYCLE: Cycle = {
   projectId: 1,
   name: "Completed cycle",
   description: "Original goal",
+  goal: null,
+  version: 2,
   status: "completed",
   startDate: "2026-09-01",
   endDate: "2026-09-14",
@@ -60,8 +63,13 @@ beforeEach(() => {
   mockUseUpdateCycle.mockReturnValue({ mutate: mockUpdateMutate, isPending: false });
 });
 
+function renderWithClient(ui: React.ReactElement) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+}
+
 it("edits an existing completed cycle without rejecting its historical dates", async () => {
-  render(
+  renderWithClient(
     <CycleFormSheet
       projectId={1}
       cycles={[COMPLETED_CYCLE]}
@@ -79,11 +87,36 @@ it("edits an existing completed cycle without rejecting its historical dates", a
     {
       projectId: 1,
       cycleId: 8,
+      version: 2,
       name: "Retrospective cycle",
       description: "Original goal",
+      goal: undefined,
       startDate: "2026-09-01",
       endDate: "2026-09-14",
     },
     expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
   ));
+});
+
+it("passes version from the cycle prop to the update mutation so the server can reject stale edits", async () => {
+  const cycleV5: Cycle = { ...COMPLETED_CYCLE, version: 5, name: "Sprint V5", goal: "Q4 goal" };
+  renderWithClient(
+    <CycleFormSheet
+      projectId={1}
+      cycles={[cycleV5]}
+      cycle={cycleV5}
+      open
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  await waitFor(() => expect(screen.getByLabelText("Name")).toHaveValue("Sprint V5"));
+  fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+  await waitFor(() =>
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ version: 5 }),
+      expect.any(Object),
+    ),
+  );
 });

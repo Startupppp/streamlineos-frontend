@@ -9,6 +9,7 @@ import { useProject, useUpdateProject } from "@/hooks/api/build/projects";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,10 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import {
   ProjectInfoSection,
   formSchema,
@@ -88,6 +93,10 @@ export function ProjectSettingsPage({ params }: PageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const listFilters = useBuildListFilters({ withSearch: true });
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const [isConflict, setIsConflict] = useState(false);
 
   const {
     data: project,
@@ -147,9 +156,22 @@ export function ProjectSettingsPage({ params }: PageProps) {
   const activeSection: SectionId =
     selectedSection === "danger" && !isOwner ? "general" : selectedSection;
 
-  const navSections: NavSection[] = isOwner
-    ? [...BASE_NAV, DANGER_SECTION]
-    : BASE_NAV;
+  const allNavSections = isOwner ? [...BASE_NAV, DANGER_SECTION] : BASE_NAV;
+  const navSections = listFilters.debouncedSearch
+    ? allNavSections.filter((s) => s.label.toLowerCase().includes(listFilters.debouncedSearch.toLowerCase()))
+    : allNavSections;
+
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+  const handleKeyboardClear = useCallback(() => listFilters.clearAll(), [listFilters]);
+  const handleKeyboardOpen = useCallback((_i: number) => {}, []);
+
+  useBuildListKeyboard({
+    itemCount: navSections.length,
+    onOpen: handleKeyboardOpen,
+    onClearSelection: handleKeyboardClear,
+    onShortcutHelp: handleShortcutHelp,
+    searchInputRef,
+  });
 
   const handleSectionClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -191,9 +213,8 @@ export function ProjectSettingsPage({ params }: PageProps) {
 
   const isOnline = useOnlineStatus();
 
-  const handleRetry = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleDismissConflict = useCallback(() => { setIsConflict(false); void refetch(); }, [refetch]);
 
   const handleDeleteSuccess = useCallback(() => {
     router.push("/build");
@@ -213,7 +234,11 @@ export function ProjectSettingsPage({ params }: PageProps) {
             toast.success("Project settings updated");
           },
           onError: (mutationError) => {
-            toast.error(getErrorMessage(mutationError));
+            if (isApiError(mutationError) && mutationError.status === 409) {
+              setIsConflict(true);
+            } else {
+              toast.error(getErrorMessage(mutationError));
+            }
           },
         },
       );
@@ -222,7 +247,16 @@ export function ProjectSettingsPage({ params }: PageProps) {
   );
 
   return (
-    <PageWrapper title="Settings" subtitle={project?.name}>
+    <PageWrapper
+      title="Settings"
+      subtitle={project?.name}
+      filters={
+        <BuildListToolbar
+          search={{ value: listFilters.search, onValueChange: listFilters.setSearch, placeholder: "Filter sections…", inputRef: searchInputRef }}
+          onClearAll={listFilters.activeCount > 0 ? listFilters.clearAll : undefined}
+        />
+      }
+    >
       <PmPageShell>
         <PageState
           resolution={pageState}
@@ -260,6 +294,12 @@ export function ProjectSettingsPage({ params }: PageProps) {
                   className="mb-4 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground"
                 >
                   You are offline — changes will not be saved until you reconnect.
+                </div>
+              )}
+              {isConflict && (
+                <div role="alert" className="mb-4 flex items-center justify-between rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  <span>Saving failed — this project was updated elsewhere. Reload to see the latest version.</span>
+                  <button type="button" className="ml-4 shrink-0 font-medium underline" onClick={handleDismissConflict}>Reload</button>
                 </div>
               )}
               <div className="flex flex-col gap-4 pb-8 md:flex-row">
@@ -448,6 +488,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
         onConfirm={confirmReassign}
         onCancel={cancelReassign}
       />
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
     </PageWrapper>
   );
 }

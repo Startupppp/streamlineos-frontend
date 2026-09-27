@@ -15,6 +15,7 @@ export interface RoadmapItem {
   targetQuarter: string | null;
   sortOrder: number;
   votes: number;
+  version: number;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;

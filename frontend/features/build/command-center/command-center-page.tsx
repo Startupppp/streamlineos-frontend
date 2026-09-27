@@ -208,7 +208,8 @@ export function CommandCenterPage() {
   const pageState = usePageState({
     permission: "build:view",
     isLoading: projectsLoading,
-    isError: false,
+    isError: projectsError,
+    error: projectsRawError,
   });
 
   const isReady = pageState.kind === "ready";

@@ -116,6 +116,7 @@ interface CreateRoadmapItemInput {
 }
 
 interface UpdateRoadmapItemInput {
+  version: number;
   title?: string;
   description?: string | null;
   status?: RoadmapStatus;

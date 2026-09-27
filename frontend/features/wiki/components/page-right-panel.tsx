@@ -31,6 +31,8 @@ import { getUserDisplayName } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "wiki-right-panel-collapsed";
+const BACKLINK_DISPLAY_LIMIT = 20;
+const RECORD_LINK_DISPLAY_LIMIT = 20;
 
 interface PageRightPanelProps {
   pageId: number;
@@ -158,23 +160,30 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
         {backlinks.length === 0 ? (
           <p className="text-xs text-muted-foreground">No pages link here.</p>
         ) : (
-          <ul className="flex flex-col">
-            {backlinks.map((bl) => (
-              <li key={bl.id}>
-                <button
-                  type="button"
-                  data-page-id={bl.id}
-                  className="flex w-full items-center gap-2 rounded-md px-1.5 py-1.5 text-left text-sm hover:bg-muted"
-                  onClick={handleBacklinkClick}
-                >
-                  <span className="shrink-0 text-sm leading-none">
-                    {bl.icon ?? <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground" />}
-                  </span>
-                  <TruncatedText text={bl.title || "Untitled"} />
-                </button>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="flex flex-col">
+              {backlinks.slice(0, BACKLINK_DISPLAY_LIMIT).map((bl) => (
+                <li key={bl.id}>
+                  <button
+                    type="button"
+                    data-page-id={bl.id}
+                    className="flex w-full items-center gap-2 rounded-md px-1.5 py-1.5 text-left text-sm hover:bg-muted"
+                    onClick={handleBacklinkClick}
+                  >
+                    <span className="shrink-0 text-sm leading-none">
+                      {bl.icon ?? <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground" />}
+                    </span>
+                    <TruncatedText text={bl.title || "Untitled"} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {backlinks.length > BACKLINK_DISPLAY_LIMIT ? (
+              <p className="mt-1 px-1.5 text-xs text-muted-foreground">
+                +{backlinks.length - BACKLINK_DISPLAY_LIMIT} more
+              </p>
+            ) : null}
+          </>
         )}
       </section>
 
@@ -186,13 +195,20 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
         {recordLinks.length === 0 ? (
           <p className="text-xs text-muted-foreground">No linked records.</p>
         ) : (
-          <ul className="flex flex-col gap-1">
-            {recordLinks.map((rl) => (
-              <li key={rl.id} className="px-1.5 py-1 text-sm text-foreground">
-                <TruncatedText text={rl.label ?? rl.targetType} className="capitalize" />
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="flex flex-col gap-1">
+              {recordLinks.slice(0, RECORD_LINK_DISPLAY_LIMIT).map((rl) => (
+                <li key={rl.id} className="px-1.5 py-1 text-sm text-foreground">
+                  <TruncatedText text={rl.label ?? rl.targetType} className="capitalize" />
+                </li>
+              ))}
+            </ul>
+            {recordLinks.length > RECORD_LINK_DISPLAY_LIMIT ? (
+              <p className="mt-1 px-1.5 text-xs text-muted-foreground">
+                +{recordLinks.length - RECORD_LINK_DISPLAY_LIMIT} more
+              </p>
+            ) : null}
+          </>
         )}
       </section>
     </div>

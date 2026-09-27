@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
@@ -26,6 +26,8 @@ import {
 } from "@/features/wiki/components/wiki-page-card";
 import { WikiHomeAllPages } from "./wiki-home-all-pages";
 import { WikiCompanyDocumentsStrip } from "./wiki-company-documents-strip";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 
 interface WikiHomePageProps {
   projectId?: number;
@@ -35,6 +37,8 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const isProjectScoped = projectId !== undefined && projectId > 0;
   const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const { data: recentPages = [] } = useKbPagesRecent();
   const { data: favoritePages = [] } = useKbPagesFavorites();
@@ -65,6 +69,18 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     );
   }
 
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+  const handleClearSelection = useCallback(() => {}, []);
+
+  useBuildListKeyboard({
+    itemCount: 0,
+    onOpen: () => {},
+    onCreate: canCreate ? handleNewPage : undefined,
+    onClearSelection: handleClearSelection,
+    onShortcutHelp: handleShortcutHelp,
+    searchInputRef: isProjectScoped ? undefined : searchInputRef,
+  });
+
   const newPageAction = canCreate ? (
     <AnimatedIconButton
       type="button"
@@ -81,6 +97,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   ) : undefined;
 
   return (
+    <>
     <PageWrapper
       title="Wiki"
       subtitle={isProjectScoped ? undefined : "Your team knowledge base"}
@@ -90,6 +107,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
         {!isProjectScoped && (
           <form onSubmit={handleSearchSubmit} role="search">
             <SearchInput
+              ref={searchInputRef}
               value={searchValue}
               onValueChange={setSearchValue}
               placeholder="Search wiki pages…"
@@ -154,5 +172,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
         </section>
       </div>
     </PageWrapper>
+    <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
+    </>
   );
 }

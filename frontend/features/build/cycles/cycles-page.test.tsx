@@ -310,6 +310,7 @@ describe("CyclesPage — cycle lifecycle actions", () => {
     id: 4,
     name: "Current cycle",
     status: "active",
+    version: 3,
     startDate: "2026-09-01",
     endDate: "2026-09-14",
     progress: 50,
@@ -331,7 +332,7 @@ describe("CyclesPage — cycle lifecycle actions", () => {
     expect(screen.getByRole("heading", { name: "Complete cycle?" })).toBeInTheDocument();
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Complete" }));
     expect(mockUpdateMutate).toHaveBeenCalledWith(
-      { projectId: 1, cycleId: 4, status: "completed" },
+      { projectId: 1, cycleId: 4, version: 3, status: "completed" },
       expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
     );
   });
@@ -343,7 +344,7 @@ describe("CyclesPage — cycle lifecycle actions", () => {
     fireEvent.click(screen.getByRole("button", { name: "Reopen" }));
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Reopen" }));
     expect(mockUpdateMutate).toHaveBeenCalledWith(
-      { projectId: 1, cycleId: 4, status: "active" },
+      { projectId: 1, cycleId: 4, version: 3, status: "active" },
       expect.any(Object),
     );
   });
@@ -401,5 +402,34 @@ describe("CyclesPage — q search filter narrows displayed cycles", () => {
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Alpha sprint")).toBeInTheDocument();
     expect(screen.queryByText("Beta sprint")).not.toBeInTheDocument();
+  });
+});
+
+describe("CyclesPage — from/to date range filters narrow displayed cycles", () => {
+  const EARLY = { id: 1, name: "Early sprint", version: 1, status: "active" as const, startDate: "2026-08-01", endDate: "2026-08-14", progress: 80, completedItems: 4, totalItems: 5 };
+  const RECENT = { id: 2, name: "Recent sprint", version: 1, status: "draft" as const, startDate: "2026-09-15", endDate: "2026-09-28", progress: 0, completedItems: 0, totalItems: 0 };
+
+  it("hides cycles that ended before the from date so only overlapping cycles appear", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("from=2026-09-01");
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [EARLY, RECENT] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByText("Recent sprint")).toBeInTheDocument();
+    expect(screen.queryByText("Early sprint")).not.toBeInTheDocument();
+  });
+
+  it("hides cycles that started after the to date so only overlapping cycles appear", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("to=2026-08-31");
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [EARLY, RECENT] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByText("Early sprint")).toBeInTheDocument();
+    expect(screen.queryByText("Recent sprint")).not.toBeInTheDocument();
+  });
+
+  it("shows cycles that overlap the from/to window even if they extend beyond it", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("from=2026-08-10&to=2026-09-20");
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [EARLY, RECENT] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByText("Early sprint")).toBeInTheDocument();
+    expect(screen.getByText("Recent sprint")).toBeInTheDocument();
   });
 });

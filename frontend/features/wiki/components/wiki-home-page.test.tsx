@@ -41,6 +41,19 @@ jest.mock("@/hooks/api/kb/linked-documents", () => ({
   useLinkedDocuments: () => ({ data: undefined }),
 }));
 
+const mockUseBuildListKeyboard = jest.fn(() => ({
+  focusedIndex: null,
+  setFocusedIndex: jest.fn(),
+}));
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+}));
+
+jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
+}));
+
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: jest.fn(),
 }));
@@ -175,6 +188,7 @@ function makeResponse(
       nextCursor: null,
       ...paginationOverrides,
     },
+    boundedCount: { count: items.length, isExact: true },
     facets: null,
   };
 }
@@ -420,5 +434,54 @@ describe("WikiHomePage — view toggle and status filter round-trip URL", () => 
     expect(
       screen.getByRole("button", { name: /card view/i }),
     ).toHaveAttribute("aria-pressed", "false");
+  });
+});
+
+describe("WikiHomePage — keyboard shortcuts wired via useBuildListKeyboard", () => {
+  beforeEach(() => {
+    mockUseBuildListKeyboard.mockClear();
+  });
+
+  it("wires useBuildListKeyboard on every render so keyboard navigation is registered", () => {
+    render(<WikiHomePage />);
+    expect(mockUseBuildListKeyboard).toHaveBeenCalled();
+  });
+
+  it("passes onCreate when canCreate is true so the c shortcut creates a page", () => {
+    render(<WikiHomePage />);
+    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(typeof options.onCreate).toBe("function");
+  });
+
+  it("passes onShortcutHelp so the ? key opens the shortcut dialog", () => {
+    render(<WikiHomePage />);
+    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(typeof options.onShortcutHelp).toBe("function");
+  });
+
+  it("ShortcutHelpDialog is hidden before the ? callback fires — paired positive control below", () => {
+    render(<WikiHomePage />);
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("ShortcutHelpDialog opens when the onShortcutHelp callback passed to the hook is invoked", async () => {
+    const { act } = await import("react");
+    render(<WikiHomePage />);
+    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    const onShortcutHelp = options.onShortcutHelp as () => void;
+    await act(async () => { onShortcutHelp(); });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
+  });
+
+  it("passes searchInputRef to the hook for the non-project-scoped wiki so / focuses the search input", () => {
+    render(<WikiHomePage />);
+    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(options.searchInputRef).toBeDefined();
+  });
+
+  it("passes searchInputRef as undefined for a project-scoped wiki because there is no search input in that view", () => {
+    render(<WikiHomePage projectId={7} />);
+    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(options.searchInputRef).toBeUndefined();
   });
 });
