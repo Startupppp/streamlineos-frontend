@@ -12,7 +12,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { MeetingTypeBadge, MeetingStatusBadge } from "./meeting-badges";
@@ -121,7 +121,11 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
     return (
       <PageWrapper title="Meeting" backHref={`/build/${projectId}/meetings`}>
         <PmPageShell>
-          <ErrorState onRetry={handleRetry} />
+          <EmptyState
+            title="Meeting not found"
+            description="This meeting may have been deleted or the link is invalid."
+            action={{ label: "Back to meetings", href: `/build/${projectId}/meetings` }}
+          />
         </PmPageShell>
       </PageWrapper>
     );

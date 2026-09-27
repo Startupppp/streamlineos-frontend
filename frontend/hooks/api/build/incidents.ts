@@ -20,6 +20,7 @@ import type {
   UpdateIncidentFollowUpActionInput,
 } from "@/hooks/api/build/incidents-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const incidentListContract = lazyContract(() =>
   import("@/hooks/api/build/incidents-schema").then(
@@ -163,6 +164,7 @@ export function useIncident(projectId?: number, incidentId?: number) {
     refetchInterval: 30_000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: "always",
+    ...INLINE_READ_ERROR,
   });
   const data = useMemo(() => {
     const pages = query.data?.pages;

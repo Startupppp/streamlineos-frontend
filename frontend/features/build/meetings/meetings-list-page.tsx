@@ -96,7 +96,11 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<MeetingTemplate | null>(null);
 
-  const { data: projectMembers = [] } = useProjectMembers(projectId);
+  const { data: projectMembersPage } = useProjectMembers(projectId);
+  const projectMembers = useMemo(
+    () => projectMembersPage?.data ?? [],
+    [projectMembersPage],
+  );
   const { data: cycles = [] } = useCycles(projectId);
   const { data: boardTickets } = useProjectBoardTickets(projectId);
   const tickets = useMemo(() => boardTickets ?? [], [boardTickets]);

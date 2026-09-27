@@ -75,8 +75,14 @@ export function TriagePage({ projectId }: TriagePageProps) {
   );
   const cursor = cursorTrail[cursorTrail.length - 1] ?? undefined;
   const hasPrevious = cursorTrail.length > 1;
-  const triageOwner = listFilters.value("ownerId") || undefined;
-  const triageSort = (listFilters.value("sort") as "created" | "updated" | "priority" | "dueDate" | undefined) || "created";
+  const ownerValue = listFilters.value("ownerId");
+  const triageOwner = ownerValue !== BUILD_FILTER_ALL ? ownerValue : undefined;
+  const sortValue = listFilters.value("sort");
+  const triageSort = (["created", "updated", "priority", "dueDate", "rank"] as const).includes(
+    sortValue as "created" | "updated" | "priority" | "dueDate" | "rank",
+  )
+    ? (sortValue as "created" | "updated" | "priority" | "dueDate" | "rank")
+    : "created";
   const urlStatus = listFilters.value("status");
   const triageStatus = urlStatus === BUILD_FILTER_ALL ? TRIAGE_STATUS : urlStatus;
   const {

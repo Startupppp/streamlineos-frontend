@@ -57,6 +57,7 @@ export function useFeedbucketSubmission(submissionId: number) {
       apiClient.get<FeedbucketSubmission>(`/feedbucket/submissions/${submissionId}`, undefined, signal, feedbucketSubmissionDetailC),
     staleTime: 30_000,
     enabled: submissionId > 0,
+    throwOnError: false,
   });
 }
 
