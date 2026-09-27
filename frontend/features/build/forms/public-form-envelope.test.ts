@@ -162,7 +162,7 @@ describe("a shape change is an error, not an undefined", () => {
   });
 });
 
-describe("the two submit seams carry the same envelope", () => {
+describe("both submit seams unwrap the envelope, and only the authenticated one surfaces an id", () => {
   it("unwraps the form submit response", async () => {
     const result = await parseApiResponse(
       response({ success: true, data: { id: 7, message: "Submission received" } }),
@@ -183,11 +183,27 @@ describe("the two submit seams carry the same envelope", () => {
     expect(result.message).toBe("Request submitted");
   });
 
-  it("rejects an intake response that lost its id", async () => {
+  it("does not surface the created item id on the anonymous intake seam even when the server sends one, unlike the token-authenticated form seam which declares it", async () => {
+    const intake = await parseApiResponse(
+      response({ success: true, data: { id: 9, message: "Request submitted" } }),
+      intakeSubmitResponseContract,
+      "/public/intake/1",
+    );
+    const form = await parseApiResponse(
+      response({ success: true, data: { id: 7, message: "Submission received" } }),
+      publicFormSubmitResponseContract,
+      "/public/forms/t/submit",
+    );
+
+    expect(intake).toEqual({ message: "Request submitted" });
+    expect(form.id).toBe(7);
+  });
+
+  it("rejects an intake response that lost its message, so the contract still bites on the field it does declare", async () => {
     await expect(
       contractViolationFrom(
         parseApiResponse(
-          response({ success: true, data: { message: "Request submitted" } }),
+          response({ success: true, data: { id: 9 } }),
           intakeSubmitResponseContract,
           "/public/intake/1",
         ),
@@ -265,12 +281,12 @@ describe("the real call sites resolve the payload, not the envelope", () => {
     });
   });
 
-  it("submitIntake returns the item id from an enveloped body", async () => {
+  it("submitIntake resolves to the message alone, withholding the created item id from an unauthenticated caller", async () => {
     stubFetch({ success: true, data: { id: 9, message: "Request submitted" } });
 
     await expect(
       submitIntake("1", { title: "Broken login", submitterEmail: undefined }),
-    ).resolves.toEqual({ id: 9, message: "Request submitted" });
+    ).resolves.toEqual({ message: "Request submitted" });
   });
 });
 

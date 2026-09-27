@@ -50,7 +50,7 @@ export function ProjectSettingsIterationsPage({ projectId }: ProjectSettingsIter
   const updateSettings = useUpdateIterationSettings(projectId);
 
   const pageState = usePageState({
-    permission: "build:update",
+    permission: "build:view",
     isLoading,
     isError,
     error,

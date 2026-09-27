@@ -71,7 +71,7 @@ export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPa
   });
 
   const pageState = usePageState({
-    permission: "build:update",
+    permission: "build:view",
     isLoading: false,
     isError: false,
     error: undefined,

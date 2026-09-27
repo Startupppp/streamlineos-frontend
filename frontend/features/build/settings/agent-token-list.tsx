@@ -63,9 +63,10 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expired" }) {
 interface TokenRowProps {
   token: AgentToken;
   onRevoke: (id: number) => void;
+  canRevoke: boolean;
 }
 
-export function TokenRow({ token, onRevoke }: TokenRowProps) {
+export function TokenRow({ token, onRevoke, canRevoke }: TokenRowProps) {
   const status = tokenStatus(token);
   const handleRevoke = useCallback(() => onRevoke(token.id), [onRevoke, token.id]);
 
@@ -85,7 +86,7 @@ export function TokenRow({ token, onRevoke }: TokenRowProps) {
           <span>Expires {expiryLabel(token.expiresAt)}</span>
         </div>
       </div>
-      {status === "active" ? (
+      {status === "active" && canRevoke ? (
         <Button
           variant="ghost"
           size="sm"

@@ -16,7 +16,7 @@ interface ProjectSettingsIntegrationsPageProps {
 export function ProjectSettingsIntegrationsPage({ projectId: _projectId }: ProjectSettingsIntegrationsPageProps) {
 
   const pageState = usePageState({
-    permission: "build:update",
+    permission: "integrations:git:view",
     isLoading: false,
     isError: false,
     error: undefined,

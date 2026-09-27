@@ -5,6 +5,7 @@ import { Bot } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
+import { useCan } from "@/hooks/api/access";
 import {
   useAgentTokens,
   useRevokeAgentToken,
@@ -19,6 +20,7 @@ import { CreateTokenDialog } from "./agent-token-create-dialog";
 import { SetupHelp } from "./agent-token-setup-help";
 
 export function AgentTokensSection() {
+  const canManageTokens = useCan("settings:api-tokens:write");
   const { data: tokens, isLoading, isError, refetch } = useAgentTokens();
   const revokeToken = useRevokeAgentToken();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -64,16 +66,18 @@ export function AgentTokensSection() {
             In Review — scoped to your access.
           </p>
         </div>
-        <AnimatedIconButton
-          size="sm"
-          className="h-9 w-full shrink-0 sm:h-8 sm:w-auto"
-          onClick={handleOpenDialog}
-          icon={PlusIcon}
-          iconSize={16}
-          iconClassName="mr-1"
-        >
-          New token
-        </AnimatedIconButton>
+        {canManageTokens ? (
+          <AnimatedIconButton
+            size="sm"
+            className="h-9 w-full shrink-0 sm:h-8 sm:w-auto"
+            onClick={handleOpenDialog}
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1"
+          >
+            New token
+          </AnimatedIconButton>
+        ) : null}
       </div>
 
       {isLoading ? (
@@ -88,7 +92,12 @@ export function AgentTokensSection() {
       ) : tokens && tokens.length > 0 ? (
         <div className="overflow-hidden rounded-lg border border-border/50">
           {tokens.map((token) => (
-            <TokenRow key={token.id} token={token} onRevoke={handleRevoke} />
+            <TokenRow
+              key={token.id}
+              token={token}
+              onRevoke={handleRevoke}
+              canRevoke={canManageTokens}
+            />
           ))}
         </div>
       ) : (

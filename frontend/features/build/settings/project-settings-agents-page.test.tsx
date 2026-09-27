@@ -102,7 +102,7 @@ describe("ProjectSettingsAgentsPage — keyboard shortcuts (Requirement C3)", ()
 });
 
 describe("ProjectSettingsAgentsPage — access control (BLD-X-FE-SETTINGS-AGENTS-001)", () => {
-  it("renders NoPermissionState when access is denied — PageState gates on build:update", () => {
+  it("renders NoPermissionState when access is denied — PageState gates on settings:api-tokens:read", () => {
     render(<ProjectSettingsAgentsPage projectId={1} />);
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
     expect(screen.queryByTestId("agent-tokens-section")).not.toBeInTheDocument();
@@ -145,11 +145,11 @@ describe("ProjectSettingsAgentsPage — URL search filter (BLD-X-FE-SETTINGS-AGE
 });
 
 describe("ProjectSettingsAgentsPage — permission key (Criterion 3)", () => {
-  it("passes build:update to usePageState — backend GET uses settings:api-tokens:read; key mismatch to resolve", () => {
+  it("passes settings:api-tokens:read to usePageState, the key its own GET endpoint requires", () => {
     mockAccessState = "granted";
     render(<ProjectSettingsAgentsPage projectId={1} />);
     expect(mockUsePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ permission: "build:update" }),
+      expect.objectContaining({ permission: "settings:api-tokens:read" }),
     );
   });
 });

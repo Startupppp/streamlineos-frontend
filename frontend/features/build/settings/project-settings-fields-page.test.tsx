@@ -121,7 +121,7 @@ describe("ProjectSettingsFieldsPage — keyboard shortcuts (Requirement C3)", ()
 });
 
 describe("ProjectSettingsFieldsPage — access control (BLD-X-FE-SETTINGS-FIELDS-001)", () => {
-  it("renders NoPermissionState when access is denied — PageState gates on build:update", () => {
+  it("renders NoPermissionState when access is denied — PageState gates on build:view", () => {
     render(<ProjectSettingsFieldsPage projectId={1} />);
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
     expect(screen.queryByTestId("custom-fields-settings")).not.toBeInTheDocument();
@@ -251,11 +251,11 @@ describe("ProjectSettingsFieldsPage — offline state", () => {
 });
 
 describe("ProjectSettingsFieldsPage — permission key (Criterion 3)", () => {
-  it("passes build:update to usePageState — NOTE: backend GET uses build:view (mismatch to fix)", () => {
+  it("passes build:view to usePageState, the key its own GET endpoint requires", () => {
     mockAccessState = "granted";
     render(<ProjectSettingsFieldsPage projectId={1} />);
     expect(mockUsePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ permission: "build:update" }),
+      expect.objectContaining({ permission: "build:view" }),
     );
   });
 });

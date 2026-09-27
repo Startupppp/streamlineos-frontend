@@ -83,7 +83,7 @@ export function ProjectSettingsRetentionPage({ projectId }: ProjectSettingsReten
   } = useProjectRetentionSettings(projectId);
 
   const pageState = usePageState({
-    permission: "build:update",
+    permission: "build:view",
     isLoading,
     isError,
     error,

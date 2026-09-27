@@ -37,7 +37,7 @@ export function ProjectSettingsAgentsPage({ projectId: _projectId }: ProjectSett
   });
 
   const pageState = usePageState({
-    permission: "build:update",
+    permission: "settings:api-tokens:read",
     isLoading: false,
     isError: false,
     error: undefined,

@@ -14,7 +14,7 @@ jest.mock("@/hooks/api/access", () => ({
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: (opts: unknown) => {
     mockUsePageState(opts);
-    if (mockAccessState === "denied") return { kind: "denied", permission: "build:update" };
+    if (mockAccessState === "denied") return { kind: "denied", permission: "integrations:git:view" };
     if (mockAccessState === "loading") return { kind: "loading" };
     if (mockIsError) return { kind: "error", error: new Error("fetch failed") };
     return { kind: "ready" };
@@ -59,7 +59,7 @@ beforeEach(() => {
 });
 
 describe("ProjectSettingsIntegrationsPage — access control (BLD-X-FE-SETTINGS-INT-001)", () => {
-  it("renders NoPermissionState when access is denied — PageState gates on build:update", () => {
+  it("renders NoPermissionState when access is denied — PageState gates on integrations:git:view", () => {
     render(<ProjectSettingsIntegrationsPage projectId={1} />);
     expect(screen.getByTestId("no-permission")).toBeInTheDocument();
     expect(screen.queryByTestId("git-integration-settings")).not.toBeInTheDocument();
@@ -97,11 +97,11 @@ describe("ProjectSettingsIntegrationsPage — error state (BLD-X-FE-SETTINGS-INT
 });
 
 describe("ProjectSettingsIntegrationsPage — permission key (Criterion 3)", () => {
-  it("passes build:update to usePageState — backend GET uses integrations:git:view; key mismatch to resolve", () => {
+  it("passes integrations:git:view to usePageState, the key its own GET endpoint requires", () => {
     mockAccessState = "granted";
     render(<ProjectSettingsIntegrationsPage projectId={1} />);
     expect(mockUsePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ permission: "build:update" }),
+      expect.objectContaining({ permission: "integrations:git:view" }),
     );
   });
 });

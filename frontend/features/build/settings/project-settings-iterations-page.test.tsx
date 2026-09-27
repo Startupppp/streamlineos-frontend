@@ -190,10 +190,10 @@ it("has no data table or paginated list — singleton settings form satisfies bo
 });
 
 describe("ProjectSettingsIterationsPage — permission key (Criterion 3)", () => {
-  it("passes build:update to usePageState — backend GET uses build:view; key mismatch to resolve", () => {
+  it("passes build:view to usePageState, the key its own GET endpoint requires", () => {
     render(<ProjectSettingsIterationsPage projectId={1} />);
     expect(mockUsePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ permission: "build:update" }),
+      expect.objectContaining({ permission: "build:view" }),
     );
   });
 });
