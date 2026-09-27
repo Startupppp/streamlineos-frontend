@@ -92,7 +92,7 @@ export function EssReimbursementsSection({
             illustration={<EmptyExpensesIllustration />}
             title="No claims yet"
             description="Submit a reimbursement claim and track its approval status here."
-            action={{ label: "Submit Claim", onClick: handleOpenSheet }}
+            action={!hideToolbar ? { label: "Submit Claim", onClick: handleOpenSheet } : undefined}
             className={PAGE_BODY_EMPTY_CLASS}
           />
         ) : (

@@ -237,7 +237,7 @@ export function EssLoansSection({
             illustrationPreset="payroll"
             title="No loans or advances"
             description={allowRequests ? "Request a salary advance or loan and track repayment here." : "No active loans."}
-            action={allowRequests ? { label: "Request Loan", onClick: handleOpenDialog } : undefined}
+            action={allowRequests && !hideToolbar ? { label: "Request Loan", onClick: handleOpenDialog } : undefined}
             className={PAGE_BODY_EMPTY_CLASS}
           />
         ) : (

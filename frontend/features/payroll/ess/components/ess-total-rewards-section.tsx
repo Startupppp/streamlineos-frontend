@@ -64,15 +64,10 @@ export function EssTotalRewardsSection() {
 
       <div
         role="status"
-        className="flex shrink-0 gap-2.5 rounded-xl border border-status-warning-rule bg-status-warning-surface px-3 py-2.5"
+        className="flex w-full min-w-0 shrink-0 gap-2.5 rounded-xl border border-status-warning-rule bg-status-warning-surface px-3 py-2.5"
       >
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-status-warning-ink" />
-        {/*
-          The note is the one thing on this tab that says the numbers are an
-          estimate, so it wraps in full at every width. A flex child floors at
-          its longest word without `min-w-0`, which is what cut it off at 390.
-        */}
-        <p className="min-w-0 break-words text-dense leading-snug text-status-warning-ink">
+        <p className="min-w-0 flex-1 whitespace-normal break-words text-dense leading-snug text-status-warning-ink [overflow-wrap:anywhere]">
           {data.honestyNote}
         </p>
       </div>

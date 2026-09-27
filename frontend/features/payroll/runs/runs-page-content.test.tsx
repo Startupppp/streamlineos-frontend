@@ -91,7 +91,7 @@ describe("RunsPageContent server-prefetch seam", () => {
       </Wrapper>,
     );
 
-    expect(screen.getByText("DRAFT")).toBeInTheDocument();
+    expect(screen.getAllByText("DRAFT")).toHaveLength(2);
     expect(apiClient.get).not.toHaveBeenCalledWith(
       "/payroll/runs",
       expect.anything(),

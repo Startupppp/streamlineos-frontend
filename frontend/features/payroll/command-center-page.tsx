@@ -22,8 +22,10 @@ import { CommandCenterPanels } from "@/features/payroll/runs/command-center-pane
 import { ReadinessRail } from "@/features/payroll/shared/readiness-rail";
 import { EmptyPayroll } from "@/components/illustrations";
 import { useCommandCenter } from "@/hooks/api/payroll/command-center";
+import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { useCreateRun } from "@/hooks/api/payroll/runs";
 import { useCan } from "@/hooks/api/access";
+import { payrollRunStartGate } from "@/features/payroll/runs/run-start-gate";
 import type { PayrollRunStatus } from "@/types/payroll/runs";
 
 function currentYearMonth(): string {
@@ -36,13 +38,31 @@ function PrimaryAction({
   runId,
   onCreateRun,
   isPending,
+  startGate,
 }: {
   status: PayrollRunStatus | null;
   runId?: number;
   onCreateRun: () => void;
   isPending: boolean;
+  startGate: ReturnType<typeof payrollRunStartGate> | null;
 }) {
   if (!status) {
+    if (!startGate) {
+      return (
+        <Button size="sm" type="button" disabled>
+          Checking payroll setup…
+        </Button>
+      );
+    }
+    if (startGate.action === "setup") {
+      return (
+        <Button size="sm" asChild>
+          <Link href={startGate.href} title={startGate.reason}>
+            {startGate.label}
+          </Link>
+        </Button>
+      );
+    }
     return (
       <LoadingButton size="sm" onClick={onCreateRun} isPending={isPending} loadingText="Starting…">
         Start Payroll Run
@@ -93,6 +113,7 @@ export function PayrollCommandCenterPage() {
   const canViewPolicies = useCan("payroll:policies:view");
 
   const { data, isLoading, isError, error, refetch } = useCommandCenter(month);
+  const policy = usePayrollPolicyCurrent();
   const createRunMutation = useCreateRun();
 
   const handleRetry = useCallback(() => {
@@ -126,6 +147,13 @@ export function PayrollCommandCenterPage() {
   const runId = data?.header.runId ?? undefined;
   const header = data?.header;
   const excCount = header ? header.exceptionCounts.BLOCKER + header.exceptionCounts.WARNING : 0;
+  const setupKnown = !canViewPolicies || !policy.isLoading;
+  const startGate = !setupKnown || isLoading
+    ? null
+    : payrollRunStartGate({
+        policyReady: canViewPolicies ? Boolean(policy.data?.policy) : true,
+        employeeCount: header?.employeeCount ?? 0,
+      });
 
   const isPreSetup = !isLoading && !isError && !data;
 
@@ -146,12 +174,13 @@ export function PayrollCommandCenterPage() {
       actions={
         <div className="flex items-center gap-2">
           <MonthPicker value={month} onChange={setMonth} yearRange={[-2, 0]} className="w-44" />
-          {canManage && (
+          {canManage && !isError && (
             <PrimaryAction
               status={header?.status ?? null}
               runId={runId}
               onCreateRun={handleCreateRun}
               isPending={createRunMutation.isPending}
+              startGate={startGate}
             />
           )}
         </div>

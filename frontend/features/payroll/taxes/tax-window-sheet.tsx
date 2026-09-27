@@ -29,12 +29,32 @@ import { useCreateTaxWindow, useUpdateTaxWindow } from "@/hooks/api/payroll/tax-
 import type { TaxWindow } from "@/types/payroll/reports";
 
 const schema = z.object({
-  financialYear: z.string().min(1, "Required"),
+  financialYear: z.string().trim().min(1, "Required"),
   opensAt: z.string().min(1, "Required"),
   closesAt: z.string().min(1, "Required"),
   proofDeadline: z.string().optional(),
   lockDate: z.string().optional(),
+}).superRefine((values, ctx) => {
+  if (values.opensAt && values.closesAt && values.closesAt < values.opensAt) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["closesAt"],
+      message: "Close date must be on or after the open date",
+    });
+  }
 });
+
+export function taxWindowCanSave(values: {
+  financialYear: string;
+  opensAt: string;
+  closesAt: string;
+}): boolean {
+  return schema.safeParse({
+    financialYear: values.financialYear,
+    opensAt: values.opensAt,
+    closesAt: values.closesAt,
+  }).success;
+}
 
 type FormValues = z.infer<typeof schema>;
 
@@ -95,6 +115,10 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const financialYear = form.watch("financialYear");
+  const opensAt = form.watch("opensAt");
+  const closesAt = form.watch("closesAt");
+  const canSave = taxWindowCanSave({ financialYear, opensAt, closesAt });
 
   return (
     <Sheet open onOpenChange={onClose}>
@@ -180,7 +204,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
+              <LoadingButton type="submit" isPending={isPending} loadingText="Saving…" disabled={!canSave}>
                 Save
               </LoadingButton>
             </SheetFooter>

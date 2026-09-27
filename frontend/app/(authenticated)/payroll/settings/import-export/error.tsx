@@ -13,8 +13,8 @@ export default function PayrollImportExportError({
     <ReportingRouteErrorBoundary
       error={error}
       reset={reset}
-      title="Import / Export error"
-      fallbackMessage="Failed to load import / export. Please try again."
+      title="Export error"
+      fallbackMessage="Failed to load payroll export. Please try again."
     />
   );
 }

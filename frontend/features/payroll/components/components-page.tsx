@@ -18,6 +18,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable } from "@/components/ui/data-table";
+import { useCursorPager } from "@/components/ui/table-pagination";
 import { EmptyPayroll } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePayrollComponents, useDeletePayrollComponent } from "@/hooks/api/payroll";
@@ -25,6 +26,8 @@ import type { SalaryComponent, ComponentType } from "@/types/payroll/setup";
 import { buildComponentColumns } from "./component-columns";
 import { ComponentFormSheet } from "./component-form-sheet";
 import { useCan } from "@/hooks/api/access";
+
+const COMPONENT_PAGE_SIZE = 20;
 
 const TYPE_OPTIONS: { value: ComponentType; label: string }[] = [
   { value: "EARNING", label: "Earning" },
@@ -42,7 +45,6 @@ export function ComponentsPageContent() {
 
   const typeFilter = searchParams.get("type") ?? "";
   const activeFilter = searchParams.get("active") ?? "";
-  const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
 
   const [searchInput, setSearchInput] = useState<string>(
     () => searchParams.get("search") ?? "",
@@ -54,6 +56,7 @@ export function ComponentsPageContent() {
   const deleteMutation = useDeletePayrollComponent();
 
   const debouncedSearch = useDebouncedValue(searchInput, 300);
+  const pager = useCursorPager(`${typeFilter}|${activeFilter}|${debouncedSearch}`);
 
   const updateParams = useCallback((updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -76,8 +79,8 @@ export function ComponentsPageContent() {
     type: (typeFilter as ComponentType) || undefined,
     active:
       activeFilter === "true" ? true : activeFilter === "false" ? false : undefined,
-    page,
-    pageSize: 20,
+    cursor: pager.cursor,
+    limit: COMPONENT_PAGE_SIZE,
   });
 
   const filtersActive =
@@ -98,10 +101,8 @@ export function ComponentsPageContent() {
   function handleTypeChange(value: string) { updateParams({ type: value === "all" ? "" : value }); }
   function handleActiveChange(value: string) { updateParams({ active: value === "all" ? "" : value }); }
 
-  function handlePageChange(newPage: number) {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(newPage));
-    router.replace(`?${params.toString()}`, { scroll: false });
+  function handleNextPage() {
+    pager.goNext(data?.pagination.nextCursor);
   }
 
   function handleEdit(row: SalaryComponent) {
@@ -193,11 +194,12 @@ export function ComponentsPageContent() {
             isLoading={isLoading}
             minWidth="700px"
             pagination={{
-              mode: "server",
-              page,
-              pageSize: 20,
-              total: data?.pagination ? (data.pagination.hasMore ? (page * 20) + 1 : (page - 1) * 20 + (data.items.length)) : 0,
-              onPageChange: handlePageChange,
+              mode: "cursor",
+              pageSize: COMPONENT_PAGE_SIZE,
+              hasMore: data?.pagination.hasMore ?? false,
+              hasPrevious: pager.hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: pager.goPrevious,
             }}
             emptyState={
               <EmptyState

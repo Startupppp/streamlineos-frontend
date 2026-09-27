@@ -190,6 +190,25 @@ export function RunsPageContent() {
     );
   }
 
+  function renderRunCard(row: PayrollRunListItem) {
+    return (
+      <div className="flex min-w-0 flex-col gap-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium">{formatMonth(row.month)}</span>
+          <RunStatusBadge status={row.status} />
+        </div>
+        <p className="break-words text-xs text-muted-foreground">
+          {row.entityId != null
+            ? (entityNameById.get(row.entityId) ?? `Entity #${row.entityId}`)
+            : "No entity"}
+        </p>
+        <p className="text-xs tabular-nums text-foreground">
+          {row.employeeCount ?? "—"} employees · Net {formatMoney(row.netTotal)}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <PageWrapper
       title="Payroll Runs"
@@ -243,6 +262,7 @@ export function RunsPageContent() {
           onRowClick={handleRowClick}
           isLoading={isLoading}
           minWidth="720px"
+          mobileCard={renderRunCard}
           footer={
             data?.pagination.hasMore ? (
               <div className="flex justify-end px-4 py-2">
