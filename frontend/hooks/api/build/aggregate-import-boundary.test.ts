@@ -11,12 +11,6 @@ const skippedDirectories = new Set([
   "node_modules",
 ]);
 
-/**
- * Matches a bare import of the cross-module aggregate (`@/hooks/api`) or
- * the Build barrel (`@/hooks/api/build`).  Deep imports such as
- * `@/hooks/api/build/projects` are intentionally NOT matched because they
- * have a path segment after the module root.
- */
 const hooksAggregatePattern =
   /from\s+["'](?:@\/hooks\/api|@\/hooks\/api\/build)["']/;
 

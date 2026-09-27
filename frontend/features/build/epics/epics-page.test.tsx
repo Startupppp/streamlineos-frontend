@@ -2,14 +2,16 @@ import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import { EpicsPage } from "./epics-page";
 
-jest.mock("@/hooks/api/build", () => ({
-  useProject: jest.fn(),
-  useProjectBoardTickets: jest.fn(),
-  useUpdateTicket: jest.fn(),
+jest.mock("@/hooks/api/build/projects", () => ({ useProject: jest.fn() }));
+jest.mock("@/hooks/api/build/ticket-queries", () => ({ useProjectBoardTickets: jest.fn() }));
+jest.mock("@/hooks/api/build/ticket-update-mutation", () => ({ useUpdateTicket: jest.fn() }));
+jest.mock("@/hooks/api/build/ticket-create-rank-mutations", () => ({
   useDeleteTicket: jest.fn(),
   useCreateTicket: jest.fn(),
   useBulkUpdateTickets: jest.fn(),
-  useCycles: jest.fn(),
+}));
+jest.mock("@/hooks/api/build/advanced", () => ({ useCycles: jest.fn() }));
+jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: jest.fn(() => ({ data: [] })),
 }));
 
