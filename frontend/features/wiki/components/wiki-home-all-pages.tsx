@@ -294,15 +294,18 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
 
   const status = searchParams.get("status") ?? "";
   const spaceParam = searchParams.get("space") ?? "";
-  const spaceId = spaceParam !== "" ? Number(spaceParam) : undefined;
+  const parsedSpaceId = spaceParam !== "" ? Number(spaceParam) : Number.NaN;
+  const spaceId =
+    Number.isInteger(parsedSpaceId) && parsedSpaceId > 0 ? parsedSpaceId : undefined;
+  const spaceValue = spaceId === undefined ? "all" : String(spaceId);
   const ownerParam = searchParams.get("owner") ?? "";
   const sort = parseEnum(searchParams.get("sort"), SORT_VALUES, "updated_desc");
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
 
   const filtersActive =
-    status !== "" || spaceParam !== "" || ownerParam !== "" || sort !== "updated_desc";
+    status !== "" || spaceId !== undefined || ownerParam !== "" || sort !== "updated_desc";
 
-  const filterKey = `${status}|${spaceParam}|${ownerParam}|${sort}`;
+  const filterKey = `${status}|${spaceValue}|${ownerParam}|${sort}`;
   const pager = useCursorPager(filterKey);
 
   const { data: spacesPage } = useKbSpaces();
@@ -428,7 +431,7 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
         </Select>
 
         {spaces && spaces.length > 0 && (
-          <Select value={spaceParam || "all"} onValueChange={handleSpaceChange}>
+          <Select value={spaceValue} onValueChange={handleSpaceChange}>
             <SelectTrigger className="h-9 w-40 shrink-0">
               <SelectValue placeholder="Space" />
             </SelectTrigger>

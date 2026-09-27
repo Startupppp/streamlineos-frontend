@@ -30,7 +30,8 @@ import {
   useUpdateKbPage,
   useRecordKbPageVisit,
 } from "@/hooks/api/kb";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { pageHref } from "@/lib/knowledge-routes";
 import PageCover from "./page-cover";
 import { PageCoverPickerDialog } from "./page-cover-picker";
@@ -96,6 +97,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   const updatePage = useUpdateKbPage();
   const recordVisit = useRecordKbPageVisit();
   const canManage = useCan("kb:pages:manage");
+  const viewAccess = useCanState("kb:pages:view");
 
   const [titleDraft, setTitleDraft] = useState<{
     pageId: number;
@@ -262,7 +264,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     );
   }
 
-  if (isLoading) {
+  if (viewAccess === "loading" || isLoading) {
     return (
       <div className="w-full px-3 py-4 space-y-4">
         <Skeleton className="h-4 w-3/4" />
@@ -270,6 +272,10 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
         <Skeleton className="h-64 w-full" />
       </div>
     );
+  }
+
+  if (viewAccess === "denied") {
+    return <NoPermissionState permission="kb:pages:view" />;
   }
 
   if (isError || !page) {

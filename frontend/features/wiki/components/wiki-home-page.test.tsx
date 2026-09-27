@@ -29,8 +29,9 @@ jest.mock("@/hooks/api/kb/page-collection", () => ({
   useKbPageCollection: jest.fn(),
 }));
 
+let mockCan: (key: string) => boolean = () => true;
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => true,
+  useCan: (key: string) => mockCan(key),
 }));
 
 jest.mock("@/hooks/api/kb/hr-link-config", () => ({
@@ -196,6 +197,7 @@ function makeResponse(
 beforeEach(() => {
   mockReplace.mockClear();
   mockPush.mockClear();
+  mockCan = () => true;
   mockSearchParams = new URLSearchParams();
 
   useKbPagesRecent.mockReturnValue({
@@ -483,5 +485,104 @@ describe("WikiHomePage — keyboard shortcuts wired via useBuildListKeyboard", (
     render(<WikiHomePage projectId={7} />);
     const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(options.searchInputRef).toBeUndefined();
+  });
+});
+
+function lastCollectionParams(): Record<string, unknown> {
+  const calls = useKbPageCollection.mock.calls;
+  return calls[calls.length - 1][0] as Record<string, unknown>;
+}
+
+describe("WikiHomePage — every URL filter param the spec declares reaches the collection request", () => {
+  it("maps the space URL param onto the spaceId field the /kb/pages query schema declares", () => {
+    mockSearchParams = new URLSearchParams("space=4");
+    render(<WikiHomePage />);
+    expect(lastCollectionParams().spaceId).toBe(4);
+  });
+
+  it("sends no spaceId when the space param is absent — paired control for the space test above", () => {
+    render(<WikiHomePage />);
+    expect(lastCollectionParams().spaceId).toBeUndefined();
+  });
+
+  it("drops a non-numeric space URL param instead of sending NaN, which the strict /kb/pages schema would answer with a 400 for the whole list", () => {
+    mockSearchParams = new URLSearchParams("space=all");
+    render(<WikiHomePage />);
+    expect(lastCollectionParams().spaceId).toBeUndefined();
+  });
+
+  it("drops a zero space URL param because the backend schema requires a positive integer", () => {
+    mockSearchParams = new URLSearchParams("space=0");
+    render(<WikiHomePage />);
+    expect(lastCollectionParams().spaceId).toBeUndefined();
+  });
+
+  it("passes the sort URL param through to the collection request", () => {
+    mockSearchParams = new URLSearchParams("sort=title_asc");
+    render(<WikiHomePage />);
+    expect(lastCollectionParams().sort).toBe("title_asc");
+  });
+
+  it("falls back to updated_desc when the sort URL param is not one the backend enum accepts", () => {
+    mockSearchParams = new URLSearchParams("sort=owner_asc");
+    render(<WikiHomePage />);
+    expect(lastCollectionParams().sort).toBe("updated_desc");
+  });
+
+  it("passes the status URL param through to the collection request", () => {
+    mockSearchParams = new URLSearchParams("status=in_review");
+    render(<WikiHomePage />);
+    expect(lastCollectionParams().status).toBe("in_review");
+  });
+
+  it("maps owner=me onto the owner literal the backend schema declares", () => {
+    mockSearchParams = new URLSearchParams("owner=me");
+    render(<WikiHomePage />);
+    expect(lastCollectionParams().owner).toBe("me");
+  });
+
+  it("sends no owner filter for an owner value other than me, because the backend schema accepts only the me literal", () => {
+    mockSearchParams = new URLSearchParams("owner=someone-else");
+    render(<WikiHomePage />);
+    expect(lastCollectionParams().owner).toBeUndefined();
+  });
+
+  it("pins projectId on the project-scoped route so the wiki list cannot read another project's pages", () => {
+    render(<WikiHomePage projectId={7} />);
+    expect(lastCollectionParams().projectId).toBe(7);
+  });
+
+  it("sends no projectId on the organization-wide wiki — paired control for the project-scoped test above", () => {
+    render(<WikiHomePage />);
+    expect(lastCollectionParams().projectId).toBeUndefined();
+  });
+
+  it("bounds the request at the declared page limit so the list is never unbounded", () => {
+    render(<WikiHomePage />);
+    expect(lastCollectionParams().limit).toBe(50);
+  });
+});
+
+describe("WikiHomePage — the create control fails closed on kb:pages:create", () => {
+  beforeEach(() => {
+    mockUseBuildListKeyboard.mockClear();
+  });
+
+  it("renders no New page action when kb:pages:create is denied", () => {
+    mockCan = (key) => key !== "kb:pages:create";
+    render(<WikiHomePage />);
+    expect(screen.queryByRole("button", { name: /new page/i })).toBeNull();
+  });
+
+  it("renders the New page action when kb:pages:create is granted — paired positive control for the denial above", () => {
+    render(<WikiHomePage />);
+    expect(screen.getByRole("button", { name: /new page/i })).toBeInTheDocument();
+  });
+
+  it("passes no onCreate to the keyboard hook when kb:pages:create is denied so the c shortcut cannot create a page", () => {
+    mockCan = (key) => key !== "kb:pages:create";
+    render(<WikiHomePage />);
+    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(options.onCreate).toBeUndefined();
   });
 });
