@@ -15,7 +15,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useProjectMembers,
   useUpdateProjectMemberRole,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";

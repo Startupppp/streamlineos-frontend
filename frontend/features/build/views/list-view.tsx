@@ -13,7 +13,7 @@ import {
   type DropResult,
 } from "@hello-pangea/dnd";
 import { useQueryClient } from "@tanstack/react-query";
-import { useUpdateTicket, useRankTicket } from "@/hooks/api";
+import { useUpdateTicket, useRankTicket } from "@/hooks/api/build/tickets";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";

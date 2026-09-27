@@ -14,12 +14,12 @@ import { Tag } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
+import { useProjectLabels } from "@/hooks/api/build/projects";
 import {
-  useProjectLabels,
   useCreateOrgLabel,
   useAddLabelToTicket,
   useRemoveLabelFromTicket,
-} from "@/hooks/api";
+} from "@/hooks/api/build/tickets";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

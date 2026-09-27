@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useCallback, useState, useEffect } from "react";
-import { useProject, useCycles } from "@/hooks/api";
-import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/build";
-import type { BulkUpdateTicketsInput } from "@/hooks/api/build";
+import { useProject } from "@/hooks/api/build/projects";
+import { useCycles } from "@/hooks/api/build/advanced";
+import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/build/tickets";
+import type { BulkUpdateTicketsInput } from "@/hooks/api/build/tickets";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CreateTicketDialog } from "@/features/build/tickets/create-ticket-dialog";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";

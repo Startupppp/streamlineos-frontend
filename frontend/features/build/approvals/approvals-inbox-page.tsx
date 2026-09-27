@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { Clock, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { isApiError, lazyContract } from "@/lib/api-envelope";
-import { useApprovalInbox, useDecideApproval } from "@/hooks/api/build";
+import { useApprovalInbox, useDecideApproval } from "@/hooks/api/build/approvals";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";

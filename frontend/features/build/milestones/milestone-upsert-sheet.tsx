@@ -42,7 +42,7 @@ import {
   useCreateMilestone,
   useUpdateMilestone,
   type ProjectMilestone,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/milestones";
 
 interface MilestoneUpsertSheetProps {
   projectId: number;

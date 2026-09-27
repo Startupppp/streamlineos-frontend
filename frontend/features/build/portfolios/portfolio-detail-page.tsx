@@ -7,9 +7,10 @@ import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import Link from "next/link";
 import {
-  useDeletePortfolio, useLinkPortfolioProject, usePortfolio, useProjects,
+  useDeletePortfolio, useLinkPortfolioProject, usePortfolio,
   useUnlinkPortfolioProject, useUpdatePortfolio,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/portfolios";
+import { useProjects } from "@/hooks/api/build/projects";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";

@@ -10,7 +10,7 @@ import {
   useCreateManagedProduct,
   useUpdateManagedProduct,
   useDeleteManagedProduct,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/managed-products";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { usePageState } from "@/hooks/api/use-page-state";

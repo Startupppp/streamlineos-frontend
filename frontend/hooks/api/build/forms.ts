@@ -41,6 +41,7 @@ const noContentContract = lazyContract(() =>
 interface FormFilters {
   type?: FormType;
   isActive?: boolean;
+  q?: string;
 }
 
 export function useForms(projectId: number, filters?: FormFilters) {
@@ -48,6 +49,7 @@ export function useForms(projectId: number, filters?: FormFilters) {
   const params: Record<string, string> = {};
   if (filters?.type) params["type"] = filters.type;
   if (filters?.isActive !== undefined) params["isActive"] = String(filters.isActive);
+  if (filters?.q) params["q"] = filters.q;
 
   return useInfiniteQuery({
     queryKey: buildWorkQueryKeys.projects.forms.list(

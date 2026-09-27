@@ -38,12 +38,14 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Combobox } from "@/components/ui/combobox";
 import type { ComboboxOption } from "@/components/ui/combobox";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { useProject } from "@/hooks/api/build";
+import { useProject } from "@/hooks/api/build/projects";
+import { usePortalChangeRequests } from "@/hooks/api/build/client-portal";
 import { useTickets } from "@/hooks/api/build/tickets";
 import { useProjectMilestones, useProjectBudget } from "@/hooks/api/build/milestones";
 import { useReleases } from "@/hooks/api/build/releases";
 import { useChangeRequests } from "@/hooks/api/build/change-requests";
 import { useTimesheetEntries } from "@/hooks/api/timesheets-core/entries";
+import { useProjectFiles } from "@/hooks/api/build/project-files";
 import type { ApprovalEntityType, CreateApprovalInput } from "@/types/projects";
 
 const ENTITY_TYPES: { value: ApprovalEntityType; label: string; searchLabel: string }[] = [
@@ -86,6 +88,8 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
     entityType === "timesheet",
   );
   const { data: budget, isFetching: budgetFetching } = useProjectBudget(projectId);
+  const { data: projectFiles, isFetching: filesFetching } = useProjectFiles(projectId);
+  const { data: portalCRs, isFetching: portalCRFetching } = usePortalChangeRequests(projectId);
 
   if (entityType === "task") {
     const tickets = ticketsData?.data ?? [];
@@ -154,6 +158,30 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
         ? [{ value: String(budget.projectId), label: "Project Budget", rawTitle: "Project Budget" } satisfies EntityItem]
         : ([] as EntityItem[]),
       isFetching: budgetFetching,
+    };
+  }
+
+  if (entityType === "document") {
+    return {
+      items: projectFiles.map((f): EntityItem => ({
+        value: String(f.id),
+        label: f.fileName,
+        sublabel: f.mimeType,
+        rawTitle: f.fileName,
+      })),
+      isFetching: filesFetching,
+    };
+  }
+
+  if (entityType === "client_approval") {
+    return {
+      items: (portalCRs ?? []).map((cr): EntityItem => ({
+        value: String(cr.id),
+        label: `CR-${cr.crNumber}: ${cr.title}`,
+        sublabel: cr.status,
+        rawTitle: cr.title,
+      })),
+      isFetching: portalCRFetching,
     };
   }
 

@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { useCreateTicket } from "@/hooks/api";
+import { useCreateTicket } from "@/hooks/api/build/tickets";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";

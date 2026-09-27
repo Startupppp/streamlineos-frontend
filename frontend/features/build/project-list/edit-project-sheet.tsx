@@ -40,7 +40,7 @@ import {
   planningEndPickerProps,
   planningStartPickerProps,
 } from "@/lib/date-constraints";
-import { useUpdateProject } from "@/hooks/api/build";
+import { useUpdateProject } from "@/hooks/api/build/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { MemberPicker } from "@/components/members/member-picker";
 import {

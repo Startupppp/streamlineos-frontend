@@ -20,7 +20,8 @@ import {
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import { useAllWork, useProjects } from "@/hooks/api/build";
+import { useAllWork } from "@/hooks/api/build/all-work";
+import { useProjects } from "@/hooks/api/build/projects";
 import { useBuildMembers } from "@/hooks/api/build/build-members";
 import { useProjectTeams } from "@/hooks/api/build/teams";
 import { useManagedProducts } from "@/hooks/api/build/managed-products";

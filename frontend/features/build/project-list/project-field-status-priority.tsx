@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useUpdateProject } from "@/hooks/api/build";
+import { useUpdateProject } from "@/hooks/api/build/projects";
 import {
   getColorSafe,
   projectStatusColors,

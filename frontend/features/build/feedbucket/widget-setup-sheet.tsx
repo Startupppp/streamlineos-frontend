@@ -30,7 +30,7 @@ import {
   useRotateFeedbucketWidgetKey,
   useUpdateFeedbucketWidget,
 } from "@/hooks/api/feedbucket";
-import { useProjects } from "@/hooks/api/build";
+import { useProjects } from "@/hooks/api/build/projects";
 import { useOrgMembers } from "@/hooks/api/organization";
 import type { FeedbucketWidget } from "@/types/feedbucket";
 import { WidgetAssigneeRules } from "./widget-assignee-rules";

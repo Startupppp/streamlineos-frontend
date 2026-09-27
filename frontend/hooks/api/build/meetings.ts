@@ -61,6 +61,7 @@ interface MeetingFilters {
   attendeeId?: string;
   hasActionItems?: boolean;
   hasUnresolvedActionItems?: boolean;
+  q?: string;
 }
 
 export function useMeetings(projectId: number, filters?: MeetingFilters) {
@@ -73,6 +74,7 @@ export function useMeetings(projectId: number, filters?: MeetingFilters) {
   if (filters?.attendeeId) params["attendeeId"] = filters.attendeeId;
   if (filters?.hasActionItems === true) params["hasActionItems"] = "true";
   if (filters?.hasUnresolvedActionItems === true) params["hasUnresolvedActionItems"] = "true";
+  if (filters?.q) params["q"] = filters.q;
   const hasParams = Object.keys(params).length > 0;
 
   return useInfiniteQuery({

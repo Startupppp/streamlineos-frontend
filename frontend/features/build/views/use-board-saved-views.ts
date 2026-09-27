@@ -3,7 +3,7 @@
 import { useCallback, useState, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { useCreateView, useUpdateView } from "@/hooks/api/build";
+import { useCreateView, useUpdateView } from "@/hooks/api/build/advanced";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { currentSearchParams } from "@/lib/current-search-params";
 import { buildTicketCollectionReturnHref } from "@/features/build/ticket-details/build-ticket-detail-url";

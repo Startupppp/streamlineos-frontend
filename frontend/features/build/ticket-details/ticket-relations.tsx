@@ -6,9 +6,9 @@ import {
   useAddTicketRelation,
   useRemoveTicketRelation,
   useProjectBoardTickets,
-} from "@/hooks/api/build";
-import type { WorkItemRelationType } from "@/hooks/api/build";
-import { useProject } from "@/hooks/api";
+} from "@/hooks/api/build/tickets";
+import type { WorkItemRelationType } from "@/hooks/api/build/tickets";
+import { useProject } from "@/hooks/api/build/projects";
 import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,

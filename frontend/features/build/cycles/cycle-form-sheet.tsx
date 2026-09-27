@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build";
+import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import {
   Sheet,

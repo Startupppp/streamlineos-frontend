@@ -5,7 +5,7 @@ import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useProject, useUpdateProject } from "@/hooks/api/build";
+import { useProject, useUpdateProject } from "@/hooks/api/build/projects";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";

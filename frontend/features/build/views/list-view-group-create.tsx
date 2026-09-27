@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
-import { useCreateTicket } from "@/hooks/api";
+import { useCreateTicket } from "@/hooks/api/build/tickets";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { InlineGroupCreateProps } from "./list-view-shared";

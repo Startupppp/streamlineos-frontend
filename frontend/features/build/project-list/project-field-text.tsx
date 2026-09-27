@@ -12,7 +12,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useUpdateProject } from "@/hooks/api/build";
+import { useUpdateProject } from "@/hooks/api/build/projects";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { InlineFieldWrapper } from "@/features/build/views/card-inline-fields";
 

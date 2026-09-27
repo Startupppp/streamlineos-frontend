@@ -21,7 +21,7 @@ import { AlertTriangle, ArrowUp, Minus, ArrowDown } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { useCreateTicket } from "@/hooks/api";
+import { useCreateTicket } from "@/hooks/api/build/tickets";
 import { useProjectMembers } from "@/hooks/api/build/projects";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";

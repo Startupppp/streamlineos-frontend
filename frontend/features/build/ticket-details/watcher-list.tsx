@@ -10,7 +10,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import { resolveImageUrl } from "@/lib/utils";
 import { MemberPicker } from "@/components/members/member-picker";
-import { useWatchers, useToggleWatch, useAddWatcher } from "@/hooks/api/build";
+import { useWatchers, useToggleWatch, useAddWatcher } from "@/hooks/api/build/watchers";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";

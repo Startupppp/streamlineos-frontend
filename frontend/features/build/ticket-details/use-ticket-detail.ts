@@ -7,9 +7,9 @@ import {
   useTicket,
   useUpdateTicket,
   useDeleteTicket,
-  useProject,
   useSubtasks,
-} from "@/hooks/api";
+} from "@/hooks/api/build/tickets";
+import { useProject } from "@/hooks/api/build/projects";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";

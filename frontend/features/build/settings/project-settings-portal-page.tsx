@@ -9,7 +9,7 @@ import {
   useClientVisibility,
   useUpdateTicketVisibility,
   useUpdateMilestoneVisibility,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/client-portal";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";

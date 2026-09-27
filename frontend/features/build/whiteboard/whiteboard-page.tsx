@@ -29,7 +29,7 @@ import {
   useWhiteboards,
   type ExcalidrawSceneData,
   type WhiteboardSummary,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/whiteboards";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";

@@ -8,9 +8,9 @@ import {
   useCreateDecision,
   useUpdateDecision,
   useDeleteDecision,
-  useProjectMembers,
   GOVERNANCE_PAGE_SIZE,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/governance";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";

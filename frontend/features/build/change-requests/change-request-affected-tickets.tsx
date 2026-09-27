@@ -8,7 +8,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
-import { useProject } from "@/hooks/api";
+import { useProject } from "@/hooks/api/build/projects";
 import {
   useChangeRequestAffectedTickets,
   useLinkAffectedTicket,

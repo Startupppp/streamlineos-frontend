@@ -28,7 +28,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { useCan } from "@/hooks/api/access";
-import { useFormSubmissions, useUpdateSubmission } from "@/hooks/api/build";
+import { useFormSubmissions, useUpdateSubmission } from "@/hooks/api/build/forms";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import type {

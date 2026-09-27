@@ -9,7 +9,7 @@ import {
   useCreatePortfolio,
   useUpdatePortfolio,
   useDeletePortfolio,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/portfolios";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";

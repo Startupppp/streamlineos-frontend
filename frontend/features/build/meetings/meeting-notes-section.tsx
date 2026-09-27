@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { useUpdateMeeting } from "@/hooks/api/build";
+import { useUpdateMeeting } from "@/hooks/api/build/meetings";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import dynamic from "next/dynamic";
 

@@ -9,7 +9,7 @@ import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { useCan } from "@/hooks/api/access";
-import { useForms, useCreateForm } from "@/hooks/api/build";
+import { useForms, useCreateForm } from "@/hooks/api/build/forms";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
@@ -77,6 +77,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
   } = useForms(projectId, {
     type: formTypeValue,
     isActive: isActiveParam,
+    q: listFilters.debouncedSearch || undefined,
   });
 
   const createForm = useCreateForm(projectId);
@@ -117,17 +118,12 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
     [listFilters],
   );
 
-  const search = listFilters.debouncedSearch.trim().toLowerCase();
   const items = useMemo(
     () =>
       Array.isArray(data)
         ? data
         : (data?.pages.flatMap((page) => page.data) ?? []),
     [data],
-  );
-  const filtered = useMemo(
-    () => items.filter((f) => !search || f.name.toLowerCase().includes(search)),
-    [items, search],
   );
 
   const columns = useMemo(() => buildFormsColumns({ projectId }), [projectId]);
@@ -219,7 +215,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
       >
         <PmPageShell>
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-            {filtered.length === 0 ? (
+            {items.length === 0 ? (
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="documents"
@@ -239,7 +235,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
               />
             ) : (
               <DataTable
-                data={filtered}
+                data={items}
                 columns={columns}
                 getRowKey={(row) => row.id}
                 minWidth="680px"

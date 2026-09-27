@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 export interface Member {
   id: string;
@@ -50,7 +51,7 @@ export interface StatusFilterOption {
 }
 
 export const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
-export const TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;
+export const TYPES = DB_ENUMS.ticket_type;
 
 /** `satisfies` keeps Build's nine exhaustive; the wider type lets any key be looked up. */
 const BUILD_CATEGORY_TITLES = {

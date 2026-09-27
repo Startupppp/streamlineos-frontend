@@ -16,7 +16,7 @@ import {
   useProjectTemplates,
   useDeleteProjectTemplate,
   type ProjectTemplate,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/templates";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { TemplateCard } from "@/features/build/templates/template-card";

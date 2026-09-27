@@ -7,7 +7,7 @@ import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useBulkUpdateTickets } from "@/hooks/api/build";
+import { useBulkUpdateTickets } from "@/hooks/api/build/tickets";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Cycle, Ticket } from "@/types/projects";
 

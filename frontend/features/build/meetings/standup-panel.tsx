@@ -10,7 +10,7 @@ import {
 } from "@/features/build/meetings/meeting-form-schema";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { useUpsertStandup } from "@/hooks/api/build";
+import { useUpsertStandup } from "@/hooks/api/build/meetings";
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";

@@ -145,4 +145,13 @@ describe("useBuildListFilters", () => {
     expect(replace).not.toHaveBeenCalled();
     expect(result.current.isFiltered).toBe(false);
   });
+
+  it("omits search fields entirely when withSearch is false so a page without a server seam cannot render a search input", () => {
+    const { result } = renderHook(() =>
+      useBuildListFilters({ filters: FILTERS, withSearch: false }),
+    );
+    expect("search" in result.current).toBe(false);
+    expect("debouncedSearch" in result.current).toBe(false);
+    expect("setSearch" in result.current).toBe(false);
+  });
 });

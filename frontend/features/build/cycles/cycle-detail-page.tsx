@@ -2,8 +2,10 @@
 
 import { useState, useMemo, useCallback, useRef } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
-import { useProject } from "@/hooks/api";
-import { useCycles, useProjectBoardTickets, useBulkUpdateTickets, useProjectMembers } from "@/hooks/api/build";
+import { useProject } from "@/hooks/api/build/projects";
+import { useCycles } from "@/hooks/api/build/advanced";
+import { useProjectBoardTickets, useBulkUpdateTickets } from "@/hooks/api/build/tickets";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
 import { ListView } from "@/features/build/views/list-view";

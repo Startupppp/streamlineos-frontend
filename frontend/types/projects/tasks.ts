@@ -109,6 +109,7 @@ export interface Ticket {
   cycleId: number | null;
   sequenceId: string | null;
   estimate: number | null;
+  version?: number;
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
   assignee?: TicketUser | null;
@@ -181,6 +182,7 @@ export interface UpdateTicketInput {
   startDate?: string | null;
   dueDate?: string | null;
   expectedUpdatedAt?: string;
+  version?: number;
   customerId?: number | null;
   parentTicketId?: number | null;
 }

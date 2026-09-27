@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useCan } from "@/hooks/api/access";
-import { useForm, useUpdateForm } from "@/hooks/api/build";
+import { useForm, useUpdateForm } from "@/hooks/api/build/forms";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { FORM_TYPE_LABELS, FORM_TYPES } from "../field-type-meta";
 import { FormFieldEditor } from "../form-field-editor";

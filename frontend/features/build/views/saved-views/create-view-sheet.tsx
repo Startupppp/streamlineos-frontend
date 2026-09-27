@@ -26,7 +26,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useCreateView } from "@/hooks/api/build";
+import { useCreateView } from "@/hooks/api/build/advanced";
 
 const VISIBILITY_OPTIONS = [
   { value: "shared" as const, label: "Shared" },

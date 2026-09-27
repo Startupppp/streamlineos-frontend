@@ -4,14 +4,9 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { toast } from "sonner";
-import {
-  usePrograms,
-  useCreateProgram,
-  useUpdateProgram,
-  useDeleteProgram,
-  usePortfolios,
-  useProjects,
-} from "@/hooks/api/build";
+import { usePrograms, useCreateProgram, useUpdateProgram, useDeleteProgram } from "@/hooks/api/build/programs";
+import { usePortfolios } from "@/hooks/api/build/portfolios";
+import { useProjects } from "@/hooks/api/build/projects";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";

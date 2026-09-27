@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import { useApplyProjectTemplate, type ProjectTemplate } from "@/hooks/api/build";
+import { useApplyProjectTemplate, type ProjectTemplate } from "@/hooks/api/build/templates";
 import { formatShortDate } from "@/lib/date-utils";
 
 interface ApplyTemplateDialogProps {

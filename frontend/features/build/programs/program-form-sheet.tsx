@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { FormSheetChrome, MemberPicker } from "@/components/shared";
-import { usePortfolios } from "@/hooks/api/build";
+import { usePortfolios } from "@/hooks/api/build/portfolios";
 import type { Program, CreateProgramInput, UpdateProgramInput } from "@/types/projects";
 import { programFormSchema, type ProgramFormValues } from "./program-form-schema";
 

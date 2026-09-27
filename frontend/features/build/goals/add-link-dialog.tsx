@@ -28,7 +28,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useProjects, useTickets } from "@/hooks/api/build";
+import { useProjects } from "@/hooks/api/build/projects";
+import { useTickets } from "@/hooks/api/build/tickets";
 import { useAddGoalLink } from "@/hooks/api/goals";
 import { getErrorMessage } from "@/lib/get-error-message";
 

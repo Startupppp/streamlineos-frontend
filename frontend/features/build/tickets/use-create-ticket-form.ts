@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCreateTicket, useAddAttachment, useProject } from "@/hooks/api";
+import { useCreateTicket, useAddAttachment } from "@/hooks/api/build/tickets";
+import { useProject } from "@/hooks/api/build/projects";
 import { useCycles } from "@/hooks/api/build/advanced";
 import { useProjectLabels } from "@/hooks/api/build/projects";
 import { useProjectMembers } from "@/hooks/api/build/projects";

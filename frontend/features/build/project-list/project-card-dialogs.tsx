@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import dynamic from "next/dynamic";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
-import { useArchiveProject } from "@/hooks/api/build";
+import { useArchiveProject } from "@/hooks/api/build/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { ProjectListItem } from "@/types/projects/projects";
 

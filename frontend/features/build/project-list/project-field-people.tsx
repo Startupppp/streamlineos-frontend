@@ -7,7 +7,7 @@ import { AvatarStack } from "@/components/ui/avatar-stack";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useUpdateProject } from "@/hooks/api/build";
+import { useUpdateProject } from "@/hooks/api/build/projects";
 import { MemberPicker } from "@/components/members/member-picker";
 import {
   getUserDisplayName,

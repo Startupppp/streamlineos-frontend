@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
-import { useForm, useDeleteForm, useSubmitForm } from "@/hooks/api/build";
+import { useForm, useDeleteForm, useSubmitForm } from "@/hooks/api/build/forms";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { FORM_TYPE_LABELS } from "./field-type-meta";

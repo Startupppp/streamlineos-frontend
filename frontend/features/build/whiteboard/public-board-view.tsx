@@ -18,8 +18,8 @@ import { toast } from "sonner";
 import {
   usePublicWhiteboard,
   useUpdatePublicWhiteboard,
-} from "@/hooks/api/build";
-import type { ExcalidrawSceneData } from "@/hooks/api/build";
+} from "@/hooks/api/build/whiteboards-public";
+import type { ExcalidrawSceneData } from "@/hooks/api/build/whiteboards";
 import { isExcalidrawScene } from "./scene-utils";
 import { useWhiteboardTheme } from "./use-whiteboard-theme";
 

@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import {
-  useIntakeRequests, useCreateIntakeRequest, useUpdateIntakeRequest,
-  useProjectMembers, useCycles, useModules,
-} from "@/hooks/api/build";
+import { useIntakeRequests, useCreateIntakeRequest, useUpdateIntakeRequest, useCycles, useModules } from "@/hooks/api/build/advanced";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";

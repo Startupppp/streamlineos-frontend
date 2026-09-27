@@ -45,6 +45,7 @@ interface ListFilters {
   impact?: string;
   ownerId?: string;
   cursor?: number;
+  search?: string;
 }
 
 interface OrgRiskFilters {
@@ -74,6 +75,7 @@ export function useProjectRisks(projectId: number, filters?: ListFilters) {
   if (filters?.impact) params["impact"] = filters.impact;
   if (filters?.ownerId) params["ownerId"] = filters.ownerId;
   if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
+  if (filters?.search) params["search"] = filters.search;
 
   return useQuery<IdCursorPage<Risk>>({
     queryKey: buildWorkQueryKeys.projects.risks.list(

@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Check, Users } from "lucide-react";
-import { useAddAttendee, useRemoveAttendee } from "@/hooks/api/build";
+import { useAddAttendee, useRemoveAttendee } from "@/hooks/api/build/meetings";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Combobox } from "@/components/ui/combobox";

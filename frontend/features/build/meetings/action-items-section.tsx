@@ -8,7 +8,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   useCreateActionItem, useUpdateActionItem, useDeleteActionItem, useConvertActionItemToTask,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/meetings";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";

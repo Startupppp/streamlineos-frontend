@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Diamond, CalendarCheck2 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { ProjectMilestone } from "@/hooks/api/build";
+import type { ProjectMilestone } from "@/hooks/api/build/milestones";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday, differenceInDays } from "date-fns";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";

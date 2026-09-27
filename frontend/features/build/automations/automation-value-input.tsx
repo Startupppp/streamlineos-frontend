@@ -7,6 +7,7 @@ import { useCustomStates } from "@/hooks/api/build/custom-states";
 import { useProjectMembers, useProjectLabels } from "@/hooks/api/build/projects";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/lib/person-display";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 const PRIORITY_OPTIONS = [
   { value: "LOW", label: "Low" },
@@ -15,13 +16,17 @@ const PRIORITY_OPTIONS = [
   { value: "URGENT", label: "Urgent" },
 ] as const;
 
-const TICKET_TYPE_OPTIONS = [
-  { value: "TASK", label: "Task" },
-  { value: "BUG", label: "Bug" },
-  { value: "STORY", label: "Story" },
-  { value: "EPIC", label: "Epic" },
-  { value: "SUBTASK", label: "Subtask" },
-] as const;
+const TICKET_TYPE_LABELS: Record<string, string> = {
+  TASK: "Task",
+  BUG: "Bug",
+  STORY: "Story",
+  EPIC: "Epic",
+};
+
+const TICKET_TYPE_OPTIONS = DB_ENUMS.ticket_type.map((value) => ({
+  value,
+  label: TICKET_TYPE_LABELS[value] ?? value.charAt(0) + value.slice(1).toLowerCase(),
+}));
 
 interface AutomationValueInputProps {
   kind: "action" | "condition";

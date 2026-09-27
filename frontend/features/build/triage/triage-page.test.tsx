@@ -3,10 +3,14 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { TriagePage } from "./triage-page";
 import { ApiError } from "@/lib/api-envelope";
 
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/tickets", () => ({
   useTickets: jest.fn(),
   useUpdateTicket: jest.fn(),
+  useBulkUpdateTickets: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -100,9 +104,11 @@ jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
-  useBulkUpdateTickets: jest.fn(),
+jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: jest.fn(() => ({ data: [] })),
+}));
+
+jest.mock("@/hooks/api/build/advanced", () => ({
   useCycles: jest.fn(() => ({ data: [] })),
 }));
 
@@ -131,10 +137,10 @@ jest.mock("@/components/shared/format-ticket-key", () => ({
   getTicketDetailHref: jest.fn(() => "/build/1/tickets/1"),
 }));
 
-import { useProject, useTickets, useUpdateTicket } from "@/hooks/api";
+import { useProject } from "@/hooks/api/build/projects";
+import { useTickets, useUpdateTicket, useBulkUpdateTickets } from "@/hooks/api/build/tickets";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
-import { useBulkUpdateTickets } from "@/hooks/api/build";
 
 const mockUseProject = useProject as jest.Mock;
 const mockUseTickets = useTickets as jest.Mock;

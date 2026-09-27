@@ -33,11 +33,8 @@ export interface UseBuildListFiltersOptions {
   withSearch?: boolean;
 }
 
-export interface BuildListFiltersState {
-  search: string;
-  debouncedSearch: string;
+export interface BuildListFiltersStateBase {
   cursor: string | null;
-  setSearch: (value: string) => void;
   setCursor: (cursor: string | null) => void;
   value: (param: string) => string;
   isActive: (param: string) => boolean;
@@ -49,9 +46,17 @@ export interface BuildListFiltersState {
   isPending: boolean;
 }
 
+export interface BuildListFiltersState extends BuildListFiltersStateBase {
+  search: string;
+  debouncedSearch: string;
+  setSearch: (value: string) => void;
+}
+
+export function useBuildListFilters(options: UseBuildListFiltersOptions & { withSearch: false }): BuildListFiltersStateBase;
+export function useBuildListFilters(options?: UseBuildListFiltersOptions): BuildListFiltersState;
 export function useBuildListFilters(
   options: UseBuildListFiltersOptions = {},
-): BuildListFiltersState {
+): BuildListFiltersStateBase | BuildListFiltersState {
   const {
     filters = [],
     searchParam = BUILD_LIST_SEARCH_PARAM,
@@ -189,19 +194,25 @@ export function useBuildListFilters(
     return parts.join("&");
   }, [debouncedSearch, filters, searchParam, values, withSearch]);
 
-  return {
-    search,
-    debouncedSearch,
+  const base: BuildListFiltersStateBase = {
     cursor,
-    setSearch: setSearchState,
     setCursor,
     value,
     isActive,
     setValue,
     clearAll,
     activeCount,
-    isFiltered: activeCount > 0 || debouncedSearch.length > 0,
+    isFiltered: activeCount > 0 || (withSearch ? debouncedSearch.length > 0 : false),
     resetKey,
     isPending,
+  };
+
+  if (!withSearch) return base;
+
+  return {
+    ...base,
+    search,
+    debouncedSearch,
+    setSearch: setSearchState,
   };
 }

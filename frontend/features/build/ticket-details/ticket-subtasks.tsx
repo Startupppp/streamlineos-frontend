@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListChecks } from "lucide-react";
-import { useProject } from "@/hooks/api";
+import { useProject } from "@/hooks/api/build/projects";
 import { SubtaskRow } from "./subtask-row";
 import { SubtaskComposer } from "./subtask-composer";
 import { TicketAiSuggestSubtasksAction } from "@/features/build/ai/ticket-detail-ai";

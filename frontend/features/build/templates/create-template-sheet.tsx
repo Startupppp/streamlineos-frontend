@@ -35,7 +35,7 @@ import {
   SheetClose,
   SheetBody,
 } from "@/components/ui/sheet";
-import { useCreateProjectTemplate } from "@/hooks/api/build";
+import { useCreateProjectTemplate } from "@/hooks/api/build/templates";
 import { TicketRow, type TicketDraft } from "./ticket-row";
 
 const CATEGORIES = ["GENERAL", "SOFTWARE", "ONBOARDING", "MARKETING", "SALES", "HR"] as const;

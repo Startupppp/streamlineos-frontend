@@ -15,7 +15,7 @@ import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { MilestoneCard } from "./milestone-card";
-import type { ProjectMilestone } from "@/hooks/api/build";
+import type { ProjectMilestone } from "@/hooks/api/build/milestones";
 import {
   RELEASES_TABLE_HEADERS,
   buildReleasesColumns,

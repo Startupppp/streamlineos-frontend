@@ -13,7 +13,7 @@ import {
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
 import { useCan, useCanState } from "@/hooks/api/access";
-import { useViews, useUpdateView, useDeleteView } from "@/hooks/api/build";
+import { useViews, useUpdateView, useDeleteView } from "@/hooks/api/build/advanced";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { currentSearchParams } from "@/lib/current-search-params";
 import { parseViewType } from "@/lib/build/view-types";

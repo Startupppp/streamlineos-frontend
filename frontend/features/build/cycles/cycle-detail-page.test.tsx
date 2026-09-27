@@ -1,14 +1,20 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { CycleDetailPage } from "./cycle-detail-page";
 
-jest.mock("@/hooks/api", () => ({
+jest.mock("@/hooks/api/build/projects", () => ({
   useProject: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/advanced", () => ({
   useCycles: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/tickets", () => ({
   useProjectBoardTickets: jest.fn(),
   useBulkUpdateTickets: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: jest.fn(() => ({ data: [] })),
 }));
 
@@ -148,8 +154,9 @@ jest.mock("@/features/build/ticket-details/build-ticket-detail-url", () => ({
   buildTicketDetailUrl: jest.fn(() => null),
 }));
 
-import { useProject } from "@/hooks/api";
-import { useCycles, useProjectBoardTickets, useBulkUpdateTickets } from "@/hooks/api/build";
+import { useProject } from "@/hooks/api/build/projects";
+import { useCycles } from "@/hooks/api/build/advanced";
+import { useProjectBoardTickets, useBulkUpdateTickets } from "@/hooks/api/build/tickets";
 import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { notFound } from "next/navigation";

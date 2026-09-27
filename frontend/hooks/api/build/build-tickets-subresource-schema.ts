@@ -145,6 +145,7 @@ export const rankTicketResultContract = z.object({
 export const ticketUpdateResultContract = z.object({
   updated: z.literal(true),
   updatedAt: z.string(),
+  version: z.number().int(),
 });
 
 export const columnCountsContract = z.record(z.string(), z.number().int());

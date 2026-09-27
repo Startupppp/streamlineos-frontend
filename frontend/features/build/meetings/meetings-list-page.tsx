@@ -2,13 +2,10 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
-import {
-  useMeetings,
-  useCreateMeeting,
-  useProjectMembers,
-  useCycles,
-  useProjectBoardTickets,
-} from "@/hooks/api/build";
+import { useMeetings, useCreateMeeting } from "@/hooks/api/build/meetings";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
+import { useCycles } from "@/hooks/api/build/advanced";
+import { useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -122,6 +119,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     attendeeId: attendeeId !== BUILD_FILTER_ALL && attendeeId ? attendeeId : undefined,
     hasActionItems: actionItemValue === "has" ? true : undefined,
     hasUnresolvedActionItems: actionItemValue === "unresolved" ? true : undefined,
+    q: listFilters.debouncedSearch || undefined,
   });
 
   const { data: upcomingData } = useMeetings(projectId, {
@@ -150,13 +148,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     [data],
   );
 
-  const displayed = useMemo(() => {
-    const q = listFilters.debouncedSearch.trim().toLowerCase();
-    if (!q) return meetings;
-    return meetings.filter(
-      (m) => m.title.toLowerCase().includes(q) || `mtg-${m.meetingNumber}`.includes(q),
-    );
-  }, [meetings, listFilters.debouncedSearch]);
+  const displayed = meetings;
 
   const handleOpenSheet = useCallback(() => {
     setSelectedTemplate(null);

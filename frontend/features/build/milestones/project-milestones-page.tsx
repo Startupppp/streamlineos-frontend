@@ -26,7 +26,7 @@ import {
   useDeleteMilestone,
   useUpdateMilestone,
   type ProjectMilestone,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/milestones";
 import { useCan } from "@/hooks/api/access";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";

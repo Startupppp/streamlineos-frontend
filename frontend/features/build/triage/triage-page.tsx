@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useProject, useTickets, useUpdateTicket } from "@/hooks/api";
-import { useBulkUpdateTickets, useCycles, useProjectMembers, type BulkUpdateTicketsInput } from "@/hooks/api/build";
+import { useProject } from "@/hooks/api/build/projects";
+import { useCycles } from "@/hooks/api/build/advanced";
+import { useTickets, useUpdateTicket, useBulkUpdateTickets } from "@/hooks/api/build/tickets";
+import type { BulkUpdateTicketsInput } from "@/hooks/api/build/tickets";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { Checkbox } from "@/components/ui/checkbox";

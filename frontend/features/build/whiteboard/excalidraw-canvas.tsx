@@ -8,7 +8,7 @@ import { Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppTheme } from "@/components/theme/app-theme-provider";
 import type { ExcalidrawProps } from "@excalidraw/excalidraw/types";
-import type { WhiteboardDetail } from "@/hooks/api/build";
+import type { WhiteboardDetail } from "@/hooks/api/build/whiteboards";
 import { isExcalidrawScene } from "./scene-utils";
 import type { SaveStatus } from "./use-whiteboard-autosave";
 

@@ -28,7 +28,7 @@ import {
   type WhiteboardDetail,
   type WhiteboardVisibility,
   type WhiteboardShareRole,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/whiteboards";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useCanState } from "@/hooks/api/access";
 

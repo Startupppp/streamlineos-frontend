@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateTicket } from "@/hooks/api/build";
+import { useCreateTicket } from "@/hooks/api/build/tickets";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { activationProps } from "@/lib/keyboard-activation";

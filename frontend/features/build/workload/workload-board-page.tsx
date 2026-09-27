@@ -3,8 +3,8 @@
 import { use, useState, useCallback, useMemo } from "react";
 import { format, addDays } from "date-fns";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useProject } from "@/hooks/api";
-import { useProjectBoardTickets } from "@/hooks/api/build";
+import { useProject } from "@/hooks/api/build/projects";
+import { useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import { useWorkloadCapacity } from "@/hooks/api/build/workload-capacity";
 import { useProjectTeams } from "@/hooks/api/build/teams";
 import { usePageState } from "@/hooks/api/use-page-state";

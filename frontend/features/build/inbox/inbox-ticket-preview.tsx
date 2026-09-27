@@ -7,8 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
-import { useProject } from "@/hooks/api";
-import { useTicketByKey } from "@/hooks/api/build";
+import { useProject } from "@/hooks/api/build/projects";
+import { useTicketByKey } from "@/hooks/api/build/tickets";
 import {
   formatTicketKey,
   parseTicketKey,

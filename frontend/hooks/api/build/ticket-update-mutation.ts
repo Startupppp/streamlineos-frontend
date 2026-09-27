@@ -30,6 +30,7 @@ const ticketUpdateResultLazy = lazyContract(() =>
 export interface UpdateTicketResponse {
   updated: boolean;
   updatedAt: string;
+  version: number;
 }
 
 interface UpdateTicketContext {
@@ -202,7 +203,7 @@ export function useUpdateTicket(
     onSuccess: (data, variables, context, mutFnCtx) => {
       const applyServerVersion = (ticket: Ticket) =>
         ticket.id === variables.ticketId
-          ? { ...ticket, updatedAt: data.updatedAt }
+          ? { ...ticket, updatedAt: data.updatedAt, version: data.version }
           : ticket;
       patchTicketCollections(queryClient, projectId, applyServerVersion);
       queryClient.setQueryData<Ticket | null>(

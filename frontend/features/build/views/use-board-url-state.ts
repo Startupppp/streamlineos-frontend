@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useProject } from "@/hooks/api";
-import { useViews, useProjectBoardTickets } from "@/hooks/api/build";
+import { useProject } from "@/hooks/api/build/projects";
+import { useViews } from "@/hooks/api/build/advanced";
+import { useProjectBoardTickets } from "@/hooks/api/build/tickets";
 import { useBugs } from "@/hooks/api/build/bugs";
 import { useBoardSavedViews } from "./use-board-saved-views";
 import { applyDisplayOptionParams, hydrateDisplayOptions, useDisplayOptions, writeDisplayOptionParams } from "./use-display-options";

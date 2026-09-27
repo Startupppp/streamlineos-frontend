@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useProjectMembers } from "@/hooks/api/build";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { FormField } from "@/types/projects/forms";
 import { numericFieldChangeOr } from "@/lib/numeric-field";

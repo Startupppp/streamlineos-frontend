@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useDeleteProject } from "@/hooks/api/build";
+import { useDeleteProject } from "@/hooks/api/build/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { clearLastProjectId } from "@/lib/projects/last-project";
 import {

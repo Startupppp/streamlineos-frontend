@@ -9,9 +9,9 @@ import {
   useCreateRisk,
   useUpdateRisk,
   useDeleteRisk,
-  useProjectMembers,
   GOVERNANCE_PAGE_SIZE,
-} from "@/hooks/api/build";
+} from "@/hooks/api/build/governance";
+import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -122,6 +122,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
       probability: probabilityValue !== BUILD_FILTER_ALL ? probabilityValue : undefined,
       impact: impactValue !== BUILD_FILTER_ALL ? impactValue : undefined,
       cursor: cursor === undefined ? undefined : Number(cursor),
+      search: listFilters.debouncedSearch || undefined,
     },
   );
   const { data: stats, isLoading: isStatsLoading } =
@@ -162,27 +163,16 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const highCritCount = stats?.highCritical ?? 0;
   const closedCount = stats?.closed ?? 0;
 
-  const search = listFilters.debouncedSearch.trim().toLowerCase();
   const isFiltered = listFilters.isFiltered || !!matrixCell;
 
   const displayed = useMemo(() => {
-    let items = filteredRisks;
-    if (matrixCell) {
-      items = items.filter(
-        (r) =>
-          r.probability === matrixCell.probability &&
-          r.impact === matrixCell.impact,
-      );
-    }
-    if (search) {
-      items = items.filter(
-        (r) =>
-          r.title.toLowerCase().includes(search) ||
-          `risk-${r.riskNumber}`.includes(search),
-      );
-    }
-    return items;
-  }, [filteredRisks, matrixCell, search]);
+    if (!matrixCell) return filteredRisks;
+    return filteredRisks.filter(
+      (r) =>
+        r.probability === matrixCell.probability &&
+        r.impact === matrixCell.impact,
+    );
+  }, [filteredRisks, matrixCell]);
 
   const handleCreate = useCallback(
     (input: CreateRiskInput) => {
