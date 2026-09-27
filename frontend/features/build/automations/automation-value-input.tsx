@@ -76,7 +76,8 @@ function AssigneeCombobox({
   onChange: (v: string) => void;
   className?: string;
 }) {
-  const { data: members = [] } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
   const options = members.map((m) => ({
     value: m.id,
     label: getUserDisplayName(m),

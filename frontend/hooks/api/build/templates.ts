@@ -99,7 +99,7 @@ export function useCreateProjectTemplate() {
     mutationKey: ["projects", "templates", "create"],
     mutationFn: (input: CreateProjectTemplateInput) =>
       apiClient.post<ProjectTemplate>("/build/templates", input, undefined, templateRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: TEMPLATES_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.templates() }),
   });
 }
 
@@ -109,7 +109,7 @@ export function useDeleteProjectTemplate() {
     mutationKey: ["projects", "templates", "delete"],
     mutationFn: (templateId: number) =>
       apiClient.delete<void>(`/build/templates/${templateId}`, undefined, undefined, noContentContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: TEMPLATES_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.templates() }),
   });
 }
 

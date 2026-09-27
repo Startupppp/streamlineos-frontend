@@ -98,9 +98,9 @@ const STUB_PROJECTS: ProjectListItem[] = [
 ];
 
 const STUB_TEAMS: ProjectTeam[] = [
-  { id: 1, orgId: "org_gallery", name: "Engineering", key: "ENG", icon: null, color: null, isPrivate: false, createdAt: "2026-01-01", updatedAt: "2026-01-01", memberCount: 8 },
-  { id: 2, orgId: "org_gallery", name: "Product", key: "PD", icon: null, color: null, isPrivate: false, createdAt: "2026-01-01", updatedAt: "2026-01-01", memberCount: 4 },
-  { id: 3, orgId: "org_gallery", name: "Design", key: "DX", icon: null, color: null, isPrivate: false, createdAt: "2026-01-01", updatedAt: "2026-01-01", memberCount: 3 },
+  { id: 1, orgId: "org_gallery", name: "Engineering", key: "ENG", icon: null, color: null, isPrivate: false, createdAt: "2026-01-01", updatedAt: "2026-01-01", memberCount: 8, capacity: null },
+  { id: 2, orgId: "org_gallery", name: "Product", key: "PD", icon: null, color: null, isPrivate: false, createdAt: "2026-01-01", updatedAt: "2026-01-01", memberCount: 4, capacity: null },
+  { id: 3, orgId: "org_gallery", name: "Design", key: "DX", icon: null, color: null, isPrivate: false, createdAt: "2026-01-01", updatedAt: "2026-01-01", memberCount: 3, capacity: null },
 ];
 
 const STUB_WORK_ITEMS = [

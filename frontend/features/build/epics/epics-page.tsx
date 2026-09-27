@@ -51,7 +51,8 @@ export function EpicsPage({ params }: PageProps) {
   const { data: project, isLoading: projectLoading, isError: projectFailed, error: projectError, refetch: refetchProject } = useProject(projectId);
   const { data: boardTickets, isLoading: ticketsLoading, isError: ticketsFailed, error: ticketsError, refetch: refetchTickets } = useProjectBoardTickets(projectId);
   const { data: cycles } = useCycles(projectId);
-  const { data: members } = useProjectMembers(projectId);
+  const { data: membersPage } = useProjectMembers(projectId);
+  const members = membersPage?.data ?? [];
   const isLoading = projectLoading || ticketsLoading;
   const loadError = projectError ?? ticketsError;
 

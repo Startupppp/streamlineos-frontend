@@ -14,7 +14,7 @@ import {
   LoadingView as InviteLoadingView,
   ErrorView as InviteErrorView,
   MissingTokenView,
-} from "@/app/(portal)/accept-invitation/page";
+} from "@/app/(portal)/accept-invitation/accept-invitation-views";
 import type {
   PortalProject,
   PortalProjectOverview,

@@ -202,7 +202,7 @@ export function useBoardUrlState(
   useEffect(() => {
     if (isCalendarDeepLink || !viewId || !views) return;
     if (appliedViewIdRef.current === viewId) return;
-    const savedView = views.find((v) => v.id.toString() === viewId);
+    const savedView = views.data.find((v) => v.id.toString() === viewId);
     if (!savedView) return;
     appliedViewIdRef.current = viewId;
     const next = currentSearchParams(searchParams);
@@ -233,7 +233,7 @@ export function useBoardUrlState(
   ]);
 
   const activeView = viewId
-    ? views?.find((v) => v.id.toString() === viewId)
+    ? views?.data.find((v) => v.id.toString() === viewId)
     : null;
 
   const allTickets: KanbanTicket[] = useMemo(() => {

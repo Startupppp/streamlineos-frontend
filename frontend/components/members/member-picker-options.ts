@@ -54,7 +54,7 @@ export function useMemberOptions(
       placeholderData: (prev) => prev,
     },
   );
-  const { data: projectMembersPage } = useProjectMembers(projectId ?? 0, {
+  const { data: projectMembersPage } = useProjectMembers(projectId ?? 0, undefined, {
     enabled: enabled && !explicit && projectId !== undefined,
   });
   const projectMembers = useMemo(() => projectMembersPage?.data ?? [], [projectMembersPage?.data]);

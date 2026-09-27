@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function CycleVelocityPanel({ projectId }: { projectId: number }) {
   const { data, isLoading, isError } = useVelocityReport(projectId);
+  const cycles = data?.pages.flatMap((page) => page.data) ?? [];
 
   return (
     <section className="space-y-3" aria-labelledby="cycle-velocity-heading">
@@ -16,8 +17,8 @@ export function CycleVelocityPanel({ projectId }: { projectId: number }) {
       <div className="rounded-lg border border-border bg-card p-4">
         {isLoading ? <Skeleton className="h-72 w-full" /> : null}
         {isError ? <p className="text-sm text-muted-foreground">Velocity is unavailable right now.</p> : null}
-        {!isLoading && !isError && data?.length ? <VelocityChart data={data.map((cycle) => ({ name: cycle.name, Committed: cycle.committedPoints, Completed: cycle.completedPoints }))} /> : null}
-        {!isLoading && !isError && !data?.length ? <p className="text-sm text-muted-foreground">Complete a cycle to see velocity here.</p> : null}
+        {!isLoading && !isError && cycles.length ? <VelocityChart data={cycles.map((cycle) => ({ name: cycle.name, Committed: cycle.committedPoints, Completed: cycle.completedPoints }))} /> : null}
+        {!isLoading && !isError && !cycles.length ? <p className="text-sm text-muted-foreground">Complete a cycle to see velocity here.</p> : null}
       </div>
     </section>
   );

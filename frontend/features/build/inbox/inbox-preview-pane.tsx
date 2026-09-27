@@ -80,6 +80,7 @@ function getCategoryLabel(category: NotificationCategory): string {
     SURVEYS: "Surveys",
     CALENDAR: "Calendar",
     SUPPORT: "Support",
+    ACCOUNTING: "Accounting",
   };
   return labels[category] ?? category;
 }

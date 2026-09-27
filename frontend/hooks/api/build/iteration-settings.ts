@@ -15,7 +15,7 @@ const iterationSettingsContract = lazyContract(() =>
 
 export function useIterationSettings(
   projectId: number,
-  options?: Omit<UseQueryOptions<IterationSettings>, "queryKey" | "queryFn" | "enabled">,
+  options?: Omit<UseQueryOptions<IterationSettings>, "queryKey" | "queryFn">,
 ) {
   const canView = useCan("build:view");
   return useQuery<IterationSettings>({
