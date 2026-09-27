@@ -53,7 +53,7 @@ Migration: `backend/migrations/1212_kb_indexed_bytes_quota.sql` + its rollback.
       (kb-chat-parts.tsx: InsufficientEvidenceBanner:153, CitationPassage:198, FreshnessTag:212, VerificationBadge:241, DisagreementBanner:283; knowledge-base-page.tsx:471-489)
 - [x] Citations are accepted only when they map to a retrieved, still-authorized passage. A
       citation that no longer resolves is redacted, not rendered. (MOVED: KbAskCitationService.resolveCitations at backend/src/modules/kb/retrieval/kb-ask-citations.service.ts:44-88 resolves visibility live and only emits ids that pass; backed by KbCitationVisibilityService.visibleArticles/visiblePages/visibleSources; called from kb-ask.service.ts:104 and :414)
-- [ ] **OPEN —** Access-change handling after an answer was generated: re-opening a conversation re-checks
+- [x] Access-change handling after an answer was generated: re-opening a conversation re-checks
       citations against current ACLs. — kb-chat-history.service.ts:74/98 (list) and :320/344 (listMessages) project citations straight from the jsonb column with no visibility call; KbCitationVisibilityService.partitionVisible has zero production callers; assertReplayCitations at kb-ask-citations.service.ts:104 is wired only to the idempotency-replay branch (kb-ask.controller.ts:172), not conversation re-open.
 - [x] Streaming stop and retry; network-loss recovery; copy; helpful/unhelpful; report wrong or
       stale; create knowledge gap. (knowledge-base-page.tsx:294 handleStop/handleRegenerate; kb-chat-parts.tsx: CopyAnswerButton, AnswerFeedbackBar, CreateKnowledgeGapButton)

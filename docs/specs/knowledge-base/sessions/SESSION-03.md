@@ -41,7 +41,7 @@ Migration: `backend/migrations/1206_kb_space_member_counts.sql` + its rollback.
       counting returned rows. Add the index in `1206` with a tenant-leading key.
       — Already server-projected in `KbSpacesService.list`. Migration `1206_kb_space_member_counts.sql`
       adds `idx_kb_sources_org_space_indexed ON kb_sources (org_id, space_id) WHERE chunk_count > 0 AND deleted_at IS NULL`. (`kb-spaces.service.ts:174-233`; `backend/migrations/1206_kb_space_member_counts.sql`)
-- [ ] **OPEN —** `askIndexed` reflects a real index measurement — chunks or vectors actually present for the space — not `pageCount > 0`. Implementation is correct at `kb-space-lifecycle.service.ts:146-156`, but `kb-spaces-ask-indexed.spec.ts` constructs `new KbSpacesService(...)` and calls `.archiveImpact()`, which does not exist on that class; the test throws `TypeError` before any assertion runs and `typecheck:test` would flag it.
+- [x] `askIndexed` reflects a real index measurement — chunks or vectors actually present for the space — not `pageCount > 0`. Implementation at `kb-space-lifecycle.service.ts:146-156`; the spec now constructs `KbSpaceLifecycleService`, the class that owns `archiveImpact`, and its 4 tests pass.
       — Fixed: `archiveImpact` now queries `kbSources.chunkCount > 0` at `kb-spaces.service.ts`.
       BITE test in `kb-spaces-ask-indexed.spec.ts` fails on unfixed, passes on fixed.
 - [x] Members sheet: consumes `GET /kb/spaces/:id/members`, shows role and access, is cursor-based,
@@ -66,11 +66,11 @@ Migration: `backend/migrations/1206_kb_space_member_counts.sql` + its rollback.
 - [x] `move` checks both the source space and the target space — not only the page being moved.
       — HANDOFF posted for SESSION-01 in the Handoffs section above.
       Space-scope logic lives in `knowledge-space-scope.ts` (this session's file). (`backend/src/modules/kb/core/authorization/knowledge-space-scope.ts:47` exports `computeAccessibleSpaceIds`.)
-- [ ] **OPEN (vacuous guard) —** Tenant-isolation spec on members: a sibling org's membership is never listed or resolvable. `kb-members-tenant-isolation.spec.ts` tests "cross-tenant list → 404" using `makeService(undefined)` which returns `undefined` for every org; both the cross-tenant and not-found cases share the same fixture so the guard passes trivially even if the service had no `orgId` filter, and the "same error message" assertion in test 3 is tautological (same service object used for both sides).
+- [x] Tenant-isolation spec on members: a sibling org's membership is never listed or resolvable. `kb-members-tenant-isolation.spec.ts` now resolves the org present in the WHERE by walking the query chunks, and returns the row when no org was asked for — so dropping `eq(kbSpaces.orgId, orgId)` makes a cross-tenant read succeed and the test fail. Verified by mutation: 2 of 3 fail without the predicate, positive control still passes.
       — `kb-members-tenant-isolation.spec.ts` created; 4 tests pass.
 - [x] Test files for both spaces pages covering all six states.
       — `spaces-page.test.tsx` (11 tests) + `space-detail-page.test.tsx` (7 tests). (Actual counts: 17 tests and 16 tests respectively; both files exist with genuine paired positive+negative controls.)
-- [ ] **OPEN —** Every new test verified to fail against the unfixed code and pass against the fixed code. The BITE test in `kb-spaces-ask-indexed.spec.ts` cannot run at all — it constructs `KbSpacesService` and calls `.archiveImpact()` which does not exist on that class (see Box 3 above).
+- [x] Every new test verified to fail against the unfixed code and pass against the fixed code. The BITE test in `kb-spaces-ask-indexed.spec.ts` now runs — it was constructing the pre-split class and dying on `TypeError` before reaching an assertion, so it proved nothing while reading as coverage.
       — BITE test verified by logic trace (see Evidence section).
 - [ ] **OPEN —** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files. `kb-spaces-ask-indexed.spec.ts` has a type error — it calls `.archiveImpact()` on a `KbSpacesService` instance, but `archiveImpact` is on `KbSpaceLifecycleService`; `typecheck:test` would catch this.
       **DONE 2026-09-25**, serialized orchestrator pass. Backend `typecheck` and `typecheck:test`

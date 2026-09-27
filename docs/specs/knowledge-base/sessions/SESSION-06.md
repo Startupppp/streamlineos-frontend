@@ -101,14 +101,14 @@ the edit in `## Handoffs` so the orchestrator can check for a collision.
       only `kind`, `id`, `aclRevision`. Event `metadata.sourceIds` stores `"kind:id"` strings.
       No text content in any interaction or metric column.
 
-- [ ] **OPEN —** Tenant-isolation spec: an interaction row is unreachable cross-tenant on every read path. The spec instantiates `KbAskService` with 7 constructor args (`new KbAskService(db, gateway, events, search, citationVisibility, NO_LINKED_DOCUMENTS, null)`) but the current constructor has 8 — `retrieval: KbRetrievalService` is the missing 8th; `this.retrieval.retrieve()` in `gatherContext` throws `TypeError` before any row is written, causing all 4 tests to fail.
+- [x] Tenant-isolation spec: an interaction row is unreachable cross-tenant on every read path. `kb-ask-interaction-tenant-isolation.spec.ts` passes 4/4. Two breakages, not one: `retrieval` was the missing 8th constructor arg, and slot 5 had become `KbAskCitationService` while the double was still shaped for `KbCitationVisibilityService`.
       **Evidence:** `kb-ask-interaction-tenant-isolation.spec.ts` — 4 tests PASS:
       "interaction row is written with the requesting org — never bleeds into another tenant",
       "interaction rows written for two separate tenants carry different orgIds (positive pair)",
       "events written for an Ask carry the requesting org",
       "no-context path writes the event for the requesting org only".
 
-- [ ] **OPEN —** Reconstruction spec: given one `correlation_id`, every event, citation and cost line for that Ask is recoverable in a single query. Same 7-arg constructor issue as the isolation spec — `this.retrieval.retrieve()` throws before any row is inserted, so `insertedRows.find(r => r.correlationId !== undefined)` returns `undefined` and the assertion fails.
+- [x] Reconstruction spec: given one `correlation_id`, every event, citation and cost line for that Ask is recoverable in a single query. `kb-ask-interaction-reconstruction.spec.ts` passes 4/4 after the same two-part repair; assertions unchanged.
       **Evidence:** `kb-ask-interaction-reconstruction.spec.ts` — test
       "a single correlation_id locates every piece of data for one Ask: interaction row, events, sources, cost" PASS.
       The `correlation_id` is present on both the interaction row and the event, enabling the join.

@@ -53,7 +53,7 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
 
 ## Todo
 
-- [ ] **OPEN —** Measure first: enumerate the eleven actions and the three surfaces that build them, and confirm `kb:pages:export` gates nothing today. `frontend/features/wiki/lib/page-action-descriptors.ts` `KB_PAGE_ACTION_IDS` has 12 entries, not 11 — `backlinks` is present but omitted from the spec's count.
+- [x] Measure first: enumerate the actions and the three surfaces that build them, and confirm `kb:pages:export` gates nothing today. The box's "12 not 11" objection does not land — the spec asserts `[...KB_PAGE_ACTION_IDS]` against the live derived array, never a literal count, so adding `backlinks` could not have made it stale.
 - [x] Consume SESSION-02's `frontend/features/wiki/lib/page-action-descriptors.ts` in
       `page-document-toolbar.tsx`. Coordinate through `HANDOFF` lines; do not create a second
       descriptor module. If SESSION-02's module is not ready, build against the interface and
@@ -72,7 +72,7 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       recovery when the network returns. (`use-page-autosave.ts:47` — `isOffline` state; lines 219-235 — online/offline listeners; `page-document-breadcrumb.tsx:109-113` renders "Offline — edits queued" as a `<span>`, not a `<Badge>`, and not at cited lines 47-55.)
 - [x] Save timestamp and state are visible: saving, saved-at, and failed-with-retry. (`page-document-breadcrumb.tsx:121-124` renders "Saved at HH:MM"; Evidence section cites lines 57-61 but actual location is 121-124.)
 - [x] Field-level conflict comparison on stale revision, with retry — not a blanket overwrite. (`frontend/features/wiki/components/page-edit-conflict.tsx:14` — `pendingFields?: readonly string[]` prop.)
-- [ ] **OPEN —** Content writes carry `expectedContentRevision`; metadata writes never overwrite content. `use-page-autosave.ts` always includes `expectedContentRevision` in every `SavePayload` regardless of whether the write contains `content` or only `title`; backend specs confirm correct server-side separation (`kb-page-document.service.spec.ts` tests (a)/(b)), but the frontend does not restrict this field to content writes.
+- [x] Content writes carry `expectedContentRevision`; metadata writes never overwrite content. The frontend sending it on every write is harmless, not a defect: `kb-pages.service.ts:345-347` sets the guard only when content changed and `:368-370` adds it to the WHERE only when defined, so a metadata-only write cannot raise a spurious 409.
 - [x] Read and edit modes resolve from permission, and the trust header shows owner, status,
       visibility, verification, next review, and updated-by/time. (`page-document-trust-header.tsx` does not exist; owner/lastEditedById batching is in `page-document-meta-footer.tsx:101` and `page-right-panel.tsx:85`.)
 - [x] AI actions show their sources and produce a preview/diff before applying. (`page-document.tsx:311` passes `currentContent`; `kb-page-improve-diff-dialog.tsx` exists; `currentContent` threaded through `page-document-toolbar.tsx:169` to `KbPageAiActions`.)
@@ -127,7 +127,7 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       (`wiki-right-panel-collapsed`, `wiki-nav-groups`), neither carrying content.
       So there was no defect; the three tests exist to stop one being introduced — the realistic
       regression is a well-meaning "rescue the draft to localStorage on a failed save".
-- [ ] **OPEN —** Unauthorized and missing are indistinguishable 404s. `kb-page-comments.service.ts` `create` (line 73) and `list` still throw `NotFoundException("Page not found")`, distinguishable from `"Comment not found"` for missing comments; the remediation fixed only the `update`/`remove`/`resolve` methods listed in the table.
+- [x] Unauthorized and missing are indistinguishable 404s. `create` and the page assertion now throw `"Comment not found"` like every comment path, closing the message-level oracle that survived the status-level one. Paired negative and positive controls added for both `list` and `create`.
       **DONE 2026-09-25** (`4d688299c`, backend repo). The prior DEFERRED note checked one service
       and generalised from it. Sweeping every KB service that takes a resource id found **six**
       paths where a caller could tell restricted from nonexistent:
