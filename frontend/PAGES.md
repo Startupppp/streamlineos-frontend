@@ -95,7 +95,7 @@
 ## AI / Ask
 
 - `/ask` · [RETIRED — redirects to `/knowledge/chat` via `next.config.ts`]
-- `/ai/executive-brief` · **AI** · hooks: `lib/api/hooks/executive-brief` → `features/ai/executive-brief-page` · streaming/cancel/failure states covered by `features/ai/executive-brief-streaming.test.tsx`; full page acceptance remains open
+- `/ai/executive-brief` · **AI** · hooks: `hooks/api/executive-brief` → `features/ai/executive-brief-page` · streaming/cancel/failure states covered by `features/ai/executive-brief-streaming.test.tsx`; full page acceptance remains open
 
 ---
 
