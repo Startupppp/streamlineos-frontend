@@ -3,6 +3,7 @@ import { buildWorkQueryKeys } from "./query-keys/build-work";
 import { accountingAndSupportQueryKeys } from "./query-keys/accounting-and-support";
 import { collaborationQueryKeys } from "./query-keys/collaboration";
 import { knowledgeAndSurveysQueryKeys } from "./query-keys/knowledge-and-surveys";
+import { platformCoreQueryKeys } from "./query-keys/platform-core";
 
 const BUILD_CHANGED = "build:changed";
 const BUILD_FOCUS_REFRESH_THROTTLE_MS = 15_000;
@@ -17,6 +18,7 @@ const BUILD_QUERY_PREFIXES = [
   collaborationQueryKeys.dashboard.myIssues(),
   collaborationQueryKeys.dashboard.recentProjects(),
   collaborationQueryKeys.dashboard.activeSprintSummary(),
+  platformCoreQueryKeys.notifications.unreadCount("build"),
 ];
 
 function buildCacheChannelName(scope: string): string | undefined {

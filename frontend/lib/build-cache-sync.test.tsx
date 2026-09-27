@@ -10,6 +10,7 @@ import { buildWorkQueryKeys } from "./query-keys/build-work";
 import { accountingAndSupportQueryKeys } from "./query-keys/accounting-and-support";
 import { authenticatedScope } from "./query-scope";
 import { subscribeBuildCacheSync } from "./build-cache-sync";
+import { platformCoreQueryKeys } from "./query-keys/platform-core";
 
 let mockOrgId = "org-a";
 jest.mock("@/lib/api-client", () => ({ apiClient: { get: jest.fn(async () => []) } }));
@@ -236,6 +237,24 @@ it("throttles focus and visibility refreshes to active Build queries when Broadc
   document.dispatchEvent(new Event("visibilitychange"));
   await waitFor(() => expect(buildQueryFn).toHaveBeenCalledTimes(3));
   expect(unrelatedQueryFn).toHaveBeenCalledTimes(1);
+});
+
+it("refetches the Build unread count when the window regains focus", async () => {
+  const tab = connect();
+  const unreadCountKey = platformCoreQueryKeys.notifications.unreadCount("build");
+  const unreadCountQueryFn = jest.fn(async () => ({ count: 1 }));
+  const observer = new QueryObserver(tab.client, {
+    queryKey: unreadCountKey,
+    queryFn: unreadCountQueryFn,
+    staleTime: Infinity,
+  });
+  cleanups.push(observer.subscribe(() => {}));
+  await waitFor(() => expect(unreadCountQueryFn).toHaveBeenCalledTimes(1));
+
+  jest.spyOn(Date, "now").mockReturnValue(20_000);
+  window.dispatchEvent(new Event("focus"));
+
+  await waitFor(() => expect(unreadCountQueryFn).toHaveBeenCalledTimes(2));
 });
 
 it("notifies peers when the server commits but a local success callback throws", async () => {

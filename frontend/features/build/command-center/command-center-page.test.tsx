@@ -126,7 +126,9 @@ jest.mock("@/components/ui/page-wrapper", () => ({
 }));
 
 jest.mock("@/components/ui/stat-card", () => ({
-  StatCard: ({ label }: { label: string }) => <div data-testid="stat-card">{label}</div>,
+  StatCard: ({ label, value }: { label: string; value: number }) => (
+    <div data-testid="stat-card">{label}{value}</div>
+  ),
   StatCardGrid: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   StatCardGridSkeleton: () => <div data-testid="stat-card-grid-skeleton" />,
 }));
@@ -235,12 +237,11 @@ it("renders the canonical Command Center heading", () => {
 });
 
 it("retries both server-derived summary queries with the page retry action", () => {
-  const refetchOpenIssues = jest.fn();
+  const refetchMyIssues = jest.fn();
   const refetchOverdueIssues = jest.fn();
   const refetchProjects = jest.fn();
-  mockUseAllWork
-    .mockReturnValueOnce({ data: undefined, refetch: refetchOpenIssues })
-    .mockReturnValueOnce({ data: undefined, refetch: refetchOverdueIssues });
+  mockUseInfiniteAllWork.mockReturnValue(baseInfiniteResult({ refetch: refetchMyIssues }));
+  mockUseAllWork.mockReturnValue({ data: undefined, refetch: refetchOverdueIssues });
   mockUseProjects.mockReturnValue(
     baseProjectsResult({
       data: undefined,
@@ -254,8 +255,23 @@ it("retries both server-derived summary queries with the page retry action", () 
   expect(retryButton).toBeInTheDocument();
   retryButton.click();
   expect(refetchProjects).toHaveBeenCalledTimes(1);
-  expect(refetchOpenIssues).toHaveBeenCalledTimes(1);
+  expect(refetchMyIssues).toHaveBeenCalledTimes(1);
   expect(refetchOverdueIssues).toHaveBeenCalledTimes(1);
+});
+
+it("uses the first My Work page total for the Open Issues statistic without a second summary request", () => {
+  mockUseInfiniteAllWork.mockReturnValue(
+    baseInfiniteResult({
+      data: { pages: [{ data: [], total: 7 }], pageParams: [undefined] },
+    }),
+  );
+  mockUseAllWork.mockReturnValue({ data: { data: [], total: 2 }, refetch: jest.fn() });
+  const callsBefore = mockUseAllWork.mock.calls.length;
+
+  render(<CommandCenterPage />);
+
+  expect(screen.getAllByTestId("stat-card")[1]).toHaveTextContent("Open issues7");
+  expect(mockUseAllWork).toHaveBeenCalledTimes(callsBefore + 1);
 });
 
 it("renders both MyIssuesPanel and ProjectsPanel when projects and issues data are empty, confirming the page-level empty state is delegated to the panels themselves", () => {

@@ -129,14 +129,6 @@ export function CommandCenterPage() {
   } = useInfiniteAllWork(myIssuesFilters, { enabled: canViewTickets });
 
   const {
-    data: openIssuesSummary,
-    refetch: refetchOpenIssuesSummary,
-  } = useAllWork(
-    { ...myIssuesFilters, limit: 1 },
-    { enabled: canViewTickets },
-  );
-
-  const {
     data: overdueIssuesSummary,
     refetch: refetchOverdueIssuesSummary,
   } = useAllWork(
@@ -169,14 +161,8 @@ export function CommandCenterPage() {
   const handleRetry = useCallback(() => {
     void refetchProjects();
     void refetchMyIssues();
-    void refetchOpenIssuesSummary();
     void refetchOverdueIssuesSummary();
-  }, [
-    refetchMyIssues,
-    refetchOpenIssuesSummary,
-    refetchOverdueIssuesSummary,
-    refetchProjects,
-  ]);
+  }, [refetchMyIssues, refetchOverdueIssuesSummary, refetchProjects]);
 
   const handleMyIssuesRetry = useCallback(() => void refetchMyIssues(), [refetchMyIssues]);
 
@@ -191,10 +177,10 @@ export function CommandCenterPage() {
     const projectList = projectsData?.data ?? [];
     return {
       activeProjects: resolveProjectsStatValue(projectList.length, projectsData?.hasMore ?? false),
-      openIssues: openIssuesSummary?.total ?? openIssuesSummary?.data.length ?? 0,
+      openIssues: myIssuesPages?.pages[0]?.total ?? myWorkItems.length,
       overdueIssues: overdueIssuesSummary?.total ?? overdueIssuesSummary?.data.length ?? 0,
     };
-  }, [projectsData, openIssuesSummary, overdueIssuesSummary]);
+  }, [myIssuesPages, myWorkItems.length, projectsData, overdueIssuesSummary]);
 
   const myIssuesEmpty = useMemo(
     () =>
