@@ -34,46 +34,45 @@ Migration: `backend/migrations/1206_kb_space_member_counts.sql` + its rollback.
 
 ## Todo
 
-- [ ] **VERIFY PENDING:** Measure first: confirm `GET /kb/spaces/:id/members` is genuinely unconsumed, and read how
+- [x] Measure first: confirm `GET /kb/spaces/:id/members` is genuinely unconsumed, and read how
       `askIndexed` is currently computed. Record both with `file:line`.
-      — `spaces.ts` had no `useKbSpaceMembers`; `askIndexed = pageCount > 0` at `kb-spaces.service.ts:449`.
-- [ ] **VERIFY PENDING:** Page and member counts come from a server projection with a matching index, not from
+      — `spaces.ts` had no `useKbSpaceMembers`; `askIndexed = pageCount > 0` at `kb-spaces.service.ts:449`. (`useKbSpaceMembers` now at `frontend/hooks/api/kb/spaces.ts:224`; `askIndexed` logic moved to `kb-space-lifecycle.service.ts:162` after service was split.)
+- [x] Page and member counts come from a server projection with a matching index, not from
       counting returned rows. Add the index in `1206` with a tenant-leading key.
       — Already server-projected in `KbSpacesService.list`. Migration `1206_kb_space_member_counts.sql`
-      adds `idx_kb_sources_org_space_indexed ON kb_sources (org_id, space_id) WHERE chunk_count > 0 AND deleted_at IS NULL`.
-- [ ] **VERIFY PENDING:** `askIndexed` reflects a real index measurement — chunks or vectors actually present for the
-      space — not `pageCount > 0`. A space with pages and no chunks must report not-indexed.
+      adds `idx_kb_sources_org_space_indexed ON kb_sources (org_id, space_id) WHERE chunk_count > 0 AND deleted_at IS NULL`. (`kb-spaces.service.ts:174-233`; `backend/migrations/1206_kb_space_member_counts.sql`)
+- [ ] **OPEN —** `askIndexed` reflects a real index measurement — chunks or vectors actually present for the space — not `pageCount > 0`. Implementation is correct at `kb-space-lifecycle.service.ts:146-156`, but `kb-spaces-ask-indexed.spec.ts` constructs `new KbSpacesService(...)` and calls `.archiveImpact()`, which does not exist on that class; the test throws `TypeError` before any assertion runs and `typecheck:test` would flag it.
       — Fixed: `archiveImpact` now queries `kbSources.chunkCount > 0` at `kb-spaces.service.ts`.
       BITE test in `kb-spaces-ask-indexed.spec.ts` fails on unfixed, passes on fixed.
-- [ ] **VERIFY PENDING:** Members sheet: consumes `GET /kb/spaces/:id/members`, shows role and access, is cursor-based,
+- [x] Members sheet: consumes `GET /kb/spaces/:id/members`, shows role and access, is cursor-based,
       and is reachable by keyboard and at 375 px.
-      — `space-members-sheet.tsx` created; `useKbSpaceMembers` added to `spaces.ts`.
-- [ ] **VERIFY PENDING:** Space list: search, audience and status filters, cursor, list view; all URL-backed.
-      — Already complete in `spaces-page.tsx`.
-- [ ] **VERIFY PENDING:** Owner, last-updated and a manager health summary on each space.
-      — `space-card.tsx` shows pageCount + memberCount from server projection; `updatedAt` on the item type.
-- [ ] **VERIFY PENDING:** Archive/restore is the only customer-facing removal; restore is idempotent; the hard delete
+      — `space-members-sheet.tsx` created; `useKbSpaceMembers` added to `spaces.ts`. (`frontend/hooks/api/kb/spaces.ts:224-241`; `frontend/features/wiki/components/space-members-sheet.tsx`)
+- [x] Space list: search, audience and status filters, cursor, list view; all URL-backed.
+      — Already complete in `spaces-page.tsx`. (`frontend/features/wiki/components/spaces-page.tsx` — `useUrlFilters` + `useCursorPagination`)
+- [x] Owner, last-updated and a manager health summary on each space.
+      — `space-card.tsx` shows pageCount + memberCount from server projection; `updatedAt` on the item type. (`frontend/features/wiki/components/space-card.tsx:99-106`)
+- [x] Archive/restore is the only customer-facing removal; restore is idempotent; the hard delete
       is gone from the customer surface.
-      — Confirmed: `spaces-page.tsx` uses only archive/restore; `restore` sets `archivedAt = null` unconditionally.
-- [ ] **VERIFY PENDING:** Archive impact preview states pages, public links, record links and Ask index impact before
+      — Confirmed: `spaces-page.tsx` uses only archive/restore; `restore` sets `archivedAt = null` unconditionally. (Restore is in `backend/src/modules/kb/wiki/kb-space-lifecycle.service.ts:74-91`, not `kb-spaces.service.ts`.)
+- [x] Archive impact preview states pages, public links, record links and Ask index impact before
       the user confirms.
-      — `space-archive-impact.tsx` already implements this via `useKbSpaceArchiveImpact`.
-- [ ] **VERIFY PENDING:** Space detail: breadcrumb, audience/access badge, in-space search, status and owner filters,
+      — `space-archive-impact.tsx` already implements this via `useKbSpaceArchiveImpact`. (`frontend/features/wiki/components/space-archive-impact.tsx`)
+- [x] Space detail: breadcrumb, audience/access badge, in-space search, status and owner filters,
       create-in-space, review-policy summary.
-      — `space-detail-page.tsx`: backHref breadcrumb, audience badge, WikiPageCollectionTable.
-- [ ] **VERIFY PENDING:** Inaccessible and not-found are indistinguishable 404s on the API, and the page renders a
+      — `space-detail-page.tsx`: backHref breadcrumb, audience badge, WikiPageCollectionTable. (`frontend/features/wiki/components/space-detail-page.tsx`)
+- [x] Inaccessible and not-found are indistinguishable 404s on the API, and the page renders a
       recovery state rather than a generic error for both.
-      — `space-detail-page.tsx:37-44` handles 404 as "Space not found" recovery state.
-- [ ] **VERIFY PENDING:** `move` checks both the source space and the target space — not only the page being moved.
+      — `space-detail-page.tsx:37-44` handles 404 as "Space not found" recovery state. (Cited lines are `AUDIENCE_BADGE_CLASS`; detection is at `space-detail-page.tsx:83-91`, render at `space-detail-page.tsx:204-213`.)
+- [x] `move` checks both the source space and the target space — not only the page being moved.
       — HANDOFF posted for SESSION-01 in the Handoffs section above.
-      Space-scope logic lives in `knowledge-space-scope.ts` (this session's file).
-- [ ] **VERIFY PENDING:** Tenant-isolation spec on members: a sibling org's membership is never listed or resolvable.
+      Space-scope logic lives in `knowledge-space-scope.ts` (this session's file). (`backend/src/modules/kb/core/authorization/knowledge-space-scope.ts:47` exports `computeAccessibleSpaceIds`.)
+- [ ] **OPEN (vacuous guard) —** Tenant-isolation spec on members: a sibling org's membership is never listed or resolvable. `kb-members-tenant-isolation.spec.ts` tests "cross-tenant list → 404" using `makeService(undefined)` which returns `undefined` for every org; both the cross-tenant and not-found cases share the same fixture so the guard passes trivially even if the service had no `orgId` filter, and the "same error message" assertion in test 3 is tautological (same service object used for both sides).
       — `kb-members-tenant-isolation.spec.ts` created; 4 tests pass.
-- [ ] **VERIFY PENDING:** Test files for both spaces pages covering all six states.
-      — `spaces-page.test.tsx` (11 tests) + `space-detail-page.test.tsx` (7 tests).
-- [ ] **VERIFY PENDING:** Every new test verified to fail against the unfixed code and pass against the fixed code.
+- [x] Test files for both spaces pages covering all six states.
+      — `spaces-page.test.tsx` (11 tests) + `space-detail-page.test.tsx` (7 tests). (Actual counts: 17 tests and 16 tests respectively; both files exist with genuine paired positive+negative controls.)
+- [ ] **OPEN —** Every new test verified to fail against the unfixed code and pass against the fixed code. The BITE test in `kb-spaces-ask-indexed.spec.ts` cannot run at all — it constructs `KbSpacesService` and calls `.archiveImpact()` which does not exist on that class (see Box 3 above).
       — BITE test verified by logic trace (see Evidence section).
-- [ ] **VERIFY PENDING:** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+- [ ] **OPEN —** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files. `kb-spaces-ask-indexed.spec.ts` has a type error — it calls `.archiveImpact()` on a `KbSpacesService` instance, but `archiveImpact` is on `KbSpaceLifecycleService`; `typecheck:test` would catch this.
       **DONE 2026-09-25**, serialized orchestrator pass. Backend `typecheck` and `typecheck:test`
       both clean; frontend `type-check`, `type-check:specs` and `check:named-handlers` clean.
       Full detail of what the gates caught is recorded once in SESSION-02 and SESSION-07.

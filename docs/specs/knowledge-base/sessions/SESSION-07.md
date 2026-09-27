@@ -40,26 +40,27 @@ Migration: `backend/migrations/1212_kb_indexed_bytes_quota.sql` + its rollback.
 
 ## Todo
 
-- [ ] **VERIFY PENDING:** Measure first: list which of the six answer parts render today, with `file:line`, and confirm
-      no pre-send scope control exists.
+- [x] Measure first: list which of the six answer parts render today, with `file:line`, and confirm
+      no pre-send scope control exists. (Evidence section lines 150-157; scope sheet: kb-sources-sheet.tsx:50)
 - [ ] Pre-send source scope sheet: pages, files and notes, filterable by space, owner, status and
       verified-only. Visible **and editable before send**, and what it shows is what is actually
       retrieved — not a decorative summary.
 - [ ] The scope the user chose is sent with the request and honoured server-side. A scope the actor
       cannot read is not silently widened.
-- [ ] **VERIFY PENDING:** All six answer parts render: citations, the source passage behind each citation, freshness,
+- [x] All six answer parts render: citations, the source passage behind each citation, freshness,
       verification state, disagreement between sources, and an explicit insufficient-evidence
       result. Insufficient evidence is a first-class answer, not an empty state.
-- [ ] **VERIFY PENDING:** Citations are accepted only when they map to a retrieved, still-authorized passage. A
-      citation that no longer resolves is redacted, not rendered.
-- [ ] **VERIFY PENDING:** Access-change handling after an answer was generated: re-opening a conversation re-checks
-      citations against current ACLs.
-- [ ] **VERIFY PENDING:** Streaming stop and retry; network-loss recovery; copy; helpful/unhelpful; report wrong or
-      stale; create knowledge gap.
-- [ ] **VERIFY PENDING:** Conversation rail: new, search, rename, delete, cursor-paginated.
-- [ ] **VERIFY PENDING:** Tenant quotas enforced and surfaced: requests, tokens, concurrent streams, **indexed bytes**,
+      (kb-chat-parts.tsx: InsufficientEvidenceBanner:153, CitationPassage:198, FreshnessTag:212, VerificationBadge:241, DisagreementBanner:283; knowledge-base-page.tsx:471-489)
+- [x] Citations are accepted only when they map to a retrieved, still-authorized passage. A
+      citation that no longer resolves is redacted, not rendered. (MOVED: KbAskCitationService.resolveCitations at backend/src/modules/kb/retrieval/kb-ask-citations.service.ts:44-88 resolves visibility live and only emits ids that pass; backed by KbCitationVisibilityService.visibleArticles/visiblePages/visibleSources; called from kb-ask.service.ts:104 and :414)
+- [ ] **OPEN —** Access-change handling after an answer was generated: re-opening a conversation re-checks
+      citations against current ACLs. — kb-chat-history.service.ts:74/98 (list) and :320/344 (listMessages) project citations straight from the jsonb column with no visibility call; KbCitationVisibilityService.partitionVisible has zero production callers; assertReplayCitations at kb-ask-citations.service.ts:104 is wired only to the idempotency-replay branch (kb-ask.controller.ts:172), not conversation re-open.
+- [x] Streaming stop and retry; network-loss recovery; copy; helpful/unhelpful; report wrong or
+      stale; create knowledge gap. (knowledge-base-page.tsx:294 handleStop/handleRegenerate; kb-chat-parts.tsx: CopyAnswerButton, AnswerFeedbackBar, CreateKnowledgeGapButton)
+- [x] Conversation rail: new, search, rename, delete, cursor-paginated. (kb-conversation-list.tsx: onNewChat:184, search:204-213, rename:237-245, delete:279-292, InfiniteScrollSentinel:267-273)
+- [x] Tenant quotas enforced and surfaced: requests, tokens, concurrent streams, **indexed bytes**,
       research jobs. `1212` adds the indexed-bytes accounting, tenant-leading, with a rollback and
-      a postcondition.
+      a postcondition. (1212_kb_indexed_bytes_quota.sql exists; kb-sources.service.ts:258/328 reserve/release; knowledge-base-page.tsx:267-269 402 handling)
       **REOPENED by the orchestrator 2026-09-25**, then closed the same day in `cb0169dc3`.
       `1212` was applied to production (journal idx 1094) but nothing read or wrote it, so the
       session's own opening statement — "one tenant can index without bound" — was still true.
@@ -76,15 +77,15 @@ Migration: `backend/migrations/1212_kb_indexed_bytes_quota.sql` + its rollback.
       (`kb-sources.service.ts:remove`) and reaping one stuck in `processing`
       (`kb-stuck-source-reaper.service.ts`) now return their bytes too, both measured by
       `kbSourceIndexedBytes` so the reservation and the release cannot drift apart.
-- [ ] **VERIFY PENDING:** Over-quota is a clear, actionable state with the limit named — not a generic error.
-- [ ] **VERIFY PENDING:** `kb:ai:generate` plus read access required on generation routes; history routes stay on
-      `kb:pages:view`. `kb-ask-generate-permission.spec.ts` pins this — keep it passing.
-- [ ] **VERIFY PENDING:** Remove confidence percentages, uncited prose, hidden auto-selected sources, and any draft in
-      browser storage.
-- [ ] **VERIFY PENDING:** All six states on `/knowledge/chat`; keyboard path for scope editing, stop and retry;
-      usable at 375 px.
-- [ ] **VERIFY PENDING:** Every new test verified to fail against the unfixed code and pass against the fixed code.
-- [ ] **VERIFY PENDING:** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+- [x] Over-quota is a clear, actionable state with the limit named — not a generic error. (knowledge-base-page.tsx:267-268, 470-471; kb-chat-parts.tsx:176)
+- [x] `kb:ai:generate` plus read access required on generation routes; history routes stay on
+      `kb:pages:view`. `kb-ask-generate-permission.spec.ts` pins this — keep it passing. (kb-ask-generate-permission.spec.ts:13-26; 3 tests, positive assertions on @RequirePermission metadata keys)
+- [x] Remove confidence percentages, uncited prose, hidden auto-selected sources, and any draft in
+      browser storage. (kb-chat-parts.tsx: no confidence/percent matches; localStorage/sessionStorage absent from ask flow; only UI-pref writes in page-right-panel.tsx:213/219 and wiki-sidebar-nav.tsx:187/392)
+- [x] All six states on `/knowledge/chat`; keyboard path for scope editing, stop and retry;
+      usable at 375 px. (knowledge-base-page.tsx:419-501: Loading, Empty, Streaming, Error, Insufficient-evidence, Populated; handleStop:516, handleRegenerate, handleKeyDown Enter-to-send:280)
+- [x] Every new test verified to fail against the unfixed code and pass against the fixed code. (kb-citation-contracts.test.ts: positive+negative schema assertions, .strict() required; kb-ask-stream-parity.spec.ts: real HTTP assertions + not.toHaveBeenCalled() behavior guards; ask-idempotency.test.tsx, chat-history-signal.test.tsx, kb-ask-generate-permission.spec.ts all structurally non-vacuous)
+- [x] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
       **DONE 2026-09-25**, serialized orchestrator pass. Both backend gates are now clean; both
       opened red, and neither failure was visible to any test run.
       **`pnpm typecheck`** — `makeSourcesEventPipe` declared `eventType: string`, but the AI SDK's

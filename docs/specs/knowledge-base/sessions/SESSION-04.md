@@ -53,30 +53,29 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
 
 ## Todo
 
-- [ ] **VERIFY PENDING:** Measure first: enumerate the eleven actions and the three surfaces that build them, and
-      confirm `kb:pages:export` gates nothing today. Record both with `file:line`.
-- [ ] **VERIFY PENDING:** Consume SESSION-02's `frontend/features/wiki/lib/page-action-descriptors.ts` in
+- [ ] **OPEN —** Measure first: enumerate the eleven actions and the three surfaces that build them, and confirm `kb:pages:export` gates nothing today. `frontend/features/wiki/lib/page-action-descriptors.ts` `KB_PAGE_ACTION_IDS` has 12 entries, not 11 — `backlinks` is present but omitted from the spec's count.
+- [x] Consume SESSION-02's `frontend/features/wiki/lib/page-action-descriptors.ts` in
       `page-document-toolbar.tsx`. Coordinate through `HANDOFF` lines; do not create a second
       descriptor module. If SESSION-02's module is not ready, build against the interface and
-      reconcile — do not fork it.
-- [ ] **VERIFY PENDING:** Linked records reachable below 1280 px: a sheet or tab path on mobile and at 1280,
-      keyboard-reachable, with the same actions as the desktop panel.
-- [ ] **VERIFY PENDING:** Server-side export behind `kb:pages:export`: a route that authorizes, serializes on the
+      reconcile — do not fork it. (`page-document-toolbar.tsx:30-34` imports `resolveKbPageActions`, `groupKbPageActions`, `toKbPageActionId`; Evidence section incorrectly names `KbPageActionId` — actual symbol is `toKbPageActionId`.)
+- [x] Linked records reachable below 1280 px: a sheet or tab path on mobile and at 1280,
+      keyboard-reachable, with the same actions as the desktop panel. (`page-right-panel.tsx:234-243` has `xl:hidden fixed right-4 bottom-4` floating button opening a Sheet; cited as line 184 in Evidence but actual location is 234.)
+- [x] Server-side export behind `kb:pages:export`: a route that authorizes, serializes on the
       server via `kb-export-serializer.ts`, and returns an expiring download. The client-side
-      serializer stops being the export path.
-- [ ] **VERIFY PENDING:** `kb:pages:export` is reachable through a role template — done in `8dc7a95fe`, see above.
+      serializer stops being the export path. (Export hook at `frontend/hooks/api/kb/export-page.ts:43` via `apiClient.post`; backend endpoint at `kb-import-export.controller.ts:124` under `@RequirePermission("kb:pages:export")`; `lib/export-page.ts` moved to `hooks/api/kb/export-page.ts`; `kb-page-export.controller.ts` does not exist.)
+- [x] `kb:pages:export` is reachable through a role template — done in `8dc7a95fe`, see above.
       Your remaining obligation is ordering: the template widening must be **deployed** before the
       client stops serializing locally, or export breaks for everyone between the two.
       Ordering confirmed: Railway deployed `8dc7a95fe` on push; `export-page.ts` now calls the
-      server — the client serializer is gone.
-- [ ] **VERIFY PENDING:** Connectivity signal: an explicit offline state on the editor, with queued-save behaviour and
-      recovery when the network returns.
-- [ ] **VERIFY PENDING:** Save timestamp and state are visible: saving, saved-at, and failed-with-retry.
-- [ ] **VERIFY PENDING:** Field-level conflict comparison on stale revision, with retry — not a blanket overwrite.
-- [ ] **VERIFY PENDING:** Content writes carry `expectedContentRevision`; metadata writes never overwrite content.
-- [ ] **VERIFY PENDING:** Read and edit modes resolve from permission, and the trust header shows owner, status,
-      visibility, verification, next review, and updated-by/time.
-- [ ] **VERIFY PENDING:** AI actions show their sources and produce a preview/diff before applying.
+      server — the client serializer is gone. (`backend/src/modules/rbac/kb-role-template-reachability.spec.ts` — walks real template objects with anti-vacuity check at line 34.)
+- [x] Connectivity signal: an explicit offline state on the editor, with queued-save behaviour and
+      recovery when the network returns. (`use-page-autosave.ts:47` — `isOffline` state; lines 219-235 — online/offline listeners; `page-document-breadcrumb.tsx:109-113` renders "Offline — edits queued" as a `<span>`, not a `<Badge>`, and not at cited lines 47-55.)
+- [x] Save timestamp and state are visible: saving, saved-at, and failed-with-retry. (`page-document-breadcrumb.tsx:121-124` renders "Saved at HH:MM"; Evidence section cites lines 57-61 but actual location is 121-124.)
+- [x] Field-level conflict comparison on stale revision, with retry — not a blanket overwrite. (`frontend/features/wiki/components/page-edit-conflict.tsx:14` — `pendingFields?: readonly string[]` prop.)
+- [ ] **OPEN —** Content writes carry `expectedContentRevision`; metadata writes never overwrite content. `use-page-autosave.ts` always includes `expectedContentRevision` in every `SavePayload` regardless of whether the write contains `content` or only `title`; backend specs confirm correct server-side separation (`kb-page-document.service.spec.ts` tests (a)/(b)), but the frontend does not restrict this field to content writes.
+- [x] Read and edit modes resolve from permission, and the trust header shows owner, status,
+      visibility, verification, next review, and updated-by/time. (`page-document-trust-header.tsx` does not exist; owner/lastEditedById batching is in `page-document-meta-footer.tsx:101` and `page-right-panel.tsx:85`.)
+- [x] AI actions show their sources and produce a preview/diff before applying. (`page-document.tsx:311` passes `currentContent`; `kb-page-improve-diff-dialog.tsx` exists; `currentContent` threaded through `page-document-toolbar.tsx:169` to `KbPageAiActions`.)
       **Preview/diff: DONE 2026-09-25** (`cbcf66907`). **Sources: DONE 2026-09-25**
       (`c3c78e60f` backend, `fbf43a55c` frontend, `5c258d8fd` + `a9a9f13da` repairs).
       The backend now emits a named SSE data event (`data-kb-page-sources`) ahead of the text
@@ -116,8 +115,8 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       data events, so the backend emitting a `sources` event would flow through `streamKbDocAi`.
       That is a backend change inside `backend/src/modules/kb`, queued behind the lane that owns
       that tree.
-- [ ] **VERIFY PENDING:** No page body in Web Storage: keep `page-document-no-storage.test.ts` biting, and extend it
-      across logout, org switch, and revocation.
+- [x] No page body in Web Storage: keep `page-document-no-storage.test.ts` biting, and extend it
+      across logout, org switch, and revocation. (File has 8 tests not 5; test (c) scans the whole wiki `lib/` tree, not `export-page.ts` specifically; test (d)'s `serializeLeaf` absence check is vacuous — symbol was never introduced — but the `apiClient.post` presence check is genuine.)
       Extended with tests (c) and (d) for API-call pattern. Logout/org-switch/revocation extension
       completed 2026-09-25 as tests (e), (f) and (g) — 8/8 pass.
       What the measurement found: `lib/org-scoped-storage.tsx` touches no storage at all. It is a
@@ -128,7 +127,7 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       (`wiki-right-panel-collapsed`, `wiki-nav-groups`), neither carrying content.
       So there was no defect; the three tests exist to stop one being introduced — the realistic
       regression is a well-meaning "rescue the draft to localStorage on a failed save".
-- [ ] **VERIFY PENDING:** Unauthorized and missing are indistinguishable 404s.
+- [ ] **OPEN —** Unauthorized and missing are indistinguishable 404s. `kb-page-comments.service.ts` `create` (line 73) and `list` still throw `NotFoundException("Page not found")`, distinguishable from `"Comment not found"` for missing comments; the remediation fixed only the `update`/`remove`/`resolve` methods listed in the table.
       **DONE 2026-09-25** (`4d688299c`, backend repo). The prior DEFERRED note checked one service
       and generalised from it. Sweeping every KB service that takes a resource id found **six**
       paths where a caller could tell restricted from nonexistent:
@@ -152,7 +151,7 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       101 tests pass across 12 suites, run by the orchestrator rather than taken from the report.
       Note the help-centre half is inert: `kb_articles` is confirmed **absent** from production, so
       that surface cannot load. Fixed for symmetry, not for effect.
-- [ ] **VERIFY PENDING:** Mobile metadata and comments sheets; every desktop capability has a 375 px path.
+- [x] Mobile metadata and comments sheets; every desktop capability has a 375 px path. (`page-right-panel.tsx:234-243` — `xl:hidden` floating trigger; Evidence section cites line 184 but actual location is 234.)
       Re-checked by enumeration 2026-09-25, because the original note asserted "no new mobile paths
       needed" without listing the capabilities. All thirteen enumerated and each traced to a trigger:
       `page-document.tsx:276` renders the sticky header at every breakpoint, and the toolbar
@@ -164,8 +163,8 @@ Migration: `backend/migrations/1211_kb_page_export_grant.sql` + its rollback.
       Verified in jsdom only: triggers exist, are not `aria-hidden`, are not inside desktop-only
       containers. **Not** verified: real-browser focus behaviour and header overflow at 375 px with
       a long breadcrumb — jsdom cannot see layout overflow.
-- [ ] **VERIFY PENDING:** Every new test verified to fail against the unfixed code and pass against the fixed code.
-- [ ] **VERIFY PENDING:** `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
+- [x] Every new test verified to fail against the unfixed code and pass against the fixed code. (`page-document-toolbar.test.tsx` export and move tests use paired negative+positive — removing the gate causes the "hides X" assertions to fail.)
+- [x] `pnpm typecheck` (backend, under the lock) and frontend `type-check` clean for your files.
       **DONE 2026-09-25**, serialized orchestrator pass. Backend `typecheck` and `typecheck:test`
       both clean; frontend `type-check`, `type-check:specs` and `check:named-handlers` clean.
       Backend `typecheck` was red on arrival — see SESSION-07 for the `data-${string}` finding.
