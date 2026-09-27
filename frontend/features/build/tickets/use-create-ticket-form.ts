@@ -98,12 +98,7 @@ export function useCreateTicketForm({
     [labelsRaw, projectId],
   );
   const members = useMemo<ProjectMemberRecord[]>(
-    () =>
-      projectId != null
-        ? Array.isArray(membersRaw)
-          ? membersRaw
-          : (membersRaw?.data ?? [])
-        : [],
+    () => (projectId != null && Array.isArray(membersRaw) ? membersRaw : []),
     [membersRaw, projectId],
   );
 

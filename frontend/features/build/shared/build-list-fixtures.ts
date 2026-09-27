@@ -240,6 +240,8 @@ const GOV_RESULT_PRIORITIES: TestCasePriority[] = ["high", "medium", "low", "med
 
 export const GOVERNANCE_QA_RUN_RESULTS: TestRunResult[] = Array.from({ length: 5 }, (_, i) => ({
   id: i + 1,
+  orgId: "org_demo",
+  projectId: 1,
   runId: 1,
   testCaseId: i + 1,
   status: GOV_RESULT_STATUSES[i % GOV_RESULT_STATUSES.length] ?? "not_run",

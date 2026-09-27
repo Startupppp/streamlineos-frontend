@@ -22,6 +22,11 @@ const noContentContract = lazyContract(() =>
 );
 export type { ProjectAutomation, AutomationActionType } from "@/types/projects";
 
+type AutomationWriteInput = Pick<
+  ProjectAutomation,
+  "name" | "isActive" | "triggerEvent" | "conditions" | "actions"
+>;
+
 export const TRIGGER_EVENTS = [
   { value: "ticket.created", label: "Ticket Created" },
   { value: "ticket.updated", label: "Ticket Updated" },
@@ -74,9 +79,7 @@ export function useCreateAutomation(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "create"],
-    mutationFn: (
-      data: Omit<ProjectAutomation, "id" | "projectId" | "createdAt">,
-    ) =>
+    mutationFn: (data: AutomationWriteInput) =>
       apiClient.post(
         `/build/${projectId}/automations`,
         data,
@@ -97,7 +100,7 @@ export function useUpdateAutomation(projectId: number) {
     mutationFn: ({
       automationId,
       ...data
-    }: Partial<ProjectAutomation> & { automationId: number }) =>
+    }: Partial<AutomationWriteInput> & { automationId: number }) =>
       apiClient.patch(
         `/build/${projectId}/automations/${automationId}`,
         data,

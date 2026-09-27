@@ -32,7 +32,10 @@ import {
   DUPLICATE_FILTER_OPTIONS,
   ProductFeedbackMobileCard,
 } from "./product-feedback-columns";
-import type { FeedbucketSubmissionFilters } from "@/types/feedbucket";
+import type {
+  FeedbucketSubmissionFilters,
+  ListFeedbucketSubmissionsQuery,
+} from "@/types/feedbucket";
 
 const PAGE_SIZE = 25;
 
@@ -114,8 +117,7 @@ export function ProductFeedbackPage({ managedProductId }: ProductFeedbackPagePro
     setSelected(new Set());
   }
 
-  const queryParams = useMemo(
-    () => ({
+  const queryParams = useMemo((): ListFeedbucketSubmissionsQuery => ({
       managedProductId,
       page,
       limit: PAGE_SIZE,
