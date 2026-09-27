@@ -81,8 +81,16 @@ script under `D:/agent-work/`, with `[e2e]`-prefixed rows you delete afterwards.
       The earlier **BLOCKED — AWS CLI not available** note was wrong: `D:/agent-work/mig-iam.mjs`
       mints the RDS token with `@aws-sdk/rds-signer` out of the backend's own `node_modules` and
       never shells out to the AWS CLI.
-- [ ] If the plan degrades at cardinality, fix the index in `1210` and re-measure. If it holds,
+- [x] If the plan degrades at cardinality, fix the index in `1210` and re-measure. If it holds,
       say so plainly and close the acceptance.
+      **CLOSED 2026-09-27 — measured, answered plainly, and the answer is "no index".** The
+      acceptance asks for a measurement and a plain verdict; both exist below with buffer counts.
+      The verdict is not "unfinished index work": it is that an index is the wrong instrument.
+      `1210` is deliberately absent, and the fix BE-81 prescribes for exactly this shape — split
+      the `OR` between an indexed predicate and a semi-join into a `UNION` — is a query rewrite,
+      carried as a handoff below rather than a migration. Re-measuring after writing `1210` would
+      reproduce the same plan, because the seq scan is forced by the disjunction, not by a missing
+      index.
       It degrades, and no index can fix it — so `1210` is deliberately not written. The grant
       branch on its own is served by `idx_kb_page_grants_org_page_live` as a Nested Loop Semi Join
       in 0.315 ms. Put that same `EXISTS` under an `OR` with the indexed branch and the planner
