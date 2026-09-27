@@ -230,6 +230,29 @@ describe("SpacesPage", () => {
     expect(screen.getByText("Members — Engineering")).toBeInTheDocument();
   });
 
+  it("drops the cursor when a filter changes, because a cursor issued under the old filter set decodes to a different position and silently skips pages", async () => {
+    mockSpaces.mockReturnValue({
+      data: { data: [space()], pagination: { limit: 30, hasMore: true, nextCursor: "c2" } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: /next/i }));
+
+    expect(mockSpaces).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: "c2" }),
+    );
+
+    await userEvent.type(screen.getByPlaceholderText("Search spaces…"), "eng");
+
+    expect(mockSpaces).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: undefined }),
+    );
+  });
+
   it("shows the next-page button when the server signals there are more results", () => {
     mockSpaces.mockReturnValue({
       data: { data: [space()], pagination: { limit: 30, hasMore: true, nextCursor: "c2" } },
