@@ -191,6 +191,22 @@ export const TimerCard = memo(function TimerCard({
               ) : null}
             </Tooltip>
           ) : null}
+          {!isActive && isBlockedDay ? (
+            <div className="flex flex-col gap-1.5">
+              <LoadingButton
+                type="button"
+                variant="outline"
+                onClick={handleCheckIn}
+                isPending={isCheckingIn}
+                className="h-10 w-full"
+              >
+                Clock in anyway
+              </LoadingButton>
+              <a href="/hr/shifts" className="text-center text-xs text-primary underline-offset-2 hover:underline">
+                Assign a shift for today
+              </a>
+            </div>
+          ) : null}
 
           {isActive && !isOnBreak ? (
             <>
