@@ -345,6 +345,21 @@ export function invalidateTicketUpdateViews(
     });
   }
 
+  if (schedulingChanged) {
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.criticalPath(projectId),
+      refetchType: "none",
+    });
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.cycleTime(projectId),
+      refetchType: "none",
+    });
+    void client.invalidateQueries({
+      queryKey: buildWorkQueryKeys.projectReports.leadTime(projectId),
+      refetchType: "none",
+    });
+  }
+
   void client.invalidateQueries({
     queryKey: collaborationQueryKeys.dashboard.activeSprintSummary(),
     refetchType: "none",
