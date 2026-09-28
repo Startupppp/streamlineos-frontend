@@ -74,7 +74,8 @@ function ReleaseContextMenuCell({
   onEdit,
   onDelete,
   children,
-}: { release: Release; children: ReactNode } & ReleaseRowHandlers) {
+  className,
+}: { release: Release; children: ReactNode; className?: string } & ReleaseRowHandlers) {
   const [open, setOpen] = useState(false);
   const handleEdit = useCallback(() => onEdit(release), [release, onEdit]);
   const handleDelete = useCallback(() => onDelete(release), [release, onDelete]);
@@ -87,7 +88,7 @@ function ReleaseContextMenuCell({
     [canManage],
   );
   return (
-    <div onContextMenu={handleContextMenu} className={cn(TEXT_FLEX_CHILD, "overflow-hidden")}>
+    <div onContextMenu={handleContextMenu} className={className}>
       {children}
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
@@ -113,7 +114,7 @@ export function buildReleasesColumns({
       header: "Name",
       className: TABLE_TITLE_CELL,
       cell: (r) => (
-        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
+        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete} className={cn(TEXT_FLEX_CHILD, "overflow-hidden")}>
           <div className={cn(TEXT_FLEX_CHILD, "space-y-0.5 overflow-hidden")}>
             <TruncatedText text={r.name} className="text-dense font-medium text-foreground" />
             <TruncatedText
@@ -133,55 +134,67 @@ export function buildReleasesColumns({
     {
       key: "status",
       header: "Status",
-      cell: (r) => <ReleaseStatusBadge status={r.status} />,
+      cell: (r) => (
+        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
+          <ReleaseStatusBadge status={r.status} />
+        </ReleaseContextMenuCell>
+      ),
     },
     {
       key: "publishedAt",
       header: "Published",
-      cell: (r) => {
-        if (r.status !== "released") {
-          return <span className="text-dense text-muted-foreground">—</span>;
-        }
-        if (r.publishedAt !== null) {
-          return (
+      cell: (r) => (
+        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
+          {r.status !== "released" ? (
+            <span className="text-dense text-muted-foreground">—</span>
+          ) : r.publishedAt !== null ? (
             <span className="font-mono tabular-nums text-dense text-muted-foreground">
               {format(new Date(r.publishedAt), "MMM d, yyyy")}
             </span>
-          );
-        }
-        return <span className="text-dense text-muted-foreground">Unknown</span>;
-      },
+          ) : (
+            <span className="text-dense text-muted-foreground">Unknown</span>
+          )}
+        </ReleaseContextMenuCell>
+      ),
     },
     {
       key: "releaseDate",
       header: "Release Date",
-      cell: (r) =>
-        r.releaseDate ? (
-          <span className="font-mono tabular-nums text-dense text-muted-foreground">
-            {format(new Date(r.releaseDate), "MMM d, yyyy")}
-          </span>
-        ) : (
-          <span className="text-dense text-muted-foreground">—</span>
-        ),
+      cell: (r) => (
+        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
+          {r.releaseDate ? (
+            <span className="font-mono tabular-nums text-dense text-muted-foreground">
+              {format(new Date(r.releaseDate), "MMM d, yyyy")}
+            </span>
+          ) : (
+            <span className="text-dense text-muted-foreground">—</span>
+          )}
+        </ReleaseContextMenuCell>
+      ),
     },
     {
       key: "ticketCount",
       header: "Tickets",
       cell: (r) => (
-        <span className="font-mono tabular-nums text-dense text-muted-foreground">
-          {r.ticketCount}
-        </span>
+        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
+          <span className="font-mono tabular-nums text-dense text-muted-foreground">
+            {r.ticketCount}
+          </span>
+        </ReleaseContextMenuCell>
       ),
     },
     {
       key: "createdBy",
       header: "Created By",
-      cell: (r) =>
-        r.createdByUser ? (
-          <span className="text-dense text-muted-foreground">{getUserDisplayName(r.createdByUser)}</span>
-        ) : (
-          <span className="text-dense text-muted-foreground">—</span>
-        ),
+      cell: (r) => (
+        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
+          {r.createdByUser ? (
+            <span className="text-dense text-muted-foreground">{getUserDisplayName(r.createdByUser)}</span>
+          ) : (
+            <span className="text-dense text-muted-foreground">—</span>
+          )}
+        </ReleaseContextMenuCell>
+      ),
     },
     {
       key: "actions",

@@ -587,3 +587,23 @@ describe("release name cell — right click opens the same authorized actions as
     expect(onDelete).toHaveBeenCalledWith(releaseRow);
   });
 });
+
+describe("every release cell answers a right click, so the gesture is not limited to one column", () => {
+  function cellFor(key: string) {
+    const { buildReleasesColumns } = require("./releases-table-columns");
+    const columns = buildReleasesColumns({ canManage: true, onEdit: jest.fn(), onDelete: jest.fn() });
+    return columns.find((c: { key: string }) => c.key === key);
+  }
+
+  it.each(["status", "publishedAt", "releaseDate", "ticketCount", "createdBy"])(
+    "opens the actions menu on contextmenu in the %s cell",
+    (key) => {
+      const column = cellFor(key);
+      const { container } = render(column.cell(releaseRow));
+      const target = container.firstElementChild;
+      if (target === null) throw new Error(`the ${key} cell rendered nothing`);
+      fireEvent.contextMenu(target);
+      expect(screen.getByRole("menuitem", { name: "Edit" })).toBeInTheDocument();
+    },
+  );
+});
