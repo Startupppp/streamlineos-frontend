@@ -1126,11 +1126,26 @@ six that cannot be.
   `cache: "no-store"`, and `kb_pages.content_revision` is available whenever one is introduced.
   What *was* fixed here is a real defect in the same area — see "Unsharing a page did not revoke
   its link" — plus the duplicate origin read below.
-- [ ] **Replica consistency classification and lag failover.** `ReplicaRouter` exists, classifies
-  `WorkClass`, and is registered — with **zero injection sites**. No lag probe exists anywhere;
-  `isReplicaHealthy` is hardcoded `true`, and the router throws `ReplicaShedError` rather than
-  falling back, which its own note says is deliberate. Closing this needs a real replica endpoint,
-  which this deployment does not have.
+- [ ] **Replica consistency classification and lag failover.** **2026-09-28 — this box's own evidence
+  was wrong on three counts, and correcting it changes what is actually left.**
+      *"Zero injection sites" is false.* `db/drizzle.module.ts:115` injects `REPLICA_ROUTER`, and
+      `:126` calls `this.replicaRouter.route("search-freshness")`. One site, not zero.
+      *"No lag probe exists anywhere" is false.* `db/replica-lag-probe.ts:19` `PostgresReplicaLagProbe`
+      reads `pg_last_xact_replay_timestamp()`, compares against a 5 s `DEFAULT_MAX_LAG_MS`, and fails
+      closed on a non-replica, a non-finite lag or a thrown query.
+      *"`isReplicaHealthy` is hardcoded `true`" is false.* It is a constructor-selected probe.
+      `drizzle.module.ts:97-99` picks `PostgresReplicaLagProbe` when `replicaConnectionString` is set
+      and `NullReplicaHealthProbe` when it is not — and the Null probe returning `true` with no replica
+      configured is correct, because `route()` returns the primary in that case anyway.
+      **What is genuinely still open, stated accurately:** no *application read path* routes through the
+      router. The single `route()` call is a boot-time diagnostic that logs which pool
+      `search-freshness` would resolve to; no KB read, search or Ask query consults it. So classification
+      exists and is unused.
+      **And the residue is smaller than "needs a replica endpoint".** With `replicaConnectionString`
+      absent, `route()` returns the primary, so wiring a read path through the router is behaviour-neutral
+      today and becomes live the moment `DB_REPLICA_URL` is set. That wiring is not KB-owned — it sits in
+      `db/drizzle.module.ts` and the tenant-transaction machinery shared by every module — so it is
+      recorded here rather than done here. Only the *failover measurement* genuinely needs a replica.
 - [x] **DONE 2026-09-27:** **Connection budget.** `poolAdmission` lanes are *regions*, not workloads, so interactive and
   background share one counter sized at `DB_POOL_MAX`. The shed is real but indiscriminate: a
   worker burst evicts interactive requests.
