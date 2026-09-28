@@ -212,3 +212,129 @@ All three callers pass `orgId` as the first arg to `storage.uploadFile()`, which
 - Exact path: `WHERE org_id = ${orgId}` at `backend/src/modules/kb/retrieval/kb-vector-candidate-query.ts:47`
 
 Chunk insert in `backend/src/modules/kb/retrieval/kb-chunk-repository.ts:73` always includes `orgId` in the row values. Chunk count cache key `kb:chunk-count:${orgId}:b${bound}` is tenant-scoped.
+
+---
+
+## 6. S20 code-removal audit
+
+Session date: 2026-09-28. Scope: `backend/src/modules/kb/**`, `frontend/hooks/api/kb/`, `frontend/features/wiki/**`.
+
+S20 box text: "Remove duplicate search/access logic, tree-as-list consumers, client caps, persisted expired review state, unclaimed endpoints, shallow wrappers".
+
+### Pre-confirmed passing notes (do not re-investigate)
+
+| Clause | Status | Evidence |
+|---|---|---|
+| Offset search retired | GONE | `KbSearchService.search` uses `(rank, updatedAt, id)` keyset row-comparison; `decodeSearchCursor` in `kb-page-search-cursor.ts`; no `OFFSET` in search path. |
+| Wildcard query adapter | FIXED | `KbSearchService.search` builds `websearch_to_tsquery('english', input.q)`; `KbCandidateService` uses `websearch_to_tsquery` in every candidate method. One `ILIKE` in `kb-spaces.service.ts` is documented as a standing exception (space name search, not article body). |
+
+---
+
+### Clause verdicts
+
+| Clause | Verdict |
+|---|---|
+| 1. Duplicate search/access logic | DEFECT |
+| 2. Tree-as-list consumers | CLEAN (production) |
+| 3. Client caps | CLEAN |
+| 4. Persisted expired review state | DEFECT |
+| 5. Unclaimed endpoints | UNPROVEN |
+| 6. Shallow wrappers | CLEAN |
+
+---
+
+### Clause 1 — Duplicate search/access logic: DEFECT
+
+`articleOwnerFilterFor` is defined identically in two services:
+
+| File | Lines | Body |
+|---|---|---|
+| `backend/src/modules/kb/retrieval/kb-search.service.ts` | 59–62 | `const read = await resolveKbArticlesViewScope(this.scopes, user); return articleOwnerScopeFilter(read, user);` |
+| `backend/src/modules/kb/retrieval/kb-search-retrieval.service.ts` | 134–137 | identical |
+
+Both delegate to `resolveKbArticlesViewScope` (binds the `KB_ARTICLES_VIEW_PERMISSION` constant) and then to `articleOwnerScopeFilter` (the canonical utility in `kb-article-owner-scope.ts`). The method adds no type narrowing, no argument binding beyond what `articleOwnerScopeFilter` already accepts, and no private encapsulation. It is a pure forwarding wrapper under BE-143 / FE-126 — a place for one copy to get fixed while the other silently diverges.
+
+The fix is to delete both wrapper methods and have every caller invoke `articleOwnerScopeFilter(await resolveKbArticlesViewScope(scopes, user), user)` directly, or extract a module-private helper inside one service if the expression is called more than twice internally.
+
+---
+
+### Clause 2 — Tree-as-list consumers: CLEAN (production)
+
+All production wiki surfaces fetch individual tree levels via paginated calls. The only consumer that reads a tree page as a non-infinite `useQuery` is `useKbProjectPagesTree` at `frontend/hooks/api/kb/pages.ts:122–138`. It fetches `/kb/pages/tree` as a plain `useQuery`, returns `page.data`, and silently ignores `pagination.hasMore`.
+
+No live feature component imports `useKbProjectPagesTree`. A search across `features/wiki/**` and `app/**` finds it referenced only inside `frontend/features/wiki/components/wiki-home-page.test.tsx` as a mock return value. The hook is orphaned test infrastructure — the tree-as-list defect it represents is unreachable in production.
+
+---
+
+### Clause 3 — Client caps: CLEAN
+
+Two `limit` values that could hide data were checked:
+
+| Site | Value | Disposition |
+|---|---|---|
+| `frontend/features/wiki/components/wiki-search-page.tsx:142` | `useKbSpaces({ limit: 100 })` | Name-lookup only — maps space IDs to display strings with `Space ${sid}` fallback. The space filter dropdown is populated from server-side `facetSpaceCounts`, not this list. Exceeding 100 spaces degrades names to IDs; no items are hidden from the result set. |
+| `frontend/features/wiki/components/page-right-panel.tsx:165,200` | `.slice(0, BACKLINK_DISPLAY_LIMIT)` and `.slice(0, RECORD_LINK_DISPLAY_LIMIT)` where both constants are 20 | Explicit "+N more" counter rendered for both backlinks and record links. Truncation is visible to the user, not silent. |
+
+Neither constitutes a silent data hide.
+
+---
+
+### Clause 4 — Persisted expired review state: DEFECT
+
+The DB column `kbPages.trustState` is a Postgres enum (`unverified | verified | verification_expired`). It is only written to `"verification_expired"` by an explicit `markStale()` call in `backend/src/modules/kb/wiki/kb-page-status.service.ts:184`. There is no background job, trigger, or boot-time sweep that auto-transitions `verified → verification_expired` when `verifiedUntil < now()`.
+
+`kb-verification.service.ts` compensates in its own queries with:
+```ts
+const trustLapsed = or(
+  eq(kbPages.trustState, "verification_expired"),
+  lt(kbPages.verifiedUntil, sql`now()`),
+);
+```
+This correctly catches pages that are `verified` in the DB but whose window has passed. `kb-analytics.service.ts:137` similarly guards with `verifiedUntil is null or verifiedUntil >= now()`.
+
+However, the display path does not compensate:
+
+| Surface | File | Defect |
+|---|---|---|
+| Trust badge | `frontend/features/wiki/components/kb-collection-badges.tsx:31–43` | `TrustBadge` renders green "Verified" based on raw `trustState` alone. A page with `trustState = "verified"` and `verifiedUntil < now()` shows green. |
+| Review list | `backend/src/modules/kb/wiki/kb-page-reviews-query.service.ts:~213` | `pageTrustState: kbPages.trustState` reads the raw DB value. The review detail panel on the frontend displays it without adjustment. |
+| Page metadata sheet | `frontend/features/wiki/components/page-metadata-sheet.tsx:328–330` | Shows `Verified until {kbFormatDate(page.verifiedUntil)}` when `trustState === "verified"`, which helps the user infer staleness but the accompanying badge is still green. |
+
+The root cause is that `trustState` is used as the display authority without compensating for the `verifiedUntil` window, except in analytics and verification-queue queries.
+
+---
+
+### Clause 5 — Unclaimed endpoints: UNPROVEN
+
+Three endpoints have no frontend caller found by exhaustive string grep and `lazyContract` dynamic-import scan:
+
+| Endpoint | Controller | Permission | Frontend caller found |
+|---|---|---|---|
+| `GET /kb/verification/queue` | `backend/src/modules/kb/help-centre/kb-verification.controller.ts:18` | `kb:articles:manage` | none |
+| `POST /kb/pages/:pageId/reindex` | `backend/src/modules/kb/retrieval/kb-page-indexing.controller.ts:35` | `kb:pages:manage` | none |
+| `POST /kb/pages/reindex-all` | `backend/src/modules/kb/retrieval/kb-page-indexing.controller.ts:51` | `kb:settings:manage` | none |
+
+Note: the support KB has a distinct reindex endpoint at `/support/kb/articles/:id/reindex` which IS called from a frontend hook. The `/kb/pages/...` variants above are separate and uncalled.
+
+These cannot be proven unclaimed by source scan alone. Proving them requires an exhaustive Nest module dependency graph (to rule out an internal caller in an unscanned module) plus a runtime route trace (to rule out a mobile client or integration that does not appear in the frontend repo). They are recorded as UNPROVEN candidates for the next runtime-trace session.
+
+---
+
+### Clause 6 — Shallow wrappers: CLEAN
+
+Three apparent wrappers in `backend/src/modules/kb/retrieval/kb-search-retrieval.service.ts` were checked:
+
+| Method | What it does | BE-143 verdict |
+|---|---|---|
+| `retrieveTopArticles` | extracts `.results` from `retrieveTopArticlesWithOutcome` return value | Shape adapter — strips the outcome envelope. Earns its keep. |
+| `retrieveDocumentPassages` | extracts `.results` from `retrieveDocumentPassagesWithOutcome` | Shape adapter — same. |
+| `retrieveTopSources` | extracts `.results` from `retrieveTopSourcesWithOutcome` | Shape adapter — same. |
+
+Two scope utilities in `backend/src/modules/kb/core/kb-scope.ts` were checked:
+
+| Function | What it does | BE-143 verdict |
+|---|---|---|
+| `resolveKbArticlesViewScope` | calls `ScopedRead.for(access, user, KB_ARTICLES_VIEW_PERMISSION)` | Argument binder — buries the private permission constant. Earns its keep. |
+| `resolveKbSpacesViewScope` | calls `ScopedRead.for(access, user, KB_SPACES_VIEW_PERMISSION)` | Argument binder — same. |
+
+No pure pass-through wrappers (a function whose body is solely a forwarding call to an exported callee with unchanged arguments) were found under Clause 6.
