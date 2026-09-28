@@ -49,6 +49,10 @@ import {
   GOAL_FILTER_DEFINITIONS,
   GOAL_LEVEL_ORDER,
 } from "@/features/build/goals/goals-list-shared";
+import {
+  ProductGoalOutcomeFilters,
+  resolveGoalOutcomeParams,
+} from "./product-goal-outcome-filters";
 
 interface ProductGoalsPageProps {
   managedProductId: number;
@@ -97,9 +101,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
   const statusValue = listFilters.value("status");
 
   const ownerIdValue = listFilters.value("ownerId");
-  const healthValue = listFilters.value("health");
-  const dueValue = listFilters.value("due");
-  const scopeValue = listFilters.value("scope");
+  const readFilterValue = listFilters.value;
 
   const typedLevel = useMemo(
     () => LEVEL_OPTIONS.find((o) => o.value === levelValue)?.value,
@@ -128,11 +130,9 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
       ...(listFilters.debouncedSearch.trim()
         ? { search: listFilters.debouncedSearch.trim() }
         : {}),
-      ...(healthValue && healthValue !== BUILD_FILTER_ALL ? { health: healthValue } : {}),
-      ...(dueValue && dueValue !== BUILD_FILTER_ALL ? { due: dueValue } : {}),
-      ...(scopeValue && scopeValue !== BUILD_FILTER_ALL ? { scope: scopeValue } : {}),
+      ...resolveGoalOutcomeParams(readFilterValue),
     }),
-    [managedProductId, page, typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch, healthValue, dueValue, scopeValue],
+    [managedProductId, page, typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch, readFilterValue],
   );
 
   const { data: goalsPage, isLoading, isError, error, refetch } = useGoalsPage(params);
@@ -244,7 +244,12 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     <PageWrapper
       title="Goals & OKRs"
       subtitle="Product objectives and key results"
-      filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} />}
+      filters={
+        <div className="flex flex-col gap-2">
+          <GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} />
+          <ProductGoalOutcomeFilters listFilters={listFilters} />
+        </div>
+}
       actions={<BuildHeaderActions actions={createActions} />}
     >
       <PmPageShell>
