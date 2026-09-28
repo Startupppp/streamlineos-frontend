@@ -117,4 +117,33 @@ describe("compatibility redirect for the retired /ask surface (S20)", () => {
   it("/knowledge/chat is a reachable universal route in the access registry", () => {
     expect(resolveRouteAccess("/knowledge/chat").kind).toBe("universal");
   });
+
+  const WIKI_PAGE_ALIASES: ReadonlyArray<RedirectPair> = [
+    {
+      source: "/knowledge/wiki/pages/:pageId",
+      destination: "/knowledge/wiki/doc/:pageId",
+    },
+    {
+      source: "/knowledge/wiki/pages/:pageId/history",
+      destination: "/knowledge/wiki/doc/:pageId/history",
+    },
+  ];
+
+  it.each(WIKI_PAGE_ALIASES)(
+    "the retired $source alias is declared, redirecting a bookmark to $destination",
+    ({ source, destination }) => {
+      expect(destinationFor(source)).toBe(destination);
+    },
+  );
+
+  it("BITE: the canonical doc path is not itself a redirect source, so the alias assertions are not matching every wiki URL", () => {
+    expect(destinationFor("/knowledge/wiki/doc/:pageId")).toBeUndefined();
+  });
+
+  it("the doc destination the aliases point at resolves as a reachable universal subtree, so neither alias lands on a route the registry denies", () => {
+    expect(resolveRouteAccess("/knowledge/wiki/doc/123").kind).toBe("universal");
+    expect(resolveRouteAccess("/knowledge/wiki/doc/123/history").kind).toBe(
+      "universal",
+    );
+  });
 });
