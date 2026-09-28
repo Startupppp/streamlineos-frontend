@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import {
+  Fragment,
   useState,
   useMemo,
   memo,
@@ -15,7 +16,12 @@ import type { KanbanTicket } from "../shared/types";
 import { isCompletedTicketStatus } from "../shared/completed-status";
 import { WorkloadMemberRow } from "./workload-member-row";
 import { WorkloadUnassignedRow } from "./workload-unassigned-row";
-import type { FilterState, MemberCapacityData, StatFilter } from "./workload-types";
+import type {
+  FilterState,
+  MemberCapacityData,
+  StatFilter,
+  WorkloadGroup,
+} from "./workload-types";
 import { hasActiveWorkloadFilters, isMemberOverCapacity } from "./workload-types";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -25,6 +31,21 @@ interface WorkloadMember {
   firstName: string | null;
   lastName: string | null;
   image?: string | null;
+}
+
+interface WorkloadMemberEntry {
+  member: WorkloadMember;
+  memberTickets: KanbanTicket[];
+  ticketsByDay: { day: Date; count: number }[];
+  total: number;
+  overdue: number;
+  points: number;
+}
+
+interface WorkloadGroupEntry {
+  key: string;
+  label: string | null;
+  rows: WorkloadMemberEntry[];
 }
 
 interface WorkloadViewProps {
@@ -41,6 +62,7 @@ interface WorkloadViewProps {
   onClearFilters: () => void;
   capacityByMemberId?: Map<string, MemberCapacityData>;
   focusedMemberId?: string | null;
+  group?: WorkloadGroup;
 }
 
 function applyTicketFilters(
@@ -172,6 +194,7 @@ export const WorkloadView = memo(function WorkloadView({
   onClearFilters,
   capacityByMemberId,
   focusedMemberId = null,
+  group = "none",
 }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
@@ -216,6 +239,32 @@ export const WorkloadView = memo(function WorkloadView({
       return { member, memberTickets, ticketsByDay, total, overdue, points };
     });
   }, [members, filteredTickets, days, filters.statCard, filters.assigneeId, capacityByMemberId, projectStatuses]);
+
+  const groupedWorkload = useMemo<WorkloadGroupEntry[]>(() => {
+    if (group !== "team")
+      return [{ key: "all", label: null, rows: memberWorkload }];
+    const byTeam = new Map<string, WorkloadGroupEntry>();
+    const withoutTeam: WorkloadMemberEntry[] = [];
+    for (const row of memberWorkload) {
+      const teams = capacityByMemberId?.get(row.member.id)?.teams ?? [];
+      if (teams.length === 0) {
+        withoutTeam.push(row);
+        continue;
+      }
+      for (const team of teams) {
+        const key = `team:${team.id}`;
+        const entry = byTeam.get(key) ?? { key, label: team.name, rows: [] };
+        entry.rows.push(row);
+        byTeam.set(key, entry);
+      }
+    }
+    const entries = [...byTeam.values()].sort((a, b) =>
+      (a.label ?? "").localeCompare(b.label ?? ""),
+    );
+    if (withoutTeam.length > 0)
+      entries.push({ key: "team:none", label: "No team", rows: withoutTeam });
+    return entries;
+  }, [group, memberWorkload, capacityByMemberId]);
 
   const unassigned = useMemo(
     () => filteredTickets.filter((t) => !t.assigneeId),
@@ -343,38 +392,53 @@ export const WorkloadView = memo(function WorkloadView({
                 onClearFilters={onClearFilters}
               />
             ) : (
-              memberWorkload.map(
-                (
-                  {
-                    member,
-                    memberTickets,
-                    ticketsByDay,
-                    total,
-                    overdue,
-                    points,
-                  },
-                  idx,
-                ) => (
-                  <WorkloadMemberRow
-                    key={member.id}
-                    member={member}
-                    memberTickets={memberTickets}
-                    ticketsByDay={ticketsByDay}
-                    total={total}
-                    overdue={overdue}
-                    points={points}
-                    days={days}
-                    projectId={projectId}
-                    projectKey={projectKey}
-                    expanded={expandedMembers.has(member.id)}
-                    focused={focusedMemberId === member.id}
-                    motionDelay={idx * 0.04}
-                    reducedMotion={shouldReduceMotion}
-                    onToggle={handleToggleExpand}
-                    capacityData={capacityByMemberId?.get(member.id)}
-                  />
-                ),
-              )
+              groupedWorkload.map((groupEntry) => (
+                <Fragment key={groupEntry.key}>
+                  {groupEntry.label !== null && (
+                    <div
+                      data-testid="workload-group-caption"
+                      className="flex shrink-0 border-b border-border bg-muted/40 px-4 py-1.5 text-micro font-bold uppercase tracking-wider text-muted-foreground"
+                    >
+                      {groupEntry.label}
+                      <span className="ml-2 tabular-nums font-normal normal-case tracking-normal">
+                        {groupEntry.rows.length}
+                      </span>
+                    </div>
+                  )}
+                  {groupEntry.rows.map(
+                    (
+                      {
+                        member,
+                        memberTickets,
+                        ticketsByDay,
+                        total,
+                        overdue,
+                        points,
+                      },
+                      idx,
+                    ) => (
+                      <WorkloadMemberRow
+                        key={`${groupEntry.key}:${member.id}`}
+                        member={member}
+                        memberTickets={memberTickets}
+                        ticketsByDay={ticketsByDay}
+                        total={total}
+                        overdue={overdue}
+                        points={points}
+                        days={days}
+                        projectId={projectId}
+                        projectKey={projectKey}
+                        expanded={expandedMembers.has(member.id)}
+                        focused={focusedMemberId === member.id}
+                        motionDelay={idx * 0.04}
+                        reducedMotion={shouldReduceMotion}
+                        onToggle={handleToggleExpand}
+                        capacityData={capacityByMemberId?.get(member.id)}
+                      />
+                    ),
+                  )}
+                </Fragment>
+              ))
             )}
 
             {showUnassignedRow && (

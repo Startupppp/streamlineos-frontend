@@ -144,6 +144,7 @@ export const epicListContract = z.array(epicRowSchema);
 export const memberCapacityItemSchema = z.object({
   userId: z.string(),
   membershipId: z.number().int(),
+  teams: z.array(z.object({ id: z.number().int(), name: z.string() })).default([]),
   workingDaysInWindow: z.number(),
   leaveDays: z.number(),
   halfLeaveDays: z.number(),

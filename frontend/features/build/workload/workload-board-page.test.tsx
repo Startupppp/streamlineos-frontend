@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 
 const mockUse = jest.fn();
 
@@ -81,14 +81,20 @@ jest.mock("@/features/build/views/workload-filter-bar", () => ({
     onFilterChange: (key: string, value: unknown) => void;
     onClearFilters: () => void;
     filters: Record<string, unknown>;
+    leading?: React.ReactNode;
   }) => {
     capturedFilterBarProps = props;
-    return <div data-testid="workload-filter-bar" />;
+    return <div data-testid="workload-filter-bar">{props.leading}</div>;
   },
 }));
 
+let capturedWorkloadViewGroup: string | undefined;
+
 jest.mock("@/features/build/views/workload-view", () => ({
-  WorkloadView: () => <div data-testid="workload-view" />,
+  WorkloadView: (props: { group?: string }) => {
+    capturedWorkloadViewGroup = props.group;
+    return <div data-testid="workload-view" />;
+  },
 }));
 
 jest.mock("@/features/build/views/view-switcher", () => ({
@@ -187,6 +193,7 @@ const TICKETS_RESULT = {
 beforeEach(() => {
   jest.clearAllMocks();
   capturedFilterBarProps = {};
+  capturedWorkloadViewGroup = undefined;
   mockSearchParams = new URLSearchParams();
   mockUse.mockReturnValue({ projectId: "1" });
   mockUseProject.mockReturnValue(READY_PROJECT);
@@ -501,5 +508,48 @@ describe("WorkloadBoardPage — projectId is the path param and never read from 
       expect.any(String),
       undefined,
     );
+  });
+});
+
+describe("WorkloadBoardPage — group URL parameter", () => {
+  it("passes group=team to the view when the URL asks for it, so a shared link renders the grouped table", () => {
+    mockSearchParams = new URLSearchParams("group=team");
+    renderPage();
+    expect(capturedWorkloadViewGroup).toBe("team");
+  });
+
+  it("passes group=none when the URL carries no group — paired with the present case above", () => {
+    renderPage();
+    expect(capturedWorkloadViewGroup).toBe("none");
+  });
+
+  it("falls back to none for a grouping dimension the view does not implement, rather than rendering an empty table", () => {
+    mockSearchParams = new URLSearchParams("group=astrology");
+    renderPage();
+    expect(capturedWorkloadViewGroup).toBe("none");
+  });
+
+  it("renders a grouping control, so the parameter is writable and not a read-only deep link", () => {
+    renderPage();
+    expect(screen.getByRole("combobox", { name: "Group members by" })).toBeInTheDocument();
+  });
+
+  it("writes group=team to the URL when the control selects it", () => {
+    renderPage();
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Group members by" }), {
+      key: "Enter",
+    });
+    fireEvent.click(screen.getByRole("option", { name: "Group by team" }));
+    expect(String(mockReplace.mock.calls.at(-1)?.[0])).toContain("group=team");
+  });
+
+  it("clears the group param when grouping returns to none, so the URL stays clean at the default", () => {
+    mockSearchParams = new URLSearchParams("group=team");
+    renderPage();
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Group members by" }), {
+      key: "Enter",
+    });
+    fireEvent.click(screen.getByRole("option", { name: "No grouping" }));
+    expect(String(mockReplace.mock.calls.at(-1)?.[0])).not.toContain("group=");
   });
 });

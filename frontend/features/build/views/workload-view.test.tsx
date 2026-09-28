@@ -210,3 +210,95 @@ describe("WorkloadView — the unassigned row keeps the same fixed columns as a 
     expect(memberRow.children).toHaveLength(header.children.length);
   });
 });
+
+const TEAM_MEMBERS = [
+  MEMBER,
+  { id: "user-2", name: null, firstName: "Grace", lastName: "Hopper", image: null },
+  { id: "user-3", name: null, firstName: "Alan", lastName: "Turing", image: null },
+];
+
+function capacityWithTeams(
+  teamsByMemberId: Record<string, { id: number; name: string }[]>,
+): Map<string, MemberCapacityData> {
+  return new Map(
+    Object.entries(teamsByMemberId).map(([memberId, teams]) => [
+      memberId,
+      { ...FULLY_FIGURED, teams },
+    ]),
+  );
+}
+
+function renderGrouped(
+  group: "none" | "team",
+  capacityByMemberId: Map<string, MemberCapacityData>,
+) {
+  return render(
+    <WorkloadView
+      tickets={[]}
+      projectId={1}
+      projectKey="ENG"
+      projectStatuses={[]}
+      members={TEAM_MEMBERS}
+      filters={INITIAL_FILTERS}
+      onFilterChange={noop}
+      onClearFilters={noop}
+      capacityByMemberId={capacityByMemberId}
+      group={group}
+    />,
+  );
+}
+
+describe("WorkloadView — group axis", () => {
+  it("renders no group caption when grouping is off, so the ungrouped table is unchanged", () => {
+    renderGrouped(
+      "none",
+      capacityWithTeams({ "user-1": [{ id: 4, name: "Platform" }] }),
+    );
+    expect(screen.queryByTestId("workload-group-caption")).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("workload-member-row")).toHaveLength(3);
+  });
+
+  it("captions one section per team, in name order, when grouping by team", () => {
+    renderGrouped(
+      "team",
+      capacityWithTeams({
+        "user-1": [{ id: 4, name: "Platform" }],
+        "user-2": [{ id: 9, name: "Billing" }],
+        "user-3": [{ id: 9, name: "Billing" }],
+      }),
+    );
+    const captions = screen.getAllByTestId("workload-group-caption");
+    expect(captions.map((c) => c.textContent)).toEqual(["Billing2", "Platform1"]);
+  });
+
+  it("lists a member under every team they belong to, rather than silently picking one", () => {
+    renderGrouped(
+      "team",
+      capacityWithTeams({
+        "user-1": [
+          { id: 4, name: "Platform" },
+          { id: 9, name: "Billing" },
+        ],
+        "user-2": [],
+        "user-3": [],
+      }),
+    );
+    const captions = screen.getAllByTestId("workload-group-caption");
+    expect(captions.map((c) => c.textContent)).toEqual(["Billing1", "Platform1", "No team2"]);
+    expect(screen.getAllByTestId("workload-member-row")).toHaveLength(4);
+  });
+
+  it("puts members on no team in a No team section last, so grouping never drops a row", () => {
+    renderGrouped("team", capacityWithTeams({ "user-1": [], "user-2": [], "user-3": [] }));
+    const captions = screen.getAllByTestId("workload-group-caption");
+    expect(captions.map((c) => c.textContent)).toEqual(["No team3"]);
+    expect(screen.getAllByTestId("workload-member-row")).toHaveLength(3);
+  });
+
+  it("groups members whose capacity row predates the team field into No team instead of throwing", () => {
+    renderGrouped("team", new Map([[MEMBER.id, NO_ESTIMATE]]));
+    expect(screen.getAllByTestId("workload-group-caption").map((c) => c.textContent)).toEqual([
+      "No team3",
+    ]);
+  });
+});
