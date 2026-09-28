@@ -56,7 +56,7 @@ describe("CycleCard — right click reaches the same authorized commands as the 
   it("opens the actions menu on a right click, so the context gesture is not a dead end", () => {
     renderCard(true);
     expect(screen.queryByText("Plan work")).not.toBeInTheDocument();
-    fireEvent.contextMenu(screen.getByText("Cycle 12").closest("div")!);
+    fireEvent.contextMenu(screen.getByText("Cycle 12"));
     expect(screen.getByText("Plan work")).toBeInTheDocument();
     expect(screen.getByText("Edit")).toBeInTheDocument();
     expect(screen.getByText("Delete")).toBeInTheDocument();
@@ -64,7 +64,7 @@ describe("CycleCard — right click reaches the same authorized commands as the 
 
   it("opens no menu on a right click for a viewer who cannot manage cycles, so the gesture never offers a denied command", () => {
     renderCard(false);
-    fireEvent.contextMenu(screen.getByText("Cycle 12").closest("div")!);
+    fireEvent.contextMenu(screen.getByText("Cycle 12"));
     expect(screen.queryByText("Plan work")).not.toBeInTheDocument();
     expect(screen.queryByText("Delete")).not.toBeInTheDocument();
     expect(
@@ -74,7 +74,7 @@ describe("CycleCard — right click reaches the same authorized commands as the 
 
   it("offers Open and Copy link, so the menu mirrors the commands the card itself exposes", () => {
     renderCard(true);
-    fireEvent.contextMenu(screen.getByText("Cycle 12").closest("div")!);
+    fireEvent.contextMenu(screen.getByText("Cycle 12"));
     expect(screen.getByText("Open").closest("a")).toHaveAttribute(
       "href",
       "/build/3/cycles/12",
@@ -88,7 +88,7 @@ describe("CycleCard — right click reaches the same authorized commands as the 
   it("reports a failed copy instead of claiming the link was copied", async () => {
     writeText.mockRejectedValue(new Error("denied"));
     renderCard(true);
-    fireEvent.contextMenu(screen.getByText("Cycle 12").closest("div")!);
+    fireEvent.contextMenu(screen.getByText("Cycle 12"));
     fireEvent.click(screen.getByText("Copy link"));
     await Promise.resolve();
     await Promise.resolve();
@@ -98,7 +98,7 @@ describe("CycleCard — right click reaches the same authorized commands as the 
 
   it("runs the same handler from the menu as the row action, so no command exists only in one place", () => {
     const { handlers } = renderCard(true);
-    fireEvent.contextMenu(screen.getByText("Cycle 12").closest("div")!);
+    fireEvent.contextMenu(screen.getByText("Cycle 12"));
     fireEvent.click(screen.getByText("Edit"));
     expect(handlers.onEdit).toHaveBeenCalledWith(CYCLE);
   });
