@@ -153,12 +153,15 @@ export function CommandCenterPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteAllWork(myIssuesFilters, { enabled: canViewTickets });
+  } = useInfiniteAllWork(myIssuesFilters, {
+    enabled: canViewTickets,
+    throwOnError: false,
+  });
 
   const { data: overdueIssuesSummary, refetch: refetchOverdueIssuesSummary } =
     useAllWork(
       { ...myIssuesScopeFilters, limit: 1, dueDateTo: overdueDueDateTo },
-      { enabled: canViewTickets },
+      { enabled: canViewTickets, throwOnError: false },
     );
 
   const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
