@@ -95,13 +95,9 @@ jest.mock("@/features/build/views/view-switcher", () => ({
   ViewSwitcher: () => null,
 }));
 
-let capturedShortcutOpen: boolean | undefined;
-
 jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
-  ShortcutHelpDialog: ({ open }: { open: boolean }) => {
-    capturedShortcutOpen = open;
-    return open ? <div data-testid="shortcut-help-dialog" /> : null;
-  },
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));
 
 jest.mock("@/features/build/tickets/create-ticket-dialog", () => ({
@@ -191,7 +187,6 @@ const TICKETS_RESULT = {
 beforeEach(() => {
   jest.clearAllMocks();
   capturedFilterBarProps = {};
-  capturedShortcutOpen = undefined;
   mockSearchParams = new URLSearchParams();
   mockUse.mockReturnValue({ projectId: "1" });
   mockUseProject.mockReturnValue(READY_PROJECT);

@@ -17,6 +17,7 @@ import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { useProjects } from "@/hooks/api/build/projects";
+import type { ProjectFilters } from "@/types/projects";
 import {
   COMMAND_CENTER_MY_ISSUES_FILTERS,
   useAllWork,
@@ -55,6 +56,17 @@ import { ApprovalsPanel } from "./command-center-approvals-panel";
 import { AgentRunsPanel } from "./command-center-agent-runs-panel";
 import { RisksPanel } from "./command-center-risks-panel";
 import { ReleasesPanel } from "./command-center-releases-panel";
+
+const COMMAND_CENTER_HEALTH_VALUES = [
+  "on_track",
+  "at_risk",
+  "off_track",
+] as const;
+type CommandCenterHealth = (typeof COMMAND_CENTER_HEALTH_VALUES)[number];
+
+function isCommandCenterHealth(v: string): v is CommandCenterHealth {
+  return (COMMAND_CENTER_HEALTH_VALUES as readonly string[]).includes(v);
+}
 
 const COMMAND_CENTER_SCOPE_VALUES = [
   "all",
@@ -119,8 +131,23 @@ export function CommandCenterPage() {
       ? rawUrlScope
       : null;
   const urlOwner = searchParams.get("owner") ?? undefined;
+  const rawUrlHealth = searchParams.get("health");
+  const urlHealth: CommandCenterHealth | undefined =
+    rawUrlHealth !== null && isCommandCenterHealth(rawUrlHealth)
+      ? rawUrlHealth
+      : undefined;
   const urlDue = searchParams.get("due");
   const overdueDueDateTo = format(subDays(new Date(), 1), "yyyy-MM-dd");
+
+  const projectFilters: ProjectFilters & { health?: CommandCenterHealth } =
+    useMemo(
+      () => ({
+        status: "ACTIVE",
+        managerId: urlOwner,
+        ...(urlHealth === undefined ? {} : { health: urlHealth }),
+      }),
+      [urlOwner, urlHealth],
+    );
 
   const {
     data: projectsData,
@@ -128,10 +155,7 @@ export function CommandCenterPage() {
     isError: projectsError,
     error: projectsRawError,
     refetch: refetchProjects,
-  } = useProjects(
-    { status: "ACTIVE", managerId: urlOwner },
-    { throwOnError: false },
-  );
+  } = useProjects(projectFilters, { throwOnError: false });
 
   const myIssuesScopeFilters = useMemo(
     () =>

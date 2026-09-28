@@ -379,6 +379,28 @@ it("passes no managerId to useProjects when the owner param is absent — paired
   );
 });
 
+it("passes the health URL param to useProjects, so the spec's health parameter filters server-side rather than inside one keyset page", () => {
+  mockSearchParams = new URLSearchParams("health=at_risk");
+  render(<CommandCenterPage />);
+  expect(mockUseProjects).toHaveBeenCalledWith(
+    expect.objectContaining({ health: "at_risk" }),
+    expect.objectContaining({ throwOnError: false }),
+  );
+});
+
+it("passes no health to useProjects when the health param is absent — paired with the health-present test above", () => {
+  render(<CommandCenterPage />);
+  const [filters] = mockUseProjects.mock.calls.at(-1) as [Record<string, unknown>];
+  expect("health" in filters).toBe(false);
+});
+
+it("ignores an unknown health value instead of forwarding it to a strict backend schema that would 400", () => {
+  mockSearchParams = new URLSearchParams("health=exploding");
+  render(<CommandCenterPage />);
+  const [filters] = mockUseProjects.mock.calls.at(-1) as [Record<string, unknown>];
+  expect("health" in filters).toBe(false);
+});
+
 it("passes a due-date window to useInfiniteAllWork when the due URL param is present, so the spec's due parameter is deep-linkable", () => {
   mockSearchParams = new URLSearchParams("due=overdue");
   render(<CommandCenterPage />);
