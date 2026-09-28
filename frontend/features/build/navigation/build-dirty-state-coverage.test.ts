@@ -85,6 +85,7 @@ const TRANSIENT_ACTION_NO_DRAFT: readonly string[] = [
 const PUBLIC_ROUTE_NO_SCOPE_SWITCHER: readonly string[] = [
   "forms/public-form-view.tsx",
   "intake/public-intake-view.tsx",
+  "intake/public-intake-token-view.tsx",
 ];
 
 const ALL_EXPLICIT_EXCLUSIONS = new Set([
