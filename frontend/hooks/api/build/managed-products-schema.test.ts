@@ -22,6 +22,7 @@ function baseRow(status: string) {
     targetLaunchDate: null,
     successMetrics: null,
     ownerMembershipId: null,
+    version: 1,
     deletedAt: null,
     createdAt: "2026-09-22T00:00:00.000Z",
     updatedAt: "2026-09-22T00:00:00.000Z",
@@ -36,6 +37,12 @@ it("accepts every managedProductStatusEnum value the backend actually sends", ()
 
 it("rejects a status outside managedProductStatusEnum instead of accepting any string", () => {
   expect(() => managedProductRowContract.parse(baseRow("deleted"))).toThrow(ZodError);
+});
+
+it("rejects a row that omits version, because an update sends it as the If-Match token and an optional contract would let a dropped projection send undefined and overwrite a concurrent edit", () => {
+  const { version: _version, ...withoutVersion } = baseRow("active");
+
+  expect(() => managedProductRowContract.parse(withoutVersion)).toThrow(ZodError);
 });
 
 it("parses a list row that carries status, matching the .returning() response the backend sends", () => {

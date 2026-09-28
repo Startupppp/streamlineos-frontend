@@ -16,6 +16,7 @@ export const managedProductRowContract = z.object({
   targetLaunchDate: z.string().nullable(),
   successMetrics: z.unknown(),
   ownerMembershipId: z.number().int().nullable(),
+  version: z.number().int(),
   deletedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),

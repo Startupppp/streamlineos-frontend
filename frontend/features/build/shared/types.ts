@@ -6,7 +6,7 @@ import type { TicketPriority } from "@/types/projects";
 export type GroupByOption = "status" | "assignee" | "priority" | "label" | "cycle" | "project" | "none";
 export type ColumnByOption = "status" | "assignee" | "priority" | "label" | "cycle" | "project";
 export type SwimlaneBy = "none" | "status" | "assignee" | "priority" | "cycle";
-export type OrderByOption = "created" | "priority" | "dueDate" | "manual";
+export type OrderByOption = "created" | "priority" | "dueDate" | "manual" | "updated";
 export type CompletedIssuesFilter = "all" | "none" | "last-day" | "last-week" | "last-month";
 
 export interface DisplayOptions {

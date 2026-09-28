@@ -169,6 +169,7 @@ const ROW_OPTIONS: { value: SwimlaneBy; label: string }[] = [
 const ORDER_OPTIONS: { value: OrderByOption; label: string }[] = [
   { value: "manual", label: "Manual" },
   { value: "created", label: "Created" },
+  { value: "updated", label: "Updated" },
   { value: "priority", label: "Priority" },
   { value: "dueDate", label: "Due date" },
 ];
@@ -224,9 +225,8 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
   }
 
   function handleOrderByChange(v: string) {
-    const valid: readonly OrderByOption[] = ["manual", "created", "priority", "dueDate"];
-    const match = valid.find((option) => option === v);
-    if (match) set("orderBy", match);
+    const match = ORDER_OPTIONS.find((option) => option.value === v);
+    if (match) set("orderBy", match.value);
   }
 
   function handleCompletedIssuesChange(v: string) {

@@ -377,6 +377,7 @@ export function KbManagerContent() {
           ) : articlesQuery.error ? (
             <ErrorState
               description={getErrorMessage(articlesQuery.error)}
+              error={articlesQuery.error}
               onRetry={handleArticlesRetry}
             />
           ) : articles.length === 0 && hasFilters ? (
@@ -386,6 +387,7 @@ export function KbManagerContent() {
               description="Try adjusting your search or filters."
               action={{ label: "Clear filters", onClick: handleClearFilters }}
               className={CONTENT_FILL_PANEL}
+              access={articlesQuery.access}
             />
           ) : articles.length === 0 ? (
             <EmptyState
@@ -394,6 +396,7 @@ export function KbManagerContent() {
               description="Create your first help center article to get started."
               action={{ label: "New Article", onClick: handleOpenNewArticle }}
               className={CONTENT_FILL_PANEL}
+              access={articlesQuery.access}
             />
           ) : (
             <div className="space-y-2">
@@ -422,6 +425,7 @@ export function KbManagerContent() {
           ) : categoriesQuery.error ? (
             <ErrorState
               description={getErrorMessage(categoriesQuery.error)}
+              error={categoriesQuery.error}
               onRetry={handleCategoriesRetry}
             />
           ) : categories.length === 0 ? (
@@ -431,6 +435,7 @@ export function KbManagerContent() {
               description="Group your articles into categories for the help center."
               action={{ label: "New Category", onClick: handleOpenCategoryDialog }}
               className={CONTENT_FILL_PANEL}
+              access={categoriesQuery.access}
             />
           ) : (
             <div className="space-y-2">

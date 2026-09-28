@@ -32,9 +32,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Combobox } from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
 import type { KbSource } from "@/hooks/api/kb/sources";
 import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
+import { KB_ASK_STATUS_SCOPES, type KbAskStatusScope } from "@/hooks/api/kb/ask";
 
 interface KbSourcesSheetManageProps {
   mode: "manage";
@@ -52,6 +54,10 @@ interface KbSourcesSheetManageProps {
 }
 
 export type SpaceIdFilter = number | null;
+
+export type OwnerMembershipFilter = number | null;
+
+export type StatusScopeFilter = KbAskStatusScope | null;
 
 interface KbSourcesSheetScopeProps {
   mode: "scope";
@@ -71,6 +77,17 @@ interface KbSourcesSheetScopeProps {
   spaceIdFilter: SpaceIdFilter;
   onSpaceIdFilterChange: (spaceId: SpaceIdFilter) => void;
   spaces: ReadonlyArray<{ id: number; name: string }>;
+  ownerMembershipId: OwnerMembershipFilter;
+  onOwnerMembershipIdChange: (ownerMembershipId: OwnerMembershipFilter) => void;
+  owners: ReadonlyArray<{
+    membershipId: number;
+    name: string | null;
+    email: string;
+  }>;
+  onOwnerSearchChange: (search: string) => void;
+  ownersAreLoading: boolean;
+  statusScope: StatusScopeFilter;
+  onStatusScopeChange: (status: StatusScopeFilter) => void;
   onConfirm: () => void;
   pageSearchQuery: string;
   onPageSearchQueryChange: (q: string) => void;
@@ -254,6 +271,100 @@ function SpaceFilterButton({
   );
 }
 
+function statusScopeLabel(status: KbAskStatusScope): string {
+  const spaced = status.replace(/_/g, " ");
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+function StatusScopeButton({
+  status,
+  label,
+  active,
+  onSelect,
+}: {
+  status: StatusScopeFilter;
+  label: string;
+  active: boolean;
+  onSelect: (status: StatusScopeFilter) => void;
+}) {
+  function handleClick() {
+    onSelect(status);
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "flex-1 rounded px-2 py-1 text-xs font-medium transition-colors",
+        active
+          ? "bg-background text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+function OwnerMembershipSelect({
+  ownerMembershipId,
+  onOwnerMembershipIdChange,
+  owners,
+  onOwnerSearchChange,
+  ownersAreLoading,
+}: Pick<
+  KbSourcesSheetScopeProps,
+  | "ownerMembershipId"
+  | "onOwnerMembershipIdChange"
+  | "owners"
+  | "onOwnerSearchChange"
+  | "ownersAreLoading"
+>) {
+  const options = owners.map((owner) => ({
+    value: String(owner.membershipId),
+    label: owner.name ?? owner.email,
+    sublabel: owner.name === null ? undefined : owner.email,
+  }));
+
+  function handleChange(value: string) {
+    onOwnerMembershipIdChange(value === "" ? null : Number(value));
+  }
+
+  function handleClear() {
+    onOwnerMembershipIdChange(null);
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground">
+          Page owner
+        </span>
+        {ownerMembershipId !== null && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs"
+            onClick={handleClear}
+          >
+            Any owner
+          </Button>
+        )}
+      </div>
+      <Combobox
+        options={options}
+        value={ownerMembershipId === null ? "" : String(ownerMembershipId)}
+        onChange={handleChange}
+        placeholder="Any owner"
+        searchPlaceholder="Search members…"
+        emptyText={ownersAreLoading ? "Loading members…" : "No members found."}
+        onSearchChange={onOwnerSearchChange}
+        aria-label="Restrict answer to pages owned by a member"
+      />
+    </div>
+  );
+}
+
 function KbSourcesScopeSheet({
   open,
   onOpenChange,
@@ -271,6 +382,13 @@ function KbSourcesScopeSheet({
   spaceIdFilter,
   onSpaceIdFilterChange,
   spaces,
+  ownerMembershipId,
+  onOwnerMembershipIdChange,
+  owners,
+  onOwnerSearchChange,
+  ownersAreLoading,
+  statusScope,
+  onStatusScopeChange,
   onConfirm,
   pageSearchQuery,
   onPageSearchQueryChange,
@@ -366,6 +484,37 @@ function KbSourcesScopeSheet({
             ))}
           </div>
         )}
+
+        <div className="space-y-2">
+          <span className="text-xs font-medium text-muted-foreground">
+            Page status
+          </span>
+          <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-1">
+            <StatusScopeButton
+              status={null}
+              label="Any"
+              active={statusScope === null}
+              onSelect={onStatusScopeChange}
+            />
+            {KB_ASK_STATUS_SCOPES.map((status) => (
+              <StatusScopeButton
+                key={status}
+                status={status}
+                label={statusScopeLabel(status)}
+                active={statusScope === status}
+                onSelect={onStatusScopeChange}
+              />
+            ))}
+          </div>
+        </div>
+
+        <OwnerMembershipSelect
+          ownerMembershipId={ownerMembershipId}
+          onOwnerMembershipIdChange={onOwnerMembershipIdChange}
+          owners={owners}
+          onOwnerSearchChange={onOwnerSearchChange}
+          ownersAreLoading={ownersAreLoading}
+        />
 
         <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2">
           <div className="flex items-center gap-2">

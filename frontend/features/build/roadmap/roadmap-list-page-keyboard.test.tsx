@@ -150,12 +150,20 @@ describe("RoadmapListPage — only forwards parameters GET /build/roadmap accept
     expect(capturedTabProps?.horizon).toBe("2026-Q1");
   });
 
-  it("sends no ownerId key, because roadmapListQuerySchema is strict and ownerId is not declared", () => {
+  it("forwards a numeric ownerId because roadmapListQuerySchema now declares it as a membership id", () => {
+    mockSearchParams = new URLSearchParams("ownerId=7");
+
+    render(<RoadmapListPage />);
+
+    expect(capturedTabProps?.ownerId).toBe(7);
+  });
+
+  it("drops a non-numeric ownerId rather than forwarding NaN, because the backend field coerces to a positive integer and a user id string is not one", () => {
     mockSearchParams = new URLSearchParams("ownerId=user-7");
 
     render(<RoadmapListPage />);
 
-    expect(capturedTabProps).not.toHaveProperty("ownerId");
+    expect(capturedTabProps?.ownerId).toBeUndefined();
   });
 });
 

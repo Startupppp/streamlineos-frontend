@@ -37,23 +37,27 @@ import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { useCan } from "@/hooks/api/access";
 
 interface BlockDiffViewProps {
-  versionContent: Record<string, unknown> | Record<string, unknown>[] | null;
-  currentContent: Record<string, unknown> | Record<string, unknown>[] | null;
-  versionTitle: string;
-  currentTitle: string;
+  heading: string;
+  identicalLabel: string;
+  beforeContent: Record<string, unknown> | Record<string, unknown>[] | null;
+  afterContent: Record<string, unknown> | Record<string, unknown>[] | null;
+  beforeTitle: string;
+  afterTitle: string;
 }
 
 function BlockDiffView({
-  versionContent,
-  currentContent,
-  versionTitle,
-  currentTitle,
+  heading,
+  identicalLabel,
+  beforeContent,
+  afterContent,
+  beforeTitle,
+  afterTitle,
 }: BlockDiffViewProps) {
   const diff = computeVersionDiff(
-    versionTitle,
-    versionContent,
-    currentTitle,
-    currentContent,
+    beforeTitle,
+    beforeContent,
+    afterTitle,
+    afterContent,
   );
   const hasChanges =
     diff.titleChanged ||
@@ -64,9 +68,7 @@ function BlockDiffView({
   return (
     <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 space-y-2">
       <div className="flex items-center gap-2 flex-wrap">
-        <p className="text-xs font-semibold text-foreground">
-          Block diff vs current
-        </p>
+        <p className="text-xs font-semibold text-foreground">{heading}</p>
         {diff.addedCount > 0 && (
           <Badge
             variant="outline"
@@ -93,9 +95,7 @@ function BlockDiffView({
         )}
       </div>
       {!hasChanges && (
-        <p className="text-xs text-muted-foreground">
-          Identical to the current page.
-        </p>
+        <p className="text-xs text-muted-foreground">{identicalLabel}</p>
       )}
       {diff.titleChanged && (
         <p className="text-xs text-muted-foreground">
@@ -628,10 +628,12 @@ export default function PageHistoryPage({
                       <div className="px-6 py-4 space-y-4">
                         {versionADetail && (
                           <BlockDiffView
-                            versionContent={versionADetail.content}
-                            currentContent={currentPage.content}
-                            versionTitle={versionADetail.title}
-                            currentTitle={currentPage.title}
+                            heading="Block diff vs current"
+                            identicalLabel="Identical to the current page."
+                            beforeContent={versionADetail.content}
+                            afterContent={currentPage.content}
+                            beforeTitle={versionADetail.title}
+                            afterTitle={currentPage.title}
                           />
                         )}
                       </div>
@@ -656,6 +658,18 @@ export default function PageHistoryPage({
         onOpenChange={handleRestoreAlertOpenChange}
         title={`Restore version ${selectedA}?`}
         description="The current content will be saved as a new version before restoring."
+        content={
+          versionADetail ? (
+            <BlockDiffView
+              heading={`Preview: how this page changes when version ${selectedA} is restored`}
+              identicalLabel="Restoring changes nothing — this version matches the current page."
+              beforeContent={currentPage.content}
+              afterContent={versionADetail.content}
+              beforeTitle={currentPage.title}
+              afterTitle={versionADetail.title}
+            />
+          ) : null
+        }
         confirmLabel="Restore"
         isPending={restoreVersion.isPending}
         onConfirm={handleConfirmRestore}

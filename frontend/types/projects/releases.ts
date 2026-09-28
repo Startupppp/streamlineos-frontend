@@ -1,3 +1,10 @@
+export interface ReleaseCreatedByUser {
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+}
+
 export interface Release {
   id: number;
   projectId: number;
@@ -10,6 +17,7 @@ export interface Release {
   publishedAt: string | null;
   ticketCount: number;
   createdBy: string | null;
+  createdByUser: ReleaseCreatedByUser | null;
   createdAt: string;
   updatedAt: string;
 }

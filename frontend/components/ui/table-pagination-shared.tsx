@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -74,14 +74,33 @@ export interface CursorPager {
   reset: () => void;
 }
 
-export function useCursorPager(resetKey?: string): CursorPager {
-  const [stack, setStack] = useState<(string | undefined)[]>([undefined]);
+export interface CursorPagerUrlOptions {
+  initialCursor: string | undefined;
+  onCursorChange: (cursor: string | undefined) => void;
+}
+
+export function useCursorPager(resetKey?: string, urlOptions?: CursorPagerUrlOptions): CursorPager {
+  const [stack, setStack] = useState<(string | undefined)[]>(() => {
+    const c = urlOptions?.initialCursor;
+    return c !== undefined ? [undefined, c] : [undefined];
+  });
   const [appliedKey, setAppliedKey] = useState(resetKey);
 
   if (appliedKey !== resetKey) {
     setAppliedKey(resetKey);
     setStack([undefined]);
   }
+
+  const currentCursor = stack[stack.length - 1];
+  const onCursorChangeRef = useRef(urlOptions?.onCursorChange);
+  onCursorChangeRef.current = urlOptions?.onCursorChange;
+  const emittedCursor = useRef(currentCursor);
+
+  useEffect(() => {
+    if (emittedCursor.current === currentCursor) return;
+    emittedCursor.current = currentCursor;
+    onCursorChangeRef.current?.(currentCursor);
+  }, [currentCursor]);
 
   const goNext = useCallback((nextCursor: string | null | undefined) => {
     if (!nextCursor) return;

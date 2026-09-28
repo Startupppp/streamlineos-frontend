@@ -56,11 +56,22 @@ export type RoadmapTierWeighting = z.infer<typeof roadmapTierWeightingContract>;
 export type CrmAccountTier = (typeof CRM_ACCOUNT_TIERS)[number];
 export type RoadmapSignals = z.infer<typeof roadmapSignalsContract>;
 
+export const roadmapOwnerContract = z.object({
+  name: z.string().nullable(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string(),
+  image: z.string().nullable(),
+});
+
+export type RoadmapOwner = z.infer<typeof roadmapOwnerContract>;
+
 export const roadmapItemContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
+  outcome: z.string().nullable(),
   status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
   category: z.string().nullable(),
   isPublic: z.boolean(),
@@ -73,6 +84,8 @@ export const roadmapItemContract = z.object({
   impact: z.number().int().nullable(),
   confidence: z.number().int().nullable(),
   effort: z.number().int().nullable(),
+  ownerMembershipId: z.number().int().nullable(),
+  owner: roadmapOwnerContract.nullable(),
   version: z.number().int(),
   createdBy: z.string().nullable(),
   createdAt: z.string(),

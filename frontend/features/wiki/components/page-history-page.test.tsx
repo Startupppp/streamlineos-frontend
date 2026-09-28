@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, cleanup, fireEvent } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent, within } from "@testing-library/react";
 import PageHistoryPage from "./page-history-page";
 
 type IntersectionCallback = (entries: IntersectionObserverEntry[]) => void;
@@ -33,10 +33,17 @@ function intersect(index = 0) {
 }
 
 const mockSearchParamsGet = jest.fn((_key: string) => null as string | null);
+const mockRouterReplace = jest.fn();
+const mockRouterPush = jest.fn();
+const mockRouterRefresh = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn() })),
-  useSearchParams: jest.fn(() => ({ get: mockSearchParamsGet })),
+  useRouter: () => ({
+    push: mockRouterPush,
+    replace: mockRouterReplace,
+    refresh: mockRouterRefresh,
+  }),
+  useSearchParams: () => ({ get: mockSearchParamsGet }),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -47,10 +54,6 @@ jest.mock("@/components/ui/page-wrapper", () => ({
     children: React.ReactNode;
     backHref?: string;
   }) => <div data-back-href={backHref}>{children}</div>,
-}));
-
-jest.mock("@/components/ui/confirm-dialog", () => ({
-  ConfirmDialog: () => null,
 }));
 
 jest.mock("@/hooks/api/kb/pages", () => ({
@@ -73,18 +76,6 @@ jest.mock("@/features/wiki/lib/kb-icons", () => ({
   KbRotateCcwIcon: ({ className }: { className?: string }) => <span className={className} />,
 }));
 
-jest.mock("@/features/wiki/lib/version-diff", () => ({
-  computeVersionDiff: jest.fn(() => ({
-    titleChanged: false,
-    addedCount: 0,
-    removedCount: 0,
-    changedCount: 0,
-    oldTitle: "",
-    newTitle: "",
-    blocks: [],
-  })),
-}));
-
 jest.mock("@/lib/knowledge-routes", () => ({
   pageHref: (id: number) => `/wiki/pages/${id}`,
   projectPageHref: (projectId: number, pageId: number) =>
@@ -94,6 +85,7 @@ jest.mock("@/lib/knowledge-routes", () => ({
 
 jest.mock("lucide-react", () => ({
   GitCompare: ({ className }: { className?: string }) => <span className={className} />,
+  Loader2: ({ className }: { className?: string }) => <span className={className} />,
 }));
 
 const { useKbPage } = jest.requireMock("@/hooks/api/kb/pages") as { useKbPage: jest.Mock };
@@ -110,10 +102,23 @@ const { useCan: mockUseCan } = jest.requireMock("@/hooks/api/access") as {
   useCan: jest.Mock;
 };
 
+function tipTapDoc(...paragraphs: string[]) {
+  return {
+    type: "doc",
+    content: paragraphs.map((text) => ({
+      type: "paragraph",
+      content: [{ type: "text", text }],
+    })),
+  };
+}
+
+const CURRENT_PAGE_CONTENT = tipTapDoc("Kept paragraph", "Only in current");
+const VERSION_ONE_CONTENT = tipTapDoc("Kept paragraph", "Only in version");
+
 const mockVersion = {
   versionNumber: 1,
   title: "Test Page",
-  content: {},
+  content: VERSION_ONE_CONTENT,
   authorName: "Alice",
   changeSummary: null,
   createdAt: new Date().toISOString(),
@@ -122,11 +127,35 @@ const mockVersion = {
 const mockVersionTwo = {
   versionNumber: 2,
   title: "Test Page",
-  content: {},
+  content: CURRENT_PAGE_CONTENT,
   authorName: "Bob",
   changeSummary: "Second edit",
   createdAt: new Date().toISOString(),
 };
+
+function mockVersionList(
+  data: (typeof mockVersion)[],
+  extra: { hasNextPage?: boolean; fetchNextPage?: jest.Mock } = {},
+) {
+  useKbPageVersionsInfinite.mockReturnValue({
+    data: { pages: [{ data }] },
+    isLoading: false,
+    hasNextPage: extra.hasNextPage ?? false,
+    isFetchingNextPage: false,
+    fetchNextPage: extra.fetchNextPage ?? jest.fn(),
+  });
+}
+
+function mockBothVersions() {
+  mockVersionList([mockVersionTwo, mockVersion]);
+}
+
+function mockDetailPerVersion() {
+  useKbPageVersionDetail.mockImplementation((_pageId: number, versionNumber: number) => ({
+    data: versionNumber === 2 ? mockVersionTwo : mockVersion,
+    isLoading: false,
+  }));
+}
 
 beforeEach(() => {
   observers.length = 0;
@@ -135,18 +164,12 @@ beforeEach(() => {
   mockSearchParamsGet.mockReturnValue(null);
 
   useKbPage.mockReturnValue({
-    data: { id: 1, title: "Test Page", content: {} },
+    data: { id: 1, title: "Test Page", content: CURRENT_PAGE_CONTENT },
     isLoading: false,
     isError: false,
   });
 
-  useKbPageVersionsInfinite.mockReturnValue({
-    data: { pages: [{ data: [mockVersion] }] },
-    isLoading: false,
-    hasNextPage: true,
-    isFetchingNextPage: false,
-    fetchNextPage: jest.fn(),
-  });
+  mockVersionList([mockVersion], { hasNextPage: true });
 
   useKbPageVersionDetail.mockReturnValue({ data: null, isLoading: false });
 
@@ -162,13 +185,7 @@ afterEach(() => {
 describe("PageHistoryPage sentinel", () => {
   it("calls fetchNextPage when the sentinel scrolls into view instead of requiring a button click", () => {
     const fetchNextPage = jest.fn();
-    useKbPageVersionsInfinite.mockReturnValue({
-      data: { pages: [{ data: [mockVersion] }] },
-      isLoading: false,
-      hasNextPage: true,
-      isFetchingNextPage: false,
-      fetchNextPage,
-    });
+    mockVersionList([mockVersion], { hasNextPage: true, fetchNextPage });
 
     render(<PageHistoryPage pageId={1} />);
 
@@ -202,13 +219,7 @@ describe("PageHistoryPage sentinel", () => {
 
 describe("PageHistoryPage — current version marker", () => {
   it("marks the highest versionNumber with a Current badge and aria-label", () => {
-    useKbPageVersionsInfinite.mockReturnValue({
-      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
-      isLoading: false,
-      hasNextPage: false,
-      isFetchingNextPage: false,
-      fetchNextPage: jest.fn(),
-    });
+    mockBothVersions();
 
     render(<PageHistoryPage pageId={1} />);
 
@@ -223,17 +234,8 @@ describe("PageHistoryPage — current version marker", () => {
 
 describe("PageHistoryPage — two-version compare", () => {
   beforeEach(() => {
-    useKbPageVersionsInfinite.mockReturnValue({
-      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
-      isLoading: false,
-      hasNextPage: false,
-      isFetchingNextPage: false,
-      fetchNextPage: jest.fn(),
-    });
-    useKbPageVersionDetail.mockImplementation((_pageId: number, versionNumber: number) => ({
-      data: versionNumber === 2 ? mockVersionTwo : mockVersion,
-      isLoading: false,
-    }));
+    mockBothVersions();
+    mockDetailPerVersion();
   });
 
   it("entering compare mode shows the compare UI hint", () => {
@@ -276,13 +278,7 @@ describe("PageHistoryPage — page states", () => {
   });
 
   it("shows an empty state when the page has no versions", () => {
-    useKbPageVersionsInfinite.mockReturnValue({
-      data: { pages: [{ data: [] }] },
-      isLoading: false,
-      hasNextPage: false,
-      isFetchingNextPage: false,
-      fetchNextPage: jest.fn(),
-    });
+    mockVersionList([]);
 
     render(<PageHistoryPage pageId={1} />);
 
@@ -298,13 +294,7 @@ describe("PageHistoryPage — page states", () => {
 
 describe("PageHistoryPage — restore gate", () => {
   beforeEach(() => {
-    useKbPageVersionsInfinite.mockReturnValue({
-      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
-      isLoading: false,
-      hasNextPage: false,
-      isFetchingNextPage: false,
-      fetchNextPage: jest.fn(),
-    });
+    mockBothVersions();
   });
 
   it("disables restore for the current version even once its detail has loaded", () => {
@@ -338,13 +328,7 @@ describe("PageHistoryPage — restore gate", () => {
 
 describe("PageHistoryPage — keyboard accessibility", () => {
   it("selects a version on Enter without requiring a pointer click", () => {
-    useKbPageVersionsInfinite.mockReturnValue({
-      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
-      isLoading: false,
-      hasNextPage: false,
-      isFetchingNextPage: false,
-      fetchNextPage: jest.fn(),
-    });
+    mockBothVersions();
     useKbPageVersionDetail.mockReturnValue({ data: mockVersion, isLoading: false });
 
     render(<PageHistoryPage pageId={1} />);
@@ -355,13 +339,7 @@ describe("PageHistoryPage — keyboard accessibility", () => {
   });
 
   it("gives every version button an accessible name instead of an icon-only control", () => {
-    useKbPageVersionsInfinite.mockReturnValue({
-      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
-      isLoading: false,
-      hasNextPage: false,
-      isFetchingNextPage: false,
-      fetchNextPage: jest.fn(),
-    });
+    mockBothVersions();
 
     render(<PageHistoryPage pageId={1} />);
 
@@ -377,21 +355,186 @@ describe("PageHistoryPage — keyboard accessibility", () => {
 });
 
 describe("PageHistoryPage — deep link", () => {
-  it("preselects the version named by the ?version= query param", () => {
-    mockSearchParamsGet.mockImplementation((key: string) => (key === "version" ? "2" : null));
-    useKbPageVersionsInfinite.mockReturnValue({
-      data: { pages: [{ data: [mockVersionTwo, mockVersion] }] },
-      isLoading: false,
-      hasNextPage: false,
-      isFetchingNextPage: false,
-      fetchNextPage: jest.fn(),
+  const HISTORY_PATH = "/knowledge/wiki/doc/1/history";
+
+  function linkParams(params: { version?: string; compare?: string }) {
+    mockSearchParamsGet.mockImplementation((key: string) =>
+      key === "version" ? (params.version ?? null) : key === "compare" ? (params.compare ?? null) : null,
+    );
+  }
+
+  function expectUrlWritten(query: string) {
+    expect(mockRouterReplace).toHaveBeenCalledWith(`${HISTORY_PATH}${query}`, {
+      scroll: false,
     });
-    useKbPageVersionDetail.mockReturnValue({ data: mockVersionTwo, isLoading: false });
+  }
+
+  beforeEach(() => {
+    window.history.replaceState({}, "", HISTORY_PATH);
+    mockBothVersions();
+    mockDetailPerVersion();
+  });
+
+  it("preselects the version named by the ?version= query param", () => {
+    linkParams({ version: "2" });
 
     render(<PageHistoryPage pageId={1} />);
 
     expect(
       screen.getByRole("button", { name: "Select version 2 (current)" }),
     ).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Select version 1" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  it("falls back to the server-rendered initialVersion when the client search params are empty", () => {
+    render(<PageHistoryPage pageId={1} initialVersion={1} />);
+
+    expect(screen.getByRole("button", { name: "Select version 1" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("writes the picked version back into the URL so the selection is shareable", () => {
+    render(<PageHistoryPage pageId={1} />);
+
+    expect(mockRouterReplace).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Select version 1" }));
+
+    expectUrlWritten("?version=1");
+  });
+
+  it("round trips: a ?version=2 link selects version 2, and picking version 1 rewrites the URL to ?version=1", () => {
+    linkParams({ version: "2" });
+
+    render(<PageHistoryPage pageId={1} />);
+
+    expect(
+      screen.getByRole("button", { name: "Select version 2 (current)" }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: "Select version 1" }));
+
+    expectUrlWritten("?version=1");
+    expect(screen.getByRole("button", { name: "Select version 1" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(
+      screen.getByRole("button", { name: "Select version 2 (current)" }),
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("opens compare mode from a ?version=1&compare=2 link with both sides selected", () => {
+    linkParams({ version: "1", compare: "2" });
+
+    render(<PageHistoryPage pageId={1} />);
+
+    expect(screen.getByRole("button", { name: "Exit compare mode" })).toBeInTheDocument();
+    expect(screen.getByText("Version 1 vs Version 2")).toBeInTheDocument();
+  });
+
+  it("writes both halves back as ?version=2&compare=1 when a compare version is picked", () => {
+    linkParams({ version: "2" });
+
+    render(<PageHistoryPage pageId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Enter compare mode" }));
+    fireEvent.click(screen.getByRole("button", { name: "Select version 1" }));
+
+    expectUrlWritten("?version=2&compare=1");
+  });
+
+  it("drops the compare half from the URL when compare mode is exited", () => {
+    linkParams({ version: "1", compare: "2" });
+
+    render(<PageHistoryPage pageId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Exit compare mode" }));
+
+    expectUrlWritten("?version=1");
+  });
+});
+
+describe("PageHistoryPage — restore preview", () => {
+  beforeEach(() => {
+    mockBothVersions();
+    useKbPageVersionDetail.mockReturnValue({ data: mockVersion, isLoading: false });
+  });
+
+  function selectRestorableVersion() {
+    render(<PageHistoryPage pageId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Select version 1" }));
+  }
+
+  function openRestoreConfirmation() {
+    selectRestorableVersion();
+    fireEvent.click(screen.getByRole("button", { name: /restore/i }));
+    return screen.getByRole("alertdialog");
+  }
+
+  it("reaches an enabled restore control with no confirmation open yet", () => {
+    selectRestorableVersion();
+
+    expect(screen.getByRole("button", { name: /restore/i })).toBeEnabled();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Preview: how this page changes when version 1 is restored",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("carries a diff preview inside the confirmation, not only an are-you-sure prompt", () => {
+    const dialog = openRestoreConfirmation();
+
+    expect(within(dialog).getByText("Restore version 1?")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        "The current content will be saved as a new version before restoring.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        "Preview: how this page changes when version 1 is restored",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("previews in the restore direction, striking through the current page text that the restore replaces", () => {
+    const dialog = openRestoreConfirmation();
+
+    expect(within(dialog).getByText("Only in current")).toHaveClass("line-through");
+    expect(within(dialog).getByText("Only in version")).toBeInTheDocument();
+    expect(within(dialog).getByText("1 changed")).toBeInTheDocument();
+  });
+
+  it("previews a no-op restore as changing nothing rather than showing an empty panel", () => {
+    useKbPageVersionDetail.mockReturnValue({
+      data: { ...mockVersion, content: CURRENT_PAGE_CONTENT },
+      isLoading: false,
+    });
+
+    const dialog = openRestoreConfirmation();
+
+    expect(
+      within(dialog).getByText(
+        "Restoring changes nothing — this version matches the current page.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("still sends the previewed version number to the restore mutation when confirmed", () => {
+    const mutate = jest.fn();
+    useRestoreKbVersion.mockReturnValue({ mutate, isPending: false });
+
+    const dialog = openRestoreConfirmation();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Restore" }));
+
+    expect(mutate).toHaveBeenCalledWith(
+      { pageId: 1, versionNumber: 1 },
+      expect.anything(),
+    );
   });
 });

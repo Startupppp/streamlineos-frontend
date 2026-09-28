@@ -131,6 +131,7 @@ describe("roadmapItemSchema — RICE entry bounds", () => {
   const base = {
     title: "Ship it",
     description: "",
+    outcome: "",
     status: "planned" as const,
     category: "",
     targetQuarter: "",

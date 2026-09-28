@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
@@ -82,6 +83,7 @@ interface ProjectBoardContentProps {
   error: unknown;
   onRetry: () => void;
   focusedTicketId?: number | null;
+  dataUpdatedAt?: number;
 }
 
 export function ProjectBoardContent({
@@ -124,6 +126,7 @@ export function ProjectBoardContent({
   error,
   onRetry,
   focusedTicketId,
+  dataUpdatedAt,
 }: ProjectBoardContentProps) {
   const shouldReduceMotion = useReducedMotion();
   const isOnline = useOnlineStatus();
@@ -159,6 +162,11 @@ export function ProjectBoardContent({
           <p className="text-xs leading-relaxed text-muted-foreground">
             Results may not be up to date. Reconnect to see the latest tickets.
           </p>
+          {dataUpdatedAt !== undefined ? (
+            <p className="text-xs text-muted-foreground">
+              Last updated {formatDistanceToNow(new Date(dataUpdatedAt), { addSuffix: true })}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

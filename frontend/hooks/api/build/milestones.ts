@@ -66,6 +66,7 @@ interface CreateMilestoneInput {
   description?: string;
   targetDate: string;
   status?: "PENDING" | "ACHIEVED" | "MISSED";
+  ownerMembershipId?: number | null;
 }
 
 interface UpdateMilestoneInput {
@@ -74,6 +75,7 @@ interface UpdateMilestoneInput {
   description?: string;
   targetDate?: string;
   status?: "PENDING" | "ACHIEVED" | "MISSED";
+  ownerMembershipId?: number | null;
 }
 
 interface MilestoneListQuery {
@@ -83,6 +85,7 @@ interface MilestoneListQuery {
   q?: string;
   from?: string;
   to?: string;
+  ownerId?: number;
 }
 
 function milestoneBaseKey(projectId: number) {

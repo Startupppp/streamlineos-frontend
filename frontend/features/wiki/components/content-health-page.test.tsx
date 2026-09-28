@@ -263,3 +263,59 @@ describe("ContentHealthPage — assign by name, not by raw ID", () => {
     );
   });
 });
+
+describe("ContentHealthPage — the failing query is the one whose request id is quoted", () => {
+  const { ApiError } = jest.requireActual("@/lib/api-envelope") as {
+    ApiError: new (
+      m: string,
+      s?: number,
+      c?: string,
+      d?: unknown,
+    ) => Error;
+  };
+
+  function failed(correlationId: string) {
+    return {
+      ...IDLE,
+      data: undefined,
+      isError: true,
+      error: new ApiError("Upstream exploded", 500, "INTERNAL", {
+        correlationId,
+      }),
+    };
+  }
+
+  it("renders the signal table when neither query failed, so the error assertions below are not vacuous", () => {
+    render(<ContentHealthPage />);
+
+    expect(screen.getByText("Policy Draft")).toBeInTheDocument();
+  });
+
+  it("quotes the counts request id when the counts query is the one that failed", () => {
+    useContentHealthCounts.mockReturnValue(failed("req_counts_1"));
+
+    render(<ContentHealthPage />);
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText("req_counts_1")).toBeInTheDocument();
+  });
+
+  it("quotes the signals request id when the signals query is the one that failed, because the counts query holds no error to quote", () => {
+    useContentHealthSignals.mockReturnValue(failed("req_signals_2"));
+
+    render(<ContentHealthPage />);
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText("req_signals_2")).toBeInTheDocument();
+  });
+
+  it("prefers the counts request id when both queries failed, so the reference is never ambiguous", () => {
+    useContentHealthCounts.mockReturnValue(failed("req_counts_1"));
+    useContentHealthSignals.mockReturnValue(failed("req_signals_2"));
+
+    render(<ContentHealthPage />);
+
+    expect(screen.getByText("req_counts_1")).toBeInTheDocument();
+    expect(screen.queryByText("req_signals_2")).not.toBeInTheDocument();
+  });
+});

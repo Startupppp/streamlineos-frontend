@@ -413,6 +413,7 @@ export default function ContentHealthPage() {
     data: signalsData,
     isLoading: signalsLoading,
     isError: signalsError,
+    error: signalsQueryError,
     refetch: refetchSignals,
   } = useContentHealthSignals({ signalType: activeSignal, afterId });
 
@@ -478,7 +479,7 @@ export default function ContentHealthPage() {
     permission: "kb:pages:manage",
     isLoading,
     isError,
-    error: countsQueryError,
+    error: countsError ? countsQueryError : signalsQueryError,
     isEmpty: allZero,
   });
 

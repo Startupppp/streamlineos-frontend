@@ -275,6 +275,12 @@ const projectReleaseListItemSchema = z.object({
   publishedAt: z.string().nullable(),
   ticketCount: z.number(),
   createdBy: z.string().nullable(),
+  createdByUser: z.object({
+    name: z.string().nullable(),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+    email: z.string().nullable(),
+  }).nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

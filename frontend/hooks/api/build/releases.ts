@@ -89,7 +89,7 @@ export function useCreateRelease(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "releases", "create"],
     mutationFn: (data: CreateReleaseInput) =>
-      apiClient.post<Release>(`/build/${projectId}/releases`, data, undefined, projectReleaseRowContract),
+      apiClient.post(`/build/${projectId}/releases`, data, undefined, projectReleaseRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: releaseBaseKey(projectId) }),
   });
 }
@@ -99,7 +99,7 @@ export function useUpdateRelease(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "releases", "update"],
     mutationFn: ({ releaseId, ...data }: UpdateReleaseInput) =>
-      apiClient.patch<Release>(`/build/${projectId}/releases/${releaseId}`, data, undefined, projectReleaseRowContract),
+      apiClient.patch(`/build/${projectId}/releases/${releaseId}`, data, undefined, projectReleaseRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: releaseBaseKey(projectId) }),
   });
 }

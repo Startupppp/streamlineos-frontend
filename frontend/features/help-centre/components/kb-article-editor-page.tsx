@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useSupportKbArticle, useSupportKbCategories } from "@/hooks/api/support/kb";
 import { isApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -35,6 +36,14 @@ export function KbArticleEditorPage({ articleId }: { articleId: number }) {
     );
   }
 
+  if (articleQuery.access.denied) {
+    return (
+      <PageWrapper title="Edit Article" backHref="/support/kb">
+        <NoPermissionState permission={articleQuery.access.permission} />
+      </PageWrapper>
+    );
+  }
+
   if (missing) {
     return (
       <PageWrapper title="Article not found" backHref="/support/kb">
@@ -56,6 +65,7 @@ export function KbArticleEditorPage({ articleId }: { articleId: number }) {
         <ErrorState
           title="Failed to load article"
           description={getErrorMessage(articleQuery.error)}
+          error={articleQuery.error}
           onRetry={handleRetry}
         />
       </PageWrapper>

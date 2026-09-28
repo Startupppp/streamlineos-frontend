@@ -19,6 +19,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   CrmAccountTier,
+  RoadmapOwner,
   RoadmapPrioritization,
   RoadmapSignals,
   RoadmapTierWeighting,
@@ -66,7 +67,7 @@ export interface RoadmapPublication {
   path: string | null;
 }
 
-export type { CrmAccountTier, RoadmapPrioritization, RoadmapSignals, RoadmapTierWeighting };
+export type { CrmAccountTier, RoadmapOwner, RoadmapPrioritization, RoadmapSignals, RoadmapTierWeighting };
 
 export type {
   ChangelogType,
@@ -100,11 +101,13 @@ interface RoadmapItemFilters {
   sort?: string;
   projectId?: number;
   horizon?: string;
+  ownerId?: number;
 }
 
 interface CreateRoadmapItemInput {
   title: string;
   description?: string;
+  outcome?: string;
   status?: RoadmapStatus;
   category?: string;
   isPublic?: boolean;
@@ -116,12 +119,14 @@ interface CreateRoadmapItemInput {
   impact?: number;
   confidence?: number;
   effort?: number;
+  ownerMembershipId?: number;
 }
 
 interface UpdateRoadmapItemInput {
   version: number;
   title?: string;
   description?: string | null;
+  outcome?: string | null;
   status?: RoadmapStatus;
   category?: string | null;
   isPublic?: boolean;
@@ -133,6 +138,7 @@ interface UpdateRoadmapItemInput {
   impact?: number | null;
   confidence?: number | null;
   effort?: number | null;
+  ownerMembershipId?: number | null;
 }
 
 export interface ScoredRoadmapItem extends RoadmapItem {
@@ -140,6 +146,9 @@ export interface ScoredRoadmapItem extends RoadmapItem {
   impact: number | null;
   confidence: number | null;
   effort: number | null;
+  outcome: string | null;
+  ownerMembershipId: number | null;
+  owner: RoadmapOwner | null;
   prioritization: RoadmapPrioritization;
   tierWeighting: RoadmapTierWeighting;
 }

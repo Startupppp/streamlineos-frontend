@@ -7,6 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { DataTable } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useUrlFilters } from "@/lib/url-state/use-url-filters";
@@ -88,6 +89,13 @@ export default function TrashPage() {
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
 
+  const filtersActive =
+    (q ?? "") !== "" ||
+    spaceId !== undefined ||
+    deletedByMembershipId !== undefined ||
+    deletedFrom !== undefined ||
+    deletedBefore !== undefined;
+
   const canPurge = useCan("kb:pages:purge");
   const canManageSettings = useCan("kb:settings:manage");
   const pageState = usePageState({
@@ -142,6 +150,19 @@ export default function TrashPage() {
     const raw = e.target.value;
     cursorState.reset();
     updateFilters({ deletedBefore: raw ? new Date(raw).toISOString() : null });
+  }
+
+  function handleClearFilters() {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setSearchDraft("");
+    cursorState.reset();
+    updateFilters({
+      q: null,
+      spaceId: null,
+      deletedByMembershipId: null,
+      deletedFrom: null,
+      deletedBefore: null,
+    });
   }
 
   function handleEmptyTrash() {
@@ -340,14 +361,20 @@ export default function TrashPage() {
             resolution={pageState}
             loading={<TrashSkeleton />}
             empty={
-              <div className="flex flex-col items-center gap-3 py-16 text-center">
-                <KbTrash2Icon className="h-8 w-8 text-muted-foreground" />
-                <p className="text-sm font-medium">Trash is empty</p>
-                <p className="text-sm text-muted-foreground">
-                  Deleted pages will appear here and can be restored or
-                  permanently removed.
-                </p>
-              </div>
+              <EmptyState
+                illustration={
+                  <KbTrash2Icon className="h-8 w-8 text-muted-foreground" />
+                }
+                title="Trash is empty"
+                description={
+                  filtersActive
+                    ? "Deleted pages are being hidden by the filters above."
+                    : "Deleted pages will appear here and can be restored or permanently removed."
+                }
+                filtersActive={filtersActive}
+                filteredTitle="No deleted pages match your filters."
+                onClearFilters={handleClearFilters}
+              />
             }
             onRetry={refetch}
           >

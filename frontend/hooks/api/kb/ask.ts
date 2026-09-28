@@ -14,6 +14,16 @@ const kbAiFeedbackContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-ai-schema").then((m) => m.kbAiFeedbackContract),
 );
 
+export type KbAskStatusScope = Exclude<
+  (typeof KB_PAGE_STATUSES)[number],
+  "archived"
+>;
+
+export const KB_ASK_STATUS_SCOPES: readonly KbAskStatusScope[] =
+  KB_PAGE_STATUSES.filter(
+    (status): status is KbAskStatusScope => status !== "archived",
+  );
+
 export interface KbAskScopedInput {
   question: string;
   spaceId?: number;
@@ -22,7 +32,7 @@ export interface KbAskScopedInput {
   pageIds?: number[];
   verifiedOnly?: boolean;
   ownerMembershipId?: number;
-  status?: Exclude<(typeof KB_PAGE_STATUSES)[number], "archived">;
+  status?: KbAskStatusScope;
 }
 
 export function useKbAsk() {

@@ -37,6 +37,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
+import { getUserDisplayName } from "@/lib/person-display";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import {
   useCreateRoadmapItem,
@@ -65,6 +66,7 @@ function buildRoadmapConflictDiffs(
   const pairs: Array<{ key: string; label: string; server: unknown; pending: unknown }> = [
     { key: "title", label: "Title", server: baseline.title, pending: values.title.trim() },
     { key: "description", label: "Description", server: baseline.description ?? null, pending: values.description.trim() || null },
+    { key: "outcome", label: "Outcome", server: baseline.outcome ?? null, pending: values.outcome.trim() || null },
     { key: "status", label: "Status", server: baseline.status, pending: values.status },
     { key: "category", label: "Category", server: baseline.category ?? null, pending: values.category.trim() || null },
     { key: "targetQuarter", label: "Target quarter", server: baseline.targetQuarter ?? null, pending: values.targetQuarter.trim() || null },
@@ -106,6 +108,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
     defaultValues: {
       title: item?.title ?? "",
       description: item?.description ?? "",
+      outcome: item?.outcome ?? "",
       status: (["planned", "in_progress", "completed", "cancelled"] as const).find((v) => v === item?.status) ?? "planned",
       category: item?.category ?? "",
       targetQuarter: item?.targetQuarter ?? "",
@@ -128,6 +131,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
     const payload = {
       title: values.title.trim(),
       description: values.description.trim() || undefined,
+      outcome: values.outcome.trim() || undefined,
       status: values.status,
       category: values.category.trim() || undefined,
       targetQuarter: values.targetQuarter.trim() || undefined,
@@ -140,6 +144,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
           version: item.version,
           title: payload.title,
           description: payload.description ?? null,
+          outcome: payload.outcome ?? null,
           status: payload.status,
           category: payload.category ?? null,
           targetQuarter: payload.targetQuarter ?? null,
@@ -166,7 +171,13 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
     } else {
       create.mutate(
         {
-          ...payload,
+          title: payload.title,
+          description: payload.description,
+          outcome: payload.outcome,
+          status: payload.status,
+          category: payload.category,
+          targetQuarter: payload.targetQuarter,
+          isPublic: payload.isPublic,
           reach: rice.reach ?? undefined,
           impact: rice.impact ?? undefined,
           confidence: rice.confidence ?? undefined,
@@ -216,6 +227,25 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="outcome"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Outcome</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={2} placeholder="What success looks like when this ships" />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              {isEdit && item.owner ? (
+                <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+                  <p className="text-xs text-muted-foreground">Owner</p>
+                  <p className="text-sm font-medium text-foreground">{getUserDisplayName(item.owner)}</p>
+                </div>
+              ) : null}
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}

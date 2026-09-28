@@ -15,6 +15,7 @@ import { PM_PANEL } from "@/components/pm-chrome";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { toMilestoneStatus, toMilestoneTargetDate } from "./milestone-status";
+import { getUserDisplayName } from "@/lib/person-display";
 
 const STATUS_CONFIG = {
   PENDING: {
@@ -137,6 +138,16 @@ export const MilestoneCard = memo(function MilestoneCard({
                   )}
                 >
                   · {daysLabel}
+                </span>
+              ) : null}
+              {milestone.owner ? (
+                <span className="min-w-0 truncate">
+                  · {getUserDisplayName(milestone.owner)}
+                </span>
+              ) : null}
+              {milestone.linkedTicketCount > 0 ? (
+                <span className="shrink-0 tabular-nums">
+                  · {milestone.linkedTicketCount} {milestone.linkedTicketCount === 1 ? "ticket" : "tickets"}
                 </span>
               ) : null}
             </div>

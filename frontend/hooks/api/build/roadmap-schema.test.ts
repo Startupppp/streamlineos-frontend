@@ -38,6 +38,7 @@ function baseRoadmapItem(status: string) {
     orgId: "org-1",
     title: "Ship the thing",
     description: null,
+    outcome: null,
     status,
     category: null,
     isPublic: true,
@@ -51,6 +52,8 @@ function baseRoadmapItem(status: string) {
     impact: null,
     confidence: null,
     effort: null,
+    ownerMembershipId: null,
+    owner: null,
     createdBy: null,
     createdAt: "2026-09-16T00:00:00.000Z",
     updatedAt: "2026-09-16T00:00:00.000Z",
@@ -116,6 +119,43 @@ it("rejects a roadmap item missing version — version is required for stale-wri
   const raw: Record<string, unknown> = { ...baseRoadmapItem("planned") };
   delete raw.version;
   expect(() => roadmapItemContract.parse(raw)).toThrow(ZodError);
+});
+
+it("rejects a roadmap row missing outcome — a missing outcome column cannot silently decode as an item with no outcome", () => {
+  const raw: Record<string, unknown> = { ...baseRoadmapItem("planned") };
+  delete raw.outcome;
+  expect(() => roadmapItemContract.parse(raw)).toThrow(ZodError);
+});
+
+it("accepts outcome: null so a row with no outcome set parses cleanly", () => {
+  expect(() => roadmapItemContract.parse(baseRoadmapItem("planned"))).not.toThrow();
+});
+
+it("accepts outcome: a string so a row with an outcome set parses cleanly", () => {
+  const raw = { ...baseRoadmapItem("planned"), outcome: "All users can export data" };
+  expect(roadmapItemContract.parse(raw).outcome).toBe("All users can export data");
+});
+
+it("rejects a roadmap row missing owner — a missing owner field cannot silently decode", () => {
+  const raw: Record<string, unknown> = { ...baseRoadmapItem("planned") };
+  delete raw.owner;
+  expect(() => roadmapItemContract.parse(raw)).toThrow(ZodError);
+});
+
+it("accepts owner: null so an unassigned item parses cleanly", () => {
+  expect(roadmapItemContract.parse(baseRoadmapItem("planned")).owner).toBeNull();
+});
+
+it("accepts a populated owner object and preserves all display fields", () => {
+  const raw = {
+    ...baseRoadmapItem("planned"),
+    ownerMembershipId: 42,
+    owner: { name: null, firstName: "Alice", lastName: "Smith", email: "alice@example.com", image: null },
+  };
+  const parsed = roadmapItemContract.parse(raw);
+  expect(parsed.ownerMembershipId).toBe(42);
+  expect(parsed.owner?.firstName).toBe("Alice");
+  expect(parsed.owner?.email).toBe("alice@example.com");
 });
 
 it("parses a GET /build/roadmap page whose rows carry status, matching the full row .returning() sends", () => {

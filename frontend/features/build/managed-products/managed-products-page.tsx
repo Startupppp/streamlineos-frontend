@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import {
   useManagedProducts,
   useCreateManagedProduct,
-  useUpdateManagedProduct,
   useDeleteManagedProduct,
 } from "@/hooks/api/build/managed-products";
 import { useCan } from "@/hooks/api/access";
@@ -21,7 +20,6 @@ import { ManagedProductFormSheet } from "./managed-product-form-sheet";
 import type {
   ManagedProduct,
   CreateManagedProductInput,
-  UpdateManagedProductInput,
 } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PmPageShell, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
@@ -109,7 +107,6 @@ export function ManagedProductsPage() {
   const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
 
   const createProduct = useCreateManagedProduct();
-  const updateProduct = useUpdateManagedProduct();
   const deleteProduct = useDeleteManagedProduct();
 
   const ownerOf = useCallback(
@@ -134,19 +131,6 @@ export function ManagedProductsPage() {
       });
     },
     [createProduct, setCreateOpen],
-  );
-
-  const handleEdit = useCallback(
-    (input: UpdateManagedProductInput & { managedProductId: number }) => {
-      updateProduct.mutate(input, {
-        onSuccess: () => {
-          toast.success("Managed product updated");
-          setEditTarget(null);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
-    },
-    [updateProduct],
   );
 
   const handleDeleteConfirm = useCallback(() => {
@@ -411,8 +395,6 @@ export function ManagedProductsPage() {
           onOpenChange={handleSheetOpenChange}
           mode="edit"
           defaultValues={editTarget}
-          onSubmitEdit={handleEdit}
-          isPending={updateProduct.isPending}
         />
       )}
 

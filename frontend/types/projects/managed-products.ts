@@ -16,6 +16,7 @@ export interface ManagedProduct {
   targetLaunchDate: string | null;
   successMetrics: unknown;
   ownerMembershipId: number | null;
+  version: number;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -34,6 +35,7 @@ export interface CreateManagedProductInput {
 }
 
 export interface UpdateManagedProductInput {
+  version: number;
   name?: string;
   description?: string | null;
   ownerId?: string | null;

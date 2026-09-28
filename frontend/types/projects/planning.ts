@@ -1,3 +1,10 @@
+export interface MilestoneOwner {
+  membershipId: number;
+  firstName: string | null;
+  lastName: string | null;
+  image: string | null;
+}
+
 export interface ProjectMilestone {
   id: number;
   projectId: number | null;
@@ -7,6 +14,9 @@ export interface ProjectMilestone {
   targetDate: string | null;
   status: string | null;
   createdBy: string | null;
+  ownerMembershipId: number | null;
+  owner: MilestoneOwner | null;
+  linkedTicketCount: number;
   version: number;
   createdAt: string | null;
   updatedAt: string | null;

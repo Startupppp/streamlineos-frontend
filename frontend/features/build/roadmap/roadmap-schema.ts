@@ -38,6 +38,7 @@ export type ChangelogFormValues = z.infer<typeof changelogSchema>;
 export const roadmapItemSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string(),
+  outcome: z.string(),
   status: z.enum(["planned", "in_progress", "completed", "cancelled"]),
   category: z.string(),
   targetQuarter: z.string(),

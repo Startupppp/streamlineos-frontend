@@ -442,3 +442,74 @@ describe("KnowledgeAnalyticsPage — gap assign uses a person picker, not a raw 
     );
   });
 });
+
+describe("KnowledgeAnalyticsPage — the failing query is the one whose request id is quoted", () => {
+  const { ApiError } = jest.requireActual("@/lib/api-envelope") as {
+    ApiError: new (m: string, s?: number, c?: string, d?: unknown) => Error;
+  };
+
+  function failure(correlationId: string) {
+    return new ApiError("Upstream exploded", 500, "INTERNAL", {
+      correlationId,
+    });
+  }
+
+  it("renders the analytics body when no query failed, so the error assertions below are not vacuous", () => {
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByText("No zero-result searches")).toBeInTheDocument();
+  });
+
+  it("quotes the overview request id when the overview query is the one that failed", () => {
+    useKbAnalyticsOverview.mockReturnValue({
+      ...settled(undefined),
+      isError: true,
+      error: failure("req_overview_1"),
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText("req_overview_1")).toBeInTheDocument();
+  });
+
+  it("quotes the no-results request id when only the no-results query failed, because the overview holds no error to quote", () => {
+    useKbNoResults.mockReturnValue({
+      ...settled(undefined),
+      isError: true,
+      error: failure("req_noresults_2"),
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText("req_noresults_2")).toBeInTheDocument();
+  });
+
+  it("quotes the page-analytics request id when only the page-analytics query failed", () => {
+    usePageAnalytics.mockReturnValue({
+      ...settledPages(undefined),
+      isError: true,
+      error: failure("req_pages_3"),
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText("req_pages_3")).toBeInTheDocument();
+  });
+
+  it("quotes the gaps request id when only the gaps query failed", () => {
+    useKnowledgeGaps.mockReturnValue({
+      ...settledGaps([]),
+      isError: true,
+      error: failure("req_gaps_4"),
+    });
+
+    render(<KnowledgeAnalyticsPage />);
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText("req_gaps_4")).toBeInTheDocument();
+  });
+});

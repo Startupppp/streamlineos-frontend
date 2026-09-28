@@ -56,6 +56,9 @@ const STUB_MILESTONES: ProjectMilestone[] = [
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-09-01T00:00:00Z",
     createdBy: "user-1",
+    ownerMembershipId: null,
+    owner: null,
+    linkedTicketCount: 0,
   },
   {
     id: 2,
@@ -69,6 +72,9 @@ const STUB_MILESTONES: ProjectMilestone[] = [
     createdAt: "2026-01-02T00:00:00Z",
     updatedAt: "2026-09-02T00:00:00Z",
     createdBy: "user-1",
+    ownerMembershipId: null,
+    owner: null,
+    linkedTicketCount: 0,
   },
   {
     id: 3,
@@ -82,6 +88,9 @@ const STUB_MILESTONES: ProjectMilestone[] = [
     createdAt: "2026-01-03T00:00:00Z",
     updatedAt: "2026-09-03T00:00:00Z",
     createdBy: "user-2",
+    ownerMembershipId: null,
+    owner: null,
+    linkedTicketCount: 0,
   },
   {
     id: 4,
@@ -95,6 +104,9 @@ const STUB_MILESTONES: ProjectMilestone[] = [
     createdAt: "2026-02-01T00:00:00Z",
     updatedAt: "2026-09-10T00:00:00Z",
     createdBy: "user-2",
+    ownerMembershipId: null,
+    owner: null,
+    linkedTicketCount: 0,
   },
   {
     id: 5,
@@ -108,6 +120,9 @@ const STUB_MILESTONES: ProjectMilestone[] = [
     createdAt: "2026-03-01T00:00:00Z",
     updatedAt: "2026-09-15T00:00:00Z",
     createdBy: "user-1",
+    ownerMembershipId: null,
+    owner: null,
+    linkedTicketCount: 0,
   },
 ];
 
@@ -125,6 +140,8 @@ const STUB_RELEASES: Release[] = [
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-06-01T00:00:00Z",
     ticketCount: 24,
+    publishedAt: null,
+    createdByUser: null,
   },
   {
     id: 2,
@@ -139,6 +156,8 @@ const STUB_RELEASES: Release[] = [
     createdAt: "2026-06-10T00:00:00Z",
     updatedAt: "2026-06-15T00:00:00Z",
     ticketCount: 3,
+    publishedAt: null,
+    createdByUser: null,
   },
   {
     id: 3,
@@ -153,6 +172,8 @@ const STUB_RELEASES: Release[] = [
     createdAt: "2026-07-01T00:00:00Z",
     updatedAt: "2026-09-20T00:00:00Z",
     ticketCount: 11,
+    publishedAt: null,
+    createdByUser: null,
   },
   {
     id: 4,
@@ -167,6 +188,8 @@ const STUB_RELEASES: Release[] = [
     createdAt: "2025-12-01T00:00:00Z",
     updatedAt: "2026-03-01T00:00:00Z",
     ticketCount: 8,
+    publishedAt: null,
+    createdByUser: null,
   },
 ];
 

@@ -17,7 +17,7 @@ const STORAGE_PREFIX = "streamlineos:projects:display-options:v1:";
 const COLUMN_BY_VALUES: readonly ColumnByOption[] = ["status", "assignee", "priority", "label", "cycle", "project"];
 const GROUP_BY_VALUES: readonly GroupByOption[] = ["status", "assignee", "priority", "label", "cycle", "project", "none"];
 const ROW_BY_VALUES: readonly SwimlaneBy[] = ["none", "status", "assignee", "priority", "cycle"];
-const ORDER_BY_VALUES: readonly OrderByOption[] = ["created", "priority", "dueDate", "manual"];
+const ORDER_BY_VALUES: readonly OrderByOption[] = ["created", "updated", "priority", "dueDate", "manual"];
 const COMPLETED_VALUES: readonly CompletedIssuesFilter[] = ["all", "none", "last-day", "last-week", "last-month"];
 
 function pickBool(value: unknown, fallback: boolean): boolean {

@@ -3,7 +3,36 @@ import {
   DirtyStateProvider,
   useHasUnsavedWork,
 } from "@/components/shared/dirty-state-context";
+import { ApiError } from "@/lib/api-envelope";
 import { ManagedProductFormSheet } from "./managed-product-form-sheet";
+import type { ManagedProduct } from "@/types/projects";
+
+const mockMutate = jest.fn();
+jest.mock("@/hooks/api/build/managed-products", () => ({
+  useUpdateManagedProduct: () => ({
+    mutate: mockMutate,
+    isPending: false,
+  }),
+}));
+
+jest.mock("@/features/build/ticket-details/ticket-conflict-dialog", () => ({
+  TicketConflictDialog: ({
+    open,
+    fields,
+  }: {
+    open: boolean;
+    fields: { key: string; label: string }[];
+  }) =>
+    open ? (
+      <div data-testid="conflict-dialog">
+        {fields.map((f) => (
+          <span key={f.key} data-testid={`conflict-field-${f.key}`}>
+            {f.label}
+          </span>
+        ))}
+      </div>
+    ) : null,
+}));
 
 jest.mock("@/components/shared", () => ({
   FormSheetChrome: ({
@@ -43,6 +72,32 @@ function renderCreateHarness() {
     </DirtyStateProvider>,
   );
 }
+
+const BASE_PRODUCT: ManagedProduct = {
+  id: 1,
+  orgId: "org-1",
+  name: "Atlas",
+  key: "ATL",
+  description: null,
+  status: "active",
+  ownerId: null,
+  vision: null,
+  missionStatement: null,
+  targetCustomer: null,
+  differentiators: null,
+  currentPhase: null,
+  targetLaunchDate: null,
+  successMetrics: null,
+  ownerMembershipId: null,
+  version: 1,
+  deletedAt: null,
+  createdAt: "2024-01-01T00:00:00Z",
+  updatedAt: "2024-01-01T00:00:00Z",
+};
+
+beforeEach(() => {
+  mockMutate.mockReset();
+});
 
 describe("managed product form sheet dirty guard (BSN-04-010, BSN-04-013)", () => {
   test("clean form when sheet is first opened reports clean state", () => {
@@ -95,5 +150,42 @@ describe("managed product form sheet dirty guard (BSN-04-010, BSN-04-013)", () =
       </DirtyStateProvider>,
     );
     expect(screen.getByTestId("probe")).toHaveTextContent("clean");
+  });
+});
+
+describe("managed product form sheet — 409 conflict path", () => {
+  test("submitting the edit form when server responds with 409 shows the conflict dialog with differing fields", async () => {
+    mockMutate.mockImplementation(
+      (_input: unknown, { onError }: { onError: (e: unknown) => void }) => {
+        onError(new ApiError("Version conflict", 409, "PROJECTS_TICKET_CONFLICT"));
+      },
+    );
+
+    render(
+      <DirtyStateProvider>
+        <ManagedProductFormSheet
+          open
+          onOpenChange={jest.fn()}
+          mode="edit"
+          defaultValues={{ ...BASE_PRODUCT, name: "Old name" }}
+        />
+      </DirtyStateProvider>,
+    );
+
+    act(() => {
+      fireEvent.change(screen.getByPlaceholderText("Product name"), {
+        target: { value: "New name" },
+      });
+    });
+
+    act(() => {
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("conflict-dialog")).toBeInTheDocument(),
+    );
+
+    expect(screen.getByTestId("conflict-field-name")).toBeInTheDocument();
   });
 });

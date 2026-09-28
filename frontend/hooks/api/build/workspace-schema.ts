@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
+const milestoneOwnerSchema = z.object({
+  membershipId: z.number().int(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  image: z.string().nullable(),
+});
+
 const milestoneRowSchema = z.object({
   id: z.number(),
   projectId: z.number().nullable(),
@@ -10,6 +17,9 @@ const milestoneRowSchema = z.object({
   targetDate: z.string().nullable(),
   status: z.string().nullable(),
   createdBy: z.string().nullable(),
+  ownerMembershipId: z.number().int().nullable(),
+  owner: milestoneOwnerSchema.nullable(),
+  linkedTicketCount: z.number().int(),
   clientVisible: z.boolean(),
   version: z.number().int(),
   deletedAt: z.string().nullable(),
@@ -146,6 +156,7 @@ export const milestoneUpdateRequestContract = z
     description: z.string().max(1000).optional(),
     targetDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     status: z.enum(["PENDING", "ACHIEVED", "MISSED"]).optional(),
+    ownerMembershipId: z.number().int().nullable().optional(),
   })
   .strict();
 export const intakeItemContract = intakeItemSchema;

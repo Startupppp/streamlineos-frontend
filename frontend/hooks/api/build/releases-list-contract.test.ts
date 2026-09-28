@@ -10,7 +10,14 @@ function projectionKeys(relativePath: string, method: string): string[] {
   const start = source.indexOf(method);
   const selectAt = source.indexOf(".select({", start);
   const block = source.slice(selectAt, source.indexOf(".from(", selectAt));
-  return [...block.matchAll(/^\s+(\w+):/gm)].map((match) => match[1]!);
+  const keys: string[] = [];
+  let depth = 0;
+  for (const line of block.split("\n")) {
+    const match = /^\s*(\w+):/.exec(line);
+    if (match && depth === 1) keys.push(match[1]!);
+    depth += (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length;
+  }
+  return keys;
 }
 
 function firstRowKeys(parsed: { data: object[] }): string[] {
@@ -28,7 +35,14 @@ const RELEASE_ROW = {
   description: null,
   status: "draft",
   releaseDate: null,
-  createdBy: null,
+  publishedAt: null,
+  createdBy: "user-7",
+  createdByUser: {
+    name: "Ada Lovelace",
+    firstName: "Ada",
+    lastName: "Lovelace",
+    email: "ada@example.test",
+  },
   ticketCount: 0,
   createdAt: "2026-09-19T10:00:00.000Z",
   updatedAt: "2026-09-19T10:00:00.000Z",
@@ -49,6 +63,17 @@ describe("releases list contract matches the projects-releases service projectio
     const projected = new Set(projectionKeys(RELEASES_SERVICE, "async listReleases("));
     const required = firstRowKeys(projectReleaseListContract.parse(CURSOR_PAGE));
     expect(required.filter((key) => !projected.has(key) && key !== "ticketCount")).toEqual([]);
+  });
+
+  it("finds createdByUser projected by both list methods, so neither releases table is left rendering a raw user id", () => {
+    expect(projectionKeys(RELEASES_SERVICE, "async listReleases(")).toContain("createdByUser");
+    expect(projectionKeys(RELEASES_SERVICE, "async listOrgReleases(")).toContain("createdByUser");
+  });
+
+  it("reads the nested user columns as nested, not as top-level projected keys, so this scan cannot pass vacuously on a name column", () => {
+    const projected = projectionKeys(RELEASES_SERVICE, "async listReleases(");
+    expect(projected).not.toContain("firstName");
+    expect(projected).not.toContain("lastName");
   });
 
   it("parses a cursor page envelope with one release row", () => {

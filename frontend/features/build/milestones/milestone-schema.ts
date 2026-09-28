@@ -6,6 +6,7 @@ export const milestoneFormSchema = z.object({
   description: z.string().optional(),
   targetDate: z.string().min(1, "Target date is required").regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date"),
   status: z.enum(MILESTONE_STATUSES),
+  ownerMembershipId: z.number().int().nullable().optional(),
 });
 
 export type MilestoneFormValues = z.infer<typeof milestoneFormSchema>;

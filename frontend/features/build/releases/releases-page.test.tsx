@@ -243,9 +243,18 @@ const releaseRow = {
   ticketCount: 0,
   description: null,
   createdBy: null,
+  createdByUser: null,
   deletedAt: null,
   createdAt: "2026-09-01T00:00:00Z",
   updatedAt: "2026-09-01T00:00:00Z",
+};
+
+const OWNER_USER_ID = "user-7";
+const OWNER = {
+  name: "Ada Lovelace",
+  firstName: "Ada",
+  lastName: "Lovelace",
+  email: "ada@example.test",
 };
 
 it("shows bulk action bar with count after row is selected", () => {
@@ -334,6 +343,7 @@ it("accepts a release row where createdBy is null since the column may be unset"
     publishedAt: null,
     ticketCount: 0,
     createdBy: null,
+    createdByUser: null,
     createdAt: "2026-09-01T00:00:00Z",
     updatedAt: "2026-09-01T00:00:00Z",
   };
@@ -360,20 +370,45 @@ it("omits the notes text from the name cell when description is null so the cell
   expect(screen.queryByText("Bug fixes and performance")).not.toBeInTheDocument();
 });
 
-it("renders the createdBy identifier in the createdBy column cell", () => {
+it("renders the owner display name in the createdBy column cell and never the raw user id (FE-85)", () => {
   const { buildReleasesColumns } = require("./releases-table-columns");
   const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
   const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
-  render(createdByColumn.cell({ ...releaseRow, createdBy: "user-abc123" }));
-  expect(screen.getByText("user-abc123")).toBeInTheDocument();
+  render(createdByColumn.cell({ ...releaseRow, createdBy: OWNER_USER_ID, createdByUser: OWNER }));
+  expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
+  expect(screen.queryByText(OWNER_USER_ID)).not.toBeInTheDocument();
 });
 
-it("renders a dash in the createdBy cell when the field is null", () => {
+it("renders the email local part in the createdBy cell for an owner with no name, still never the raw user id", () => {
   const { buildReleasesColumns } = require("./releases-table-columns");
   const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
   const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
-  render(createdByColumn.cell({ ...releaseRow, createdBy: null }));
+  render(
+    createdByColumn.cell({
+      ...releaseRow,
+      createdBy: OWNER_USER_ID,
+      createdByUser: { name: null, firstName: null, lastName: null, email: "ada@example.test" },
+    }),
+  );
+  expect(screen.getByText("ada")).toBeInTheDocument();
+  expect(screen.queryByText(OWNER_USER_ID)).not.toBeInTheDocument();
+});
+
+it("renders a dash in the createdBy cell when createdByUser is null, so an unresolvable owner is an absent value and not a blank loading cell", () => {
+  const { buildReleasesColumns } = require("./releases-table-columns");
+  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
+  render(createdByColumn.cell({ ...releaseRow, createdBy: null, createdByUser: null }));
   expect(screen.getByText("—")).toBeInTheDocument();
+});
+
+it("renders a dash and not the id when createdBy still holds an id whose user row is gone", () => {
+  const { buildReleasesColumns } = require("./releases-table-columns");
+  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
+  render(createdByColumn.cell({ ...releaseRow, createdBy: OWNER_USER_ID, createdByUser: null }));
+  expect(screen.getByText("—")).toBeInTheDocument();
+  expect(screen.queryByText(OWNER_USER_ID)).not.toBeInTheDocument();
 });
 
 it("renders the release description as notes text in the mobile card", () => {
@@ -389,17 +424,32 @@ it("renders the release description as notes text in the mobile card", () => {
   expect(screen.getByText("Bug fixes and performance improvements")).toBeInTheDocument();
 });
 
-it("renders the createdBy identifier in the mobile card", () => {
+it("renders the owner display name in the mobile card and never the raw user id (FE-85)", () => {
   const { ReleaseMobileCard } = require("./releases-table-columns");
   render(
     <ReleaseMobileCard
-      release={{ ...releaseRow, description: null, createdBy: "user-abc123" }}
+      release={{ ...releaseRow, description: null, createdBy: OWNER_USER_ID, createdByUser: OWNER }}
       canManage={false}
       onEdit={jest.fn()}
       onDelete={jest.fn()}
     />,
   );
-  expect(screen.getByText("user-abc123")).toBeInTheDocument();
+  expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
+  expect(screen.queryByText(OWNER_USER_ID)).not.toBeInTheDocument();
+});
+
+it("omits the created-by row from the mobile card when createdByUser is null, rather than falling back to the id", () => {
+  const { ReleaseMobileCard } = require("./releases-table-columns");
+  render(
+    <ReleaseMobileCard
+      release={{ ...releaseRow, description: null, createdBy: OWNER_USER_ID, createdByUser: null }}
+      canManage={false}
+      onEdit={jest.fn()}
+      onDelete={jest.fn()}
+    />,
+  );
+  expect(screen.queryByText("Created by")).not.toBeInTheDocument();
+  expect(screen.queryByText(OWNER_USER_ID)).not.toBeInTheDocument();
 });
 
 it("rejects a release row that omits publishedAt because a dropped projection must not decode silently", async () => {
@@ -415,6 +465,7 @@ it("rejects a release row that omits publishedAt because a dropped projection mu
     releaseDate: null,
     ticketCount: 0,
     createdBy: null,
+    createdByUser: null,
     createdAt: "2026-09-01T00:00:00Z",
     updatedAt: "2026-09-01T00:00:00Z",
   };
@@ -423,6 +474,56 @@ it("rejects a release row that omits publishedAt because a dropped projection mu
     pagination: { limit: 25, hasMore: false, nextCursor: null },
   });
   expect(result.success).toBe(false);
+});
+
+it("rejects a release row that omits createdByUser, so a dropped join cannot decode into a permanent dash", async () => {
+  const { projectReleaseListContract } = await import("@/hooks/api/build/build-project-schema");
+  const rowWithoutCreatedByUser = {
+    id: 1,
+    projectId: 1,
+    name: "v1",
+    version: "1.0.0",
+    rowVersion: 1,
+    description: null,
+    status: "draft",
+    releaseDate: null,
+    publishedAt: null,
+    ticketCount: 0,
+    createdBy: OWNER_USER_ID,
+    createdAt: "2026-09-01T00:00:00Z",
+    updatedAt: "2026-09-01T00:00:00Z",
+  };
+  const result = projectReleaseListContract.safeParse({
+    data: [rowWithoutCreatedByUser],
+    pagination: { limit: 25, hasMore: false, nextCursor: null },
+  });
+  expect(result.success).toBe(false);
+});
+
+it("accepts a release row whose createdByUser is the four-field user object the join projects", async () => {
+  const { projectReleaseListContract } = await import("@/hooks/api/build/build-project-schema");
+  const result = projectReleaseListContract.safeParse({
+    data: [
+      {
+        id: 1,
+        projectId: 1,
+        name: "v1",
+        version: "1.0.0",
+        rowVersion: 1,
+        description: null,
+        status: "draft",
+        releaseDate: null,
+        publishedAt: null,
+        ticketCount: 0,
+        createdBy: OWNER_USER_ID,
+        createdByUser: OWNER,
+        createdAt: "2026-09-01T00:00:00Z",
+        updatedAt: "2026-09-01T00:00:00Z",
+      },
+    ],
+    pagination: { limit: 25, hasMore: false, nextCursor: null },
+  });
+  expect(result.success).toBe(true);
 });
 
 it("renders a dash in the published column for a draft release that has never been released", () => {

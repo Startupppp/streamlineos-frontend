@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,12 +24,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { FormSheetChrome, MemberPicker } from "@/components/shared";
-import type {
-  ManagedProduct,
-  CreateManagedProductInput,
-  UpdateManagedProductInput,
-} from "@/types/projects";
+import type { ManagedProduct, CreateManagedProductInput } from "@/types/projects";
 import { upperCaseFieldChange } from "@/lib/case-field";
+import { useUpdateManagedProduct } from "@/hooks/api/build/managed-products";
+import { isApiError } from "@/lib/api-envelope";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { toast } from "sonner";
+import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
+import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
 
 const CREATE_DEFAULTS: CreateManagedProductFormValues = {
   name: "",
@@ -72,8 +74,8 @@ interface EditProps {
   mode: "edit";
   defaultValues: ManagedProduct;
   onSubmitCreate?: never;
-  onSubmitEdit: (input: UpdateManagedProductInput & { managedProductId: number }) => void;
-  isPending?: boolean;
+  onSubmitEdit?: never;
+  isPending?: never;
 }
 
 type Props = CreateProps | EditProps;
@@ -84,9 +86,12 @@ export function ManagedProductFormSheet({
   mode,
   defaultValues,
   onSubmitCreate,
-  onSubmitEdit,
   isPending,
 }: Props) {
+  const updateProduct = useUpdateManagedProduct();
+  const [conflictFields, setConflictFields] = useState<TicketConflictFieldDiff[] | null>(null);
+  const submitPending = mode === "edit" ? updateProduct.isPending : (isPending ?? false);
+
   const createForm = useForm<CreateManagedProductFormValues>({
     resolver: zodResolver(createManagedProductSchema),
     defaultValues: CREATE_DEFAULTS,
@@ -122,13 +127,44 @@ export function ManagedProductFormSheet({
   }
 
   function handleEditSubmit(v: EditManagedProductFormValues) {
-    if (!onSubmitEdit || !defaultValues) return;
-    onSubmitEdit({
+    if (!defaultValues) return;
+    const input = {
       managedProductId: defaultValues.id,
+      version: defaultValues.version,
       name: v.name,
       description: v.description || null,
       ownerId: v.ownerId || null,
       status: v.status,
+    };
+    updateProduct.mutate(input, {
+      onSuccess: () => {
+        toast.success("Managed product updated");
+        onOpenChange(false);
+      },
+      onError: (e) => {
+        if (isApiError(e) && e.status === 409) {
+          type Comparison = { key: string; label: string; serverValue: string; pendingValue: string };
+          const comparisons: Comparison[] = [
+            { key: "name", label: "Name", serverValue: defaultValues.name, pendingValue: v.name },
+            { key: "status", label: "Status", serverValue: defaultValues.status, pendingValue: v.status },
+            {
+              key: "description",
+              label: "Description",
+              serverValue: defaultValues.description ?? "",
+              pendingValue: v.description ?? "",
+            },
+          ];
+          const diffs: TicketConflictFieldDiff[] = [];
+          for (const { key, label, serverValue, pendingValue } of comparisons) {
+            if (serverValue !== pendingValue) {
+              diffs.push({ key, label, serverValue: serverValue || "Not set", pendingValue: pendingValue || "Not set" });
+            }
+          }
+          setConflictFields(diffs.length > 0 ? diffs : [{ key: "version", label: "Version", serverValue: "changed on server", pendingValue: "stale" }]);
+          return;
+        }
+        toast.error(getErrorMessage(e));
+      },
     });
   }
 
@@ -147,7 +183,7 @@ export function ManagedProductFormSheet({
         type="submit"
         form={formId}
         size="sm"
-        isPending={isPending}
+        isPending={submitPending}
         loadingText="Saving…"
       >
         {mode === "edit" ? "Save Changes" : "Create Product"}
@@ -239,6 +275,12 @@ export function ManagedProductFormSheet({
             />
           </form>
         </Form>
+        <TicketConflictDialog
+          open={conflictFields !== null}
+          fields={conflictFields ?? []}
+          onKeepMine={() => setConflictFields(null)}
+          onDiscard={() => { setConflictFields(null); onOpenChange(false); }}
+        />
       </FormSheetChrome>
     );
   }

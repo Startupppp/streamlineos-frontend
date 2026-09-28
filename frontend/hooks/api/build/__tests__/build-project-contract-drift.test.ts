@@ -34,6 +34,7 @@ const RELEASE = {
   description: null,
   status: "draft",
   releaseDate: null,
+  publishedAt: null,
   createdBy: null,
   ticketCount: 0,
   createdAt: "2026-09-15T10:00:00.000Z",

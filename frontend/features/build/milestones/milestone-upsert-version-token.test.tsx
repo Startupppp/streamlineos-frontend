@@ -11,6 +11,10 @@ jest.mock("@/hooks/api/build/milestones", () => ({
   useUpdateMilestone: () => ({ mutate: updateMutate, isPending: false }),
 }));
 
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembers: () => ({ data: undefined }),
+}));
+
 jest.mock("@/components/shared/dirty-state-context", () => ({
   useRegisterDirtyState: jest.fn(),
 }));
@@ -27,6 +31,9 @@ const MILESTONE: ProjectMilestone = {
   status: "PENDING",
   createdBy: "user-1",
   version: 7,
+  ownerMembershipId: null,
+  owner: null,
+  linkedTicketCount: 0,
   createdAt: "2026-09-01T00:00:00.000Z",
   updatedAt: "2026-09-02T00:00:00.000Z",
 };

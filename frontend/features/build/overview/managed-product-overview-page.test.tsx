@@ -18,6 +18,10 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
     setValue: jest.fn(),
     isActive: jest.fn(() => false),
     clearAll: jest.fn(),
+    search: "",
+    debouncedSearch: "",
+    setSearch: jest.fn(),
+    isFiltered: false,
   })),
 }));
 
@@ -348,6 +352,10 @@ describe("ManagedProductOverviewPage — URL-backed search (BSN-OVW-Q)", () => {
       setValue: jest.fn(),
       isActive: jest.fn(() => false),
       clearAll: jest.fn(),
+      search: "",
+      debouncedSearch: "",
+      setSearch: jest.fn(),
+      isFiltered: false,
     });
 
     const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
@@ -360,13 +368,17 @@ describe("ManagedProductOverviewPage — URL-backed search (BSN-OVW-Q)", () => {
     );
   });
 
-  it("forwards the q URL param as search to useProjects so the linked projects preview is filtered server-side", () => {
+  it("forwards the search input value to useProjects so the linked projects preview is filtered server-side", () => {
     const { useBuildListFilters } = jest.requireMock("@/features/build/shared/use-build-list-filters");
     (useBuildListFilters as jest.Mock).mockReturnValue({
-      value: jest.fn((key: string) => (key === "q" ? "checkout" : undefined)),
+      value: jest.fn(() => undefined),
       setValue: jest.fn(),
       isActive: jest.fn(() => false),
       clearAll: jest.fn(),
+      search: "checkout",
+      debouncedSearch: "checkout",
+      setSearch: jest.fn(),
+      isFiltered: true,
     });
 
     const { useProjects } = jest.requireMock("@/hooks/api/build/projects");

@@ -11,6 +11,7 @@ import { BuildMobileCard } from "@/features/build/shared/build-mobile-card";
 import { TABLE_TITLE_CELL, TEXT_FLEX_CHILD } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
+import { getUserDisplayName } from "@/lib/person-display";
 import type { Release } from "@/hooks/api/build/releases";
 import { format } from "date-fns";
 import { STATUS_CONFIG } from "./releases-page-parts";
@@ -140,8 +141,8 @@ export function buildReleasesColumns({
       key: "createdBy",
       header: "Created By",
       cell: (r) =>
-        r.createdBy ? (
-          <span className="text-dense text-muted-foreground">{r.createdBy}</span>
+        r.createdByUser ? (
+          <span className="text-dense text-muted-foreground">{getUserDisplayName(r.createdByUser)}</span>
         ) : (
           <span className="text-dense text-muted-foreground">—</span>
         ),
@@ -191,8 +192,8 @@ export function ReleaseMobileCard({
         ...(release.description
           ? [{ label: "Notes", value: release.description.replace(/<[^>]*>/g, "") }]
           : []),
-        ...(release.createdBy
-          ? [{ label: "Created by", value: release.createdBy }]
+        ...(release.createdByUser
+          ? [{ label: "Created by", value: getUserDisplayName(release.createdByUser) }]
           : []),
       ]}
       actions={

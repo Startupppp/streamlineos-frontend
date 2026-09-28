@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -22,14 +22,23 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Briefcase, Map, MessageSquare, Target } from "lucide-react";
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { cn } from "@/lib/utils";
 
 const OVERVIEW_FILTER_DEFINITIONS = [
-  { param: "q" },
   { param: "ownerId" },
   { param: "status" },
   { param: "cursor" },
 ] as const;
+
+const PROJECT_STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "ARCHIVED", label: "Archived" },
+];
 
 interface ManagedProductOverviewPageProps {
   managedProductId: number;
@@ -46,9 +55,10 @@ export function ManagedProductOverviewSkeleton() {
 
 export function ManagedProductOverviewPage({ managedProductId }: ManagedProductOverviewPageProps) {
   const router = useRouter();
-  const listFilters = useBuildListFilters({ filters: OVERVIEW_FILTER_DEFINITIONS, withSearch: false });
-  const rawQ = listFilters.value("q");
-  const searchValue = rawQ === BUILD_FILTER_ALL ? undefined : rawQ;
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const listFilters = useBuildListFilters({ filters: OVERVIEW_FILTER_DEFINITIONS, withSearch: true });
+  const searchValue = listFilters.debouncedSearch.trim() || undefined;
   const rawOwner = listFilters.value("ownerId");
   const managerId = rawOwner && rawOwner !== BUILD_FILTER_ALL ? rawOwner : undefined;
   const rawStatus = listFilters.value("status");
@@ -127,11 +137,21 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
 
   const handleClearSelection = useCallback(() => {}, []);
 
+  const handleStatusChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
+  const handleShortcutHelp = useCallback(() => {
+    setShortcutHelpOpen(true);
+  }, []);
+
   const { focusedIndex } = useBuildListKeyboard({
     itemCount: linkedProjects.length,
     onOpen: handleOpenFocused,
     onClearSelection: handleClearSelection,
-    enabled: linkedProjects.length > 0,
+    onShortcutHelp: handleShortcutHelp,
+    searchInputRef,
   });
 
   return (
@@ -143,7 +163,35 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
           ? `${product.status} · updated ${product.updatedAt.slice(0, 10)}`
           : product?.status ?? undefined
       }
+      filters={
+        <BuildListToolbar
+          search={{
+            value: listFilters.search,
+            onValueChange: listFilters.setSearch,
+            placeholder: "Search linked projects…",
+            label: "Search linked projects",
+            inputRef: searchInputRef,
+          }}
+          filters={[
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={rawStatus}
+                  onValueChange={handleStatusChange}
+                  options={PROJECT_STATUS_OPTIONS}
+                />
+              ),
+            },
+          ]}
+          onClearAll={listFilters.clearAll}
+        />
+      }
     >
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
       <PageState
         resolution={resolution}
         loading={<ManagedProductOverviewSkeleton />}

@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import TrashPage from "./trash-page";
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
@@ -456,5 +456,73 @@ describe("trash page retention permission split", () => {
     render(<TrashPage />);
 
     expect(screen.queryByRole("button", { name: /empty trash/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("trash page first-empty is not the same claim as filtered-empty", () => {
+  it("with no filters in the URL the empty branch claims the trash itself is empty and offers no Clear filters escape", () => {
+    useSearchParams.mockReturnValue(new URLSearchParams());
+
+    render(<TrashPage />);
+
+    expect(screen.getByText("Trash is empty")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /clear filters/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("with a search term in the URL the empty branch blames the filters instead of claiming the trash is empty", () => {
+    useSearchParams.mockReturnValue(new URLSearchParams("q=invoice"));
+
+    render(<TrashPage />);
+
+    expect(
+      screen.getByText("No deleted pages match your filters."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Trash is empty")).not.toBeInTheDocument();
+  });
+
+  it("each of the five trash filters on its own is enough to reach the filtered-empty branch", () => {
+    const filterParams = [
+      "q=invoice",
+      "spaceId=1",
+      "deletedByMembershipId=7",
+      "deletedFrom=2026-01-01T00:00:00.000Z",
+      "deletedBefore=2026-06-01T00:00:00.000Z",
+    ];
+
+    for (const param of filterParams) {
+      useSearchParams.mockReturnValue(new URLSearchParams(param));
+      const { unmount } = render(<TrashPage />);
+
+      expect(
+        screen.getByText("No deleted pages match your filters."),
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Trash is empty")).not.toBeInTheDocument();
+
+      unmount();
+    }
+  });
+
+  it("the filtered-empty branch offers a Clear filters control that drops every one of the five trash filters", () => {
+    const update = jest.fn();
+    const { useUrlFilters } = jest.requireMock(
+      "@/lib/url-state/use-url-filters",
+    ) as { useUrlFilters: jest.Mock };
+    useUrlFilters.mockReturnValue({ update, isPending: false });
+    useSearchParams.mockReturnValue(
+      new URLSearchParams("q=invoice&spaceId=1&deletedByMembershipId=7"),
+    );
+
+    render(<TrashPage />);
+    fireEvent.click(screen.getByRole("button", { name: /clear filters/i }));
+
+    expect(update).toHaveBeenCalledWith({
+      q: null,
+      spaceId: null,
+      deletedByMembershipId: null,
+      deletedFrom: null,
+      deletedBefore: null,
+    });
   });
 });

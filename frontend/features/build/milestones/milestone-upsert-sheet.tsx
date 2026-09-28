@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { MemberPicker } from "@/components/members/member-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -44,6 +45,7 @@ import {
   useUpdateMilestone,
   type ProjectMilestone,
 } from "@/hooks/api/build/milestones";
+import { useOrgMembers } from "@/hooks/api/organization";
 
 interface MilestoneUpsertSheetProps {
   projectId: number;
@@ -57,6 +59,22 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
   const update = useUpdateMilestone(projectId);
   const isPending = create.isPending || update.isPending;
 
+  const { data: membersPage } = useOrgMembers(1, 100);
+  const members = membersPage?.data ?? [];
+
+  const candidates = useMemo(
+    () => members.map((m) => ({ id: m.userId, name: m.name, email: m.email, image: m.image })),
+    [members],
+  );
+  const userIdByMembershipId = useMemo(
+    () => new Map(members.map((m) => [m.membershipId, m.userId])),
+    [members],
+  );
+  const membershipIdByUserId = useMemo(
+    () => new Map(members.map((m) => [m.userId, m.membershipId])),
+    [members],
+  );
+
   const form = useForm<MilestoneFormValues>({
     resolver: zodResolver(milestoneFormSchema),
     defaultValues: {
@@ -64,6 +82,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
       description: milestone?.description ?? "",
       targetDate: milestone?.targetDate ?? "",
       status: toMilestoneStatus(milestone?.status),
+      ownerMembershipId: milestone?.ownerMembershipId ?? null,
     },
   });
   useRegisterDirtyState(form.formState.isDirty);
@@ -89,6 +108,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
         description: values.description?.trim() || undefined,
         targetDate: values.targetDate,
         status: values.status,
+        ownerMembershipId: values.ownerMembershipId,
       };
 
       if (isEdit) {
@@ -144,6 +164,26 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea rows={3} placeholder="Optional description…" className="resize-none" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ownerMembershipId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Owner</FormLabel>
+                    <FormControl>
+                      <MemberPicker
+                        candidates={candidates}
+                        value={field.value != null ? (userIdByMembershipId.get(field.value) ?? undefined) : undefined}
+                        onChange={(userId) => field.onChange(userId != null ? (membershipIdByUserId.get(userId) ?? null) : null)}
+                        allowUnassigned
+                        placeholder="Unassigned"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

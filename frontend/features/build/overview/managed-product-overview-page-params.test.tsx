@@ -16,6 +16,10 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
     setValue: jest.fn(),
     isActive: jest.fn(() => false),
     clearAll: jest.fn(),
+    search: "",
+    debouncedSearch: "",
+    setSearch: jest.fn(),
+    isFiltered: false,
   })),
 }));
 
@@ -72,6 +76,10 @@ describe("ManagedProductOverviewPage — URL-backed ownerId/status/cursor (BSN-O
       setValue: jest.fn(),
       isActive: jest.fn(() => false),
       clearAll: jest.fn(),
+      search: "",
+      debouncedSearch: "",
+      setSearch: jest.fn(),
+      isFiltered: false,
     });
     const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
     render(<ManagedProductOverviewPage managedProductId={42} />);
@@ -88,6 +96,10 @@ describe("ManagedProductOverviewPage — URL-backed ownerId/status/cursor (BSN-O
       setValue: jest.fn(),
       isActive: jest.fn(() => false),
       clearAll: jest.fn(),
+      search: "",
+      debouncedSearch: "",
+      setSearch: jest.fn(),
+      isFiltered: false,
     });
     const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
     render(<ManagedProductOverviewPage managedProductId={42} />);
@@ -104,6 +116,10 @@ describe("ManagedProductOverviewPage — URL-backed ownerId/status/cursor (BSN-O
       setValue: jest.fn(),
       isActive: jest.fn(() => false),
       clearAll: jest.fn(),
+      search: "",
+      debouncedSearch: "",
+      setSearch: jest.fn(),
+      isFiltered: false,
     });
     const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
     render(<ManagedProductOverviewPage managedProductId={42} />);
@@ -120,6 +136,10 @@ describe("ManagedProductOverviewPage — URL-backed ownerId/status/cursor (BSN-O
       setValue: jest.fn(),
       isActive: jest.fn(() => false),
       clearAll: jest.fn(),
+      search: "",
+      debouncedSearch: "",
+      setSearch: jest.fn(),
+      isFiltered: false,
     });
     const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
     render(<ManagedProductOverviewPage managedProductId={42} />);
@@ -136,6 +156,10 @@ describe("ManagedProductOverviewPage — URL-backed ownerId/status/cursor (BSN-O
       setValue: jest.fn(),
       isActive: jest.fn(() => false),
       clearAll: jest.fn(),
+      search: "",
+      debouncedSearch: "",
+      setSearch: jest.fn(),
+      isFiltered: false,
     });
     const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
     render(<ManagedProductOverviewPage managedProductId={42} />);

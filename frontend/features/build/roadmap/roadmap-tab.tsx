@@ -53,6 +53,7 @@ interface RoadmapTabProps {
   sort?: string;
   projectId?: number;
   horizon?: string;
+  ownerId?: number;
   onClearFilters?: () => void;
   onItemsChange?: (items: ScorableRoadmapItem[]) => void;
   externalEditTarget?: ScorableRoadmapItem | null;
@@ -84,6 +85,7 @@ export function RoadmapTab({
   sort,
   projectId,
   horizon,
+  ownerId,
   onClearFilters,
   onItemsChange,
   externalEditTarget,
@@ -99,6 +101,7 @@ export function RoadmapTab({
     ...(sortValue ? { sort: sortValue } : {}),
     ...(projectId !== undefined ? { projectId } : {}),
     ...(horizon ? { horizon } : {}),
+    ...(ownerId !== undefined ? { ownerId } : {}),
   });
   const deleteItem = useDeleteRoadmapItem();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
@@ -115,7 +118,8 @@ export function RoadmapTab({
     status ||
     managedProductId !== undefined ||
     projectId !== undefined ||
-    horizon,
+    horizon ||
+    ownerId !== undefined,
   );
 
   const offlineEmptyState = (

@@ -14,6 +14,7 @@ jest.mock("next-auth/react", () => ({
 }));
 
 jest.mock("@/hooks/api/kb/ask", () => ({
+  ...jest.requireActual("@/hooks/api/kb/ask"),
   useKbAsk: () => ({
     mutate: mockAskMutate,
     isPending: false,

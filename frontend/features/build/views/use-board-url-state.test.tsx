@@ -343,6 +343,33 @@ describe("useBoardUrlState — grouping, sort and column config survive a copied
     expect(written.get("cols")).not.toBeNull();
   });
 
+  it("keeps a deep-linked orderBy=updated on both the query sent to the backend and the display options, because the two read the same param with different vocabularies and the narrower one used to overwrite it", () => {
+    setParams({ orderBy: "updated" });
+
+    const { result } = renderHook(() => useBoardUrlState(1));
+
+    expect(result.current.boardFilters.orderBy).toBe("updated");
+    expect(result.current.displayOptions.orderBy).toBe("updated");
+  });
+
+  it("does not rewrite a deep-linked orderBy=updated back to the fallback when any other display option changes", () => {
+    setParams({ orderBy: "updated" });
+
+    const { result } = renderHook(() => useBoardUrlState(1));
+
+    act(() => {
+      result.current.setDisplayOptions({
+        ...result.current.displayOptions,
+        groupBy: "assignee",
+      });
+    });
+
+    const written = new URLSearchParams(
+      (mockReplace.mock.calls.at(-1)?.[0] as string).slice(1),
+    );
+    expect(written.get("orderBy")).toBe("updated");
+  });
+
   it("still persists the changed display options to localStorage so the preference outlives the URL", () => {
     const { result } = renderHook(() => useBoardUrlState(1));
 

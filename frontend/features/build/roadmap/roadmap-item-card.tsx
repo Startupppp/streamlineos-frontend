@@ -14,7 +14,8 @@ import { PM_PANEL } from "@/components/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import type { RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap";
+import type { RoadmapOwner, RoadmapPrioritization, RoadmapTierWeighting } from "@/hooks/api/build/roadmap";
+import { getUserDisplayName } from "@/lib/person-display";
 import { RoadmapPriorityScore } from "./roadmap-priority-score";
 
 export type ScorableRoadmapItem = RoadmapItem & {
@@ -22,6 +23,9 @@ export type ScorableRoadmapItem = RoadmapItem & {
   impact?: number | null;
   confidence?: number | null;
   effort?: number | null;
+  outcome?: string | null;
+  ownerMembershipId?: number | null;
+  owner?: RoadmapOwner | null;
   prioritization?: RoadmapPrioritization;
   tierWeighting?: RoadmapTierWeighting;
 };
@@ -77,6 +81,11 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
         {item.description ? (
           <p className={cn(TEXT_TWO_LINES, "text-xs text-muted-foreground")} title={item.description}>
             {item.description}
+          </p>
+        ) : null}
+        {item.owner ? (
+          <p className={cn(TEXT_ONE_LINE, "text-xs text-muted-foreground")}>
+            {getUserDisplayName(item.owner)}
           </p>
         ) : null}
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">

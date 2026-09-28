@@ -221,6 +221,46 @@ describe("ProjectBoardContent — offline state", () => {
   });
 });
 
+describe("ProjectBoardContent — offline freshness timestamp", () => {
+  beforeEach(() => {
+    mockIsOnline = false;
+    mockScopes = { "build:tickets:view": true };
+  });
+
+  it("renders the last-updated timestamp inside the offline panel when dataUpdatedAt is provided", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        showEmptyFilterState
+        dataUpdatedAt={Date.now()}
+      />,
+    );
+
+    expect(screen.getByText(/last updated/i)).toBeInTheDocument();
+  });
+
+  it("does not render a timestamp inside the offline panel when dataUpdatedAt is absent", () => {
+    render(
+      <ProjectBoardContent {...buildBaseProps()} showEmptyFilterState />,
+    );
+
+    expect(screen.queryByText(/last updated/i)).not.toBeInTheDocument();
+  });
+
+  it("does not render the timestamp on the online path so the online state is unchanged", () => {
+    mockIsOnline = true;
+
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        dataUpdatedAt={Date.now()}
+      />,
+    );
+
+    expect(screen.queryByText(/last updated/i)).not.toBeInTheDocument();
+  });
+});
+
 describe("ProjectBoardContent — workload capacity wiring", () => {
   beforeEach(() => {
     lastWorkloadViewProps = null;

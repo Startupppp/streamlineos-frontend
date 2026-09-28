@@ -5,7 +5,11 @@ import { format } from "date-fns";
 import { PublicPageContentLoader } from "@/features/wiki/components/public-page-content-loader";
 import { publicGetNoStore } from "@/lib/public-fetch";
 import { publicWikiPageContract } from "@/lib/public-schema";
-import { rewritePublicMediaUrls } from "@/features/wiki/lib/rewrite-public-media-urls";
+import {
+  COVER_GRADIENT_PREFIX,
+  rewritePublicCoverImage,
+  rewritePublicMediaUrls,
+} from "@/features/wiki/lib/rewrite-public-media-urls";
 
 export const dynamic = "force-dynamic";
 
@@ -24,13 +28,13 @@ const GRADIENT_PRESETS: Array<{ key: string; css: string }> = [
 
 function getCoverStyle(coverImage: string | null): CSSProperties {
   if (!coverImage) return {};
-  if (coverImage.startsWith("gradient:")) {
-    const key = coverImage.slice(9);
+  if (coverImage.startsWith(COVER_GRADIENT_PREFIX)) {
+    const key = coverImage.slice(COVER_GRADIENT_PREFIX.length);
     const preset = GRADIENT_PRESETS.find((p) => p.key === key);
     return preset ? { background: preset.css } : {};
   }
   return {
-    backgroundImage: `url(${coverImage})`,
+    backgroundImage: `url("${coverImage}")`,
     backgroundSize: "cover",
     backgroundPosition: "center",
   };
@@ -66,11 +70,11 @@ export default async function PublicWikiPage({ params }: Props) {
     notFound();
   }
 
-  const hasCover = !!data.coverImage;
-  const coverStyle = getCoverStyle(data.coverImage);
+  const brokerCover = rewritePublicCoverImage(data.coverImage, shareToken);
+  const hasCover = brokerCover !== null;
+  const coverStyle = getCoverStyle(brokerCover);
 
-  const r2Base = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? "").replace(/\/$/, "");
-  const brokerContent = r2Base ? rewritePublicMediaUrls(data.content, shareToken, r2Base) : data.content;
+  const brokerContent = rewritePublicMediaUrls(data.content, shareToken);
 
   return (
     <main>

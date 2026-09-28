@@ -362,12 +362,13 @@ export default function KnowledgeAnalyticsPage() {
 
   const { data: overview, isLoading: overviewLoading, isError: overviewError, error: overviewQueryError, refetch: refetchOverview } =
     useKbAnalyticsOverview(spaceId !== undefined ? { ...range, spaceId } : range);
-  const { data: noResults = [], isLoading: noResultsLoading, isError: noResultsError, refetch: refetchNoResults } =
+  const { data: noResults = [], isLoading: noResultsLoading, isError: noResultsError, error: noResultsQueryError, refetch: refetchNoResults } =
     useKbNoResults(range);
   const {
     data: pageAnalytics = [],
     isLoading: pagesLoading,
     isError: pagesError,
+    error: pagesQueryError,
     refetch: refetchPages,
     fetchNextPage,
     hasNextPage,
@@ -379,6 +380,7 @@ export default function KnowledgeAnalyticsPage() {
     gaps = [],
     isLoading: gapsLoading,
     isError: gapsError,
+    error: gapsQueryError,
     refetch: refetchGaps,
     fetchNextPage: fetchNextGaps,
     hasNextPage: hasNextGaps,
@@ -466,7 +468,13 @@ export default function KnowledgeAnalyticsPage() {
     permission: "kb:analytics:view",
     isLoading: overviewLoading || noResultsLoading || pagesLoading || gapsLoading,
     isError: overviewError || noResultsError || pagesError || gapsError,
-    error: overviewQueryError,
+    error: overviewError
+      ? overviewQueryError
+      : noResultsError
+        ? noResultsQueryError
+        : pagesError
+          ? pagesQueryError
+          : gapsQueryError,
     isEmpty: !overview,
   });
 

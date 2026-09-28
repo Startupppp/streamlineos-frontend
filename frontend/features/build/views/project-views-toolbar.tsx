@@ -7,6 +7,13 @@ import type { IconHandle } from "@animateicons/react";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { ViewSwitcher, type ViewType } from "@/features/build/views/view-switcher";
@@ -58,6 +65,14 @@ interface StatusOption {
   type?: string | null;
 }
 
+interface ModuleFilterOption {
+  id: number;
+  name: string;
+}
+
+const MODULE_ALL = "__all__";
+const MODULE_SELECT_TRIGGER = "h-9 w-fit min-w-0 shrink-0 gap-1 px-2 text-xs";
+
 interface ProjectViewsToolbarProps {
   view: ViewType;
   onViewChange: (view: ViewType) => void;
@@ -86,6 +101,9 @@ interface ProjectViewsToolbarProps {
   filterQaState: string;
   onQaFilterChange: (key: "severity" | "qaState", value: string) => void;
   searchInputRef?: RefObject<HTMLInputElement | null>;
+  filterModule?: string;
+  onModuleFilterChange?: (moduleId: string) => void;
+  modules?: ModuleFilterOption[];
 }
 
 export function ProjectViewsToolbar({
@@ -113,11 +131,21 @@ export function ProjectViewsToolbar({
   filterQaState,
   onQaFilterChange,
   searchInputRef,
+  filterModule = "",
+  onModuleFilterChange,
+  modules = [],
 }: ProjectViewsToolbarProps) {
   const canManageViews = useCan("build:workspace:manage");
   const handleSaveViewClick = useCallback(() => {
     onOpenSaveView();
   }, [onOpenSaveView]);
+
+  const handleModuleChange = useCallback(
+    (value: string) => {
+      onModuleFilterChange?.(value === MODULE_ALL ? "" : value);
+    },
+    [onModuleFilterChange],
+  );
 
   const leading = (
     <div className="flex min-w-0 shrink-0 items-center gap-1">
@@ -140,6 +168,22 @@ export function ProjectViewsToolbar({
           />
         ) : null}
       </div>
+
+      {modules.length > 0 ? (
+        <Select value={filterModule || MODULE_ALL} onValueChange={handleModuleChange}>
+          <SelectTrigger className={MODULE_SELECT_TRIGGER} aria-label="Filter by module">
+            <SelectValue placeholder="Module" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={MODULE_ALL} className="text-xs">All modules</SelectItem>
+            {modules.map((m) => (
+              <SelectItem key={m.id} value={String(m.id)} className="text-xs">
+                {m.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : null}
 
       {filterType === "BUG" ? (
         <BugQaFilters

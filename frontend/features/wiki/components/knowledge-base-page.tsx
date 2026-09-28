@@ -38,8 +38,11 @@ import {
   type SourceKindFilter,
   type OwnerFilter,
   type SpaceIdFilter,
+  type OwnerMembershipFilter,
+  type StatusScopeFilter,
 } from "@/features/wiki/components/kb-sources-sheet";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
+import { useOrgMembers } from "@/hooks/api/organization";
 import { KbNoteSheet } from "@/features/wiki/components/kb-note-sheet";
 import { KbConversationList } from "@/features/wiki/components/kb-conversation-list";
 import {
@@ -95,6 +98,15 @@ export default function KnowledgeBasePage() {
   const [pendingVerifiedOnly, setPendingVerifiedOnly] = useState(false);
   const [scopePageIds, setScopePageIds] = useState<number[]>([]);
   const [pendingPageIds, setPendingPageIds] = useState<number[]>([]);
+  const [scopeSpaceId, setScopeSpaceId] = useState<SpaceIdFilter>(null);
+  const [pendingSpaceId, setPendingSpaceId] = useState<SpaceIdFilter>(null);
+  const [scopeOwnerMembershipId, setScopeOwnerMembershipId] =
+    useState<OwnerMembershipFilter>(null);
+  const [pendingOwnerMembershipId, setPendingOwnerMembershipId] =
+    useState<OwnerMembershipFilter>(null);
+  const [scopeStatus, setScopeStatus] = useState<StatusScopeFilter>(null);
+  const [pendingStatus, setPendingStatus] = useState<StatusScopeFilter>(null);
+  const [ownerSearch, setOwnerSearch] = useState("");
   const [pageSearchQuery, setPageSearchQuery] = useState("");
   const [noteOpen, setNoteOpen] = useState(false);
 
@@ -125,7 +137,6 @@ export default function KnowledgeBasePage() {
 
   const [scopeKindFilter, setScopeKindFilter] = useState<SourceKindFilter>("all");
   const [scopeOwnerFilter, setScopeOwnerFilter] = useState<OwnerFilter>("all");
-  const [scopeSpaceIdFilter, setScopeSpaceIdFilter] = useState<SpaceIdFilter>(null);
 
   const scopeFilters: KbSourcesParams = {
     kind: scopeKindFilter !== "all" ? scopeKindFilter : undefined,
@@ -137,6 +148,10 @@ export default function KnowledgeBasePage() {
 
   const spacesQuery = useKbSpaces();
   const kbSpaces = spacesQuery.data?.data ?? [];
+
+  const debouncedOwnerSearch = useDebouncedValue(ownerSearch.trim(), 300);
+  const ownersQuery = useOrgMembers(1, 100, debouncedOwnerSearch || undefined);
+  const scopeOwners = ownersQuery.data?.data ?? [];
 
   const debouncedPageSearchQuery = useDebouncedValue(pageSearchQuery.trim(), 300);
   const pageSearchResult = useKbPagesSearch(debouncedPageSearchQuery);
@@ -249,6 +264,11 @@ export default function KnowledgeBasePage() {
       ...(scopeSourceIds.length > 0 ? { sourceIds: scopeSourceIds } : {}),
       ...(scopePageIds.length > 0 ? { pageIds: scopePageIds } : {}),
       ...(scopeVerifiedOnly ? { verifiedOnly: true } : {}),
+      ...(scopeSpaceId !== null ? { spaceId: scopeSpaceId } : {}),
+      ...(scopeOwnerMembershipId !== null
+        ? { ownerMembershipId: scopeOwnerMembershipId }
+        : {}),
+      ...(scopeStatus !== null ? { status: scopeStatus } : {}),
     };
     ask.mutate(
       { question: trimmed, conversationId: activeConversationId ?? undefined, onToken: handleToken, ...scopePayload },
@@ -350,6 +370,9 @@ export default function KnowledgeBasePage() {
     setPendingScopeIds(scopeSourceIds);
     setPendingVerifiedOnly(scopeVerifiedOnly);
     setPendingPageIds(scopePageIds);
+    setPendingSpaceId(scopeSpaceId);
+    setPendingOwnerMembershipId(scopeOwnerMembershipId);
+    setPendingStatus(scopeStatus);
     setPageSearchQuery("");
     setSourcesSheet({ kind: "scope" });
   }
@@ -360,8 +383,23 @@ export default function KnowledgeBasePage() {
 
   function handleScopeSelectionChange(ids: number[]) { setPendingScopeIds(ids); }
   function handleScopeVerifiedOnlyChange(v: boolean) { setPendingVerifiedOnly(v); }
-  function handleScopeConfirm() { setScopeSourceIds(pendingScopeIds); setScopeVerifiedOnly(pendingVerifiedOnly); setScopePageIds(pendingPageIds); setSourcesSheet({ kind: "closed" }); }
-  function handleClearScope() { setScopeSourceIds([]); setScopeVerifiedOnly(false); setScopePageIds([]); }
+  function handleScopeConfirm() {
+    setScopeSourceIds(pendingScopeIds);
+    setScopeVerifiedOnly(pendingVerifiedOnly);
+    setScopePageIds(pendingPageIds);
+    setScopeSpaceId(pendingSpaceId);
+    setScopeOwnerMembershipId(pendingOwnerMembershipId);
+    setScopeStatus(pendingStatus);
+    setSourcesSheet({ kind: "closed" });
+  }
+  function handleClearScope() {
+    setScopeSourceIds([]);
+    setScopeVerifiedOnly(false);
+    setScopePageIds([]);
+    setScopeSpaceId(null);
+    setScopeOwnerMembershipId(null);
+    setScopeStatus(null);
+  }
 
   function makeDeleteHandler(id: number) {
     return function handleDeleteSource() {
@@ -376,7 +414,13 @@ export default function KnowledgeBasePage() {
 
   const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
   const readyCount = sources.filter((s) => s.status === "ready").length;
-  const scopeActive = scopeSourceIds.length > 0 || scopeVerifiedOnly || scopePageIds.length > 0;
+  const scopeActive =
+    scopeSourceIds.length > 0 ||
+    scopeVerifiedOnly ||
+    scopePageIds.length > 0 ||
+    scopeSpaceId !== null ||
+    scopeOwnerMembershipId !== null ||
+    scopeStatus !== null;
   const scopeItemCount = scopeSourceIds.length + scopePageIds.length;
   const clientFilteredSources = sources.filter((source) => {
     if (scopeFilters.kind !== undefined && source.kind !== scopeFilters.kind) return false;
@@ -388,8 +432,8 @@ export default function KnowledgeBasePage() {
     : scopeSourcesQuery.isError
       ? clientFilteredSources
       : scopeSources;
-  const scopeDisplaySources = scopeSpaceIdFilter !== null
-    ? baseDisplaySources.filter((s) => s.spaceId === scopeSpaceIdFilter)
+  const scopeDisplaySources = pendingSpaceId !== null
+    ? baseDisplaySources.filter((s) => s.spaceId === pendingSpaceId)
     : baseDisplaySources;
 
   return (
@@ -600,9 +644,16 @@ export default function KnowledgeBasePage() {
           onKindFilterChange={setScopeKindFilter}
           ownerFilter={scopeOwnerFilter}
           onOwnerFilterChange={setScopeOwnerFilter}
-          spaceIdFilter={scopeSpaceIdFilter}
-          onSpaceIdFilterChange={setScopeSpaceIdFilter}
+          spaceIdFilter={pendingSpaceId}
+          onSpaceIdFilterChange={setPendingSpaceId}
           spaces={kbSpaces}
+          ownerMembershipId={pendingOwnerMembershipId}
+          onOwnerMembershipIdChange={setPendingOwnerMembershipId}
+          owners={scopeOwners}
+          onOwnerSearchChange={setOwnerSearch}
+          ownersAreLoading={ownersQuery.isLoading}
+          statusScope={pendingStatus}
+          onStatusScopeChange={setPendingStatus}
           onConfirm={handleScopeConfirm}
           pageSearchQuery={pageSearchQuery}
           onPageSearchQueryChange={setPageSearchQuery}
