@@ -6,13 +6,13 @@ Move them under a named directory. Structure only; no logic changes.
 
 **Blocked by:** 01 — Publish the Build core shared surface.
 
-**Status:** done except four `core/` sibling reaches, which are ticket 01's seam work
-(the cross-module callers are closed, and nine of the twelve sibling callers were closed
-2026-09-28 — see "The sibling half, measured and mostly closed")
+**Status:** done — all six criteria earned. The last four sibling reaches were closed
+2026-09-28 by moving the shared leaves into `core/lib/` (route 2).
 
 - [x] Ticket files live under one named directory
 - [x] Imports are updated; no file is orphaned
-- [ ] Nothing outside the group reaches into it except through the shared surface
+- [x] Nothing outside the group reaches into it except through the shared surface
+  Earned 2026-09-28 (Lane-SEAM) at **zero** non-spec reaches, by route 2 — see "Criterion 3 earned" below.
 - [x] The import graph stays acyclic, per BE-10
 - [x] Every route behaves identically and no logic changed
 - [x] File names stay kebab-case, per BE-08
@@ -457,3 +457,95 @@ compiler's view of a dependency that still runs, and the probe shows it would no
 turn the gate green; and `ProjectsMembersService.assertProjectAccess` stays as it is
 because substituting the standalone function turns a 404 into a 403 on a missing
 project — a BE-22 regression traded for a green gate.
+
+## Criterion 3 earned — 2026-09-28 (Lane-SEAM, route 2)
+
+The four leaves moved from `core/tickets/` to `core/lib/`:
+`tickets-scope.ts`, `build-ticket-capacity.ts`, `build-ticket-mutation-policy.ts`,
+`projects-labels.service.ts`, plus `tickets-scope.spec.ts` with its subject. They sit
+beside `allocate-ticket-number`, `build-app-paths`, `default-statuses`, `escape-like`
+and `projects-recurrence.util` — the seam both halves can depend on, and the location
+the first write-up named.
+
+**Non-spec sibling reaches into `core/tickets/`: 4 → 0.** The enumeration is empty:
+
+```
+$ cd backend/src/modules/build
+$ grep -rn 'from "[^"]*tickets/' core --include="*.ts" \
+    | grep -v '^core/tickets/' | grep -v '^core/index.ts:' | grep -v '\.spec\.ts:'
+(no output)
+```
+
+`core/tickets/` needed **no internal edits at all**. `core/tickets/` and `core/lib/`
+sit at the same depth, so every `../../../../db/...` specifier inside the four files is
+unchanged, and their only `./` siblings (`capacity → mutation-policy`,
+`mutation-policy → tickets-scope`) moved together. `git show --stat` records all five
+as renames with `| 0` — byte-for-byte moves, so no logic changed, which is what this
+ticket promised from the start.
+
+### Only two of five barrel lines were dead — the other three are load-bearing
+
+The plan said "the barrel lines removed". Audited symbol by symbol before deleting
+anything, because a dead barrel line and a load-bearing one look identical:
+
+| Barrel export | Remaining consumers | Verdict |
+|---|---|---|
+| `ticketsScopeIsUnrestricted` | none (both callers now on `../lib/tickets-scope`) | **deleted** |
+| `ProjectsLabelsService` | none (`projects.module.ts` now on `./lib/`) | **deleted** |
+| `reserveTicketCapacity` | `forms/submissions.service.ts:14`, `entity/build-entity.actions.ts:18`, `entity/build-entity-ticket-create.ts:10`, `execution/workspace.service.ts:2`, `execution/epics.service.ts:21`, `meetings/action-items.service.ts:13`, `cron/cron-projects.service.ts:10` | **kept** |
+| `lockProjectTicketMutation` | `import-export/ticket-import.service.ts:19` | **kept** |
+| `resolveTicketsScope`, `ticketScope`, `TICKETS_PERMISSION` | `import-export/ticket-export.service.ts:9`, `ai/core/tools/work-actions-tools.ts:12`, `ai/core/tools/projects-copilot-tools.ts:9`, and two spec consumers | **kept** |
+
+Deleting all five would have broken **eleven external call sites** across forms,
+entity, execution, meetings, import-export, cron and ai. The three kept lines now
+re-export from `../lib/`, which is an indirection worth naming as follow-up rather
+than leaving silent: those symbols are no longer tickets-group members, so their
+proper home on the surface is `core/index.ts`. Moving them there means repointing
+eleven external specifiers onto a barrel that also carries `ProjectsModule` and twelve
+services — a fatter edge than the tickets barrel and a fresh cycle risk. That is
+ticket 01's call, not a change to smuggle into a file move.
+
+### A dead guard found and revived on the way
+
+`modules/access/capability-decision-regression.spec.ts` keeps a path list of the
+production files that must use `AccessService`'s deep capability interface, and reads
+each with `readFileSync`. It named `build/core/tickets/tickets-scope.ts`, which this
+move relocated. It also named `build/core/projects-scope.ts`, which had **already**
+moved to `project-crud/projects-scope.ts` in an earlier restructure — and
+`readFileSync` throws on a missing path, so the whole suite had been failing with
+`ENOENT` and checking nothing. Baseline confirmed before touching it:
+
+```
+● c3/c4 capability decision seam › does not regress migrated production callers …
+  ENOENT: no such file or directory, open '…/build/core/projects-scope.ts'
+Test Suites: 1 failed, 1 total
+```
+
+Both entries corrected; the suite now passes, and its twelve-file sweep is live for
+the first time. This is the same class ticket 27 found: an intra-`build` path reach
+that no gate could see.
+
+### Verification
+
+- `npx madge --circular --extensions ts src` → `✔ No circular dependency found!` (BE-10, criterion 4). Also clean scoped to `src/modules/build/core`.
+- `pnpm check:build-core-surface:self-test` → `PASS … 26 pattern checks + anti-vacuity, all directions bite` (318 sibling files, 9349 repo files, 839 specifiers into `build/core` — the floors bite, so the OK is not vacuous).
+- `pnpm check:build-core-surface` → `OK — 318 sibling submodule file(s) scanned; 0 deep core imports.` / `OK — 9349 repo file(s) scanned, 839 specifier(s) aimed into build/core; 0 unresolved, 0 external reaches past the core/tickets barrel.`
+- `pnpm check:kebab-case` → `scanned 10334 entries under src — 0 violation(s)` (BE-08, criterion 6).
+- `npx tsc -p tsconfig.json --noEmit` → 8 error lines, **0 under `src/modules/build/core` or `src/modules/access`**, and no `TS2307` naming a moved file. Identical to the pre-move baseline; all eight are foreign (`modules/kb/**`, `test/helpers/reporting-probe.ts`).
+- `npx jest --maxWorkers=2 src/modules/build/core src/modules/access` → **208 suites, 1728 tests, all passing.**
+- `npx jest --maxWorkers=2 src/modules/build src/modules/cron src/modules/ai` → 451 of 467 suites, 4232 of 4318 tests. The 16 failures are foreign and were proven so rather than assumed: twelve `ai/**` suites fail on `this.discovery.getControllers is not a function`, a Nest `DiscoveryService` double, and four `cron/**` suites fail on `(0, tenant_1.NoTenantTransaction) is not a function` raised at `billing/core/billing.controller.ts:91`, which the billing lane had just decorated through the `common/tenant` barrel. **Proof it is not this move:** `projects.module.ts` was temporarily restored to its exact pre-move form — `ProjectsLabelsService` back inside the `./tickets` block and its barrel line reinstated — and the cron failure reproduced identically, same message, same six-frame require chain. The probe was reverted.
+
+### The remaining reaches are specs, and they are named rather than hidden
+
+Thirteen `.spec.ts` lines still import concrete classes deep inside `core/tickets/`
+— `build-core-services-tenant-isolation.spec.ts` (4),
+`build-cross-tenant-lookup.spec.ts` (2), `webhooks/project-webhook-atomicity.spec.ts` (2),
+`build-core-isolation.spec.ts`, `build-actor-migration.spec.ts`,
+`sibling-version-conflict.spec.ts`,
+`webhooks/projects-webhooks-edit-concurrency.spec.ts` and
+`custom-fields/projects-custom-field-values-project-access.spec.ts` (1 each). They
+construct a service directly (`new ProjectsTicketsTransferService(...)`) to unit-test
+it, which is the same test-harness reasoning this ticket recorded for its three
+`jest.mock` automocks. Criterion 3 has counted non-spec application code throughout —
+the 2026-09-27 premise correction says so explicitly — so it is earned at zero, with
+the spec figure stated here rather than left for someone to discover.
