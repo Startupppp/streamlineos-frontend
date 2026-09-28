@@ -1,13 +1,56 @@
 "use client";
 
+import { LogIn } from "lucide-react";
 import type { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 import { ErrorState } from "./error-state";
-import { SessionExpiredState } from "./session-expired-state";
 import { DeniedView, FeatureLockedView, QuotaExceededView } from "./page-state-views";
+import type { GateStateProps } from "./page-state-shared";
+
+function SessionExpiredState({ compact = false, className }: GateStateProps) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center text-center",
+        compact ? "py-6 px-4" : "min-h-full w-full flex-1 py-12 px-6",
+        className,
+      )}
+      role="status"
+      aria-label="Session expired"
+    >
+      <div
+        className={cn(
+          "rounded-2xl bg-muted flex items-center justify-center mb-4",
+          compact ? "h-10 w-10" : "h-14 w-14",
+        )}
+      >
+        <LogIn className={cn("text-muted-foreground", compact ? "w-5" : "w-7")} />
+      </div>
+      <h2 className={cn("font-semibold mb-1", compact ? "text-sm" : "text-base")}>
+        Your session expired
+      </h2>
+      <p
+        className={cn(
+          "text-muted-foreground max-w-sm mb-4",
+          compact ? "text-xs" : "text-sm",
+        )}
+      >
+        You were signed out after a period of inactivity. Signing in again will bring you
+        straight back here.
+      </p>
+      <Button
+        size={compact ? "sm" : "default"}
+        onClick={() => window.location.assign("/signin")}
+      >
+        Sign in again
+      </Button>
+    </div>
+  );
+}
 
 export interface PageStateProps {
   resolution: PageStateResolution;
