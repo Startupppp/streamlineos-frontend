@@ -1046,8 +1046,22 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 
 ### S20 — `/ask` removal, redirects, aliases
 
-- [ ] **BLOCKED:** `/knowledge` redirect behavior verified with telemetry and entitlement
+- [ ] **BLOCKED (telemetry half only):** `/knowledge` redirect behavior verified with telemetry and entitlement
       Telemetry verification requires a live environment. BLOCKED.
+      **2026-09-28 — the entitlement half needed no live environment and is verified.** The redirect is not a
+      `next.config.ts` rule, which matters: a config redirect runs at the edge before any application code and
+      *structurally cannot* consult entitlement. This one is an app route.
+      `app/(authenticated)/knowledge/page.tsx` is five lines — `redirect("/knowledge/chat")` — and is
+      unconditional by design. Entitlement is enforced at the destination:
+      `app/(authenticated)/knowledge/chat/page.tsx` awaits `requireSession()` and wraps its content in
+      `<RequireModule module="kb">`, so an unentitled caller is redirected and then meets the module-unavailable
+      state rather than the surface. That is the correct arrangement — gating the redirect itself would leak
+      whether the module exists.
+      Checked against the known trap that `next.config.ts` shadows app-route redirects: the config's two
+      `/knowledge/*` entries are `wiki/pages/:pageId` → `wiki/doc/:pageId` and its `/history` sibling, neither of
+      which matches `/knowledge`, so nothing shadows this route.
+      **Still blocked, and only this:** that the redirect *emits* telemetry. There is no emission on the redirect
+      path at all, and confirming an operator can see it needs a live stream.
 - [x] **DONE 2026-09-27:** `/ask` → `/knowledge/chat` redirect; callers moved; duplicate surface deleted
       `frontend/next.config.ts:323-324`: `source: "/ask"`, `destination: "/knowledge/chat"`. Redirect is in place.
 - [x] **DONE 2026-09-28 — the inventory is static, and two of its three entries were unpinned.** Required aliases and redirects in place
