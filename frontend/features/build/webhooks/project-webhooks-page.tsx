@@ -86,8 +86,6 @@ const WEBHOOK_EVENTS = [
   { value: "ticket.updated", label: "Ticket Updated" },
   { value: "ticket.deleted", label: "Ticket Deleted" },
   { value: "ticket.assigned", label: "Ticket Assigned" },
-  { value: "sprint.started", label: "Sprint Started" },
-  { value: "sprint.completed", label: "Sprint Completed" },
   { value: "comment.created", label: "Comment Added" },
   { value: "member.added", label: "Member Added" },
   { value: "member.removed", label: "Member Removed" },

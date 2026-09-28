@@ -275,8 +275,6 @@ const AUTOMATION_TRIGGER_EVENT_VALUES = [
   "ticket.updated",
   "ticket.status_changed",
   "ticket.assigned",
-  "sprint.started",
-  "sprint.completed",
 ] as const;
 
 const automationCreatedByUserSchema = z.object({

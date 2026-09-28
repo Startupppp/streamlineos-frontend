@@ -110,7 +110,7 @@ describe("webhookDeliveryListContract (BLD-X-BE-SETTINGS-WH-002)", () => {
       {
         id: 12,
         webhookId: 1,
-        event: "sprint.started",
+        event: "ticket.updated",
         status: "failed",
         responseCode: null,
         attempts: 2,

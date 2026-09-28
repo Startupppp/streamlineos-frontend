@@ -260,24 +260,24 @@ describe("AutomationsPage — filter bar (BLD-X-FE-SETTINGS-004)", () => {
     mockAccessState = "granted";
     mockAutomations = [
       SAMPLE_AUTOMATION,
-      { ...SAMPLE_AUTOMATION, id: 2, name: "Sprint cleanup", triggerEvent: "sprint.started" },
+      { ...SAMPLE_AUTOMATION, id: 2, name: "Close ticket", triggerEvent: "ticket.updated" },
     ];
     mockDebouncedSearch = "auto";
     render(<AutomationsPage projectId={1} />);
     expect(screen.getByText("Auto-assign bugs")).toBeInTheDocument();
-    expect(screen.queryByText("Sprint cleanup")).not.toBeInTheDocument();
+    expect(screen.queryByText("Close ticket")).not.toBeInTheDocument();
   });
 
   it("trigger filter hides automations with a different trigger (BLD-X-FE-SETTINGS-004d)", () => {
     mockAccessState = "granted";
     mockAutomations = [
       SAMPLE_AUTOMATION,
-      { ...SAMPLE_AUTOMATION, id: 2, name: "Sprint cleanup", triggerEvent: "sprint.started" },
+      { ...SAMPLE_AUTOMATION, id: 2, name: "Close ticket", triggerEvent: "ticket.updated" },
     ];
     mockTriggerFilter = "ticket.created";
     render(<AutomationsPage projectId={1} />);
     expect(screen.getByText("Auto-assign bugs")).toBeInTheDocument();
-    expect(screen.queryByText("Sprint cleanup")).not.toBeInTheDocument();
+    expect(screen.queryByText("Close ticket")).not.toBeInTheDocument();
   });
 });
 

@@ -18,8 +18,6 @@ export const formSchema = z.object({
     "ticket.updated",
     "ticket.status_changed",
     "ticket.assigned",
-    "sprint.started",
-    "sprint.completed",
   ]),
   conditions: z.array(conditionSchema),
   actions: z.array(actionSchema).min(1, "At least one action required"),

@@ -2,9 +2,7 @@ export type AutomationTriggerEvent =
   | "ticket.created"
   | "ticket.updated"
   | "ticket.status_changed"
-  | "ticket.assigned"
-  | "sprint.started"
-  | "sprint.completed";
+  | "ticket.assigned";
 
 export type AutomationActionType =
   | "set_status"

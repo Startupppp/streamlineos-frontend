@@ -32,8 +32,6 @@ export const TRIGGER_EVENTS = [
   { value: "ticket.updated", label: "Ticket Updated" },
   { value: "ticket.status_changed", label: "Status Changed" },
   { value: "ticket.assigned", label: "Ticket Assigned" },
-  { value: "sprint.started", label: "Sprint Started" },
-  { value: "sprint.completed", label: "Sprint Completed" },
 ] as const;
 
 export const ACTION_TYPES = [
