@@ -166,6 +166,143 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     and the board-view keyboard suppression. `features/build/views/**` was not re-run by this lane —
     it is another lane's write territory this run and was being edited concurrently — so the six
     items listed above are reported from source, not from a suite result.
+
+  - **2026-09-28 (lane PLAN) — of the six items reported above, four are now implemented and tested,
+    one is implemented except for its `cursor` half, one is adjudicated, and the box stays unchecked on
+    that `cursor` half, which no render-layer change can reach.**
+    `features/build/views/**`, `features/build/shared/bulk-action-bar.tsx` and
+    `components/list-view/list-filter-spec.ts` were handed to this lane for this unit.
+    - **Core fields.** `module` now renders **by name**: `useModules` resolves the project's modules
+      once in `project-board-content.tsx:136` and a `ModuleNamesProvider`
+      (`features/build/views/module-names-context.tsx`) carries the id→name map to both leaves, so
+      neither prop-threads through four levels of kanban. The list row's old `M-{moduleId}` chip was a
+      raw id on screen (FE-85) and is gone — `list-view-item.tsx:213-215` renders the name and
+      **renders nothing** for a module the board has no name for, rather than falling back to the id;
+      the kanban card gains the same chip at `kanban-ticket-card.tsx:187-191`. Five cases across
+      `list-view-item-selection.test.tsx` and `kanban-card-selection.test.tsx` pin the name, the
+      absence for an unknown id, and the absence when the ticket has no module.
+    - **The assignee set** now reaches the list row, which previously showed one assignee while the
+      card showed the set: `list-view-item.tsx:69-78` resolves `ticket.assignees` (declared on the row
+      type at `list-view-shared.ts:24`, a render-side widening of a field the list read already
+      returns) and `:202-209` renders `+N` with the other names in its title. Three cases: two
+      assignees beyond the first, no chip for a single assignee, no chip for a row with no set.
+    - **`rank` is adjudicated, not printed.** It is a lexorank string (`0|hzzzzz:`), an internal
+      ordering key; printing it would be exactly the raw-identifier render FE-85 forbids, and no
+      tracker shows it. The field is surfaced as what it produces: the manual order, and the drag
+      handle that rewrites it (`list-view-item.tsx:105-112`). Two cases pin that the handle appears
+      when the row is manually orderable and that the lexorank string never appears in the row.
+    - **One `orderBy` key, one meaning.** The two enums remain two vocabularies — the panel says
+      `manual`, the read endpoint says `rank` — but the alias is now explicit and two-way:
+      `board-filter-params.ts:15` maps `manual`→`rank` on the way to the server and
+      `use-display-options.ts:105-115` maps `rank`→`manual` on the way back, so a deep link in either
+      spelling survives a round trip instead of silently falling back. The audit's second claim was
+      wrong and is corrected here: `updated` is in **both** enums and was never coerced away; the
+      only mismatched spelling was manual/rank.
+    - **`orderDir` has a writer.** `writeDisplayOptionParams` now writes a direction beside every
+      order it writes (`use-display-options.ts:159`), derived from the order itself
+      (`orderDirectionFor`, `:117-119`): rank and due date ascend, created/updated/priority descend.
+      Twelve cases in `board-order-params.test.ts` pin the aliases both ways, every order's direction,
+      that the read endpoint accepts every direction the panel writes, and both deep-link directions.
+    - **`module` has a control.** The toolbar's module select existed but was fed nothing: no caller
+      passed `modules`, so `modules.length > 0` was always false and the control never rendered.
+      `project-views-toolbar.tsx:141-147` now falls back to the project's own `useModules` and to its
+      own URL writer (`use-module-filter-param.ts`) when the caller wires neither, so the control is
+      real without a change in the page that owns the toolbar's props. Five cases pin the render from
+      the project's modules, the absence when the project has none, the URL write, the clear, and
+      that a caller's own handler still wins.
+    - **The context menu exists, and `ticket-quick-actions.tsx` is no longer Delete-only.** It is a
+      menu of Open, Copy link, Copy key, Archive and Delete
+      (`ticket-quick-actions.tsx:128-166`), controllable by the row so a right click opens it:
+      `list-view-item.tsx:92` and `kanban-ticket-card.tsx:92` `preventDefault` and open the row's own
+      menu, the shape `components/ui/data-table.tsx`'s new `onRowContextMenu` uses on the releases
+      table. Twelve cases in `ticket-quick-actions.test.tsx` plus four in the two row suites.
+    - **The hard delete is fixed as a defect, not papered over.** `DELETE /build/:projectId/tickets/:id`
+      soft-deletes the ticket row but **hard-deletes** its assignees, comments, attachments, label
+      mappings, watchers, timesheets and relations
+      (`backend/src/modules/build/core/tickets/projects-tickets-delete.service.ts:93-118`), so FE-84's
+      "archive, never delete" applies squarely. Archive is now the row's reversible path: it posts
+      `{ ticketIds: [id], archive: true }` to the bulk endpoint, which only stamps `deleted_at` and
+      refuses a ticket with active sub-tickets outside the selection
+      (`core/tickets/build-ticket-bulk-mutation.ts:161-198`); the blocker comes back as a message
+      rather than a silent no-op. Delete survives for `build:tickets:delete` holders and its dialog now
+      names what it destroys. Five cases cover the archive payload, the blocker message, the
+      confirmation gate, and that delete and archive never call each other's mutation.
+    - **First run and filtered-empty are different screens.** `project-board-content.tsx:142` resolves
+      `isEmpty` from the collection rather than from the filter flag, and `:412-418` picks the panel:
+      offline wins, then filtered, then first-run (`:178-197`). The workload view is deliberately
+      exempt — it aggregates people, not only work, so an empty ticket list is not an empty view.
+      `hasActiveFilters` is no longer threaded-and-ignored: `kanban-board.tsx:238,298` pass it to
+      `kanban-board-column.tsx:126`, and `ColumnEmptyState` (`:148-166`) says "No matches here"
+      under an active filter instead of inviting a drop. Eight cases across
+      `project-board-content.test.tsx` and `kanban-column-empty-state.test.tsx`.
+    - **The tickets read's own 402 and request id are now driven.** Four cases in
+      `project-board-content.test.tsx` render the component with a 402 `MODULE_NOT_ENABLED` and assert
+      the upgrade path, with a 500 and assert the backend message survives, and with and without a
+      `correlationId` and assert the reference appears only when the envelope carries one.
+    - **The search debounce now bites.** Both existing tests advanced the timer by the full 300 ms, so
+      a 25 ms debounce passed them. `use-list-filter-params.test.ts` adds a case that advances **299**
+      (asserting no navigation) and then **1** (asserting exactly one), with the 299 and the 1 as
+      literals rather than arithmetic on the constant — mutation-checked: setting
+      `DEFAULT_SEARCH_DEBOUNCE_MS = 25` fails exactly that case and nothing else. A second case pins
+      that a spec's own `searchDebounceMs` overrides the default, so the wait is not hardcoded in the
+      hook. `features/build/shared/use-ticket-filter-params.test.ts:160` has the same weak assertion
+      for the Build ticket list's own debounce and was left alone — out of this lane's files.
+    - **`add link` is adjudicated, not shipped.** There is no bulk link endpoint: `bulkUpdateSchema`
+      accepts `assigneeId`, `status`, `cycleId`, `priority`, `parentTicketId`, `labelIds` and `archive`
+      and nothing else (`backend/src/modules/build/core/dto/ticket.schemas.ts:196-216`), and work-item
+      relations have only per-ticket routes. The bar's one real link is therefore the parent link
+      (`Set parent`), now pinned by a test. Improvising N per-ticket relation calls from the bar would
+      invent a fan-out with no per-record result, which is the opposite of what this section asks for.
+    - **Archive and Export are adjudicated: no key is missing.** Archive gates on
+      `build:tickets:update` because that is the key its endpoint declares
+      (`projects-tickets.controller.ts:179-180`), which is what FE-45 requires; Export's own mutation
+      independently gates on `build:tickets:view` (`hooks/api/build/ticket-import-export.ts:93-95`).
+      The bar as a whole is selection-driven and returns null without `build:tickets:update`, and
+      selection itself is offered only to that same standing
+      (`project-board-content.tsx:144-147`), so no separate archive or export permission exists **or
+      is needed**. Minting one would have to land in the backend catalog and the frontend catalog in
+      one change (FE-45, BE-112) — out of this lane, and a half key makes `useCan` false forever.
+      Five cases pin the two controls' presence, their absence on denial, and their absence when the
+      caller wires no handler.
+  - **Still open — `cursor` is not in the URL, and no render-layer change can put it there.** The
+    board pages through `useInfiniteQuery` page params
+    (`frontend/hooks/api/build/ticket-queries.ts:67-90`), so the cursor lives in Query's own
+    `pageParam` and a scrolled position is not shareable. Fixing it means changing that hook's read
+    shape — either a URL-backed cursor through `useBuildListFilters` plus `TablePagination
+    mode="cursor"`, as cycles and the issue detail page did, or keeping infinite scroll and accepting
+    that the criterion's `cursor` parameter is void for this page. This lane was fenced out of
+    `ticket-queries.ts` (the execution lane is paginating the epic list through it in the same run),
+    so the box stays unchecked on this one item rather than being ticked over a gap.
+
+    ```text
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/build/views
+    Test Suites: 22 passed, 22 total
+    Tests:       214 passed, 214 total
+
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 components/ui/data-table \
+        features/build/shared/bulk-action-bar-statuses components/list-view
+    Test Suites: 5 passed, 5 total
+    Tests:       67 passed, 67 total
+
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/build/views features/build/shared \
+        components/list-view features/build/project-detail
+    Test Suites: 45 passed, 45 total
+    Tests:       519 passed, 519 total
+
+    $ cd frontend && npx eslint features/build/views features/build/shared/bulk-action-bar.tsx components/list-view
+    (0 errors)
+
+    $ cd frontend && node ./node_modules/typescript/bin/tsc --noEmit -p tsconfig.specs.json
+    (nothing under features/build/views, features/build/shared/bulk-action-bar* or components/list-view)
+    ```
+
+    Component-test evidence only: no database, no browser, no dev server. One pre-existing failure
+    outside this lane's files was left alone rather than fixed:
+    `features/__tests__/build-board-cards-a11y.test.tsx` (4 tests) has been red since `useCan` entered
+    `kanban-ticket-card.tsx` — the suite mocks no access module, so `useSession` throws, which is
+    verifiable at `HEAD` before this lane's first commit. The fix is one
+    `jest.mock("@/hooks/api/access")` line in that file, which belongs to whoever owns
+    `features/__tests__/`.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
