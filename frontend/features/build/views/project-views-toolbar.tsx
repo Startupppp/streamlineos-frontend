@@ -24,6 +24,8 @@ import type { FilterState as WorkloadFilterState } from "@/features/build/views/
 import type { TeamOption } from "@/features/build/views/workload-filter-types";
 import type { DisplayOptions } from "@/features/build/shared/types";
 import { useCan } from "@/hooks/api/access";
+import { useModules } from "@/hooks/api/build/advanced";
+import { useModuleFilterParam } from "@/features/build/views/use-module-filter-param";
 
 type AnimatedToolbarIcon = React.ForwardRefExoticComponent<
   { size?: number } & React.RefAttributes<IconHandle>
@@ -136,15 +138,27 @@ export function ProjectViewsToolbar({
   modules = [],
 }: ProjectViewsToolbarProps) {
   const canManageViews = useCan("build:workspace:manage");
+  const { data: fetchedModules } = useModules(projectId);
+  const { filterModule: urlModule, setModuleFilter } = useModuleFilterParam();
+  const moduleOptions: ModuleFilterOption[] =
+    modules.length > 0
+      ? modules
+      : (fetchedModules ?? []).map((m) => ({ id: m.id, name: m.name }));
+  const moduleValue = onModuleFilterChange ? filterModule : urlModule;
   const handleSaveViewClick = useCallback(() => {
     onOpenSaveView();
   }, [onOpenSaveView]);
 
   const handleModuleChange = useCallback(
     (value: string) => {
-      onModuleFilterChange?.(value === MODULE_ALL ? "" : value);
+      const next = value === MODULE_ALL ? "" : value;
+      if (onModuleFilterChange) {
+        onModuleFilterChange(next);
+        return;
+      }
+      setModuleFilter(next);
     },
-    [onModuleFilterChange],
+    [onModuleFilterChange, setModuleFilter],
   );
 
   const leading = (
@@ -169,14 +183,14 @@ export function ProjectViewsToolbar({
         ) : null}
       </div>
 
-      {modules.length > 0 ? (
-        <Select value={filterModule || MODULE_ALL} onValueChange={handleModuleChange}>
+      {moduleOptions.length > 0 ? (
+        <Select value={moduleValue || MODULE_ALL} onValueChange={handleModuleChange}>
           <SelectTrigger className={MODULE_SELECT_TRIGGER} aria-label="Filter by module">
             <SelectValue placeholder="Module" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={MODULE_ALL} className="text-xs">All modules</SelectItem>
-            {modules.map((m) => (
+            {moduleOptions.map((m) => (
               <SelectItem key={m.id} value={String(m.id)} className="text-xs">
                 {m.name}
               </SelectItem>

@@ -94,6 +94,30 @@ interface ReadonlyParams {
   get(name: string): string | null;
 }
 
+const SERVER_ORDER_ALIASES: Readonly<Record<string, OrderByOption>> = { rank: "manual" };
+
+const ORDER_DIRECTIONS: Readonly<Record<OrderByOption, "asc" | "desc">> = {
+  manual: "asc",
+  dueDate: "asc",
+  created: "desc",
+  updated: "desc",
+  priority: "desc",
+};
+
+export function readOrderBy(
+  raw: string | null,
+  fallback: OrderByOption,
+): OrderByOption {
+  if (raw === null) return fallback;
+  const aliased = SERVER_ORDER_ALIASES[raw];
+  if (aliased !== undefined) return aliased;
+  return pickEnum(raw, ORDER_BY_VALUES, fallback);
+}
+
+export function orderDirectionFor(orderBy: OrderByOption): "asc" | "desc" {
+  return ORDER_DIRECTIONS[orderBy];
+}
+
 export function applyDisplayOptionParams(
   fallback: DisplayOptions,
   params: ReadonlyParams,
@@ -108,7 +132,7 @@ export function applyDisplayOptionParams(
   const next: DisplayOptions = {
     ...fallback,
     groupBy: groupBy === null ? fallback.groupBy : pickEnum(groupBy, GROUP_BY_VALUES, fallback.groupBy),
-    orderBy: orderBy === null ? fallback.orderBy : pickEnum(orderBy, ORDER_BY_VALUES, fallback.orderBy),
+    orderBy: readOrderBy(orderBy, fallback.orderBy),
     rowBy: rowBy === null ? fallback.rowBy : pickEnum(rowBy, ROW_BY_VALUES, fallback.rowBy),
     columnBy: columnBy === null ? fallback.columnBy : pickEnum(columnBy, COLUMN_BY_VALUES, fallback.columnBy),
     completedIssues:
@@ -132,6 +156,7 @@ export function writeDisplayOptionParams(
 ): URLSearchParams {
   params.set("groupBy", options.groupBy);
   params.set("orderBy", options.orderBy);
+  params.set("orderDir", orderDirectionFor(options.orderBy));
   params.set("rowBy", options.rowBy);
   params.set("columnBy", options.columnBy);
   params.set("completed", options.completedIssues);

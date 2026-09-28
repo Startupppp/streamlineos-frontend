@@ -12,12 +12,16 @@ import type { TicketOrderBy, TicketOrderDir } from "@/hooks/api/build/ticket-que
 const VALID_ORDER_BY = new Set<TicketOrderBy>(["created", "updated", "priority", "dueDate", "rank"]);
 const VALID_ORDER_DIR = new Set<TicketOrderDir>(["asc", "desc"]);
 
-function parseOrderBy(v: string | null): TicketOrderBy | undefined {
+const DISPLAY_ORDER_ALIASES: Readonly<Record<string, TicketOrderBy>> = { manual: "rank" };
+
+export function parseBoardOrderBy(v: string | null): TicketOrderBy | undefined {
   if (!v) return undefined;
+  const aliased = DISPLAY_ORDER_ALIASES[v];
+  if (aliased !== undefined) return aliased;
   return VALID_ORDER_BY.has(v as TicketOrderBy) ? (v as TicketOrderBy) : undefined;
 }
 
-function parseOrderDir(v: string | null): TicketOrderDir | undefined {
+export function parseBoardOrderDir(v: string | null): TicketOrderDir | undefined {
   if (!v) return undefined;
   return VALID_ORDER_DIR.has(v as TicketOrderDir) ? (v as TicketOrderDir) : undefined;
 }
@@ -41,8 +45,8 @@ export function useBoardFilterParams() {
   const dueDateTo = searchParams.get("dueDateTo") ?? "";
   const filterSeverity = searchParams.get("severity") ?? "";
   const filterQaState = searchParams.get("qaState") ?? "";
-  const sortOrderBy = parseOrderBy(searchParams.get("orderBy"));
-  const sortOrderDir = parseOrderDir(searchParams.get("orderDir"));
+  const sortOrderBy = parseBoardOrderBy(searchParams.get("orderBy"));
+  const sortOrderDir = parseBoardOrderDir(searchParams.get("orderDir"));
 
   const boardFilters = useMemo(
     () => ({
