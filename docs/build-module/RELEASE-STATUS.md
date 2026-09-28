@@ -31,6 +31,19 @@ checkout is deployed.
 
 ## Current verified delta
 
+### 2026-09-28 six-lane remediation pass
+
+Measured on the merge pushed to both `origin/main` (frontend `70ec2ec8f` onward, backend `3fc00e56e` onward).
+
+- Page-specification implementation boxes earned this pass: `10-managed-products-product`, `10-managed-products-product-goals`, `10-roadmap`, `10-project-milestones`, `10-project-releases`, `10-project-cycles`, `10-project-tickets-issue`, `10-project-epics`, `10-project-workload`, `10-project-settings-integrations-webhooks`. Still open: `10-command-center` on the `view` parameter and `10-project-issues` on writing a board cursor to the URL, both with dated adjudications naming the missing subject; `10-project-wiki` and `10-project-wiki-page` remain peer-owned.
+- Architecture tickets closed: 14 (the BE-81 union, mutation-checked), 25 (deep `core/tickets/` reaches 13 to 0 via the `core/lib/` move), 50's file-size criterion. Ticket 44 box 1 and ticket 54's criterion are adjudicated unearnable as written, with reasons in their tickets.
+- Whole-repository typechecks: frontend `pnpm type-check` exits 0, backend `pnpm typecheck` exits 0. `pnpm type-check:specs` improves from 85 errors to 58 with no file newly broken; the residue is out-of-lane.
+- Test matrices: frontend 388 suites / 4,129 tests pass across `features/build`, `hooks/api/build`, `lib/query-keys` and `components/ui/data-table`; backend 276 suites / 2,624 tests pass across `src/modules/build`.
+- Static gates green: `check:route-access-contract`, `check:feature-cycles`, `check:pm-workspace-removal`, `check:build-list-surface`, `check:permission-catalog`, `check:retired-vocabulary`, `check:contract-vendor`. `check:file-sizes` remains red repo-wide and improves from 56 over-500 files to 49; no Build list-surface batch path remains on it.
+- The contract was republished and vendored: 3,075 paths before and after, so no route was added or retired. `check:contract-drift` and `check:contract-parity` report identical findings before and after the vendoring.
+- No migration was authored this pass, so the journal is unchanged at 1,025 entries with no duplicate `idx` and no journalled tag lacking a file.
+- Defects fixed that no acceptance box asked for: a soft-deleted project's live tickets still sent due-soon and overdue notifications; `isProjectMember` authorised creating a ticket inside a soft-deleted project; a pending approval on a deleted project was still decidable; the releases page bulk strip published several releases per click with no confirmation; the issues row menu hard-deleted a ticket with its comments, attachments, assignees, worklogs and relations; `queryKeys.projects.clientPortal.visibility` padded with `null`, so no uncursored invalidation matched a cursored key; `capability-decision-regression.spec.ts` had been throwing `ENOENT` over twelve production files and asserting nothing; the FE-127 aggregate-import gate walked only `features/build`, hiding 47 violations elsewhere.
+
 - The production migration source-hash audit reports `pendingCount=0`, `watermarkAhead=false`, and no duplicate ledger rows. Twenty-one historical ledger rows have hashes not represented by the current migration journal; they remain an open ledger-reconciliation item and were not deleted.
 - Local browser verification on `http://localhost:1000/build/command-center` confirmed the Command Center remains usable when the projects request fails and auxiliary risks/releases requests return validation errors; those panels show local error states instead of replacing the whole route.
 - The live backend still returned the pre-fix `projectId=NaN` response during this browser pass, so the backend route fix is pushed but deployment identity and rollout completion remain unverified.
