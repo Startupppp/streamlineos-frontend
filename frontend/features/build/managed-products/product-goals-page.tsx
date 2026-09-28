@@ -43,6 +43,8 @@ import { BuildHeaderActions } from "@/features/build/shared/build-header-actions
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
   GoalCard,
   GOAL_LEVEL_ORDER,
@@ -83,7 +85,8 @@ export function GoalsSkeleton() {
 }
 
 export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
-  const canManage = useCan("build:goals:manage");
+  const isOnline = useOnlineStatus();
+  const canManage = useCan("build:goals:manage") && isOnline;
   const listFilters = useBuildListFilters({ filters: GOAL_FILTER_DEFINITIONS });
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
@@ -134,7 +137,8 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     [managedProductId, page, typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch, readFilterValue],
   );
 
-  const { data: goalsPage, isLoading, isError, error, refetch } = useGoalsPage(params);
+  const { data: goalsPage, isLoading, isError, error, refetch, dataUpdatedAt } =
+    useGoalsPage(params);
   const goals = goalsPage?.items ?? [];
   const totalGoals = goalsPage?.total ?? 0;
   const { data: stats } = useGoalStats();
@@ -233,10 +237,10 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
 
   const createActions = useMemo(
     () =>
-      resolution.kind !== "denied"
+      resolution.kind !== "denied" && isOnline
         ? [{ ...CREATE_ACTION, onSelect: handleOpenCreate }]
         : [],
-    [resolution.kind, handleOpenCreate],
+    [resolution.kind, handleOpenCreate, isOnline],
   );
 
   return (
@@ -279,6 +283,8 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
             />
           </StatCardGrid>
         </PmSection>
+
+        <BuildOfflineNotice dataUpdatedAt={dataUpdatedAt} />
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           <PageState

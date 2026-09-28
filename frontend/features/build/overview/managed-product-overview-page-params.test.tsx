@@ -337,3 +337,42 @@ describe("ManagedProductOverviewPage — edit action and conflict overlay (BSN-O
     expect(screen.queryAllByRole("button", { name: /Edit product/i })).toHaveLength(0);
   });
 });
+
+describe("ManagedProductOverviewPage — offline state (BSN-OVW-OFFLINE)", () => {
+  const onlineSpy = jest.spyOn(navigator, "onLine", "get");
+
+  afterEach(() => {
+    onlineSpy.mockReturnValue(true);
+  });
+
+  it("renders no offline notice while online, so the banner is not permanent furniture", () => {
+    onlineSpy.mockReturnValue(true);
+    mockFilters({});
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryByTestId("offline-notice")).not.toBeInTheDocument();
+  });
+
+  it("shows freshness rather than blanking the overview when the browser goes offline", () => {
+    onlineSpy.mockReturnValue(false);
+    mockFilters({});
+    const { useManagedProduct } = jest.requireMock("@/hooks/api/build/managed-products");
+    (useManagedProduct as jest.Mock).mockReturnValue({
+      data: { id: 42, name: "Payments Platform", key: "PAY", status: "active", owner: null, description: null, vision: null, version: 1 },
+      dataUpdatedAt: Date.now(),
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.getByTestId("offline-notice")).toHaveTextContent(/Offline — showing data/);
+  });
+
+  it("withdraws the edit action while offline, because a managed-product write is not an idempotent command", () => {
+    onlineSpy.mockReturnValue(false);
+    mockFilters({});
+    const { useCan } = jest.requireMock("@/hooks/api/access");
+    (useCan as jest.Mock).mockReturnValue(true);
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    expect(screen.queryAllByRole("button", { name: /Edit product/i })).toHaveLength(0);
+  });
+});

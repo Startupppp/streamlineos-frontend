@@ -291,3 +291,43 @@ describe("ProductGoalsPage — outcome params are validated before the request (
     expect(callParams).not.toHaveProperty("scope");
   });
 });
+
+describe("ProductGoalsPage — offline state (BSN-STATE-GOALS-OFFLINE)", () => {
+  const onlineSpy = jest.spyOn(navigator, "onLine", "get");
+
+  afterEach(() => {
+    onlineSpy.mockReturnValue(true);
+  });
+
+  it("renders no offline notice while the browser is online, so the banner is not permanent furniture", () => {
+    onlineSpy.mockReturnValue(true);
+    useGoalsPage.mockReturnValue({ ...EMPTY_GOALS_PAGE_RESULT, dataUpdatedAt: Date.now() });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.queryByTestId("offline-notice")).not.toBeInTheDocument();
+  });
+
+  it("shows freshness rather than blanking the list when the browser goes offline", () => {
+    onlineSpy.mockReturnValue(false);
+    useGoalsPage.mockReturnValue({
+      ...EMPTY_GOALS_PAGE_RESULT,
+      data: { items: [], page: 1, pageSize: 20, total: 0 },
+      dataUpdatedAt: Date.now(),
+    });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByTestId("offline-notice")).toHaveTextContent(/Offline — showing data/);
+  });
+
+  it("withdraws the create action while offline, because a goal write is not an idempotent command", () => {
+    onlineSpy.mockReturnValue(false);
+    useGoalsPage.mockReturnValue({ ...EMPTY_GOALS_PAGE_RESULT, dataUpdatedAt: Date.now() });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.queryAllByRole("button", { name: /New Goal/i })).toHaveLength(0);
+  });
+
+  it("offers the create action again once online (FE-122 positive pair)", () => {
+    onlineSpy.mockReturnValue(true);
+    useGoalsPage.mockReturnValue({ ...EMPTY_GOALS_PAGE_RESULT, dataUpdatedAt: Date.now() });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.queryAllByRole("button", { name: /New Goal/i }).length).toBeGreaterThan(0);
+  });
+});

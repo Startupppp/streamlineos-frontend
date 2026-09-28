@@ -30,6 +30,8 @@ import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-key
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { cn } from "@/lib/utils";
 
 const PROJECT_SORT_VALUES = ["name_asc", "priority_desc", "due_asc", "due_desc"] as const;
@@ -107,7 +109,8 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
   );
   const insightsQuery = useManagedProductInsights(managedProductId);
   const { data: membersRes } = useOrgMembers(1, 100);
-  const canEdit = useCan("build:managed-products:update");
+  const isOnline = useOnlineStatus();
+  const canEdit = useCan("build:managed-products:update") && isOnline;
   const [editOpen, setEditOpen] = useState(false);
   const roadmapQuery = useRoadmapItems({ managedProductId, limit: 5 });
   const goalsQuery = useGoalsPage({ managedProductId });
@@ -294,6 +297,8 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
         className="flex-1 min-h-0"
       >
         <div className="flex flex-1 min-h-0 flex-col gap-6">
+          <BuildOfflineNotice dataUpdatedAt={productQuery.dataUpdatedAt} />
+
           <StatCardGrid cols={3}>
             <StatCard
               label="Linked projects"
