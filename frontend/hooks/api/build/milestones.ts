@@ -7,12 +7,16 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
-  ProjectMilestone,
+  ProjectMilestone as ProjectMilestoneBase,
   ProjectBudget,
   ProjectBudgetUpdate,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+
+export type ProjectMilestone = ProjectMilestoneBase & {
+  completedTicketCount: number;
+};
 
 type MilestonePage = {
   data: ProjectMilestone[];
@@ -55,11 +59,7 @@ const projectBudgetUpdateContract = lazyContract(() =>
     (m) => m.projectBudgetUpdateContract,
   ),
 );
-export type {
-  ProjectMilestone,
-  ProjectBudget,
-  ProjectBudgetUpdate,
-} from "@/types/projects";
+export type { ProjectBudget, ProjectBudgetUpdate } from "@/types/projects";
 
 interface CreateMilestoneInput {
   name: string;

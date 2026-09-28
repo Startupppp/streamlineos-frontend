@@ -59,6 +59,7 @@ const STUB_MILESTONES: ProjectMilestone[] = [
     ownerMembershipId: null,
     owner: null,
     linkedTicketCount: 0,
+    completedTicketCount: 0,
   },
   {
     id: 2,
@@ -75,6 +76,7 @@ const STUB_MILESTONES: ProjectMilestone[] = [
     ownerMembershipId: null,
     owner: null,
     linkedTicketCount: 0,
+    completedTicketCount: 0,
   },
   {
     id: 3,
@@ -91,6 +93,7 @@ const STUB_MILESTONES: ProjectMilestone[] = [
     ownerMembershipId: null,
     owner: null,
     linkedTicketCount: 0,
+    completedTicketCount: 0,
   },
   {
     id: 4,
@@ -107,6 +110,7 @@ const STUB_MILESTONES: ProjectMilestone[] = [
     ownerMembershipId: null,
     owner: null,
     linkedTicketCount: 0,
+    completedTicketCount: 0,
   },
   {
     id: 5,
@@ -123,6 +127,7 @@ const STUB_MILESTONES: ProjectMilestone[] = [
     ownerMembershipId: null,
     owner: null,
     linkedTicketCount: 0,
+    completedTicketCount: 0,
   },
 ];
 

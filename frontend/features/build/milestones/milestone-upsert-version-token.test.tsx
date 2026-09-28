@@ -15,6 +15,14 @@ jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: undefined }),
 }));
 
+jest.mock("@/components/members/member-picker", () => ({
+  MemberPicker: () => null,
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+}));
+
 jest.mock("@/components/shared/dirty-state-context", () => ({
   useRegisterDirtyState: jest.fn(),
 }));
@@ -34,6 +42,7 @@ const MILESTONE: ProjectMilestone = {
   ownerMembershipId: null,
   owner: null,
   linkedTicketCount: 0,
+  completedTicketCount: 0,
   createdAt: "2026-09-01T00:00:00.000Z",
   updatedAt: "2026-09-02T00:00:00.000Z",
 };

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState, type MouseEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -62,8 +62,18 @@ export const MilestoneCard = memo(function MilestoneCard({
     dateObj !== null && isPast(dateObj) && !isToday(dateObj) && status === "PENDING";
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
+  const [menuOpen, setMenuOpen] = useState(false);
   const handleEdit = useCallback(() => onEdit(milestone), [onEdit, milestone]);
   const handleDelete = useCallback(() => onDelete?.(milestone), [onDelete, milestone]);
+  const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setMenuOpen(true);
+  }, []);
+
+  const progressPercent =
+    milestone.linkedTicketCount > 0
+      ? Math.round((milestone.completedTicketCount / milestone.linkedTicketCount) * 100)
+      : null;
 
   const daysLabel =
     status !== "PENDING" || daysLeft === null
@@ -84,6 +94,7 @@ export const MilestoneCard = memo(function MilestoneCard({
         overdue ? "border-l-destructive" : cfg.stripeClassName,
         overdue && "border-destructive/40",
       )}
+      onContextMenu={handleContextMenu}
     >
       <div className="flex min-w-0 items-start gap-2.5">
         {onSelect ? (
@@ -150,9 +161,17 @@ export const MilestoneCard = memo(function MilestoneCard({
                   · {milestone.linkedTicketCount} {milestone.linkedTicketCount === 1 ? "ticket" : "tickets"}
                 </span>
               ) : null}
+              {progressPercent !== null ? (
+                <span
+                  className="shrink-0 tabular-nums"
+                  aria-label={`Progress ${progressPercent}%`}
+                >
+                  · {milestone.completedTicketCount}/{milestone.linkedTicketCount} done ({progressPercent}%)
+                </span>
+              ) : null}
             </div>
             <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-              <DropdownMenu>
+              <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="w-7" aria-label={`Actions for ${milestone.name}`} {...hoverHandlers}>
                     <EllipsisIcon ref={iconRef} size={14} />

@@ -1,11 +1,16 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ProjectMilestonesPage } from "./project-milestones-page";
 import { ApiError } from "@/lib/api-envelope";
+import { toast } from "sonner";
+
+let mockIsOnline = true;
+const mockReplace = jest.fn();
+let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace }),
   usePathname: () => "/build/1/milestones",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }));
 
 jest.mock("@/hooks/common/use-debounce", () => ({
@@ -18,6 +23,14 @@ jest.mock("@/hooks/api/build/milestones", () => ({
   useUpdateMilestone: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembers: () => ({ data: { data: [{ membershipId: 4, userId: "user-4", name: "Dana Scully", email: "dana@example.com", image: null }] } }),
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockIsOnline,
+}));
+
 jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
@@ -27,7 +40,7 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn(),
 }));
 
-jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
+jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn() } }));
 
 jest.mock("framer-motion", () => ({
   motion: {
@@ -47,10 +60,11 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title, actions }: { children: React.ReactNode; title?: string; actions?: React.ReactNode }) => (
+  PageWrapper: ({ children, title, actions, filters }: { children: React.ReactNode; title?: string; actions?: React.ReactNode; filters?: React.ReactNode }) => (
     <div>
       {title ? <h1>{title}</h1> : null}
       {actions ? <div data-testid="page-actions">{actions}</div> : null}
+      {filters ? <div data-testid="page-filters">{filters}</div> : null}
       {children}
     </div>
   ),
@@ -88,15 +102,27 @@ jest.mock("@/components/pm-chrome", () => ({
   PM_TOOLBAR: "",
 }));
 
-jest.mock("@/components/ui/select", () => ({
-  Select: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SelectTrigger: ({ children }: { children: React.ReactNode }) => (
-    <button type="button">{children}</button>
-  ),
-  SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
-}));
+jest.mock("@/components/ui/select", () => {
+  const react = jest.requireActual<typeof import("react")>("react");
+  const SelectChange = react.createContext<((value: string) => void) | undefined>(undefined);
+  return {
+    Select: ({ children, onValueChange }: { children: React.ReactNode; onValueChange?: (value: string) => void }) => (
+      <SelectChange.Provider value={onValueChange}>{children}</SelectChange.Provider>
+    ),
+    SelectTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    SelectItem: ({ children, value }: { children: React.ReactNode; value: string }) => {
+      const onValueChange = react.useContext(SelectChange);
+      const handleClick = () => onValueChange?.(value);
+      return (
+        <button type="button" onClick={handleClick}>
+          {children}
+        </button>
+      );
+    },
+    SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
+  };
+});
 
 jest.mock("./milestone-upsert-sheet", () => ({
   MilestoneUpsertSheet: () => <div data-testid="milestone-upsert-sheet" />,
@@ -142,11 +168,16 @@ function cursorPage<T>(items: T[]) {
 }
 
 beforeEach(() => {
+  mockIsOnline = true;
+  mockReplace.mockClear();
+  mockSearchParams = new URLSearchParams();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseProjectMilestones.mockReturnValue(baseQueryResult({ data: cursorPage([]) }));
   mockUseDeleteMilestone.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseUpdateMilestone.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  (toast.success as jest.Mock).mockClear();
+  (toast.error as jest.Mock).mockClear();
 });
 
 it("renders NoPermissionState when build:view is denied instead of empty milestone list", () => {
@@ -263,5 +294,90 @@ describe("ProjectMilestonesPage — the failure branch keeps the backend's statu
     render(<ProjectMilestonesPage projectId="1" />);
 
     expect(screen.getByTestId("error-state").textContent).toContain("Milestones query timed out");
+  });
+});
+
+describe("ProjectMilestonesPage — ownerId is a served query parameter, not a declared-and-ignored one", () => {
+  it("forwards a numeric ownerId from the URL to the milestone list read", () => {
+    mockSearchParams = new URLSearchParams("ownerId=4");
+    render(<ProjectMilestonesPage projectId="1" />);
+    expect(mockUseProjectMilestones).toHaveBeenCalledWith(1, expect.objectContaining({ ownerId: 4 }));
+  });
+
+  it("drops a non-numeric ownerId instead of sending NaN, which the backend schema would reject", () => {
+    mockSearchParams = new URLSearchParams("ownerId=user-7");
+    render(<ProjectMilestonesPage projectId="1" />);
+    expect(mockUseProjectMilestones).toHaveBeenCalledWith(1, expect.objectContaining({ ownerId: undefined }));
+  });
+
+  it("offers the owner filter by member display name so the control never shows a membership id", () => {
+    render(<ProjectMilestonesPage projectId="1" />);
+    expect(screen.getByTestId("page-filters")).toHaveTextContent("Dana Scully");
+    expect(screen.getByTestId("page-filters")).not.toHaveTextContent("Any owner4");
+  });
+
+  it("writes the picked owner into the URL rather than filtering the loaded page in memory", () => {
+    render(<ProjectMilestonesPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: "Dana Scully" }));
+    expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("ownerId=4"), { scroll: false });
+  });
+});
+
+describe("ProjectMilestonesPage — offline state", () => {
+  it("shows the offline notice when connectivity is lost", () => {
+    mockIsOnline = false;
+    render(<ProjectMilestonesPage projectId="1" />);
+    expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+  });
+
+  it("shows no offline notice while online, so the notice is driven by connectivity and not always rendered", () => {
+    render(<ProjectMilestonesPage projectId="1" />);
+    expect(screen.queryByText(/you're offline/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectMilestonesPage — a bulk status change reports a per-record result", () => {
+  const rowA = { ...milestoneRow, id: 1, name: "Beta Launch", version: 3 };
+  const rowB = { ...milestoneRow, id: 2, name: "GA Launch", version: 5 };
+
+  function bulkSetAchieved() {
+    fireEvent.click(screen.getAllByTestId("milestone-card")[0]);
+    fireEvent.click(screen.getAllByTestId("milestone-card")[1]);
+    const achieved = screen.getAllByRole("button", { name: "Achieved" });
+    fireEvent.click(achieved[achieved.length - 1]);
+  }
+
+  it("reports both rows updated when every mutation succeeds", () => {
+    const mutate = jest.fn((_vars, opts) => opts.onSuccess?.());
+    mockUseUpdateMilestone.mockReturnValue({ mutate, isPending: false });
+    mockUseProjectMilestones.mockReturnValue(baseQueryResult({ data: cursorPage([rowA, rowB]) }));
+    render(<ProjectMilestonesPage projectId="1" />);
+    bulkSetAchieved();
+    expect(mutate).toHaveBeenCalledTimes(2);
+    expect(toast.success).toHaveBeenCalledWith("2 milestones updated");
+  });
+
+  it("names the failed row and the survivors when one of two mutations is rejected", () => {
+    const mutate = jest.fn((vars: { milestoneId: number }, opts) => {
+      if (vars.milestoneId === 2) opts.onError?.(new Error("stale token"));
+      else opts.onSuccess?.();
+    });
+    mockUseUpdateMilestone.mockReturnValue({ mutate, isPending: false });
+    mockUseProjectMilestones.mockReturnValue(baseQueryResult({ data: cursorPage([rowA, rowB]) }));
+    render(<ProjectMilestonesPage projectId="1" />);
+    bulkSetAchieved();
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("1 of 2 milestones updated"));
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("GA Launch"));
+    expect(toast.success).not.toHaveBeenCalled();
+  });
+
+  it("sends each selected row's own version token, so no row is saved with another row's token", () => {
+    const mutate = jest.fn((_vars, opts) => opts.onSuccess?.());
+    mockUseUpdateMilestone.mockReturnValue({ mutate, isPending: false });
+    mockUseProjectMilestones.mockReturnValue(baseQueryResult({ data: cursorPage([rowA, rowB]) }));
+    render(<ProjectMilestonesPage projectId="1" />);
+    bulkSetAchieved();
+    expect(mutate).toHaveBeenCalledWith({ milestoneId: 1, version: 3, status: "ACHIEVED" }, expect.anything());
+    expect(mutate).toHaveBeenCalledWith({ milestoneId: 2, version: 5, status: "ACHIEVED" }, expect.anything());
   });
 });

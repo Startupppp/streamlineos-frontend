@@ -14,6 +14,10 @@ const MILESTONE_ROW = {
   targetDate: "2026-12-15",
   status: "PENDING",
   createdBy: "user-1",
+  ownerMembershipId: 4,
+  owner: { membershipId: 4, firstName: "Dana", lastName: "Scully", image: null },
+  linkedTicketCount: 4,
+  completedTicketCount: 3,
   clientVisible: false,
   version: 3,
   deletedAt: null,
@@ -97,5 +101,23 @@ describe("milestones list contract matches the workspace service projection", ()
   it("confirms the backend workspace service has a limit on listMilestones to keep reads bounded", () => {
     const source = readFileSync(backendPath(WORKSPACE_SERVICE), "utf8");
     expect(source).toMatch(/limit\s*\+\s*1/);
+  });
+});
+
+describe("milestone progress fields are required, so a dropped projection fails the decode instead of rendering blank", () => {
+  it("keeps linkedTicketCount and completedTicketCount on a decoded row", () => {
+    const parsed = milestoneListContract.parse(CURSOR_PAGE);
+    expect(parsed.data[0]?.linkedTicketCount).toBe(4);
+    expect(parsed.data[0]?.completedTicketCount).toBe(3);
+  });
+
+  it("rejects a row that omits completedTicketCount rather than decoding a milestone with no progress", () => {
+    const { completedTicketCount: _dropped, ...row } = MILESTONE_ROW;
+    expect(() => milestoneListContract.parse({ ...CURSOR_PAGE, data: [row] })).toThrow();
+  });
+
+  it("rejects a row that omits owner, because nullable is not optional", () => {
+    const { owner: _dropped, ...row } = MILESTONE_ROW;
+    expect(() => milestoneListContract.parse({ ...CURSOR_PAGE, data: [row] })).toThrow();
   });
 });

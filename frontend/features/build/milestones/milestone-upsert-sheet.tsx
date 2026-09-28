@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,12 +40,50 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getApiErrorCode, isApiError } from "@/lib/api-envelope";
+import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
+import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
 import {
   useCreateMilestone,
   useUpdateMilestone,
   type ProjectMilestone,
 } from "@/hooks/api/build/milestones";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/lib/person-display";
+
+const CONFLICT_EMPTY = "Not set";
+
+function displayConflictValue(value: unknown): string {
+  if (value === null || value === undefined || value === "") return CONFLICT_EMPTY;
+  return String(value);
+}
+
+function buildMilestoneConflictDiffs(
+  values: MilestoneFormValues,
+  baseline: ProjectMilestone,
+  ownerLabel: (membershipId: number | null) => string,
+): TicketConflictFieldDiff[] {
+  const pairs: Array<{ key: string; label: string; server: unknown; pending: unknown }> = [
+    { key: "name", label: "Name", server: baseline.name, pending: values.name.trim() },
+    { key: "description", label: "Description", server: baseline.description ?? null, pending: values.description?.trim() || null },
+    { key: "targetDate", label: "Target date", server: baseline.targetDate ?? null, pending: values.targetDate || null },
+    { key: "status", label: "Status", server: toMilestoneStatus(baseline.status), pending: values.status },
+    {
+      key: "ownerMembershipId",
+      label: "Owner",
+      server: ownerLabel(baseline.ownerMembershipId ?? null),
+      pending: ownerLabel(values.ownerMembershipId ?? null),
+    },
+  ];
+  return pairs
+    .filter(({ server, pending }) => String(server ?? "") !== String(pending ?? ""))
+    .map(({ key, label, server, pending }) => ({
+      key,
+      label,
+      serverValue: displayConflictValue(server),
+      pendingValue: displayConflictValue(pending),
+    }));
+}
 
 interface MilestoneUpsertSheetProps {
   projectId: number;
@@ -59,6 +97,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
   const update = useUpdateMilestone(projectId);
   const isPending = create.isPending || update.isPending;
 
+  const [conflictFields, setConflictFields] = useState<TicketConflictFieldDiff[] | null>(null);
   const { data: membersPage } = useOrgMembers(1, 100);
   const members = membersPage?.data ?? [];
 
@@ -94,6 +133,17 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
     [form],
   );
 
+  const ownerLabel = useCallback(
+    (membershipId: number | null) => {
+      if (membershipId === null) return CONFLICT_EMPTY;
+      const member = members.find((m) => m.membershipId === membershipId);
+      return member ? getUserDisplayName(member) : String(membershipId);
+    },
+    [members],
+  );
+
+  const handleConflictDismiss = useCallback(() => setConflictFields(null), []);
+
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) onClose();
@@ -116,7 +166,18 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
           { milestoneId: milestone.id, version: milestone.version, ...payload },
           {
             onSuccess: () => { toast.success("Milestone updated"); onClose(); },
-            onError: (err) => toast.error(getErrorMessage(err)),
+            onError: (err) => {
+              if (isApiError(err) && getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT") {
+                const diffs = buildMilestoneConflictDiffs(values, milestone, ownerLabel);
+                if (diffs.length > 0) {
+                  setConflictFields(diffs);
+                } else {
+                  toast.warning("This milestone was modified by another user. Your changes were not saved.");
+                }
+                return;
+              }
+              toast.error(getErrorMessage(err));
+            },
           },
         );
       } else {
@@ -129,10 +190,11 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
         );
       }
     },
-    [isEdit, milestone, create, update, onClose],
+    [isEdit, milestone, create, update, onClose, ownerLabel],
   );
 
   return (
+    <>
     <Sheet open onOpenChange={handleOpenChange}>
       <SheetContent className="w-full sm:max-w-md flex flex-col gap-0 p-0">
         <SheetHeader className="px-6 py-4 border-b">
@@ -250,5 +312,12 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
         </Form>
       </SheetContent>
     </Sheet>
+    <TicketConflictDialog
+      open={conflictFields !== null}
+      fields={conflictFields ?? []}
+      onKeepMine={handleConflictDismiss}
+      onDiscard={handleConflictDismiss}
+    />
+    </>
   );
 }
