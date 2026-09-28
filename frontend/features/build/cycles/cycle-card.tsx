@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Calendar, CheckCircle2, Clock, MoreHorizontal, Pencil, Play, RotateCcw, Trash2 } from "lucide-react";
+import { ArrowRight, Calendar, CheckCircle2, Clock, Gauge, MoreHorizontal, Pencil, Play, RotateCcw, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -71,6 +71,12 @@ export function CycleCard({
               <CheckCircle2 className="h-3 w-3" />
               {cycle.completedItems ?? 0}/{cycle.totalItems ?? 0} done
             </span>
+            {cycle.capacity !== null ? (
+              <span className="flex items-center gap-1">
+                <Gauge className="h-3 w-3" />
+                <span className="tabular-nums">{cycle.capacity}</span> capacity
+              </span>
+            ) : null}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">

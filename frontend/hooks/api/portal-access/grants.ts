@@ -38,6 +38,9 @@ export function useProjectClientGrants(params?: {
   cursor?: string;
   limit?: number;
   projectId?: number;
+  grantId?: string;
+  from?: string;
+  to?: string;
   q?: string;
   state?: string;
   permission?: string;

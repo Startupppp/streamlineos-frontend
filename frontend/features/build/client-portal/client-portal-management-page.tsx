@@ -17,6 +17,13 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import {
   PmPageShell,
   PmPanel,
@@ -30,8 +37,64 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 const PORTAL_TABS = ["grants", "visibility", "preview"] as const;
 type PortalTab = (typeof PORTAL_TABS)[number];
 
+const GRANT_STATUS_OPTIONS = ["active", "expired", "suspended", "revoked"] as const;
+
+const GRANT_FILTER_DEFINITIONS = [
+  { param: "grantId" },
+  { param: "from" },
+  { param: "to" },
+  { param: "status", options: GRANT_STATUS_OPTIONS },
+] as const;
+
 function isPortalTab(v: string | null): v is PortalTab {
   return PORTAL_TABS.includes(v as PortalTab);
+}
+
+function filterValue(raw: string): string | undefined {
+  return raw === BUILD_FILTER_ALL ? undefined : raw;
+}
+
+function noop() {}
+
+interface GrantsPagerProps {
+  cursor: string | null;
+  nextCursor: string | null;
+  hasMore: boolean;
+  isPending: boolean;
+  onCursorChange: (cursor: string | null) => void;
+}
+
+function GrantsPager({
+  cursor,
+  nextCursor,
+  hasMore,
+  isPending,
+  onCursorChange,
+}: GrantsPagerProps) {
+  const [trail, setTrail] = useState<string[]>(cursor ? [cursor] : []);
+
+  const handleNext = useCallback(() => {
+    if (!nextCursor) return;
+    setTrail([...trail, nextCursor]);
+    onCursorChange(nextCursor);
+  }, [nextCursor, onCursorChange, trail]);
+
+  const handlePrevious = useCallback(() => {
+    const next = trail.slice(0, -1);
+    setTrail(next);
+    onCursorChange(next.at(-1) ?? null);
+  }, [onCursorChange, trail]);
+
+  return (
+    <CursorPageControls
+      page={trail.length + 1}
+      hasNext={hasMore && nextCursor !== null}
+      disabled={isPending}
+      onPrevious={handlePrevious}
+      onNext={handleNext}
+      className="mt-2"
+    />
+  );
 }
 
 interface PublicationStateBannerProps {
@@ -226,9 +289,28 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
 
   const canManage = useCan("build:clientvisibility:manage");
   const isOnline = useOnlineStatus();
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+
+  const handleOpenShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+  const handleShortcutHelpOpenChange = useCallback(
+    (open: boolean) => setShortcutHelpOpen(open),
+    [],
+  );
+
+  const listFilters = useBuildListFilters({
+    filters: GRANT_FILTER_DEFINITIONS,
+    withSearch: false,
+  });
 
   const { data: settings, isLoading: settingsLoading, isError: settingsError, error: settingsErrorVal } = usePortalSettings(projectId);
-  const { data: grantsPage, isLoading: grantsLoading, isError: grantsError, error: grantsErrorVal } = useProjectClientGrants({ projectId });
+  const { data: grantsPage, isLoading: grantsLoading, isError: grantsError, error: grantsErrorVal } = useProjectClientGrants({
+    projectId,
+    cursor: listFilters.cursor ?? undefined,
+    grantId: filterValue(listFilters.value("grantId")),
+    from: filterValue(listFilters.value("from")),
+    to: filterValue(listFilters.value("to")),
+    state: filterValue(listFilters.value("status")),
+  });
 
   const publishMutation = usePublishPortal(projectId);
   const unpublishMutation = useUnpublishPortal(projectId);
@@ -268,6 +350,14 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
 
   const grants = grantsPage?.data ?? [];
   const isPending = publishMutation.isPending || unpublishMutation.isPending;
+
+  useBuildListKeyboard({
+    itemCount: grants.length,
+    onOpen: noop,
+    onClearSelection: noop,
+    onShortcutHelp: handleOpenShortcutHelp,
+    enabled: pageState.kind === "ready" && !shortcutHelpOpen,
+  });
 
   return (
     <PageWrapper
@@ -327,17 +417,36 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
               {grants.length === 0 ? (
                 <EmptyState
                   illustrationPreset="projects"
-                  title="No grants"
-                  description="Grant a client portal membership access to this project from the Client Access settings."
+                  title={listFilters.isFiltered ? "No matching grants" : "No grants"}
+                  description={
+                    listFilters.isFiltered
+                      ? "No grant matches the current filters. Clear them to see every grant on this project."
+                      : "Grant a client portal membership access to this project from the Client Access settings."
+                  }
                   compact
                   className={CONTENT_FILL_PANEL}
+                  action={
+                    listFilters.isFiltered
+                      ? { label: "Clear filters", onClick: listFilters.clearAll }
+                      : undefined
+                  }
                 />
               ) : (
-                <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-                  {grants.map((grant) => (
-                    <GrantRow key={grant.projectClientGrantId} grant={grant} />
-                  ))}
-                </PmPanel>
+                <>
+                  <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+                    {grants.map((grant) => (
+                      <GrantRow key={grant.projectClientGrantId} grant={grant} />
+                    ))}
+                  </PmPanel>
+                  <GrantsPager
+                    key={listFilters.resetKey}
+                    cursor={listFilters.cursor}
+                    nextCursor={grantsPage?.pagination.nextCursor ?? null}
+                    hasMore={grantsPage?.pagination.hasMore ?? false}
+                    isPending={grantsLoading || listFilters.isPending}
+                    onCursorChange={listFilters.setCursor}
+                  />
+                </>
               )}
             </TabsContent>
 

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,11 +45,13 @@ const TiptapEditor = dynamic(
   },
 );
 import {
+  releaseBaseKey,
   useCreateRelease,
   useUpdateRelease,
   type Release,
 } from "@/hooks/api/build/releases";
 import { toast } from "sonner";
+import { getApiErrorCode, isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface ReleaseFormSheetProps {
@@ -59,6 +62,7 @@ interface ReleaseFormSheetProps {
 
 export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormSheetProps) {
   const isEdit = !!release;
+  const queryClient = useQueryClient();
   const create = useCreateRelease(projectId);
   const update = useUpdateRelease(projectId);
   const isPending = create.isPending || update.isPending;
@@ -85,6 +89,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
         update.mutate(
           {
             releaseId: release.id,
+            rowVersion: release.rowVersion,
             name: values.name,
             version: values.version,
             description: values.description || null,
@@ -93,7 +98,14 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
           },
           {
             onSuccess: () => { toast.success("Release updated"); onClose(); },
-            onError: (err) => toast.error(getErrorMessage(err)),
+            onError: (err) => {
+              if (isApiError(err) && getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT") {
+                void queryClient.invalidateQueries({ queryKey: releaseBaseKey(projectId) });
+                toast.warning("This release was modified by another user. Your changes were not saved — reopen it to see the latest version.");
+                return;
+              }
+              toast.error(getErrorMessage(err));
+            },
           },
         );
       } else {
@@ -112,7 +124,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
         );
       }
     },
-    [isEdit, release, create, update, onClose],
+    [isEdit, release, create, update, onClose, projectId, queryClient],
   );
 
   return (

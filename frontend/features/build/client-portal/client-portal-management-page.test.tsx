@@ -14,9 +14,12 @@ jest.mock("framer-motion", () => ({
   ),
 }));
 
+let currentSearch = new URLSearchParams();
+const mockReplace = jest.fn();
+
 jest.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams(),
-  useRouter: () => ({ replace: jest.fn(), refresh: jest.fn() }),
+  useSearchParams: () => currentSearch,
+  useRouter: () => ({ replace: mockReplace, refresh: jest.fn() }),
   usePathname: () => "/build/1/client-portal",
 }));
 
@@ -168,7 +171,28 @@ jest.mock("@/hooks/api/build/client-portal-management", () => ({
 }));
 
 jest.mock("@/hooks/api/portal-access/grants", () => ({
-  useProjectClientGrants: () => mockUseProjectClientGrants(),
+  useProjectClientGrants: (params?: unknown) => mockUseProjectClientGrants(params),
+}));
+
+jest.mock("@/components/ui/cursor-page-controls", () => ({
+  CursorPageControls: ({
+    page,
+    hasNext,
+    onNext,
+    onPrevious,
+  }: {
+    page: number;
+    hasNext: boolean;
+    onNext: () => void;
+    onPrevious: () => void;
+  }) => (
+    <div data-testid="cursor-page-controls" data-page={page}>
+      <button onClick={onPrevious}>Previous</button>
+      <button disabled={!hasNext} onClick={onNext}>
+        Next
+      </button>
+    </div>
+  ),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -254,6 +278,7 @@ const GRANTS_PAGE = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  currentSearch = new URLSearchParams();
   mockUseCan.mockReturnValue(true);
   mockUseOnlineStatus.mockReturnValue(true);
   mockUsePageState.mockReturnValue({ kind: "ready" });
@@ -416,5 +441,123 @@ describe("ClientPortalManagementPage — error + loading states do not render ba
     const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByRole("switch")).toBeInTheDocument();
+  });
+});
+
+describe("ClientPortalManagementPage — URL-backed grant filter axes (FE-86)", () => {
+  function lastGrantParams() {
+    const calls = mockUseProjectClientGrants.mock.calls;
+    return calls[calls.length - 1]?.[0] as Record<string, unknown> | undefined;
+  }
+
+  it("sends no filter axis to the grants read when the URL carries none", () => {
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(lastGrantParams()).toEqual({
+      projectId: 1,
+      cursor: undefined,
+      grantId: undefined,
+      from: undefined,
+      to: undefined,
+      state: undefined,
+    });
+  });
+
+  it("forwards grantId, from, to, status and cursor from the URL to the grants read", () => {
+    currentSearch = new URLSearchParams(
+      "grantId=grant-abc-123&from=2026-01-01&to=2026-06-30&status=active&cursor=cur-2",
+    );
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(lastGrantParams()).toEqual({
+      projectId: 1,
+      cursor: "cur-2",
+      grantId: "grant-abc-123",
+      from: "2026-01-01",
+      to: "2026-06-30",
+      state: "active",
+    });
+  });
+
+  it("drops an unknown status value rather than sending it, so a bookmarked URL cannot 400 the strict backend schema", () => {
+    currentSearch = new URLSearchParams("status=NOT_A_STATE");
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(lastGrantParams()?.state).toBeUndefined();
+  });
+
+  it("distinguishes a filtered no-result state from first-run emptiness", () => {
+    currentSearch = new URLSearchParams("status=revoked");
+    mockUseProjectClientGrants.mockReturnValue(
+      baseQuery({ data: { data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } } }),
+    );
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.getAllByText("No matching grants").length).toBeGreaterThan(0);
+    expect(screen.queryByText("No grants")).toBeNull();
+  });
+
+  it("NEGATIVE — with no filter in the URL the empty state is the first-run one, not the filtered one", () => {
+    mockUseProjectClientGrants.mockReturnValue(
+      baseQuery({ data: { data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } } }),
+    );
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.getAllByText("No grants").length).toBeGreaterThan(0);
+    expect(screen.queryByText("No matching grants")).toBeNull();
+  });
+});
+
+describe("ClientPortalManagementPage — grants cursor pagination writes the URL", () => {
+  it("advances by writing the next cursor into the URL rather than growing the mounted list (FE-125)", () => {
+    mockUseProjectClientGrants.mockReturnValue(
+      baseQuery({
+        data: {
+          data: [SAMPLE_GRANT],
+          pagination: { limit: 50, nextCursor: "cur-next", hasMore: true },
+        },
+      }),
+    );
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    fireEvent.click(screen.getByText("Next"));
+    const target = mockReplace.mock.calls.at(-1)?.[0] as string;
+    expect(target).toContain("cursor=cur-next");
+  });
+
+  it("NEGATIVE — Next is disabled on the last page, so there is no cursor write", () => {
+    mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.getByText("Next")).toBeDisabled();
+    fireEvent.click(screen.getByText("Next"));
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("returns to the unpaged URL from page two, so Previous is recoverable on reload", () => {
+    currentSearch = new URLSearchParams("cursor=cur-2");
+    mockUseProjectClientGrants.mockReturnValue(
+      baseQuery({
+        data: {
+          data: [SAMPLE_GRANT],
+          pagination: { limit: 50, nextCursor: "cur-3", hasMore: true },
+        },
+      }),
+    );
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.getByTestId("cursor-page-controls")).toHaveAttribute("data-page", "2");
+    fireEvent.click(screen.getByText("Previous"));
+    const target = mockReplace.mock.calls.at(-1)?.[0] as string;
+    expect(target).not.toContain("cursor=");
+  });
+
+  it("renders no pager when there are no grants at all", () => {
+    mockUseProjectClientGrants.mockReturnValue(
+      baseQuery({ data: { data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } } }),
+    );
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.queryByTestId("cursor-page-controls")).toBeNull();
   });
 });

@@ -176,6 +176,97 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
     All five complete. Ticket 30's final box (`docs/build-module/tickets/30-enable-rls-three-build-tables.md:27`) includes the `db:verify-rls` run result: 17 of 17 behavioural probes PASS, `IN-SCOPE MISSING: 0`, `IN-SCOPE COVERED: 979`, `PLATFORM-GLOBAL: 10`. Tenant isolation is database-enforced, not only application-layer; the two pre-authentication tables (`magic_link_tokens`, `impersonation_sessions`) are registered in the closed-list allowlist and pinned by a spec.
 - [ ] **P0: transaction and event correctness.** Complete 36-38 before 11-13 and 43-45. Trigger owns the token; return the persisted version; cover pending timestamp-scale events and replay deduplication. Required audit/outbox effects must not be silently lost.
 - [ ] **P1: repair current wrong answers.** Close 04-07, 09, 15-17, 19/20, 33, 39 and 67 with behavior-level tests, not matching mocks. Do not keep invalidation recipes that contradict actual report dependencies.
+  - Not earned 2026-09-27 (Lane ROLLUP). Box counts are effectively clear, but **both substantive qualifiers fail**. Two independent blockers, below. Box counting alone would have ticked this box; it is wrong to tick.
+
+    **Box counts — re-derived, line-anchored and CRLF-safe** (a `- \[ \]` match anywhere in the line is what earlier passes used; both forms agree here). From `D:/projects/personal/Streamlineos/`:
+    ```
+    PYTHONIOENCODING=utf-8 python -c "
+    import glob, re
+    for t in [4,5,6,7,9,15,16,17,19,20,33,39,67]:
+        f = sorted(glob.glob('docs/build-module/tickets/%02d-*.md' % t))[0]
+        data = open(f, 'rb').read()
+        u = len(re.findall(rb'(?m)^[ \t]*- \[ \]', data))
+        x = len(re.findall(rb'(?m)^[ \t]*- \[[xX]\]', data))
+        print('%02d unchecked=%d checked=%d' % (t, u, x))
+    "
+    ```
+    Result: `04 0/7 · 05 0/5 · 06 0/5 · 07 0/4 · 09 0/5 · 15 0/7 · 16 1/6 · 17 0/5 · 19 0/8 · 20 0/4 · 33 0/5 · 39 0/6 · 67 0/7` — 1 unchecked box across 75.
+
+    Ticket 16's sole unchecked box is the adjudicated closed-window sequencing guard recorded in the five adjudications above, not open work: 1378 is journalled at idx 1121 and the ticket-17 reader `eq(ticketActivityLog.projectId, projectId)` in `backend/src/modules/build/core/activity/projects-activity-feed.service.ts` shipped afterwards, so "No reader depends on the new column yet" is false at HEAD by design. **That box is not why this roll-up is blocked.**
+
+    **Blocker 1 — qualifier "behavior-level tests, not matching mocks" fails on ticket 07.** Ticket 07 cites `ticket-schema-bounds.spec.ts` for "Schema rejection tested". That suite is **red at HEAD**, and the half that still passes is vacuous. From `backend/`:
+    ```
+    node node_modules/jest/bin/jest.js --runInBand --no-cache --coverage=false \
+      --runTestsByPath src/modules/build/core/dto/ticket-schema-bounds.spec.ts
+    ```
+    Result: `Tests: 10 failed, 40 passed, 50 total`. Every failure is a **positive** assertion over `updateTicketSchema`:
+    ```
+    ● ticket type derives from the database enum › updateTicketSchema accepts DB enum value: EPIC
+    ● ticket type derives from the database enum › updateTicketSchema accepts DB enum value: STORY
+    ● ticket type derives from the database enum › updateTicketSchema accepts DB enum value: TASK
+    ● ticket type derives from the database enum › updateTicketSchema accepts DB enum value: BUG
+    ● ticket type derives from the database enum › updateTicketSchema accepts omitted type (field is optional)
+    ● Build ticket numeric bounds › accepts valid story points: 0
+    ● Build ticket numeric bounds › accepts valid story points: 8
+    ● Build ticket numeric bounds › accepts valid original estimates: 0
+    ● Build ticket numeric bounds › accepts valid original estimates: 0.25
+    ● Build ticket numeric bounds › accepts valid original estimates: 100
+    ```
+    Cause: ticket 12 made the concurrency token mandatory — `backend/src/modules/build/core/dto/ticket.schemas.ts:174` is `version: z.number().int().positive()` with no `.optional()`. The spec's positive cases call `updateTicketSchema.safeParse({ type })` and `safeParse({ originalEstimate })` with no `version`, so they now fail on the missing token. This is committed at HEAD, not a lane's in-flight edit: `git status --short -- src/modules/build/core/dto/` is empty and the breaking change is `82235d8ad feat(build): require the ticket concurrency token, and land seven more migrations`.
+
+    The consequence is worse than a red suite. The paired negatives — `updateTicketSchema rejects value absent from the DB enum: SUBTASK / subtask / FEATURE / "" / "null"` — still pass, but they now pass **because `version` is absent**, not because the enum rejects `SUBTASK`. With its positive control red, ticket 07's type-derivation negative is exactly the vacuous assertion this roll-up forbids. Ticket 07 cannot be called closed by behaviour-level tests while its cited suite is in this state.
+
+    **Blocker 2 — qualifier "do not keep invalidation recipes that contradict actual report dependencies" fails on ticket 19.** Ticket 19 owns this clause (not 33, 39 or 67). Its recipe contradicts the real report dependencies in **both** directions, and its cited test pins the contradiction in place.
+
+    *Omission — keys a report does read that the recipe does not invalidate.* Three of the six reports are computed from `tickets.updatedAt`, which every edit bumps:
+    - `backend/src/modules/build/core/analytics/projects-reports.service.ts:143,163,164` — burnup fallback groups completed points by `date_trunc('day', ${tickets.updatedAt})`.
+    - `:303,304,318,321,322` — cycleTime groups by `date_trunc('week', ${tickets.updatedAt})` and averages `EXTRACT(EPOCH FROM (${tickets.updatedAt} - ${tickets.createdAt}))`.
+    - `:337-358` — leadTime does the same, with p50/p90 percentiles.
+
+    `frontend/hooks/api/build/ticket-cache.ts:338-343` invalidates **only** `criticalPath` on a title change, and a rank-only change (`{ status: undefined }`) returns at `:278` having invalidated no report at all. So a title edit and a rank change both move burnup, cycleTime and leadTime and refresh none of them. Ticket 19's own box 5 concedes this ("a known gap documented above") and box 1 defers it ("Decision deferred pending a backend design change"), yet the criterion it is ticked against reads "…while patching or invalidating **every** report projection they actually change". The deferral is the contradiction, not a resolution of it.
+
+    *Over-invalidation resting on a false premise.* Ticket 19 box 1 asserts "`points` (frontend) maps to `storyPoints` in the DB schema". That is false at source: `backend/src/db/schema/build/ticket-core.ts:47,48` declares `points: integer("points")` and `storyPoints: integer("story_points")` as two distinct columns, and the update path writes only the former — `backend/src/modules/build/core/tickets/apply-ticket-change.ts:174` is `if (input.points !== undefined) updateData.points = input.points;`. Meanwhile every report the recipe evicts on a points change reads `storyPoints`: `projects-velocity-report.ts:34,36`, `projects-reports.service.ts:134,144`, `:372`. So `ticket-cache.ts:323-336` invalidates velocity, burnup and criticalPath for a mutation that cannot move any of them. Ticket 19's own second-pass correction at its lines 26-27 states the opposite of its box 1 and is the one that matches disk; the ticket contradicts itself and the box was ticked on the wrong half.
+
+    *The cited test enforces the wrong matrix.* `frontend/hooks/api/build/ticket-cache.test.ts` uses a real `QueryClient` and the real helper, which is the right shape — but its test "title-only change evicts only criticalPath (title is projected in the critical-path query)" asserts `expect(keys).not.toContain(... cycleTime ...)`, `not.toContain(... leadTime ...)` and `not.toContain(... burnup ...)`. Those three assertions are false against the SQL above, so the suite would go red if the omission were fixed. The recipe is not merely kept — it is pinned.
+
+    For completeness, the two suites behind these two tickets do pass as written. From `frontend/`:
+    ```
+    node node_modules/jest/bin/jest.js --runInBand --no-cache --runTestsByPath \
+      hooks/api/build/ticket-cache.test.ts hooks/api/build/project-rename-invalidation.test.ts
+    → Test Suites: 2 passed, 2 total · Tests: 15 passed, 15 total
+    ```
+    Passing is not the point; the 7 ticket-cache tests encode a matrix that the backend SQL refutes. Also verified and not a blocker: all six report hooks do sit at the documented floor — `frontend/hooks/api/build/reports.ts:133,149,160,171,181,191` are each `staleTime: 2 * 60_000`.
+
+    **Citation audit — every cited path resolves; none is missing.** 62 distinct repository paths are cited across the 13 tickets. 13 are stale, all of them to a file that moved and can be named:
+    - `core/` → concept subdirectories (the 57-file move): `projects-activity.service.ts`, `projects-activity.isolation.spec.ts`, `projects-activity-feed.service.ts`, `projects-activity-feed.isolation.spec.ts` are now under `backend/src/modules/build/core/activity/`; `projects-velocity-report.ts` and `projects-reports.service.ts` under `core/analytics/`; `s04-roadmap-pagination.spec.ts` under `core/roadmap/`; `ticket-type-invalid-returns-400.spec.ts`, `ticket-16-backfill-reconciliation.db.spec.ts`, `ticket-17-activity-feed-plan.db.spec.ts` under `core/tickets/`.
+    - `frontend/features/meetings/generate-agenda.ts` (ticket 39) is `frontend/features/build/meetings/generate-agenda.ts`.
+    No cited file exists nowhere on disk.
+
+    **Coverage of this audit, stated so the verdict is honest about itself.** Examined for qualifier (2), with the cited suite run: **04, 05, 06, 07, 09, 17, 19, 20, 39, 67**. From `backend/`, six suites:
+    ```
+    node node_modules/jest/bin/jest.js --runInBand --no-cache --coverage=false --runTestsByPath \
+      src/modules/build/core/roadmap/s04-roadmap-pagination.spec.ts \
+      src/modules/build/core/dto/ticket-schema-bounds.spec.ts \
+      src/modules/build/core/tickets/ticket-type-invalid-returns-400.spec.ts \
+      src/modules/build/core/activity/projects-activity.isolation.spec.ts \
+      src/modules/build/core/activity/projects-activity-feed.isolation.spec.ts \
+      src/modules/notifications/unified-inbox-approval-ordering.spec.ts
+    → Test Suites: 1 failed, 5 passed, 6 total · Tests: 10 failed, 86 passed, 96 total
+    ```
+    From `frontend/`, six suites:
+    ```
+    node node_modules/jest/bin/jest.js --runInBand --no-cache --runTestsByPath \
+      hooks/api/build/column-count-invalidation.test.ts \
+      features/build/approvals/approvals-schema.test.ts \
+      features/build/approvals/request-approval-sheet.test.tsx \
+      features/build/shared/assignee-filter-submenu.test.tsx \
+      features/build/shared/completed-status.test.ts \
+      features/build/views/table-view-types.test.ts
+    → Test Suites: 6 passed, 6 total · Tests: 90 passed, 90 total
+    ```
+    **Not examined at evidence level: 15, 16, 33.** Ticket 33's boxes cite no spec file at all, so there was nothing to run. Tickets 16 and 17 cite `ticket-16-backfill-reconciliation.db.spec.ts` and `ticket-17-activity-feed-plan.db.spec.ts`; **neither was run** — `*.db.spec.ts` falls back to the production connection string in this repo, and no lane may open it. Ticket 15's remaining evidence is the plan measurement, which needs the same database. Those three tickets are unaudited here and this box must not be read as clearing them.
+
+    **What would unblock this box.** (1) Repair `ticket-schema-bounds.spec.ts` so its `updateTicketSchema` positives supply the now-mandatory `version`, restoring a live positive control behind ticket 07's enum-rejection negatives. (2) Settle ticket 19's `updatedAt` dependency rather than deferring it — either remove the generic-timestamp dependency from the burnup fallback and the cycle/lead-time windows, or invalidate those three keys on every edit — then correct box 1's false `points`→`storyPoints` claim and re-point `ticket-cache.test.ts` at the corrected matrix. Neither is in this lane's write territory.
 - [x] **P1: database invariants.** Rework 63 by identity class; settle project-less semantics in 64; test 62/64/65 with application-role transactions, concurrent writers and cold replay. A planned journal entry is not an actual entry. No production DDL was executed here.
   - Earned 2026-09-27 (Lane A). Tickets 62, 63, 64 and 65 all have zero unchecked boxes.
 

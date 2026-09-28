@@ -100,7 +100,23 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
-  - 2026-09-27: `ownerId`→`managerId`, `status`, and `cursor`→`afterId` URL params are now wired in `OVERVIEW_FILTER_DEFINITIONS` and forwarded to `useProjects`; 5 new tests cover these params. NOT-EARNED: `sort` URL param (listed in URL state section) is absent from `listProjectsSchema` at `backend/src/modules/build/core/dto/project-core.schemas.ts:73` — backend does not accept a sort argument; box stays open until backend adds `sort` support or the spec removes it.
+  - 2026-09-27: `ownerId`→`managerId`, `status`, and `cursor`→`afterId` URL params are now wired in `OVERVIEW_FILTER_DEFINITIONS` and forwarded to `useProjects`; 5 new tests cover these params.
+  - 2026-09-28 NOT EARNED, backend gap confirmed by reading the schema. `sort` is listed in the URL state section but `listProjectsSchema` is `.strict()` and declares no sort argument, so sending one is a 400. `sed -n '73,80p' backend/src/modules/build/core/dto/project-core.schemas.ts`:
+
+    ```text
+    export const listProjectsSchema = z.object({
+      search: z.string().optional(),
+      status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED", "ALL"]).default("ALL"),
+      afterId: idCursorSchema,
+      limit: pageSizeField(9),
+      managedProductId: z.coerce.number().int().positive().optional(),
+      managerId: z.string().optional(),
+    }).strict();
+    ```
+
+    The schema is bound to the live read at `backend/src/modules/build/core/projects.controller.ts:65` (`@Validate({ query: listProjectsSchema })` on `@Get()`), and `backend/src/common/validation/zod-validation.interceptor.ts:30` calls `schemas.query.parse(req.query)`, so a `.strict()` miss is a 400 and not a silent strip.
+    - **BE required:** add a sort field to `listProjectsSchema` (`backend/src/modules/build/core/dto/project-core.schemas.ts:73`), plus the matching `ORDER BY` in `ProjectsQueryService.listProjects`. A keyset list must keep the cursor and the sort in agreement, so the sort whitelist has to stay compatible with `afterId` descending-id paging.
+  - 2026-09-28 second gap on this box, frontend and in this lane's territory: the four URL params are read and forwarded but the page renders **no filter toolbar at all** — the wireframe's "Filter and layout toolbar (URL-backed)" row has no control on `managed-product-overview-page.tsx`. The params are deep-linkable only. Not fixed here because the box cannot be earned while `sort` is a 400.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.

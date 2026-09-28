@@ -93,7 +93,14 @@ jest.mock("@/components/pm-chrome", () => ({
 }));
 
 jest.mock("@/components/ui/select", () => ({
-  Select: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Select: ({ children, onValueChange }: { children: React.ReactNode; onValueChange?: (value: string) => void }) => (
+    <div>
+      {children}
+      <button type="button" data-testid="select-released" onClick={() => onValueChange?.("released")}>
+        released
+      </button>
+    </div>
+  ),
   SelectTrigger: ({ children }: { children: React.ReactNode }) => (
     <button type="button">{children}</button>
   ),
@@ -229,6 +236,7 @@ const releaseRow = {
   projectId: 1,
   name: "v1.0.0",
   version: "1.0.0",
+  rowVersion: 4,
   status: "draft" as const,
   releaseDate: null,
   ticketCount: 0,
@@ -245,6 +253,27 @@ it("shows bulk action bar with count after row is selected", () => {
   expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
   fireEvent.click(screen.getByTestId("table-rows"));
   expect(screen.getByText("1 selected")).toBeInTheDocument();
+});
+
+it("sends the row's rowVersion with a bulk status change, because the backend rejects an untokened update", () => {
+  const mutate = jest.fn();
+  mockUseUpdateRelease.mockReturnValue({ mutate, isPending: false });
+  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
+  render(<ReleasesPage projectId={1} />);
+  fireEvent.click(screen.getByTestId("table-rows"));
+  fireEvent.click(screen.getByTestId("select-released"));
+  expect(mutate).toHaveBeenCalledTimes(1);
+  expect(mutate.mock.calls[0]?.[0]).toEqual({ releaseId: 1, rowVersion: 4, status: "released" });
+});
+
+it("sends no bulk update for a selected id that is not on the current page, so no row is saved without its token", () => {
+  const mutate = jest.fn();
+  mockUseUpdateRelease.mockReturnValue({ mutate, isPending: false });
+  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([{ ...releaseRow, id: 99 }]) }));
+  render(<ReleasesPage projectId={1} />);
+  fireEvent.click(screen.getByTestId("table-rows"));
+  fireEvent.click(screen.getByTestId("select-released"));
+  expect(mutate).not.toHaveBeenCalled();
 });
 
 it("hides bulk action bar after clear button is clicked", () => {

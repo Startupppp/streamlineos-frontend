@@ -42,7 +42,7 @@ Priority is identity and next action first, filters/layout second, bounded conte
 
 ## URL state
 
-Deep-linkable query parameters: `state`, `event`, `from`, `to`, `q`, `cursor`. Cursor may be shared only when it is stable for the same normalized filter/sort/access revision. Selection, open menus, drafts, and unsaved form state are not placed in the URL.
+Deep-linkable query parameters: `state`, `event`, `from`, `to`, `q`, `cursor` (serialised as the shared `cursors` stack by `useBuildCursorPager`, so Previous works on a keyset read). Cursor may be shared only when it is stable for the same normalized filter/sort/access revision. Selection, open menus, drafts, and unsaved form state are not placed in the URL.
 
 ## Bulk, keyboard, and context actions
 
@@ -101,6 +101,21 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+  - 2026-09-28 NOT EARNED, backend gap confirmed by reading the schema. `sed -n '17,22p' backend/src/modules/build/core/dto/webhook.schemas.ts`:
+
+    ```text
+    export const listWebhooksQuerySchema = z.object({
+      state: z.enum(["active", "inactive"]).optional(),
+      event: z.string().optional(),
+      q: z.string().optional(),
+      cursor: z.coerce.number().int().positive().optional(),
+    }).strict();
+    ```
+
+    Bound at `backend/src/modules/build/core/projects-webhooks.controller.ts:44` (`@Validate({ params: projectIdParams, query: listWebhooksQuerySchema })` on `@Get(":projectId/webhooks")`); `backend/src/common/validation/zod-validation.interceptor.ts:30` does `schemas.query.parse(req.query)`, so an unrecognised key is a 400, not a silent strip. `from` and `to` are listed in the URL state section and cannot be wired client-side.
+    - **BE required:** add `from` and `to` to `listWebhooksQuerySchema` at `backend/src/modules/build/core/dto/webhook.schemas.ts:17` (ISO-date strings, both optional, with a refinement that `to >= from`) and filter on `projectWebhooks.createdAt` — or on the delivery timestamp if the intent is "webhooks with deliveries in this window" — in `ProjectsWebhooksService.listWebhooks`. Do not relax `.strict()`.
+  - 2026-09-28 everything on the box the backend already supports is now wired: `cursor` was the remaining unimplemented URL parameter and is done. `useWebhooks` (`hooks/api/build/webhooks.ts`) had `select: (page) => page.data`, which threw away `hasMore`/`nextCursor` and made paging impossible; it now returns the envelope (FE-31). The page pages through the shared `useBuildCursorPager`, serialising the cursor stack into the URL as `cursors`, and renders `TablePagination mode="cursor"` with `hideOnSinglePage` — prev/next over a keyset read, no reveal button and no faked page count (FE-125, FE-105). A filter or search write clears the stack in the same `router.replace`. 7 tests under `BLD-X-FE-SETTINGS-WH-034`.
+  - 2026-09-28 also not on this page and not blocked by the backend: the wireframe's selection-aware **bulk action bar** has no counterpart here, and there is no bulk webhook endpoint to back one. Decide whether bulk enable/disable/delete is in scope for this page before the box is re-opened; the box as written asks for it.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.

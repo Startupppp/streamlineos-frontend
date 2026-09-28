@@ -16,6 +16,10 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { ProjectMember } from "./types";
 import { useCan } from "@/hooks/api/access";
+import {
+  diffTicketConflictFields,
+  type TicketConflictFieldDiff,
+} from "./ticket-conflict-diff";
 
 interface ProjectManager {
   id: string;
@@ -36,10 +40,17 @@ interface UseTicketDetailOptions {
   onDeleted?: () => void;
 }
 
+interface TicketConflictState {
+  fields: TicketConflictFieldDiff[];
+  patch: Record<string, unknown>;
+  serverUpdatedAt: string;
+}
+
 export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDetailOptions) {
   const canUpdate = useCan("build:tickets:update");
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
+  const [conflict, setConflict] = useState<TicketConflictState | null>(null);
   const [localTitle, setLocalTitle] = useState("");
   const [syncedTitleVersion, setSyncedTitleVersion] = useState<string | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -112,6 +123,24 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
         for (const [key, value] of Object.entries(variables)) {
           if (key !== "ticketId" && key !== "expectedUpdatedAt") patch[key] = value;
         }
+        async function showFieldComparison() {
+          const latest = await refetchTicket();
+          const current = latest.data;
+          if (!current?.updatedAt) return;
+          const fields = diffTicketConflictFields(patch, current, {
+            members,
+            epics: queryClient.getQueryData(buildWorkQueryKeys.projects.epics(projectId)),
+            modules: queryClient.getQueryData(buildWorkQueryKeys.projects.modules(projectId)),
+            cycles: queryClient.getQueryData(buildWorkQueryKeys.projects.cycles(projectId)),
+          });
+          if (fields.length === 0) return;
+          setConflict({
+            fields,
+            patch,
+            serverUpdatedAt: new Date(current.updatedAt).toISOString(),
+          });
+        }
+        void showFieldComparison();
         async function handleReapply() {
           const latest = await refetchTicket();
           if (!latest.data?.updatedAt) {
@@ -213,6 +242,18 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     };
   }, []);
 
+  const discardConflictingEdit = useCallback(() => {
+    setConflict(null);
+  }, []);
+
+  const keepConflictingEdit = useCallback(() => {
+    if (!conflict) return;
+    const { patch, serverUpdatedAt } = conflict;
+    lastSavedAtRef.current = serverUpdatedAt;
+    setConflict(null);
+    enqueueSave(patch);
+  }, [conflict, enqueueSave]);
+
   const handleDelete = useCallback(() => {
     if (!ticketId) return;
     deleteTicketMutation.mutate({ ticketId });
@@ -244,6 +285,9 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     members,
     statuses,
     saving,
+    conflict,
+    keepConflictingEdit,
+    discardConflictingEdit,
     localTitle,
     handleTitleChange,
     handleDescriptionEditorChange,

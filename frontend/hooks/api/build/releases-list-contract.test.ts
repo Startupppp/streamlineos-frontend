@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
 import { projectReleaseListContract } from "./build-project-schema";
 
-const RELEASES_SERVICE = "src/modules/build/core/projects-releases.service.ts";
+const RELEASES_SERVICE = "src/modules/build/core/releases/projects-releases.service.ts";
+const RELEASES_SCHEMAS = "src/modules/build/core/dto/releases.schemas.ts";
 
 function projectionKeys(relativePath: string, method: string): string[] {
   const source = readFileSync(backendPath(relativePath), "utf8");
@@ -23,6 +24,7 @@ const RELEASE_ROW = {
   projectId: 10,
   name: "v1.2.0",
   version: "1.2.0",
+  rowVersion: 3,
   description: null,
   status: "draft",
   releaseDate: null,
@@ -82,6 +84,28 @@ describe("releases list contract matches the projects-releases service projectio
   it("keeps version on the list row so the release identifier is always visible", () => {
     const parsed = projectReleaseListContract.parse(CURSOR_PAGE);
     expect(parsed.data[0]?.version).toBe("1.2.0");
+  });
+
+  it("keeps rowVersion on the list row because the update body cannot be built without it", () => {
+    const parsed = projectReleaseListContract.parse(CURSOR_PAGE);
+    expect(parsed.data[0]?.rowVersion).toBe(3);
+  });
+
+  it("drops a release row that omits rowVersion, so a projection regression fails here and not as a 400 on save", () => {
+    const { rowVersion: _omitted, ...withoutToken } = RELEASE_ROW;
+    expect(() =>
+      projectReleaseListContract.parse({ ...CURSOR_PAGE, data: [withoutToken] }),
+    ).toThrow();
+  });
+
+  it("confirms the backend update schema requires rowVersion and rejects unknown keys, so an untokened PATCH is a 400", () => {
+    const source = readFileSync(backendPath(RELEASES_SCHEMAS), "utf8");
+    const start = source.indexOf("export const updateReleaseSchema");
+    expect(start).toBeGreaterThan(-1);
+    const block = source.slice(start, source.indexOf("}).strict()", start) + "}).strict()".length);
+    expect(block).toContain("rowVersion: z.number().int().positive(),");
+    expect(block).not.toContain("rowVersion: z.number().int().positive().optional()");
+    expect(block).toContain("}).strict()");
   });
 
   it("confirms the backend releases service has server cursor pagination keeping reads bounded", () => {

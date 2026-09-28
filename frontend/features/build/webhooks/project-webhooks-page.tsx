@@ -62,6 +62,11 @@ import {
   type WebhookFormValues,
 } from "@/features/build/webhooks/webhook-schema";
 import { setListMembership } from "@/lib/toggle-in-list";
+import { TablePagination } from "@/components/ui/table-pagination";
+import {
+  BUILD_CURSOR_STACK_PARAM,
+  useBuildCursorPager,
+} from "@/features/build/shared/use-build-cursor-pager";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
@@ -122,9 +127,19 @@ export function ProjectWebhooksPage({
   const [qInput, setQInput] = useState(qParam ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
+  const pager = useBuildCursorPager(
+    `${stateParam ?? ""}|${eventParam ?? ""}|${qParam ?? ""}`,
+  );
+  const cursorParam = pager.cursor ? Number(pager.cursor) : undefined;
+
   const filters =
-    stateParam || eventParam || qParam
-      ? { state: stateParam ?? undefined, event: eventParam, q: qParam }
+    stateParam || eventParam || qParam || cursorParam !== undefined
+      ? {
+          state: stateParam ?? undefined,
+          event: eventParam,
+          q: qParam,
+          cursor: cursorParam,
+        }
       : undefined;
 
   const updateUrl = useCallback(
@@ -137,7 +152,7 @@ export function ProjectWebhooksPage({
           params.delete(key);
         }
       }
-      params.delete("cursor");
+      params.delete(BUILD_CURSOR_STACK_PARAM);
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
@@ -171,12 +186,13 @@ export function ProjectWebhooksPage({
   );
 
   const {
-    data: webhooks,
+    data: webhookPage,
     isLoading,
     isError,
     error,
     refetch,
   } = useWebhooks(projectId, filters);
+  const webhooks = webhookPage?.data;
 
   const pageState = usePageState({
     permission: "build:manage",
@@ -254,6 +270,10 @@ export function ProjectWebhooksPage({
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   const webhookList = webhooks ?? [];
+  const nextCursor = webhookPage?.nextCursor ?? null;
+  const handleNextPage = useCallback(() => {
+    pager.goNext(nextCursor === null ? undefined : String(nextCursor));
+  }, [pager, nextCursor]);
   const handleOpenWebhook = useCallback((_index: number) => {}, []);
   const handleClearWebhookSelection = useCallback(() => {}, []);
   useBuildListKeyboard({
@@ -350,25 +370,36 @@ export function ProjectWebhooksPage({
             onRetry={handleRetry}
             className="flex-1"
           >
-            <PmStaggerList
-              className="space-y-2.5"
-              role="list"
-              aria-label="Webhooks"
-            >
-              <AnimatePresence initial={false}>
-                {(webhooks ?? []).map((wh) => (
-                  <div key={wh.id} role="listitem">
-                    <WebhookCard
-                      webhook={wh}
-                      projectId={projectId}
-                      onDelete={handleDelete}
-                      onToggle={canManage ? handleToggle : undefined}
-                      canManage={canManage}
-                    />
-                  </div>
-                ))}
-              </AnimatePresence>
-            </PmStaggerList>
+            <div className="flex min-h-0 flex-1 flex-col gap-2">
+              <PmStaggerList
+                className="space-y-2.5"
+                role="list"
+                aria-label="Webhooks"
+              >
+                <AnimatePresence initial={false}>
+                  {webhookList.map((wh) => (
+                    <div key={wh.id} role="listitem">
+                      <WebhookCard
+                        webhook={wh}
+                        projectId={projectId}
+                        onDelete={handleDelete}
+                        onToggle={canManage ? handleToggle : undefined}
+                        canManage={canManage}
+                      />
+                    </div>
+                  ))}
+                </AnimatePresence>
+              </PmStaggerList>
+              <TablePagination
+                mode="cursor"
+                rowCount={webhookList.length}
+                hasMore={webhookPage?.hasMore ?? false}
+                hasPrevious={pager.hasPrevious}
+                onNext={handleNextPage}
+                onPrevious={pager.goPrevious}
+                hideOnSinglePage
+              />
+            </div>
           </PageState>
         </PmSection>
       </PmPageShell>

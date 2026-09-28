@@ -21,6 +21,7 @@ const RELEASE = {
   projectId: 3,
   name: "v1.2",
   version: "1.2.0",
+  rowVersion: 1,
   description: null,
   status: "draft",
   releaseDate: null,

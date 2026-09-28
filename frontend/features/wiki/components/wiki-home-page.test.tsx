@@ -42,13 +42,26 @@ jest.mock("@/hooks/api/kb/linked-documents", () => ({
   useLinkedDocuments: () => ({ data: undefined }),
 }));
 
-const mockUseBuildListKeyboard = jest.fn(() => ({
-  focusedIndex: null,
-  setFocusedIndex: jest.fn(),
-}));
+type BuildListKeyboardOptions = Record<string, unknown>;
+
+const mockUseBuildListKeyboard = jest.fn(
+  (options: BuildListKeyboardOptions) => ({
+    focusedIndex: null,
+    setFocusedIndex: jest.fn(),
+    receivedOptions: options,
+  }),
+);
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
-  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+  useBuildListKeyboard: (options: BuildListKeyboardOptions) =>
+    mockUseBuildListKeyboard(options),
 }));
+
+function lastKeyboardOptions(): BuildListKeyboardOptions {
+  const calls = mockUseBuildListKeyboard.mock.calls;
+  const latest = calls[calls.length - 1];
+  if (latest === undefined) throw new Error("useBuildListKeyboard was never called");
+  return latest[0];
+}
 
 jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
   ShortcutHelpDialog: ({ open }: { open: boolean }) =>
@@ -451,13 +464,13 @@ describe("WikiHomePage — keyboard shortcuts wired via useBuildListKeyboard", (
 
   it("passes onCreate when canCreate is true so the c shortcut creates a page", () => {
     render(<WikiHomePage />);
-    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    const options = lastKeyboardOptions();
     expect(typeof options.onCreate).toBe("function");
   });
 
   it("passes onShortcutHelp so the ? key opens the shortcut dialog", () => {
     render(<WikiHomePage />);
-    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    const options = lastKeyboardOptions();
     expect(typeof options.onShortcutHelp).toBe("function");
   });
 
@@ -469,7 +482,7 @@ describe("WikiHomePage — keyboard shortcuts wired via useBuildListKeyboard", (
   it("ShortcutHelpDialog opens when the onShortcutHelp callback passed to the hook is invoked", async () => {
     const { act } = await import("react");
     render(<WikiHomePage />);
-    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    const options = lastKeyboardOptions();
     const onShortcutHelp = options.onShortcutHelp as () => void;
     await act(async () => { onShortcutHelp(); });
     expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
@@ -477,13 +490,13 @@ describe("WikiHomePage — keyboard shortcuts wired via useBuildListKeyboard", (
 
   it("passes searchInputRef to the hook for the non-project-scoped wiki so / focuses the search input", () => {
     render(<WikiHomePage />);
-    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    const options = lastKeyboardOptions();
     expect(options.searchInputRef).toBeDefined();
   });
 
   it("passes searchInputRef as undefined for a project-scoped wiki because there is no search input in that view", () => {
     render(<WikiHomePage projectId={7} />);
-    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    const options = lastKeyboardOptions();
     expect(options.searchInputRef).toBeUndefined();
   });
 });
@@ -582,7 +595,7 @@ describe("WikiHomePage — the create control fails closed on kb:pages:create", 
   it("passes no onCreate to the keyboard hook when kb:pages:create is denied so the c shortcut cannot create a page", () => {
     mockCan = (key) => key !== "kb:pages:create";
     render(<WikiHomePage />);
-    const options = mockUseBuildListKeyboard.mock.calls[0]?.[0] as Record<string, unknown>;
+    const options = lastKeyboardOptions();
     expect(options.onCreate).toBeUndefined();
   });
 });

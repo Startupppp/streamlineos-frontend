@@ -17,6 +17,7 @@ import { formatTicketKey, parseTicketKey } from "@/components/shared/format-tick
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
 import { TicketDetailToolbar } from "./ticket-detail-toolbar";
+import { TicketConflictDialog } from "./ticket-conflict-dialog";
 import { TicketParentControl } from "./ticket-parent-control";
 import { useTicketDetail } from "./use-ticket-detail";
 import { useIsMobile } from "@/hooks/common/use-mobile";
@@ -100,6 +101,9 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     members,
     statuses,
     saving,
+    conflict,
+    keepConflictingEdit,
+    discardConflictingEdit,
     localTitle,
     handleTitleChange,
     handleDescriptionEditorChange,
@@ -326,6 +330,14 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           asideClassName="md:w-96 md:min-w-96 xl:w-[26rem] xl:min-w-[26rem]"
         />
       </div>
+
+      <TicketConflictDialog
+        open={Boolean(conflict)}
+        fields={conflict?.fields ?? []}
+        isReapplying={saving}
+        onKeepMine={keepConflictingEdit}
+        onDiscard={discardConflictingEdit}
+      />
     </PageWrapper>
   );
 }

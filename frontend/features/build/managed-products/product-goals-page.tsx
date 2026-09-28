@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Plus, Target, TrendingUp, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
@@ -53,7 +54,13 @@ interface ProductGoalsPageProps {
 }
 
 const PAGE_SIZE = 20;
+const PAGE_PARAM = "page";
 const CREATE_ACTION = { id: "create", label: "New Goal", icon: Plus, primary: true as const };
+
+function parsePageParam(raw: string | null): number {
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
 
 export function GoalsSkeleton() {
   return (
@@ -102,13 +109,11 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     [statusValue],
   );
 
-  const [page, setPage] = useState(1);
-  const [appliedResetKey, setAppliedResetKey] = useState(listFilters.resetKey);
-
-  if (appliedResetKey !== listFilters.resetKey) {
-    setAppliedResetKey(listFilters.resetKey);
-    setPage(1);
-  }
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+  const page = parsePageParam(searchParams.get(PAGE_PARAM));
 
   const params = useMemo(
     () => ({
@@ -156,9 +161,20 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     isEmpty: goals.length === 0 && page === 1,
   });
 
-  const handlePageChange = useCallback((nextPage: number) => {
-    setPage(nextPage);
-  }, []);
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (nextPage > 1) next.set(PAGE_PARAM, String(nextPage));
+      else next.delete(PAGE_PARAM);
+      const query = next.toString();
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
+      });
+    },
+    [pathname, router, searchParams],
+  );
 
   const handleOpenCreate = useCallback(() => { openCreate(); }, [openCreate]);
 

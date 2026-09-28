@@ -1,8 +1,10 @@
+import { readFileSync } from "node:fs";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CycleFormSheet } from "./cycle-form-sheet";
 import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
 import type { Cycle } from "@/types/projects";
+import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
 
 jest.mock("@/hooks/api/build/advanced", () => ({
   useCreateCycle: jest.fn(),
@@ -37,6 +39,15 @@ jest.mock("@/components/ui/loading-button", () => ({
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
+const ITERATIONS_SCHEMAS = "src/modules/build/execution/dto/iterations.schemas.ts";
+
+function declaredKeys(exportStatement: string): string[] {
+  const source = readFileSync(backendPath(ITERATIONS_SCHEMAS), "utf8");
+  const start = source.indexOf(exportStatement);
+  const block = source.slice(start, source.indexOf("}).strict()", start));
+  return [...block.matchAll(/^\s{4}(\w+):/gm)].map((match) => match[1]!);
+}
+
 const mockUseCreateCycle = useCreateCycle as jest.Mock;
 const mockUseUpdateCycle = useUpdateCycle as jest.Mock;
 const mockUpdateMutate = jest.fn();
@@ -48,6 +59,7 @@ const COMPLETED_CYCLE: Cycle = {
   name: "Completed cycle",
   description: "Original goal",
   goal: null,
+  capacity: null,
   version: 2,
   status: "completed",
   startDate: "2026-09-01",
@@ -91,11 +103,151 @@ it("edits an existing completed cycle without rejecting its historical dates", a
       name: "Retrospective cycle",
       description: "Original goal",
       goal: undefined,
+      capacity: null,
       startDate: "2026-09-01",
       endDate: "2026-09-14",
     },
     expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
   ));
+});
+
+it("loads the stored capacity into the form and sends the edited number back on save", async () => {
+  const cycleWithCapacity: Cycle = { ...COMPLETED_CYCLE, capacity: 21 };
+  renderWithClient(
+    <CycleFormSheet
+      projectId={1}
+      cycles={[cycleWithCapacity]}
+      cycle={cycleWithCapacity}
+      open
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  await waitFor(() => expect(screen.getByLabelText("Capacity")).toHaveValue("21"));
+  fireEvent.change(screen.getByLabelText("Capacity"), { target: { value: "34" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+  await waitFor(() =>
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ capacity: 34 }),
+      expect.any(Object),
+    ),
+  );
+});
+
+it("clears capacity to null rather than to zero when the field is emptied", async () => {
+  const cycleWithCapacity: Cycle = { ...COMPLETED_CYCLE, capacity: 21 };
+  renderWithClient(
+    <CycleFormSheet
+      projectId={1}
+      cycles={[cycleWithCapacity]}
+      cycle={cycleWithCapacity}
+      open
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  await waitFor(() => expect(screen.getByLabelText("Capacity")).toHaveValue("21"));
+  fireEvent.change(screen.getByLabelText("Capacity"), { target: { value: "" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+  await waitFor(() =>
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ capacity: null }),
+      expect.any(Object),
+    ),
+  );
+});
+
+it("rejects a fractional capacity instead of sending a value the integer column cannot hold", async () => {
+  renderWithClient(
+    <CycleFormSheet
+      projectId={1}
+      cycles={[COMPLETED_CYCLE]}
+      cycle={COMPLETED_CYCLE}
+      open
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  await waitFor(() => expect(screen.getByLabelText("Name")).toHaveValue("Completed cycle"));
+  fireEvent.change(screen.getByLabelText("Capacity"), { target: { value: "8.5" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+  await waitFor(() => expect(screen.getByText("Capacity must be a whole number of points")).toBeInTheDocument());
+  expect(mockUpdateMutate).not.toHaveBeenCalled();
+});
+
+it("offers no goal field while creating, because createCycleSchema is strict and does not declare goal", async () => {
+  renderWithClient(
+    <CycleFormSheet projectId={1} cycles={[]} cycle={null} open onOpenChange={jest.fn()} />,
+  );
+
+  await waitFor(() => expect(screen.getByLabelText("Name")).toHaveValue(""));
+  expect(screen.queryByLabelText("Goal")).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Capacity")).toBeInTheDocument();
+});
+
+it("offers the goal field while editing, where updateCycleSchema does declare goal", async () => {
+  renderWithClient(
+    <CycleFormSheet
+      projectId={1}
+      cycles={[COMPLETED_CYCLE]}
+      cycle={COMPLETED_CYCLE}
+      open
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  await waitFor(() => expect(screen.getByLabelText("Goal")).toBeInTheDocument());
+});
+
+it("sends a create payload carrying no key createCycleSchema would reject", async () => {
+  const createMutate = jest.fn();
+  mockUseCreateCycle.mockReturnValue({ mutate: createMutate, isPending: false });
+  renderWithClient(
+    <CycleFormSheet projectId={1} cycles={[]} cycle={null} open onOpenChange={jest.fn()} />,
+  );
+
+  await waitFor(() => expect(screen.getByLabelText("Name")).toHaveValue(""));
+  fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Cycle 1" } });
+  fireEvent.change(screen.getByLabelText("Capacity"), { target: { value: "13" } });
+  const dates = screen.getAllByDisplayValue("");
+  fireEvent.change(dates[dates.length - 2]!, { target: { value: "2099-01-01" } });
+  fireEvent.change(dates[dates.length - 1]!, { target: { value: "2099-01-14" } });
+  fireEvent.click(screen.getByRole("button", { name: "Create Cycle" }));
+
+  await waitFor(() => expect(createMutate).toHaveBeenCalled());
+  const sent = Object.keys(createMutate.mock.calls[0]![0]).filter((key) => key !== "projectId");
+  expect(backendReachable(ITERATIONS_SCHEMAS)).toBe(true);
+  const declared = declaredKeys("export const createCycleSchema");
+  expect(declared).toContain("name");
+  expect(sent.filter((key) => !declared.includes(key))).toEqual([]);
+});
+
+it("keeps the cycle update payload inside the keys updateCycleSchema declares", async () => {
+  const cycleWithCapacity: Cycle = { ...COMPLETED_CYCLE, capacity: 21, goal: "Ship the importer" };
+  renderWithClient(
+    <CycleFormSheet
+      projectId={1}
+      cycles={[cycleWithCapacity]}
+      cycle={cycleWithCapacity}
+      open
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  await waitFor(() => expect(screen.getByLabelText("Name")).toHaveValue("Completed cycle"));
+  fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+  await waitFor(() => expect(mockUpdateMutate).toHaveBeenCalled());
+  const sent = Object.keys(mockUpdateMutate.mock.calls[0]![0]).filter(
+    (key) => key !== "projectId" && key !== "cycleId",
+  );
+  const declared = declaredKeys("export const updateCycleSchema");
+  expect(declared).toContain("version");
+  expect(sent.filter((key) => !declared.includes(key))).toEqual([]);
+  expect(sent).toContain("version");
 });
 
 it("passes version from the cycle prop to the update mutation so the server can reject stale edits", async () => {

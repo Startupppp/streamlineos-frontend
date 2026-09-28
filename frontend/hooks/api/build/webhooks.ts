@@ -51,7 +51,7 @@ export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
   const canManage = useCan("build:manage");
   const hasFilters = filters !== undefined && Object.values(filters).some((v) => v !== undefined);
   const activeFilters = hasFilters ? filters : undefined;
-  return useQuery<WebhookPage, Error, ProjectWebhook[]>({
+  return useQuery<WebhookPage>({
     queryKey: buildWorkQueryKeys.projects.webhooks(projectId, activeFilters as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<WebhookPage>(
@@ -60,7 +60,6 @@ export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
         signal,
         projectWebhookPageContract,
       ),
-    select: (page) => page.data,
     enabled: canManage && !!projectId,
     staleTime: 30_000,
   });

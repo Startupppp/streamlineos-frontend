@@ -1,13 +1,38 @@
 import "./product-scope-pages.test-harness";
+import { fireEvent } from "@testing-library/react";
 import { ProductGoalsPage } from "./product-goals-page";
 import {
   EMPTY_GOALS_PAGE_RESULT,
+  mockRouterReplace,
   mockUseSearchParams,
   render,
   screen,
   useGoalsPage,
   usePageState,
 } from "./product-scope-pages.test-harness";
+
+function goalsPageResult(total: number, page: number) {
+  return {
+    data: {
+      items: Array.from({ length: 20 }, (_, i) => ({
+        id: i + 1,
+        title: `Goal ${i + 1}`,
+        level: "company",
+        status: "on_track",
+        progress: 50,
+        owner: null,
+        keyResultCount: 0,
+      })),
+      page,
+      pageSize: 20,
+      total,
+    },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  };
+}
 
 describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
   beforeEach(() => {
@@ -63,28 +88,73 @@ describe("ProductGoalsPage — usePageState integration (BSN-01-027)", () => {
   });
 
   it("renders pagination controls so a user can advance past the first 20 goals (C4)", () => {
-    useGoalsPage.mockReturnValue({
-      data: {
-        items: Array.from({ length: 20 }, (_, i) => ({
-          id: i + 1,
-          title: `Goal ${i + 1}`,
-          level: "company",
-          status: "on_track",
-          progress: 50,
-          owner: null,
-          keyResultCount: 0,
-        })),
-        page: 1,
-        pageSize: 20,
-        total: 45,
-      },
-      isLoading: false,
-      isError: false,
-      error: null,
-      refetch: jest.fn(),
-    });
+    useGoalsPage.mockReturnValue(goalsPageResult(45, 1));
     render(<ProductGoalsPage managedProductId={7} />);
     expect(screen.getByRole("button", { name: /next page/i })).toBeInTheDocument();
+  });
+});
+
+describe("ProductGoalsPage — URL-backed pagination (BSN-GOALS-PAGE-URL)", () => {
+  afterEach(() => {
+    mockUseSearchParams.mockImplementation(() => new URLSearchParams());
+  });
+
+  it("reads the page number from the URL so a deep link to page 3 fetches page 3 rather than page 1", () => {
+    mockUseSearchParams.mockImplementation(() => new URLSearchParams("page=3"));
+    useGoalsPage.mockReturnValue(goalsPageResult(80, 3));
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ page: 3, limit: 20 });
+  });
+
+  it("falls back to page 1 when the URL page value is not a positive integer", () => {
+    mockUseSearchParams.mockImplementation(() => new URLSearchParams("page=not-a-number"));
+    useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ page: 1 });
+  });
+
+  it("falls back to page 1 when the URL page value is zero or negative", () => {
+    mockUseSearchParams.mockImplementation(() => new URLSearchParams("page=-2"));
+    useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).toMatchObject({ page: 1 });
+  });
+
+  it("writes the next page into the URL instead of component state, so reload and back both restore the page", () => {
+    useGoalsPage.mockReturnValue(goalsPageResult(45, 1));
+    render(<ProductGoalsPage managedProductId={7} />);
+    fireEvent.click(screen.getByRole("button", { name: /next page/i }));
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      "/build/managed-products/7/goals?page=2",
+      { scroll: false },
+    );
+  });
+
+  it("drops the page param from the URL when returning to page 1 rather than writing page=1", () => {
+    mockUseSearchParams.mockImplementation(() => new URLSearchParams("page=2"));
+    useGoalsPage.mockReturnValue(goalsPageResult(45, 2));
+    render(<ProductGoalsPage managedProductId={7} />);
+    fireEvent.click(screen.getByRole("button", { name: /previous page/i }));
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      "/build/managed-products/7/goals",
+      { scroll: false },
+    );
+  });
+
+  it("preserves the active filter params when paging so page 2 is still filtered", () => {
+    mockUseSearchParams.mockImplementation(
+      () => new URLSearchParams("health=at_risk&page=1"),
+    );
+    useGoalsPage.mockReturnValue(goalsPageResult(45, 1));
+    render(<ProductGoalsPage managedProductId={7} />);
+    fireEvent.click(screen.getByRole("button", { name: /next page/i }));
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      "/build/managed-products/7/goals?health=at_risk&page=2",
+      { scroll: false },
+    );
   });
 });
 

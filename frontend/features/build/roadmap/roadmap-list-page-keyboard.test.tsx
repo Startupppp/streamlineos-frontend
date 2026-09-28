@@ -1,11 +1,14 @@
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { RoadmapListPage } from "./roadmap-list-page";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 
+const mockReplace = jest.fn();
+let mockSearchParams = new URLSearchParams();
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace }),
   usePathname: () => "/build/roadmap",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }));
 
 jest.mock("@/components/auth/require-module", () => ({
@@ -40,7 +43,13 @@ jest.mock("@/components/ui/page-tabs-toolbar", () => ({
 }));
 
 jest.mock("@/components/ui/search-input", () => ({
-  SearchInput: () => null,
+  SearchInput: ({ value, onValueChange }: { value: string; onValueChange: (next: string) => void }) => (
+    <input
+      aria-label="Search roadmap"
+      value={value}
+      onChange={(event) => onValueChange(event.target.value)}
+    />
+  ),
 }));
 
 jest.mock("@/hooks/common/use-debounce", () => ({
@@ -48,14 +57,18 @@ jest.mock("@/hooks/common/use-debounce", () => ({
 }));
 
 let capturedOnItemsChange: ((items: { id: number }[]) => void) | undefined;
+let capturedSearch: string | undefined;
 
 jest.mock("./roadmap-tab", () => ({
   RoadmapTab: ({
     onItemsChange,
+    search,
   }: {
     onItemsChange?: (items: { id: number }[]) => void;
+    search?: string;
   }) => {
     capturedOnItemsChange = onItemsChange;
+    capturedSearch = search;
     return <div data-testid="roadmap-tab" />;
   },
 }));
@@ -81,6 +94,7 @@ const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
 beforeEach(() => {
   jest.clearAllMocks();
   capturedOnItemsChange = undefined;
+  mockSearchParams = new URLSearchParams();
 });
 
 describe("RoadmapListPage — keyboard itemCount (BSN-FE-K3)", () => {
@@ -100,5 +114,39 @@ describe("RoadmapListPage — keyboard itemCount (BSN-FE-K3)", () => {
 
     const lastCall = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0] as { itemCount: number } | undefined;
     expect(lastCall?.itemCount).toBe(3);
+  });
+});
+
+describe("RoadmapListPage — search is URL-backed as q", () => {
+  it("writes the typed search to the q parameter rather than holding it in component state", () => {
+    render(<RoadmapListPage />);
+
+    fireEvent.change(screen.getByLabelText("Search roadmap"), { target: { value: "billing" } });
+
+    expect(mockReplace).toHaveBeenCalledWith("/build/roadmap?q=billing", { scroll: false });
+  });
+
+  it("seeds the search box from q so a shared roadmap link reopens filtered", () => {
+    mockSearchParams = new URLSearchParams("q=retention");
+
+    render(<RoadmapListPage />);
+
+    expect(screen.getByLabelText("Search roadmap")).toHaveValue("retention");
+  });
+
+  it("removes q from the URL when the search box is emptied instead of leaving q=", () => {
+    mockSearchParams = new URLSearchParams("q=retention");
+    render(<RoadmapListPage />);
+
+    fireEvent.change(screen.getByLabelText("Search roadmap"), { target: { value: "" } });
+
+    expect(mockReplace).toHaveBeenCalledWith("/build/roadmap", { scroll: false });
+  });
+
+  it("forwards the debounced search to RoadmapTab, so the filtered read is server-side", () => {
+    mockSearchParams = new URLSearchParams("q=retention");
+    render(<RoadmapListPage />);
+
+    expect(capturedSearch).toBe("retention");
   });
 });

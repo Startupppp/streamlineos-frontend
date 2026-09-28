@@ -46,7 +46,7 @@ interface ReleaseListQuery {
   to?: string;
 }
 
-function releaseBaseKey(projectId: number) {
+export function releaseBaseKey(projectId: number) {
   return [...queryKeyBase, "projects", projectId, "releases"] as const;
 }
 

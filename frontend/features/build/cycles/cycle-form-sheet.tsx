@@ -42,6 +42,7 @@ import type { Cycle } from "@/types/projects";
 
 const DESCRIPTION_MAX = 500;
 const GOAL_MAX = 500;
+const CAPACITY_MAX = 100_000;
 
 const cycleFormSchema = z
   .object({
@@ -51,6 +52,10 @@ const cycleFormSchema = z
     ),
     description: z.string().max(DESCRIPTION_MAX, `Description must be ${DESCRIPTION_MAX} characters or fewer`),
     goal: z.string().max(GOAL_MAX, `Goal must be ${GOAL_MAX} characters or fewer`),
+    capacity: z
+      .string()
+      .refine((value) => value === "" || /^\d+$/.test(value), "Capacity must be a whole number of points")
+      .refine((value) => value === "" || Number(value) <= CAPACITY_MAX, `Capacity must be ${CAPACITY_MAX} or fewer`),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
   })
@@ -72,6 +77,7 @@ const EMPTY_VALUES: CycleFormValues = {
   name: "",
   description: "",
   goal: "",
+  capacity: "",
   startDate: "",
   endDate: "",
 };
@@ -107,6 +113,7 @@ export function CycleFormSheet({
       name: cycle.name,
       description: cycle.description ?? "",
       goal: cycle.goal ?? "",
+      capacity: cycle.capacity === null ? "" : String(cycle.capacity),
       startDate: cycle.startDate,
       endDate: cycle.endDate,
     } : EMPTY_VALUES);
@@ -140,6 +147,7 @@ export function CycleFormSheet({
   }, [form]);
 
   const handleSubmit = useCallback((values: CycleFormValues) => {
+    const capacity = values.capacity === "" ? null : Number(values.capacity);
     if (cycle) {
       updateCycle.mutate(
         {
@@ -149,6 +157,7 @@ export function CycleFormSheet({
           name: values.name,
           description: values.description,
           goal: values.goal || undefined,
+          capacity,
           startDate: values.startDate,
           endDate: values.endDate,
         },
@@ -172,7 +181,14 @@ export function CycleFormSheet({
       return;
     }
     createCycle.mutate(
-      { ...values, projectId },
+      {
+        projectId,
+        name: values.name,
+        description: values.description,
+        ...(capacity === null ? {} : { capacity }),
+        startDate: values.startDate,
+        endDate: values.endDate,
+      },
       {
         onSuccess: () => {
           toast.success("Cycle created");
@@ -230,14 +246,33 @@ export function CycleFormSheet({
                   </FormItem>
                 )}
               />
+              {isEdit ? (
+                <FormField
+                  control={form.control}
+                  name="goal"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Goal</FormLabel>
+                      <FormControl>
+                        <Textarea rows={2} placeholder="What should this cycle achieve?" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
               <FormField
                 control={form.control}
-                name="goal"
+                name="capacity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Goal</FormLabel>
+                    <FormLabel>Capacity</FormLabel>
                     <FormControl>
-                      <Textarea rows={2} placeholder="What should this cycle achieve?" {...field} />
+                      <Input
+                        inputMode="numeric"
+                        placeholder="Story points this cycle can absorb"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

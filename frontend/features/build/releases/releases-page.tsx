@@ -179,9 +179,10 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   const handleBulkStatusChange = useCallback(
     (status: string) => {
       if (!isReleaseStatus(status)) return;
-      selectedReleaseIds.forEach((releaseId) => {
+      releases.forEach((row) => {
+        if (!selectedReleaseIds.has(row.id)) return;
         updateRelease.mutate(
-          { releaseId, status },
+          { releaseId: row.id, rowVersion: row.rowVersion, status },
           {
             onError: (err) => toast.error(getErrorMessage(err)),
           },
@@ -189,7 +190,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       });
       setSelectedReleaseIds(new Set<number>());
     },
-    [selectedReleaseIds, updateRelease],
+    [releases, selectedReleaseIds, updateRelease],
   );
   const handleOpenByIndex = useCallback(
     (index: number) => {

@@ -1,14 +1,27 @@
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectWebhooksPage } from "./project-webhooks-page";
 import type { ProjectWebhook } from "@/hooks/api/build/webhooks";
 
-const mockUseBuildListKeyboard = jest.fn(() => ({
-  focusedIndex: null,
-  setFocusedIndex: jest.fn(),
-}));
+interface BuildListKeyboardOptions {
+  itemCount?: number;
+  onOpen?: (index: number) => void;
+  onEdit?: (index: number) => void;
+  onCreate?: () => void;
+  onClearSelection?: () => void;
+  onShortcutHelp?: () => void;
+  enabled?: boolean;
+}
+
+const mockUseBuildListKeyboard = jest.fn(
+  (_options?: BuildListKeyboardOptions) => ({
+    focusedIndex: null,
+    setFocusedIndex: jest.fn(),
+  }),
+);
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
-  useBuildListKeyboard: (...args: unknown[]) => mockUseBuildListKeyboard(...args),
+  useBuildListKeyboard: (options: BuildListKeyboardOptions) =>
+    mockUseBuildListKeyboard(options),
 }));
 
 jest.mock("@/hooks/common/use-online-status", () => ({
@@ -30,6 +43,24 @@ let mockAccessState: AccessState = "denied";
 let mockWebhooks: ProjectWebhook[] = [];
 let mockIsLoading = false;
 let mockIsError = false;
+let mockHasMore = false;
+let mockNextCursor: number | null = null;
+const mockGoNext = jest.fn();
+const mockGoPrevious = jest.fn();
+let mockPagerCursor: string | undefined;
+let mockPagerHasPrevious = false;
+const mockUseBuildCursorPager = jest.fn((_resetKey?: string) => ({
+  cursor: mockPagerCursor,
+  hasPrevious: mockPagerHasPrevious,
+  goNext: mockGoNext,
+  goPrevious: mockGoPrevious,
+  reset: jest.fn(),
+}));
+
+jest.mock("@/features/build/shared/use-build-cursor-pager", () => ({
+  BUILD_CURSOR_STACK_PARAM: "cursors",
+  useBuildCursorPager: (resetKey?: string) => mockUseBuildCursorPager(resetKey),
+}));
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (_permission: string) => mockAccessState === "granted",
@@ -47,14 +78,21 @@ jest.mock("@/hooks/api/use-page-state", () => ({
   },
 }));
 
+const mockUseWebhooks = jest.fn(
+  (_projectId: number, _filters?: Record<string, unknown>) => undefined,
+);
+
 jest.mock("@/hooks/api/build/webhooks", () => ({
-  useWebhooks: () => ({
-    data: mockWebhooks,
-    isLoading: mockIsLoading,
-    isError: mockIsError,
-    error: mockIsError ? new Error("fetch failed") : undefined,
-    refetch: jest.fn(),
-  }),
+  useWebhooks: (projectId: number, filters?: Record<string, unknown>) => {
+    mockUseWebhooks(projectId, filters);
+    return {
+      data: { data: mockWebhooks, hasMore: mockHasMore, nextCursor: mockNextCursor },
+      isLoading: mockIsLoading,
+      isError: mockIsError,
+      error: mockIsError ? new Error("fetch failed") : undefined,
+      refetch: jest.fn(),
+    };
+  },
   useCreateWebhook: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteWebhook: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateWebhook: () => ({ mutate: jest.fn(), isPending: false }),
@@ -105,6 +143,14 @@ beforeEach(() => {
   mockWebhooks = [];
   mockIsLoading = false;
   mockIsError = false;
+  mockHasMore = false;
+  mockNextCursor = null;
+  mockPagerCursor = undefined;
+  mockPagerHasPrevious = false;
+  mockGoNext.mockClear();
+  mockGoPrevious.mockClear();
+  mockUseWebhooks.mockClear();
+  mockUseBuildCursorPager.mockClear();
   mockUseBuildListKeyboard.mockClear();
   (
     jest.requireMock("@/hooks/common/use-online-status") as {
@@ -313,9 +359,9 @@ describe("ProjectWebhooksPage — shortcut help dialog (BLD-X-FE-SETTINGS-WH-031
     mockAccessState = "granted";
     mockWebhooks = [SAMPLE_WEBHOOK];
     render(<ProjectWebhooksPage projectId="1" />);
-    const capturedOptions = mockUseBuildListKeyboard.mock.calls[0]?.[0] as { onShortcutHelp: () => void };
-    expect(typeof capturedOptions.onShortcutHelp).toBe("function");
-    await act(async () => { capturedOptions.onShortcutHelp(); });
+    const onShortcutHelp = mockUseBuildListKeyboard.mock.calls[0]?.[0]?.onShortcutHelp;
+    expect(typeof onShortcutHelp).toBe("function");
+    await act(async () => { onShortcutHelp?.(); });
     expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
   });
 });
@@ -384,5 +430,80 @@ describe("ProjectWebhooksPage — URL-backed filters (BLD-X-FE-SETTINGS-WH-033)"
     expect(screen.getByRole("combobox", { name: /filter by state/i })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: /filter by event/i })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: /search webhooks/i })).toBeInTheDocument();
+  });
+});
+
+describe("ProjectWebhooksPage — URL-backed cursor pagination (BLD-X-FE-SETTINGS-WH-034)", () => {
+  it("resets the URL cursor stack whenever the filter shape changes so a shared link cannot pin a stale page", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(mockUseBuildCursorPager).toHaveBeenCalledWith("||");
+  });
+
+  it("forwards the URL-backed cursor to useWebhooks as a number so page 2 is fetched server-side", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    mockPagerCursor = "41";
+    mockPagerHasPrevious = true;
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(mockUseWebhooks).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ cursor: 41 }),
+    );
+  });
+
+  it("sends no cursor to useWebhooks when the URL carries no cursor stack", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(mockUseWebhooks).toHaveBeenCalledWith(1, undefined);
+  });
+
+  it("hides the pagination footer on a single page — there is no reveal button and no faked page count", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.queryByRole("navigation", { name: /pagination/i })).not.toBeInTheDocument();
+  });
+
+  it("shows prev/next controls once the server reports more rows — paired with the single-page assertion above", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    mockHasMore = true;
+    mockNextCursor = 7;
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByRole("navigation", { name: /pagination/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /next page/i })).toBeEnabled();
+  });
+
+  it("advances the URL cursor stack with the server nextCursor when Next page is pressed", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    mockHasMore = true;
+    mockNextCursor = 7;
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: /next page/i }));
+    expect(mockGoNext).toHaveBeenCalledWith("7");
+  });
+
+  it("does not advance the cursor stack when the server reports no nextCursor", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    mockHasMore = true;
+    mockNextCursor = null;
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: /next page/i }));
+    expect(mockGoNext).toHaveBeenCalledWith(undefined);
+  });
+
+  it("pops the URL cursor stack when Previous page is pressed", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    mockPagerCursor = "41";
+    mockPagerHasPrevious = true;
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: /previous page/i }));
+    expect(mockGoPrevious).toHaveBeenCalled();
   });
 });

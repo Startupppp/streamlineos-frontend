@@ -268,6 +268,7 @@ export interface CreateCycleInput {
   projectId: number;
   name: string;
   description?: string;
+  capacity?: number;
   startDate: string;
   endDate: string;
 }

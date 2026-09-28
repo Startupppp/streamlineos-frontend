@@ -42,7 +42,9 @@ Priority is identity and next action first, filters/layout second, bounded conte
 
 ## URL state
 
-Deep-linkable query parameters: `scope`, `ownerId`, `status`, `health`, `due`, `q`, `cursor`. Cursor may be shared only when it is stable for the same normalized filter/sort/access revision. Selection, open menus, drafts, and unsaved form state are not placed in the URL.
+Deep-linkable query parameters: `scope`, `ownerId`, `status`, `health`, `due`, `q`, `page`. Selection, open menus, drafts, and unsaved form state are not placed in the URL.
+
+`page`, not `cursor`: `GET /goals` is offset-paginated and returns an exact `total` (`goalsListResponseSchema` — `items`, `page`, `pageSize`, `total`), so FE-125 requires numbered pagination via `TablePagination` and FE-105 forbids faking a page count over a keyset read. There is no cursor to deep-link. Amended 2026-09-28 from `cursor`.
 
 ## Bulk, keyboard, and context actions
 
@@ -92,6 +94,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - **P0:** Verify route renders this contract rather than another page; add route/access/parent identity tests and complete loading/error/denied behavior.
 - **P0:** Verify server/client Zod parity, bounded pagination, composite tenant predicates, and exact cache keys for every endpoint above.
+- **P1 BLOCKED (BE):** `scope`, `health` and `due` are listed as URL parameters above and are already sent by the client, but `listSchema` at `backend/src/modules/goals/dto/goal.schemas.ts:18` is `.strict()` and declares only `status`, `level`, `ownerId`, `projectId`, `managedProductId`, `search`, `page`, `limit`. Selecting any of the three is a 400 in production. Backend is fenced this wave.
 - **P1:** Complete URL-backed filters, saved views, keyboard/context actions, bulk semantics, mobile layout, and accessible chart/table alternatives.
 - **P2:** Add realtime or AI only when it reduces a measured user delay and preserves deterministic non-AI operation.
 
@@ -100,7 +103,25 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
-  - 2026-09-27: Core fields, edit/delete actions, URL-backed filters (scope, ownerId, status, health, due, q via `GOAL_FILTER_DEFINITIONS`), states, and keyboard shortcuts are all implemented and tested. NOT-EARNED: the `cursor` URL param listed in the URL state section is not implemented — the page uses `const [page, setPage] = useState(1)` (React state, not URL-backed). Either add a URL-backed `page` param via `useBuildCursorPager` / a URL-backed page number, or confirm that numbered pagination without URL-backed page satisfies the spec and remove `cursor` from the URL state section.
+  - 2026-09-27: Core fields, edit/delete actions, URL-backed filters (scope, ownerId, status, health, due, q via `GOAL_FILTER_DEFINITIONS`), states, and keyboard shortcuts are all implemented and tested. NOT-EARNED: the `cursor` URL param listed in the URL state section is not implemented — the page uses `const [page, setPage] = useState(1)` (React state, not URL-backed).
+  - 2026-09-28 pagination gap CLOSED. `features/build/managed-products/product-goals-page.tsx` no longer holds the page in React state; it reads `page` from `useSearchParams()` and writes it with `router.replace(…, { scroll: false })` inside a transition, the same primitives `useBuildListFilters.setCursor` uses. The reset-on-filter-change already belonged to the shared hook — `features/build/shared/use-build-list-filters.ts:78` deletes `PAGE_PARAM` on every filter and search write — so no effect was added and the `setListParams`-in-an-effect loop is avoided by construction. 6 tests under `BSN-GOALS-PAGE-URL` cover deep-linked page 3, non-integer and negative fallback to 1, the write of `?page=2`, dropping the param on the way back to page 1, and filter preservation while paging.
+  - 2026-09-28 NOT EARNED, new backend gap found while verifying the filters. `scope`, `health` and `due` are listed above, are wired in `GOAL_FILTER_DEFINITIONS` (`features/build/goals/goals-list-shared.tsx:44`) and are forwarded into `useGoalsPage` (`product-goals-page.tsx`), with FE tests asserting the forwarding — **but the backend list schema is `.strict()` and declares none of them, so selecting any of those three filters is a live 400 today.** The FE tests pass because they assert the hook's arguments, not the request. `sed -n '18,27p' backend/src/modules/goals/dto/goal.schemas.ts`:
+
+    ```text
+    export const listSchema = z.object({
+      status: goalStatusEnum.optional(),
+      level: goalLevelEnum.optional(),
+      ownerId: z.string().optional(),
+      projectId: z.coerce.number().int().optional(),
+      managedProductId: z.coerce.number().int().positive().optional(),
+      search: z.string().optional(),
+      page: pageNumberField,
+      limit: pageSizeField(20, 100),
+    }).strict();
+    ```
+
+    Bound at `backend/src/modules/goals/goals.controller.ts:70` (`@Validate({ query: listSchema })` on `@Get()`); `backend/src/common/validation/zod-validation.interceptor.ts:30` does `schemas.query.parse(req.query)`, so unrecognised keys reject rather than strip.
+    - **BE required:** add `scope`, `health` and `due` to `listSchema` at `backend/src/modules/goals/dto/goal.schemas.ts:18` and implement them in `GoalsService.list`. Do **not** relax `.strict()` — the schema is the authority on what the endpoint accepts.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
