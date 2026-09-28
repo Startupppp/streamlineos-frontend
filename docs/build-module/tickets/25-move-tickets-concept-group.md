@@ -6,8 +6,9 @@ Move them under a named directory. Structure only; no logic changes.
 
 **Blocked by:** 01 — Publish the Build core shared surface.
 
-**Status:** done except the `core/` sibling reaches, which are ticket 01's seam work
-(the cross-module callers are closed — see Remeasurement 2026-09-28)
+**Status:** done except four `core/` sibling reaches, which are ticket 01's seam work
+(the cross-module callers are closed, and nine of the twelve sibling callers were closed
+2026-09-28 — see "The sibling half, measured and mostly closed")
 
 - [x] Ticket files live under one named directory
 - [x] Imports are updated; no file is orphaned
@@ -205,3 +206,127 @@ conversion; the 82 failures are pre-existing and none is a module
 resolution error — 68 are hand-rolled db doubles that lack a join the
 service now issues, and 6 are fixtures missing the `version` field a peer
 commit made required.
+
+## The sibling half, measured and mostly closed — 2026-09-28 (Lane-SEAM)
+
+The write-ups above call all thirteen sibling reaches "architectural blockers: either
+the importing file is itself exported from the barrel … or the import chain forms the
+deeper cycle". That is **false for nine of the twelve files**. It was asserted, never
+tested. Tested now, and nine of them route through `core/tickets/index.ts` with zero
+cycles anywhere in `src`.
+
+### Before — 13 non-spec specifiers across 12 files
+
+Command (run from `backend/src/modules/build`):
+
+```
+grep -rn 'from "[^"]*tickets/' core --include="*.ts" \
+  | grep -v '^core/tickets/' | grep -v '\.spec\.ts:' | grep -v '^core/index.ts:'
+```
+
+| # | File | Line | Symbol(s) | Target |
+|---|---|---|---|---|
+| 1 | `core/analytics/projects-reports.service.ts` | 18 | `ticketsScopeIsUnrestricted` | `tickets/tickets-scope` |
+| 2 | `core/automation/build-automation-actions.service.ts` | 15 | `reserveTicketCapacity` | `tickets/build-ticket-capacity` |
+| 3 | `core/custom-fields/projects-custom-fields.service.ts` | 14 | `assertTicketReadAccess`, `TicketReadAccess` | `tickets/build-ticket-read-access` |
+| 4 | `core/custom-states/projects-custom-states.service.ts` | 19 | `lockProjectTicketMutation` | `tickets/build-ticket-mutation-policy` |
+| 5 | `core/custom-states/projects-custom-states.service.ts` | 20 | `reserveTicketCapacity` | `tickets/build-ticket-capacity` |
+| 6 | `core/members/projects-members.service.ts` | 48 | `ProjectsLabelsService` | `tickets/projects-labels.service` |
+| 7 | `core/notifications/build-notification-context.service.ts` | 11 | `resolveTicketsScope`, `ticketScope` | `tickets/tickets-scope` |
+| 8 | `core/project-crud/build-project-aggregate-access.ts` | 7 | `ticketsScopeIsUnrestricted` | `tickets/tickets-scope` |
+| 9 | `core/project-crud/projects-query.service.ts` | 26 | `resolveTicketsScope`, `ticketScope` | `tickets/tickets-scope` |
+| 10 | `core/projects.module.ts` | 62 | `ProjectsLabelsService` | `tickets/projects-labels.service` |
+| 11 | `core/releases/projects-releases.service.ts` | 2 | `TicketVersionConflictException` | `tickets/ticket-version-conflict.exception` |
+| 12 | `core/roadmap/projects-roadmap.service.ts` | 7 | `TicketVersionConflictException` | `tickets/ticket-version-conflict.exception` |
+| 13 | `core/webhooks/projects-webhooks.service.ts` | 17 | `TicketVersionConflictException` | `tickets/ticket-version-conflict.exception` |
+
+Only six modules are reached at all, and every one of them is a **pure leaf** —
+`tickets-scope.ts` (31 lines), `build-ticket-capacity.ts` (53),
+`build-ticket-mutation-policy.ts` (42), `build-ticket-read-access.ts` (52),
+`ticket-version-conflict.exception.ts` (15) and `projects-labels.service.ts` (46).
+Not one of them imports a ticket controller or a ticket service. The cycle risk
+never came from what the siblings wanted; it came from the barrel also re-exporting
+eighteen controllers and services beside the leaves.
+
+### After — 4 specifiers across 3 files
+
+Ten specifiers in nine files now read `from "../tickets"` (and `from "./tickets"` for
+`projects.module.ts`, merged into its existing barrel import rather than added as a
+second one). `ticketsScopeIsUnrestricted`, `assertTicketReadAccess`,
+`TicketReadAccess` and `ProjectsLabelsService` were added to `core/tickets/index.ts`
+so those callers have a sanctioned export to reach; the barrel already carried the
+other four symbols.
+
+Remaining, and each one proven cyclic rather than assumed so:
+
+| File | Line | Symbol |
+|---|---|---|
+| `core/automation/build-automation-actions.service.ts` | 15 | `reserveTicketCapacity` |
+| `core/custom-states/projects-custom-states.service.ts` | 19 | `lockProjectTicketMutation` |
+| `core/custom-states/projects-custom-states.service.ts` | 20 | `reserveTicketCapacity` |
+| `core/members/projects-members.service.ts` | 48 | `ProjectsLabelsService` |
+
+### The proof, which is a command and not an argument
+
+With all thirteen pointed at the barrel,
+`npx madge --circular --extensions ts src/modules/build/core` reported exactly three
+cycles and named them:
+
+```
+1) tickets/index.ts > tickets/projects-tickets-create.service.ts
+   > automation/build-automation-runner.service.ts > automation/build-automation-actions.service.ts
+2) tickets/index.ts > tickets/projects-tickets-create.service.ts
+   > automation/build-automation-runner.service.ts > automation/build-automation-run-history.service.ts
+   > members/projects-members.service.ts > custom-states/projects-custom-states.service.ts
+3) tickets/index.ts > tickets/projects-tickets-create.service.ts
+   > automation/build-automation-runner.service.ts > automation/build-automation-run-history.service.ts
+   > members/projects-members.service.ts
+```
+
+Three chains, three files, one shared root: the barrel drags
+`projects-tickets-create.service`, which reaches
+`automation/build-automation-runner.service`, which reaches back into `automation`,
+`members` and `custom-states`. Reverting those three files to deep imports and
+re-running gives `✔ No circular dependency found!`. Nine of the twelve were never
+blocked by anything but the absence of a measurement.
+
+### Why criterion 3 still stays unticked
+
+Four specifiers in three files still reach past the front door, so the criterion —
+*nothing* outside the group reaches in except through the shared surface — is not
+satisfied. Neither candidate seam closes them:
+
+- **`core/tickets/index.ts`**: the three madge chains above. BE-10 forbids it.
+- **`core/index.ts`**: `projects-members.service` is itself exported from
+  `core/index.ts` (line 37), so `members → core/index → members` is a direct
+  two-node cycle. The same holds for seven of the twelve original importers
+  (`projects-reports.service`, `projects-custom-fields.service`,
+  `projects-query.service`, `projects-releases.service`,
+  `projects-webhooks.service`, `projects-members.service`, `projects.module`),
+  which is why the core barrel is not the seam for an intra-`core` caller at all.
+
+The only fix that works is the one this ticket named in its first write-up and
+ticket 01 owns: move the shared leaves out of the group to somewhere both halves can
+depend on — `core/lib/` already holds exactly this class of file
+(`allocate-ticket-number`, `build-app-paths`, `default-statuses`, `escape-like`).
+Once `tickets-scope.ts`, `build-ticket-capacity.ts`, `build-ticket-mutation-policy.ts`
+and `projects-labels.service.ts` live there, all four remaining specifiers stop
+naming `core/tickets/` and the criterion closes with no barrel edge at all. That is a
+file move inside a directory a live lane owns, not an import repoint, so it is out of
+this lane's territory.
+
+What would settle it: zero rows from the `grep` above.
+
+### Verification
+
+- `npx madge --circular --extensions ts src` → `Processed 9082 files … ✔ No circular dependency found!` (BE-10, criterion 4 holds).
+- `pnpm check:build-core-surface:self-test` → `PASS: build-core-surface self-test, 26 pattern checks + anti-vacuity, all directions bite.` (316 sibling files, 9346 repo files, 839 specifiers aimed into `build/core` — the floors bite, so the OK below is not vacuous).
+- `pnpm check:build-core-surface` → `OK — 316 sibling submodule file(s) scanned; 0 deep core imports.` / `OK — 9346 repo file(s) scanned, 839 specifier(s) aimed into build/core; 0 unresolved, 0 external reaches past the core/tickets barrel.`
+- `npx tsc -p tsconfig.json --noEmit` → 8 error lines, **0 under `src/modules/build/core`**. All eight are foreign in-flight work: `modules/kb/**` (3), `test/helpers/reporting-probe.ts` (2), and `build/execution/milestone-owner-linked-work.spec.ts` (1, a hand-rolled db double), none a module resolution error from this change.
+- `npx jest --maxWorkers=2 src/modules/build` → **271 of 273 suites, 2582 of 2589 tests passing.** Every `core/` suite passes. The two failures are `build/execution/execution-cross-project-binding.spec.ts` and `build/execution/milestone-owner-linked-work.spec.ts`, both uncommitted edits belonging to another lane at the time of the run (`git status` shows `execution/workspace.service.ts` and both specs modified), failing on `this.db.select(...).from(...).leftJoin is not a function` — the hand-rolled-double class this ticket already records, not a resolution error.
+
+Gate coverage note: `check:build-core-surface` cannot see these four, by design —
+`findExternalTicketsReaches` returns early for any importer inside `core/`
+(`if (aimsInside(CORE_ROOT, resolve(fromDir))) return []`), and its self-test asserts
+that exemption explicitly. The four remaining reaches are therefore held by this
+ticket alone, not by a gate.
