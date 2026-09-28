@@ -107,3 +107,52 @@ Batched by blast radius so each batch fits one fresh context window. Land them i
   the four is in Lane-SEAM's territory, which is import statements and barrel files. The split is left to the
   lane that owns those files, and FE-57's shrink-only counts make it their obligation regardless of this
   ticket.
+
+## Progress on the file-size criterion — 2026-09-28 (Lane-SEAM)
+
+Two of the four over-500 source files in the batch's directories are now under the
+limit. The box stays unchecked until all four are.
+
+| File | Before | After | New sibling |
+|---|---|---|---|
+| `features/build/views/use-board-url-state.ts` | 501 | **391** | `board-filter-params.ts` (159) |
+| `features/build/views/workload-view.tsx` | 538 | **396** | `workload-unassigned-row.tsx` (164) |
+
+`useBoardFilterParams` takes the twelve filter params, the order-by/order-dir
+parsing, the query-filter and active-filter derivations and the effect that clears
+an invalid `priority` or `type` param. `WorkloadUnassignedRow` takes the unassigned
+row and its collapsible ticket list, and mirrors the props `WorkloadMemberRow`
+already takes beside it. Neither public export changed shape, so no caller changed:
+`project-detail/project-board-page.tsx:15`, `views/project-board-content.tsx:12,27`
+and `workload/workload-board-page.tsx:15` are untouched.
+
+`data.members.flatMap` was deliberately left inside `use-board-url-state.ts`:
+`hooks/api/build/board-server-filter.test.ts:259` asserts on that file's **source
+text** (`expect(source).toContain("data.members.flatMap")` and
+`expect(source).not.toContain("useProjectMembers")`), so extracting the member
+derivation would have broken a passing test without changing any behaviour.
+
+Commands and results:
+
+- `pnpm check:file-sizes:self-test` → `check-file-sizes self-tests: 65 passed`.
+- `pnpm check:file-sizes` → both files are **off** the over-500 list; the total moved
+  from 56 to 55 while the webhooks lane's in-flight files grew onto it
+  (`project-webhooks-page.test.tsx` 744 → 999, plus a new `webhook-card.test.tsx` at
+  513), so 55 understates the two removals.
+- `pnpm check:over-300:self-test` → `29 passed`. `pnpm check:over-300` is red
+  repo-wide and was before this change (`709 files exceed 300 lines — 196 above
+  baseline of 513`). Neither new file appears on it — 159 and 164 lines — and the two
+  split files were already over 300 at 501 and 538, so the count is unmoved by this
+  work.
+- `npx tsc -p tsconfig.json --noEmit` → no error names `features/build/views/**`.
+- `npx eslint` on all four files → clean, no new disables.
+- `npx jest --maxWorkers=2 features/build/views features/build/workload
+  features/build/project-detail/project-board-page.test.tsx` → **22 suites, 219 tests,
+  all passing.** `workload-view.test.tsx` still asserts the `workload-unassigned-row`
+  testid through the extracted component, and `board-server-filter.test.ts`,
+  `use-board-url-state.test.tsx`, `project-board-content.test.tsx` and
+  `project-board-page.test.tsx` pass unchanged.
+
+Still over 500, and held back on purpose because live lanes own those directories:
+`epics/epics-page.tsx` (531) and `milestones/planning-surfaces-gallery.tsx` (521,
+was 526 — that lane is editing it).
