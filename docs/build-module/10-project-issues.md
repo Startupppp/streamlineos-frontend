@@ -242,11 +242,14 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     - **The search debounce now bites.** Both existing tests advanced the timer by the full 300 ms, so
       a 25 ms debounce passed them. `use-list-filter-params.test.ts` adds a case that advances **299**
       (asserting no navigation) and then **1** (asserting exactly one), with the 299 and the 1 as
-      literals rather than arithmetic on the constant — mutation-checked: setting
-      `DEFAULT_SEARCH_DEBOUNCE_MS = 25` fails exactly that case and nothing else. A second case pins
-      that a spec's own `searchDebounceMs` overrides the default, so the wait is not hardcoded in the
-      hook. `features/build/shared/use-ticket-filter-params.test.ts:160` has the same weak assertion
-      for the Build ticket list's own debounce and was left alone — out of this lane's files.
+      literals rather than arithmetic on the constant. A second case pins that a spec's own
+      `searchDebounceMs` overrides the default, so the wait is not hardcoded in the hook.
+      `features/build/shared/use-ticket-filter-params.test.ts` — the Build ticket list's own debounce,
+      which reaches the same constant through `useListFilterParams(TICKET_FILTER_SPEC)` — carried the
+      same weak assertion and now has the same 299/1 boundary plus a case pinning that each keystroke
+      restarts the wait. Mutation-checked across both files at once: `DEFAULT_SEARCH_DEBOUNCE_MS = 25`
+      fails exactly three cases — the two new ones there and the one in `components/list-view` — and
+      nothing else.
     - **`add link` is adjudicated, not shipped.** There is no bulk link endpoint: `bulkUpdateSchema`
       accepts `assigneeId`, `status`, `cycleId`, `priority`, `parentTicketId`, `labelIds` and `archive`
       and nothing else (`backend/src/modules/build/core/dto/ticket.schemas.ts:196-216`), and work-item
@@ -296,13 +299,28 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     (nothing under features/build/views, features/build/shared/bulk-action-bar* or components/list-view)
     ```
 
-    Component-test evidence only: no database, no browser, no dev server. One pre-existing failure
-    outside this lane's files was left alone rather than fixed:
-    `features/__tests__/build-board-cards-a11y.test.tsx` (4 tests) has been red since `useCan` entered
-    `kanban-ticket-card.tsx` — the suite mocks no access module, so `useSession` throws, which is
-    verifiable at `HEAD` before this lane's first commit. The fix is one
-    `jest.mock("@/hooks/api/access")` line in that file, which belongs to whoever owns
-    `features/__tests__/`.
+    **The board-card a11y suite is green again, against the card's *current* contract.**
+    `features/__tests__/build-board-cards-a11y.test.tsx` had been red since `useCan` entered
+    `kanban-ticket-card.tsx` — it mocks no access module, so `useSession` throws, verifiable at the
+    commit before this lane's first. It now mocks `useCan`, and three of its assertions described a card
+    that no longer exists: its `TicketQuickActions` double rendered a lone `Delete ticket` button, so
+    the tab-order test asserted a label the card stopped having when the row action became a menu. The
+    double is now the real shape — one `Ticket actions` trigger plus, while the row holds it open, a
+    `role="menu"` — and four cases cover what the card gained: the trigger is named for the menu and not
+    for one command inside it, a right click opens that menu without inserting a focus stop before the
+    title, axe passes with the menu open, and the module chip is non-interactive so the card's only
+    controls remain the title and its menu.
+
+    ```text
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/__tests__/build-board-cards-a11y
+    Tests:       8 passed, 8 total
+    ```
+
+    Component-test evidence only: no database, no browser, no dev server. One unrelated suite is red in
+    this tree and belongs to the Knowledge Base workstream, not to this lane:
+    `features/__tests__/heavy-module-lazy-boundaries.test.ts` reports `platejs` eagerly reachable from
+    `app/(authenticated)/build/[projectId]/wiki/[pageId]/page.tsx`. No file this lane touched appears in
+    that import graph.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
