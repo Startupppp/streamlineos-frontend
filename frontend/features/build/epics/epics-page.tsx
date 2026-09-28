@@ -11,8 +11,12 @@ import {
 } from "@/hooks/api/build/ticket-create-rank-mutations";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build/ticket-create-rank-mutations";
 import { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
-import { useCycles } from "@/hooks/api/build/advanced";
+import { useCycles, useEpics } from "@/hooks/api/build/advanced";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
+import { useOrgLabels } from "@/hooks/api/build/labels";
+import { useExportTickets } from "@/hooks/api/build/ticket-import-export";
+import { downloadTextFile } from "@/features/build/import-export/download-text-file";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CreateEpicDialog } from "@/features/build/epics/create-epic-dialog";
 import { EpicCard } from "@/features/build/epics/epic-card";
 import { EpicStoryRow } from "@/features/build/epics/epic-story-row";
@@ -38,6 +42,11 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { ModuleDisabledState } from "@/features/build/shared/module-disabled-state";
 import { getCompletedStatusNames } from "@/features/build/shared/completed-status";
 import { useCan } from "@/hooks/api/access";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { WifiOff } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   BUILD_FILTER_ALL,
@@ -56,9 +65,17 @@ import {
   CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 
+const EPIC_HEALTH_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "Any health" },
+  { value: "on_track", label: "On track" },
+  { value: "at_risk", label: "At risk" },
+  { value: "off_track", label: "Off track" },
+] as const;
+
 const EPIC_FILTER_DEFINITIONS = [
   { param: "status" },
   { param: "ownerId" },
+  { param: "health", options: EPIC_HEALTH_OPTIONS.map((o) => o.value) },
 ] as const;
 
 interface PageProps {
@@ -80,6 +97,9 @@ export function EpicsPage({ params }: PageProps) {
   );
   const [createOpen, setCreateOpen] = useState(false);
   const [editTargetId, setEditTargetId] = useState<number | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const isOnline = useOnlineStatus();
 
   const {
     data: project,
@@ -94,8 +114,12 @@ export function EpicsPage({ params }: PageProps) {
     isError: ticketsFailed,
     error: ticketsError,
     refetch: refetchTickets,
+    dataUpdatedAt: ticketsUpdatedAt,
   } = useProjectBoardTickets(projectId);
   const { data: cycles } = useCycles(projectId);
+  const { data: epicRecords } = useEpics(projectId);
+  const { data: orgLabels } = useOrgLabels();
+  const exportEpics = useExportTickets(projectId);
   const { data: membersPage } = useProjectMembers(projectId);
   const members = membersPage?.data ?? [];
   const isLoading = projectLoading || ticketsLoading;
@@ -115,6 +139,13 @@ export function EpicsPage({ params }: PageProps) {
   const q = listFilters.debouncedSearch.toLowerCase();
   const statusFilter = listFilters.value("status");
   const ownerFilter = listFilters.value("ownerId");
+  const healthFilter = listFilters.value("health");
+  const dependencyCounts = useMemo(() => {
+    const counts = new Map<number, number>();
+    for (const record of epicRecords ?? [])
+      counts.set(record.id, record.dependencyCount);
+    return counts;
+  }, [epicRecords]);
 
   const allEpics = tickets.filter((t) => t.type === "EPIC");
   const epics = allEpics.filter(
@@ -123,7 +154,8 @@ export function EpicsPage({ params }: PageProps) {
       (!statusFilter || statusFilter === "all" || t.status === statusFilter) &&
       (!ownerFilter ||
         ownerFilter === "all" ||
-        String(t.assigneeId) === ownerFilter),
+        String(t.assigneeId) === ownerFilter) &&
+      (!healthFilter || healthFilter === "all" || t.health === healthFilter),
   );
   const stories = tickets.filter((t) => t.type === "STORY");
   const tasks = tickets.filter((t) => t.type === "TASK");
@@ -184,15 +216,38 @@ export function EpicsPage({ params }: PageProps) {
       update: Partial<
         Pick<
           BulkUpdateTicketsInput,
-          "status" | "priority" | "assigneeId" | "cycleId"
+          | "status"
+          | "priority"
+          | "assigneeId"
+          | "cycleId"
+          | "parentTicketId"
+          | "labelIds"
+          | "archive"
         >
       >,
     ) => {
-      if (selectedIds.size === 0) return;
+      if (selectedIds.size === 0) {
+        toast.error("No epics selected");
+        return;
+      }
       bulkUpdate.mutate(
         { ticketIds: [...selectedIds].map(Number), ...update },
         {
           onSuccess: (d) => {
+            const blockedCount = d.blocked?.length ?? 0;
+            if (blockedCount > 0 && d.updated === 0) {
+              toast.error(
+                `${blockedCount} epic${blockedCount !== 1 ? "s" : ""} could not be changed — ${blockedCount !== 1 ? "they have" : "it has"} active sub-tasks not in the selection. Nothing was changed.`,
+              );
+              return;
+            }
+            if (blockedCount > 0) {
+              toast.warning(
+                `${d.updated} updated, ${blockedCount} could not be changed — ${blockedCount !== 1 ? "they have" : "it has"} active sub-tasks not in the selection.`,
+              );
+              handleClearSelection();
+              return;
+            }
             toast.success(
               `${d.updated} epic${d.updated !== 1 ? "s" : ""} updated`,
             );
@@ -225,6 +280,45 @@ export function EpicsPage({ params }: PageProps) {
     [handleBulkUpdate],
   );
 
+  const handleBulkParent = useCallback(
+    (parentTicketId: number | null) => handleBulkUpdate({ parentTicketId }),
+    [handleBulkUpdate],
+  );
+  const handleBulkLabel = useCallback(
+    (labelId: string) => handleBulkUpdate({ labelIds: [Number(labelId)] }),
+    [handleBulkUpdate],
+  );
+  const handleBulkArchiveRequest = useCallback(
+    () => setArchiveConfirmOpen(true),
+    [],
+  );
+  const handleArchiveDialogChange = useCallback(
+    (open: boolean) => setArchiveConfirmOpen(open),
+    [],
+  );
+  const handleBulkArchiveConfirm = useCallback(() => {
+    handleBulkUpdate({ archive: true });
+    setArchiveConfirmOpen(false);
+  }, [handleBulkUpdate]);
+  const handleBulkExport = useCallback(() => {
+    if (selectedIds.size === 0) {
+      toast.error("No epics selected");
+      return;
+    }
+    exportEpics.mutate(
+      { format: "csv", ticketIds: [...selectedIds].map(Number) },
+      {
+        onSuccess: (result) => {
+          downloadTextFile(result.filename, result.contentType, result.content);
+          toast.success(
+            `Exported ${result.rowCount} epic${result.rowCount !== 1 ? "s" : ""}`,
+          );
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [exportEpics, selectedIds]);
+
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleCreateOpenChange = useCallback(
     (open: boolean) => setCreateOpen(open),
@@ -252,6 +346,11 @@ export function EpicsPage({ params }: PageProps) {
     (value: string) => listFilters.setValue("ownerId", value),
     [listFilters],
   );
+  const handleHealthFilterChange = useCallback(
+    (value: string) => listFilters.setValue("health", value),
+    [listFilters],
+  );
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   const statusOptions = useMemo(
     () => [
@@ -277,6 +376,7 @@ export function EpicsPage({ params }: PageProps) {
     onEdit: handleEditByIndex,
     onCreate: canCreate ? handleOpenCreate : undefined,
     onClearSelection: handleClearSelection,
+    onShortcutHelp: handleShortcutHelp,
     enabled: pageState.kind === "ready",
     searchInputRef,
   });
@@ -376,6 +476,19 @@ export function EpicsPage({ params }: PageProps) {
                 />
               ),
             },
+            {
+              id: "health",
+              label: "Health",
+              active: listFilters.isActive("health"),
+              control: (
+                <BuildFilterSelect
+                  label="Health"
+                  value={healthFilter}
+                  onValueChange={handleHealthFilterChange}
+                  options={EPIC_HEALTH_OPTIONS}
+                />
+              ),
+            },
           ]}
           onClearAll={listFilters.clearAll}
         />
@@ -387,6 +500,27 @@ export function EpicsPage({ params }: PageProps) {
           aria-live="polite"
           aria-atomic="true"
         >
+          {!isOnline && epics.length > 0 ? (
+            <div
+              className="flex shrink-0 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2"
+              data-testid="offline-banner"
+            >
+              <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">
+                You&apos;re offline — these epics may be out of date.
+                {ticketsUpdatedAt ? (
+                  <span data-testid="offline-banner-freshness">
+                    {" "}
+                    Last updated{" "}
+                    {formatDistanceToNow(new Date(ticketsUpdatedAt), {
+                      addSuffix: true,
+                    })}
+                    .
+                  </span>
+                ) : null}
+              </p>
+            </div>
+          ) : null}
           {canUpdate && selectedIds.size > 0 && (
             <BulkActionBar
               selectedCount={selectedIds.size}
@@ -399,6 +533,11 @@ export function EpicsPage({ params }: PageProps) {
               onBulkPriority={handleBulkPriority}
               onBulkAssignee={handleBulkAssignee}
               onBulkCycle={handleBulkCycle}
+              onBulkParent={handleBulkParent}
+              onBulkLabel={handleBulkLabel}
+              onBulkArchive={handleBulkArchiveRequest}
+              onBulkExport={handleBulkExport}
+              labels={orgLabels}
               onClear={handleClearSelection}
             />
           )}
@@ -439,7 +578,35 @@ export function EpicsPage({ params }: PageProps) {
           </PmSection>
 
           <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-            {epics.length === 0 ? (
+            {epics.length === 0 && !isOnline ? (
+              <div
+                className={cn(
+                  CONTENT_FILL_PANEL,
+                  "flex flex-col items-center justify-center gap-2 text-center",
+                )}
+                data-testid="offline-state"
+              >
+                <WifiOff className="h-5 w-5 text-muted-foreground" />
+                <p className="text-sm font-semibold text-foreground">
+                  You&apos;re offline
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Results may not be up to date. Reconnect to see the latest
+                  epics.
+                </p>
+                {ticketsUpdatedAt ? (
+                  <p
+                    className="text-xs text-muted-foreground"
+                    data-testid="offline-freshness"
+                  >
+                    Last updated{" "}
+                    {formatDistanceToNow(new Date(ticketsUpdatedAt), {
+                      addSuffix: true,
+                    })}
+                  </p>
+                ) : null}
+              </div>
+            ) : epics.length === 0 ? (
               <EmptyState
                 className={CONTENT_FILL_PANEL}
                 illustrationPreset="projects"
@@ -477,6 +644,7 @@ export function EpicsPage({ params }: PageProps) {
                     <div className="flex-1 min-w-0">
                       <EpicCard
                         epic={epic}
+                        dependencyCount={dependencyCounts.get(epic.id)}
                         stories={tickets.filter(
                           (t) => t.type !== "EPIC" && t.epicId === epic.id,
                         )}
@@ -515,6 +683,22 @@ export function EpicsPage({ params }: PageProps) {
               </PmPanel>
             </PmSection>
           )}
+
+          <ConfirmDialog
+            open={archiveConfirmOpen}
+            onOpenChange={handleArchiveDialogChange}
+            title={`Archive ${selectedIds.size} epic${selectedIds.size !== 1 ? "s" : ""}?`}
+            description="An epic with active sub-tasks outside the selection is reported back and left alone."
+            confirmLabel="Archive"
+            destructive
+            isPending={bulkUpdate.isPending}
+            onConfirm={handleBulkArchiveConfirm}
+          />
+
+          <ShortcutHelpDialog
+            open={shortcutHelpOpen}
+            onOpenChange={setShortcutHelpOpen}
+          />
 
           {canUpdate && keyboardEditTarget ? (
             <EditEpicDialog

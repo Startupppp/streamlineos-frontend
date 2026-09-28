@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useCallback, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -32,6 +32,9 @@ import { useUpdateTicket } from "@/hooks/api/build/tickets";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
+import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
+import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
 import { activationProps } from "@/lib/keyboard-activation";
 
 interface EditEpicDialogProps {
@@ -59,6 +62,44 @@ function toStatus(value: string | null | undefined): EditEpicInput["status"] {
   return EPIC_STATUSES.find((s) => s === value) ?? "TODO";
 }
 
+function buildEpicConflictDiffs(
+  pending: EditEpicInput,
+  server: EditEpicDialogProps["epic"],
+): TicketConflictFieldDiff[] {
+  const shown = (value: unknown): string =>
+    value === null || value === undefined || value === "" ? "—" : String(value);
+  const diffs: TicketConflictFieldDiff[] = [];
+  if (pending.title !== server.title)
+    diffs.push({
+      key: "title",
+      label: "Title",
+      serverValue: shown(server.title),
+      pendingValue: shown(pending.title),
+    });
+  if ((pending.description ?? "") !== (server.description ?? ""))
+    diffs.push({
+      key: "description",
+      label: "Description",
+      serverValue: shown(server.description),
+      pendingValue: shown(pending.description),
+    });
+  if (pending.priority !== toPriority(server.priority))
+    diffs.push({
+      key: "priority",
+      label: "Priority",
+      serverValue: shown(toPriority(server.priority)),
+      pendingValue: shown(pending.priority),
+    });
+  if (pending.status !== toStatus(server.status))
+    diffs.push({
+      key: "status",
+      label: "Status",
+      serverValue: shown(toStatus(server.status)),
+      pendingValue: shown(pending.status),
+    });
+  return diffs;
+}
+
 const STATUS_LABEL: Record<EditEpicInput["status"], string> = {
   TODO: "To Do",
   IN_PROGRESS: "In Progress",
@@ -84,6 +125,10 @@ export function EditEpicDialog({
   };
 
   const handleOpen = () => setOpen(true);
+  const [conflictFields, setConflictFields] = useState<
+    TicketConflictFieldDiff[] | null
+  >(null);
+  const pendingValuesRef = useRef<EditEpicInput | null>(null);
 
   const updateTicket = useUpdateTicket(projectId, {
     onSuccess: () => {
@@ -93,10 +138,36 @@ export function EditEpicDialog({
       });
       setOpen(false);
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => {
+      if (
+        isApiError(error) &&
+        getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT"
+      ) {
+        void queryClient.invalidateQueries({
+          queryKey: buildWorkQueryKeys.projects.detail(projectId),
+        });
+        const pending = pendingValuesRef.current;
+        const diffs = pending ? buildEpicConflictDiffs(pending, epic) : [];
+        setConflictFields(
+          diffs.length > 0
+            ? diffs
+            : [
+                {
+                  key: "version",
+                  label: "Version",
+                  serverValue: "Updated by another user",
+                  pendingValue: "Your edit",
+                },
+              ],
+        );
+        return;
+      }
+      toast.error(getErrorMessage(error));
+    },
   });
 
   const handleSubmit = (data: EditEpicInput) => {
+    pendingValuesRef.current = data;
     updateTicket.mutate({
       ticketId: epic.id,
       version: epic.version,
@@ -106,6 +177,12 @@ export function EditEpicDialog({
       status: data.status,
     });
   };
+
+  const handleKeepMine = useCallback(() => setConflictFields(null), []);
+  const handleDiscardConflict = useCallback(() => {
+    setConflictFields(null);
+    setOpen(false);
+  }, [setOpen]);
 
   const defaultValues: EditEpicInput = {
     title: epic.title,
@@ -229,6 +306,14 @@ export function EditEpicDialog({
           </>
         )}
       </EntityFormSheet>
+      {conflictFields !== null ? (
+        <TicketConflictDialog
+          open
+          fields={conflictFields}
+          onKeepMine={handleKeepMine}
+          onDiscard={handleDiscardConflict}
+        />
+      ) : null}
     </>
   );
 }

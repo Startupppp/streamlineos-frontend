@@ -63,6 +63,7 @@ export interface EpicCardProps {
     } | null;
   };
   stories: Ticket[];
+  dependencyCount?: number;
   projectId: number;
   projectKey?: string | null;
   projectStatuses?: ProjectStatusRecord[];
@@ -128,7 +129,7 @@ export const LinkStoryItem = memo(function LinkStoryItem({ story, onSelect }: Li
   );
 });
 
-export const EpicCard = memo(function EpicCard({ epic, stories, projectId, projectKey, projectStatuses, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
+export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount, projectId, projectKey, projectStatuses, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
   const canCreate = useCan("build:tickets:create");
   const canUpdate = useCan("build:tickets:update");
   const canDelete = useCan("build:tickets:delete");
@@ -138,6 +139,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
   const [newStoryTitle, setNewStoryTitle] = useState("");
   const [linkOpen, setLinkOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const { iconRef: actionsIconRef, hoverHandlers: actionsHoverHandlers } = useAnimatedIcon();
   const { iconRef: expandIconRef, hoverHandlers: expandHoverHandlers } = useAnimatedIcon();
   const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
@@ -150,6 +152,12 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
   const epicCardId = `epic-stories-${epic.id}`;
 
   const handleToggleExpand = useCallback(() => setIsExpanded(prev => !prev), []);
+
+  const handleContextMenu = useCallback((e: MouseEvent) => {
+    if (!canUpdate && !canDeleteEpic) return;
+    e.preventDefault();
+    setActionsOpen(true);
+  }, [canDeleteEpic, canUpdate]);
 
   const handleStopPropagation = useCallback((e: MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
@@ -213,6 +221,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
         <CardHeader
           className="cursor-pointer px-3 py-2.5 transition-colors hover:bg-primary/[0.03]"
           onClick={handleToggleExpand}
+          onContextMenu={handleContextMenu}
           role="button"
           aria-expanded={isExpanded}
           aria-controls={epicCardId}
@@ -247,6 +256,9 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
               onClick={handleStopPropagation}
               onKeyDown={handleStopPropagation}
             >
+              <Badge variant="secondary" className="h-5 px-1.5 text-micro">
+                {(epic.status ?? "TODO").replace(/_/g, " ")}
+              </Badge>
               <Badge
                 variant="outline"
                 className={cn("h-5 px-1.5 text-micro", getColorSafe(priorityColors, epic.priority || "MEDIUM"))}
@@ -261,7 +273,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                   onOpenChange={setEditOpen}
                 />
               )}
-              {(canUpdate || canDeleteEpic) && <DropdownMenu>
+              {(canUpdate || canDeleteEpic) && <DropdownMenu open={actionsOpen} onOpenChange={setActionsOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="More actions" {...actionsHoverHandlers}>
                     <EllipsisIcon ref={actionsIconRef} size={14} />
@@ -291,6 +303,13 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                   <AvatarFallback className="text-micro">{getUserInitials(epic.assignee)}</AvatarFallback>
                 </Avatar>
                 <span className="min-w-0 truncate">{getUserDisplayName(epic.assignee)}</span>
+              </span>
+            ) : null}
+            {dependencyCount !== undefined && dependencyCount > 0 ? (
+              <span className="shrink-0 tabular-nums">
+                {dependencyCount === 1
+                  ? "1 dependency"
+                  : `${dependencyCount} dependencies`}
               </span>
             ) : null}
             {(epic.startDate || epic.dueDate) ? (
