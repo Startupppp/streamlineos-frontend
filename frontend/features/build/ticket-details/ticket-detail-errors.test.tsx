@@ -19,6 +19,8 @@ let mockResolvedTicket:
   | { id: number; ticketNumber: number; title: string; version?: number; rank?: string }
   | undefined;
 let mockRightPanelOpen = false;
+let mockTicketUpdatedAt: number | undefined;
+let mockOfflineDraftFields: string[] = [];
 let mockMainSectionCanUpdate: boolean | undefined;
 let mockPanelCanUpdate: boolean | undefined;
 let mockPanelCanAssign: boolean | undefined;
@@ -30,9 +32,18 @@ jest.mock("next/navigation", () => ({
   notFound: () => mockNotFound(),
 }));
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, actions }: { children: ReactNode; actions?: ReactNode }) => (
+  PageWrapper: ({
+    children,
+    actions,
+    subtitle,
+  }: {
+    children: ReactNode;
+    actions?: ReactNode;
+    subtitle?: ReactNode;
+  }) => (
     <main>
       {actions}
+      <p data-testid="page-subtitle">{subtitle}</p>
       {children}
     </main>
   ),
@@ -73,6 +84,8 @@ jest.mock("./use-ticket-detail", () => ({
     isLoading: false,
     ticketError: mockTicketError,
     refetchTicket: mockRetryTicket,
+    ticketUpdatedAt: mockTicketUpdatedAt,
+    offlineDraftFields: mockOfflineDraftFields,
     subtasks: [],
     members: [],
     statuses: [],
@@ -117,6 +130,8 @@ beforeEach(() => {
   mockIsOnline = true;
   mockIsMobile = false;
   mockResolvedTicket = undefined;
+  mockTicketUpdatedAt = undefined;
+  mockOfflineDraftFields = [];
   mockRightPanelOpen = false;
   mockMainSectionCanUpdate = undefined;
   mockPanelCanUpdate = undefined;
@@ -275,4 +290,44 @@ it("hides the offline notice when the user is online", () => {
   mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
   render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
   expect(screen.queryByText(/you're offline/i)).not.toBeInTheDocument();
+});
+
+it("dates the offline notice from the read's own timestamp, because an undated stale record cannot be judged", () => {
+  mockIsOnline = false;
+  mockTicketUpdatedAt = Date.now() - 5 * 60 * 1000;
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.getByTestId("offline-freshness")).toHaveTextContent(/last updated .*5 minutes ago/i);
+});
+
+it("omits the freshness line when the record has never resolved, so it cannot claim a load that did not happen", () => {
+  mockIsOnline = false;
+  mockTicketUpdatedAt = 0;
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+  expect(screen.queryByTestId("offline-freshness")).not.toBeInTheDocument();
+});
+
+it("renders the issue key in the header, because the key is the core identity field a reader cites", () => {
+  mockResolvedTicket = { id: 1, ticketNumber: 7, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-7" />);
+  expect(screen.getByTestId("page-subtitle")).toHaveTextContent("TEST-7");
+});
+
+it("counts the edits held back while offline, so a kept draft is visible rather than silently lost", () => {
+  mockIsOnline = false;
+  mockOfflineDraftFields = ["title", "priority"];
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.getByTestId("offline-draft-count")).toHaveTextContent("2 unsent changes");
+});
+
+it("shows no unsent-change count while offline with nothing held back, so the notice never overstates", () => {
+  mockIsOnline = false;
+  mockOfflineDraftFields = [];
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+  expect(screen.queryByTestId("offline-draft-count")).not.toBeInTheDocument();
 });

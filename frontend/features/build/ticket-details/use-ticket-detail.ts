@@ -16,6 +16,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { ProjectMember } from "./types";
 import { useCan } from "@/hooks/api/access";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
   diffTicketConflictFields,
   type TicketConflictFieldDiff,
@@ -50,7 +51,10 @@ interface TicketConflictState {
 export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDetailOptions) {
   const canUpdate = useCan("build:tickets:update");
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
   const [saving, setSaving] = useState(false);
+  const [offlineDraftFields, setOfflineDraftFields] = useState<string[]>([]);
+  const offlineDraftRef = useRef<Record<string, unknown>>({});
   const [conflict, setConflict] = useState<TicketConflictState | null>(null);
   const [localTitle, setLocalTitle] = useState("");
   const [syncedTitleVersion, setSyncedTitleVersion] = useState<string | null>(null);
@@ -68,6 +72,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     isLoading,
     error: ticketError,
     refetch: refetchTicket,
+    dataUpdatedAt: ticketUpdatedAt,
   } = useTicket(projectId, ticketId ?? 0, INLINE_READ_ERROR);
   const { data: projectData } = useProject(projectId);
   const { data: subtasks } = useSubtasks(ticketId ?? 0, projectId);
@@ -199,6 +204,11 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const enqueueSave = useCallback(
     (field: Record<string, unknown>) => {
       if (!ticketId || !canUpdate) return;
+      if (!isOnline) {
+        offlineDraftRef.current = { ...offlineDraftRef.current, ...field };
+        setOfflineDraftFields(Object.keys(offlineDraftRef.current));
+        return;
+      }
       const sequence = ++saveSequenceRef.current;
       setSaving(true);
       const task = saveQueueRef.current.then(() => {
@@ -221,12 +231,21 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
         })
         .catch(() => undefined);
     },
-    [ticketId, canUpdate, updateTicketMutation],
+    [ticketId, canUpdate, isOnline, updateTicketMutation],
   );
 
   useEffect(() => {
     enqueueSaveRef.current = enqueueSave;
   }, [enqueueSave]);
+
+  useEffect(() => {
+    if (!isOnline) return;
+    const pending = offlineDraftRef.current;
+    if (Object.keys(pending).length === 0) return;
+    offlineDraftRef.current = {};
+    setOfflineDraftFields([]);
+    enqueueSaveRef.current?.(pending);
+  }, [isOnline]);
 
   const autoSave = useCallback(
     (field: Record<string, unknown>) => {
@@ -297,6 +316,8 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     isLoading,
     ticketError,
     refetchTicket,
+    ticketUpdatedAt,
+    offlineDraftFields,
     projectData,
     subtasks: subtasks ?? [],
     members,
