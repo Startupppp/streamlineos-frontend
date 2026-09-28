@@ -143,7 +143,8 @@ export function EpicsPage({ params }: PageProps) {
   const dependencyCounts = useMemo(() => {
     const counts = new Map<number, number>();
     for (const record of epicRecords ?? [])
-      counts.set(record.id, record.dependencyCount);
+      if (record.dependencyCount !== undefined)
+        counts.set(record.id, record.dependencyCount);
     return counts;
   }, [epicRecords]);
 
