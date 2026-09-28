@@ -22,12 +22,24 @@ function makeProject(overrides: Partial<ProjectListItem>): ProjectListItem {
 }
 
 describe("filterVisibleProjects", () => {
-  it("keeps only the projects matching an active health filter, because the health chip claims to filter and must actually narrow the list", () => {
+  it("keeps every row the server returned under an active health filter, because narrowing a keyset page again in the client presents one page as the whole filtered set", () => {
     const onTrack = makeProject({ id: 1, name: "Fast", health: "on_track" });
     const offTrack = makeProject({ id: 2, name: "Slow", health: "off_track" });
 
     const result = filterVisibleProjects([onTrack, offTrack], { health: "off_track" }, true);
 
-    expect(result.map((p) => p.id)).toEqual([2]);
+    expect(result.map((p) => p.id)).toEqual([1, 2]);
+  });
+
+  it("still applies the status filter and the closed-project preference, so dropping the health branch did not disarm the rest", () => {
+    const active = makeProject({ id: 1, status: "ACTIVE" });
+    const archived = makeProject({ id: 2, status: "ARCHIVED" });
+
+    expect(
+      filterVisibleProjects([active, archived], {}, false).map((p) => p.id),
+    ).toEqual([1]);
+    expect(
+      filterVisibleProjects([active, archived], { status: "ARCHIVED" }, true).map((p) => p.id),
+    ).toEqual([2]);
   });
 });

@@ -199,6 +199,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     limit: viewMode === "grid" ? 12 : 25,
     search: debouncedSearch || undefined,
     status: activeFilters.status,
+    ...(filterHealth ? { health: filterHealth } : {}),
     ...(managedProductId !== undefined
       ? { managedProductId }
       : filterProductId

@@ -113,3 +113,26 @@ describe("ProjectsPage — clientId URL param", () => {
     expect(() => render(<ProjectsPage />)).not.toThrow();
   });
 });
+
+describe("ProjectsPage — health URL param reaches the server", () => {
+  it("passes filterHealth to useInfiniteProjects, so the health chip narrows the whole result set and not one keyset page", () => {
+    mockSearchParams = new URLSearchParams("filterHealth=off_track");
+    render(<ProjectsPage />);
+    expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+      expect.objectContaining({ health: "off_track" }),
+    );
+  });
+
+  it("passes no health when the param is absent — paired with the present case above", () => {
+    render(<ProjectsPage />);
+    const [filters] = mockUseInfiniteProjects.mock.calls.at(-1) as [Record<string, unknown>];
+    expect("health" in filters).toBe(false);
+  });
+
+  it("passes no health for a band the backend enum does not define, which a strict schema would reject", () => {
+    mockSearchParams = new URLSearchParams("filterHealth=exploding");
+    render(<ProjectsPage />);
+    const [filters] = mockUseInfiniteProjects.mock.calls.at(-1) as [Record<string, unknown>];
+    expect("health" in filters).toBe(false);
+  });
+});

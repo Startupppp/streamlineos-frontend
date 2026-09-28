@@ -139,15 +139,14 @@ export function CommandCenterPage() {
   const urlDue = searchParams.get("due");
   const overdueDueDateTo = format(subDays(new Date(), 1), "yyyy-MM-dd");
 
-  const projectFilters: ProjectFilters & { health?: CommandCenterHealth } =
-    useMemo(
-      () => ({
-        status: "ACTIVE",
-        managerId: urlOwner,
-        ...(urlHealth === undefined ? {} : { health: urlHealth }),
-      }),
-      [urlOwner, urlHealth],
-    );
+  const projectFilters: ProjectFilters = useMemo(
+    () => ({
+      status: "ACTIVE",
+      managerId: urlOwner,
+      ...(urlHealth === undefined ? {} : { health: urlHealth }),
+    }),
+    [urlOwner, urlHealth],
+  );
 
   const {
     data: projectsData,
