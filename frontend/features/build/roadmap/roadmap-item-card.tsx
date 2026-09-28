@@ -1,11 +1,17 @@
 ﻿"use client";
 
-import { memo } from "react";
+import { memo, useCallback, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowBigUp, Pencil } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import type { RoadmapItem } from "@/types/projects";
@@ -42,6 +48,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
   onDelete,
 }: RoadmapItemCardProps) {
   const shouldReduceMotion = useReducedMotion();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   function handleEdit() {
     onEdit(item);
@@ -51,6 +58,11 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
     onDelete(item);
   }
 
+  const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setMenuOpen(true);
+  }, []);
+
   return (
     <motion.div
       variants={shouldReduceMotion ? listItemReduced : listItem}
@@ -59,6 +71,7 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
         PM_PANEL,
         "group p-2.5 transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md",
       )}
+      onContextMenu={handleContextMenu}
     >
       <div className="space-y-2">
         <div className="flex min-w-0 items-start justify-between gap-2">
@@ -76,6 +89,15 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
               icon={Trash2Icon}
               iconSize={12}
             />
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <span aria-hidden tabIndex={-1} className="sr-only" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         {item.description ? (

@@ -39,7 +39,40 @@ jest.mock("@/components/ui/tabs", () => ({
 }));
 
 jest.mock("@/components/ui/page-tabs-toolbar", () => ({
-  PageTabsToolbar: ({ search }: { search?: React.ReactNode }) => <div>{search}</div>,
+  PageTabsToolbar: ({ search, filters }: { search?: React.ReactNode; filters?: React.ReactNode | (() => React.ReactNode) }) => (
+    <div>
+      {search}
+      <div data-testid="roadmap-filters">{typeof filters === "function" ? filters() : filters}</div>
+    </div>
+  ),
+}));
+
+jest.mock("@/components/ui/select", () => {
+  const react = jest.requireActual<typeof import("react")>("react");
+  const SelectChange = react.createContext<((value: string) => void) | undefined>(undefined);
+  return {
+    Select: ({ children, onValueChange }: { children: React.ReactNode; onValueChange?: (value: string) => void }) => (
+      <SelectChange.Provider value={onValueChange}>{children}</SelectChange.Provider>
+    ),
+    SelectTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    SelectItem: ({ children, value }: { children: React.ReactNode; value: string }) => {
+      const onValueChange = react.useContext(SelectChange);
+      const handleClick = () => onValueChange?.(value);
+      return (
+        <button type="button" onClick={handleClick}>
+          {children}
+        </button>
+      );
+    },
+    SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
+  };
+});
+
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembers: () => ({
+    data: { data: [{ membershipId: 9, userId: "user-9", name: "Fox Mulder", email: "fox@example.com", image: null }] },
+  }),
 }));
 
 jest.mock("@/components/ui/search-input", () => ({
@@ -218,5 +251,55 @@ describe("RoadmapListPage — search is URL-backed as q", () => {
     render(<RoadmapListPage />);
 
     expect(capturedSearch).toBe("retention");
+  });
+});
+
+describe("RoadmapListPage — every response-shaping value has a control that writes the URL", () => {
+  it("writes a picked status to the URL rather than filtering the loaded page in memory", () => {
+    render(<RoadmapListPage />);
+    fireEvent.click(screen.getByRole("button", { name: "In progress" }));
+    expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("status=in_progress"), { scroll: false });
+  });
+
+  it("writes a picked sort to the URL", () => {
+    render(<RoadmapListPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Recently created" }));
+    expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("sort=created_at"), { scroll: false });
+  });
+
+  it("offers owners by display name and writes the membership id to the URL, never a raw id label", () => {
+    render(<RoadmapListPage />);
+    expect(screen.getByTestId("roadmap-filters")).toHaveTextContent("Fox Mulder");
+    fireEvent.click(screen.getByRole("button", { name: "Fox Mulder" }));
+    expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("ownerId=9"), { scroll: false });
+  });
+
+  it("commits the typed horizon to the URL on blur", () => {
+    render(<RoadmapListPage />);
+    const horizon = screen.getByLabelText("Filter by horizon");
+    fireEvent.change(horizon, { target: { value: "Q3 2026" } });
+    expect(mockReplace).not.toHaveBeenCalled();
+    fireEvent.blur(horizon);
+    expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("horizon=Q3+2026"), { scroll: false });
+  });
+
+  it("commits the typed horizon to the URL on Enter, so the filter is reachable from the keyboard", () => {
+    render(<RoadmapListPage />);
+    const horizon = screen.getByLabelText("Filter by horizon");
+    fireEvent.change(horizon, { target: { value: "Q4 2026" } });
+    fireEvent.keyDown(horizon, { key: "Enter" });
+    expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("horizon=Q4+2026"), { scroll: false });
+  });
+
+  it("seeds the horizon box from the URL so a shared roadmap link reopens filtered", () => {
+    mockSearchParams = new URLSearchParams("horizon=Q1 2027");
+    render(<RoadmapListPage />);
+    expect(screen.getByLabelText("Filter by horizon")).toHaveValue("Q1 2027");
+  });
+
+  it("renders no roadmap filter controls on the feedback tab, where they shape no read", () => {
+    mockSearchParams = new URLSearchParams("tab=feedback");
+    render(<RoadmapListPage />);
+    expect(screen.getByTestId("roadmap-filters")).toBeEmptyDOMElement();
   });
 });
