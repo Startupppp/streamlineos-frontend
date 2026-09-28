@@ -137,6 +137,18 @@ jest.mock("./release-form-sheet", () => ({
 }));
 
 import { fireEvent } from "@testing-library/react";
+import { ReleaseMobileCard, buildReleasesColumns } from "./releases-table-columns";
+import type { Release } from "@/hooks/api/build/releases";
+
+function releaseColumnCell(
+  key: string,
+  handlers: { canManage: boolean; onEdit: (r: Release) => void; onDelete: (r: Release) => void },
+) {
+  const column = buildReleasesColumns(handlers).find((c) => c.key === key);
+  const cell = column?.cell;
+  if (cell === undefined) throw new Error(`the releases table has no ${key} column with a cell`);
+  return cell;
+}
 import { useReleases, useDeleteRelease, useUpdateRelease } from "@/hooks/api/build/releases";
 import { useCan, useAccess } from "@/hooks/api/access";
 
@@ -355,36 +367,28 @@ it("accepts a release row where createdBy is null since the column may be unset"
 });
 
 it("renders the plain-text notes below the version in the name column cell", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const nameColumn = columns.find((c: { key: string }) => c.key === "name");
-  render(nameColumn.cell({ ...releaseRow, description: "<p>Bug fixes and performance</p>" }));
+  const nameCell = releaseColumnCell("name", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(nameCell({ ...releaseRow, description: "<p>Bug fixes and performance</p>" }));
   expect(screen.getByText("Bug fixes and performance")).toBeInTheDocument();
 });
 
 it("omits the notes text from the name cell when description is null so the cell stays compact", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const nameColumn = columns.find((c: { key: string }) => c.key === "name");
-  render(nameColumn.cell({ ...releaseRow, description: null }));
+  const nameCell = releaseColumnCell("name", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(nameCell({ ...releaseRow, description: null }));
   expect(screen.queryByText("Bug fixes and performance")).not.toBeInTheDocument();
 });
 
 it("renders the owner display name in the createdBy column cell and never the raw user id (FE-85)", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
-  render(createdByColumn.cell({ ...releaseRow, createdBy: OWNER_USER_ID, createdByUser: OWNER }));
+  const createdByCell = releaseColumnCell("createdBy", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(createdByCell({ ...releaseRow, createdBy: OWNER_USER_ID, createdByUser: OWNER }));
   expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
   expect(screen.queryByText(OWNER_USER_ID)).not.toBeInTheDocument();
 });
 
 it("renders the email local part in the createdBy cell for an owner with no name, still never the raw user id", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
+  const createdByCell = releaseColumnCell("createdBy", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
   render(
-    createdByColumn.cell({
+    createdByCell({
       ...releaseRow,
       createdBy: OWNER_USER_ID,
       createdByUser: { name: null, firstName: null, lastName: null, email: "ada@example.test" },
@@ -395,24 +399,19 @@ it("renders the email local part in the createdBy cell for an owner with no name
 });
 
 it("renders a dash in the createdBy cell when createdByUser is null, so an unresolvable owner is an absent value and not a blank loading cell", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
-  render(createdByColumn.cell({ ...releaseRow, createdBy: null, createdByUser: null }));
+  const createdByCell = releaseColumnCell("createdBy", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(createdByCell({ ...releaseRow, createdBy: null, createdByUser: null }));
   expect(screen.getByText("—")).toBeInTheDocument();
 });
 
 it("renders a dash and not the id when createdBy still holds an id whose user row is gone", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
-  render(createdByColumn.cell({ ...releaseRow, createdBy: OWNER_USER_ID, createdByUser: null }));
+  const createdByCell = releaseColumnCell("createdBy", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(createdByCell({ ...releaseRow, createdBy: OWNER_USER_ID, createdByUser: null }));
   expect(screen.getByText("—")).toBeInTheDocument();
   expect(screen.queryByText(OWNER_USER_ID)).not.toBeInTheDocument();
 });
 
 it("renders the release description as notes text in the mobile card", () => {
-  const { ReleaseMobileCard } = require("./releases-table-columns");
   render(
     <ReleaseMobileCard
       release={{ ...releaseRow, description: "<p>Bug fixes and performance improvements</p>", createdBy: null }}
@@ -425,7 +424,6 @@ it("renders the release description as notes text in the mobile card", () => {
 });
 
 it("renders the owner display name in the mobile card and never the raw user id (FE-85)", () => {
-  const { ReleaseMobileCard } = require("./releases-table-columns");
   render(
     <ReleaseMobileCard
       release={{ ...releaseRow, description: null, createdBy: OWNER_USER_ID, createdByUser: OWNER }}
@@ -439,7 +437,6 @@ it("renders the owner display name in the mobile card and never the raw user id 
 });
 
 it("omits the created-by row from the mobile card when createdByUser is null, rather than falling back to the id", () => {
-  const { ReleaseMobileCard } = require("./releases-table-columns");
   render(
     <ReleaseMobileCard
       release={{ ...releaseRow, description: null, createdBy: OWNER_USER_ID, createdByUser: null }}
@@ -527,40 +524,33 @@ it("accepts a release row whose createdByUser is the four-field user object the 
 });
 
 it("renders a dash in the published column for a draft release that has never been released", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const publishedColumn = columns.find((c: { key: string }) => c.key === "publishedAt");
-  render(publishedColumn.cell({ ...releaseRow, status: "draft", publishedAt: null }));
+  const publishedCell = releaseColumnCell("publishedAt", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(publishedCell({ ...releaseRow, status: "draft", publishedAt: null }));
   expect(screen.getByText("—")).toBeInTheDocument();
 });
 
 it("renders a formatted date in the published column for a released row that has a known publication date", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const publishedColumn = columns.find((c: { key: string }) => c.key === "publishedAt");
-  render(publishedColumn.cell({ ...releaseRow, status: "released", publishedAt: "2026-09-01T10:00:00Z" }));
+  const publishedCell = releaseColumnCell("publishedAt", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(publishedCell({ ...releaseRow, status: "released", publishedAt: "2026-09-01T10:00:00Z" }));
   expect(screen.getByText("Sep 1, 2026")).toBeInTheDocument();
 });
 
 it("renders Unknown in the published column for a released row with null publishedAt because the release predates the migration", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const publishedColumn = columns.find((c: { key: string }) => c.key === "publishedAt");
-  render(publishedColumn.cell({ ...releaseRow, status: "released", publishedAt: null }));
+  const publishedCell = releaseColumnCell("publishedAt", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(publishedCell({ ...releaseRow, status: "released", publishedAt: null }));
   expect(screen.getByText("Unknown")).toBeInTheDocument();
 });
 
 describe("release name cell — right click opens the same authorized actions as the row menu", () => {
-  function nameCell(canManage: boolean, onEdit = jest.fn(), onDelete = jest.fn()) {
-    const { buildReleasesColumns } = require("./releases-table-columns");
-    const columns = buildReleasesColumns({ canManage, onEdit, onDelete });
-    const nameColumn = columns.find((c: { key: string }) => c.key === "name");
-    render(nameColumn.cell(releaseRow));
+  function renderNameCell(canManage: boolean) {
+    const onEdit = jest.fn();
+    const onDelete = jest.fn();
+    render(releaseColumnCell("name", { canManage, onEdit, onDelete })(releaseRow));
     return { onEdit, onDelete };
   }
 
   it("opens Edit and Delete on contextmenu for a viewer who can manage releases", () => {
-    nameCell(true);
+    renderNameCell(true);
     expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
     fireEvent.contextMenu(screen.getByText("v1.0.0"));
     expect(screen.getByRole("menuitem", { name: "Edit" })).toBeInTheDocument();
@@ -568,20 +558,20 @@ describe("release name cell — right click opens the same authorized actions as
   });
 
   it("opens nothing on contextmenu for a viewer who cannot manage releases, so the menu never offers an unauthorized command", () => {
-    nameCell(false);
+    renderNameCell(false);
     fireEvent.contextMenu(screen.getByText("v1.0.0"));
     expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
   });
 
   it("calls the row's edit handler with the row the menu was opened on", () => {
-    const { onEdit } = nameCell(true);
+    const { onEdit } = renderNameCell(true);
     fireEvent.contextMenu(screen.getByText("v1.0.0"));
     fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
     expect(onEdit).toHaveBeenCalledWith(releaseRow);
   });
 
   it("calls the row's delete handler from the context menu, so delete is reachable without the actions column", () => {
-    const { onDelete } = nameCell(true);
+    const { onDelete } = renderNameCell(true);
     fireEvent.contextMenu(screen.getByText("v1.0.0"));
     fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
     expect(onDelete).toHaveBeenCalledWith(releaseRow);
@@ -589,17 +579,11 @@ describe("release name cell — right click opens the same authorized actions as
 });
 
 describe("every release cell answers a right click, so the gesture is not limited to one column", () => {
-  function cellFor(key: string) {
-    const { buildReleasesColumns } = require("./releases-table-columns");
-    const columns = buildReleasesColumns({ canManage: true, onEdit: jest.fn(), onDelete: jest.fn() });
-    return columns.find((c: { key: string }) => c.key === key);
-  }
-
   it.each(["status", "publishedAt", "releaseDate", "ticketCount", "createdBy"])(
     "opens the actions menu on contextmenu in the %s cell",
     (key) => {
-      const column = cellFor(key);
-      const { container } = render(column.cell(releaseRow));
+      const cell = releaseColumnCell(key, { canManage: true, onEdit: jest.fn(), onDelete: jest.fn() });
+      const { container } = render(cell(releaseRow));
       const target = container.firstElementChild;
       if (target === null) throw new Error(`the ${key} cell rendered nothing`);
       fireEvent.contextMenu(target);

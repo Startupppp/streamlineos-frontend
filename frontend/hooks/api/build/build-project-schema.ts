@@ -452,6 +452,7 @@ export const ticketFieldValueCreateContract = z.object({
 export const projectReleaseListContract = cursorPageContract(
   projectReleaseListItemSchema,
 );
+export const projectReleaseListItemContract = projectReleaseListItemSchema;
 export const projectReleaseRowContract = projectReleaseRowSchema;
 export const projectWebhookPageContract =
   idCursorPageContract(projectWebhookSchema);

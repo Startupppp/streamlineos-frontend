@@ -17,7 +17,7 @@ type ReleasePage = {
 const projectReleaseListContract = lazyContract<ReleasePage>(() =>
   import("@/hooks/api/build/build-project-schema").then((m) =>
     m.projectReleaseListContract
-      .or(z.array(m.projectReleaseRowContract))
+      .or(z.array(m.projectReleaseListItemContract))
       .transform((value) =>
         Array.isArray(value)
           ? {

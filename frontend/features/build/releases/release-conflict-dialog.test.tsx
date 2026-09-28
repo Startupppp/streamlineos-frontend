@@ -35,7 +35,6 @@ import { toast } from "sonner";
 
 const RELEASE: Release = {
   id: 1,
-  orgId: "org-1",
   projectId: 1,
   name: "v1.0.0",
   version: "1.0.0",
@@ -47,7 +46,6 @@ const RELEASE: Release = {
   description: null,
   createdBy: null,
   createdByUser: null,
-  deletedAt: null,
   createdAt: "2026-09-01T00:00:00Z",
   updatedAt: "2026-09-01T00:00:00Z",
 };
