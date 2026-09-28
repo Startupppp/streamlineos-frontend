@@ -52,7 +52,8 @@ Batched by blast radius so each batch fits one fresh context window. Land them i
   conditional `description`, the inbox through `emptyState={hasActiveFilters ? a : b}` on `DataTable`. Both
   now declare `isFiltered`, `empty` and `filteredEmpty` separately, which is the module's rule, and the
   rendered copy is unchanged in each branch. The difference is recorded in the migration commit.
-- [ ] Files in the batch that exceeded 500 lines drop below it, per FE-57
+- [x] Files in the batch that exceeded 500 lines drop below it, per FE-57
+  Earned 2026-09-28 (Lane-SEAM). Zero files of any kind in the batch's directories exceed 500 — see "Criterion earned" at the end of this ticket. The notes below record how the premise was corrected twice on the way there, and are kept because the corrections are the point.
   **Left unchecked. The original reason — "the criterion has no subject" — is corrected below:
   `epics/epics-page.tsx` is a batch file at 531 lines, so the criterion is unmet rather than subject-less.**
   The measurement the earlier lanes recorded, for the five files they chose -- `project-backlog-page.tsx` 421 -> 412,
@@ -265,3 +266,75 @@ work was in progress** — `releases-page.test.tsx` 551 → 596 and
 this is a moving target owned by live lanes, not a fixed backlog. Splitting them is a
 separate unit, and `project-board-page.test.tsx` should be excluded from it for the same
 reason the earlier measurements were wrong to include `project-detail/` files at all.
+
+## Criterion earned — 2026-09-28 (Lane-SEAM), on the stricter reading
+
+The criterion cites FE-57, FE-57's gate is `check:file-sizes`, and that gate counts
+spec files. So the criterion is met only when **no file of any kind** in the batch's
+directories exceeds 500. Owner decision, 2026-09-28: the stricter reading is the
+correct one, because ticking on a source-only reading would be exactly the narrowed
+criterion this programme keeps having to undo. The three in-scope specs were split
+rather than excused.
+
+### The three spec splits
+
+| Spec | Before | After | New siblings | Tests |
+|---|---|---|---|---|
+| `releases/releases-page.test.tsx` | 596 | **134** | `releases-page-test-harness.tsx` 265, `releases-table-columns.test.tsx` 122, `releases-row-contract.test.tsx` 143 | 31 → 31 |
+| `views/use-board-url-state.test.tsx` | 555 | **254** | `use-board-url-state-test-harness.ts` 91, `use-board-url-state-display-options.test.ts` 131, `use-board-url-state-qa-filters.test.ts` 126 | 24 → 24 |
+| `workload/workload-board-page.test.tsx` | 555 | **151** | `workload-board-page-test-harness.tsx` 216, `workload-board-page-states.test.tsx` 230 | 36 → 36 |
+
+**91 assertions before, 91 after** — verified by running the three specs together
+before the work and the resulting eight files after. Each split follows the pattern the
+epics spec used and that `views/project-board-content-test-harness.ts` set: a harness
+holding the mocks, fixtures and an `install…Mocks` the specs pass to `beforeEach`, then
+per-concern spec files.
+
+The one recurring problem was module-level mutable state — a `let` the preamble
+reassigns and the tests read or write. In every case it became a single exported object
+(`releaseState`, `boardState`, `captured`) so the change is an identifier rename and no
+assertion had to be restructured to cross a file boundary; `setSearchParams(query)` and
+`setParams({…})` cover the two cases where a test replaces a `URLSearchParams` outright.
+Three shared fixtures in the releases spec (`releaseRow`, `OWNER`, `OWNER_USER_ID`) were
+declared between tests rather than in the preamble, and only surfaced as
+`ReferenceError: releaseRow is not defined` once the split ran — they are in the harness
+now.
+
+### Final measurement, taken last
+
+Largest file of any kind in each of the batch's directories:
+
+| Directory | Largest file | Lines |
+|---|---|---|
+| `backlog` | `project-backlog-page.tsx` | 412 |
+| `feedbucket` | `widget-setup-sheet.tsx` | 347 |
+| `releases` | `releases-page.tsx` | 440 |
+| `epics` | `epics-page.tsx` | 490 |
+| `milestones` | `project-milestones-page.tsx` | 472 |
+| `triage` | `triage-page.test.tsx` | 377 |
+| `workload` | `workload-board-page.tsx` | 388 |
+| `views` | `gantt-view.tsx` | 494 |
+
+- `pnpm check:file-sizes:self-test` → `check-file-sizes self-tests: 65 passed`.
+- `pnpm check:file-sizes` → **not one `features/build/{backlog,feedbucket,releases,epics,milestones,triage,workload,views}/` path appears on the over-500 list.** The repo total is 49, down from 57 at the start of this lane's work, and what remains is outside this batch.
+- `npx tsc --noEmit -p tsconfig.specs.json` → no error names any split file.
+- `npx eslint` on all eight directories → 0 errors.
+- `npx jest --maxWorkers=2` over all eight directories → **47 suites, 485 tests, all passing.**
+
+### What the earlier measurements got wrong, kept as the record
+
+The premise was corrected twice, and both corrections mattered more than the tick:
+
+1. "No file in this batch exceeded 500" was measured over a file set the batch does not
+   define — it reached outside for `views/table-view.tsx` and
+   `project-detail/project-budget-page.tsx` while omitting `epics/epics-page.tsx`, a
+   surface criterion 1 inspected by name, which was 531 at the time and 760 by the time
+   it was handed over.
+2. The corrected source-file reading was itself incomplete, because FE-57's gate counts
+   specs and three in-scope specs were over 500 — two of which **grew during the work**
+   (`releases-page.test.tsx` 551 → 596, `workload-board-page.test.tsx` 504 → 510 → 555)
+   under live lanes. That is why this measurement was taken last rather than first.
+
+`project-detail/project-board-page.test.tsx` (676) is still over 500 and is deliberately
+**not** in scope: `project-detail/` is not one of the batch's seven surfaces, which is
+the same boundary error the first measurement made in the other direction.
