@@ -433,3 +433,27 @@ probe was reverted:
 - `npx madge --circular --extensions ts src/modules/build/core` → `✔ No circular dependency found!`
 - `pnpm check:build-core-surface:self-test` → `PASS … 26 pattern checks + anti-vacuity, all directions bite` (316 sibling files, 9346 repo files, 839 specifiers — the floors bite)
 - `pnpm check:build-core-surface` → `OK — 316 sibling submodule file(s) scanned; 0 deep core imports.` / `OK — 9346 repo file(s) scanned, 839 specifier(s) aimed into build/core; 0 unresolved, 0 external reaches past the core/tickets barrel.`
+
+## Route decisions on the last four reaches — 2026-09-28 (owner, via coordinator)
+
+**Route 2 is approved and is how criterion 3 will close.** Move `tickets-scope.ts`,
+`build-ticket-capacity.ts`, `build-ticket-mutation-policy.ts` and
+`projects-labels.service.ts` from `core/tickets/` into `core/lib/`, repoint every
+importer, drop the barrel lines that only existed to serve the four sibling callers,
+and tick criterion 3 at zero reaches. It is scheduled behind the execution lane's
+current unit in `core/tickets/**`, not blocked on anything else. Gates it must clear:
+`madge --circular --extensions ts src` green, `check:build-core-surface` green
+(self-test first), backend `core/` suites green.
+
+**Route 1 is rejected for this programme.** Replacing the `create → runner` call with
+an outbox emit changes *when* automations fire relative to the commit. That is a
+behaviour change wearing a refactor's clothes, and the four deep imports are not worth
+buying it. If the owner wants the emit later it gets its own ticket, with the
+before/after firing order as its acceptance criteria rather than a cycle count.
+
+The two findings above stand as the record for anyone re-opening this: the
+string-or-symbol DI token with `import type` is refused because it deletes the
+compiler's view of a dependency that still runs, and the probe shows it would not even
+turn the gate green; and `ProjectsMembersService.assertProjectAccess` stays as it is
+because substituting the standalone function turns a 404 into a 403 on a missing
+project — a BE-22 regression traded for a green gate.
