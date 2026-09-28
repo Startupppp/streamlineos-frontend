@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateTicket } from "@/hooks/api/build/tickets";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { activationProps } from "@/lib/keyboard-activation";
@@ -46,6 +47,7 @@ export function CreateEpicDialog({
   const controlled = controlledOpen !== undefined;
   const open = controlled ? controlledOpen : uncontrolledOpen;
   const createTicket = useCreateTicket();
+  const isOnline = useOnlineStatus();
 
   const setOpen = (next: boolean) => {
     if (!controlled) setUncontrolledOpen(next);
@@ -55,6 +57,12 @@ export function CreateEpicDialog({
   const handleOpen = () => setOpen(true);
 
   const handleSubmit = (data: CreateEpicInput) => {
+    if (!isOnline) {
+      toast.warning(
+        "You're offline — your draft is kept here and nothing was sent.",
+      );
+      return;
+    }
     createTicket.mutate(
       {
         projectId,

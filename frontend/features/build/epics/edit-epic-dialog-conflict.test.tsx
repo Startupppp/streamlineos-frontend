@@ -4,14 +4,17 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api-envelope";
 import { EditEpicDialog } from "./edit-epic-dialog";
+import { CreateEpicDialog } from "./create-epic-dialog";
 
 const mutate = jest.fn();
+const createMutate = jest.fn();
 let capturedOptions: {
   onError?: (error: unknown) => void;
   onSuccess?: () => void;
 } = {};
 
 jest.mock("@/hooks/api/build/tickets", () => ({
+  useCreateTicket: () => ({ mutate: createMutate, isPending: false }),
   useUpdateTicket: (
     _projectId: number,
     options: { onError?: (error: unknown) => void },
@@ -26,6 +29,12 @@ jest.mock("sonner", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+
+let mockIsOnline = true;
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockIsOnline,
+}));
 
 const EPIC = {
   id: 9,
@@ -71,6 +80,7 @@ async function openAndSave() {
 beforeEach(() => {
   jest.clearAllMocks();
   capturedOptions = {};
+  mockIsOnline = true;
 });
 
 describe("EditEpicDialog — a 409 shows the server value beside the local one, not a toast", () => {
@@ -119,5 +129,53 @@ describe("EditEpicDialog — a 409 shows the server value beside the local one, 
     });
     expect(within(dialog).getByText("Version")).toBeInTheDocument();
     expect(within(dialog).getByText("Updated by another user")).toBeInTheDocument();
+  });
+});
+
+describe("EditEpicDialog — offline keeps the draft and sends no command", () => {
+  it("sends no update while the browser is offline and leaves the typed value in the form", async () => {
+    mockIsOnline = false;
+    await openAndSave();
+    expect(mutate).not.toHaveBeenCalled();
+    expect(toast.warning).toHaveBeenCalledWith(
+      "You're offline — your draft is kept here and nothing was sent.",
+    );
+    expect(screen.getByDisplayValue("Checkout rewrite v2")).toBeInTheDocument();
+  });
+
+  it("sends the update once the browser is online, so the guard is not always on", async () => {
+    await openAndSave();
+    expect(mutate).toHaveBeenCalled();
+  });
+});
+
+describe("CreateEpicDialog — offline keeps the draft and sends no command", () => {
+  async function fillAndSubmit() {
+    render(
+      <Wrapper>
+        <CreateEpicDialog projectId={3} open onOpenChange={jest.fn()} />
+      </Wrapper>,
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: /title/i }), {
+      target: { value: "New epic draft" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /create epic/i }));
+    });
+  }
+
+  it("sends no create while the browser is offline and leaves the typed value in the form", async () => {
+    mockIsOnline = false;
+    await fillAndSubmit();
+    expect(createMutate).not.toHaveBeenCalled();
+    expect(toast.warning).toHaveBeenCalledWith(
+      "You're offline — your draft is kept here and nothing was sent.",
+    );
+    expect(screen.getByDisplayValue("New epic draft")).toBeInTheDocument();
+  });
+
+  it("sends the create once the browser is online, so the guard is not always on", async () => {
+    await fillAndSubmit();
+    expect(createMutate).toHaveBeenCalled();
   });
 });

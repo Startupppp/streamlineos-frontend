@@ -36,6 +36,7 @@ import { isApiError, getApiErrorCode } from "@/lib/api-envelope";
 import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
 import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
 import { activationProps } from "@/lib/keyboard-activation";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
 interface EditEpicDialogProps {
   epic: {
@@ -118,6 +119,7 @@ export function EditEpicDialog({
   const controlled = controlledOpen !== undefined;
   const open = controlled ? controlledOpen : uncontrolledOpen;
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
 
   const setOpen = (next: boolean) => {
     if (!controlled) setUncontrolledOpen(next);
@@ -167,6 +169,12 @@ export function EditEpicDialog({
   });
 
   const handleSubmit = (data: EditEpicInput) => {
+    if (!isOnline) {
+      toast.warning(
+        "You're offline — your draft is kept here and nothing was sent.",
+      );
+      return;
+    }
     pendingValuesRef.current = data;
     updateTicket.mutate({
       ticketId: epic.id,
