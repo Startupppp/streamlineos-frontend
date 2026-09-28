@@ -558,6 +558,22 @@ check `git -c core.autocrlf=false -c core.whitespace=cr-at-eol diff --check -- d
     nonzero: 11(1), 14(1), 16(1), 25(1), 27(5), 38(1), 44(1), 50(2), 51(1), 54(1), 55(1)
     complete: 57 of 68
     ```
+    **Re-run later the same day, same command, after ticket 27 closed: 58 of 68, 11 boxes.**
+    ```
+    nonzero: 11(1), 14(1), 16(1), 25(1), 38(1), 44(1), 50(2), 51(1), 54(1), 55(1)
+    complete: 58 of 68
+    ```
+    The eleven were each adjudicated individually on 2026-09-28 and none is merely unattended.
+    Three are permanently unearnable as written and say so in their own files: 11 asserts nothing
+    rejects an untokened request, which ticket 12 deliberately made false; 38 asserts a
+    propagating effect returns an error, and propagation was never chosen at any of eleven sites;
+    44 is the structural effect-family gap this document's own P0 box is blocked on. Three are
+    browser-only: 50's and 51's "no page changes visibly" and 55's gallery focus order. Five carry
+    a named blocker at file and line: 14 (`getAllWork` still ORs `isNull` against an `IN` semi-join
+    at `projects-work-query.service.ts:265`), 16 (the reader is committed, so the absence it
+    asserts is gone), 25 (thirteen or more non-spec importers still reach into `core/tickets/`),
+    50's file-size box (no file in the batch ever exceeded 500 lines, so the criterion has no
+    subject) and 54 (both named helpers have callers — 137 and 42 files).
     The anchored form and the looser `- \[ \]` form agree on every one of the 68 files, so neither the CRLF miscount nor an indented-box miss is in play here.
 
     **The 16 boxes, by why they are open.** Four are adjudicated permanent N/A — 11, 16, 38, and 44's box 1 — and would never be ticked. Twelve are real: ticket 27's five (the core restructure, unstarted), 25's one cross-module caller, 50's two, and one each in 51, 54, 55 (two of which are browser-class), plus ticket 14's union criterion, which has work in flight under another session. So the honest form of this box is **57 complete, 4 permanently N/A, 7 real boxes outstanding** — and it cannot be earned on either reading, because the programme rule is that an unchecked box is unchecked whatever its adjudication.
