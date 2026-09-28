@@ -49,7 +49,7 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
         label: "Knowledge Base",
         icon: BookOpen,
         href: "/support/kb",
-        requiredPermission: ["kb:articles:view", "support:kb:view"],
+        requiredPermission: "support:kb:view",
       },
       {
         label: "Reports",

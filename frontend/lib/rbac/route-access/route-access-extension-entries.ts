@@ -167,9 +167,9 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/support/kb",
-    permission: "kb:articles:view",
+    permission: "support:kb:view",
     reason:
-      "Helpdesk knowledge articles. Without this entry the prefix resolved to the /support nav gate (dashboard:support:view), an unrelated key from another module, while every read the page issues declares kb:articles:view.",
+      "Helpdesk knowledge articles. Without this entry the prefix resolved to the /support nav gate (dashboard:support:view), an unrelated key from another module. The page reads /support/kb/articles and /support/kb/categories and nothing else, and both declare support:kb:view — the key the support-agent role template actually grants. It was kb:articles:view until 2026-09-28, which locked every support agent out of their own surface.",
     backendRoute: { method: "get", path: "/support/kb/articles" },
   },
   {

@@ -6,4 +6,4 @@
 // the reporting-request queue and bulk reporting change, recomputed on the tree
 // merged with main's Recruitment OS move.
 export const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "5f5cb7dec91594435f423b5cfe8e673a0b14c03629ae9898cbf970915cdc0a31";
+  "d82465e552ab909bff745894c122a63923e658c56b32e9f981dc317ac862418c";

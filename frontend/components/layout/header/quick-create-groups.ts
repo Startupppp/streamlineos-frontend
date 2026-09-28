@@ -188,7 +188,7 @@ export const QUICK_CREATE_GROUPS: CreateGroup[] = [
         label: "Help article",
         href: "/support/kb?create=1",
         icon: FileText,
-        permission: "kb:articles:create",
+        permission: "support:kb:manage",
         module: "HELPDESK",
       },
       {
