@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/tickets", () => ({
   useUpdateTicket: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
