@@ -157,6 +157,43 @@ Additionally `build/import-export/ticket-points-column.spec.ts:7` imports `query
 
 Criterion 3 stays unticked. The sibling half (thirteen-plus non-spec imports across `analytics`, `automation`, `custom-fields`, `custom-states`, `members`, `notifications`, `project-crud`, `releases`, `roadmap`, `webhooks` and `projects.module.ts`) is the primary blocker; the `goals/` external bypass is an additional violation the gate (`check:build-core-surface`) should cover. What would settle it: zero results from `grep -r "from.*core/tickets/" backend/src --include="*.ts" -l` outside `build/core/tickets/` and `build/core/index.ts`.
 
+## Closure of the external-half violations — 2026-09-28 (Lane-25)
+
+The two external violations noted by Lane-Adj-A are now closed.
+
+`goals.service.ts` was repointed to the barrel in an earlier lane. Lane-25
+closes `build/import-export/ticket-points-column.spec.ts:7`: `queryTickets`
+was added to `core/index.ts` (`export { queryTickets } from "./tickets/projects-tickets-read.query"`)
+and the spec's import was changed from `"../core/tickets/projects-tickets-read.query"` to `"../core"`.
+`queryTickets` imports only from `db/drizzle.module`, `drizzle-orm` and `db/schema`; no cycle risk.
+
+Search run: `grep -rn "from.*['\"].*tickets/" src/modules/build/core --include="*.ts"` (excluding
+`core/tickets/` and `core/index.ts`), and `node src/scripts/check-build-core-surface.mjs`.
+
+Gate result after fix:
+`OK — 314 sibling submodule file(s) scanned; 0 deep core imports.`
+`OK — 9329 repo file(s) scanned, 822 specifier(s) aimed into build/core; 0 unresolved, 0 external reaches past the core/tickets barrel.`
+
+`tsc -p tsconfig.json --noEmit` error count: 0. `tsc -p tsconfig.test.json --noEmit` error count: 0.
+Build jest suite: 266 suites / 2470 tests, all passing (baseline unchanged).
+
+**Remaining violations — `core/` siblings (not in gate scope, not in Lane-25 write territory):**
+13 non-spec imports across `analytics/projects-reports.service.ts:18`,
+`automation/build-automation-actions.service.ts:15`,
+`custom-fields/projects-custom-fields.service.ts:14`,
+`custom-states/projects-custom-states.service.ts:19–20`,
+`members/projects-members.service.ts:48`,
+`notifications/build-notification-context.service.ts:11`,
+`project-crud/build-project-aggregate-access.ts:7`,
+`project-crud/projects-query.service.ts:26`,
+`projects.module.ts:62`,
+`releases/projects-releases.service.ts:2`,
+`roadmap/projects-roadmap.service.ts:2`,
+`webhooks/projects-webhooks.service.ts:10`.
+All are architectural blockers: either the importing file is itself exported from the barrel (routing
+through it creates a direct `barrel → file → barrel` cycle), or the import chain forms the deeper
+cycle the ticket has documented since the first write-up. Criterion 3 stays unticked.
+
 ## Verification
 
 `tsc` reports zero unresolved modules. `check:module-di` finds every ticket
