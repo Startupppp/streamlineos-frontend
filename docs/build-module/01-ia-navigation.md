@@ -207,6 +207,48 @@ Dynamic detail pages require valid parent IDs and must return indistinguishable 
   Nav-catalog audit confirms command-palette coverage for every KEEP route: organization scope destinations in `frontend/lib/build/nav/build-organization-catalog.ts` (6 primary, 6 moreTools, 1 settings); project scope in `frontend/lib/build/nav/build-project-catalog.ts` (8 primary, 23 moreTools, 1 settings); managed-product scope in `frontend/lib/build/nav/build-managed-product-catalog.ts` (6 primary); cross-scope stable destinations in `frontend/lib/build/nav/build-stable-destinations.ts` (Inbox, My Work, Drafts, Browse all Build). Detail pages with dynamic IDs (`/build/[projectId]/cycles/[cycleId]`, `/build/[projectId]/tickets/[ticketKey]`, wiki page, etc.) are correctly absent — the command palette cannot navigate to them without knowing the ID, which is by design. All 75 KEEP routes are either in a catalog or are detail/settings-sub pages that the parent catalog entry covers. -->
 - [ ] Collapsed, mobile, keyboard, and screen-reader navigation expose equivalent names and badges.
   <!-- BROWSER-EXCLUDED (2026-09-27). Requires a real browser with focus tracking and screen reader. Source confirms collapsed rail is 48–56 px target and labels become tooltips (`01-ia-navigation.md:93–95`), but behavioral equivalence across modes cannot be verified in jsdom. -->
+  <!-- 2026-09-28, third lane. STILL UNCHECKED, and it stays unchecked. Said plainly: this lane ran no
+  browser and no screen reader, so it produced no evidence for any of the four modes, and it is not
+  substituting a source audit or a component test for either. The 2026-09-27 verdict stands.
+
+  What this pass adds is that the exclusion is now traced to a specific, *double* blocker rather than
+  left as "needs a browser", because a sibling document records that a real, backend-free Playwright
+  harness does exist (`04-shared-components.md`, third box: 12 public gallery routes under
+  `frontend/app/(public)/design-system/`, 10 non-skipping specs, 379 tests at 375/768/1280, 163
+  focus assertions) and a reader could reasonably ask why that harness cannot settle this box.
+
+  It cannot, for two measured reasons:
+
+  (1) THE GALLERY ROUTES DO NOT MOUNT THE NAVIGATION. The Build sidebar is assembled from
+  `frontend/lib/build/nav/build-{organization,project,managed-product}-catalog.ts` and rendered only
+  inside the authenticated tenant shell. `grep -rn "Sidebar|TenantLayout|build-organization-catalog"
+  "app/(public)/design-system/"` returns nothing: every gallery page is a bare page component (each
+  opens with `import { notFound } from "next/navigation"`), so there is no rail to collapse, no
+  tooltip to reveal and no badge to compare. The one nav-shaped assertion anywhere in the
+  backend-free set is `e2e/kb-routes.spec.ts:771,:823` locating `nav[aria-label], [data-sidebar]` on
+  a *public* KB page, which is a different navigation.
+
+  (2) THE ONE SPEC THAT REACHES THE AUTHENTICATED SHELL SKIPS WITHOUT A TENANT.
+  `e2e/authenticated-shell.spec.ts:15` is `test.skip(!hasTenantEnv(), SKIP_REASON)`, and it carries
+  only two tests — that a minted session lands on a page rather than sign-in, and that the shell is
+  not a permission or module wall. Neither compares names or badges across modes. `hasTenantEnv()`
+  needs a real tenant against a reachable API, and every connection string in this checkout points at
+  production, so satisfying that guard here would mean driving a browser against production.
+
+  So the blocker is not one missing capability but two: the nav is not reachable without a tenant,
+  and no tenant is reachable without production. That is strictly worse than the boxes in
+  `04-shared-components.md`, which need only a quiet tree and one Playwright run.
+
+  SETTLES WHEN either (a) a non-production tenant exists — the same prerequisite as open question 12
+  in `99-open-questions.md` — and one accessibility pass records, at 375 / 768 / 1280 and with a
+  screen reader, that each of the three sidebar scopes exposes the same destination names and the same
+  badge values collapsed, expanded, via keyboard and via the accessibility tree; or (b) the three nav
+  catalogs are mounted in a public design-system gallery route with fixture badge counts, which would
+  bring the collapsed/mobile/keyboard three of the four modes inside the existing backend-free harness
+  and leave only the screen-reader mode needing a human.
+
+  This box remains counted in `BROWSER-VERIFICATION-EXCLUSIONS.md` (`:36` names it, `:98` counts it),
+  and route (b) above is the only way to take it off that list without a tenant. -->
 - [x] Route moves preserve deep links through intentional redirects and remove old callers.
   <!-- Evidence: `frontend/next.config.ts:83+` (redirects block). All EXECUTED moves verified present: workspaces (9 entries), goal→goals, drafts→inbox, automations→settings/automations, workflow→settings/workflow, timeline→issues, analytics→reports, webhooks→settings/integrations/webhooks, access/client-access/members redirects. Old physical route files are deleted; `build-route-manifest.ts` contains only KEEP entries. -->
 - [x] Library remains Knowledge-owned while project Wiki remains an access-filtered projection.
