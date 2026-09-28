@@ -299,6 +299,63 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     (nothing under features/build/views, features/build/shared/bulk-action-bar* or components/list-view)
     ```
 
+  - **2026-09-28 (lane EXEC) — the `cursor` parameter is now read, honoured and tested, but the board
+    still authors no cursor into the URL, so the box stays unchecked on that half.**
+    Of the two shapes the note above names, the smaller one landed: the cursor is the board read's
+    starting position rather than a replacement for infinite scroll.
+    - `BoardFilters` carries an optional `cursor` and it seeds the infinite query's first page —
+      `frontend/hooks/api/build/ticket-queries.ts:64,90`. It is part of the query key, as this spec's
+      caching sentence requires, so a shared link is a distinct cache entry and is not answered by the
+      top of the list.
+    - `useBoardFilterParams` reads `cursor` off the URL into `boardFilters`
+      (`frontend/features/build/views/board-filter-params.ts:50,76`). A cursor is valid for one
+      normalized filter/sort shape only, so the hook stops using it in the same render the shape
+      changes and removes it from the URL — whichever writer changed the shape, including the board
+      writers that bypass `buildListSearchParams`
+      (`board-filter-params.ts:52-77`). It is not counted as an active filter, so a shared link does
+      not render as filtered-empty.
+    - Five cases in `frontend/hooks/api/build/board-cursor-page-param.test.ts` and eight in
+      `frontend/features/build/views/board-cursor-param.test.tsx`. Mutation-checked: dropping the
+      `initialPageParam` seed and the shape reset together fails 5 of the 13.
+    - Every other consumer of `useProjectBoardTickets` — board, backlog, triage, workload, the epics
+      and cycles rollups, meetings and ticket relations — passes no cursor, so its key is unchanged
+      and it still pages from the top. One case asserts that absence rather than trusting it.
+    - No render file under `features/build/views/**` changed what it reads; the change is in the URL
+      hook they already call.
+
+    **Why the box is still unchecked.** Nothing in the page writes a cursor, so a reader cannot share
+    the position they are at — only a hand-built link works. Both ways to add that writer cost more
+    than they earn, and the choice belongs to whoever owns the board's paging:
+    - Writing the cursor as the reader advances re-keys the infinite query, which drops every loaded
+      page mid-scroll and flashes the skeleton. That is a visible regression on a page whose paging is
+      infinite scroll by FE-125.
+    - Keeping the cursor out of the cache key removes that churn, but contradicts this spec's own
+      caching sentence ("key includes scope, normalized filters, sort, cursor") and lets a window that
+      started elsewhere answer a cursored link.
+    The remaining alternative is the other shape the lane above named — replacing infinite scroll with
+    `TablePagination mode="cursor"` across both the kanban and the list view — which changes what the
+    render files read and how the board behaves, and was not in scope here.
+
+    ```text
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/build/views \
+        features/build/backlog features/build/workload features/build/epics \
+        features/build/project-detail hooks/api/build
+    Test Suites: 106 passed, 106 total
+    Tests:       1126 passed, 1126 total
+
+    $ cd frontend && npx eslint hooks/api/build/ticket-queries.ts \
+        features/build/views/board-filter-params.ts \
+        features/build/views/board-cursor-param.test.tsx \
+        hooks/api/build/board-cursor-page-param.test.ts
+    (0 errors)
+
+    $ cd frontend && npx tsc --noEmit -p tsconfig.json
+    (nothing in ticket-queries.ts or board-filter-params.ts)
+
+    $ cd frontend && npx tsc --noEmit -p tsconfig.specs.json
+    (nothing in either new spec)
+    ```
+
     **The board-card a11y suite is green again, against the card's *current* contract.**
     `features/__tests__/build-board-cards-a11y.test.tsx` had been red since `useCan` entered
     `kanban-ticket-card.tsx` — it mocks no access module, so `useSession` throws, verifiable at the

@@ -105,3 +105,20 @@ the ratchet the way FE-48 already does for `denial-is-not-emptiness.known.json` 
 `hooks/api/build/aggregate-import-known.json`, its 45 entries and that the count may only shrink.
 Without it the ratchet is enforced but undocumented, and the next reader of FE-127 will assume the
 gate is a hard zero everywhere.
+
+**2026-09-28 (lane EXEC) — the gate's test-file exemption was narrower than the convention it
+exempts.** `listProductionSourceFiles` excluded only `*.test.*` and `*.spec.*`, so
+`features/build/epics/epics-page-test-harness.tsx` — setup a peer lane extracted out of
+`epics-page.test.tsx` — was measured as a production Build file and failed the hard-zero arm over an
+import FE-127 explicitly permits a test file. This repo carries test-only code in three shapes, and
+the gate now excludes all three: a `*-test-harness.{ts,tsx}` file (eight of them today), a
+`__tests__/` directory, and `lib/test-support`. No `aggregate-import-known.json` entry went stale
+under the wider exclusion, so the ratchet did not shrink by accident — the "keeps no entry for a file
+that no longer imports an aggregate" arm would have failed if it had. The four boxes stay ticked: the
+criterion was true, the exemption was incomplete.
+
+```text
+$ cd frontend && nice -n 10 npx jest --maxWorkers=2 hooks/api/build/aggregate-import-boundary
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+```
