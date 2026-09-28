@@ -28,6 +28,7 @@ const noContentContract = lazyContract(() =>
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { z } from "zod";
 import type {
   goalRowContract as goalRowContractDef,
@@ -137,6 +138,7 @@ export function useGoals(params?: GoalsParams) {
       (await apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract)).items,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -148,6 +150,7 @@ export function useGoalsPage(params?: GoalsParams) {
       apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -167,6 +170,7 @@ export function useGoalStats() {
     queryKey: accountingAndSupportQueryKeys.goals.stats(),
     queryFn: ({ signal }) => apiClient.get<GoalStats>("/goals/stats", undefined, signal, goalStatsContract),
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

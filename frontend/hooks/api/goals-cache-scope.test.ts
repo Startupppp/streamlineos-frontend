@@ -59,6 +59,13 @@ describe("goals cache invalidation is scoped correctly", () => {
     expect(body).toContain("build:goals:view");
   });
 
+  it.each(["useGoals", "useGoalsPage", "useGoalStats"])(
+    "%s keeps API failures inline so the goals surface can render its recovery state",
+    (hook) => {
+      expect(bodyOf(hook)).toContain("...INLINE_READ_ERROR");
+    },
+  );
+
   it("useGoal stale time is 30 seconds, matching the standard entity stale time", () => {
     const body = bodyOf("useGoal");
     expect(body).toContain("staleTime: 30_000");
