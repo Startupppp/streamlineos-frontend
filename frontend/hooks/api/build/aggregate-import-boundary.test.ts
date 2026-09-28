@@ -7,6 +7,8 @@ const buildFeatureRoot = join(frontendRoot, "features", "build");
 const consumerRoots = ["features", "components", "app", "lib"];
 
 const skippedDirectories = new Set([
+  "__tests__",
+  "test-support",
   ".git",
   ".next",
   ".next-e2e",
@@ -24,6 +26,7 @@ function listProductionSourceFiles(directory: string): string[] {
     if (statSync(path).isDirectory()) return listProductionSourceFiles(path);
     if (!/\.(?:ts|tsx)$/.test(entry)) return [];
     if (/(?:\.test|\.spec)\.(?:ts|tsx)$/.test(entry)) return [];
+    if (/test-harness\.(?:ts|tsx)$/.test(entry)) return [];
     return [path];
   });
 }
