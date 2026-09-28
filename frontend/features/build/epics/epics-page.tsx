@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useMemo, useRef, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toBulkPriority } from "@/features/build/shared/bulk-priority";
 import { useProject } from "@/hooks/api/build/projects";
 import { useUpdateTicket } from "@/hooks/api/build/ticket-update-mutation";
@@ -11,7 +11,11 @@ import {
 } from "@/hooks/api/build/ticket-create-rank-mutations";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build/ticket-create-rank-mutations";
 import { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
-import { useCycles, useEpics } from "@/hooks/api/build/advanced";
+import {
+  useCycles,
+  useEpicPage,
+  type EpicListFilters,
+} from "@/hooks/api/build/advanced";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useOrgLabels } from "@/hooks/api/build/labels";
 import { useExportTickets } from "@/hooks/api/build/ticket-import-export";
@@ -47,6 +51,7 @@ import { WifiOff } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   BUILD_FILTER_ALL,
@@ -71,6 +76,8 @@ const EPIC_HEALTH_OPTIONS = [
   { value: "at_risk", label: "At risk" },
   { value: "off_track", label: "Off track" },
 ] as const;
+
+const EPIC_PAGE_SIZE = 25;
 
 const EPIC_FILTER_DEFINITIONS = [
   { param: "status" },
@@ -114,21 +121,47 @@ export function EpicsPage({ params }: PageProps) {
     isError: ticketsFailed,
     error: ticketsError,
     refetch: refetchTickets,
-    dataUpdatedAt: ticketsUpdatedAt,
   } = useProjectBoardTickets(projectId);
   const { data: cycles } = useCycles(projectId);
-  const { data: epicRecords } = useEpics(projectId);
   const { data: orgLabels } = useOrgLabels();
   const exportEpics = useExportTickets(projectId);
   const { data: membersPage } = useProjectMembers(projectId);
   const members = membersPage?.data ?? [];
-  const isLoading = projectLoading || ticketsLoading;
-  const loadError = projectError ?? ticketsError;
+
+  const statusFilter = listFilters.value("status");
+  const ownerFilter = listFilters.value("ownerId");
+  const healthFilter = listFilters.value("health");
+  const epicFilters: EpicListFilters = {
+    q: listFilters.debouncedSearch || undefined,
+    status: statusFilter !== BUILD_FILTER_ALL ? statusFilter : undefined,
+    ownerId: ownerFilter !== BUILD_FILTER_ALL ? ownerFilter : undefined,
+    health:
+      healthFilter === "on_track" ||
+      healthFilter === "at_risk" ||
+      healthFilter === "off_track"
+        ? healthFilter
+        : undefined,
+    cursor: listFilters.cursor ?? undefined,
+    limit: EPIC_PAGE_SIZE,
+  };
+  const {
+    data: epicPage,
+    isLoading: epicsLoading,
+    isError: epicsFailed,
+    error: epicsError,
+    refetch: refetchEpics,
+    dataUpdatedAt: epicsUpdatedAt,
+  } = useEpicPage(projectId, epicFilters);
+
+  const isLoading = projectLoading || ticketsLoading || epicsLoading;
+  const readFailed = projectFailed || epicsFailed || ticketsFailed;
+  const loadError = projectError ?? epicsError ?? ticketsError;
 
   const handleRetry = useCallback(() => {
     void refetchProject();
+    void refetchEpics();
     void refetchTickets();
-  }, [refetchProject, refetchTickets]);
+  }, [refetchEpics, refetchProject, refetchTickets]);
 
   const updateTicket = useUpdateTicket(projectId);
   const deleteTicket = useDeleteTicket(projectId);
@@ -136,28 +169,29 @@ export function EpicsPage({ params }: PageProps) {
   const bulkUpdate = useBulkUpdateTickets(projectId);
 
   const tickets = boardTickets ?? [];
-  const q = listFilters.debouncedSearch.toLowerCase();
-  const statusFilter = listFilters.value("status");
-  const ownerFilter = listFilters.value("ownerId");
-  const healthFilter = listFilters.value("health");
-  const dependencyCounts = useMemo(() => {
-    const counts = new Map<number, number>();
-    for (const record of epicRecords ?? [])
-      if (record.dependencyCount !== undefined)
-        counts.set(record.id, record.dependencyCount);
-    return counts;
-  }, [epicRecords]);
+  const epics = epicPage?.data ?? [];
+  const hasMoreEpics = epicPage?.pagination.hasMore ?? false;
+  const nextEpicCursor = epicPage?.pagination.nextCursor ?? null;
+  const [visitedCursors, setVisitedCursors] = useState<(string | null)[]>([]);
+  const urlCursor = listFilters.cursor;
+
+  useEffect(() => {
+    if (urlCursor === null) setVisitedCursors([]);
+  }, [urlCursor]);
+
+  const handleNextPage = useCallback(() => {
+    if (!nextEpicCursor) return;
+    setVisitedCursors((current) => [...current, urlCursor]);
+    listFilters.setCursor(nextEpicCursor);
+  }, [listFilters, nextEpicCursor, urlCursor]);
+
+  const handlePreviousPage = useCallback(() => {
+    const previous = visitedCursors[visitedCursors.length - 1] ?? null;
+    setVisitedCursors((current) => current.slice(0, -1));
+    listFilters.setCursor(previous);
+  }, [listFilters, visitedCursors]);
 
   const allEpics = tickets.filter((t) => t.type === "EPIC");
-  const epics = allEpics.filter(
-    (t) =>
-      (!q || t.title.toLowerCase().includes(q)) &&
-      (!statusFilter || statusFilter === "all" || t.status === statusFilter) &&
-      (!ownerFilter ||
-        ownerFilter === "all" ||
-        String(t.assigneeId) === ownerFilter) &&
-      (!healthFilter || healthFilter === "all" || t.health === healthFilter),
-  );
   const stories = tickets.filter((t) => t.type === "STORY");
   const tasks = tickets.filter((t) => t.type === "TASK");
 
@@ -195,7 +229,7 @@ export function EpicsPage({ params }: PageProps) {
   const pageState = usePageState({
     permission: "build:view",
     isLoading,
-    isError: projectFailed || ticketsFailed,
+    isError: readFailed,
     error: loadError,
   });
 
@@ -509,11 +543,11 @@ export function EpicsPage({ params }: PageProps) {
               <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
               <p className="text-xs text-muted-foreground">
                 You&apos;re offline — these epics may be out of date.
-                {ticketsUpdatedAt ? (
+                {epicsUpdatedAt ? (
                   <span data-testid="offline-banner-freshness">
                     {" "}
                     Last updated{" "}
-                    {formatDistanceToNow(new Date(ticketsUpdatedAt), {
+                    {formatDistanceToNow(new Date(epicsUpdatedAt), {
                       addSuffix: true,
                     })}
                     .
@@ -546,7 +580,7 @@ export function EpicsPage({ params }: PageProps) {
             <StatCardGrid cols={4}>
               <StatCard
                 label="Epics"
-                value={epics.length}
+                value={allEpics.length}
                 icon={Layers}
                 tone="default"
                 index={0}
@@ -595,13 +629,13 @@ export function EpicsPage({ params }: PageProps) {
                   Results may not be up to date. Reconnect to see the latest
                   epics.
                 </p>
-                {ticketsUpdatedAt ? (
+                {epicsUpdatedAt ? (
                   <p
                     className="text-xs text-muted-foreground"
                     data-testid="offline-freshness"
                   >
                     Last updated{" "}
-                    {formatDistanceToNow(new Date(ticketsUpdatedAt), {
+                    {formatDistanceToNow(new Date(epicsUpdatedAt), {
                       addSuffix: true,
                     })}
                   </p>
@@ -645,7 +679,7 @@ export function EpicsPage({ params }: PageProps) {
                     <div className="flex-1 min-w-0">
                       <EpicCard
                         epic={epic}
-                        dependencyCount={dependencyCounts.get(epic.id)}
+                        dependencyCount={epic.dependencyCount}
                         stories={tickets.filter(
                           (t) => t.type !== "EPIC" && t.epicId === epic.id,
                         )}
@@ -663,6 +697,16 @@ export function EpicsPage({ params }: PageProps) {
                 ))}
               </PmStaggerList>
             )}
+            {epics.length > 0 ? (
+              <TablePagination
+                mode="cursor"
+                rowCount={epics.length}
+                hasMore={hasMoreEpics}
+                hasPrevious={visitedCursors.length > 0}
+                onNext={handleNextPage}
+                onPrevious={handlePreviousPage}
+              />
+            ) : null}
           </PmSection>
 
           {unlinkedStories.length > 0 && (

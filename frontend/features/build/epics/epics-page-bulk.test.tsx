@@ -32,7 +32,7 @@ jest.mock("sonner", () => ({
 
 jest.mock("@/hooks/api/build/advanced", () => ({
   useCycles: jest.fn(),
-  useEpics: jest.fn(() => ({ data: [] })),
+  useEpicPage: jest.fn(),
 }));
 jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: jest.fn(() => ({ data: [] })),
@@ -117,11 +117,13 @@ jest.mock("@/features/build/epics/epic-card", () => ({
 
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   useBuildListFilters: jest.fn(),
+  BUILD_FILTER_ALL: "all",
 }));
 
 import { useProject, useProjectBoardTickets, useUpdateTicket, useDeleteTicket, useCreateTicket, useBulkUpdateTickets, useCycles } from "@/hooks/api/build";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import { useEpicPage } from "@/hooks/api/build/advanced";
 import { useExportTickets } from "@/hooks/api/build/ticket-import-export";
 import { downloadTextFile } from "@/features/build/import-export/download-text-file";
 import { toast } from "sonner";
@@ -133,6 +135,18 @@ const mockUseCycles = useCycles as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
+const mockUseEpicPage = useEpicPage as jest.Mock;
+
+function epicPage(rows: unknown[]) {
+  return {
+    data: { data: rows, pagination: { limit: 25, hasMore: false, nextCursor: null } },
+    isLoading: false,
+    isError: false,
+    error: undefined,
+    dataUpdatedAt: 0,
+    refetch: jest.fn(),
+  };
+}
 
 const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:view": "all", "build:tickets:create": "all", "build:tickets:update": "all" }, modules: { BUILD: true } },
@@ -144,7 +158,7 @@ const EPIC_B = { ...EPIC_A, id: 2, title: "Epic Beta", ticketNumber: 2, sequence
 
 const makeMutation = () => ({ mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false });
 
-const defaultFilters = { search: "", debouncedSearch: "", setSearch: jest.fn(), value: jest.fn(() => "all"), isActive: jest.fn(() => false), setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: false };
+const defaultFilters = { search: "", debouncedSearch: "", setSearch: jest.fn(), value: jest.fn(() => "all"), isActive: jest.fn(() => false), setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: false, cursor: null, setCursor: jest.fn() };
 
 const params = Promise.resolve({ projectId: "1" });
 
@@ -153,6 +167,7 @@ beforeEach(() => {
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseProject.mockReturnValue({ data: { id: 1, key: "P", statuses: [], settings: { modules: {} } }, isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
   mockUseProjectBoardTickets.mockReturnValue({ data: [EPIC_A, EPIC_B], isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+  mockUseEpicPage.mockReturnValue(epicPage([EPIC_A, EPIC_B]));
   mockUseBulkUpdateTickets.mockReturnValue(makeMutation());
   mockUseCycles.mockReturnValue({ data: [] });
   mockUseBuildListFilters.mockReturnValue(defaultFilters);
@@ -167,22 +182,26 @@ beforeEach(() => {
   (downloadTextFile as jest.Mock).mockClear();
 });
 
-it("search filter narrows displayed epics without showing the excluded title", async () => {
+it("sends the search term to the epic read and renders the page it returns, instead of filtering rows here", async () => {
   mockUseBuildListFilters.mockReturnValue({ ...defaultFilters, debouncedSearch: "Beta" });
+  mockUseEpicPage.mockReturnValue(epicPage([EPIC_B]));
 
   await act(async () => { render(<EpicsPage params={params} />); });
 
+  expect(mockUseEpicPage).toHaveBeenCalledWith(1, expect.objectContaining({ q: "Beta" }));
   const cards = screen.getAllByTestId("epic-card");
   expect(cards).toHaveLength(1);
   expect(cards[0].textContent).toContain("Beta");
   expect(screen.queryByText("Epic Alpha")).not.toBeInTheDocument();
 });
 
-it("status filter shows only epics that match the value and excludes the rest", async () => {
+it("sends the status filter to the epic read and renders the page it returns", async () => {
   mockUseBuildListFilters.mockReturnValue({ ...defaultFilters, value: (key: string) => key === "status" ? "TODO" : "all" });
+  mockUseEpicPage.mockReturnValue(epicPage([EPIC_A]));
 
   await act(async () => { render(<EpicsPage params={params} />); });
 
+  expect(mockUseEpicPage).toHaveBeenCalledWith(1, expect.objectContaining({ status: "TODO" }));
   const cards = screen.getAllByTestId("epic-card");
   expect(cards).toHaveLength(1);
   expect(cards[0].textContent).toContain("Alpha");

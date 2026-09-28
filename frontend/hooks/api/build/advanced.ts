@@ -8,9 +8,6 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { z } from "zod";
 
-const epicListContract = lazyContract(() =>
-  import("@/hooks/api/build/execution-schema").then((m) => m.epicListContract),
-);
 const cycleListContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.cycleListContract),
 );
@@ -57,7 +54,6 @@ const viewResponseLazy = lazyContract<{
   ),
 );
 import type {
-  Epic,
   Cycle,
   Module,
   ProjectView,
@@ -74,20 +70,12 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export function useEpics(
-  projectId: number,
-  options?: Omit<UseQueryOptions<Epic[]>, "queryKey" | "queryFn" | "enabled">
-) {
-  const canView = useCan("build:tickets:view");
-  return useQuery<Epic[]>({
-    queryKey: buildWorkQueryKeys.projects.epics(projectId),
-    queryFn: ({ signal }) => apiClient.get<Epic[]>(`/build/${projectId}/epics`, undefined, signal, epicListContract),
-    staleTime: 30_000,
-    ...options,
-    enabled: canView && !!projectId,
-  });
-}
-
+export {
+  useEpicPage,
+  useEpics,
+  type EpicListFilters,
+  type EpicPage,
+} from "@/hooks/api/build/epics";
 
 export interface CycleListFilters {
   status?: "draft" | "active" | "completed";

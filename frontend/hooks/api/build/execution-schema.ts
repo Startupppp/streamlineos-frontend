@@ -86,6 +86,15 @@ const moduleRowSchema = z.object({
   updatedAt: z.string(),
 });
 
+const epicAssigneeUserSchema = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string().nullable(),
+  image: z.string().nullable(),
+});
+
 const epicRowSchema = z.object({
   id: z.number(),
   orgId: z.string(),
@@ -116,6 +125,11 @@ const epicRowSchema = z.object({
   dependencyCount: z.number(),
   createdAt: z.string().nullable(),
   updatedAt: z.string().nullable(),
+  assignee: z
+    .object({ user: epicAssigneeUserSchema.nullable() })
+    .nullable()
+    .optional()
+    .transform((value) => value?.user ?? null),
 });
 
 export const cyclePageContract = z.object({
@@ -139,7 +153,14 @@ export const modulePageContract = z.object({
 });
 export const moduleResponseContract = z.union([modulePageContract, moduleListContract]);
 export const moduleRowContract = moduleRowSchema;
-export const epicListContract = z.array(epicRowSchema);
+export const epicPageContract = z.object({
+  data: z.array(epicRowSchema),
+  pagination: z.object({
+    limit: z.number().int().positive(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
 
 export const memberCapacityItemSchema = z.object({
   userId: z.string(),
