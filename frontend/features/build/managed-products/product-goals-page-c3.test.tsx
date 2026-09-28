@@ -119,6 +119,11 @@ jest.mock("@/features/build/goals/goal-form-sheet", () => ({
     open ? <div data-testid="goal-form-sheet" /> : null,
 }));
 
+jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
+}));
+
 jest.mock("@/features/build/goals/goals-list-shared", () => ({
   GoalCard: ({
     goal,
@@ -402,5 +407,34 @@ describe("ProductGoalsPage — keyboard shortcuts e and Esc (C3 BSN-KB-GOALS-02)
     fireEvent.keyDown(document, { key: "j" });
     fireEvent.keyDown(document, { key: "e" });
     expect(screen.queryByTestId("goal-form-sheet")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProductGoalsPage — ? shortcut help overlay (C3 BSN-KB-GOALS-03)", () => {
+  it("the shortcut help overlay is closed on first render so it cannot be the reason a later assertion passes", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+  });
+
+  it("? key opens the shortcut help overlay so the keyboard contract is discoverable without documentation", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    fireEvent.keyDown(document, { key: "?" });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
+  });
+
+  it("? typed inside the search input does not open the overlay so the shortcut does not fire while typing", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: "?" });
+    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+    input.remove();
+  });
+
+  it("? opens the overlay for a read-only viewer because the help overlay is not a mutation control", () => {
+    useCan.mockReturnValue(false);
+    render(<ProductGoalsPage managedProductId={7} />);
+    fireEvent.keyDown(document, { key: "?" });
+    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
   });
 });

@@ -8,7 +8,7 @@ The same pass closes a second hole in the same shape: the epic update path filte
 
 **Blocked by:** None — can start immediately.
 
-**Status:** partial — implementation fragments exist; full acceptance remains unverified (audit 2026-09-27)
+**Status:** complete — all boxes earned and re-verified 2026-09-28. The status line previously read "partial — full acceptance remains unverified (audit 2026-09-27)" while every box below carried dated EARNED evidence; the line was stale, not the boxes. Re-verification: the row-level trigger from migration `1373` (journal idx 1123) is applied and owns the token, so all eleven writers are correct at once; the only surviving application-level version increments in the repo are `projects-retention-settings.service.ts:144` and `:218`, which act on a different table and are not a double-step on this one.
 
 - [x] Each of the eleven ticket write paths leaves the token higher than it found it, with a test per path
   **EARNED 2026-09-27 by the orchestrator — the spec was run and it passes.** Lane 1's note above

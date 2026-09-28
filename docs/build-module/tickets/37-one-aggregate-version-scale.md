@@ -6,7 +6,7 @@ Fixing the producers is not enough on its own: the watermark rows already writte
 
 **Blocked by:** 36 — Every ticket write maintains the concurrency token, and no write touches a deleted row.
 
-**Status:** partial — implementation fragments exist; full acceptance remains unverified (audit 2026-09-27)
+**Status:** complete — all boxes earned and re-verified 2026-09-28. The status line previously read "partial — full acceptance remains unverified (audit 2026-09-27)" while every box below carried dated EARNED evidence; the line was stale, not the boxes. Re-verification: both producers emit the row-derived scale, the paired scale test passes 9 of 9, and the watermark remediation shipped as `1398_remediate_completed_ticket_inbox_watermarks`, applied on production.
 
 - [x] Both producers of the ticket status event emit the same version scale, derived from the row
 - [x] A test asserts the two producers agree, and fails if either scale changes

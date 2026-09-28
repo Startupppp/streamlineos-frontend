@@ -42,6 +42,7 @@ import {
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import {
   GoalCard,
   GoalsListToolbar,
@@ -87,6 +88,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
 
   const [editGoalId, setEditGoalId] = useState<number | null>(null);
   const [deleteGoalId, setDeleteGoalId] = useState<number | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
 
   const { data: editGoalDetail } = useGoal(editGoalId ?? 0);
   const deleteGoalMutation = useDeleteGoal();
@@ -217,12 +219,15 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     if (!open) setDeleteGoalId(null);
   }, []);
 
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+
   useBuildListKeyboard({
     itemCount: flatGoals.length,
     onOpen: canManage ? handleEditGoalByIndex : () => undefined,
     onEdit: canManage ? handleEditGoalByIndex : undefined,
     onCreate: handleOpenCreate,
     onClearSelection: () => undefined,
+    onShortcutHelp: handleShortcutHelp,
     searchInputRef,
     enabled: !createOpen,
   });
@@ -342,6 +347,8 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
           </PageState>
         </PmSection>
       </PmPageShell>
+
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
 
       <GoalFormSheet open={createOpen} onOpenChange={setCreateOpen} />
       {editGoalId !== null && editGoalDetail !== undefined ? (

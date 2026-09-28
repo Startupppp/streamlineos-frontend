@@ -175,6 +175,36 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
     ```
     All five complete. Ticket 30's final box (`docs/build-module/tickets/30-enable-rls-three-build-tables.md:27`) includes the `db:verify-rls` run result: 17 of 17 behavioural probes PASS, `IN-SCOPE MISSING: 0`, `IN-SCOPE COVERED: 979`, `PLATFORM-GLOBAL: 10`. Tenant isolation is database-enforced, not only application-layer; the two pre-authentication tables (`magic_link_tokens`, `impersonation_sessions`) are registered in the closed-list allowlist and pinned by a spec.
 - [ ] **P0: transaction and event correctness.** Complete 36-38 before 11-13 and 43-45. Trigger owns the token; return the persisted version; cover pending timestamp-scale events and replay deduplication. Required audit/outbox effects must not be silently lost.
+  - Not earned 2026-09-28 (Lane ROLLUP). Six of the nine constituent tickets are at zero boxes and three (11, 38, 44) carry one adjudicated-N/A box each. **But the box is not blocked on those three counts — it is blocked on its own last sentence.** Rank and bulk still lose two of the four effect families, so the audit trail hole this box names is open at HEAD.
+
+    Three qualifiers verified and passing:
+    - *Trigger owns the token.* 1373 journalled at idx 1123 and applied (evidence under the P0 deployment box above). The only surviving application-side increments in `src/modules/build/**` are `core/settings/projects-retention-settings.service.ts:144,218`, which are on retention settings, not `tickets`.
+    - *Return the persisted version.* `core/tickets/apply-ticket-change.ts:287` is `.returning({ id: tickets.id, version: tickets.version })` and `:385` returns `{ updated: true, updatedAt, version: updatedVersion }`.
+    - *Timestamp-scale events and replay deduplication.* Ticket 37, 9 of 9 boxes, including the two-producer scale agreement and the idempotent-replay remediation.
+
+    **Blocker — "required audit/outbox effects must not be silently lost" fails on rank and bulk.** `applyTicketChange` dispatches four effect families; rank and bulk dispatch two. From `backend/`:
+    ```
+    grep -n "activity\|Activity\|notif\|Notif\|webhook\|automation" src/modules/build/core/tickets/apply-ticket-change.ts
+    ```
+    → `:314` `deps.webhooksDispatch.enqueue`, `:333` `deps.activity`, `:346` `.notifyNewAssignees`, `:375-380` `deps.automationRunner.runForTicketEvent`.
+
+    The two effect-dependency interfaces the other paths accept declare only two members each — `core/tickets/projects-tickets-rank-utils.ts:25-43` (`RankTicketEffectDeps`) and `core/tickets/build-ticket-bulk-mutation.ts:31-49` (`BulkTicketEffectDeps`) both hold exactly `webhooksDispatch` and `automationRunner`. Neither has an `activity` or a `dispatch` member, so neither can write a `ticket_activity_log` row or notify a new assignee, whatever it is passed. Both production call sites do supply the deps they accept (`core/tickets/projects-tickets-query.service.ts:33` and `:49`), so webhook and automation genuinely fire; the audit row and the notification are structurally absent, not merely unpassed.
+
+    This is the defect ticket 44's own problem statement opens with — "a drag writes no activity row, fires no webhook, runs no automation and sends no notification". The webhook and automation halves were fixed. The activity and notification halves were not, and ticket 44 box 2 concedes it in the same breath as ticking: "covered effects are webhook and automation (the customer-visible pair). Activity and in-app notifications are produced by `ProjectsActivityService` and `NotificationDispatchService`; both files … cannot be touched this lane." A lane-scope exclusion is not effect parity.
+
+    The cited proof carries the same gap. `core/tickets/drag-vs-panel-effects.spec.ts` passes, but it contains no assertion about either missing family:
+    ```
+    node node_modules/jest/bin/jest.js --runInBand --no-cache --coverage=false --runTestsByPath \
+      src/modules/build/core/tickets/drag-vs-panel-effects.spec.ts \
+      src/modules/build/core/tickets/apply-ticket-change-effects.spec.ts
+    → Test Suites: 2 passed, 2 total · Tests: 24 passed, 24 total
+
+    grep -n "activity\|Activity\|notif\|Notif" src/modules/build/core/tickets/drag-vs-panel-effects.spec.ts
+    → (no matches)
+    ```
+    Its two describe blocks are named "rank route fires same effects as detail route" and "bulk route fires same effects as detail route". Sixteen tests, all on `webhook` and `automation`, correctly paired positive and negative. The names claim parity over the whole effect set; the assertions cover half of it. Ticket 61 retired this class of overclaim for BE-81 labels — the same class survives here.
+
+    **What would unblock this box.** Give `RankTicketEffectDeps` and `BulkTicketEffectDeps` an `activity` and a `dispatch` member, dispatch them on the same diff that drives the webhook, and extend `drag-vs-panel-effects.spec.ts` to assert all four families side by side — or rename its describe blocks to the two families they actually cover and record the audit hole as an accepted gap. Ticket 44's box 1 is not the blocker; its box 2 is. Neither file is in this lane's write territory.
 - [ ] **P1: repair current wrong answers.** Close 04-07, 09, 15-17, 19/20, 33, 39 and 67 with behavior-level tests, not matching mocks. Do not keep invalidation recipes that contradict actual report dependencies.
   - Not earned 2026-09-27 (Lane ROLLUP). Box counts are effectively clear, but **both substantive qualifiers fail**. Two independent blockers, below. Box counting alone would have ticked this box; it is wrong to tick.
 
@@ -267,6 +297,15 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
     **Not examined at evidence level: 15, 16, 33.** Ticket 33's boxes cite no spec file at all, so there was nothing to run. Tickets 16 and 17 cite `ticket-16-backfill-reconciliation.db.spec.ts` and `ticket-17-activity-feed-plan.db.spec.ts`; **neither was run** — `*.db.spec.ts` falls back to the production connection string in this repo, and no lane may open it. Ticket 15's remaining evidence is the plan measurement, which needs the same database. Those three tickets are unaudited here and this box must not be read as clearing them.
 
     **What would unblock this box.** (1) Repair `ticket-schema-bounds.spec.ts` so its `updateTicketSchema` positives supply the now-mandatory `version`, restoring a live positive control behind ticket 07's enum-rejection negatives. (2) Settle ticket 19's `updatedAt` dependency rather than deferring it — either remove the generic-timestamp dependency from the burnup fallback and the cycle/lead-time windows, or invalidate those three keys on every edit — then correct box 1's false `points`→`storyPoints` claim and re-point `ticket-cache.test.ts` at the corrected matrix. Neither is in this lane's write territory.
+
+  - Re-verified 2026-09-28 (Lane ROLLUP), independently of the block above, because the box's count case now looks clean enough to tempt a tick. **Both blockers still hold; still not earned.**
+
+    Counts re-derived over all 68 tickets rather than the 13: only 11 tickets carry any unchecked box, and of this box's thirteen only ticket 16 does. Ticket 16's box is the permanent N/A adjudicated above, so **box counting alone would earn this box.** It must not be ticked, because the two qualifiers are separately measured and separately fail:
+
+    - *Blocker 1 re-run at root `07cbefbf0` / backend `c785361e8`.* `ticket-schema-bounds.spec.ts` → `Tests: 10 failed, 40 passed, 50 total`, same ten positives, same cause: `core/dto/ticket.schemas.ts:174` is `version: z.number().int().positive()` with no `.optional()`. `git status --short -- src/modules/build/core/dto/` is empty, so this is HEAD, not a lane's in-flight edit. The suite's eleven `updateTicketSchema` call sites are at spec lines 27, 34, 39, 54, 68, 74, 79; every one of them omits `version`, so all four negatives (`:34`, `:54`, `:68`) now reject on the missing token regardless of the value under test. The positive control at `:39` is red. The negatives are vacuous.
+    - *Blocker 2 re-verified on source.* `backend/src/db/schema/build/ticket-core.ts:47,48` are still two distinct columns (`points`, `story_points`); `core/tickets/apply-ticket-change.ts:174` still writes only `points`; every report the points branch evicts still reads `storyPoints` (`core/analytics/projects-reports.service.ts:134,144,242,372`, `projects-velocity-report.ts:34,36`). On the other side, `projects-reports.service.ts:143,163,164` (burnup fallback) and `:303,304,318,321,322` / `:337-358` (cycleTime, leadTime) still group and window on `tickets.updatedAt`, while `frontend/hooks/api/build/ticket-cache.ts:278` still returns early for a rank-only change and `:335-341` still invalidates only `criticalPath` on a title change. The recipe remains wrong in both directions.
+
+    Also noted, not a blocker for this box: ticket 07's own evidence line (`docs/build-module/tickets/07-ticket-type-derives-from-enum.md:45`) describes that suite as "exit 0, verified source". That is false at HEAD. Correcting it is outside this lane's write territory.
 - [x] **P1: database invariants.** Rework 63 by identity class; settle project-less semantics in 64; test 62/64/65 with application-role transactions, concurrent writers and cold replay. A planned journal entry is not an actual entry. No production DDL was executed here.
   - Earned 2026-09-27 (Lane A). Tickets 62, 63, 64 and 65 all have zero unchecked boxes.
 
@@ -292,8 +331,80 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
     - Ticket 62 (`docs/build-module/tickets/62-cycle-invariants-in-the-database.md`): 1371 journalled idx 1125, applied, proved as application role (complete per addendum).
     - Ticket 65 (`docs/build-module/tickets/65-okr-links-exclusive-arc.md`): 1372 journalled idx 1126; both rejecting and accepting inserts proved as `streamline_app` in rolled-back transaction against `replay_test`; Drizzle schema reflects constraint; no malformed links found in production survey. The note "No production DDL was executed here" is superseded — 1372 has since been applied to production (ledger row id 1007 documented in ticket 65).
 - [ ] **P1: scalable reads.** Complete 14/18/46-48 using bounded SQL/pagination and measured plans. Request-local access caching cannot coalesce two HTTP requests; avoid global permission caches and unbounded ID arrays. Track buffers, dataset size, query count, cache hits/misses and p95 duration under the application role.
+  - Not earned 2026-09-28 (Lane ROLLUP). Blocked twice over: by ticket 14's one unchecked box, and by the "measured plans" qualifier, which ticket 14 cannot satisfy from any database this programme may open.
+
+    18, 46, 47 and 48 are at zero boxes. Ticket 14 is `1 unchecked of 6`, and it is the criterion this box's first clause names: `docs/build-module/tickets/14-assignee-predicate-union.md:12`, "The combined filter is expressed as a union of independently indexable branches." Its **Status** line reads "partial — locality done, BE-81 not satisfied"; its correction at `:17-39` explains why the implemented correlated `EXISTS` cannot deliver the index win (first branch has no `FROM`, so there is no relation to probe; the whole predicate is opaque to row selection). Adjudicated in addendum 3 as correctly unchecked.
+
+    **In-flight work exists and is deliberately not counted here.** `backend/src/modules/build/core/tickets/assignee-filter.ts` and `assignee-filter.spec.ts` are present as `A` in the index, and `core/tickets/projects-tickets-read.service.ts:309` now issues a top-level `(SELECT … WHERE branch1Bounded) UNION ALL (SELECT … WHERE branch2Bounded) ORDER BY … LIMIT` — the shape BE-81 asks for, with the cursor applied to the combined result rather than per branch, which is the coupling ticket 14 flagged as the hard part. That work belongs to another session. It was read, not touched, and ticket 14's box is left for its owner to tick; this roll-up does not tick it on their behalf and does not treat it as earned.
+
+    **Qualifier "measured plans" fails independently of the box count.** Grepping the five tickets for plan evidence, only 46 has any:
+    ```
+    for t in 14 18 46 47 48; do f=$(ls docs/build-module/tickets/${t}-*.md); \
+      echo "=== $f"; grep -ni "EXPLAIN\|buffers\|p95\|shared hit\|measured plan" "$f" | head -6; done
+    ```
+    → 46 carries real numbers (`:28` 10,001-row fixture across 20 projects, `:42` 11 buffers on `idx_probe_risks_fts`, `:55` 501 rows at 13 buffers, `:77` role/RLS context recorded). 18, 47 and 48 return nothing. Ticket 14 returns only its two admissions that nothing was measured — `:62` "no `EXPLAIN` was run" and `:74-79`, which corrects the stale reason (a local PG18 replay does exist) without changing the verdict: the replay databases hold **zero rows**, so a plan taken there would come from default statistics and would say nothing about which branch wins. Honest measurement needs a seeded dataset. Neither the buffers/dataset-size/query-count/cache-hit/p95 table this box asks for, nor an application-role plan, exists for 14, 18, 47 or 48.
+
+    **What would unblock this box.** Land the top-level `UNION ALL` rewrite already in flight, tick ticket 14 from its owning session, and take one seeded-dataset plan under `streamline_app` for the union and for 18/47/48's reads, recording buffers rather than milliseconds as ticket 46 already does.
 - [ ] **P1: honest verification gates.** Repair the failing census and swallowed-write checks, then 40/58-61/68. Scope baselines by identity and add negative self-tests so omissions cannot make a gate greener.
+  - Not earned 2026-09-28 (Lane ROLLUP). **Every constituent ticket is at zero unchecked boxes — 40, 58, 59, 60, 61 and 68 all measure `0 remaining`.** This box is the one place in this file where box counting and the box's own text disagree most sharply, and the text wins: the census is still failing, and its baseline is still scoped by count rather than by identity.
+
+    *Repaired, verified here.* The swallowed-write check passes, and so does the transaction-callback check ticket 58 owns. From `backend/`:
+    ```
+    node src/scripts/check-build-swallowed-writes.mjs --self-test
+    → check-build-swallowed-writes self-tests: 7 passed          (exit 0)
+    node src/scripts/check-build-swallowed-writes.mjs --list
+    → Scanned 90 service files under src/modules/build  ·  2 swallowed-write site(s) found
+    →   src\modules\build\import-export\ticket-import.service.ts:201
+    →   src\modules\build\import-export\ticket-import.service.ts:239
+    → OK — 2 swallowed-write site(s) (ratchet 2).                (exit 0)
+    node src/scripts/check-transaction-callbacks.mjs --self-test
+    → check-transaction-callbacks self-tests: 28 passed           (exit 0)
+    node src/scripts/check-transaction-callbacks.mjs
+    → Spec files 3533 · files with a transaction double 464 · doubles 801
+    →   invokes 443 · declared-unreached 8 · rejects 5 · VOID 8
+    → OK — every spec that doubles db.transaction either runs the callback, rejects
+      deliberately, or asserts the transaction is never reached. VOID 8 (ratchet 8).  (exit 0)
+    ```
+
+    **Blocker 1 — the census check is red.** From `backend/`:
+    ```
+    node scripts/build-authorization-census.mjs --check
+    → Controller files found: 53
+    → HTTP handlers found:    342
+    → 191 REVIEWED anchor(s) no longer match source:
+    → A hand-read verdict whose line moved is a stale verdict. Re-read and update REVIEWED.
+    → exit 1
+
+    node scripts/build-authorization-census.mjs --self-test
+    → build-authorization-census self-test: 30 passed, 2 failed
+    → FAIL  REVIEWED anchors all still match source
+    → FAIL  every REVIEWED key matches a real handler
+    → exit 1
+    ```
+    Run twice, ten minutes apart, at backend `e855cc01f` then `c785361e8`: 191 both times. **This is a moving target, not a stable number** — addendum 3 measured 174 at exit 0 earlier the same programme, and a concurrent lane is relocating further `build/core/` files as this is written. Do not treat 191 as a figure to reconcile against; re-measure before acting. One detail cuts the other way and is worth recording: the self-test now propagates its two failures to exit 1, where addendum 3 recorded exit 0 for the same two failures. That specific "omission makes the gate greener" hole is closed.
+
+    Also: the two failing self-test assertions are not tests of the gate's detection logic, they are assertions about the census file's current content — the same finding as `--check`, counted twice. The gate's genuine negative self-tests all pass: `ratchet: VULNERABLE rising above floor is detected`, `ratchet: VERIFIED falling below floor is detected`, `--check survives a CRLF checkout (core.autocrlf=true is set in this repo)`.
+
+    **Blocker 2 — "scope baselines by identity" is unmet; the ratchet is scoped by count.** `backend/docs/build-module/authorization-census-ratchet.json` holds three keys — `note`, `measured`, `counts` — and `counts` is the whole baseline: `{"VULNERABLE": 0, "NEEDS-REVIEW": 0, "CLOSED": 42, "VERIFIED": 283}`. There is no per-handler key list. `backend/scripts/build-authorization-census.mjs:1720-1742` compares only those four integers. The vacuity floors are real and do work (`:101-102` `CONTROLLER_FLOOR = 40`, `METHOD_FLOOR = 250`, enforced at `:1685`), but a floor is not an identity.
+
+    The consequence is the failure mode ticket 59's own premise correction at `:12-13` asks to prevent — "Use identity-based baselines so deleting a controller cannot hide a newly vulnerable handler." A count ratchet cannot see a swap: retire one VERIFIED handler, add one newly VERIFIED handler, and `VERIFIED` stays 283 while a hand-read verdict has silently vanished. It cannot see a rename either, which is exactly the event producing the 191 stale anchors right now — the anchors move, the counts do not, and only `--check`'s anchor pass notices. Ticket 59's box 1 is ticked for "The census verdict counts are held in a ratchet file and may only improve", which is true and is not what this roll-up asked for.
+
+    **What would unblock this box.** Re-read and re-anchor the 191 REVIEWED entries once the `build/core/` moves settle, so `--check` exits 0; then re-key the ratchet from four integers to a map of `controller#handler → verdict` so a retire-and-add cannot net to zero. Both live in `backend/`, outside this lane's write territory.
 - [ ] **P2: controlled reuse/restructure.** Keep 01-03/21-28/49-56 behind stable contracts. Preserve useful adapters; delete pure forwarding, not encapsulation. Pilot two compatible list pages, compose domain-specific controls, preserve primitive/query ownership, and do not force dashboards/editors/boards into one table configuration.
+  - Not earned 2026-09-28 (Lane ROLLUP). Real unstarted work, not an adjudication problem. Eleven of the sixteen unchecked boxes left in the whole 68-ticket set belong to this box.
+
+    Of its fifteen tickets, nine are at zero (01, 02, 03, 21, 22, 23, 24, 28, 49, 52, 53, 56 — twelve, counting the list-surface batches that landed). Six carry boxes, and ticket 27 has not started:
+
+    | ticket | remaining | the criterion |
+    |---|---|---|
+    | 25 | 1 of 6 | "Nothing outside the group reaches into it except through the shared surface" — Status: "done except the cross-module callers" |
+    | 27 | 5 of 5 | no group moved, imports not updated, acyclicity not checked, route-behaviour parity not shown, naming convention not applied — Status: "ready-for-agent" |
+    | 50 | 2 of 5 | no visible page change incl. empty/error states; files over 500 lines drop below it, per FE-57 |
+    | 51 | 1 of 5 | no visible page change incl. empty/error states |
+    | 54 | 1 of 5 | "Any remaining shared assembly helper with no callers left is deleted" |
+    | 55 | 1 of 5 | every visual case the galleries covered still reachable in a browser, incl. overflow and focus order |
+
+    Two of those are browser-class and one is real deletion work; ticket 27 is the restructure itself and a concurrent lane is moving `build/core/` files as this is written, which is also what is holding the census red under the gates box above. The qualifiers were **not** separately verified, and this box must not be read as clearing them: "preserve useful adapters; delete pure forwarding, not encapsulation" was checked only to the extent tickets 01 and 02 record it (BE-143 deleted `checkProjectAccess` rather than leaving it forwarding, per the addendum-1 correction); "pilot two compatible list pages", "compose domain-specific controls", "preserve primitive/query ownership" and "do not force dashboards/editors/boards into one table configuration" were not measured against source at all. With ticket 27 at 5 of 5 there was nothing to be gained by pricing qualifiers on top of an unstarted restructure. Owner scheduling is the unblock.
 - [ ] **Release proof:** Full browser verification remains separate and unchecked. A local UI pass on port `1000` verified `/build`, `/build/my-work`, `/build/inbox`, `/build/6/issues`, `/build/6/intake`, `/build/managed-products`, `/build/portfolios`, `/build/roadmap`, `/build/6/files`, and `/build/6/settings/views` after the compatibility fixes; each rendered with no captured browser errors. The full route/state/mobile matrix is still open.
   - Stays unchecked by owner decision, 2026-09-27, and the exclusion is now written down with counts rather than left implicit: see `docs/build-module/BROWSER-VERIFICATION-EXCLUSIONS.md`. 168 of the 250 unchecked boxes outside `tickets/` are this class — 87 keyboard/screen-reader/reduced-motion/375 px, 80 production browser evidence, 1 narrow viewport. The remaining 82 are real scope and are explicitly not covered by that note.
   - The sentence above is also a live constraint, not just a caveat. A Playwright run here would not settle these: the capture harness is gone, and the e2e suite **skips** rather than fails when no backend is reachable, so an automated attempt would report green having loaded no page. jsdom cannot observe focus order, focus trapping, `prefers-reduced-motion` or real 375 px layout at all.
@@ -426,6 +537,32 @@ check `git -c core.autocrlf=false -c core.whitespace=cr-at-eol diff --check -- d
 - [x] Invalid or overbroad architecture recommendations were corrected and assigned explicit follow-up work.
 - [x] Existing code/UI changes were preserved; this pass changed documentation only.
 - [ ] All 68 remediation tickets are implemented, verified and tested. This remains unfinished product work, not an audit claim.
+  - Not earned 2026-09-28 (Lane ROLLUP). **57 of 68 tickets have zero unchecked boxes; 11 tickets hold 16 unchecked boxes between them.** Counting command, line-anchored so a CRLF line cannot be missed, run from `D:/projects/personal/Streamlineos/`:
+    ```
+    PYTHONIOENCODING=utf-8 python -c "
+    import glob, re, os
+    rows=[]
+    for f in sorted(glob.glob('docs/build-module/tickets/*.md')):
+        m = re.match(r'^(\d+)-', os.path.basename(f))
+        if not m: continue
+        n=int(m.group(1)); data=open(f,'rb').read()
+        u=len(re.findall(rb'(?m)^[ \t]*- \[ \]', data))
+        x=len(re.findall(rb'(?m)^[ \t]*- \[[xX]\]', data))
+        rows.append((n,u,x))
+    print('nonzero:', ', '.join('%d(%d)'%(n,u) for n,u,x in rows if u))
+    print('complete:', sum(1 for n,u,x in rows if u==0), 'of', len(rows))
+    "
+    ```
+    Result, identical on two runs (backend `e855cc01f`, then `c785361e8` after peer commits):
+    ```
+    nonzero: 11(1), 14(1), 16(1), 25(1), 27(5), 38(1), 44(1), 50(2), 51(1), 54(1), 55(1)
+    complete: 57 of 68
+    ```
+    The anchored form and the looser `- \[ \]` form agree on every one of the 68 files, so neither the CRLF miscount nor an indented-box miss is in play here.
+
+    **The 16 boxes, by why they are open.** Four are adjudicated permanent N/A — 11, 16, 38, and 44's box 1 — and would never be ticked. Twelve are real: ticket 27's five (the core restructure, unstarted), 25's one cross-module caller, 50's two, and one each in 51, 54, 55 (two of which are browser-class), plus ticket 14's union criterion, which has work in flight under another session. So the honest form of this box is **57 complete, 4 permanently N/A, 7 real boxes outstanding** — and it cannot be earned on either reading, because the programme rule is that an unchecked box is unchecked whatever its adjudication.
+
+    **This box is also blocked above its own count, in two places that box counting cannot see.** Both were measured this pass and are written under their own boxes: the P0 transaction/event box fails its "required audit/outbox effects must not be silently lost" clause, because rank and bulk dispatch two of the four effect families and write no activity row; and the P1 honest-verification-gates box fails with all six of its tickets at zero, because `build-authorization-census.mjs --check` exits 1 on 191 stale anchors and its ratchet is scoped by count rather than by identity. A top roll-up that inherited its children's box counts without those two measurements would read as substantially greener than the module is.
 
 ---
 
@@ -666,6 +803,8 @@ Newly complete since addendum 2: **01, 02, 28**.
 | 55 | 1 of 5 boxes remain | |
 
 ### Architecture box verdicts — Lane A2, 2026-09-27
+
+**Superseded 2026-09-28 (Lane ROLLUP) for the census figures and the per-box reasoning.** The current verdicts are written under each architecture box above, measured rather than inherited. Three numbers in this section are now wrong: the ticket count is 57 of 68 complete, not 55 or 56; `build-authorization-census.mjs --check` exits **1** on **191** stale anchors, not exit 0 on 174; and its `--self-test` exits **1**, not 0. Two blockers this section does not name are now the binding ones — the effect-parity/audit-row hole under the P0 transaction box, and the count-scoped census ratchet under the honest-gates box. This section is kept as the historical record of that pass.
 
 **None of the 7 unchecked architecture boxes can be earned in this pass.** Blockers per box:
 
