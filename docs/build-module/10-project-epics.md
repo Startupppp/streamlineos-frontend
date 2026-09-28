@@ -107,6 +107,66 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
   - **Still open — `cursor` query parameter.** `epics-page.tsx` flattens every `useProjectBoardTickets` page and never reflects a cursor in the URL.
   - **Still open — core fields `owner`, `dates` and `dependencies` are not rendered.** `frontend/features/build/epics/epic-card.tsx` renders title, priority, status and a progress bar (`:282-286`) only; it renders no assignee, no `startDate`/`dueDate`, and no dependency count. `dependencyCount` is projected by `listEpics()` but this page does not call that endpoint.
   - **Still open — offline and conflict states.** No `useOnlineStatus` branch and no 409 handler anywhere on this surface.
+  - **2026-09-28 (lane EXEC) — nine items closed, one blocker left, so the box stays unchecked.**
+    The P0 above is stale: `version` is projected
+    (`backend/src/modules/build/core/tickets/projects-tickets-read.query.ts:40`), picked
+    (`frontend/hooks/api/build/build-tickets-core-schema.ts:219`), required on the types
+    (`frontend/types/projects/tasks.ts:112,187`), and sent by every PATCH this page reaches —
+    `edit-epic-dialog.tsx:102`, `epics-page.tsx` `handleLinkStory`, and the eight inline controls in
+    `epic-story-row.tsx`. Closed this pass:
+    - **`health`** is now a declared URL parameter with a toolbar control and a real predicate
+      (`frontend/features/build/epics/epics-page.tsx:62-74, 142, 148, 406-418`). It filters the rows
+      this page already holds, not the request, because one `useProjectBoardTickets` read feeds the
+      epic list, the story list, the task count and every child rollup — narrowing it server-side by
+      `health` would silently empty the other three.
+    - **Core fields `status` and `dependencies`.** `epic-card.tsx:264-266` renders the epic's own
+      status beside its priority (they were conflated before), and `:300-306` renders the dependency
+      count `listEpics()` projects, merged in by id from `useEpics` at `epics-page.tsx:143-149`.
+      An epic the endpoint does not know keeps no count rather than being shown a zero.
+    - **Offline.** A dated banner over a loaded list (`epics-page.tsx:462-482`) and a dated offline
+      state in place of the first-run empty (`:511-539`).
+    - **Conflict.** `edit-epic-dialog.tsx:69-113, 236-243` diffs the pending form against the epic
+      and renders the server/current comparison through `TicketConflictDialog` on a 409
+      `PROJECTS_TICKET_CONFLICT`, falling back to naming the version when the drift is in a field
+      this form does not edit.
+    - **The bulk set.** `label`, `move/link` (parent), `archive` behind a `ConfirmDialog`, and `export`
+      are wired (`epics-page.tsx:246-303, 430-437`), and partial success is surfaced per record:
+      `:200-224` reports `blocked` separately, says "Nothing was changed" when every row was blocked,
+      and only claims a plain success when the server blocked nothing.
+    - **The `?` shortcut** has a target (`:281, 307, 585`).
+    - **Right click** opens the same authorized menu as the ⋯ button (`epic-card.tsx:156-161, 224, 276`).
+
+    Tests: 56 in `features/build/epics` across five suites, including the new
+    `epic-card-core-fields.test.tsx` (status/priority, owner by display name, dates, dependency count
+    with singular/zero cases, the unset case, and the context-menu permission pair),
+    `edit-epic-dialog-conflict.test.tsx` (the field-level comparison, the non-409 toast that proves
+    the branch is not always on, and the version fallback), eight new bulk tests in
+    `epics-page-bulk.test.tsx` (label, parent, archive-after-confirm, three partial-success branches,
+    export downloading its file), and in `epics-page.test.tsx` two `health` predicate tests, two
+    dependency-count tests, three offline tests, two `?` tests, two request-id tests and two
+    link-story token tests.
+
+    ```text
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/build/epics
+    Test Suites: 5 passed, 5 total
+    Tests:       56 passed, 56 total
+    ```
+
+    **Premise correction — `cursor` is not earnable on this page as it is built, which is why the box
+    stays unchecked.** The URL machinery exists (`use-build-list-filters.ts:37-38, 144-157`) and is
+    used on the cycles page this pass. The obstruction is the page's read shape: `epics-page.tsx:104`
+    takes one `useProjectBoardTickets` infinite query and derives four collections from it — epics
+    (`:150`), stories (`:158`), tasks (`:159`) and the per-epic child rollup (`:519-521`). A cursor
+    over that read paginates all four at once, so page two of the epic list would silently drop the
+    stories and tasks that back the rollups and the "Stories without Epic" section. Earning it needs
+    the epic list to read its own paginated endpoint (`listEpics()`, which already returns
+    `dependencyCount` and would remove the merge above) with the child work fetched per epic or per
+    page — a read restructure, not a parameter. `ticket-queries.ts` is shared with the board, backlog,
+    triage and workload surfaces, so the change cannot be made inside this page alone.
+
+    Also still open and deliberately not papered over: the page-level shortcut tests assert the props
+    handed to `useBuildListKeyboard`; the keydown behaviour itself is covered only in
+    `features/build/shared/use-build-list-keyboard.test.ts`, which is a different file's guarantee.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.

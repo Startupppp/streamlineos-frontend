@@ -99,13 +99,71 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
   - 2026-09-27: `version` token flows end-to-end (backend projection → `Cycle` type → `UpdateCycleInput` → `handleConfirmStatus`/`handleConfirmCompletion`/form submit); `goal` added to projection, type, input, form schema and card; 409 conflict handler in `cycle-form-sheet.tsx`; contract tests cover `version` and `goal`.
   - 2026-09-28 per-item audit. **Closed since the last entry:** the capacity form field IS wired — `frontend/features/build/cycles/cycle-form-sheet.tsx:264-280` renders it and `:150` submits it; `cycle-card.tsx:74-77` renders it. The capacity migration is journalled as `migrations/1418_build_cycle_capacity.sql`, so the "not yet journalled" note above was stale. `c`, `e` and `Enter` now have real targets (`cycles-page.tsx` `handleOpenCreate`/`handleEditByIndex`), a `status` select and a `from`/`to` `DateRangePicker` now render in the toolbar, and the empty state distinguishes first-run from filtered-empty. 25/25 in `cycles-page.test.tsx`.
   - **Still open — `cursor` query parameter is not implementable on the frontend.** `cycleListQuerySchema` (`backend/src/modules/build/execution/dto/iterations.schemas.ts:107`) accepts `status` only: no `cursor`, no `limit`. `useCycles` (`frontend/hooks/api/build/advanced.ts:92`) therefore fetches the whole list and `cycles-page.tsx` maps it unpaginated, which is also an FE-112 exposure. Needs `cursor`/`limit` on the list endpoint first.
   - **Still open — `q`, `from` and `to` filter client-side, not server-side.** `filteredCycles` in `frontend/features/build/cycles/cycles-page.tsx:73-87` filters an already-fetched array. The API contract above specifies `{ cursor?, limit<=100, q?, filters, sort }`; the backend accepts none of `q`/`from`/`to`. Same backend change as the item above.
   - **Still open — offline state.** The States section requires freshness plus local drafts; `cycles-page.tsx` has no `useOnlineStatus` branch of any kind.
   - **Still open — conflict UX is a toast, not a field-level comparison.** The States section requires "field-level server/current comparison for version conflicts". `cycle-form-sheet.tsx:170-176` invalidates the list and shows a warning toast; it never shows the server value beside the local one.
+  - **2026-09-28 (lane EXEC) — EARNED, and two of the four notes above were stale.** Re-audited every
+    item against current source rather than the notes. `cycleListQuerySchema`
+    (`backend/src/modules/build/execution/dto/iterations.schemas.ts:114-122`) already accepted
+    `cursor`, `limit`, `q`, `from` and `to`, and `listCycles`
+    (`backend/src/modules/build/execution/cycles.service.ts:41-86`) already applied all five
+    server-side, so "not implementable on the frontend" and "filter client-side" no longer held.
+    `buildCycleConflictDiffs` + `TicketConflictDialog`
+    (`frontend/features/build/cycles/cycle-form-sheet.tsx:120-171, 506`) already rendered the
+    field-level server/current comparison, so the "conflict UX is a toast" note was stale too.
+    What this pass added:
+    - **`cursor` is now a URL parameter.** `useCyclePage`
+      (`frontend/hooks/api/build/advanced.ts:129-140`) returns the page envelope over the same
+      `cyclePageQuery` factory `useCycles` selects rows from (`:105-127, 142-160`) — one queryFn, two
+      selects, no second read of the endpoint. `cycles-page.tsx:101-153` reads `listFilters.cursor`,
+      asks for `limit: 25`, and renders `TablePagination mode="cursor"` (`:518-525`); `writeParams`
+      in `use-build-list-filters.ts:77` already drops the cursor on any filter change. The list is
+      therefore bounded (FE-112) and a page is a shareable link.
+    - **Offline shows freshness.** A banner over a loaded list (`cycles-page.tsx:454-476`) and the
+      empty offline state (`:566-580`) both date the read from `dataUpdatedAt`.
+    - **Offline allows a draft and no command.** `cycle-form-sheet.tsx:268-274` refuses to submit
+      while offline, keeps the typed values in the form, and says so.
+    - **The `?` shortcut has a target.** `cycles-page.tsx:195, 216, 659` opens `ShortcutHelpDialog`;
+      previously `onShortcutHelp` was never passed.
+    - **Right click reaches the row commands.** `cycle-card.tsx:44-60, 90` opens the same controlled
+      `DropdownMenu` the ⋯ button opens, and that menu now also carries Open and Copy link, so the
+      context gesture mirrors visible commands and hides no only-path.
+
+    Per-item coverage, all in `frontend/features/build/cycles/`: core fields —
+    `cycle-card.test.tsx:110-160` (name, status, dates, work counts, capacity, goal, progress, and
+    the unset case), velocity panel `cycles-page.test.tsx` ("renders the velocity panel with the
+    list"); query parameters — `cycles-page.test.tsx` `q`/`status`/`from`/`to` (server-side, four
+    tests) and six `cursor` tests (bounded page, next writes the URL, Next disabled at the end, no
+    Previous on a deep link, Previous returns to the prior cursor, a filter change drops the cursor);
+    selection — "offers no selection control on a cycle row, because the primary record is never
+    selected here"; shortcuts — `c`/`e`/`Enter` wiring plus two `?` tests, with the keydown
+    behaviour itself covered by `features/build/shared/use-build-list-keyboard.test.ts`; states —
+    loading skeleton, first-run vs filtered empty, denied, 402 upgrade path, error message, two
+    request-id tests (present and deliberately absent), three offline/freshness tests, and the
+    field-level 409 comparison in `cycle-form-sheet.test.tsx:292`; permissions —
+    `build:cycles:view` gate plus the `build:cycles:manage` pair ("does not render mutation controls
+    without manage permission" against the lifecycle tests that do), and the context-menu pair in
+    `cycle-card.test.tsx`.
+
+    ```text
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/build/cycles
+    Test Suites: 4 passed, 4 total
+    Tests:       72 passed, 72 total
+
+    $ cd frontend && nice -n 10 node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc --noEmit -p tsconfig.json
+    (no error in features/build/cycles or hooks/api/build/advanced.ts; the run is not clean
+     repo-wide — see the out-of-territory list in this lane's report)
+    ```
+
+    Labelled honestly: these are jsdom component and hook results plus backend schema/source
+    reading. No database, no browser, no `EXPLAIN`. The two boxes below stay unchecked for that
+    reason. Two ceilings inside what is ticked: the offline draft lives in the form, so a reload
+    while offline loses it; and Previous is only offered for pages this session walked, because a
+    keyset cursor carries no backwards token.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
