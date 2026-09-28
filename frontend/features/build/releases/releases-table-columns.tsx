@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, type MouseEvent, type ReactNode } from "react";
+import { useCallback } from "react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
@@ -68,41 +68,6 @@ function ReleaseRowActions({
   );
 }
 
-function ReleaseContextMenuCell({
-  release,
-  canManage,
-  onEdit,
-  onDelete,
-  children,
-  className,
-}: { release: Release; children: ReactNode; className?: string } & ReleaseRowHandlers) {
-  const [open, setOpen] = useState(false);
-  const handleEdit = useCallback(() => onEdit(release), [release, onEdit]);
-  const handleDelete = useCallback(() => onDelete(release), [release, onDelete]);
-  const handleContextMenu = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
-      if (!canManage) return;
-      event.preventDefault();
-      setOpen(true);
-    },
-    [canManage],
-  );
-  return (
-    <div onContextMenu={handleContextMenu} className={className}>
-      {children}
-      <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger asChild>
-          <span aria-hidden tabIndex={-1} className="sr-only" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
-          <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
-}
-
 export function buildReleasesColumns({
   canManage,
   onEdit,
@@ -114,87 +79,70 @@ export function buildReleasesColumns({
       header: "Name",
       className: TABLE_TITLE_CELL,
       cell: (r) => (
-        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete} className={cn(TEXT_FLEX_CHILD, "overflow-hidden")}>
-          <div className={cn(TEXT_FLEX_CHILD, "space-y-0.5 overflow-hidden")}>
-            <TruncatedText text={r.name} className="text-dense font-medium text-foreground" />
+        <div className={cn(TEXT_FLEX_CHILD, "space-y-0.5 overflow-hidden")}>
+          <TruncatedText text={r.name} className="text-dense font-medium text-foreground" />
+          <TruncatedText
+            text={r.version}
+            className="font-mono text-micro text-muted-foreground"
+          />
+          {r.description ? (
             <TruncatedText
-              text={r.version}
-              className="font-mono text-micro text-muted-foreground"
+              text={r.description.replace(/<[^>]*>/g, "")}
+              className="text-micro text-muted-foreground"
             />
-            {r.description ? (
-              <TruncatedText
-                text={r.description.replace(/<[^>]*>/g, "")}
-                className="text-micro text-muted-foreground"
-              />
-            ) : null}
-          </div>
-        </ReleaseContextMenuCell>
+          ) : null}
+        </div>
       ),
     },
     {
       key: "status",
       header: "Status",
-      cell: (r) => (
-        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
-          <ReleaseStatusBadge status={r.status} />
-        </ReleaseContextMenuCell>
-      ),
+      cell: (r) => <ReleaseStatusBadge status={r.status} />,
     },
     {
       key: "publishedAt",
       header: "Published",
-      cell: (r) => (
-        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
-          {r.status !== "released" ? (
-            <span className="text-dense text-muted-foreground">—</span>
-          ) : r.publishedAt !== null ? (
-            <span className="font-mono tabular-nums text-dense text-muted-foreground">
-              {format(new Date(r.publishedAt), "MMM d, yyyy")}
-            </span>
-          ) : (
-            <span className="text-dense text-muted-foreground">Unknown</span>
-          )}
-        </ReleaseContextMenuCell>
-      ),
+      cell: (r) =>
+        r.status !== "released" ? (
+          <span className="text-dense text-muted-foreground">—</span>
+        ) : r.publishedAt !== null ? (
+          <span className="font-mono tabular-nums text-dense text-muted-foreground">
+            {format(new Date(r.publishedAt), "MMM d, yyyy")}
+          </span>
+        ) : (
+          <span className="text-dense text-muted-foreground">Unknown</span>
+        ),
     },
     {
       key: "releaseDate",
       header: "Release Date",
-      cell: (r) => (
-        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
-          {r.releaseDate ? (
-            <span className="font-mono tabular-nums text-dense text-muted-foreground">
-              {format(new Date(r.releaseDate), "MMM d, yyyy")}
-            </span>
-          ) : (
-            <span className="text-dense text-muted-foreground">—</span>
-          )}
-        </ReleaseContextMenuCell>
-      ),
+      cell: (r) =>
+        r.releaseDate ? (
+          <span className="font-mono tabular-nums text-dense text-muted-foreground">
+            {format(new Date(r.releaseDate), "MMM d, yyyy")}
+          </span>
+        ) : (
+          <span className="text-dense text-muted-foreground">—</span>
+        ),
     },
     {
       key: "ticketCount",
       header: "Tickets",
       cell: (r) => (
-        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
-          <span className="font-mono tabular-nums text-dense text-muted-foreground">
-            {r.ticketCount}
-          </span>
-        </ReleaseContextMenuCell>
+        <span className="font-mono tabular-nums text-dense text-muted-foreground">
+          {r.ticketCount}
+        </span>
       ),
     },
     {
       key: "createdBy",
       header: "Created By",
-      cell: (r) => (
-        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
-          {r.createdByUser ? (
-            <span className="text-dense text-muted-foreground">{getUserDisplayName(r.createdByUser)}</span>
-          ) : (
-            <span className="text-dense text-muted-foreground">—</span>
-          )}
-        </ReleaseContextMenuCell>
-      ),
+      cell: (r) =>
+        r.createdByUser ? (
+          <span className="text-dense text-muted-foreground">{getUserDisplayName(r.createdByUser)}</span>
+        ) : (
+          <span className="text-dense text-muted-foreground">—</span>
+        ),
     },
     {
       key: "actions",

@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { ReleasesPage } from "./releases-page";
 
 let mockIsOnline = true;
+const mockPreventDefault = jest.fn();
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => mockIsOnline,
 }));
@@ -73,13 +74,34 @@ jest.mock("@/components/ui/data-table", () => ({
     emptyState,
     data,
     selection,
+    onRowContextMenu,
   }: {
     isLoading?: boolean;
     emptyState?: React.ReactNode;
-    data?: unknown[];
+    data?: { id: number; name: string }[];
     selection?: { onChange: (s: Set<number>) => void };
-  }) =>
-    isLoading ? <div data-testid="table-loading" /> : data?.length === 0 ? <>{emptyState}</> : <div data-testid="table-rows" onClick={() => selection?.onChange(new Set([1]))} />,
+    onRowContextMenu?: (row: { id: number; name: string }, event: { preventDefault: () => void; clientX: number; clientY: number }) => void;
+  }) => {
+    if (isLoading) return <div data-testid="table-loading" />;
+    if (data?.length === 0) return <>{emptyState}</>;
+    const handleSelect = () => selection?.onChange(new Set([1]));
+    return (
+      <div data-testid="table-rows" onClick={handleSelect}>
+        {(data ?? []).map((row) => {
+          const handleContextMenu = () =>
+            onRowContextMenu?.(row, { preventDefault: mockPreventDefault, clientX: 120, clientY: 240 });
+          return (
+            <button
+              key={row.id}
+              type="button"
+              data-testid={`row-contextmenu-${row.id}`}
+              onClick={handleContextMenu}
+            />
+          );
+        })}
+      </div>
+    );
+  },
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
@@ -121,7 +143,8 @@ jest.mock("@/components/ui/button", () => ({
 }));
 
 jest.mock("@/components/ui/confirm-dialog", () => ({
-  ConfirmDialog: () => null,
+  ConfirmDialog: ({ open, description }: { open: boolean; description?: string }) =>
+    open ? <div data-testid="confirm-delete">{description}</div> : null,
 }));
 
 jest.mock("./releases-page-parts", () => ({
@@ -199,6 +222,7 @@ function cursorPage<T>(items: T[]) {
 
 beforeEach(() => {
   mockIsOnline = true;
+  mockPreventDefault.mockClear();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([]) }));
@@ -541,53 +565,40 @@ it("renders Unknown in the published column for a released row with null publish
   expect(screen.getByText("Unknown")).toBeInTheDocument();
 });
 
-describe("release name cell — right click opens the same authorized actions as the row menu", () => {
-  function renderNameCell(canManage: boolean) {
-    const onEdit = jest.fn();
-    const onDelete = jest.fn();
-    render(releaseColumnCell("name", { canManage, onEdit, onDelete })(releaseRow));
-    return { onEdit, onDelete };
+describe("right click on a release row opens the row's authorized actions", () => {
+  function renderWithRows() {
+    mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
+    render(<ReleasesPage projectId={1} />);
   }
 
-  it("opens Edit and Delete on contextmenu for a viewer who can manage releases", () => {
-    renderNameCell(true);
+  it("opens Edit and Delete for a viewer who can manage releases, and suppresses the browser menu", () => {
+    renderWithRows();
     expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
-    fireEvent.contextMenu(screen.getByText("v1.0.0"));
+    fireEvent.click(screen.getByTestId("row-contextmenu-1"));
+    expect(mockPreventDefault).toHaveBeenCalled();
     expect(screen.getByRole("menuitem", { name: "Edit" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Delete" })).toBeInTheDocument();
   });
 
-  it("opens nothing on contextmenu for a viewer who cannot manage releases, so the menu never offers an unauthorized command", () => {
-    renderNameCell(false);
-    fireEvent.contextMenu(screen.getByText("v1.0.0"));
+  it("opens nothing and leaves the browser menu alone for a viewer who cannot manage releases", () => {
+    mockUseCan.mockReturnValue(false);
+    renderWithRows();
+    fireEvent.click(screen.getByTestId("row-contextmenu-1"));
+    expect(mockPreventDefault).not.toHaveBeenCalled();
     expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
   });
 
-  it("calls the row's edit handler with the row the menu was opened on", () => {
-    const { onEdit } = renderNameCell(true);
-    fireEvent.contextMenu(screen.getByText("v1.0.0"));
+  it("opens the edit sheet for the row the menu was opened on", () => {
+    renderWithRows();
+    fireEvent.click(screen.getByTestId("row-contextmenu-1"));
     fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
-    expect(onEdit).toHaveBeenCalledWith(releaseRow);
+    expect(screen.getByTestId("release-form-sheet")).toBeInTheDocument();
   });
 
-  it("calls the row's delete handler from the context menu, so delete is reachable without the actions column", () => {
-    const { onDelete } = renderNameCell(true);
-    fireEvent.contextMenu(screen.getByText("v1.0.0"));
+  it("opens the destructive confirmation naming the row, rather than deleting it outright", () => {
+    renderWithRows();
+    fireEvent.click(screen.getByTestId("row-contextmenu-1"));
     fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
-    expect(onDelete).toHaveBeenCalledWith(releaseRow);
+    expect(screen.getByTestId("confirm-delete")).toHaveTextContent("v1.0.0");
   });
-});
-
-describe("every release cell answers a right click, so the gesture is not limited to one column", () => {
-  it.each(["status", "publishedAt", "releaseDate", "ticketCount", "createdBy"])(
-    "opens the actions menu on contextmenu in the %s cell",
-    (key) => {
-      const cell = releaseColumnCell(key, { canManage: true, onEdit: jest.fn(), onDelete: jest.fn() });
-      const { container } = render(cell(releaseRow));
-      const target = container.firstElementChild;
-      if (target === null) throw new Error(`the ${key} cell rendered nothing`);
-      fireEvent.contextMenu(target);
-      expect(screen.getByRole("menuitem", { name: "Edit" })).toBeInTheDocument();
-    },
-  );
 });

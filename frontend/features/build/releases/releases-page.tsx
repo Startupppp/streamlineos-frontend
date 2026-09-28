@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, type MouseEvent } from "react";
 import { Plus, X, WifiOff } from "lucide-react";
 import { Tag, CheckCircle2, Archive, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,12 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import {
   useReleases,
@@ -106,6 +112,11 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   );
   const [editTarget, setEditTarget] = useState<Release | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Release | null>(null);
+  const [contextTarget, setContextTarget] = useState<{
+    release: Release;
+    x: number;
+    y: number;
+  } | null>(null);
 
   const releases = data?.data ?? [];
   const pagination = data?.pagination;
@@ -158,6 +169,31 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleRowContextMenu = useCallback(
+    (row: Release, event: MouseEvent) => {
+      if (!canManage) return;
+      event.preventDefault();
+      setContextTarget({ release: row, x: event.clientX, y: event.clientY });
+    },
+    [canManage],
+  );
+
+  const handleContextMenuOpenChange = useCallback((open: boolean) => {
+    if (!open) setContextTarget(null);
+  }, []);
+
+  const handleContextEdit = useCallback(() => {
+    if (!contextTarget) return;
+    handleOpenEdit(contextTarget.release);
+    setContextTarget(null);
+  }, [contextTarget, handleOpenEdit]);
+
+  const handleContextDelete = useCallback(() => {
+    if (!contextTarget) return;
+    setDeleteTarget(contextTarget.release);
+    setContextTarget(null);
+  }, [contextTarget]);
 
   const handleStatusFilterChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
@@ -387,6 +423,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             isFiltered={listFilters.isFiltered}
             getRowKey={(r) => r.id}
             onRowClick={handleOpenEdit}
+            onRowContextMenu={handleRowContextMenu}
             mobileCard={renderMobileCard}
             selection={{
               selected: selectedReleaseIds,
@@ -432,6 +469,27 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             onClose={handleCloseSheet}
           />
         ) : null}
+
+        <DropdownMenu open={contextTarget !== null} onOpenChange={handleContextMenuOpenChange}>
+          <DropdownMenuTrigger asChild>
+            <span
+              aria-hidden
+              tabIndex={-1}
+              className="fixed h-0 w-0"
+              style={
+                contextTarget === null
+                  ? undefined
+                  : { left: contextTarget.x, top: contextTarget.y }
+              }
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onSelect={handleContextEdit}>Edit</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onSelect={handleContextDelete}>
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <ConfirmDialog
           open={!!deleteTarget}

@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
   useTransition,
+  type MouseEvent,
 } from "react";
 import {
   type ColumnDef,
@@ -54,6 +55,7 @@ export function DataTable<T>({
   columns,
   getRowKey,
   onRowClick,
+  onRowContextMenu,
   selection,
   pagination,
   isLoading,
@@ -481,6 +483,11 @@ export function DataTable<T>({
                           )
                         : undefined
                     }
+                    onContextMenu={
+                      onRowContextMenu
+                        ? (event: MouseEvent) => onRowContextMenu(row.original, event)
+                        : undefined
+                    }
                     className={cn(
                       "rounded-lg border border-border bg-card p-3 text-left touch-manipulation",
                       onRowClick &&
@@ -534,6 +541,11 @@ export function DataTable<T>({
                           ? createRowActivationKeyHandler(() =>
                               handleRowActivate(row.original, row.id),
                             )
+                          : undefined
+                      }
+                      onContextMenu={
+                        onRowContextMenu
+                          ? (event: MouseEvent) => onRowContextMenu(row.original, event)
                           : undefined
                       }
                       tabIndex={onRowClick ? 0 : undefined}

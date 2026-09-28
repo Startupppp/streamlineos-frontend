@@ -15,10 +15,12 @@ const ROWS: HarnessRow[] = [
 
 function Harness({
   onRowAction,
+  onRowContextMenu,
   withMobileCard = false,
   withFocusStop = false,
 }: {
   onRowAction?: () => void;
+  onRowContextMenu?: (row: HarnessRow, event: React.MouseEvent) => void;
   withMobileCard?: boolean;
   withFocusStop?: boolean;
 }) {
@@ -79,6 +81,7 @@ function Harness({
         columns={columns}
         getRowKey={(row) => row.id}
         onRowClick={handleRowClick}
+        onRowContextMenu={onRowContextMenu}
         selection={{ selected, onChange: handleSelectionChange }}
         toolbar={
           selected.size > 0 ? (
@@ -250,5 +253,59 @@ describe("DataTable — scroll region", () => {
     expect(regions[0]).toHaveAccessibleName("People");
     expect(regions[0]).toHaveAttribute("tabindex", "0");
     expect(regions[0]).toHaveClass("overflow-auto");
+  });
+});
+
+describe("DataTable — onRowContextMenu covers the whole row, including its padding", () => {
+  it("calls the handler with the row the event landed in", () => {
+    const onRowContextMenu = jest.fn();
+    render(<Harness onRowContextMenu={onRowContextMenu} />);
+
+    fireEvent.contextMenu(firstDataRow());
+
+    expect(onRowContextMenu).toHaveBeenCalledTimes(1);
+    expect(onRowContextMenu.mock.calls[0][0]).toEqual({ id: "a", name: "Ada Lovelace" });
+  });
+
+  it("fires from a right click inside the row's cell padding, not only over the cell text", () => {
+    const onRowContextMenu = jest.fn();
+    render(<Harness onRowContextMenu={onRowContextMenu} />);
+    const cell = screen.getByText("Ada Lovelace").closest("td");
+    if (cell === null) throw new Error("no data cell rendered");
+
+    fireEvent.contextMenu(cell);
+
+    expect(onRowContextMenu).toHaveBeenCalledTimes(1);
+  });
+
+  it("hands the event through so the caller can suppress the browser menu", () => {
+    const onRowContextMenu = jest.fn((_row: HarnessRow, event: React.MouseEvent) => {
+      event.preventDefault();
+    });
+    render(<Harness onRowContextMenu={onRowContextMenu} />);
+
+    const notPrevented = fireEvent.contextMenu(firstDataRow());
+
+    expect(notPrevented).toBe(false);
+  });
+
+  it("leaves the row without a contextmenu handler when the caller passes none, so existing tables keep the browser menu", () => {
+    render(<Harness />);
+
+    const notPrevented = fireEvent.contextMenu(firstDataRow());
+
+    expect(notPrevented).toBe(true);
+  });
+
+  it("fires from the mobile card too, which is the same row rendered below the breakpoint", () => {
+    const onRowContextMenu = jest.fn();
+    render(<Harness withMobileCard onRowContextMenu={onRowContextMenu} />);
+    const card = screen.getByText("Card Ada Lovelace").closest("div");
+    if (card === null) throw new Error("no mobile card rendered");
+
+    fireEvent.contextMenu(card);
+
+    expect(onRowContextMenu).toHaveBeenCalled();
+    expect(onRowContextMenu.mock.calls[0][0]).toEqual({ id: "a", name: "Ada Lovelace" });
   });
 });
