@@ -7,6 +7,7 @@ import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-sur
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { KbPage, KbPageVersion } from "./page-types";
 
 type CursorPage<T> = {
@@ -33,6 +34,7 @@ const kbPageContract = lazyContract(() =>
 export function useKbPageVersionsInfinite(pageId: number) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageVersions(pageId),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = {};
@@ -54,6 +56,7 @@ export function useKbPageVersionsInfinite(pageId: number) {
 export function useKbPageVersionDetail(pageId: number, versionNumber: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageVersion(pageId, versionNumber),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageVersion>(

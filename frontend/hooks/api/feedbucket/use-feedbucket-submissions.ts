@@ -18,6 +18,7 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const feedbucketSubmissionListC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketSubmissionListContract),
@@ -47,6 +48,7 @@ export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery
         params, signal, feedbucketSubmissionListC,
       ),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

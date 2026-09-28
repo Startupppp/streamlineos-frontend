@@ -65,6 +65,10 @@ const MILESTONE_FILTER_DEFINITIONS = [
   { param: "to" },
 ] as const;
 
+function readDateFilter(value: string): string | undefined {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
+}
+
 function NewMilestoneButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
@@ -102,8 +106,8 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
     statusFilterValue !== BUILD_FILTER_ALL
       ? (statusFilterValue as "PENDING" | "ACHIEVED" | "MISSED")
       : undefined;
-  const fromValue = listFilters.value("from") || undefined;
-  const toValue = listFilters.value("to") || undefined;
+  const fromValue = readDateFilter(listFilters.value("from"));
+  const toValue = readDateFilter(listFilters.value("to"));
   const ownerIdValue = listFilters.value("ownerId");
   const ownerId = /^\d+$/.test(ownerIdValue) ? Number(ownerIdValue) : undefined;
 

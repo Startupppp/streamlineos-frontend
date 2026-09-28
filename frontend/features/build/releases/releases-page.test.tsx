@@ -249,6 +249,14 @@ it("shows actual query error message on failure instead of hardcoded text", () =
   expect(errorEl.textContent).toContain("Build module is not enabled");
 });
 
+it("omits the all sentinel from the API date filters", () => {
+  render(<ReleasesPage projectId={1} />);
+
+  expect(mockUseReleases.mock.calls[0]?.[1]).toEqual(
+    expect.objectContaining({ from: undefined, to: undefined }),
+  );
+});
+
 it("hides New Release button when build:manage is denied", () => {
   mockUseCan.mockReturnValue(false);
   render(<ReleasesPage projectId={1} />);

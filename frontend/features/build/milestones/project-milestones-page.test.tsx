@@ -188,6 +188,14 @@ it("renders NoPermissionState when build:view is denied instead of empty milesto
   expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
 });
 
+it("omits the all sentinel from the API date filters", () => {
+  render(<ProjectMilestonesPage projectId="1" />);
+
+  expect(mockUseProjectMilestones.mock.calls[0]?.[1]).toEqual(
+    expect.objectContaining({ from: undefined, to: undefined }),
+  );
+});
+
 it("renders milestone cards when data is populated", () => {
   const milestone = {
     id: 1,
