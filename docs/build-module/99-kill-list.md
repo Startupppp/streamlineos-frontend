@@ -407,3 +407,57 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   **CLASS 4 IS UNCHANGED AND IS STILL THE MOST SERIOUS ITEM HERE.** Project retention and legal hold are advertised in detail (`features/build/settings/project-settings-retention-sections.tsx:33,:167-182,:340-341`) and enforced nowhere — the only Build retention job prunes `webhookDeliveries` on a hard-coded 90 days and reads none of the three configured fields. That is a compliance promise with no implementation, and it is also a silent answer to open question 10, which [`05-performance-caching.md`](./05-performance-caching.md)'s cross-module box now depends on for its own settling. Route it first, ahead of every wording item above.
 
   **THE (A) DECISION IS UNCHANGED** — a rendered-string-literal scan with an allowlist, after classes 1 and 2 land — and this pass adds one requirement to its spec: **it must scan `components/` as well as `features/` and `app/`.** Both findings in this note were invisible to every previous pass for exactly that reason, and a gate seeded from a scope that has already missed two public surfaces would inherit the blind spot.
+
+  **2026-09-28, fourth lane — (A) IS BUILT. Both `components/` findings are FIXED. The box stays unchecked, and after this pass exactly one line keeps it that way.**
+
+  **THE TWO FIXES.**
+
+  - `frontend/components/brand/floating-composition.tsx:44` now renders `Cycle 24` instead of `Sprint 24`. That string appears on the **public landing hero** (`features/landing/components/landing-hero.tsx`) and the **sign-in page** (`features/auth/auth-right-panel.tsx`), so it was the same class as the four `pillars.ts` strings and the SEO payload — public marketing copy selling a removed noun — and it survived the pass that fixed those only because it lives in `components/brand/` rather than `features/landing/data/`.
+  - `frontend/components/hr/employee-tickets-list.tsx` — **the column is deleted, not relabelled**, together with the `sprint: { name: string } | null` member of its row type. No HR backend read ever projected that field and the prop arrives as a bare `as` cast, so the column rendered `-` on every row under a heading naming a removed surface. Relabelling it to "Cycle" would have preserved a permanently empty column; the right fix was to remove it. `grep -rn -i sprint` over both files → no matches. `nice -n 10 npx jest --maxWorkers=2 features/hr/employees` → **13 suites, 97 tests, all passing**.
+
+  **THE GATE, and it is a shrink-only ratchet rather than a red-on-day-one scanner.** `frontend/scripts/check-retired-vocabulary.mjs`, registered as `check:retired-vocabulary` with a `:self-test` sibling, baseline at `frontend/scripts/baselines/retired-vocabulary.json`.
+
+  - **Scope is `app`, `components`, `features`** — the one change over every manual pass, and the self-test asserts it (`(k) scans components/, which every previous manual pass omitted`) so the blind spot cannot silently come back.
+  - **It reads rendered positions, not raw file text**, which is what (A) specified: quoted string literals and JSX text nodes, filtered to things shaped like prose or a label (contains a space, or begins with a capital). That one rule replaces a pile of allowlist entries — it excludes dotted event keys, snake_case stored enum values, path and query segments, import specifiers and bare identifiers in a single pass. `EmptySprintIllustration` is invisible to it because it is an identifier; `build.sprint.ending` because it is a dotted key; `sprint_changed` because it is snake_case.
+  - **It matches the plural**, the failure the second-lane note identified in the hand-typed `\bSprint\b`. Self-test assertion `(b)` is exactly that case.
+  - **Design-system routes and `*-gallery.tsx` files are skipped by path** — 26 files — rather than allowlisted line by line. Gallery sample data advertises nothing, and the previous passes' repeated ranking of those hits as "lowest priority" is now a rule instead of a judgement.
+  - **Why a ratchet and not a hard fail:** this document's own (A) analysis warned that a gate shipped before the debt is cleared gets switched off. So the baseline records today's count as a ceiling that may only shrink, on the established `check:over-300` pattern, and the gate **lists every finding on every run** while failing only if the count grows. It also fails on a stale justification, and when the count drops it tells you to lower the ceiling.
+
+  Verbatim, `frontend/`, self-test first:
+
+  ```
+  $ node scripts/check-retired-vocabulary.mjs --self-test
+    [pass] (a) flags a retired word in a rendered label prop
+    [pass] (b) flags the PLURAL, which a \bSprint\b pattern cannot match
+    [pass] (c) flags a JSX text node
+    [pass] (d) flags a placeholder attribute
+    [pass] (e) does NOT flag a dotted event key
+    [pass] (f) does NOT flag a snake_case stored enum value
+    [pass] (g) does NOT flag an import specifier
+    [pass] (h) does NOT flag a bare identifier outside a string
+    [pass] (i) does NOT flag a query-key or path segment
+    [pass] (j) reports exactly one finding for one offending line
+    [pass] (k) scans components/, which every previous manual pass omitted
+    [pass] (l) skips a test file by name
+    [pass] (m) skips design-system and gallery fixture data
+    [pass] (n) does not skip an ordinary component path
+    [pass] (o) does NOT flag a bare barrel-export identifier line
+    [pass] (p) still flags a bare multi-word JSX text line
+    [pass] (q) the baseline is a shrink-only ratchet, not a mute switch
+  SELF-TEST PASS (17 assertions)
+
+  $ node scripts/check-retired-vocabulary.mjs
+  Retired-vocabulary scan: app, components, features
+    files 5067  ·  fixture files skipped 26  ·  findings 16  ·  justified 2  ·  acknowledged debt 14 [ceiling 14]
+  check-retired-vocabulary: OK
+  ```
+
+  Assertions (e) through (i) are what make `OK` mean "scanned and clean" rather than "matched nothing useful" — they prove the noise rules exclude the right things — and (a) through (d) plus (j), (p) prove it still bites. **Neither `components/brand/` nor `components/hr/` appears in the 14, which is the gate confirming this lane's two fixes rather than this lane asserting them.**
+
+  **THE 14 ACKNOWLEDGED, with owners.** `project-create/steps/{step-review.tsx:54, step-toggles.tsx:19 (×2), step-type.tsx:19}` — class 2, and **they cannot be fixed by renaming**: the flag behind them is dead and must be retired through the expand–contract in the box above · `qa/test-run-sheet.tsx:149` and `whiteboard/create-board-dialog.tsx:70` — placeholders · `webhooks/project-webhooks-page.tsx:599` — the section copy, still present and now at `:599` (it was cited at `:361`; a peer lane is live in that file, so this lane did not touch it) · `dashboard/dashboard-deferred-body.tsx:347` and `dashboard/sprint-card.tsx:44,:50,:87,:146,:147` — the card is live and Cycle-backed, so class 3, except `:147` *"Start a sprint in your project to see progress here."*, which instructs the user to do something the product has no verb for · `org-setup/lib/preview-mock-content.ts:32` — first-run onboarding preview.
+
+  **TWO JUSTIFIED, and one of them is not really a justification.** `features/wiki/lib/starter-templates.ts:340` is generic agile vocabulary in a retro template description and the file belongs to the Knowledge Base workstream. `features/landing/data/testimonials.ts:18` is recorded in the baseline with its reason spelled out as **an open owner decision, not an exemption** — an attributed customer quotation cannot be reworded without falsifying a statement a named person is said to have made, and fabricating a replacement is not an option this lane will take. It is in the baseline so the gate can be green over work engineering is able to do, and it is named in the baseline text as the reason **this box is not.**
+
+  **STILL NOT EARNED, and the blocker is now exactly one line.** Every `components/` finding is fixed, the public marketing copy is clean (`pillars.ts`, `structured-data.tsx`, `floating-composition.tsx` all check out), the gate exists with a non-vacuous self-test and cannot regress, and 14 wording items are held under a shrink-only ceiling with owners attached. The box says product copy "does not advertise removed or unimplemented capabilities", and `testimonials.ts:18` still does, publicly, in a voice nobody here may edit. **SETTLES WHEN** the owner chooses: leave it as a dated quote, remove the testimonial, or source a real replacement.
+
+  **AND CLASS 4 IS UNTOUCHED AND STILL RANKS FIRST.** The retention copy promises deletion nothing performs. A vocabulary gate cannot see it — "unimplemented" is not a word — so it is not in the 14 and never will be. It remains the most serious item in this box and the one to route ahead of every wording fix above.
