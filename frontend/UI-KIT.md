@@ -277,6 +277,7 @@ The one screen that owns its scroll. `PageWrapper … noInternalScroll className
 | `mobileCardBreakpoint` | `"sm"` (default) or `"xl"`: where cards give way to the table. Use `"xl"` when a trailing action column clips at 768-1024px with the sidebar open |
 | `scrollRegionLabel` | names the scrolling element and makes it the one keyboard stop (`role="region"`, `tabIndex=0`) for a table wider than its container |
 | `search` / `toolbar` | declared and compiling — **do not pass them** |
+| `onRowContextMenu` | `(row, event) => void` on the whole `<tr>` and on the mobile card — the padding included. The caller calls `event.preventDefault()` to replace the browser menu and anchors its own menu; omit it and the row keeps the browser menu. Canonical `features/build/releases/releases-page.tsx` |
 | `onRowClick` · `footer` · `minWidth` · `className` · `rowClassName` | `rowClassName: (row, index) => string` |
 
 `DataTableColumn<T>` = `{ key; header; cell: (row) => ReactNode; className?; headerClassName? }`. Search and filters live in `PageWrapper`'s `filters` prop above the card.
