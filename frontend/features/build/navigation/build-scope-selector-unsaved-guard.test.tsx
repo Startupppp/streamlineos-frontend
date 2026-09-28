@@ -6,6 +6,7 @@ import {
 } from "@/components/shared/dirty-state-context";
 import { BuildScopeSelector } from "./build-scope-selector";
 import { ORGANIZATION_BUILD_SCOPE } from "@/lib/build/build-scope";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { BuildScopeRef } from "./use-build-nav-preferences";
 import type { BuildScopeIdentity } from "./use-build-scope-identity";
 
@@ -113,15 +114,17 @@ function DirtySurface({ isDirty }: { isDirty: boolean }) {
   return null;
 }
 
-function renderSelector(isDirty: boolean) {
+function renderSelector(isDirty: boolean, isCollapsed = false) {
   return render(
-    <DirtyStateProvider>
-      <DirtySurface isDirty={isDirty} />
-      <BuildScopeSelector
-        scope={ORGANIZATION_BUILD_SCOPE}
-        isCollapsed={false}
-      />
-    </DirtyStateProvider>,
+    <TooltipProvider>
+      <DirtyStateProvider>
+        <DirtySurface isDirty={isDirty} />
+        <BuildScopeSelector
+          scope={ORGANIZATION_BUILD_SCOPE}
+          isCollapsed={isCollapsed}
+        />
+      </DirtyStateProvider>
+    </TooltipProvider>,
   );
 }
 
@@ -170,5 +173,13 @@ describe("BuildScopeSelector — BSN-04-014 scope selector honours the unsaved-w
 
     expect(push).not.toHaveBeenCalled();
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("keeps the collapsed trigger available without nesting tooltip and popover refs on the button", () => {
+    renderSelector(false, true);
+
+    expect(
+      screen.getByRole("button", { name: /switch build scope/i }),
+    ).toBeInTheDocument();
   });
 });

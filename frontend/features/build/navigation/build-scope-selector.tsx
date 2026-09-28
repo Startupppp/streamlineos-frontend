@@ -175,7 +175,9 @@ export function BuildScopeSelector({
         {isCollapsed ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <ResponsivePopoverTrigger asChild>{trigger}</ResponsivePopoverTrigger>
+              <span className="block">
+                <ResponsivePopoverTrigger asChild>{trigger}</ResponsivePopoverTrigger>
+              </span>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
               {currentRef.name || BUILD_SCOPE_TYPE_LABELS[currentRef.type]}
