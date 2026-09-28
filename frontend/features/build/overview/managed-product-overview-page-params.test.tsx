@@ -376,3 +376,24 @@ describe("ManagedProductOverviewPage — offline state (BSN-OVW-OFFLINE)", () =>
     expect(screen.queryAllByRole("button", { name: /Edit product/i })).toHaveLength(0);
   });
 });
+
+describe("ManagedProductOverviewPage — linked project row context menu (BSN-OVW-CONTEXT)", () => {
+  it("right-click on a linked project row offers open and copy link, so the row's commands are not hidden behind hover alone", () => {
+    mockFilters({});
+    const { useProjects } = jest.requireMock("@/hooks/api/build/projects");
+    (useProjects as jest.Mock).mockReturnValue({
+      data: {
+        data: [{ id: 9, name: "Checkout", key: "CHK", status: "ACTIVE" }],
+        hasMore: false,
+        nextCursor: null,
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+    render(<ManagedProductOverviewPage managedProductId={42} />);
+    fireEvent.contextMenu(screen.getByText("Checkout").closest("div")!);
+    expect(screen.getByText("Open project")).toBeInTheDocument();
+    expect(screen.getByText("Copy link")).toBeInTheDocument();
+  });
+});

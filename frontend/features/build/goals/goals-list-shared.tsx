@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { CalendarDays, Link2 as LinkIcon, ListChecks, Users } from "lucide-react";
@@ -29,15 +29,17 @@ interface GoalCardActionsProps {
   goal: GoalListItem;
   onEdit?: (goal: GoalListItem) => void;
   onDelete?: (goal: GoalListItem) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-function GoalCardActions({ goal, onEdit, onDelete }: GoalCardActionsProps) {
+function GoalCardActions({ goal, onEdit, onDelete, open, onOpenChange }: GoalCardActionsProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleEdit = useCallback(() => onEdit?.(goal), [goal, onEdit]);
   const handleDelete = useCallback(() => onDelete?.(goal), [goal, onDelete]);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -68,11 +70,23 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
   const cfg = STATUS_CONFIG[goal.status];
   const ownerName = goal.owner?.name ?? goal.owner?.email ?? null;
   const shouldReduceMotion = useReducedMotion();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const hasActions = Boolean(onEdit || onDelete);
+
+  const handleContextMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (!hasActions) return;
+      event.preventDefault();
+      setMenuOpen(true);
+    },
+    [hasActions],
+  );
 
   return (
     <motion.div
       variants={shouldReduceMotion ? listItemReduced : listItem}
       transition={pmSnappy}
+      onContextMenu={handleContextMenu}
     >
       <div className="group relative">
         <div
@@ -94,8 +108,14 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
               <Badge variant={cfg.variant} className="shrink-0 text-micro">
                 {cfg.label}
               </Badge>
-              {onEdit || onDelete ? (
-                <GoalCardActions goal={goal} onEdit={onEdit} onDelete={onDelete} />
+              {hasActions ? (
+                <GoalCardActions
+                  goal={goal}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  open={menuOpen}
+                  onOpenChange={setMenuOpen}
+                />
               ) : null}
             </div>
           </div>

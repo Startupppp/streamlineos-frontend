@@ -30,9 +30,9 @@ import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-key
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { LinkedProjectRow } from "./linked-project-row";
 import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { cn } from "@/lib/utils";
 
 const PROJECT_SORT_VALUES = ["name_asc", "priority_desc", "due_asc", "due_desc"] as const;
 
@@ -369,29 +369,11 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
               </CardHeader>
               <CardContent className="space-y-2">
                 {linkedProjects.map((proj, index) => (
-                  <div
+                  <LinkedProjectRow
                     key={proj.id}
-                    aria-selected={focusedIndex === index}
-                    className={cn(
-                      "flex items-center justify-between gap-2 rounded-md px-1 text-sm transition-colors",
-                      focusedIndex === index && "bg-accent",
-                    )}
-                  >
-                    <Link
-                      href={`/build/${proj.id}`}
-                      className="truncate text-primary hover:underline"
-                    >
-                      {proj.name}
-                    </Link>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <span className="font-mono text-dense text-muted-foreground">{proj.key}</span>
-                      {proj.status && (
-                        <Badge variant="outline" className="h-5 px-2 py-0.5 text-micro">
-                          {proj.status}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+                    project={proj}
+                    focused={focusedIndex === index}
+                  />
                 ))}
                 {hasMoreProjects && (
                   <Link

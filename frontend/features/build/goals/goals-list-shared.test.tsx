@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { GoalCard } from "./goals-list-shared";
 import type { GoalListItem } from "@/hooks/api/goals";
 
@@ -183,5 +183,25 @@ describe("GoalCard renders the linked-initiative count (BSN-GOALS-LINKS)", () =>
     render(<GoalCard goal={baseGoal()} />);
     expect(screen.getByText("No linked initiatives")).toBeInTheDocument();
     expect(screen.queryByText(/0 linked/)).not.toBeInTheDocument();
+  });
+});
+
+describe("GoalCard right-click mirrors the row menu (BSN-GOALS-CONTEXT)", () => {
+  it("opens the same edit and delete commands on right-click, so the menu is not the only path and the only path is not a hover target", () => {
+    const onEdit = jest.fn();
+    const onDelete = jest.fn();
+    const { container } = render(
+      <GoalCard goal={baseGoal()} onEdit={onEdit} onDelete={onDelete} />,
+    );
+    fireEvent.contextMenu(container.firstElementChild!);
+    expect(screen.getByText("Edit")).toBeInTheDocument();
+    expect(screen.getByText("Delete")).toBeInTheDocument();
+  });
+
+  it("offers no right-click menu to a viewer with neither command (FE-122 paired negative)", () => {
+    const { container } = render(<GoalCard goal={baseGoal()} />);
+    fireEvent.contextMenu(container.firstElementChild!);
+    expect(screen.queryByText("Edit")).not.toBeInTheDocument();
+    expect(screen.queryByText("Delete")).not.toBeInTheDocument();
   });
 });
