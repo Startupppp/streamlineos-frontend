@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import type { ListFilterSpec } from "./list-filter-spec";
+import { DEFAULT_SEARCH_DEBOUNCE_MS, type ListFilterSpec } from "./list-filter-spec";
 import { useListFilterParams } from "./use-list-filter-params";
 
 const mockReplace = jest.fn();
@@ -183,6 +183,43 @@ describe("list filter params, driven by a spec", () => {
       jest.advanceTimersByTime(300);
     });
 
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+  });
+
+  it("holds the navigation at 299 ms and releases it on the 300th, so a shorter debounce fails this test", () => {
+    jest.useFakeTimers();
+    const { result } = renderWith("");
+
+    act(() => result.current.setSearch("annual"));
+    act(() => {
+      jest.advanceTimersByTime(299);
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    act(() => {
+      jest.advanceTimersByTime(1);
+    });
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    expect(lastParams().get("search")).toBe("annual");
+    expect(DEFAULT_SEARCH_DEBOUNCE_MS).toBe(300);
+  });
+
+  it("waits the spec's own debounce when the list declares one, so the default is not hardcoded into the hook", () => {
+    jest.useFakeTimers();
+    mockSearchParams = new URLSearchParams("");
+    const { result } = renderHook(() =>
+      useListFilterParams({ ...PAYROLL_RUN_SPEC, searchDebounceMs: 900 }),
+    );
+
+    act(() => result.current.setSearch("annual"));
+    act(() => {
+      jest.advanceTimersByTime(899);
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    act(() => {
+      jest.advanceTimersByTime(1);
+    });
     expect(mockReplace).toHaveBeenCalledTimes(1);
   });
 
