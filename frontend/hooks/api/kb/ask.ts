@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { streamAiResult, type AiResultStreamOptions } from "@/hooks/api/ai-result-stream";
 import { kbAskResultSchema, type KbAskResult } from "./ask-result-schema";
 import type { KbAiFeedbackInput } from "@/types/kb";
+import { KB_PAGE_STATUSES } from "./kb-analytics-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
@@ -21,7 +22,7 @@ export interface KbAskScopedInput {
   pageIds?: number[];
   verifiedOnly?: boolean;
   ownerMembershipId?: number;
-  status?: "draft" | "in_review" | "published" | "archived";
+  status?: Exclude<(typeof KB_PAGE_STATUSES)[number], "archived">;
 }
 
 export function useKbAsk() {

@@ -19,6 +19,7 @@ export const RELEASES_TABLE_HEADERS = [
   "Name",
   "Status",
   "Release Date",
+  "Published",
   "Tickets",
   "Created By",
   "Actions",
@@ -98,6 +99,23 @@ export function buildReleasesColumns({
       cell: (r) => <ReleaseStatusBadge status={r.status} />,
     },
     {
+      key: "publishedAt",
+      header: "Published",
+      cell: (r) => {
+        if (r.status !== "released") {
+          return <span className="text-dense text-muted-foreground">—</span>;
+        }
+        if (r.publishedAt !== null) {
+          return (
+            <span className="font-mono tabular-nums text-dense text-muted-foreground">
+              {format(new Date(r.publishedAt), "MMM d, yyyy")}
+            </span>
+          );
+        }
+        return <span className="text-dense text-muted-foreground">Unknown</span>;
+      },
+    },
+    {
       key: "releaseDate",
       header: "Release Date",
       cell: (r) =>
@@ -159,6 +177,15 @@ export function ReleaseMobileCard({
           value: release.releaseDate
             ? format(new Date(release.releaseDate), "MMM d, yyyy")
             : "—",
+        },
+        {
+          label: "Published",
+          value:
+            release.status !== "released"
+              ? "—"
+              : release.publishedAt !== null
+                ? format(new Date(release.publishedAt), "MMM d, yyyy")
+                : "Unknown",
         },
         { label: "Tickets", value: release.ticketCount },
         ...(release.description

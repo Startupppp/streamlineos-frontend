@@ -239,6 +239,7 @@ const releaseRow = {
   rowVersion: 4,
   status: "draft" as const,
   releaseDate: null,
+  publishedAt: null,
   ticketCount: 0,
   description: null,
   createdBy: null,
@@ -307,6 +308,7 @@ it("rejects a release row that omits the createdBy key so a future dropped proje
     description: null,
     status: "draft",
     releaseDate: null,
+    publishedAt: null,
     ticketCount: 0,
     createdAt: "2026-09-01T00:00:00Z",
     updatedAt: "2026-09-01T00:00:00Z",
@@ -329,6 +331,7 @@ it("accepts a release row where createdBy is null since the column may be unset"
     description: null,
     status: "draft",
     releaseDate: null,
+    publishedAt: null,
     ticketCount: 0,
     createdBy: null,
     createdAt: "2026-09-01T00:00:00Z",
@@ -397,4 +400,51 @@ it("renders the createdBy identifier in the mobile card", () => {
     />,
   );
   expect(screen.getByText("user-abc123")).toBeInTheDocument();
+});
+
+it("rejects a release row that omits publishedAt because a dropped projection must not decode silently", async () => {
+  const { projectReleaseListContract } = await import("@/hooks/api/build/build-project-schema");
+  const rowWithoutPublishedAt = {
+    id: 1,
+    projectId: 1,
+    name: "v1",
+    version: "1.0.0",
+    rowVersion: 1,
+    description: null,
+    status: "draft",
+    releaseDate: null,
+    ticketCount: 0,
+    createdBy: null,
+    createdAt: "2026-09-01T00:00:00Z",
+    updatedAt: "2026-09-01T00:00:00Z",
+  };
+  const result = projectReleaseListContract.safeParse({
+    data: [rowWithoutPublishedAt],
+    pagination: { limit: 25, hasMore: false, nextCursor: null },
+  });
+  expect(result.success).toBe(false);
+});
+
+it("renders a dash in the published column for a draft release that has never been released", () => {
+  const { buildReleasesColumns } = require("./releases-table-columns");
+  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  const publishedColumn = columns.find((c: { key: string }) => c.key === "publishedAt");
+  render(publishedColumn.cell({ ...releaseRow, status: "draft", publishedAt: null }));
+  expect(screen.getByText("—")).toBeInTheDocument();
+});
+
+it("renders a formatted date in the published column for a released row that has a known publication date", () => {
+  const { buildReleasesColumns } = require("./releases-table-columns");
+  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  const publishedColumn = columns.find((c: { key: string }) => c.key === "publishedAt");
+  render(publishedColumn.cell({ ...releaseRow, status: "released", publishedAt: "2026-09-01T10:00:00Z" }));
+  expect(screen.getByText("Sep 1, 2026")).toBeInTheDocument();
+});
+
+it("renders Unknown in the published column for a released row with null publishedAt because the release predates the migration", () => {
+  const { buildReleasesColumns } = require("./releases-table-columns");
+  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  const publishedColumn = columns.find((c: { key: string }) => c.key === "publishedAt");
+  render(publishedColumn.cell({ ...releaseRow, status: "released", publishedAt: null }));
+  expect(screen.getByText("Unknown")).toBeInTheDocument();
 });

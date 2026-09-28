@@ -7,6 +7,7 @@ export interface Release {
   description: string | null;
   status: "draft" | "released" | "archived";
   releaseDate: string | null;
+  publishedAt: string | null;
   ticketCount: number;
   createdBy: string | null;
   createdAt: string;
