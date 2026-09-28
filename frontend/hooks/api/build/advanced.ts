@@ -106,13 +106,8 @@ export type CyclePage = {
 function cyclePageQuery(projectId: number, filters?: CycleListFilters) {
   const activeFilters = filters ?? {};
   const queryParams: Record<string, string> = {};
-  if (activeFilters.status) queryParams.status = activeFilters.status;
-  if (activeFilters.q) queryParams.q = activeFilters.q;
-  if (activeFilters.from) queryParams.from = activeFilters.from;
-  if (activeFilters.to) queryParams.to = activeFilters.to;
-  if (activeFilters.cursor) queryParams.cursor = activeFilters.cursor;
-  if (activeFilters.limit !== undefined)
-    queryParams.limit = String(activeFilters.limit);
+  for (const [key, value] of Object.entries(activeFilters))
+    if (value !== undefined && value !== "") queryParams[key] = String(value);
   return {
     queryKey: [...buildWorkQueryKeys.projects.cycles(projectId), activeFilters],
     queryFn: ({ signal }: { signal: AbortSignal }) =>
