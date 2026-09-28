@@ -136,6 +136,35 @@ including a soft delete, so a tombstoning write is never mistaken for no change.
   ```
 
   `injected env (61) from .env` on a run that was given no connection string is the evidence that the alias inherits the production target. The self-test passing is not evidence for this box: it proves the harness detects breaches, not that any Build list was measured.
+
+  **2026-09-28, third pass — STILL NOT EARNED. The named `package.json` defect is FIXED by this lane, one figure moved, and the recorded self-test evidence turns out to be false in a way that matters more than any of the numbers.**
+
+  **THE DEFECT IS FIXED.** `backend/package.json` `db:check-read-budgets:build` named 6 of the 10 declared Build-scoped budget specs. It now names all 10 — `build-all-work`, `build-roadmap-list`, `build-feedback-list` and `build-changelog-list` have been added, in spec-declaration order. Verified:
+
+  ```
+  $ node -e "const p=require('./package.json'); const ids=p.scripts['db:check-read-budgets:build'].split('--ids=')[1].split(','); console.log(ids.length, ids.join(' '))"
+  10 scoped-board-page my-work ticket-list-project ticket-org-assigned-to-me build-all-work build-roadmap-list build-org-project-health-summary build-resource-allocation build-feedback-list build-changelog-list
+  ```
+
+  So the Build alias now measures every Build ceiling that has been authored. **That closes the alias defect and does not close the box** — the coverage gap it sat inside is untouched.
+
+  **FIGURE CORRECTED: 39 → 41 paginated Build list responses.** `grep -rhoE '@ResponseSchema\([a-zA-Z]*[Pp]age[A-Za-z]*\)' --include='*.controller.ts' src/modules/build | wc -l` → **41**. The spec total is unchanged at `grep -cE '^\s*id: "' src/scripts/read-cost-budgets.mjs` → **86**. So measured index coverage is now **10 of 41 Build lists (24%)**, down from 26% — not because anything regressed, but because two more Build lists gained a cursor envelope (one of them `GET /build/:projectId/automations`, see [`03-api-contracts.md`](./03-api-contracts.md) box 1) and neither carries a budget. **The denominator grows faster than the numerator, which is the shape of this box's real problem:** a list gains a page contract in an afternoon and a measured ceiling only with a fixture-shaped database.
+
+  **THE RECORDED SELF-TEST EVIDENCE IS FALSE, AND THE HAZARD IS WORSE THAN THIS BOX HAS BEEN RECORDING.** Two previous entries quote `SELF-TEST PASS: all 6 breach types detected` and conclude that "the specs can be authored and their breach detection proven before any fixture exists". Run this lane, `backend/`, verbatim:
+
+  ```
+  $ node src/scripts/run-read-cost-budgets.mjs --self-test
+  ◇ injected env (46) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+  RUNNER FAILED: PAM authentication failed for user "streamline_app"
+  ```
+
+  Then confirmed on disk rather than by a second run: `:317` reads `--self-test` into `SELF_TEST`, but the connection opens at `:359` and the connected role is queried at `:365-375`, **before any self-test branching**; the six synthetic breaching budgets are built at `:435-459` from a real base spec (`org-members-list`) and run as `EXPLAIN` against that same connection. **`--self-test` is the harness pointed at `.env`, not a dry run of it.** This lane's attempt failed at PAM authentication, so no `EXPLAIN` executed and no table was read — but it was a connection attempt to the production host and it must not be repeated. Note also that the env-injection count has moved from 61 to 46, which is a second reason not to trust a quoted figure from an earlier `.env`.
+
+  **THE STANDING RULE HAS AN EXCEPTION HERE, AND IT SHOULD BE READ AS ONE.** The programme rule is to run a gate's `:self-test` before the gate, because a gate that resolves nothing reports zero vacuously. **That rule must not be applied to `db:check-read-budgets`.** For this one harness the self-test is a production connection, so the override has to be on the command line *for the self-test too*: `APP_DATABASE_URL='postgres://streamline_app:<pw>@127.0.0.1:5432/replay2' PGSSLMODE=disable node src/scripts/run-read-cost-budgets.mjs --self-test`.
+
+  Everything else in the settling recipe stands: the unsuffixed alias for all 86 specs (or the now-complete `:build` alias for all 10 Build ones), an explicit `APP_DATABASE_URL` so the `.env` production value is overridden rather than inherited, `PGSSLMODE=disable` for a loopback target (`benchmark-role-guard.mjs:37-39`), the `streamline_app` non-BYPASSRLS role or the guard refuses, and a production-shaped fixture — on a zero-row database the planner picks a Seq Scan on every query and a run proves nothing. **31 of 41 Build lists still have no authored ceiling, so even a perfect fixture run settles 10 of 41 today.**
+
+  **NOT A REQUIREMENT, unchanged:** the 31 unmeasured lists are unmeasured, not exempt. The alias repair means the Build gate no longer silently skips ceilings that were already written; it does not mean any Build list has been measured in this checkout, and none has.
 - [x] Client and server validation constraints have automated parity evidence. `frontend/package.json:50` registers `check:contract-parity` which runs `scripts/check-contract-parity.mjs --backend-file contracts/openapi.json`; `check:contract-drift` at line 52 guards against in-flight drift. Per-entity schema tests live in `frontend/hooks/api/build/*-schema.test.ts`.
 - [ ] Soft delete, restore, retention, audit, and outbox behavior is specified for every mutable entity. **2026-09-28 NOT EARNED. Re-measured this lane; the Build-territory figure was wrong and is corrected.**
 
@@ -212,3 +241,48 @@ including a soft delete, so a tombstoning write is never mistaken for no change.
   Resolving the decision does not tick the box, and the reasons are now three and separable: the 23 Build sites are unrepaired; the outbox clause fails on its own evidence above; and the gate cannot go green on Build action alone. The last of those is the out-of-lane part — the 2 stale ACCEPTED entries in `modules/gdpr/gdpr-subject-erasure-authored-content.ts` fail the gate independently of anything Build does, so a Build-only fix still leaves it red.
 
   **NOT A REQUIREMENT:** the 23 sites are defects awaiting repair, not sanctioned exemptions. The gate's own baselines (69/83) are the sanctioned-exemption record, and BE-50 says such a list may only shrink.
+
+  **2026-09-28, third pass — STILL NOT EARNED. Gate re-run by this lane; every figure reproduces, three line numbers drifted again, and the (C) repair is explicitly NOT attempted here for a reason this entry records rather than a deadline it misses.**
+
+  Gate run, `backend/`, verbatim, self-test first:
+
+  ```
+  $ node src/scripts/check-lifecycle-predicates.mjs --self-test
+    FAIL: the three-way filter keeps the primary-read candidate set actionable — a gate that flags hundreds gets switched off (found 75)
+  check-lifecycle-predicates self-tests: 1 failed, 21 passed
+
+  $ node src/scripts/check-lifecycle-predicates.mjs
+  Tables 838  ·  with a lifecycle column 90  ·  read sites 2218 across 5161 files
+    predicate in statement 1003  ·  built elsewhere in file 327  ·  dormant column 125  ·  primary-read candidates 75  ·  join candidates 94
+  FAIL — 2 stale ACCEPTED entry(ies); the read is no longer a candidate. Remove them:
+    modules/gdpr/gdpr-subject-erasure-authored-content.ts::kbSources  (erasure deliberately sweeps deleted rows (report 06))
+    modules/gdpr/gdpr-subject-erasure-authored-content.ts::kbPages  (erasure deliberately sweeps deleted rows (report 06))
+  FAIL — 75 primary reads of a lifecycle table carry no predicate, 6 above the recorded baseline of 69. Run with --list.
+  FAIL — 94 joins onto a lifecycle table carry no predicate, 11 above the recorded baseline of 83. …
+  ```
+
+  **75 / 94 / 69 / 83 and the two stale gdpr entries all reproduce exactly.** The scanned surface grew (2208 → 2218 read sites, 5159 → 5161 files; `predicate in statement` 1005 → 1003, `built elsewhere in file` 321 → 327) without moving any of the four numbers the gate fails on — a peer lane's edits shifting reads between the two "has a predicate" buckets. The self-test's single red assertion is still the gate reporting on itself at 75, the same fact as the first FAIL rather than a second one.
+
+  **BUILD-TERRITORY FIGURE HOLDS AT 23 SITES ACROSS 18 FILES, for the third consecutive pass.** `--list | grep -oE "modules/build/[^ :]+:[0-9]+" | sort -u | wc -l` → **23**; the same filtered on filename → **18**. **THREE LINE NUMBERS DRIFTED AGAIN** under concurrent sibling edits, and the previous pass's warning about exactly this is now a pattern rather than an anecdote: `core/project-crud/projects-query.service.ts` **:201 → :253** · `core/roadmap/projects-roadmap.service.ts` **:225 → :287** · `core/tickets/projects-tickets-read.query.ts` **:51 → :53**. The other twenty are byte-identical to the previous pass. **Treat every line number in this entry as re-derivable, never as a citation** — the file names and the count are the stable part.
+
+  **THE (C) REPAIR WAS NOT ATTEMPTED BY THIS LANE, AND THAT IS A DECISION, NOT AN OMISSION.** Roughly twenty of the 23 sit outside the five peer lanes' territories and were technically editable here. They were left alone on three grounds, in order of weight:
+
+  1. **Each repair is a product decision, not a mechanical filter, and the entry above already proved it on its own example.** It declined to fix `listRelations` because "whether a relation to a soft-deleted ticket should vanish or render as a tombstone is a product decision", and because the list is capped at 100 rows so post-filtering would silently shrink pages. That reasoning generalises to most of the twenty. `core/activity/projects-activity.service.ts:140` reading `tickets` is an activity feed — hiding a soft-deleted ticket's history is a different product than showing it struck through. `qa/test-runs.service.ts:422` reading `tickets` is a QA result set; dropping a retired defect silently changes a run's pass rate. Adding `isNull(deletedAt)` to twenty live reads on a judgement-free sweep is the kind of change that is small in diff and large in behaviour.
+  2. **It cannot green the gate.** The two stale `ACCEPTED` entries in `modules/gdpr/gdpr-subject-erasure-authored-content.ts` fail this gate independently of anything Build does, and that file is out of lane. A Build-only repair leaves the gate red, so the repair buys no gate evidence.
+  3. **The outbox clause fails on its own regardless**, and it is the shorter route to the verdict — see below.
+
+  **THE OUTBOX CLAUSE, RE-MEASURED, AND IT HAS NOT MOVED.** Build still owns **no outbox table** (`grep -rn outbox src/db/schema/build/` → **0** hits; the shared table is `outbox_events`, `src/db/schema/common/outbox.ts:29`). It reaches the shared one through `OutboxWriter` at **5** production sites carrying **3** aggregate types, re-derived this lane:
+
+  | Aggregate type | Emit site |
+  |---|---|
+  | `ticket` | `core/tickets/apply-ticket-change.ts:302` · `core/tickets/build-ticket-batch-workflow.ts:31` |
+  | `release` | `core/releases/projects-releases.service.ts:169` |
+  | `project_webhook_delivery` | `core/webhooks/projects-webhooks-dispatch.service.ts:191`, `:376` |
+
+  `grep -rn 'OutboxWriter.emit' --include='*.ts' src/modules/build | grep -v spec | wc -l` → **5**; `grep -rn 'aggregateType: "' --include='*.ts' src/modules/build | grep -v spec` → 5 hits, 3 distinct values. Two line numbers moved (`releases` :145/:148 → :169, `webhooks` :186/:191 → :191 and :373/:376 → :376); the substance is identical. Set against the **15 entity rows** in § Canonical entities: exactly **one** of them emits a domain event. `release` and `project_webhook_delivery` are not rows in that table at all. And this document's § Migration order still carries "Introduce audit/outbox fields before moving writers" as step 7, unstarted.
+
+  **THAT REMAINS THE SHORTEST ROUTE TO THE VERDICT, and it is independent of every count above:** outbox behaviour cannot be "specified for every mutable entity" while it exists for one canonical entity of fifteen and the plan still schedules its introduction as future work.
+
+  **DECISION (C) as scoped stands unchanged** — one lifecycle spec entry per lifecycle-bearing table, repair of the 23 Build sites, then a baseline move from 69/83. What this pass adds is that the repair's cost was mis-stated as "23 query edits": it is 23 product judgements, of which the entry above made one (`listRelations`, deferred) and this one makes none. **SETTLES WHEN** each of the 23 has a recorded answer to "should this read see retired rows?", the ones answered *no* are fixed, the baselines move, the 2 gdpr entries are cleared by their owner, and the outbox clause has an implementation rather than a step 7.
+
+  **NOT A REQUIREMENT, unchanged:** the 23 are defects awaiting a judgement and then a repair, not sanctioned exemptions. The 69/83 baselines are the sanctioned-exemption record and under BE-50 they may only shrink.
