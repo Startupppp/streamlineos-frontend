@@ -3,6 +3,7 @@ import { ReleasesPage } from "./releases-page";
 
 let mockIsOnline = true;
 const mockPreventDefault = jest.fn();
+let mockDataTableProps: Record<string, unknown> = {};
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => mockIsOnline,
 }));
@@ -75,6 +76,7 @@ jest.mock("@/components/ui/data-table", () => ({
     data,
     selection,
     onRowContextMenu,
+    ...rest
   }: {
     isLoading?: boolean;
     emptyState?: React.ReactNode;
@@ -82,6 +84,7 @@ jest.mock("@/components/ui/data-table", () => ({
     selection?: { onChange: (s: Set<number>) => void };
     onRowContextMenu?: (row: { id: number; name: string }, event: { preventDefault: () => void; clientX: number; clientY: number }) => void;
   }) => {
+    mockDataTableProps = { selection, onRowContextMenu, ...rest };
     if (isLoading) return <div data-testid="table-loading" />;
     if (data?.length === 0) return <>{emptyState}</>;
     const handleSelect = () => selection?.onChange(new Set([1]));
@@ -172,7 +175,7 @@ function releaseColumnCell(
   if (cell === undefined) throw new Error(`the releases table has no ${key} column with a cell`);
   return cell;
 }
-import { useReleases, useDeleteRelease, useUpdateRelease } from "@/hooks/api/build/releases";
+import { useReleases, useDeleteRelease } from "@/hooks/api/build/releases";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockReplace = jest.fn();
@@ -192,7 +195,6 @@ beforeEach(() => {
 
 const mockUseReleases = useReleases as jest.Mock;
 const mockUseDeleteRelease = useDeleteRelease as jest.Mock;
-const mockUseUpdateRelease = useUpdateRelease as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 
@@ -227,7 +229,7 @@ beforeEach(() => {
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([]) }));
   mockUseDeleteRelease.mockReturnValue({ mutate: jest.fn(), isPending: false });
-  mockUseUpdateRelease.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockDataTableProps = {};
 });
 
 it("renders NoPermissionState when build:view is denied instead of empty releases table", () => {
@@ -292,43 +294,6 @@ const OWNER = {
   lastName: "Lovelace",
   email: "ada@example.test",
 };
-
-it("shows bulk action bar with count after row is selected", () => {
-  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
-  render(<ReleasesPage projectId={1} />);
-  expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
-  fireEvent.click(screen.getByTestId("table-rows"));
-  expect(screen.getByText("1 selected")).toBeInTheDocument();
-});
-
-it("sends the row's rowVersion with a bulk status change, because the backend rejects an untokened update", () => {
-  const mutate = jest.fn();
-  mockUseUpdateRelease.mockReturnValue({ mutate, isPending: false });
-  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
-  render(<ReleasesPage projectId={1} />);
-  fireEvent.click(screen.getByTestId("table-rows"));
-  fireEvent.click(screen.getByTestId("select-released"));
-  expect(mutate).toHaveBeenCalledTimes(1);
-  expect(mutate.mock.calls[0]?.[0]).toEqual({ releaseId: 1, rowVersion: 4, status: "released" });
-});
-
-it("sends no bulk update for a selected id that is not on the current page, so no row is saved without its token", () => {
-  const mutate = jest.fn();
-  mockUseUpdateRelease.mockReturnValue({ mutate, isPending: false });
-  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([{ ...releaseRow, id: 99 }]) }));
-  render(<ReleasesPage projectId={1} />);
-  fireEvent.click(screen.getByTestId("table-rows"));
-  fireEvent.click(screen.getByTestId("select-released"));
-  expect(mutate).not.toHaveBeenCalled();
-});
-
-it("hides bulk action bar after clear button is clicked", () => {
-  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
-  render(<ReleasesPage projectId={1} />);
-  fireEvent.click(screen.getByTestId("table-rows"));
-  fireEvent.click(screen.getByLabelText("Clear selection"));
-  expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
-});
 
 it("shows the offline notice when the user loses connectivity", () => {
   mockIsOnline = false;
@@ -600,5 +565,24 @@ describe("right click on a release row opens the row's authorized actions", () =
     fireEvent.click(screen.getByTestId("row-contextmenu-1"));
     fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
     expect(screen.getByTestId("confirm-delete")).toHaveTextContent("v1.0.0");
+  });
+});
+
+describe("a release is never selected as a row, because it is this page's primary record", () => {
+  it("passes no selection to the table, so no checkbox column and no bulk status strip exist", () => {
+    mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
+    render(<ReleasesPage projectId={1} />);
+    expect(mockDataTableProps.selection).toBeUndefined();
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Set status…")).not.toBeInTheDocument();
+  });
+
+  it("still reaches one release's status through its own edit sheet, so removing the strip removed no capability", () => {
+    mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
+    render(<ReleasesPage projectId={1} />);
+    expect(screen.queryByTestId("release-form-sheet")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("row-contextmenu-1"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+    expect(screen.getByTestId("release-form-sheet")).toBeInTheDocument();
   });
 });
