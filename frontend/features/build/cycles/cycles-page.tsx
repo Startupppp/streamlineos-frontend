@@ -140,12 +140,10 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   }, [listFilters, nextCycleCursor, urlCursor]);
 
   const handlePreviousPage = useCallback(() => {
-    setVisitedCursors((current) => {
-      const previous = current[current.length - 1] ?? null;
-      listFilters.setCursor(previous);
-      return current.slice(0, -1);
-    });
-  }, [listFilters]);
+    const previous = visitedCursors[visitedCursors.length - 1] ?? null;
+    setVisitedCursors((current) => current.slice(0, -1));
+    listFilters.setCursor(previous);
+  }, [listFilters, visitedCursors]);
   const { data: tickets = [] } = useProjectBoardTickets(projectId);
   const { data: projectData } = useProject(projectId);
   const projectStatuses = projectData?.statuses ?? [];
