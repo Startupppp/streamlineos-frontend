@@ -1099,3 +1099,30 @@ describe("ProjectWebhooksPage — j/k focus, Enter and / (BLD-X-FE-SETTINGS-WH-0
     expect(cards[1]).toHaveAttribute("data-expanded", "true");
   });
 });
+
+describe("ProjectWebhooksPage — bulk actions offline (BLD-X-FE-SETTINGS-WH-044)", () => {
+  it("hides the bulk action bar while offline, because none of its commands can reach the server", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    (
+      jest.requireMock("@/hooks/common/use-online-status") as {
+        useOnlineStatus: jest.Mock;
+      }
+    ).useOnlineStatus.mockReturnValue(false);
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: "select-1" }));
+    expect(
+      screen.queryByRole("region", { name: /webhook bulk actions/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows the bulk action bar for the same selection when online — paired with the offline assertion above", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: "select-1" }));
+    expect(
+      screen.getByRole("region", { name: /webhook bulk actions/i }),
+    ).toBeInTheDocument();
+  });
+});

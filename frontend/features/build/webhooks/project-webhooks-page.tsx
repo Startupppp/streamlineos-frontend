@@ -609,7 +609,7 @@ export function ProjectWebhooksPage({
             className="flex-1"
           >
             <div className="flex min-h-0 flex-1 flex-col gap-2">
-              {canManage && selectedIds.size > 0 && (
+              {canManage && isOnline && selectedIds.size > 0 && (
                 <WebhookBulkBar
                   selectedCount={selectedIds.size}
                   canEnable={selectedWebhooks.every((wh) => !wh.isActive)}
