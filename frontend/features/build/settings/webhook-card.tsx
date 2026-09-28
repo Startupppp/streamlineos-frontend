@@ -11,6 +11,7 @@ import {
 } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Switch } from "@/components/ui/switch";
@@ -131,6 +132,9 @@ interface WebhookCardProps {
   onToggle?: (webhook: Pick<ProjectWebhook, "id" | "version">, isActive: boolean) => void;
   onEdit?: (webhook: ProjectWebhook) => void;
   canManage?: boolean;
+  density?: "compact" | "comfortable";
+  selected?: boolean;
+  onSelectedChange?: (webhookId: number, selected: boolean) => void;
 }
 
 export function WebhookCard({
@@ -140,6 +144,9 @@ export function WebhookCard({
   onToggle,
   onEdit,
   canManage = false,
+  density = "compact",
+  selected = false,
+  onSelectedChange,
 }: WebhookCardProps) {
   const accessState = useCanState("build:manage");
   const [expanded, setExpanded] = useState(false);
@@ -187,6 +194,13 @@ export function WebhookCard({
     [onToggle, webhook.id, webhook.version],
   );
 
+  const handleSelectedChange = useCallback(
+    (checked: boolean | "indeterminate") => {
+      onSelectedChange?.(webhook.id, checked === true);
+    },
+    [onSelectedChange, webhook.id],
+  );
+
   const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
     setMenuOpen(true);
@@ -219,7 +233,20 @@ export function WebhookCard({
       )}
       onContextMenu={handleContextMenu}
     >
-      <div className="flex items-center gap-3 p-3.5">
+      <div
+        className={cn(
+          "flex items-center gap-3",
+          density === "comfortable" ? "p-3.5" : "p-2",
+        )}
+      >
+        {onSelectedChange && (
+          <Checkbox
+            checked={selected}
+            onCheckedChange={handleSelectedChange}
+            aria-label={`Select ${webhook.url}`}
+            className="shrink-0"
+          />
+        )}
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
           <Zap className="h-4 w-4 text-muted-foreground" />
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
@@ -37,7 +37,12 @@ import {
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
-import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
+import { WebhookBulkBar } from "@/features/build/webhooks/webhook-bulk-bar";
+import {
+  WebhookConflictDialog,
+  diffWebhookConflictFields,
+  type WebhookConflictPatch,
+} from "@/features/build/webhooks/webhook-conflict-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
@@ -116,6 +121,15 @@ export function ProjectWebhooksPage({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const [editingWebhook, setEditingWebhook] = useState<ProjectWebhook | null>(null);
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
+    () => new Set<number>(),
+  );
+  const [density, setDensity] = useState<"compact" | "comfortable">("compact");
+  const [bulkPending, setBulkPending] = useState(false);
+  const [conflict, setConflict] = useState<{
+    webhookId: number;
+    patch: WebhookConflictPatch;
+  } | null>(null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -158,6 +172,7 @@ export function ProjectWebhooksPage({
         }
       }
       params.delete(BUILD_CURSOR_STACK_PARAM);
+      setSelectedIds(new Set<number>());
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
@@ -231,6 +246,18 @@ export function ProjectWebhooksPage({
   });
   useRegisterDirtyState(sheetOpen && form.formState.isDirty);
 
+  const handleMutationError = useCallback(
+    (error: unknown, webhookId: number, patch: WebhookConflictPatch) => {
+      if (isApiError(error) && error.status === 409) {
+        setConflict({ webhookId, patch });
+        void refetch();
+        return;
+      }
+      toast.error(getErrorMessage(error));
+    },
+    [refetch],
+  );
+
   const handleSubmit = useCallback(
     (values: WebhookFormValues) => {
       if (editingWebhook) {
@@ -243,7 +270,11 @@ export function ProjectWebhooksPage({
               setEditingWebhook(null);
               toast.success("Webhook updated");
             },
-            onError: (e) => toast.error(getErrorMessage(e)),
+            onError: (e) =>
+              handleMutationError(e, editingWebhook.id, {
+                url: values.url,
+                events: values.events,
+              }),
           },
         );
       } else {
@@ -260,7 +291,7 @@ export function ProjectWebhooksPage({
         );
       }
     },
-    [createWebhook, updateWebhook, editingWebhook, form],
+    [createWebhook, updateWebhook, editingWebhook, form, handleMutationError],
   );
 
   const handleDelete = useCallback(
@@ -280,27 +311,11 @@ export function ProjectWebhooksPage({
         {
           onSuccess: () =>
             toast.success(isActive ? "Webhook enabled" : "Webhook disabled"),
-          onError: (e) => {
-            if (isApiError(e) && e.status === 409) {
-              const diff: TicketConflictFieldDiff[] = [
-                {
-                  key: "isActive",
-                  label: "Active",
-                  serverValue: "changed — reload to see current",
-                  pendingValue: isActive ? "Enabled" : "Disabled",
-                },
-              ];
-              toast.error(
-                `Webhook conflict on "${diff[0].label}": you set "${diff[0].pendingValue}" but the server has a newer version. Reload to retry.`,
-              );
-            } else {
-              toast.error(getErrorMessage(e));
-            }
-          },
+          onError: (e) => handleMutationError(e, webhook.id, { isActive }),
         },
       );
     },
-    [updateWebhook],
+    [updateWebhook, handleMutationError],
   );
 
   const handleRetry = useCallback(() => {
@@ -325,13 +340,132 @@ export function ProjectWebhooksPage({
   const handleShowForm = useCallback(() => setSheetOpen(true), []);
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
-  const webhookList = webhooks ?? [];
+  const webhookList = useMemo(() => webhooks ?? [], [webhooks]);
   const nextCursor = webhookPage?.nextCursor ?? null;
   const handleNextPage = useCallback(() => {
     pager.goNext(nextCursor === null ? undefined : String(nextCursor));
   }, [pager, nextCursor]);
   const handleOpenWebhook = useCallback((_index: number) => {}, []);
-  const handleClearWebhookSelection = useCallback(() => {}, []);
+  const handleClearWebhookSelection = useCallback(() => {
+    setSelectedIds(new Set<number>());
+  }, []);
+  const handleSelectedChange = useCallback(
+    (webhookId: number, selected: boolean) => {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (selected) {
+          next.add(webhookId);
+        } else {
+          next.delete(webhookId);
+        }
+        return next;
+      });
+    },
+    [],
+  );
+  const handleDensityToggle = useCallback(() => {
+    setDensity((prev) => (prev === "compact" ? "comfortable" : "compact"));
+  }, []);
+
+  const selectedWebhooks = useMemo(
+    () => webhookList.filter((wh) => selectedIds.has(wh.id)),
+    [webhookList, selectedIds],
+  );
+
+  const reportBulkOutcome = useCallback(
+    (
+      verb: string,
+      results: PromiseSettledResult<unknown>[],
+      rows: ProjectWebhook[],
+    ) => {
+      const failed = rows.filter((_, i) => results[i]?.status === "rejected");
+      const succeeded = rows.length - failed.length;
+      if (failed.length === 0) {
+        toast.success(`${succeeded} webhook${succeeded === 1 ? "" : "s"} ${verb}`);
+        return;
+      }
+      toast.error(
+        `${succeeded} of ${rows.length} ${verb}. Failed: ${failed
+          .map((row) => row.url)
+          .join(", ")}`,
+      );
+    },
+    [],
+  );
+
+  const handleBulkActive = useCallback(
+    (isActive: boolean) => {
+      const rows = selectedWebhooks;
+      if (rows.length === 0) return;
+      setBulkPending(true);
+      void Promise.allSettled(
+        rows.map((row) =>
+          updateWebhook.mutateAsync({
+            webhookId: row.id,
+            version: row.version,
+            isActive,
+          }),
+        ),
+      ).then((results) => {
+        setBulkPending(false);
+        setSelectedIds(new Set<number>());
+        reportBulkOutcome(isActive ? "enabled" : "disabled", results, rows);
+      });
+    },
+    [selectedWebhooks, updateWebhook, reportBulkOutcome],
+  );
+
+  const handleBulkEnable = useCallback(
+    () => handleBulkActive(true),
+    [handleBulkActive],
+  );
+  const handleBulkDisable = useCallback(
+    () => handleBulkActive(false),
+    [handleBulkActive],
+  );
+
+  const handleBulkDelete = useCallback(() => {
+    const rows = selectedWebhooks;
+    if (rows.length === 0) return;
+    setBulkPending(true);
+    void Promise.allSettled(
+      rows.map((row) => deleteWebhook.mutateAsync(row.id)),
+    ).then((results) => {
+      setBulkPending(false);
+      setSelectedIds(new Set<number>());
+      reportBulkOutcome("deleted", results, rows);
+    });
+  }, [selectedWebhooks, deleteWebhook, reportBulkOutcome]);
+
+  const conflictServerWebhook =
+    conflict === null
+      ? undefined
+      : webhookList.find((wh) => wh.id === conflict.webhookId);
+
+  const conflictFields =
+    conflict === null || conflictServerWebhook === undefined
+      ? []
+      : diffWebhookConflictFields(conflict.patch, conflictServerWebhook);
+
+  const handleConflictDiscard = useCallback(() => setConflict(null), []);
+
+  const handleConflictKeepMine = useCallback(() => {
+    if (conflict === null || conflictServerWebhook === undefined) {
+      setConflict(null);
+      return;
+    }
+    const { webhookId, patch } = conflict;
+    updateWebhook.mutate(
+      { webhookId, version: conflictServerWebhook.version, ...patch },
+      {
+        onSuccess: () => {
+          setConflict(null);
+          toast.success("Webhook updated");
+        },
+        onError: (e) => handleMutationError(e, webhookId, patch),
+      },
+    );
+  }, [conflict, conflictServerWebhook, updateWebhook, handleMutationError]);
   const handleEditFocusedWebhook = useCallback(
     (index: number) => {
       const focused = webhookList[index];
@@ -406,6 +540,15 @@ export function ProjectWebhooksPage({
               className="h-8 text-sm w-36 shrink-0"
               aria-label="Filter to date"
             />
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              aria-pressed={density === "comfortable"}
+              onClick={handleDensityToggle}
+            >
+              {density === "comfortable" ? "Comfortable" : "Compact"}
+            </Button>
           </div>
           <PageState
             resolution={pageState}
@@ -449,6 +592,18 @@ export function ProjectWebhooksPage({
             className="flex-1"
           >
             <div className="flex min-h-0 flex-1 flex-col gap-2">
+              {canManage && selectedIds.size > 0 && (
+                <WebhookBulkBar
+                  selectedCount={selectedIds.size}
+                  canEnable={selectedWebhooks.every((wh) => !wh.isActive)}
+                  canDisable={selectedWebhooks.every((wh) => wh.isActive)}
+                  isPending={bulkPending}
+                  onEnable={handleBulkEnable}
+                  onDisable={handleBulkDisable}
+                  onDelete={handleBulkDelete}
+                  onClear={handleClearWebhookSelection}
+                />
+              )}
               <PmStaggerList
                 className="space-y-2.5"
                 role="list"
@@ -464,6 +619,11 @@ export function ProjectWebhooksPage({
                         onToggle={canManage ? handleToggle : undefined}
                         onEdit={canManage ? handleEdit : undefined}
                         canManage={canManage}
+                        density={density}
+                        selected={selectedIds.has(wh.id)}
+                        onSelectedChange={
+                          canManage ? handleSelectedChange : undefined
+                        }
                       />
                     </div>
                   ))}
@@ -484,6 +644,14 @@ export function ProjectWebhooksPage({
       </PmPageShell>
 
       <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
+
+      <WebhookConflictDialog
+        open={conflict !== null}
+        fields={conflictFields}
+        isReapplying={updateWebhook.isPending}
+        onKeepMine={handleConflictKeepMine}
+        onDiscard={handleConflictDiscard}
+      />
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md overflow-hidden">

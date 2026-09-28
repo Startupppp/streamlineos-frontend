@@ -1,4 +1,4 @@
-import { render, screen, act, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, act, fireEvent, waitFor, within } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectWebhooksPage } from "./project-webhooks-page";
 import type { ProjectWebhook } from "@/hooks/api/build/webhooks";
@@ -95,8 +95,16 @@ jest.mock("@/hooks/api/build/webhooks", () => ({
     };
   },
   useCreateWebhook: () => ({ mutate: jest.fn(), isPending: false }),
-  useDeleteWebhook: () => ({ mutate: jest.fn(), isPending: false }),
-  useUpdateWebhook: () => ({ mutate: mockUpdateMutate, isPending: false }),
+  useDeleteWebhook: () => ({
+    mutate: jest.fn(),
+    mutateAsync: mockDeleteMutateAsync,
+    isPending: false,
+  }),
+  useUpdateWebhook: () => ({
+    mutate: mockUpdateMutate,
+    mutateAsync: mockUpdateMutateAsync,
+    isPending: false,
+  }),
 }));
 
 jest.mock("@/components/shared/dirty-state-context", () => ({
@@ -105,6 +113,8 @@ jest.mock("@/components/shared/dirty-state-context", () => ({
 }));
 
 const mockUpdateMutate = jest.fn();
+const mockUpdateMutateAsync = jest.fn((_vars?: unknown) => Promise.resolve());
+const mockDeleteMutateAsync = jest.fn((_webhookId?: unknown) => Promise.resolve());
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 jest.mock("@/lib/api-envelope", () => ({
   isApiError: (e: unknown): e is { status: number; details?: unknown } =>
@@ -116,16 +126,31 @@ jest.mock("@/features/build/settings/webhook-card", () => ({
     webhook,
     onToggle,
     onEdit,
+    density,
+    selected,
+    onSelectedChange,
   }: {
     webhook: ProjectWebhook;
     onToggle?: (wh: Pick<ProjectWebhook, "id" | "version">, isActive: boolean) => void;
     onEdit?: (wh: ProjectWebhook) => void;
+    density?: string;
+    selected?: boolean;
+    onSelectedChange?: (webhookId: number, selected: boolean) => void;
   }) => (
-    <div data-testid="webhook-card" data-url={webhook.url}>
+    <div
+      data-testid="webhook-card"
+      data-url={webhook.url}
+      data-density={density}
+      data-selected={selected === true ? "true" : "false"}
+      data-selectable={onSelectedChange === undefined ? "false" : "true"}
+    >
       <button onClick={() => onToggle?.({ id: webhook.id, version: webhook.version }, false)}>
         toggle-off
       </button>
       <button onClick={() => onEdit?.(webhook)}>edit-webhook</button>
+      <button onClick={() => onSelectedChange?.(webhook.id, selected !== true)}>
+        {`select-${webhook.id}`}
+      </button>
     </div>
   ),
 }));
@@ -174,6 +199,10 @@ beforeEach(() => {
   mockUseBuildCursorPager.mockClear();
   mockUseBuildListKeyboard.mockClear();
   mockUpdateMutate.mockClear();
+  mockUpdateMutateAsync.mockClear();
+  mockUpdateMutateAsync.mockImplementation((_vars?: unknown) => Promise.resolve());
+  mockDeleteMutateAsync.mockClear();
+  mockDeleteMutateAsync.mockImplementation((_webhookId?: unknown) => Promise.resolve());
   mockSearchParams = new URLSearchParams();
   (
     jest.requireMock("@/hooks/common/use-online-status") as {
@@ -681,7 +710,7 @@ describe("ProjectWebhooksPage — edit Sheet (BLD-X-FE-SETTINGS-WH-036)", () => 
 });
 
 describe("ProjectWebhooksPage — 409 conflict UX on toggle (BLD-X-FE-SETTINGS-WH-037)", () => {
-  it("a 409 from updateWebhook shows a field-level conflict toast, not the generic error string", async () => {
+  it("a 409 from updateWebhook opens the conflict overlay comparing the server value with the submitted one, instead of only a toast", async () => {
     mockAccessState = "granted";
     mockWebhooks = [{ ...SAMPLE_WEBHOOK, isActive: true }];
     render(<ProjectWebhooksPage projectId="1" />);
@@ -692,10 +721,65 @@ describe("ProjectWebhooksPage — 409 conflict UX on toggle (BLD-X-FE-SETTINGS-W
     act(() => {
       options.onError?.({ status: 409, details: { currentVersion: 5 } });
     });
-    const { toast } = jest.requireMock("sonner") as { toast: { error: jest.Mock } };
-    expect(toast.error).toHaveBeenCalledWith(
-      expect.stringMatching(/conflict|active/i),
+    expect(
+      screen.getByText("This webhook changed while you were editing"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("On the server now")).toBeInTheDocument();
+    expect(screen.getByText("Enabled")).toBeInTheDocument();
+    expect(screen.getByText("Disabled")).toBeInTheDocument();
+  });
+
+  it("Keep my changes resubmits the patch with the server's current version, so the retry cannot collide on the stale token", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [{ ...SAMPLE_WEBHOOK, isActive: true, version: 9 }];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getAllByRole("button", { name: /toggle-off/i })[0]);
+    const [[, options]] = mockUpdateMutate.mock.calls as [
+      [unknown, { onError?: (e: unknown) => void }],
+    ];
+    act(() => {
+      options.onError?.({ status: 409, details: { currentVersion: 9 } });
+    });
+    mockUpdateMutate.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: /keep my changes/i }));
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        webhookId: SAMPLE_WEBHOOK.id,
+        version: 9,
+        isActive: false,
+      }),
+      expect.any(Object),
     );
+  });
+
+  it("Discard my changes closes the conflict overlay without issuing another write", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [{ ...SAMPLE_WEBHOOK, isActive: true }];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getAllByRole("button", { name: /toggle-off/i })[0]);
+    const [[, options]] = mockUpdateMutate.mock.calls as [
+      [unknown, { onError?: (e: unknown) => void }],
+    ];
+    act(() => {
+      options.onError?.({ status: 409, details: { currentVersion: 5 } });
+    });
+    mockUpdateMutate.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: /discard my changes/i }));
+    await waitFor(() => {
+      expect(
+        screen.queryByText("This webhook changed while you were editing"),
+      ).not.toBeInTheDocument();
+    });
+    expect(mockUpdateMutate).not.toHaveBeenCalled();
+  });
+
+  it("the conflict overlay is absent before any 409 — paired with the open assertion so it cannot pass on a blank frame", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(
+      screen.queryByText("This webhook changed while you were editing"),
+    ).not.toBeInTheDocument();
   });
 
   it("a non-409 error from updateWebhook shows the plain toast — the 409 branch does not swallow other errors", async () => {
@@ -711,5 +795,205 @@ describe("ProjectWebhooksPage — 409 conflict UX on toggle (BLD-X-FE-SETTINGS-W
       options.onError?.(new Error("network error"));
     });
     expect(toast.error).toHaveBeenCalledWith(expect.not.stringMatching(/conflict/i));
+  });
+});
+
+describe("ProjectWebhooksPage — bulk actions (BLD-X-FE-SETTINGS-WH-038)", () => {
+  function selectFirstWebhook() {
+    fireEvent.click(screen.getByRole("button", { name: "select-1" }));
+  }
+
+  it("shows no bulk action bar until a row is selected — the primary record itself is never selected", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(
+      screen.queryByRole("region", { name: /webhook bulk actions/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows the bulk action bar with the selected count once a row is selected", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    selectFirstWebhook();
+    expect(
+      screen.getByRole("region", { name: /webhook bulk actions/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+  });
+
+  it("does not offer row selection when the viewer cannot manage — bulk writes fail closed", () => {
+    mockAccessState = "denied";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.queryByRole("button", { name: "select-1" })).not.toBeInTheDocument();
+  });
+
+  it("offers Disable but not Enable when every selected row is already active — the transition must be valid for all of them", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [{ ...SAMPLE_WEBHOOK, isActive: true }];
+    render(<ProjectWebhooksPage projectId="1" />);
+    selectFirstWebhook();
+    expect(screen.getByRole("button", { name: "Disable" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Enable" })).toBeDisabled();
+  });
+
+  it("offers Enable but not Disable when every selected row is inactive", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [{ ...SAMPLE_WEBHOOK, isActive: false }];
+    render(<ProjectWebhooksPage projectId="1" />);
+    selectFirstWebhook();
+    expect(screen.getByRole("button", { name: "Enable" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Disable" })).toBeDisabled();
+  });
+
+  it("offers neither Enable nor Disable on a mixed selection, because one request would be a no-op for half the rows", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [
+      { ...SAMPLE_WEBHOOK, id: 1, isActive: true },
+      { ...SAMPLE_WEBHOOK, id: 2, url: "https://b.example.com", isActive: false },
+    ];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: "select-1" }));
+    fireEvent.click(screen.getByRole("button", { name: "select-2" }));
+    expect(screen.getByRole("button", { name: "Enable" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Disable" })).toBeDisabled();
+  });
+
+  it("bulk Disable sends one update per selected row carrying that row's own version token", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [
+      { ...SAMPLE_WEBHOOK, id: 1, isActive: true, version: 3 },
+      { ...SAMPLE_WEBHOOK, id: 2, url: "https://b.example.com", isActive: true, version: 7 },
+    ];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: "select-1" }));
+    fireEvent.click(screen.getByRole("button", { name: "select-2" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Disable" }));
+    });
+    expect(mockUpdateMutateAsync).toHaveBeenCalledWith({ webhookId: 1, version: 3, isActive: false });
+    expect(mockUpdateMutateAsync).toHaveBeenCalledWith({ webhookId: 2, version: 7, isActive: false });
+  });
+
+  it("reports the whole-batch result when every row succeeds", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [{ ...SAMPLE_WEBHOOK, isActive: true }];
+    render(<ProjectWebhooksPage projectId="1" />);
+    selectFirstWebhook();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Disable" }));
+    });
+    const { toast } = jest.requireMock("sonner") as { toast: { success: jest.Mock } };
+    expect(toast.success).toHaveBeenCalledWith("1 webhook disabled");
+  });
+
+  it("names the rows that failed on a partial success, rather than reporting the batch as done", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [
+      { ...SAMPLE_WEBHOOK, id: 1, isActive: true, version: 1 },
+      { ...SAMPLE_WEBHOOK, id: 2, url: "https://b.example.com", isActive: true, version: 1 },
+    ];
+    mockUpdateMutateAsync.mockImplementation((vars?: unknown) => {
+      const webhookId = (vars as { webhookId: number }).webhookId;
+      return webhookId === 2 ? Promise.reject(new Error("boom")) : Promise.resolve();
+    });
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: "select-1" }));
+    fireEvent.click(screen.getByRole("button", { name: "select-2" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Disable" }));
+    });
+    const { toast } = jest.requireMock("sonner") as { toast: { error: jest.Mock } };
+    expect(toast.error).toHaveBeenCalledWith(
+      "1 of 2 disabled. Failed: https://b.example.com",
+    );
+  });
+
+  it("bulk delete confirms first and then deletes every selected row", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [{ ...SAMPLE_WEBHOOK, id: 1 }];
+    render(<ProjectWebhooksPage projectId="1" />);
+    selectFirstWebhook();
+    fireEvent.click(
+      within(screen.getByRole("region", { name: /webhook bulk actions/i })).getByRole(
+        "button",
+        { name: "Delete" },
+      ),
+    );
+    const dialog = await screen.findByRole("alertdialog");
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+    });
+    expect(mockDeleteMutateAsync).toHaveBeenCalledWith(1);
+  });
+
+  it("clearing the selection removes the bulk bar", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    selectFirstWebhook();
+    fireEvent.click(screen.getByRole("button", { name: /clear selection/i }));
+    expect(
+      screen.queryByRole("region", { name: /webhook bulk actions/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("changing a filter drops the selection, so a bulk action cannot apply to rows that scrolled out of the filtered set", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    selectFirstWebhook();
+    fireEvent.change(screen.getByLabelText("Filter from date"), {
+      target: { value: "2026-02-01" },
+    });
+    expect(
+      screen.queryByRole("region", { name: /webhook bulk actions/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("Esc clears the selection through the shared list keyboard hook", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    selectFirstWebhook();
+    const onClearSelection =
+      mockUseBuildListKeyboard.mock.calls.at(-1)?.[0]?.onClearSelection;
+    act(() => {
+      onClearSelection?.();
+    });
+    expect(
+      screen.queryByRole("region", { name: /webhook bulk actions/i }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectWebhooksPage — density toggle (BLD-X-FE-SETTINGS-WH-039)", () => {
+  it("starts compact, as the page contract requires compact by default", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByTestId("webhook-card")).toHaveAttribute("data-density", "compact");
+  });
+
+  it("switches the rows to comfortable density when the toggle is pressed", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: "Compact" }));
+    expect(screen.getByTestId("webhook-card")).toHaveAttribute(
+      "data-density",
+      "comfortable",
+    );
+  });
+
+  it("switches back to compact on a second press, so the toggle is reversible", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: "Compact" }));
+    fireEvent.click(screen.getByRole("button", { name: "Comfortable" }));
+    expect(screen.getByTestId("webhook-card")).toHaveAttribute("data-density", "compact");
   });
 });

@@ -411,3 +411,103 @@ describe("WebhookCard — right-click context menu (BLD-X-FE-SETTINGS-WH-028)", 
     expect(onEdit).toHaveBeenCalledWith(BASE_WEBHOOK);
   });
 });
+
+describe("WebhookCard — row selection for bulk actions (BLD-X-FE-SETTINGS-WH-040)", () => {
+  it("renders a selection checkbox when the page passes onSelectedChange", () => {
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+        onSelectedChange={jest.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("checkbox", { name: `Select ${BASE_WEBHOOK.url}` }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders no selection checkbox when the page passes no onSelectedChange — paired so the positive cannot pass on an always-on control", () => {
+    render(
+      <WebhookCard webhook={BASE_WEBHOOK} projectId={3} onDelete={jest.fn()} canManage />,
+    );
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  });
+
+  it("reports the row id and the new state when the checkbox is clicked", () => {
+    const onSelectedChange = jest.fn();
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+        onSelectedChange={onSelectedChange}
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: `Select ${BASE_WEBHOOK.url}` }),
+    );
+    expect(onSelectedChange).toHaveBeenCalledWith(BASE_WEBHOOK.id, true);
+  });
+
+  it("reports deselection when an already selected row is clicked", () => {
+    const onSelectedChange = jest.fn();
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+        selected
+        onSelectedChange={onSelectedChange}
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: `Select ${BASE_WEBHOOK.url}` }),
+    );
+    expect(onSelectedChange).toHaveBeenCalledWith(BASE_WEBHOOK.id, false);
+  });
+});
+
+describe("diffWebhookConflictFields — field-level server/current comparison (BLD-X-FE-SETTINGS-WH-041)", () => {
+  it("reports the active flag with both sides when the server disagrees with the submitted value", async () => {
+    const { diffWebhookConflictFields } = await import(
+      "@/features/build/webhooks/webhook-conflict-dialog"
+    );
+    expect(diffWebhookConflictFields({ isActive: false }, BASE_WEBHOOK)).toEqual([
+      { key: "isActive", label: "Active", serverValue: "Enabled", pendingValue: "Disabled" },
+    ]);
+  });
+
+  it("reports url and events together when an edit collided on both", async () => {
+    const { diffWebhookConflictFields } = await import(
+      "@/features/build/webhooks/webhook-conflict-dialog"
+    );
+    const fields = diffWebhookConflictFields(
+      { url: "https://new.example.com/hook", events: ["comment.created"] },
+      BASE_WEBHOOK,
+    );
+    expect(fields.map((f) => f.key)).toEqual(["url", "events"]);
+    expect(fields[0]).toEqual({
+      key: "url",
+      label: "Payload URL",
+      serverValue: BASE_WEBHOOK.url,
+      pendingValue: "https://new.example.com/hook",
+    });
+    expect(fields[1].serverValue).toBe("ticket.created, ticket.updated");
+  });
+
+  it("reports nothing for a field the server already agrees with, so the overlay never shows a false difference", async () => {
+    const { diffWebhookConflictFields } = await import(
+      "@/features/build/webhooks/webhook-conflict-dialog"
+    );
+    expect(
+      diffWebhookConflictFields(
+        { url: BASE_WEBHOOK.url, events: ["ticket.updated", "ticket.created"], isActive: true },
+        BASE_WEBHOOK,
+      ),
+    ).toEqual([]);
+  });
+});

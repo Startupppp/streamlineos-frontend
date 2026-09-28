@@ -32,20 +32,24 @@ jest.mock("@/hooks/api/build/tickets", () => ({
     mockUseProjectBoardTickets(...args),
 }));
 
-const mockUseWorkloadCapacity = jest.fn(() => new Map());
+const mockUseWorkloadCapacity = jest.fn((..._args: unknown[]) => new Map());
 
 jest.mock("@/hooks/api/build/workload-capacity", () => ({
   useWorkloadCapacity: (...args: unknown[]) =>
     mockUseWorkloadCapacity(...args),
 }));
 
-const mockUseProjectTeams = jest.fn(() => ({ data: undefined }));
+const mockUseProjectTeams = jest.fn(
+  (..._args: unknown[]) => ({ data: undefined }) as { data: unknown },
+);
 
 jest.mock("@/hooks/api/build/teams", () => ({
   useProjectTeams: (...args: unknown[]) => mockUseProjectTeams(...args),
 }));
 
-const mockUsePageState = jest.fn();
+const mockUsePageState = jest.fn(
+  (..._args: unknown[]) => ({ kind: "ready" }) as { kind: string; permission?: string },
+);
 
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: (...args: unknown[]) => mockUsePageState(...args),
@@ -57,7 +61,9 @@ jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => mockUseOnlineStatus(),
 }));
 
-const mockUseBuildListKeyboard = jest.fn(() => ({ focusedIndex: null }));
+const mockUseBuildListKeyboard = jest.fn((..._args: unknown[]) => ({
+  focusedIndex: null,
+}));
 
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: unknown[]) =>
@@ -217,11 +223,11 @@ describe("WorkloadBoardPage — URL param forwarding to useWorkloadCapacity", ()
     renderPage();
     const calls = mockUseWorkloadCapacity.mock.calls;
     expect(calls.length).toBeGreaterThan(0);
-    const [, start, end] = calls[0];
+    const [, start, end] = calls[0] as unknown[];
     expect(typeof start).toBe("string");
     expect(typeof end).toBe("string");
-    expect(start.length).toBe(10);
-    expect(end.length).toBe(10);
+    expect(String(start).length).toBe(10);
+    expect(String(end).length).toBe(10);
   });
 
   it("passes teamId as a number to useWorkloadCapacity when the teamId URL param is present so the capacity endpoint can filter by team", () => {
@@ -408,7 +414,7 @@ describe("WorkloadBoardPage — offline state", () => {
 describe("WorkloadBoardPage — keyboard shortcuts", () => {
   it("wires onShortcutHelp to useBuildListKeyboard so the ? key opens the shortcut help dialog (CCG-4)", () => {
     renderPage();
-    const call = mockUseBuildListKeyboard.mock.calls[0][0] as {
+    const call = mockUseBuildListKeyboard.mock.calls[0]?.[0] as {
       onShortcutHelp?: () => void;
     };
     expect(typeof call.onShortcutHelp).toBe("function");
@@ -416,7 +422,7 @@ describe("WorkloadBoardPage — keyboard shortcuts", () => {
 
   it("calling onShortcutHelp from useBuildListKeyboard opens the ShortcutHelpDialog", () => {
     renderPage();
-    const call = mockUseBuildListKeyboard.mock.calls[0][0] as {
+    const call = mockUseBuildListKeyboard.mock.calls[0]?.[0] as {
       onShortcutHelp?: () => void;
     };
     act(() => {
@@ -427,7 +433,7 @@ describe("WorkloadBoardPage — keyboard shortcuts", () => {
 
   it("wires onCreate to useBuildListKeyboard so the c key opens the create ticket dialog", () => {
     renderPage();
-    const call = mockUseBuildListKeyboard.mock.calls[0][0] as {
+    const call = mockUseBuildListKeyboard.mock.calls[0]?.[0] as {
       onCreate?: () => void;
     };
     expect(typeof call.onCreate).toBe("function");
