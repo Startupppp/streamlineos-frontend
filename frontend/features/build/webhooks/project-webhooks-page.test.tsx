@@ -954,17 +954,44 @@ describe("ProjectWebhooksPage — bulk actions (BLD-X-FE-SETTINGS-WH-038)", () =
     ).not.toBeInTheDocument();
   });
 
-  it("changing a filter drops the selection, so a bulk action cannot apply to rows that scrolled out of the filtered set", () => {
+  it("drops the selection once the filter in the URL has changed, so a bulk action cannot apply to rows outside the filtered set", () => {
     mockAccessState = "granted";
     mockWebhooks = [SAMPLE_WEBHOOK];
-    render(<ProjectWebhooksPage projectId="1" />);
+    const { rerender } = render(<ProjectWebhooksPage projectId="1" />);
     selectFirstWebhook();
-    fireEvent.change(screen.getByLabelText("Filter from date"), {
-      target: { value: "2026-02-01" },
-    });
+    expect(
+      screen.getByRole("region", { name: /webhook bulk actions/i }),
+    ).toBeInTheDocument();
+    mockSearchParams = new URLSearchParams("from=2026-02-01");
+    rerender(<ProjectWebhooksPage projectId="1" />);
     expect(
       screen.queryByRole("region", { name: /webhook bulk actions/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("drops the selection when the cursor moves to another page, so Disable cannot hit rows the operator can no longer see", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    mockHasMore = true;
+    mockNextCursor = 7;
+    const { rerender } = render(<ProjectWebhooksPage projectId="1" />);
+    selectFirstWebhook();
+    mockPagerCursor = "7";
+    rerender(<ProjectWebhooksPage projectId="1" />);
+    expect(
+      screen.queryByRole("region", { name: /webhook bulk actions/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the selection across a re-render that changes neither the filter nor the page — paired with the two drop assertions above", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    const { rerender } = render(<ProjectWebhooksPage projectId="1" />);
+    selectFirstWebhook();
+    rerender(<ProjectWebhooksPage projectId="1" />);
+    expect(
+      screen.getByRole("region", { name: /webhook bulk actions/i }),
+    ).toBeInTheDocument();
   });
 
   it("Esc clears the selection through the shared list keyboard hook", () => {

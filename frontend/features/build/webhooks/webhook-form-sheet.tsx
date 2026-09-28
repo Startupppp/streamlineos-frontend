@@ -1,7 +1,6 @@
 "use client";
 
 import type { UseFormReturn } from "react-hook-form";
-import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -64,8 +63,6 @@ export function WebhookFormSheet({
   onSubmit,
   onCancel,
 }: WebhookFormSheetProps) {
-  useRegisterDirtyState(open && form.formState.isDirty);
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md overflow-hidden">
