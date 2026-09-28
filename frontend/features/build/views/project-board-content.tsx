@@ -13,7 +13,7 @@ import { WorkloadView } from "./workload-view";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { SearchX, WifiOff } from "lucide-react";
+import { ListPlus, SearchX, WifiOff } from "lucide-react";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { ViewType } from "./view-switcher";
 import type { BoardFilters } from "@/hooks/api/build/ticket-queries";
@@ -139,7 +139,7 @@ export function ProjectBoardContent({
     isLoading,
     isError,
     error,
-    isEmpty: showEmptyFilterState,
+    isEmpty: view !== "workload" && filteredTickets.length === 0,
   });
   const viewVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
   const selection = useMemo(
@@ -170,6 +170,27 @@ export function ProjectBoardContent({
               Last updated {formatDistanceToNow(new Date(dataUpdatedAt), { addSuffix: true })}
             </p>
           ) : null}
+        </div>
+      </div>
+    </div>
+  );
+
+  const firstRunEmptyState = (
+    <div className="relative flex h-full flex-1 flex-col items-center justify-center py-12">
+      <div
+        className={cn(
+          PM_PANEL,
+          "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
+        )}
+      >
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
+          <ListPlus className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground">No tickets yet</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Create the first ticket to start tracking work on this project.
+          </p>
         </div>
       </div>
     </div>
@@ -388,7 +409,13 @@ export function ProjectBoardContent({
       <PageState
         resolution={resolution}
         loading={<KanbanBoardSkeleton />}
-        empty={isOnline ? filteredEmptyState : offlineEmptyState}
+        empty={
+          !isOnline
+            ? offlineEmptyState
+            : hasActiveFilters || showEmptyFilterState
+              ? filteredEmptyState
+              : firstRunEmptyState
+        }
         onRetry={onRetry}
         className="flex-1"
       >

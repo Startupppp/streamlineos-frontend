@@ -308,3 +308,54 @@ describe("ProjectBoardContent — workload capacity wiring", () => {
     expect(isMemberOverCapacity(1, undefined)).toBe(false);
   });
 });
+
+describe("ProjectBoardContent — a first run and a filtered-out list are different screens", () => {
+  beforeEach(() => {
+    mockScopes = { "build:tickets:view": true };
+    mockIsOnline = true;
+  });
+
+  it("offers the first-run copy when the collection is empty and no filter is active", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters={false} />);
+    expect(screen.getByText("No tickets yet")).toBeInTheDocument();
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+  });
+
+  it("offers the filtered copy with a clear action when a filter is active, not the first-run copy", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters />);
+    expect(screen.getByText("No tickets match your filters")).toBeInTheDocument();
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /clear all filters/i })).toBeInTheDocument();
+  });
+
+  it("offers the filtered copy when the page reports a filtered-empty result even without the filter flag", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} showEmptyFilterState />);
+    expect(screen.getByText("No tickets match your filters")).toBeInTheDocument();
+  });
+
+  it("prefers the offline panel over either empty copy, because the list may be stale rather than empty", () => {
+    mockIsOnline = false;
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters />);
+    expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+  });
+
+  it("renders neither empty copy once the collection has a row", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps([
+          { id: 1, title: "Widen the grain", type: "TASK", status: "TODO", version: 1 },
+        ])}
+        hasActiveFilters={false}
+      />,
+    );
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+  });
+
+  it("keeps the workload view rendering with no tickets, because it aggregates people and not only work", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters={false} view="workload" />);
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+  });
+});
