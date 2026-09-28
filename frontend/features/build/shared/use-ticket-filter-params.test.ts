@@ -175,6 +175,44 @@ describe("ticket filter URL state", () => {
     expect(lastParams().get("q")).toBe("login");
   });
 
+  it("holds the ticket search at 299 ms and releases it on the 300th, so a shorter debounce fails this test", () => {
+    jest.useFakeTimers();
+    const { result } = renderWith("");
+
+    act(() => result.current.handleSearchChange("login"));
+    act(() => {
+      jest.advanceTimersByTime(299);
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    act(() => {
+      jest.advanceTimersByTime(1);
+    });
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    expect(lastParams().get("q")).toBe("login");
+  });
+
+  it("restarts the wait on each keystroke rather than navigating 300 ms after the first one", () => {
+    jest.useFakeTimers();
+    const { result } = renderWith("");
+
+    act(() => result.current.handleSearchChange("log"));
+    act(() => {
+      jest.advanceTimersByTime(299);
+    });
+    act(() => result.current.handleSearchChange("login"));
+    act(() => {
+      jest.advanceTimersByTime(299);
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    act(() => {
+      jest.advanceTimersByTime(1);
+    });
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    expect(lastParams().get("q")).toBe("login");
+  });
+
   it("shows typed input immediately even before it reaches the URL", () => {
     jest.useFakeTimers();
     const { result } = renderWith("");
