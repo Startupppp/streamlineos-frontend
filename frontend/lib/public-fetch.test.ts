@@ -1,8 +1,10 @@
 jest.mock("server-only", () => ({}));
 jest.mock("@/lib/backend-url", () => ({ BACKEND_URL: "http://api.test" }));
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { ApiError } from "@/lib/api-envelope";
-import { publicGet } from "@/lib/public-fetch";
+import { publicGet, publicGetNoStore } from "@/lib/public-fetch";
 
 const mockFetch = jest.fn();
 const mockAbortSignalTimeout = jest.fn();
@@ -64,6 +66,41 @@ afterAll(() => {
     writable: true,
     configurable: true,
     value: undefined,
+  });
+});
+
+describe("token-bound public reads are never cached — AV-16 frontend half", () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it("publicGetNoStore sends cache: no-store, so a share token revoked a second ago cannot keep being served out of the Next data cache", async () => {
+    mockFetch.mockResolvedValueOnce(makeOkResponse({ title: "Page" }));
+
+    await publicGetNoStore("/public/kb/pages/tok-123");
+
+    expect(mockFetch.mock.calls[0][1].cache).toBe("no-store");
+  });
+
+  it("publicGet by contrast revalidates on a timer and sets no cache mode, so the assertion above distinguishes the two helpers instead of holding for every public read", async () => {
+    mockFetch.mockResolvedValueOnce(makeOkResponse({ title: "Post" }));
+
+    await publicGet("/public/blogs");
+
+    const options = mockFetch.mock.calls[0][1];
+    expect(options.cache).toBeUndefined();
+    expect(options.next.revalidate).toBeGreaterThan(0);
+  });
+
+  it("the public wiki share page reads through the no-store helper and is force-dynamic, so neither the data cache nor the full route cache retains a token-bound page", () => {
+    const source = readFileSync(
+      join(process.cwd(), "app", "(public)", "wiki", "[shareToken]", "page.tsx"),
+      "utf8",
+    );
+
+    expect(source).toMatch(/publicGetNoStore/);
+    expect(source).not.toMatch(/\bpublicGet\s*[<(]/);
+    expect(source).toMatch(/export const dynamic = "force-dynamic"/);
   });
 });
 
