@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { MessageSquare, AlertTriangle } from "lucide-react";
 import { SendIcon, XIcon } from "@animateicons/react/lucide";
-import { useAddComment } from "@/hooks/api/build";
+import { useAddComment } from "@/hooks/api/build/ticket-sub-resources";
 import { useCreateTicket } from "@/hooks/api/build/tickets";
 import {
   useUpdateComment,

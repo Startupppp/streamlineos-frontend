@@ -45,7 +45,7 @@ jest.mock("@/hooks/api/build/comment-drafts", () => ({
   useGenerateCommentDraft: () => ({ mutateAsync: mockMutateAsync, isPending: false }),
 }));
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/ticket-sub-resources", () => ({
   useAddComment: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 jest.mock("@/hooks/api/build/tickets", () => ({

@@ -20,6 +20,7 @@ const LIST_ROW = {
   icon: null,
   color: null,
   isPrivate: false,
+  capacity: 60,
   createdAt: "2026-09-18T10:00:00.000Z",
   updatedAt: "2026-09-18T10:00:00.000Z",
   memberCount: 3,

@@ -278,11 +278,14 @@ export function invalidateTicketUpdateViews(
   if (!titleChanged && !statusChanged && !cycleChanged && !pointsChanged && !schedulingChanged)
     return;
 
-  if (statusChanged) {
+  if (statusChanged || cycleChanged) {
     void client.invalidateQueries({
       queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
       refetchType: "none",
     });
+  }
+
+  if (statusChanged) {
     void client.invalidateQueries({
       queryKey: buildWorkQueryKeys.projectReports.cycleTime(projectId),
       refetchType: "none",

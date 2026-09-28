@@ -27,6 +27,7 @@ const BACKEND_SERVICE = backendPath(
   "modules",
   "build",
   "core",
+  "budget",
   "projects-budget.service.ts",
 );
 
@@ -83,9 +84,9 @@ describe("project budget update response contract", () => {
     expect(currency?.type).toBe("string | null");
   });
 
-  it("makes the mutation hook use the named type instead of an inline literal", () => {
-    const hook = fs.readFileSync(HOOK_FILE, "utf8");
-    expect(hook).toContain("apiClient.patch<ProjectBudgetUpdate>(`/build/${projectId}/budget`");
-    expect(hook).not.toMatch(/apiClient\.patch<\{[^}]*\}>\(`\/build\/\$\{projectId\}\/budget`/);
+  it("makes the mutation hook use the named type instead of an inline literal, matched on whitespace-collapsed source so reformatting the call across lines cannot silently stop this assertion from finding it", () => {
+    const hook = fs.readFileSync(HOOK_FILE, "utf8").replace(/\s+/g, " ");
+    expect(hook).toContain("apiClient.patch<ProjectBudgetUpdate>( `/build/${projectId}/budget`");
+    expect(hook).not.toMatch(/apiClient\.patch<\{[^}]*\}>\( ?`\/build\/\$\{projectId\}\/budget`/);
   });
 });
