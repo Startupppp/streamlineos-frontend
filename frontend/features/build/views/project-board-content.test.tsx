@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -365,5 +366,68 @@ describe("ProjectBoardContent — a first run and a filtered-out list are differ
   it("keeps the workload view rendering with no tickets, because it aggregates people and not only work", () => {
     render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters={false} view="workload" />);
     expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectBoardContent — the tickets read's own failure keeps its backend semantics", () => {
+  beforeEach(() => {
+    mockScopes = { "build:tickets:view": true };
+    mockIsOnline = true;
+  });
+
+  it("resolves a 402 on the tickets read as a plan-locked module with its upgrade path, not as a generic failure (FE-41)", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={
+          new ApiError("module not enabled", 402, "MODULE_NOT_ENABLED", {
+            moduleKey: "build",
+            reason: "not-in-plan",
+            upgradePath: "/settings/billing",
+          })
+        }
+      />,
+    );
+    expect(screen.getByRole("link", { name: /upgrade|billing|plan/i })).toHaveAttribute(
+      "href",
+      "/settings/billing",
+    );
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+  });
+
+  it("keeps the backend message for an ordinary tickets-read failure, so the 402 branch did not swallow errors", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={new ApiError("the ticket index is rebuilding", 500, "INTERNAL")}
+      />,
+    );
+    expect(screen.getByText(/the ticket index is rebuilding/i)).toBeInTheDocument();
+  });
+
+  it("exposes the request id of a failed tickets read, so a person can quote it to support", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={
+          new ApiError("boom", 500, "INTERNAL", { correlationId: "req-42ab" })
+        }
+      />,
+    );
+    expect(screen.getByText("req-42ab")).toBeInTheDocument();
+  });
+
+  it("renders no request id for a failure that carries none, so the reference tracks the envelope", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={new ApiError("boom", 500, "INTERNAL")}
+      />,
+    );
+    expect(screen.queryByText(/^req-/)).not.toBeInTheDocument();
   });
 });
