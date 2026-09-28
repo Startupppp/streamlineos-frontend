@@ -99,7 +99,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
   - 2026-09-27 investigation: Backend epics service (`epics.service.ts:67,86`) throws `TicketVersionConflictException`; `sibling-version-conflict.spec.ts` covers epic conflict (2/2 paired). `health` storage landed (`migrations/1419_build_ticket_health.sql`, journalled — the "not yet journalled" note above was stale) and `dependencyCount` is projected by `listEpics()`.
   - 2026-09-28 per-item audit. **Closed since the last entry:** `status` and `ownerId` were dead query parameters — `useBuildListFilters()` was called with no `filters` array (`frontend/features/build/epics/epics-page.tsx`), so `listFilters.value("status")` and `value("ownerId")` returned the `all` sentinel on every render and both filter predicates were tautologies. They are now declared, given toolbar controls, and covered. `c`/`e`/`Enter` now have targets (previously `onOpen` was `() => {}` and no `onEdit`/`onCreate` was passed). The empty state now distinguishes first-run from filtered-empty. 12/12 in `epics-page.test.tsx`, 12/12 in `epics-page-bulk.test.tsx`.
   - **P0 still open — epic edit and story-link PATCH are both dead, and the fix is outside this lane.** `updateTicketSchema` requires `version: z.number().int().positive()` and is `.strict()` (`backend/src/modules/build/core/dto/ticket.schemas.ts:175`). This page reads `useProjectBoardTickets`, whose projection omits `version`: `TICKET_LIST_COLUMNS` (`backend/src/modules/build/core/tickets/projects-tickets-read.query.ts:16-43`) does not select it and `ticketListRowContract` (`frontend/hooks/api/build/build-tickets-core-schema.ts:193-220`) does not `pick` it, although `ticketRowContract:52` and `ticketDetailContract` both have it. So no list-fed surface can build a valid body, and `EditEpicDialog.handleSubmit` (`frontend/features/build/epics/edit-epic-dialog.tsx:99`) plus `handleLinkStory` (`epics-page.tsx`) both send an untokened PATCH that 400s. Three files must change together: add `version: true` to `TICKET_LIST_COLUMNS`, add `version: true` to the `ticketListRowContract` pick, and make `version` required (not `version?: number`) on `Ticket` and `UpdateTicketInput` in `frontend/types/projects/tasks.ts:112,187` — an optional token is what let this ship. Only then can this page send it.
@@ -152,21 +152,95 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     Tests:       56 passed, 56 total
     ```
 
-    **Premise correction — `cursor` is not earnable on this page as it is built, which is why the box
-    stays unchecked.** The URL machinery exists (`use-build-list-filters.ts:37-38, 144-157`) and is
-    used on the cycles page this pass. The obstruction is the page's read shape: `epics-page.tsx:104`
-    takes one `useProjectBoardTickets` infinite query and derives four collections from it — epics
-    (`:150`), stories (`:158`), tasks (`:159`) and the per-epic child rollup (`:519-521`). A cursor
-    over that read paginates all four at once, so page two of the epic list would silently drop the
-    stories and tasks that back the rollups and the "Stories without Epic" section. Earning it needs
-    the epic list to read its own paginated endpoint (`listEpics()`, which already returns
-    `dependencyCount` and would remove the merge above) with the child work fetched per epic or per
-    page — a read restructure, not a parameter. `ticket-queries.ts` is shared with the board, backlog,
-    triage and workload surfaces, so the change cannot be made inside this page alone.
+    **`cursor` EARNED 2026-09-28 (lane EXEC, second unit) — the epic list now has its own paginated
+    endpoint, so the box is ticked.** The earlier correction below diagnosed the obstruction
+    correctly — one `useProjectBoardTickets` read fed the epic list, the story list, the task count
+    and every child rollup, so a cursor over it would have paginated all four — and the fix was the
+    read restructure it named, not a parameter.
 
-    Also still open and deliberately not papered over: the page-level shortcut tests assert the props
-    handed to `useBuildListKeyboard`; the keydown behaviour itself is covered only in
-    `features/build/shared/use-build-list-keyboard.test.ts`, which is a different file's guarantee.
+    Backend. `GET /build/:projectId/epics` now takes `epicListQuerySchema`
+    (`backend/src/modules/build/execution/dto/iterations.schemas.ts:254-265`, `.strict()`) and returns
+    `epicPageSchema` (`dto/execution-response.schemas.ts:226-233`), the same envelope the modules and
+    cycles routes already return. `EpicsService.listEpics`
+    (`execution/epics.service.ts:27-101`) is a keyset page: `decodeTimestampCursor` +
+    `keysetBeforeMicros(tickets.createdAt, tickets.id, position)` over
+    `ORDER BY created_at DESC, id DESC`, over-fetching `limit + 1` and capping at `PAGE_SIZE_CAP`
+    (BE-24, BE-25 — no total is returned and none is faked). It also applies every filter this page
+    offers in SQL: `q` (escaped `ILIKE`, the same form `listCycles` already ships), `status`, `health`,
+    and `ownerId` resolved through the tenant's own `organization_members`, so a user id from another
+    org selects nothing. `dependencyCount` still rides on each row, which removed the second read the
+    page previously used to merge counts in.
+
+    Frontend. `hooks/api/build/epics.ts` is a new domain module (FE-29) holding one query factory with
+    two observers: `useEpicPage` returns the envelope, `useEpics` selects `page.data` so its ~15
+    existing consumers — the ticket sidebar, the board, backlog, triage, workload and the peer lane's
+    render files — keep the exact `Epic[]` they had. `advanced.ts` re-exports both, so no consumer's
+    import path changed. `epicPageContract`
+    (`hooks/api/build/execution-schema.ts:158-166`) parses the envelope and flattens the nested
+    `assignee: { user }` the backend sends into the `Ticket`-shaped owner the card renders, tolerating
+    a null user rather than rejecting the page; `hooks/api/build/epic-page-contract.test.ts` covers
+    the flatten, the unassigned row, the dependency count, and a rejection of the old bare array.
+
+    `epics-page.tsx:141-193, 700-710` now reads the epic collection from `useEpicPage` with
+    `limit: 25` and the URL cursor, renders `TablePagination mode="cursor"` under the list, and keeps
+    `useProjectBoardTickets` solely for the stories, tasks, "Stories without Epic" section and the
+    per-epic rollups — the four collections the earlier correction said a shared cursor would break.
+    The four client-side epic predicates are gone; the page forwards `q`/`status`/`ownerId`/`health`
+    to the server instead. A failed epic read now resolves the page to its error state with the
+    request id (`:157, 232`), which it previously could not, because `epicsFailed` was unused.
+
+    Evidence:
+
+    ```text
+    $ cd backend && nice -n 10 npx jest --maxWorkers=2 "src/modules/build/execution/.*\.spec\.ts$"
+    Test Suites: 29 passed, 29 total
+    Tests:       328 passed, 328 total
+
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/build/epics
+    Test Suites: 5 passed, 5 total
+    Tests:       69 passed, 69 total
+
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 hooks/api/build
+    Test Suites: 72 passed, 72 total
+    Tests:       734 passed, 734 total
+
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/build hooks/api/build
+    Tests:       3983 passed, 4 failed — the four are the peer lane's uncommitted
+                 features/build/views/list-view-item.tsx edit and the pre-existing
+                 features/__tests__/menu-driven-sheet-focus.a11y.test.tsx barrel-mock defect
+
+    $ cd backend && nice -n 10 node --max-old-space-size=10240 tsc --noEmit -p tsconfig.json
+    (no error in build/execution except the pre-existing milestone-owner-linked-work.spec.ts cast)
+
+    $ cd frontend && nice -n 10 node --max-old-space-size=8192 tsc --noEmit -p tsconfig.json
+    (no error in features/build/epics or hooks/api/build/{epics,advanced,execution-schema}.ts)
+    ```
+
+    New backend tests: `execution/epics-cursor-pagination.spec.ts` — 12 tests covering the envelope,
+    the over-fetch and trim, the `(createdAt, id)` cursor for two epics minted in the same
+    microsecond, the two-column order, the bound cursor position, a tampered cursor falling back to
+    page one, the `PAGE_SIZE_CAP` clamp, and each filter bound in SQL plus the not-always-on case.
+    New frontend tests in `epics-page.test.tsx`: the forwarded filter set, the sentinel case, the
+    server's rows rendered without re-filtering, the URL cursor forwarded, Next writing the next
+    cursor, Next disabled at the end, no Previous on a deep link, Previous returning to the prior
+    cursor, no footer on an empty page, and the failed-epic-read error state with its request id.
+    The two former client-side filter tests in `epics-page-bulk.test.tsx` now assert the parameter is
+    forwarded and the returned page rendered.
+
+    Offline drafts closed with it: `create-epic-dialog.tsx:59-65` and `edit-epic-dialog.tsx:171-177`
+    hold the typed draft and send no command while offline, paired positive-and-negative in
+    `edit-epic-dialog-conflict.test.tsx`.
+
+    Two things this does not claim. The route's response shape changed from a bare array to a page
+    envelope, so the vendored `frontend/contracts/openapi.json` needs regeneration by the
+    orchestrator (`pnpm openapi:generate`); this lane did not run it and did not edit the file. And
+    the page-level shortcut tests still assert the props handed to `useBuildListKeyboard` — the
+    keydown behaviour is covered in `features/build/shared/use-build-list-keyboard.test.ts`, which is
+    a different file's guarantee.
+
+    **Superseded premise correction, kept for the record.** The text below is what this note replaces:
+    it read that `cursor` "is not earnable on this page as it is built", for the read-shape reason
+    restated above. The diagnosis held; the restructure it asked for is what landed.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
