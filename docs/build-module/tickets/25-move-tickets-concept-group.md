@@ -330,3 +330,106 @@ Gate coverage note: `check:build-core-surface` cannot see these four, by design 
 (`if (aimsInside(CORE_ROOT, resolve(fromDir))) return []`), and its self-test asserts
 that exemption explicitly. The four remaining reaches are therefore held by this
 ticket alone, not by a gate.
+
+## The last four reaches cannot be closed at the import layer — 2026-09-28 (Lane-SEAM)
+
+`core/tickets/projects-tickets-create.service.ts` was released to this lane on the
+hypothesis that its edge to `automation/build-automation-runner.service` roots all
+three cycles, so breaking that one edge would close the remaining four specifiers
+onto the barrel with no file move. The graph reading is right. The lever does not
+exist, and it fails on two independent grounds. **No code landed; criterion 3 stays
+unticked.**
+
+### Every cycle-forming edge is Nest constructor DI, not an import-layer artifact
+
+Four edges appear in the three chains. Each one injects a concrete class through a
+constructor, so each needs the class as a **runtime value** for its DI token:
+
+| Edge | Import | Injection site |
+|---|---|---|
+| create → runner | `projects-tickets-create.service.ts:26` | `:48` `private readonly automationRunner: BuildAutomationRunnerService` |
+| runner → actions | `build-automation-runner.service.ts:10` | `:99` `private readonly actionExecutor: BuildAutomationActionExecutor` |
+| run-history → members | `build-automation-run-history.service.ts:9` | `:48` `private readonly members: ProjectsMembersService`, used at `:154` |
+| members → custom-states | `projects-members.service.ts:47` | `:72` `private readonly statesService: ProjectsCustomStatesService` |
+
+BE-11 forbids the only import-layer move available — `import type` on an injected
+Nest service erases the DI token and boots null. There is no import to repoint here;
+there is a service dependency.
+
+### Even the forbidden move would not satisfy the gate
+
+Measured rather than assumed. With all four callers pointed at the barrel **and**
+`projects-tickets-create.service.ts:26` converted to `import type`,
+`npx madge --circular --extensions ts src/modules/build/core` reported the **same
+three cycles, unchanged**:
+
+```
+1) tickets/index.ts > tickets/projects-tickets-create.service.ts
+   > automation/build-automation-runner.service.ts > automation/build-automation-actions.service.ts
+2) … > automation/build-automation-run-history.service.ts > members/projects-members.service.ts
+   > custom-states/projects-custom-states.service.ts
+3) … > automation/build-automation-run-history.service.ts > members/projects-members.service.ts
+```
+
+`check:cycles` is `madge --circular --extensions ts src` and this repo has no
+`.madgerc`, so `detectiveOptions.ts.skipTypeImports` is off and madge counts an
+`import type` as a dependency edge like any other. The trick BE-11 forbids would not
+even buy a green gate. The probe was reverted in full — `git status --porcelain
+src/modules/build/core` is empty and madge is back to
+`✔ No circular dependency found!`.
+
+### One candidate checked and rejected on its merits
+
+`build-automation-run-history.service.ts:154` calls
+`this.members.assertProjectAccess(u, projectId)`, and `core/index.ts` already exports
+a standalone `assertProjectAccess` from `project-crud/project-access.ts:165`. If
+`ProjectsMembersService.assertProjectAccess` were the pass-through BE-143 tells us to
+delete, swapping the call would drop the run-history → members edge and close three
+of the four specifiers with a one-line change.
+
+It is not a pass-through. `projects-members.service.ts:111` is a distinct
+implementation: it reads the project first and throws `NotFoundException` when it is
+missing, returns early for `u.isOrgOwner`, and resolves permissions itself, where the
+standalone function only throws `ForbiddenException` off `resolveProjectAccess`.
+Substituting one for the other would change a 404 into a 403 on a missing project,
+which is a BE-22 status-semantics regression. Left alone.
+
+### What is actually required, and why this lane cannot do it
+
+Two routes remain, and both are outside an import-and-barrel lane:
+
+1. **Remove the dependency rather than hide it.** `create → runner` exists so that
+   creating a ticket fires automations. Emitting instead of calling deletes the edge
+   honestly and closes `build-automation-actions.service.ts:15`. That is business
+   logic inside the create service, which this lane was explicitly fenced out of.
+2. **Move the leaves to `core/lib/`** — `tickets-scope.ts`,
+   `build-ticket-capacity.ts`, `build-ticket-mutation-policy.ts` and
+   `projects-labels.service.ts`. This closes all four with no barrel edge at all and
+   is ticket 01's job. A file move, still out of scope.
+
+**Explicitly refused: a string or symbol DI token with `import type`.** It leaves the
+runtime dependency exactly where it is and removes only the compiler's view of it,
+which is `forwardRef` in a different hat — the thing BE-10 names by name. On the
+evidence above it would not work anyway, but it should not be reached for if madge is
+ever configured to skip type imports. The four reaches are a real architectural
+coupling; the honest record is to leave them visible in this ticket rather than to
+make a gate stop seeing them.
+
+### State at the close of this lane
+
+`grep -rn 'from "[^"]*tickets/' core --include="*.ts"` from
+`backend/src/modules/build`, excluding `core/tickets/`, `core/index.ts` and specs:
+
+```
+core/automation/build-automation-actions.service.ts:15   reserveTicketCapacity
+core/custom-states/projects-custom-states.service.ts:19  lockProjectTicketMutation
+core/custom-states/projects-custom-states.service.ts:20  reserveTicketCapacity
+core/members/projects-members.service.ts:48              ProjectsLabelsService
+```
+
+Four specifiers, three files, down from thirteen across twelve. Verified after the
+probe was reverted:
+
+- `npx madge --circular --extensions ts src/modules/build/core` → `✔ No circular dependency found!`
+- `pnpm check:build-core-surface:self-test` → `PASS … 26 pattern checks + anti-vacuity, all directions bite` (316 sibling files, 9346 repo files, 839 specifiers — the floors bite)
+- `pnpm check:build-core-surface` → `OK — 316 sibling submodule file(s) scanned; 0 deep core imports.` / `OK — 9346 repo file(s) scanned, 839 specifier(s) aimed into build/core; 0 unresolved, 0 external reaches past the core/tickets barrel.`
