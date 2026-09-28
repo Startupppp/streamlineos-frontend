@@ -114,3 +114,63 @@ describe("the bulk Set Status menu", () => {
     expect(screen.getByText("CODE REVIEW")).toBeInTheDocument();
   });
 });
+
+describe("BulkActionBar — archive and export carry their endpoints' own keys, not an invented one", () => {
+  const statuses = [{ name: "TODO", color: null, type: "unstarted" }];
+
+  it("offers Archive to a viewer with build:tickets:update, the key the bulk endpoint declares", () => {
+    mountBar(statuses);
+    expect(screen.getByRole("button", { name: "Archive" })).toBeInTheDocument();
+  });
+
+  it("offers Export beside it, whose own mutation gates on build:tickets:view", () => {
+    mountBar(statuses);
+    expect(screen.getByRole("button", { name: "Export" })).toBeInTheDocument();
+  });
+
+  it("offers neither once build:tickets:update is denied, because the whole selection-driven bar goes away", () => {
+    grantedKeys = [];
+    mountBar(statuses);
+    expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Export" })).not.toBeInTheDocument();
+  });
+
+  it("omits each of them when the caller wires no handler, so the bar never shows a command it cannot run", () => {
+    render(
+      <BulkActionBar
+        selectedCount={2}
+        members={[]}
+        cycles={[]}
+        statuses={statuses}
+        hideCycle
+        onBulkStatus={noopString}
+        onBulkPriority={noopString}
+        onBulkAssignee={noopString}
+        onBulkCycle={noopString}
+        onClear={noop}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Export" })).not.toBeInTheDocument();
+  });
+
+  it("offers Set parent as the bar's linking control, which is the only bulk link the endpoint accepts", () => {
+    render(
+      <BulkActionBar
+        selectedCount={2}
+        members={[]}
+        cycles={[]}
+        statuses={statuses}
+        hideCycle
+        projectId={1}
+        onBulkStatus={noopString}
+        onBulkPriority={noopString}
+        onBulkAssignee={noopString}
+        onBulkCycle={noopString}
+        onBulkParent={noop}
+        onClear={noop}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Set parent" })).toBeInTheDocument();
+  });
+});
