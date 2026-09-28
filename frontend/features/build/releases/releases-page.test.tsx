@@ -125,12 +125,6 @@ jest.mock("./releases-page-parts", () => ({
     released: { label: "Released", className: "" },
     archived: { label: "Archived", className: "" },
   },
-  NewReleaseButton: ({ onClick }: { onClick: () => void }) => (
-    <button onClick={onClick} data-testid="new-release-btn">New Release</button>
-  ),
-  DeleteReleaseButton: ({ onClick }: { onClick: () => void }) => (
-    <button onClick={onClick} data-testid="delete-release-btn">Delete</button>
-  ),
 }));
 
 jest.mock("./release-form-sheet", () => ({
