@@ -17,7 +17,7 @@ export const pillars: Pillar[] = [
     icon: Zap,
     title: "Real-time, end to end",
     description:
-      "Live presence, chat, notifications, and sprint boards stay in sync across every browser tab through WebSocket-native infrastructure.",
+      "Live presence, chat, notifications, and cycle boards stay in sync across every browser tab through WebSocket-native infrastructure.",
   },
   {
     icon: Lock,
@@ -62,10 +62,10 @@ export const walkthroughSteps = [
   },
   {
     eyebrow: "Deliver",
-    title: "Run sprints without leaving the workspace",
+    title: "Run cycles without leaving the workspace",
     description:
-      "Kanban boards, sprints, epics, and time tracking live alongside HR and CRM. Velocity and work distribution surfaced for managers — not weekly Excel exports.",
-    bullets: ["Drag-and-drop kanban", "Sprint velocity tracking", "Time tracked to tickets"],
+      "Kanban boards, cycles, epics, and time tracking live alongside HR and CRM. Velocity and work distribution surfaced for managers — not weekly Excel exports.",
+    bullets: ["Drag-and-drop kanban", "Cycle velocity tracking", "Time tracked to tickets"],
   },
   {
     eyebrow: "Close",

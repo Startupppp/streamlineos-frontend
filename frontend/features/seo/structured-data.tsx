@@ -125,7 +125,7 @@ export function SoftwareApplicationJsonLd() {
           "HR Management",
           "Payroll automation",
           "Attendance & leave tracking",
-          "Project & sprint planning",
+          "Project & cycle planning",
           "Kanban boards",
           "CRM & sales pipeline",
           "Real-time team chat",

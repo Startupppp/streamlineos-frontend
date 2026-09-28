@@ -452,9 +452,9 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
 
             <TabsContent value="visibility" className="mt-0 flex min-h-0 flex-1 flex-col">
               <p className="text-sm text-muted-foreground">
-                Use the Visibility toggles to control which tickets and milestones appear in the
-                portal. Switch to the <strong>Tickets</strong> and <strong>Milestones</strong>{" "}
-                sections in the Client Visibility panel.
+                Per-item visibility is not available on this surface yet. Only tickets and
+                milestones that are already marked visible appear in the client portal, and the
+                Preview tab shows exactly what a client sees today.
               </p>
             </TabsContent>
 
