@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
+  BUILD_LIST_CURSOR_PARAM,
   buildListSearchParams,
   parsePriorityParam,
   parseTicketTypeParam,
@@ -47,6 +48,36 @@ export function useBoardFilterParams() {
   const filterQaState = searchParams.get("qaState") ?? "";
   const sortOrderBy = parseBoardOrderBy(searchParams.get("orderBy"));
   const sortOrderDir = parseBoardOrderDir(searchParams.get("orderDir"));
+  const cursor = searchParams.get(BUILD_LIST_CURSOR_PARAM) ?? "";
+
+  const filterShape = JSON.stringify([
+    q,
+    filterStatus,
+    filterPriority,
+    filterType,
+    filterAssigneeId,
+    filterLabels,
+    filterCycle,
+    filterModule,
+    dueDateFrom,
+    dueDateTo,
+    filterSeverity,
+    filterQaState,
+    sortOrderBy,
+    sortOrderDir,
+  ]);
+  const appliedShapeRef = useRef(filterShape);
+  const shapeChanged = appliedShapeRef.current !== filterShape;
+  const activeCursor = shapeChanged ? "" : cursor;
+
+  useEffect(() => {
+    appliedShapeRef.current = filterShape;
+    if (!shapeChanged || !cursor) return;
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete(BUILD_LIST_CURSOR_PARAM);
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [cursor, filterShape, pathname, router, searchParams, shapeChanged]);
 
   const boardFilters = useMemo(
     () => ({
@@ -62,8 +93,10 @@ export function useBoardFilterParams() {
       dueDateTo: dueDateTo || undefined,
       orderBy: sortOrderBy,
       orderDir: sortOrderDir,
+      cursor: activeCursor || undefined,
     }),
     [
+      activeCursor,
       q,
       filterStatus,
       filterPriority,
@@ -145,6 +178,7 @@ export function useBoardFilterParams() {
 
   return {
     q,
+    cursor: activeCursor,
     filterStatus,
     filterPriority,
     filterType,

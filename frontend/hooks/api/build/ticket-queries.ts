@@ -61,6 +61,7 @@ export type BoardFilters = {
   dueDateTo?: string;
   orderBy?: TicketOrderBy;
   orderDir?: TicketOrderDir;
+  cursor?: string;
 };
 
 export function useProjectBoardTickets(projectId: number, filters?: BoardFilters) {
@@ -86,7 +87,7 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.dueDateTo) params.dueDateTo = filters.dueDateTo;
       return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal, ticketListPageLazy);
     },
-    initialPageParam: NO_CURSOR_YET,
+    initialPageParam: filters?.cursor ?? NO_CURSOR_YET,
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 30_000,
