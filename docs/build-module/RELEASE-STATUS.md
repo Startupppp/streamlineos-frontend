@@ -210,6 +210,8 @@ The candidate was exercised through a real authenticated browser against the pro
   pending until the backend deployment containing its release commit is observed.
 
 Some detail pages have no production fixture rows for forms, incidents, meetings, QA runs, wiki pages, goals, portfolios, managed products, or teams. Their authenticated parent empty states passed; no production business data was created solely for testing.
+- On 2026-09-28, local port `1000` verification of `/build/6/wiki/1/history` found that a missing page caused the history-version query to reach the route error boundary and leave the main region blank. `frontend/hooks/api/kb/page-versions.ts` now applies the inline-read error policy to the version list and detail queries; focused wiki history coverage passes 30/30, and the settled browser state shows `Page history`, `Failed to load page.`, and `Retry` with no fresh console error. This closes the confirmed defect for the recoverable missing-page state; the full route/action matrix remains open.
+- On 2026-09-28, local port `1000` reproduced a 500 from `/feedbucket/submissions?managedProductId=1&page=1&limit=25` on `/build/managed-products/1/feedback`. `frontend/hooks/api/feedbucket/use-feedbucket-submissions.ts` now keeps that read failure inline; the browser shows the feedback page, the error message, a reference id, and `Try again` without entering the route error boundary or emitting a fresh console error. Backend commit `8a5cfe66b` fixes the numeric Feedbucket membership scope comparison and is pushed to `origin/main`; the live API still returned 500 at 17:15 IST, so backend rollout and successful data response remain open.
 
 ## External repository debt
 

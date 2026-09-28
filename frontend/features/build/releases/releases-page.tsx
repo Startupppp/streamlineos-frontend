@@ -69,6 +69,10 @@ function isReleaseStatus(value: string): value is ReleaseStatus {
   return value === "draft" || value === "released" || value === "archived";
 }
 
+function readDateFilter(value: string): string | undefined {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
+}
+
 interface ReleasesPageProps {
   projectId: number;
 }
@@ -84,8 +88,8 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   const serverStatus = isReleaseStatus(statusFilterValue)
     ? statusFilterValue
     : undefined;
-  const fromValue = listFilters.value("from") || undefined;
-  const toValue = listFilters.value("to") || undefined;
+  const fromValue = readDateFilter(listFilters.value("from"));
+  const toValue = readDateFilter(listFilters.value("to"));
 
   const { data, isLoading, isError, error, refetch } = useReleases(projectId, {
     cursor: pager.cursor,

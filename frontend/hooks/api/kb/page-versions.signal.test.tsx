@@ -14,13 +14,15 @@ jest.mock("@/lib/api-client", () => ({
 
 type QueryFnCtx = { pageParam: unknown; signal: AbortSignal };
 let capturedQueryFn: ((ctx: QueryFnCtx) => unknown) | null = null;
+let capturedOptions: { throwOnError?: unknown } | null = null;
 
 jest.mock("@tanstack/react-query", () => {
   const actual = jest.requireActual<object>("@tanstack/react-query");
   return {
     ...actual,
-    useInfiniteQuery: jest.fn((opts: { queryFn: (ctx: QueryFnCtx) => unknown }) => {
+    useInfiniteQuery: jest.fn((opts: { queryFn: (ctx: QueryFnCtx) => unknown; throwOnError?: unknown }) => {
       capturedQueryFn = opts.queryFn;
+      capturedOptions = opts;
       return {
         data: undefined,
         isLoading: false,
@@ -34,6 +36,7 @@ jest.mock("@tanstack/react-query", () => {
 
 beforeEach(() => {
   capturedQueryFn = null;
+  capturedOptions = null;
   mockGet.mockClear();
   mockGet.mockResolvedValue({
     data: [],
@@ -62,5 +65,11 @@ describe("useKbPageVersionsInfinite — abort signal forwarding (FE-26)", () => 
     );
     const params = mockGet.mock.calls[0]?.[1] as Record<string, unknown>;
     expect(params).not.toHaveProperty("signal");
+  });
+
+  it("keeps missing page history inline instead of throwing through the route boundary", () => {
+    render(<VersionsHook />);
+
+    expect(capturedOptions?.throwOnError).toBe(false);
   });
 });
