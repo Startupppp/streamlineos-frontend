@@ -7,7 +7,7 @@
 - **Disposition:** **KEEP**
 - **Decision:** Retain as a canonical page, subject to the gaps and acceptance criteria below.
 - **User job:** Create and find durable project knowledge.
-- **Evidence:** `frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/page.tsx`; Route existence verified in the repository; live behavior not directly observed with a valid detail record. **ASSUMPTION:** the page follows its source component until browser evidence is captured.
+- **Evidence:** `frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/page.tsx`; route and access guard verified in the repository. Browser verification on 2026-09-28 used `/build/6/wiki/860067` with the local frontend on port 1000 and the configured deployed API: the page detail, page tree, editor, breadcrumbs, and details panel rendered after refresh with no fresh browser errors. The test record was created during browser verification and remains pending explicit cleanup approval.
 
 ## Product contract
 
@@ -87,6 +87,16 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - **Pagination:** cursor for unbounded activity/work; numbered pages only when an exact total is already computed cheaply.
 - **Caching:** key includes scope, normalized filters, sort, cursor, and source revision. Standard list stale time 30 s; entity 60 s; live queues 0–15 s; reports 2 min.
 - **Invalidation:** patch exact detail and every rendered collection first; invalidate only affected aggregates/ancestors after commit. Source-module projections follow source events and ACL revisions.
+
+## Verification evidence
+
+- `GET /kb/pages/860067/backlinks` was verified through the rendered details panel as a cursor-page response and displayed the empty state `No pages link here.` without a contract error.
+- `GET /kb/pages/860067/comments` was exercised during document loading; the page remained usable after the client and server contracts were aligned to cursor pages.
+- The browser action `Open details panel` opened and closed the panel successfully. The final page reload preserved the document route and rendered the editor without fresh warning or error logs.
+- Focused frontend verification: 48 tests passed across milestones and wiki contract/gating suites; dialog-description structural check passed.
+- Focused backend verification: backlinks service 5 tests passed; KB pagination suite 19 tests passed; backend typecheck passed.
+- Backend commits pushed to `main`: `37dabb34a`, `0e94ed6`. Frontend commit pushed to `main`: `71a193bcc`.
+- Railway CLI deployment status was not confirmed because the supplied token was rejected as unauthorized. The browser verification confirms the running API response shape, not a deployment audit record.
 
 ## Gaps
 

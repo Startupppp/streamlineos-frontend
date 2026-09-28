@@ -7,7 +7,7 @@
 - **Disposition:** **KEEP**
 - **Decision:** Retain as a canonical page, subject to the gaps and acceptance criteria below.
 - **User job:** Create and find durable project knowledge.
-- **Evidence:** `frontend/app/(authenticated)/build/[projectId]/wiki/page.tsx`; Route existence verified in the repository; live behavior not directly observed with a valid detail record. **ASSUMPTION:** the page follows its source component until browser evidence is captured.
+- **Evidence:** `frontend/app/(authenticated)/build/[projectId]/wiki/page.tsx`; route and access guard verified in the repository. Browser verification on 2026-09-28 loaded `/build/6/wiki` with the local frontend on port 1000 and the configured deployed API, then loaded the resulting test document at `/build/6/wiki/860067`. The list and detail surfaces rendered after refresh without fresh browser errors. The test record was created during browser verification and remains pending explicit cleanup approval.
 
 ## Product contract
 
