@@ -29,6 +29,7 @@ interface TicketDetailRightPanelProps {
   saving: boolean;
   ticket: {
     id: number;
+    version: number;
     parentTicketId?: number | null;
     status?: string | null;
     priority?: string | null;

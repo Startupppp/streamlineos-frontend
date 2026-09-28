@@ -24,6 +24,7 @@ import { InlineFieldWrapper } from "./card-field-wrapper";
 interface InlineStatusProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentStatus: string;
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
 }
@@ -31,6 +32,7 @@ interface InlineStatusProps {
 export const InlineStatus = memo(function InlineStatus({
   ticketId,
   projectId,
+  version,
   currentStatus,
   projectStatuses,
 }: InlineStatusProps) {
@@ -51,7 +53,7 @@ export const InlineStatus = memo(function InlineStatus({
 
   function makeStatusHandler(status: string) {
     return function selectStatus() {
-      updateTicket.mutate({ ticketId, status });
+      updateTicket.mutate({ ticketId, version, status });
       setOpen(false);
     };
   }

@@ -30,6 +30,7 @@ const PRIORITIES: { value: TicketPriority; label: string; Icon: typeof Minus }[]
 interface InlinePriorityProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentPriority?: string | null;
   showLabel?: boolean;
 }
@@ -37,6 +38,7 @@ interface InlinePriorityProps {
 export const InlinePriority = memo(function InlinePriority({
   ticketId,
   projectId,
+  version,
   currentPriority,
   showLabel = false,
 }: InlinePriorityProps) {
@@ -47,7 +49,7 @@ export const InlinePriority = memo(function InlinePriority({
 
   function makePriorityHandler(priority: TicketPriority) {
     return function selectPriority() {
-      updateTicket.mutate({ ticketId, priority });
+      updateTicket.mutate({ ticketId, version, priority });
       setOpen(false);
     };
   }

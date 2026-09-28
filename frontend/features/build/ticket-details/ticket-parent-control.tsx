@@ -28,7 +28,7 @@ import type { Ticket } from "@/types/projects";
 type TicketParentControlVariant = "field" | "breadcrumb";
 
 interface TicketParentControlProps {
-  ticket: Pick<Ticket, "id" | "parentTicketId">;
+  ticket: Pick<Ticket, "id" | "parentTicketId"> & Required<Pick<Ticket, "version">>;
   projectId: number;
   projectKey?: string | null;
   variant?: TicketParentControlVariant;
@@ -66,7 +66,7 @@ export function TicketParentControl({
 
   function setParent(parentTicketId: number | null) {
     updateTicket.mutate(
-      { ticketId: ticket.id, parentTicketId },
+      { ticketId: ticket.id, version: ticket.version, parentTicketId },
       {
         onSuccess: () => {
           toast.success(parentTicketId ? "Parent set" : "Parent removed");

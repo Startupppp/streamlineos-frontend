@@ -20,6 +20,7 @@ const minimalTicket = {
   points: null,
   estimate: null,
   rank: "a0",
+  version: 1,
   cycleId: null,
   epicId: null,
   assigneeId: null,

@@ -12,7 +12,7 @@ let mockTicketError: Error | null = null;
 let mockCanViewAccess: "loading" | "granted" | "denied" = "granted";
 let mockIsMobile = false;
 let mockResolvedTicket:
-  | { id: number; ticketNumber: number; title: string }
+  | { id: number; ticketNumber: number; title: string; version?: number }
   | undefined;
 let mockRightPanelOpen = false;
 
@@ -136,12 +136,48 @@ it("shows a plan-required state for a 402 MODULE_NOT_ENABLED on ticket key looku
   expect(mockNotFound).not.toHaveBeenCalled();
 });
 
+it("exposes the request id of a failed key lookup so a person can quote it to support", () => {
+  mockByKeyError = new ApiError("Internal server error", 500, "INTERNAL", {
+    correlationId: "req-key-8821",
+  });
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.getByRole("alert")).toHaveTextContent("req-key-8821");
+});
+
+it("exposes the request id of a failed detail read so a person can quote it to support", () => {
+  mockTicketError = new ApiError("Internal server error", 500, "INTERNAL", {
+    correlationId: "req-detail-4417",
+  });
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.getByRole("alert")).toHaveTextContent("req-detail-4417");
+});
+
+it("shows no reference line for an error that carries no request id, so the failure reads cleanly", () => {
+  mockByKeyError = new TypeError("Failed to fetch");
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.getByRole("alert")).not.toHaveTextContent("Reference");
+});
+
+it("refuses to render an editable issue whose version token is missing, rather than saving without it", () => {
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Tokenless ticket" };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.getByRole("alert")).toHaveTextContent("without the version token");
+  expect(mockNotFound).not.toHaveBeenCalled();
+});
+
+it("renders the issue once the version token is present, proving the token guard is not always on", () => {
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
 it("keeps mobile ticket properties closed until the user opens them", () => {
   mockIsMobile = true;
   mockResolvedTicket = {
     id: 1,
     ticketNumber: 1,
     title: "Mobile ticket",
+    version: 1,
   };
 
   render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);

@@ -66,6 +66,7 @@ function makeTicket(id: number, overrides?: Partial<Ticket>): Ticket {
     cycleId: null,
     sequenceId: null,
     estimate: null,
+    version: 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     ...overrides,

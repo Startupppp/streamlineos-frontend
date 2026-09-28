@@ -58,17 +58,20 @@ jest.mock("@/hooks/common/use-debounce", () => ({
 
 let capturedOnItemsChange: ((items: { id: number }[]) => void) | undefined;
 let capturedSearch: string | undefined;
+let capturedTabProps: Record<string, unknown> | undefined;
 
 jest.mock("./roadmap-tab", () => ({
   RoadmapTab: ({
     onItemsChange,
     search,
+    ...rest
   }: {
     onItemsChange?: (items: { id: number }[]) => void;
     search?: string;
   }) => {
     capturedOnItemsChange = onItemsChange;
     capturedSearch = search;
+    capturedTabProps = { search, ...rest };
     return <div data-testid="roadmap-tab" />;
   },
 }));
@@ -94,7 +97,59 @@ const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
 beforeEach(() => {
   jest.clearAllMocks();
   capturedOnItemsChange = undefined;
+  capturedTabProps = undefined;
   mockSearchParams = new URLSearchParams();
+});
+
+describe("RoadmapListPage — only forwards parameters GET /build/roadmap accepts", () => {
+  it("forwards status when the URL carries a value the backend enum allows", () => {
+    mockSearchParams = new URLSearchParams("status=in_progress");
+
+    render(<RoadmapListPage />);
+
+    expect(capturedTabProps?.status).toBe("in_progress");
+  });
+
+  it("drops a status the backend enum rejects instead of forwarding it into a 400", () => {
+    mockSearchParams = new URLSearchParams("status=shipped");
+
+    render(<RoadmapListPage />);
+
+    expect(capturedTabProps?.status).toBeUndefined();
+  });
+
+  it("forwards sort when the URL carries a value the backend enum allows", () => {
+    mockSearchParams = new URLSearchParams("sort=created_at");
+
+    render(<RoadmapListPage />);
+
+    expect(capturedTabProps?.sort).toBe("created_at");
+  });
+
+  it("drops a sort the backend enum rejects instead of forwarding it into a 400", () => {
+    mockSearchParams = new URLSearchParams("sort=priority");
+
+    render(<RoadmapListPage />);
+
+    expect(capturedTabProps?.sort).toBeUndefined();
+  });
+
+  it("maps productId onto managedProductId because that is the key the list query declares", () => {
+    mockSearchParams = new URLSearchParams("productId=42");
+
+    render(<RoadmapListPage />);
+
+    expect(capturedTabProps?.managedProductId).toBe(42);
+  });
+
+  it("sends no horizon or ownerId key, because roadmapListQuerySchema is strict and has neither", () => {
+    mockSearchParams = new URLSearchParams("horizon=2026-Q1&ownerId=user-7");
+
+    render(<RoadmapListPage />);
+
+    expect(capturedTabProps).not.toHaveProperty("horizon");
+    expect(capturedTabProps).not.toHaveProperty("ownerId");
+  });
 });
 
 describe("RoadmapListPage — keyboard itemCount (BSN-FE-K3)", () => {

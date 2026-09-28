@@ -115,6 +115,7 @@ function makeTicket(id: number, projectId: number): AllWorkTicket {
     id, title: `Ticket ${id}`, type: "TASK", status: "TODO", priority: null,
     projectId, projectKey: `P${projectId}`, projectName: `Project ${projectId}`,
     ticketNumber: id, epicId: null, assigneeId: null,
+    version: 1,
     points: null, estimate: null, rank: null, startDate: null, dueDate: null,
     cycleId: null, createdAt: null, updatedAt: null, assignee: null, labels: [],
   };

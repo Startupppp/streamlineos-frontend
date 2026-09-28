@@ -140,7 +140,7 @@ describe("ProjectBoardContent — truncation notice", () => {
   it("shows a loading status indicator instead of a button while the next page is loading", () => {
     render(
       <ProjectBoardContent
-        {...buildBaseProps([{ id: 1, title: "Ticket", type: "TASK", status: "TODO" }], {
+        {...buildBaseProps([{ id: 1, title: "Ticket", type: "TASK", status: "TODO", version: 1 }], {
           isTruncated: true,
           isFetchingMore: true,
         })}

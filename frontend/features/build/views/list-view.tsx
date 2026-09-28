@@ -153,6 +153,8 @@ export const ListView = memo(function ListView({
       if (isCrossGroup) {
         const patch = buildGroupFieldPatch(groupBy, dstGroup, allTickets, ticketId);
         if (!patch) return;
+        const version = allTickets.find((t) => t.id === ticketId)?.version;
+        if (version == null) return;
 
         const nextTickets = allTickets.map((t) =>
           t.id === ticketId ? applyLocalPatch(t, patch, groupBy) : t,
@@ -160,7 +162,7 @@ export const ListView = memo(function ListView({
         setOptimisticTickets(nextTickets);
 
         updateTicket.mutate(
-          { ticketId, ...patch },
+          { ticketId, version, ...patch },
           {
             onError: () => setOptimisticTickets(allTickets),
           },

@@ -14,6 +14,8 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
@@ -30,6 +32,19 @@ import { CycleVelocityPanel } from "./cycle-velocity-panel";
 import type { Cycle, CycleStatus } from "@/types/projects";
 
 type CyclesPageProps = { projectId: number };
+
+const CYCLE_STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "draft", label: "Upcoming" },
+  { value: "active", label: "Active" },
+  { value: "completed", label: "Completed" },
+] as const;
+
+const CYCLE_FILTER_DEFINITIONS = [
+  { param: "status", options: CYCLE_STATUS_OPTIONS.map((o) => o.value) },
+  { param: "from" },
+  { param: "to" },
+] as const;
 
 function nextCycleStatus(status: CycleStatus): CycleStatus {
   if (status === "draft") return "active";
@@ -54,8 +69,14 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   const canManage = useCan("build:cycles:manage");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listFilters = useBuildListFilters({
-    filters: [{ param: "status" }, { param: "from" }, { param: "to" }],
+    filters: CYCLE_FILTER_DEFINITIONS,
   });
+  const dateFilterFromValue = listFilters.value("from");
+  const dateFilterToValue = listFilters.value("to");
+  const dateFilterFrom =
+    dateFilterFromValue === BUILD_FILTER_ALL ? undefined : dateFilterFromValue;
+  const dateFilterTo =
+    dateFilterToValue === BUILD_FILTER_ALL ? undefined : dateFilterToValue;
   const { error, refetch, isError, isLoading, data: cycles } = useCycles(projectId);
   const { data: tickets = [] } = useProjectBoardTickets(projectId);
   const { data: projectData } = useProject(projectId);
@@ -86,10 +107,42 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     });
   }, [cycles, listFilters]);
 
+  const handleOpenCreate = useCallback(() => {
+    setEditTarget(null);
+    setFormOpen(true);
+  }, []);
+
+  const handleEditByIndex = useCallback(
+    (index: number) => {
+      const cycle = filteredCycles[index];
+      if (!cycle) return;
+      setEditTarget(cycle);
+      setFormOpen(true);
+    },
+    [filteredCycles],
+  );
+
+  const handleNoSelection = useCallback(() => {}, []);
+
+  const handleStatusFilterChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+
+  const handleDateRangeChange = useCallback(
+    (range: { from: string; to: string }) => {
+      listFilters.setValue("from", range.from);
+      listFilters.setValue("to", range.to);
+    },
+    [listFilters],
+  );
+
   useBuildListKeyboard({
     itemCount: filteredCycles.length,
-    onOpen: useCallback((_i: number) => {}, []),
-    onClearSelection: useCallback(() => {}, []),
+    onOpen: handleEditByIndex,
+    onEdit: handleEditByIndex,
+    onCreate: canManage ? handleOpenCreate : undefined,
+    onClearSelection: handleNoSelection,
     enabled: pageState.kind === "ready",
     searchInputRef,
   });
@@ -111,11 +164,6 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     const query = next.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [pathname, router, searchParams, showCompleted]);
-
-  const handleOpenCreate = useCallback(() => {
-    setEditTarget(null);
-    setFormOpen(true);
-  }, []);
 
   const handleEdit = useCallback((cycle: Cycle) => {
     setEditTarget(cycle);
@@ -272,6 +320,35 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
             placeholder: "Search cycles",
             inputRef: searchInputRef,
           }}
+          filters={[
+            {
+              id: "status",
+              label: "Status",
+              active: listFilters.isActive("status"),
+              control: (
+                <BuildFilterSelect
+                  label="Status"
+                  value={listFilters.value("status")}
+                  onValueChange={handleStatusFilterChange}
+                  options={CYCLE_STATUS_OPTIONS}
+                />
+              ),
+            },
+            {
+              id: "date-range",
+              label: "Date range",
+              active:
+                listFilters.isActive("from") || listFilters.isActive("to"),
+              control: (
+                <DateRangePicker
+                  from={dateFilterFrom}
+                  to={dateFilterTo}
+                  onChange={handleDateRangeChange}
+                  placeholder="Filter by cycle dates…"
+                />
+              ),
+            },
+          ]}
           onClearAll={listFilters.clearAll}
         />
       }
@@ -324,9 +401,19 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
       ) : (
         <EmptyState
           illustration={<EmptyCalendarIllustration />}
-          title="No cycles yet"
-          description="Create your first cycle to start planning work in time-boxed iterations."
-          action={canManage ? { label: "Create First Cycle", onClick: handleOpenCreate } : undefined}
+          title={listFilters.isFiltered ? "No cycles match your filters" : "No cycles yet"}
+          description={
+            listFilters.isFiltered
+              ? undefined
+              : "Create your first cycle to start planning work in time-boxed iterations."
+          }
+          filtersActive={listFilters.isFiltered}
+          onClearFilters={listFilters.clearAll}
+          action={
+            listFilters.isFiltered || !canManage
+              ? undefined
+              : { label: "Create First Cycle", onClick: handleOpenCreate }
+          }
         />
       )}
 

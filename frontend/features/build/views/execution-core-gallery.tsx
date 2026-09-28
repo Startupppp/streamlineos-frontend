@@ -49,6 +49,7 @@ const STUB_TICKET: KanbanTicket & { id: number } = {
   cycleId: null,
   moduleId: null,
   rank: "1000",
+  version: 1,
   dueDate: "2026-10-15",
   startDate: null,
   createdAt: "2026-09-01",
@@ -106,6 +107,7 @@ const STUB_FULL_TICKET: Ticket = {
   cycleId: null,
   sequenceId: "PROJ-101",
   estimate: null,
+  version: 1,
   startDate: null,
   dueDate: "2026-10-31",
   createdAt: "2026-09-01",
@@ -395,7 +397,7 @@ function EpicCase() {
     <GalleryCase id="epic-card" title="Epics — epic card">
       <div className="p-4">
         <EpicCard
-          epic={{ id: 1, title: "Platform Foundation Epic", status: "IN_PROGRESS", priority: "HIGH", description: "Foundation services, auth, and core data models." }}
+          epic={{ id: 1, title: "Platform Foundation Epic", status: "IN_PROGRESS", priority: "HIGH", description: "Foundation services, auth, and core data models.", version: 1 }}
           stories={[STUB_FULL_TICKET]}
           projectId={1}
           projectKey="PROJ"

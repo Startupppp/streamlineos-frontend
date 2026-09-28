@@ -19,8 +19,13 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
   useBuildListFilters: jest.fn(),
 }));
 
+let capturedToolbarFilters: { id: string }[] | undefined;
+
 jest.mock("@/features/build/shared/build-list-toolbar", () => ({
-  BuildListToolbar: () => <div data-testid="build-list-toolbar" />,
+  BuildListToolbar: ({ filters }: { filters?: { id: string }[] }) => {
+    capturedToolbarFilters = filters;
+    return <div data-testid="build-list-toolbar" />;
+  },
 }));
 
 jest.mock("@/features/build/shared/bulk-action-bar", () => ({
@@ -59,8 +64,8 @@ jest.mock("@/features/build/epics/epic-story-row", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title }: { children: React.ReactNode; title?: string }) => (
-    <div>{title ? <h1>{title}</h1> : null}{children}</div>
+  PageWrapper: ({ children, title, filters }: { children: React.ReactNode; title?: string; filters?: React.ReactNode }) => (
+    <div>{title ? <h1>{title}</h1> : null}{filters}{children}</div>
   ),
 }));
 
@@ -179,7 +184,7 @@ beforeEach(() => {
   mockUseBulkUpdateTickets.mockReturnValue(makeMutationResult());
   mockUseCycles.mockReturnValue({ data: [] });
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
-  mockUseBuildListFilters.mockReturnValue({ search: "", debouncedSearch: "", setSearch: jest.fn(), value: jest.fn(() => ""), setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: false });
+  mockUseBuildListFilters.mockReturnValue({ search: "", debouncedSearch: "", setSearch: jest.fn(), value: jest.fn(() => "all"), isActive: jest.fn(() => false), setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: false });
 });
 
 const params = Promise.resolve({ projectId: "1" });
@@ -298,4 +303,85 @@ it("enables keyboard navigation bound to the epic count when epics are present a
   const lastArgs = calls[calls.length - 1]?.[0];
   expect(lastArgs?.enabled).toBe(true);
   expect(lastArgs?.itemCount).toBe(1);
+});
+
+describe("EpicsPage — the status and ownerId URL parameters are declared, so they are not stripped to the sentinel", () => {
+  it("declares status and ownerId to useBuildListFilters, because an undeclared param always reads back as all", async () => {
+    await act(async () => {
+      render(<EpicsPage params={params} />);
+    });
+
+    const options = mockUseBuildListFilters.mock.calls.at(-1)?.[0] as
+      | { filters?: readonly { param: string }[] }
+      | undefined;
+    expect(options?.filters?.map((f) => f.param)).toEqual(["status", "ownerId"]);
+  });
+
+  it("renders a control for each declared filter so the parameter is reachable without hand-editing the URL", async () => {
+    await act(async () => {
+      render(<EpicsPage params={params} />);
+    });
+
+    const toolbarFilters = capturedToolbarFilters ?? [];
+    expect(toolbarFilters.map((f) => f.id)).toEqual(["status", "ownerId"]);
+  });
+});
+
+describe("EpicsPage — the c and e shortcuts have a real target", () => {
+  const EPIC = {
+    id: 3, orgId: "org-1", projectId: 1, title: "Epic C", type: "EPIC",
+    status: "TODO", priority: "MEDIUM", ticketNumber: 3, epicId: null,
+    reporterId: "user-1", points: null, storyPoints: null, link: null,
+    rank: "1002", parentTicketId: null, originalEstimate: null, timeSpent: null,
+    startDate: null, dueDate: null, moduleId: null, cycleId: null,
+    sequenceId: "PROJ-3", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
+  };
+
+  it("passes onCreate and onEdit to useBuildListKeyboard when the caller may create and update", async () => {
+    mockUseProjectBoardTickets.mockReturnValue({ data: [EPIC], isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+
+    await act(async () => {
+      render(<EpicsPage params={params} />);
+    });
+
+    const args = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(typeof args?.onCreate).toBe("function");
+    expect(typeof args?.onEdit).toBe("function");
+  });
+
+  it("passes no onCreate when build:tickets:create is denied, so c cannot open a sheet the caller may not submit", async () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseProjectBoardTickets.mockReturnValue({ data: [EPIC], isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+
+    await act(async () => {
+      render(<EpicsPage params={params} />);
+    });
+
+    const args = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(args?.onCreate).toBeUndefined();
+  });
+});
+
+describe("EpicsPage — the empty state tells a first run apart from a filtered no-result", () => {
+  it("offers first-run copy when nothing is filtered and the project has no epics", async () => {
+    await act(async () => {
+      render(<EpicsPage params={params} />);
+    });
+
+    expect(screen.getByTestId("empty-state").textContent).toBe("No epics yet");
+  });
+
+  it("says the filters excluded everything when a filter is active and no epic survives it", async () => {
+    mockUseBuildListFilters.mockReturnValue({
+      search: "", debouncedSearch: "zzz", setSearch: jest.fn(),
+      value: jest.fn(() => "all"), isActive: jest.fn(() => false),
+      setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: true,
+    });
+
+    await act(async () => {
+      render(<EpicsPage params={params} />);
+    });
+
+    expect(screen.getByTestId("empty-state").textContent).toBe("No epics match your filters");
+  });
 });

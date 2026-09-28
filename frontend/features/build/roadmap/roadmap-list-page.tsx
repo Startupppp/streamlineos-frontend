@@ -24,6 +24,7 @@ import type { ScorableRoadmapItem } from "@/features/build/roadmap/roadmap-item-
 import { FeedbackTab } from "@/features/build/roadmap/feedback-tab";
 import { ChangelogTab } from "@/features/build/roadmap/changelog-tab";
 import { RoadmapPublicationActions } from "@/features/build/roadmap/roadmap-publication-actions";
+import { ROADMAP_SORTS } from "@/hooks/api/build/roadmap";
 import {
   PmPageShell,
   PmSection,
@@ -34,13 +35,12 @@ type RoadmapTabValue = "roadmap" | "feedback" | "changelog";
 
 const FILTER_DEFINITIONS = [
   { param: "tab", options: ["roadmap", "feedback", "changelog"] },
-  { param: "scope" },
   { param: "productId" },
-  { param: "projectId" },
-  { param: "status" },
-  { param: "horizon" },
-  { param: "ownerId" },
-  { param: "sort" },
+  {
+    param: "status",
+    options: ["planned", "in_progress", "completed", "cancelled"],
+  },
+  { param: "sort", options: ROADMAP_SORTS },
 ] as const;
 
 export function RoadmapListPage() {
@@ -77,9 +77,11 @@ export function RoadmapListPage() {
   }, []);
 
   const statusValue = listFilters.value("status");
-  const ownerIdValue = listFilters.value("ownerId");
-  const horizonValue = listFilters.value("horizon");
   const sortValue = listFilters.value("sort");
+  const productIdValue = listFilters.value("productId");
+  const managedProductId = /^\d+$/.test(productIdValue)
+    ? Number(productIdValue)
+    : undefined;
 
   const handleRoadmapEditByIndex = useCallback((index: number) => {
     const item = roadmapItemsRef.current[index];
@@ -182,9 +184,9 @@ export function RoadmapListPage() {
                   createOpen={roadmapCreateOpen}
                   onCreateOpenChange={handleRoadmapCreateOpenChange}
                   status={statusValue !== "all" ? statusValue : undefined}
-                  horizon={horizonValue !== "all" ? horizonValue : undefined}
-                  ownerId={ownerIdValue !== "all" ? ownerIdValue : undefined}
+                  managedProductId={managedProductId}
                   sort={sortValue !== "all" ? sortValue : undefined}
+                  onClearFilters={listFilters.clearAll}
                   onItemsChange={handleRoadmapItemsChange}
                   externalEditTarget={externalEditTarget}
                   onExternalEditClose={handleExternalEditClose}

@@ -44,6 +44,7 @@ interface TicketConflictState {
   fields: TicketConflictFieldDiff[];
   patch: Record<string, unknown>;
   serverUpdatedAt: string;
+  serverVersion: number | undefined;
 }
 
 export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDetailOptions) {
@@ -55,6 +56,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const [syncedTitleVersion, setSyncedTitleVersion] = useState<string | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedAtRef = useRef<string | undefined>(undefined);
+  const lastSavedVersionRef = useRef<number | undefined>(undefined);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const saveSequenceRef = useRef(0);
   const enqueueSaveRef = useRef<
@@ -111,6 +113,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
   const updateTicketMutation = useUpdateTicket(projectId, {
     onSuccess: (data) => {
       lastSavedAtRef.current = data.updatedAt;
+      lastSavedVersionRef.current = data.version;
     },
     onError: (error, variables) => {
       if (isApiError(error) && getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT") {
@@ -121,7 +124,9 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
         }
         const patch: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(variables)) {
-          if (key !== "ticketId" && key !== "expectedUpdatedAt") patch[key] = value;
+          if (key !== "ticketId" && key !== "expectedUpdatedAt" && key !== "version") {
+            patch[key] = value;
+          }
         }
         async function showFieldComparison() {
           const latest = await refetchTicket();
@@ -138,6 +143,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
             fields,
             patch,
             serverUpdatedAt: new Date(current.updatedAt).toISOString(),
+            serverVersion: current.version,
           });
         }
         void showFieldComparison();
@@ -152,6 +158,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
             return;
           }
           lastSavedAtRef.current = new Date(latest.data.updatedAt).toISOString();
+          lastSavedVersionRef.current = latest.data.version;
           enqueueSaveRef.current?.(patch);
         }
         toast.warning(
@@ -183,18 +190,27 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
     }
   }, [ticket?.updatedAt]);
 
+  useEffect(() => {
+    if (typeof ticket?.version === "number") {
+      lastSavedVersionRef.current = ticket.version;
+    }
+  }, [ticket?.version]);
+
   const enqueueSave = useCallback(
     (field: Record<string, unknown>) => {
       if (!ticketId || !canUpdate) return;
       const sequence = ++saveSequenceRef.current;
       setSaving(true);
-      const task = saveQueueRef.current.then(() =>
-        updateTicketMutation.mutateAsync({
+      const task = saveQueueRef.current.then(() => {
+        const version = lastSavedVersionRef.current;
+        if (version === undefined) return undefined;
+        return updateTicketMutation.mutateAsync({
           ticketId,
           expectedUpdatedAt: lastSavedAtRef.current,
+          version,
           ...field,
-        }),
-      );
+        });
+      });
       saveQueueRef.current = task.then(
         () => undefined,
         () => undefined,
@@ -248,8 +264,9 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
 
   const keepConflictingEdit = useCallback(() => {
     if (!conflict) return;
-    const { patch, serverUpdatedAt } = conflict;
+    const { patch, serverUpdatedAt, serverVersion } = conflict;
     lastSavedAtRef.current = serverUpdatedAt;
+    lastSavedVersionRef.current = serverVersion;
     setConflict(null);
     enqueueSave(patch);
   }, [conflict, enqueueSave]);

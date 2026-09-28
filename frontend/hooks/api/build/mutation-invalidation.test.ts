@@ -169,7 +169,7 @@ describe("useUpdateTicket — invalidation contract", () => {
     });
 
     await act(async () => {
-      await result.current.mutateAsync({ ticketId: 9, title: "After" });
+      await result.current.mutateAsync({ ticketId: 9, version: 3, title: "After" });
     });
 
     expect(client.getQueryData(queryKeys.projects.ticket(42, 9))).toMatchObject({
@@ -191,7 +191,7 @@ describe("useUpdateTicket — invalidation contract", () => {
     });
 
     await act(async () => {
-      await result.current.mutateAsync({ ticketId: 9, cycleId: 3 });
+      await result.current.mutateAsync({ ticketId: 9, version: 3, cycleId: 3 });
     });
 
     expect(invalidateSpy).toHaveBeenCalledWith({
@@ -210,7 +210,7 @@ describe("useUpdateTicket — invalidation contract", () => {
     });
 
     await act(async () => {
-      await result.current.mutateAsync({ ticketId: 9, title: "After" });
+      await result.current.mutateAsync({ ticketId: 9, version: 3, title: "After" });
     });
 
     expect(invalidateSpy).toHaveBeenCalledWith({

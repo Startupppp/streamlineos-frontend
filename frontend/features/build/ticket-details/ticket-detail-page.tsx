@@ -114,6 +114,14 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   const displayKey = formatTicketKey(projectData?.key, ticket?.ticketNumber ?? parsed?.ticketNumber);
 
+  const versionedTicket = useMemo(
+    () =>
+      ticket && typeof ticket.version === "number"
+        ? { ...ticket, version: ticket.version }
+        : null,
+    [ticket],
+  );
+
   const handleApplyAiDescription = useCallback(
     (html: string) => {
       autoSave({ description: html });
@@ -175,7 +183,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     }
     return (
       <PageWrapper title="Ticket" backHref={backHref}>
-        <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(byKeyError)} onRetry={refetchByKey} />
+        <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(byKeyError)} error={byKeyError} onRetry={refetchByKey} />
       </PageWrapper>
     );
   }
@@ -231,7 +239,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     }
     return (
       <PageWrapper title={displayKey} backHref={backHref}>
-        <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(ticketError)} onRetry={refetchTicket} />
+        <ErrorState className="flex-1" title="Couldn't load ticket" description={getErrorMessage(ticketError)} error={ticketError} onRetry={refetchTicket} />
       </PageWrapper>
     );
   }
@@ -250,7 +258,20 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     );
   }
 
-  const pageTitle = localTitle || ticket.title;
+  if (!versionedTicket) {
+    return (
+      <PageWrapper title={displayKey} backHref={backHref}>
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load ticket"
+          description="This issue arrived without the version token its edits need, so nothing here could be saved. Reload to try again."
+          onRetry={refetchTicket}
+        />
+      </PageWrapper>
+    );
+  }
+
+  const pageTitle = localTitle || versionedTicket.title;
   const panelOpen = isMobile ? mobilePanelOpen : !rightPanelCollapsed;
 
   return (
@@ -261,13 +282,13 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           <span className="shrink-0 font-mono text-label font-medium text-muted-foreground">
             {displayKey}
           </span>
-          {ticket.parentTicketId != null ? (
+          {versionedTicket.parentTicketId != null ? (
             <>
               <span className="shrink-0 text-muted-foreground" aria-hidden>
                 ·
               </span>
               <TicketParentControl
-                ticket={ticket}
+                ticket={versionedTicket}
                 projectId={projectId}
                 projectKey={projectData?.key}
                 variant="breadcrumb"
@@ -299,7 +320,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
         <div className="min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 scrollbar-hide md:px-6 md:pb-5">
           <TicketDetailMainSection
-            ticket={ticket}
+            ticket={versionedTicket}
             ticketId={ticketId}
             projectId={projectId}
             projectKey={projectData?.key}
@@ -319,7 +340,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           onOpenChange={handleRightPanelOpenChange}
           displayKey={displayKey}
           saving={saving}
-          ticket={ticket}
+          ticket={versionedTicket}
           ticketId={ticketId}
           projectId={projectId}
           projectKey={projectData?.key}

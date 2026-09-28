@@ -70,6 +70,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
 
   const points = ticket.points ?? ticket.storyPoints;
   const createdDate = parseDisplayDate(ticket.createdAt);
+  const version = ticket.version;
 
   return (
     <div
@@ -125,6 +126,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           <InlinePriority
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentPriority={ticket.priority}
             showLabel
           />
@@ -134,6 +136,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           <InlineType
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentType={ticket.type}
             showLabel
           />
@@ -153,6 +156,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           <InlineEstimate
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentPoints={points}
           />
         ) : null}
@@ -161,6 +165,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           <InlineCycle
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentCycleId={ticket.cycleId}
           />
         ) : null}
@@ -169,6 +174,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           <InlineStartDate
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentStartDate={ticket.startDate}
           />
         ) : null}
@@ -179,6 +185,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           <InlineDueDate
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentDueDate={ticket.dueDate}
             fallbackDate={ticket.createdAt}
           />
@@ -196,6 +203,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             <InlineAssignee
               ticketId={ticket.id}
               projectId={projectId}
+              version={version}
               currentAssigneeId={ticket.assigneeId ?? primaryAssignee?.id ?? null}
               assignee={primaryAssignee}
             />

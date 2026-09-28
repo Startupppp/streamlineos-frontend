@@ -16,6 +16,7 @@ import { Calendar as CalendarIcon } from "lucide-react";
 interface InlineDueDateProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentDueDate?: string | null;
   fallbackDate?: string | null;
 }
@@ -23,6 +24,7 @@ interface InlineDueDateProps {
 export const InlineDueDate = memo(function InlineDueDate({
   ticketId,
   projectId,
+  version,
   currentDueDate,
   fallbackDate,
 }: InlineDueDateProps) {
@@ -49,13 +51,13 @@ export const InlineDueDate = memo(function InlineDueDate({
 
   function handleDateSelect(date: Date | undefined) {
     if (date) {
-      updateTicket.mutate({ ticketId, dueDate: format(date, "yyyy-MM-dd") });
+      updateTicket.mutate({ ticketId, version, dueDate: format(date, "yyyy-MM-dd") });
       setOpen(false);
     }
   }
 
   function handleClear() {
-    updateTicket.mutate({ ticketId, dueDate: null });
+    updateTicket.mutate({ ticketId, version, dueDate: null });
     setOpen(false);
   }
 
@@ -112,12 +114,14 @@ export const InlineDueDate = memo(function InlineDueDate({
 interface InlineStartDateProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentStartDate?: string | null;
 }
 
 export const InlineStartDate = memo(function InlineStartDate({
   ticketId,
   projectId,
+  version,
   currentStartDate,
 }: InlineStartDateProps) {
   const [open, setOpen] = useState(false);
@@ -134,13 +138,13 @@ export const InlineStartDate = memo(function InlineStartDate({
 
   function handleDateSelect(date: Date | undefined) {
     if (date) {
-      updateTicket.mutate({ ticketId, startDate: format(date, "yyyy-MM-dd") });
+      updateTicket.mutate({ ticketId, version, startDate: format(date, "yyyy-MM-dd") });
       setOpen(false);
     }
   }
 
   function handleClear() {
-    updateTicket.mutate({ ticketId, startDate: null });
+    updateTicket.mutate({ ticketId, version, startDate: null });
     setOpen(false);
   }
 

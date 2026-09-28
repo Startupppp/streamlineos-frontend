@@ -14,6 +14,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PM_PANEL } from "@/components/pm-chrome";
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { toMilestoneStatus, toMilestoneTargetDate } from "./milestone-status";
 
 const STATUS_CONFIG = {
   PENDING: {
@@ -52,17 +53,19 @@ export const MilestoneCard = memo(function MilestoneCard({
   selected,
   onSelect,
 }: MilestoneCardProps) {
-  const cfg = STATUS_CONFIG[milestone.status];
-  const dateObj = new Date(milestone.targetDate);
-  const daysLeft = differenceInDays(dateObj, new Date());
-  const overdue = isPast(dateObj) && !isToday(dateObj) && milestone.status === "PENDING";
+  const status = toMilestoneStatus(milestone.status);
+  const cfg = STATUS_CONFIG[status];
+  const dateObj = toMilestoneTargetDate(milestone.targetDate);
+  const daysLeft = dateObj ? differenceInDays(dateObj, new Date()) : null;
+  const overdue =
+    dateObj !== null && isPast(dateObj) && !isToday(dateObj) && status === "PENDING";
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const handleEdit = useCallback(() => onEdit(milestone), [onEdit, milestone]);
   const handleDelete = useCallback(() => onDelete?.(milestone), [onDelete, milestone]);
 
   const daysLabel =
-    milestone.status !== "PENDING"
+    status !== "PENDING" || daysLeft === null
       ? null
       : overdue
         ? `${Math.abs(daysLeft)}d overdue`
@@ -123,7 +126,9 @@ export const MilestoneCard = memo(function MilestoneCard({
           <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-1.5 text-dense text-muted-foreground">
               <CalendarCheck2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              <span className="shrink-0 tabular-nums">{format(dateObj, "MMM d, yyyy")}</span>
+              <span className="shrink-0 tabular-nums">
+                {dateObj ? format(dateObj, "MMM d, yyyy") : "No target date"}
+              </span>
               {daysLabel ? (
                 <span
                   className={cn(

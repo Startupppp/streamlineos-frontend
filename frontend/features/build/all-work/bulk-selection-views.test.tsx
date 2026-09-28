@@ -80,6 +80,7 @@ const TICKET: AllWorkTicket = {
   assigneeId: null,
   points: null,
   estimate: null,
+  version: 1,
   rank: null,
   startDate: null,
   dueDate: null,

@@ -27,7 +27,7 @@ it("a failed edit preserves newer ticket changes, project fields and loaded page
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useUpdateTicket(42), { wrapper });
   let failed: Promise<unknown> = Promise.resolve();
-  act(() => { failed = result.current.mutateAsync({ ticketId: 1, title: "Failed edit", priority: "HIGH" }).catch((error: unknown) => error); });
+  act(() => { failed = result.current.mutateAsync({ ticketId: 1, version: 2, title: "Failed edit", priority: "HIGH" }).catch((error: unknown) => error); });
   await waitFor(() => expect(apiClient.patch).toHaveBeenCalledTimes(1));
   const newer = { ...ticket, title: "Newer successful edit", priority: "HIGH" };
   const extra = { data: [{ id: 2, title: "New page", priority: "LOW" }], pagination: { nextCursor: null } };
@@ -50,7 +50,7 @@ it("updates an infinite board without destroying its pages", async () => {
   jest.mocked(apiClient.patch).mockResolvedValue({ updated: true });
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useUpdateTicket(42), { wrapper });
-  await act(async () => { await result.current.mutateAsync({ ticketId: 1, title: "After" }); });
+  await act(async () => { await result.current.mutateAsync({ ticketId: 1, version: 2, title: "After" }); });
   expect(client.getQueryData(key)).toEqual({ ...original, pages: [{ ...original.pages[0], data: [{ id: 1, title: "After" }] }] });
   expect(apiClient.patch).toHaveBeenCalledTimes(1);
   client.clear();
@@ -68,7 +68,7 @@ it("rolls back filtered multipage boards and paginated lists after failure", asy
   jest.mocked(apiClient.patch).mockRejectedValue(new Error("conflict"));
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useUpdateTicket(42), { wrapper });
-  await act(async () => { await expect(result.current.mutateAsync({ ticketId: 1, title: "After" })).rejects.toThrow("conflict"); });
+  await act(async () => { await expect(result.current.mutateAsync({ ticketId: 1, version: 2, title: "After" })).rejects.toThrow("conflict"); });
   expect(client.getQueryData(board)).toEqual(original);
   expect(client.getQueryData(list)).toEqual(page);
   client.clear();
@@ -82,7 +82,7 @@ it.each(["title", "priority", "dueDate"])("invalidates My Issues after %s change
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useUpdateTicket(42), { wrapper });
   const change = field === "title" ? { title: "After" } : field === "priority" ? { priority: "HIGH" as const } : { dueDate: "2026-09-10" };
-  await act(async () => { await result.current.mutateAsync({ ticketId: 1, ...change }); });
+  await act(async () => { await result.current.mutateAsync({ ticketId: 1, version: 2, ...change }); });
   expect(client.getQueryState(queryKeys.dashboard.myIssues())?.isInvalidated).toBe(true);
   if (field === "title") expect(client.getQueryState(queryKeys.projectReports.velocity(42))?.isInvalidated).toBe(false);
   client.clear();

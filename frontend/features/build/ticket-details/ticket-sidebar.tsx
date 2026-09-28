@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 interface TicketSidebarProps {
   ticket: {
     id: number;
+    version: number;
     parentTicketId?: number | null;
     status?: string | null;
     priority?: string | null;
@@ -103,7 +104,7 @@ export function TicketSidebar({
   const handleClearStartDate = () => onAutoSave({ startDate: null });
   const handleClearDueDate = () => onAutoSave({ dueDate: null });
   const handleRecurrenceChange = (rule: RecurrenceRule | null) =>
-    setRecurrence.mutate(rule);
+    setRecurrence.mutate({ version: ticket.version, rule });
 
   const handleStatusChange = (v: string) => onAutoSave({ status: v });
   const handlePriorityChange = (v: string) => onAutoSave({ priority: v });
@@ -174,6 +175,7 @@ export function TicketSidebar({
         <TicketParentControl
           ticket={{
             id: ticket.id,
+            version: ticket.version,
             parentTicketId: ticket.parentTicketId ?? null,
           }}
           projectId={projectId}

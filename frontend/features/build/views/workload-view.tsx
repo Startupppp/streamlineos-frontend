@@ -474,19 +474,22 @@ export const WorkloadView = memo(function WorkloadView({
                           >
                             <ExternalLink className="h-3 w-3 text-muted-foreground" />
                           </Link>
-                          <span
-                            onMouseDown={stopEvent}
-                            onClick={stopEvent}
-                            onKeyDown={stopEvent}
-                            className="shrink-0 opacity-0 group-hover/unassigned:opacity-100 transition-opacity"
-                          >
-                            <InlineAssignee
-                              ticketId={ticket.id}
-                              projectId={projectId}
-                              currentAssigneeId={null}
-                              assignee={null}
-                            />
-                          </span>
+                          {ticket.version !== null ? (
+                            <span
+                              onMouseDown={stopEvent}
+                              onClick={stopEvent}
+                              onKeyDown={stopEvent}
+                              className="shrink-0 opacity-0 group-hover/unassigned:opacity-100 transition-opacity"
+                            >
+                              <InlineAssignee
+                                ticketId={ticket.id}
+                                projectId={projectId}
+                                version={ticket.version}
+                                currentAssigneeId={null}
+                                assignee={null}
+                              />
+                            </span>
+                          ) : null}
                         </div>
                       ))}
                       {unassigned.length > 10 && (

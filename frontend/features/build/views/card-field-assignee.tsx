@@ -30,6 +30,7 @@ import { AvatarWithPresence } from "@/components/shared/presence-dot";
 interface InlineAssigneeProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentAssigneeId?: string | null;
   assignee?: {
     id: string;
@@ -43,6 +44,7 @@ interface InlineAssigneeProps {
 export const InlineAssignee = memo(function InlineAssignee({
   ticketId,
   projectId,
+  version,
   currentAssigneeId,
   assignee,
 }: InlineAssigneeProps) {
@@ -59,9 +61,9 @@ export const InlineAssignee = memo(function InlineAssignee({
   function makeAssigneeHandler(userId: string | null) {
     return function selectAssignee() {
       if (userId === null) {
-        updateTicket.mutate({ ticketId, assigneeIds: [] });
+        updateTicket.mutate({ ticketId, version, assigneeIds: [] });
       } else {
-        updateTicket.mutate({ ticketId, assigneeId: userId });
+        updateTicket.mutate({ ticketId, version, assigneeId: userId });
       }
       setOpen(false);
     };

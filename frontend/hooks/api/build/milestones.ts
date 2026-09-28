@@ -69,6 +69,7 @@ interface CreateMilestoneInput {
 }
 
 interface UpdateMilestoneInput {
+  version: number;
   name?: string;
   description?: string;
   targetDate?: string;

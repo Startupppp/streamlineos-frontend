@@ -3,7 +3,12 @@
 import { ReactNode, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { editEpicSchema, EPIC_PRIORITIES, EPIC_STATUSES, type EditEpicInput } from "./epic-schema";
+import {
+  editEpicSchema,
+  EPIC_PRIORITIES,
+  EPIC_STATUSES,
+  type EditEpicInput,
+} from "./epic-schema";
 import { Pencil, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EntityFormSheet } from "@/components/shared";
@@ -36,21 +41,17 @@ interface EditEpicDialogProps {
     description?: string | null;
     priority?: string | null;
     status: string | null;
+    version: number;
   };
   projectId: number;
   trigger?: ReactNode;
-  /**
-   * Controlled mode, for a caller that opens this from a menu item. Without it
-   * the caller has to render a trigger, and a caller with no visible trigger to
-   * offer ends up rendering a hidden proxy button — which the sheet then
-   * restores focus to on close, stranding a keyboard user on an element that is
-   * not there.
-   */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
-function toPriority(value: string | null | undefined): EditEpicInput["priority"] {
+function toPriority(
+  value: string | null | undefined,
+): EditEpicInput["priority"] {
   return EPIC_PRIORITIES.find((p) => p === value) ?? "MEDIUM";
 }
 
@@ -87,7 +88,9 @@ export function EditEpicDialog({
   const updateTicket = useUpdateTicket(projectId, {
     onSuccess: () => {
       toast.success("Epic updated");
-      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.detail(projectId),
+      });
       setOpen(false);
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -96,6 +99,7 @@ export function EditEpicDialog({
   const handleSubmit = (data: EditEpicInput) => {
     updateTicket.mutate({
       ticketId: epic.id,
+      version: epic.version,
       title: data.title,
       description: data.description,
       priority: data.priority,
@@ -113,9 +117,7 @@ export function EditEpicDialog({
   return (
     <>
       {controlled ? null : trigger ? (
-        <span {...activationProps(handleOpen)}>
-          {trigger}
-        </span>
+        <span {...activationProps(handleOpen)}>{trigger}</span>
       ) : (
         <Button variant="ghost" size="sm" onClick={handleOpen}>
           <Pencil className="h-4 w-4 mr-2" />

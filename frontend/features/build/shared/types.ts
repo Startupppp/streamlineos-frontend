@@ -57,6 +57,7 @@ export interface KanbanTicket {
   dueDate?: string | null;
   startDate?: string | null;
   timeSpent?: string | null;
+  version: number;
   createdAt?: string | null;
   updatedAt?: string | null;
   assignee?: {

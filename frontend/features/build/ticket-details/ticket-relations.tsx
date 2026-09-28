@@ -263,6 +263,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
                             id: t.id,
                             title: t.title,
                             status: t.status ?? "TODO",
+                            version: t.version,
                             priority: t.priority,
                             points: t.points,
                             ticketNumber: t.ticketNumber,

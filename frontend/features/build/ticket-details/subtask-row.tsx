@@ -13,6 +13,7 @@ export interface CompactTicketRowData {
   id: number;
   title: string;
   status: string;
+  version: number;
   priority?: string | null;
   points?: number | null;
   ticketNumber?: number | null;
@@ -60,12 +61,15 @@ export const SubtaskRow = memo(function SubtaskRow({
   const rowClassName =
     "group flex items-center gap-2 rounded-lg bg-muted/30 px-2 py-1.5 hover:bg-muted/60 transition-colors";
 
+  const version = subtask.version;
+
   const rowBody = (
     <>
       <span className="shrink-0" onClick={stopProp} onKeyDown={stopProp}>
         <InlineStatus
           ticketId={subtask.id}
           projectId={resolvedProjectId}
+          version={version}
           currentStatus={subtask.status}
           projectStatuses={projectStatuses}
         />
@@ -98,6 +102,7 @@ export const SubtaskRow = memo(function SubtaskRow({
         <InlinePriority
           ticketId={subtask.id}
           projectId={resolvedProjectId}
+          version={version}
           currentPriority={subtask.priority}
         />
       </span>
@@ -106,6 +111,7 @@ export const SubtaskRow = memo(function SubtaskRow({
         <InlineAssignee
           ticketId={subtask.id}
           projectId={resolvedProjectId}
+          version={version}
           currentAssigneeId={subtask.assigneeId}
           assignee={subtask.assignee ?? null}
         />

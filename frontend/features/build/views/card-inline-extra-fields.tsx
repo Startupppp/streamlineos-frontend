@@ -35,6 +35,7 @@ const TYPE_PILL_CLASS: Record<string, string> = {
 interface InlineTypeProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentType?: string | null;
   showLabel?: boolean;
 }
@@ -42,6 +43,7 @@ interface InlineTypeProps {
 export const InlineType = memo(function InlineType({
   ticketId,
   projectId,
+  version,
   currentType,
   showLabel = false,
 }: InlineTypeProps) {
@@ -52,7 +54,7 @@ export const InlineType = memo(function InlineType({
 
   function makeTypeHandler(type: string) {
     return function selectType() {
-      updateTicket.mutate({ ticketId, type });
+      updateTicket.mutate({ ticketId, version, type });
       setOpen(false);
     };
   }
@@ -207,12 +209,14 @@ export const InlineLabels = memo(function InlineLabels({
 interface InlineCycleProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentCycleId?: number | null;
 }
 
 export const InlineCycle = memo(function InlineCycle({
   ticketId,
   projectId,
+  version,
   currentCycleId,
 }: InlineCycleProps) {
   const [open, setOpen] = useState(false);
@@ -225,7 +229,7 @@ export const InlineCycle = memo(function InlineCycle({
 
   function makeCycleHandler(cycleId: number | null) {
     return function selectCycle() {
-      updateTicket.mutate({ ticketId, cycleId });
+      updateTicket.mutate({ ticketId, version, cycleId });
       setOpen(false);
     };
   }

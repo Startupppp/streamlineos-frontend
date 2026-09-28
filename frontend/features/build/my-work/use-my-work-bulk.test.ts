@@ -66,6 +66,7 @@ function makeTicket(id: number, projectId: number): AllWorkTicket {
     assigneeId: null,
     points: null,
     estimate: null,
+    version: 1,
     rank: null,
     startDate: null,
     dueDate: null,

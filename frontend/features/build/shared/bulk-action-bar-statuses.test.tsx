@@ -1,8 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { BulkActionBar } from "./bulk-action-bar";
 
+let grantedKeys: string[] = ["build:tickets:update"];
+
 jest.mock("@/hooks/api/access", () => ({
-  useCan: (key: string) => key === "build:tickets:update",
+  useCan: (key: string) => grantedKeys.includes(key),
 }));
 jest.mock("@/hooks/api/build/ticket-search", () => ({
   useTicketSearch: () => ({ data: [] }),
@@ -22,7 +24,13 @@ jest.mock("@/components/ui/select", () => ({
 const noop = () => {};
 const noopString = (_value: string) => {};
 
-function renderBar(statuses: { name: string; color: string | null; type: string | null }[] | undefined) {
+beforeEach(() => {
+  grantedKeys = ["build:tickets:update"];
+});
+
+function mountBar(
+  statuses: { name: string; color: string | null; type: string | null }[] | undefined,
+) {
   render(
     <BulkActionBar
       selectedCount={2}
@@ -34,13 +42,53 @@ function renderBar(statuses: { name: string; color: string | null; type: string 
       onBulkPriority={noopString}
       onBulkAssignee={noopString}
       onBulkCycle={noopString}
+      onBulkArchive={noop}
+      onBulkExport={noop}
       onClear={noop}
     />,
   );
+}
+
+function renderBar(statuses: { name: string; color: string | null; type: string | null }[] | undefined) {
+  mountBar(statuses);
   return screen
     .getAllByTestId("status-option")
     .map((node) => node.getAttribute("data-value"));
 }
+
+describe("BulkActionBar — permission gate (FE-44)", () => {
+  const statuses = [{ name: "TODO", color: null, type: "unstarted" }];
+
+  it("renders no bulk controls at all when build:tickets:update is denied", () => {
+    grantedKeys = [];
+    mountBar(statuses);
+    expect(screen.queryByTestId("status-option")).not.toBeInTheDocument();
+    expect(screen.queryByText("Set Status")).not.toBeInTheDocument();
+    expect(screen.queryByText("Archive")).not.toBeInTheDocument();
+    expect(screen.queryByText("Export")).not.toBeInTheDocument();
+  });
+
+  it("renders the bulk controls when build:tickets:update is granted, proving the denial test is not passing on a control that cannot render", () => {
+    grantedKeys = ["build:tickets:update"];
+    mountBar(statuses);
+    expect(screen.getAllByTestId("status-option").length).toBeGreaterThan(0);
+    expect(screen.getByText("Set Status")).toBeInTheDocument();
+    expect(screen.getByText("Archive")).toBeInTheDocument();
+    expect(screen.getByText("Export")).toBeInTheDocument();
+  });
+
+  it("hides the assign control when build:tickets:assign is denied even though update is granted", () => {
+    grantedKeys = ["build:tickets:update"];
+    mountBar(statuses);
+    expect(screen.queryByText("Assign to")).not.toBeInTheDocument();
+  });
+
+  it("shows the assign control once build:tickets:assign is granted", () => {
+    grantedKeys = ["build:tickets:update", "build:tickets:assign"];
+    mountBar(statuses);
+    expect(screen.getByText("Assign to")).toBeInTheDocument();
+  });
+});
 
 describe("the bulk Set Status menu", () => {
   it("offers the organisation's configured workflow states, because a bulk transition to a state absent from the menu cannot be performed at all", () => {

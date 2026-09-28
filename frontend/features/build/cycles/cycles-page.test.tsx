@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { CyclesPage } from "./cycles-page";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ApiError } from "@/lib/api-envelope";
 
 const mockReplace = jest.fn();
@@ -189,6 +190,7 @@ const mockUseUpdateCycle = useUpdateCycle as jest.Mock;
 const mockUseDeleteCycle = useDeleteCycle as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
+const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
 const mockUpdateMutate = jest.fn();
 const mockDeleteMutate = jest.fn();
 
@@ -431,5 +433,62 @@ describe("CyclesPage — from/to date range filters narrow displayed cycles", ()
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Early sprint")).toBeInTheDocument();
     expect(screen.getByText("Recent sprint")).toBeInTheDocument();
+  });
+});
+
+describe("CyclesPage — the c and e shortcuts have a real target", () => {
+  const CYCLE = { id: 4, name: "Focused sprint", version: 1, status: "active" as const, startDate: "2026-09-01", endDate: "2026-09-14", progress: 0, completedItems: 0, totalItems: 0 };
+
+  it("passes onCreate to useBuildListKeyboard so c opens the create sheet when cycles can be managed", () => {
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    const args = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(typeof args?.onCreate).toBe("function");
+  });
+
+  it("passes no onCreate when build:cycles:manage is denied, so c cannot open a sheet the caller may not submit", () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    const args = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(args?.onCreate).toBeUndefined();
+  });
+
+  it("opens the edit sheet on the focused cycle when onEdit fires, instead of the previous no-op handler", () => {
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    const args = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(screen.queryByTestId("cycle-form-sheet")).not.toBeInTheDocument();
+    act(() => {
+      args?.onEdit?.(0);
+    });
+    expect(screen.getByTestId("cycle-form-sheet").textContent).toBe("Editing Focused sprint");
+  });
+
+  it("opens the edit sheet on the focused cycle when Enter fires, so onOpen is not a no-op either", () => {
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    const args = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    act(() => {
+      args?.onOpen?.(0);
+    });
+    expect(screen.getByTestId("cycle-form-sheet").textContent).toBe("Editing Focused sprint");
+  });
+});
+
+describe("CyclesPage — the empty state tells a first run apart from a filtered no-result", () => {
+  const DRAFT = { id: 7, name: "Draft sprint", version: 1, status: "draft" as const, startDate: "2026-09-01", endDate: "2026-09-14", progress: 0, completedItems: 0, totalItems: 0 };
+
+  it("offers first-run copy when nothing is filtered and the project has no cycles", () => {
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByTestId("empty-state").textContent).toBe("No cycles yet");
+  });
+
+  it("says the filters excluded everything when a status filter hides every cycle", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("status=completed");
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [DRAFT] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByTestId("empty-state").textContent).toBe("No cycles match your filters");
   });
 });

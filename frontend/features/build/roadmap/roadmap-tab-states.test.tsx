@@ -6,6 +6,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 jest.mock("@/hooks/api/build/roadmap", () => ({
   useRoadmapItems: jest.fn(),
   useDeleteRoadmapItem: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  ROADMAP_SORTS: ["updated_at", "created_at", "title"],
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -210,5 +211,67 @@ describe("RoadmapTab — denial-is-not-emptiness", () => {
     mockUsePageState.mockReturnValue({ kind: "empty" });
     render(<RoadmapTab search="" />);
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+  });
+});
+
+describe("RoadmapTab — the empty state tells a first run apart from a filtered no-result", () => {
+  it("offers first-run copy when no filter is applied and the org has no roadmap items", () => {
+    mockUsePageState.mockReturnValue({ kind: "empty" });
+    render(<RoadmapTab search="" />);
+    expect(screen.getByTestId("empty-state-content")).toHaveAttribute(
+      "data-title",
+      "No roadmap items yet",
+    );
+  });
+
+  it("says the filters excluded everything when a search term returned no rows", () => {
+    mockUsePageState.mockReturnValue({ kind: "empty" });
+    render(<RoadmapTab search="retention" />);
+    expect(screen.getByTestId("empty-state-content")).toHaveAttribute(
+      "data-title",
+      "No roadmap items match your filters",
+    );
+  });
+
+  it("says the filters excluded everything when a status filter returned no rows", () => {
+    mockUsePageState.mockReturnValue({ kind: "empty" });
+    render(<RoadmapTab search="" status="completed" />);
+    expect(screen.getByTestId("empty-state-content")).toHaveAttribute(
+      "data-title",
+      "No roadmap items match your filters",
+    );
+  });
+});
+
+describe("RoadmapTab — the list read carries only keys roadmapListQuerySchema declares", () => {
+  it("passes status, managedProductId and sort through to the query", () => {
+    render(
+      <RoadmapTab
+        search="billing"
+        status="planned"
+        managedProductId={9}
+        sort="created_at"
+      />,
+    );
+    expect(mockUseRoadmapItems).toHaveBeenCalledWith({
+      search: "billing",
+      cursor: undefined,
+      status: "planned",
+      managedProductId: 9,
+      sort: "created_at",
+    });
+  });
+
+  it("drops a sort value the backend enum rejects, so the read is not a 400", () => {
+    render(<RoadmapTab search="" sort="votes" />);
+    expect(mockUseRoadmapItems).toHaveBeenCalledWith({ cursor: undefined });
+  });
+
+  it("drops a status value the backend enum rejects, so the read is not a 400", () => {
+    render(<RoadmapTab search="" status="shipped" />);
+    expect(mockUseRoadmapItems).toHaveBeenCalledWith({
+      cursor: undefined,
+      status: undefined,
+    });
   });
 });

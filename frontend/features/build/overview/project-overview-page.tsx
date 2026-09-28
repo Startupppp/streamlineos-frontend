@@ -114,7 +114,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
   const activeCycle = cycles.find((c) => c.status === "active");
   const nextMilestone = milestones
     .filter((m) => m.status === "PENDING")
-    .sort((a, b) => a.targetDate.localeCompare(b.targetDate))[0];
+    .sort((a, b) => (a.targetDate ?? "").localeCompare(b.targetDate ?? ""))[0];
   const nextRelease = releases
     .filter((r) => r.status === "draft")
     .sort((a, b) => {

@@ -20,6 +20,7 @@ export function mapBoardTicketToKanban(t: BoardTicket): KanbanTicket {
     rank: t.rank ?? undefined,
     epicId: t.epicId ?? undefined,
     assigneeId: t.assigneeId ?? undefined,
+    version: t.version,
     cycleId: t.cycleId ?? null,
     moduleId: t.moduleId ?? null,
     dueDate: t.dueDate ?? null,

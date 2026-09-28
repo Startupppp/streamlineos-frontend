@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ProjectMilestonesPage } from "./project-milestones-page";
+import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn() }),
@@ -230,4 +231,37 @@ it("hides bulk action bar after clear button is clicked", () => {
   fireEvent.click(screen.getByTestId("milestone-card"));
   fireEvent.click(screen.getByLabelText("Clear selection"));
   expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
+});
+
+describe("ProjectMilestonesPage — the failure branch keeps the backend's status semantics", () => {
+  it("offers the upgrade path the backend sent with a 402 rather than a generic load failure", () => {
+    mockUseProjectMilestones.mockReturnValue(
+      baseQueryResult({
+        isError: true,
+        error: new ApiError("Build is not included in your current plan.", 402, "MODULE_NOT_ENABLED", {
+          moduleKey: "build",
+          reason: "not-in-plan",
+          upgradePath: "/settings/billing",
+        }),
+      }),
+    );
+
+    render(<ProjectMilestonesPage projectId="1" />);
+
+    expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /plan|billing|upgrade/i })).toHaveAttribute(
+      "href",
+      "/settings/billing",
+    );
+  });
+
+  it("still shows the backend message for an ordinary load failure, so the 402 branch did not swallow errors", () => {
+    mockUseProjectMilestones.mockReturnValue(
+      baseQueryResult({ isError: true, error: new Error("Milestones query timed out") }),
+    );
+
+    render(<ProjectMilestonesPage projectId="1" />);
+
+    expect(screen.getByTestId("error-state").textContent).toContain("Milestones query timed out");
+  });
 });

@@ -138,9 +138,11 @@ export function TriagePage({ projectId }: TriagePageProps) {
 
   const handleAccept = useCallback(
     (ticketId: number) => {
+      const target = tickets.find((t) => t.id === ticketId);
+      if (!target) return;
       setPendingAccept((prev) => new Set(prev).add(ticketId));
       updateTicket.mutate(
-        { ticketId, status: ACCEPT_STATUS },
+        { ticketId, version: target.version, status: ACCEPT_STATUS },
         {
           onSuccess: () => {
             setPendingAccept((prev) => {
@@ -166,9 +168,11 @@ export function TriagePage({ projectId }: TriagePageProps) {
 
   const handleDecline = useCallback(
     (ticketId: number) => {
+      const target = tickets.find((t) => t.id === ticketId);
+      if (!target) return;
       setPendingDecline((prev) => new Set(prev).add(ticketId));
       updateTicket.mutate(
-        { ticketId, status: DECLINE_STATUS },
+        { ticketId, version: target.version, status: DECLINE_STATUS },
         {
           onSuccess: () => {
             setPendingDecline((prev) => {

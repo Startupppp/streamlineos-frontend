@@ -216,6 +216,7 @@ export const ticketListRowContract = ticketRowContract
     cycleId: true,
     sequenceId: true,
     estimate: true,
+    version: true,
     createdAt: true,
     updatedAt: true,
   })

@@ -253,6 +253,74 @@ describe("useBuildListKeyboard — ? opens shortcut help overlay when the callba
   });
 });
 
+describe("useBuildListKeyboard — / focuses the page search", () => {
+  function setupWithSearch(ref: { current: HTMLInputElement | null }) {
+    return renderHook(() =>
+      useBuildListKeyboard({
+        itemCount: 5,
+        onOpen: mockOpen,
+        onClearSelection: mockClear,
+        searchInputRef: ref,
+      }),
+    );
+  }
+
+  it("/ moves focus into the search input the page handed it", () => {
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    setupWithSearch({ current: input });
+
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "/" });
+    });
+
+    expect(document.activeElement).toBe(input);
+    input.remove();
+  });
+
+  it("/ does not throw when the page has no search input to focus", () => {
+    setupWithSearch({ current: null });
+
+    expect(() =>
+      act(() => {
+        fireEvent.keyDown(document.body, { key: "/" });
+      }),
+    ).not.toThrow();
+  });
+
+  it("/ does not steal focus while the user is already typing, so a slash can be typed into a field", () => {
+    const search = document.createElement("input");
+    const other = document.createElement("textarea");
+    document.body.appendChild(search);
+    document.body.appendChild(other);
+    other.focus();
+    setupWithSearch({ current: search });
+
+    act(() => {
+      fireEvent.keyDown(other, { key: "/" });
+    });
+
+    expect(document.activeElement).toBe(other);
+    search.remove();
+    other.remove();
+  });
+});
+
+describe("useBuildListKeyboard — the input guard covers every editable target", () => {
+  it("j does not move focus inside a native select", () => {
+    const select = document.createElement("select");
+    document.body.appendChild(select);
+    const { result } = setup();
+
+    act(() => {
+      fireEvent.keyDown(select, { key: "j" });
+    });
+
+    expect(result.current.focusedIndex).toBeNull();
+    select.remove();
+  });
+});
+
 describe("useBuildListKeyboard — c creates and e edits, so no page needs its own keydown listener", () => {
   const mockCreate = jest.fn();
   const mockEdit = jest.fn();

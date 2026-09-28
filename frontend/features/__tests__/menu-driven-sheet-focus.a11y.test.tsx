@@ -22,6 +22,7 @@ const epic = {
   description: "",
   priority: "MEDIUM",
   status: "TODO",
+  version: 4,
 };
 
 /**

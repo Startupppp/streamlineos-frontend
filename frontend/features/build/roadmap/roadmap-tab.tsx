@@ -6,12 +6,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
-import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
+import {
+  useRoadmapItems,
+  useDeleteRoadmapItem,
+  ROADMAP_SORTS,
+  type RoadmapSort,
+} from "@/hooks/api/build/roadmap";
 import type { RoadmapStatus } from "@/types/projects/roadmap";
 
 const ROADMAP_STATUSES: readonly RoadmapStatus[] = ["planned", "in_progress", "completed", "cancelled"];
 function toRoadmapStatus(s: string): RoadmapStatus | undefined {
   return ROADMAP_STATUSES.find((v) => v === s);
+}
+function toRoadmapSort(s: string): RoadmapSort | undefined {
+  return ROADMAP_SORTS.find((v) => v === s);
 }
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -29,10 +37,9 @@ interface RoadmapTabProps {
   createOpen?: boolean;
   onCreateOpenChange?: (open: boolean) => void;
   status?: string;
-  projectId?: number;
-  horizon?: string;
-  ownerId?: string;
+  managedProductId?: number;
   sort?: string;
+  onClearFilters?: () => void;
   onItemsChange?: (items: ScorableRoadmapItem[]) => void;
   externalEditTarget?: ScorableRoadmapItem | null;
   onExternalEditClose?: () => void;
@@ -59,22 +66,20 @@ export function RoadmapTab({
   createOpen,
   onCreateOpenChange,
   status,
-  projectId,
-  horizon,
-  ownerId,
+  managedProductId,
   sort,
+  onClearFilters,
   onItemsChange,
   externalEditTarget,
   onExternalEditClose,
 }: RoadmapTabProps) {
+  const sortValue = sort ? toRoadmapSort(sort) : undefined;
   const { data, isLoading, isError, error, refetch } = useRoadmapItems({
     ...(search.trim() ? { search: search.trim() } : {}),
     cursor: cursor ?? undefined,
     ...(status ? { status: toRoadmapStatus(status) } : {}),
-    ...(projectId !== undefined ? { projectId } : {}),
-    ...(horizon ? { horizon } : {}),
-    ...(ownerId ? { ownerId } : {}),
-    ...(sort ? { sort } : {}),
+    ...(managedProductId !== undefined ? { managedProductId } : {}),
+    ...(sortValue ? { sort: sortValue } : {}),
   });
   const deleteItem = useDeleteRoadmapItem();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
@@ -82,6 +87,9 @@ export function RoadmapTab({
   const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(null);
 
   const isEmpty = (data?.data ?? []).length === 0 && !cursor;
+  const isFiltered = Boolean(
+    search.trim() || status || managedProductId !== undefined,
+  );
 
   useEffect(() => {
     onItemsChange?.(data?.data ?? []);
@@ -169,9 +177,23 @@ export function RoadmapTab({
           <EmptyState
             className={CONTENT_FILL_PANEL}
             illustrationPreset="projects"
-            title="No roadmap items yet"
-            description="Plan what's coming and share it publicly with your users."
-            action={{ label: "Add roadmap item", onClick: handleOpenSheet }}
+            title={
+              isFiltered
+                ? "No roadmap items match your filters"
+                : "No roadmap items yet"
+            }
+            description={
+              isFiltered
+                ? undefined
+                : "Plan what's coming and share it publicly with your users."
+            }
+            filtersActive={isFiltered}
+            onClearFilters={onClearFilters}
+            action={
+              isFiltered
+                ? undefined
+                : { label: "Add roadmap item", onClick: handleOpenSheet }
+            }
           />
         }
         onRetry={handleRetry}

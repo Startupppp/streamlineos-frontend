@@ -113,6 +113,7 @@ const TICKET: Ticket = {
   title: "Fix the bug",
   status: "TODO",
   type: "TASK",
+  version: 2,
 };
 
 describe("ListViewItem — checkbox visibility", () => {

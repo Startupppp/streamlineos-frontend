@@ -65,7 +65,7 @@ describe("column-count invalidation — filtered and unfiltered queries (ticket 
     const { result } = renderHook(() => useUpdateTicket(42), { wrapper: wrap(client) });
 
     await act(async () => {
-      await result.current.mutateAsync({ ticketId: 1, status: "DONE" });
+      await result.current.mutateAsync({ ticketId: 1, version: 3, status: "DONE" });
     });
 
     expect(client.getQueryState(FILTERED_COUNTS_KEY)?.isInvalidated).toBe(true);
@@ -98,7 +98,7 @@ describe("column-count invalidation — filtered and unfiltered queries (ticket 
     const { result } = renderHook(() => useUpdateTicket(42), { wrapper: wrap(client) });
 
     await act(async () => {
-      await result.current.mutateAsync({ ticketId: 1, title: "New title" });
+      await result.current.mutateAsync({ ticketId: 1, version: 3, title: "New title" });
     });
 
     expect(client.getQueryState(FILTERED_COUNTS_KEY)?.isInvalidated).toBe(false);
@@ -109,7 +109,7 @@ describe("column-count invalidation — filtered and unfiltered queries (ticket 
     const { result } = renderHook(() => useUpdateTicket(42), { wrapper: wrap(client) });
 
     await act(async () => {
-      await result.current.mutateAsync({ ticketId: 1, assigneeId: "user-xyz" });
+      await result.current.mutateAsync({ ticketId: 1, version: 3, assigneeId: "user-xyz" });
     });
 
     expect(client.getQueryState(FILTERED_COUNTS_KEY)?.isInvalidated).toBe(false);

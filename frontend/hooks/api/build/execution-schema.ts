@@ -112,6 +112,7 @@ const epicRowSchema = z.object({
   cycleId: z.number().nullable(),
   sequenceId: z.string().nullable(),
   estimate: z.number().nullable(),
+  version: z.number().int(),
   dependencyCount: z.number(),
   createdAt: z.string().nullable(),
   updatedAt: z.string().nullable(),

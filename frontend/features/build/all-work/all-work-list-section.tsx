@@ -23,6 +23,7 @@ function toListTicket(t: AllWorkTicket) {
     points: t.points,
     ticketNumber: t.ticketNumber,
     sequenceId: undefined,
+    version: t.version,
     assigneeId: t.assigneeId,
     cycleId: t.cycleId,
     dueDate: t.dueDate,

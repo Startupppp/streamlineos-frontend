@@ -14,6 +14,7 @@ export interface Ticket {
   dueDate?: string | null;
   assigneeId?: string | null;
   cycleId?: number | null;
+  version: number;
   assignee?: {
     id: string;
     name?: string | null;

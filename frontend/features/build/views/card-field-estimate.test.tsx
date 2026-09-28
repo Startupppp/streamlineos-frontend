@@ -7,14 +7,14 @@ jest.mock("@/hooks/api/build/tickets", () => ({
 
 it("renders zero points distinctly from an unset estimate", () => {
   const { rerender } = render(
-    <InlineEstimate ticketId={1} projectId={2} currentPoints={0} />,
+    <InlineEstimate ticketId={1} projectId={2} version={5} currentPoints={0} />,
   );
 
   expect(screen.getByRole("button", { name: "Change estimate" })).toHaveTextContent(
     "0 pts",
   );
 
-  rerender(<InlineEstimate ticketId={1} projectId={2} currentPoints={null} />);
+  rerender(<InlineEstimate ticketId={1} projectId={2} version={5} currentPoints={null} />);
 
   expect(screen.getByRole("button", { name: "Change estimate" })).toHaveTextContent(
     "pts",

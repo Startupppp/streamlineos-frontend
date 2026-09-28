@@ -140,6 +140,14 @@ export function InboxTicketPreview({
     ticketId: resolvedTicketId,
   });
 
+  const versionedTicket = useMemo(
+    () =>
+      ticket && typeof ticket.version === "number"
+        ? { ...ticket, version: ticket.version }
+        : null,
+    [ticket],
+  );
+
   const handleApplyAiDescription = useCallback(
     (html: string) => {
       autoSave({ description: html });
@@ -190,7 +198,7 @@ export function InboxTicketPreview({
       />
     );
 
-  if (!ticket)
+  if (!ticket || !versionedTicket)
     return (
       <PreviewError
         title="Ticket not found"
@@ -295,7 +303,7 @@ export function InboxTicketPreview({
           onOpenChange={handleRightPanelOpenChange}
           displayKey={displayKey}
           saving={saving}
-          ticket={ticket}
+          ticket={versionedTicket}
           ticketId={resolvedTicketId}
           projectId={target.projectId}
           projectKey={detailProject?.key ?? projectData?.key}

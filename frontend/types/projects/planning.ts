@@ -1,26 +1,17 @@
 export interface ProjectMilestone {
   id: number;
-  projectId: number;
+  projectId: number | null;
   orgId: string;
   name: string;
   description: string | null;
-  targetDate: string;
-  status: "PENDING" | "ACHIEVED" | "MISSED";
+  targetDate: string | null;
+  status: string | null;
   createdBy: string | null;
+  version: number;
   createdAt: string | null;
   updatedAt: string | null;
 }
 
-/**
- * The row `PATCH /build/:projectId/budget` returns.
- *
- * `budget` is a NUMBER of major units — the server builds it with `minorToMajor`,
- * which divides the stored integer minor amount and returns a number. The hook used
- * to declare it `string`, which typechecked forever because nothing on the success
- * path did arithmetic on it, and would have silently produced `"1000" + delta` string
- * concatenation the moment something did. `currency` was not declared at all, so the
- * one field that says which currency the amount is in was invisible to the client.
- */
 export interface ProjectBudgetUpdate {
   id: number;
   /** Major units of `currency`. */

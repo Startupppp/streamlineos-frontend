@@ -15,6 +15,7 @@ const MILESTONE_ROW = {
   status: "PENDING",
   createdBy: "user-1",
   clientVisible: false,
+  version: 3,
   deletedAt: null,
   createdAt: "2026-09-19T10:00:00.000Z",
   updatedAt: "2026-09-19T10:00:00.000Z",
@@ -39,13 +40,30 @@ describe("milestones list contract matches the workspace service projection", ()
     expect(parsed.pagination.nextCursor).toBeNull();
   });
 
-  it("rejects a status outside the three DB check-constraint values, where z.string() would let an invalid status through", () => {
+  it("accepts a status outside the three display values, because the backend row schema declares a nullable string", () => {
     expect(() =>
       milestoneListContract.parse({ ...CURSOR_PAGE, data: [{ ...MILESTONE_ROW, status: "DONE" }] }),
-    ).toThrow();
+    ).not.toThrow();
     expect(() =>
-      milestoneListContract.parse({ ...CURSOR_PAGE, data: [{ ...MILESTONE_ROW, status: "PENDING_APPROVAL" }] }),
-    ).toThrow();
+      milestoneListContract.parse({ ...CURSOR_PAGE, data: [{ ...MILESTONE_ROW, status: null }] }),
+    ).not.toThrow();
+  });
+
+  it("accepts a null projectId, because the backend row schema declares it nullable", () => {
+    expect(() =>
+      milestoneListContract.parse({ ...CURSOR_PAGE, data: [{ ...MILESTONE_ROW, projectId: null }] }),
+    ).not.toThrow();
+  });
+
+  it("accepts a null targetDate, because the backend row schema declares it nullable", () => {
+    expect(() =>
+      milestoneListContract.parse({ ...CURSOR_PAGE, data: [{ ...MILESTONE_ROW, targetDate: null }] }),
+    ).not.toThrow();
+  });
+
+  it("keeps the version token the milestone update endpoint requires, instead of stripping it on decode", () => {
+    const parsed = milestoneListContract.parse(CURSOR_PAGE);
+    expect(parsed.data[0]?.version).toBe(3);
   });
 
   it("accepts every valid milestone status the DB check constraint allows", () => {

@@ -74,6 +74,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
               <InlineStatus
                 ticketId={story.id}
                 projectId={projectId}
+                version={story.version}
                 currentStatus={story.status}
                 projectStatuses={projectStatuses}
               />
@@ -94,6 +95,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
               <InlineTitle
                 ticketId={story.id}
                 projectId={projectId}
+                version={story.version}
                 currentTitle={story.title}
                 className={cn(
                   "min-w-0 max-w-[min(100%,18rem)] sm:max-w-xs",
@@ -115,21 +117,25 @@ export const EpicStoryRow = memo(function EpicStoryRow({
                 <InlinePriority
                   ticketId={story.id}
                   projectId={projectId}
+                  version={story.version}
                   currentPriority={story.priority}
                 />
                 <InlineEstimate
                   ticketId={story.id}
                   projectId={projectId}
+                  version={story.version}
                   currentPoints={story.points}
                 />
                 <InlineDueDate
                   ticketId={story.id}
                   projectId={projectId}
+                  version={story.version}
                   currentDueDate={story.dueDate}
                 />
                 <InlineStartDate
                   ticketId={story.id}
                   projectId={projectId}
+                  version={story.version}
                   currentStartDate={story.startDate}
                 />
                 <InlineLabels
@@ -154,6 +160,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
               <InlineAssignee
                 ticketId={story.id}
                 projectId={projectId}
+                version={story.version}
                 currentAssigneeId={story.assigneeId}
                 assignee={story.assignee ?? null}
               />
@@ -178,6 +185,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
             <InlineDescription
               ticketId={story.id}
               projectId={projectId}
+              version={story.version}
               currentDescription={story.description ?? null}
             />
           </div>

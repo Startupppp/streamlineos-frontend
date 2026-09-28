@@ -87,15 +87,16 @@ interface CursorPaginated<T> {
   };
 }
 
+export const ROADMAP_SORTS = ["updated_at", "created_at", "title"] as const;
+
+export type RoadmapSort = (typeof ROADMAP_SORTS)[number];
+
 interface RoadmapItemFilters {
   status?: RoadmapStatus;
   search?: string;
   cursor?: string;
   limit?: number;
   managedProductId?: number;
-  projectId?: number;
-  horizon?: string;
-  ownerId?: string;
   sort?: string;
 }
 

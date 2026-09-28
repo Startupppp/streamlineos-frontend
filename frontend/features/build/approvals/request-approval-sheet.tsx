@@ -106,7 +106,7 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
       items: (milestones ?? []).map((m): EntityItem => ({
         value: String(m.id),
         label: m.name,
-        sublabel: m.status,
+        sublabel: m.status ?? undefined,
         rawTitle: m.name,
       })),
       isFetching: milestonesFetching,

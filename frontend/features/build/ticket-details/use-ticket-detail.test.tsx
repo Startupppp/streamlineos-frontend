@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api-envelope";
+import { ticketUpdateRequestContract } from "@/hooks/api/build/build-tickets-subresource-schema";
 import { TicketConflictDialog } from "./ticket-conflict-dialog";
 import { useTicketDetail } from "./use-ticket-detail";
 
@@ -12,9 +13,10 @@ let mockTicket = {
   id: 7,
   title: "Regression ticket",
   updatedAt: "2026-09-15T10:00:00.000Z",
+  version: 4,
 };
 let mockUpdateOptions: {
-  onSuccess?: (data: { updated: boolean; updatedAt: string }) => void;
+  onSuccess?: (data: { updated: boolean; updatedAt: string; version: number }) => void;
   onError?: (error: unknown, variables: Record<string, unknown>) => void;
 } = {};
 
@@ -74,6 +76,7 @@ beforeEach(() => {
     id: 7,
     title: "Regression ticket",
     updatedAt: "2026-09-15T10:00:00.000Z",
+    version: 4,
   };
   mockRefetchTicket.mockResolvedValue({ data: mockTicket, error: null });
   mockUpdateOptions = {};
@@ -223,11 +226,15 @@ it("names the assignees in the comparison instead of their ids and reports the d
 it("re-sends the pending edit against the server version the comparison displayed when the user keeps their changes", async () => {
   await renderConflict(
     { status: "IN_PROGRESS" },
-    { ...mockTicket, status: "DONE", updatedAt: "2026-09-15T10:30:00.000Z" },
+    { ...mockTicket, status: "DONE", updatedAt: "2026-09-15T10:30:00.000Z", version: 5 },
   );
 
   mockMutateAsync.mockReset();
-  mockMutateAsync.mockResolvedValue({ updated: true, updatedAt: "2026-09-15T11:00:00.000Z" });
+  mockMutateAsync.mockResolvedValue({
+    updated: true,
+    updatedAt: "2026-09-15T11:00:00.000Z",
+    version: 6,
+  });
 
   await act(async () => {
     fireEvent.click(screen.getByRole("button", { name: "Keep my changes" }));
@@ -237,6 +244,7 @@ it("re-sends the pending edit against the server version the comparison displaye
   expect(mockMutateAsync).toHaveBeenCalledWith({
     ticketId: 7,
     expectedUpdatedAt: "2026-09-15T10:30:00.000Z",
+    version: 5,
     status: "IN_PROGRESS",
   });
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -260,8 +268,8 @@ it("keeps the server value and sends nothing when the user discards their change
 });
 
 it("serializes rapid ticket updates with the latest server version", async () => {
-  const first = deferred<{ updated: boolean; updatedAt: string }>();
-  const second = deferred<{ updated: boolean; updatedAt: string }>();
+  const first = deferred<{ updated: boolean; updatedAt: string; version: number }>();
+  const second = deferred<{ updated: boolean; updatedAt: string; version: number }>();
   mockMutateAsync
     .mockImplementationOnce(() =>
       first.promise.then((data) => {
@@ -296,11 +304,12 @@ it("serializes rapid ticket updates with the latest server version", async () =>
   expect(mockMutateAsync).toHaveBeenNthCalledWith(1, {
     ticketId: 7,
     expectedUpdatedAt: "2026-09-15T10:00:00.000Z",
+    version: 4,
     status: "IN_PROGRESS",
   });
 
   await act(async () => {
-    first.resolve({ updated: true, updatedAt: "2026-09-15T10:01:00.000Z" });
+    first.resolve({ updated: true, updatedAt: "2026-09-15T10:01:00.000Z", version: 5 });
     await first.promise;
     await Promise.resolve();
   });
@@ -309,11 +318,12 @@ it("serializes rapid ticket updates with the latest server version", async () =>
   expect(mockMutateAsync).toHaveBeenNthCalledWith(2, {
     ticketId: 7,
     expectedUpdatedAt: "2026-09-15T10:01:00.000Z",
+    version: 5,
     cycleId: 2,
   });
 
   await act(async () => {
-    second.resolve({ updated: true, updatedAt: "2026-09-15T10:02:00.000Z" });
+    second.resolve({ updated: true, updatedAt: "2026-09-15T10:02:00.000Z", version: 6 });
     await second.promise;
   });
 
@@ -353,12 +363,13 @@ it("offers a reapply action on a version conflict instead of silently dropping t
       ...mockTicket,
       title: "Changed elsewhere",
       updatedAt: "2026-09-15T10:30:00.000Z",
+      version: 5,
     },
     error: null,
   });
   mockMutateAsync.mockClear();
   mockMutateAsync.mockImplementation(() =>
-    Promise.resolve({ updated: true, updatedAt: "2026-09-15T11:00:00.000Z" }),
+    Promise.resolve({ updated: true, updatedAt: "2026-09-15T11:00:00.000Z", version: 6 }),
   );
   await act(async () => {
     await options.action.onClick();
@@ -370,8 +381,64 @@ it("offers a reapply action on a version conflict instead of silently dropping t
       ticketId: 7,
       status: "IN_PROGRESS",
       expectedUpdatedAt: "2026-09-15T10:30:00.000Z",
+      version: 5,
     }),
   );
+});
+
+it("sends a body the backend update schema accepts, version token included", async () => {
+  mockMutateAsync.mockResolvedValue({
+    updated: true,
+    updatedAt: "2026-09-15T10:05:00.000Z",
+    version: 5,
+  });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const { result } = renderHook(
+    () => useTicketDetail({ projectId: 5, ticketId: 7 }),
+    { wrapper: wrapper(client) },
+  );
+
+  await act(async () => {
+    result.current.autoSave({ status: "IN_PROGRESS", priority: "URGENT" });
+    await Promise.resolve();
+  });
+
+  const sent = mockMutateAsync.mock.calls[0][0] as Record<string, unknown>;
+  const body: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(sent)) {
+    if (key !== "ticketId") body[key] = value;
+  }
+  expect(body.version).toBe(4);
+  expect(ticketUpdateRequestContract.safeParse(body).success).toBe(true);
+});
+
+it("would be rejected by the backend update schema if the version token were dropped", async () => {
+  mockMutateAsync.mockResolvedValue({
+    updated: true,
+    updatedAt: "2026-09-15T10:05:00.000Z",
+    version: 5,
+  });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const { result } = renderHook(
+    () => useTicketDetail({ projectId: 5, ticketId: 7 }),
+    { wrapper: wrapper(client) },
+  );
+
+  await act(async () => {
+    result.current.autoSave({ status: "IN_PROGRESS" });
+    await Promise.resolve();
+  });
+
+  const sent = mockMutateAsync.mock.calls[0][0] as Record<string, unknown>;
+  const withoutToken: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(sent)) {
+    if (key !== "ticketId" && key !== "version") withoutToken[key] = value;
+  }
+  expect(ticketUpdateRequestContract.safeParse(withoutToken).success).toBe(false);
 });
 
 it("resyncs the title when the same ticket receives a newer server version", async () => {

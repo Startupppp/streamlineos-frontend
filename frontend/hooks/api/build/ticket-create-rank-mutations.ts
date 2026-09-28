@@ -122,6 +122,7 @@ export function useCreateTicket(
         cycleId: variables.cycleId ?? null,
         sequenceId: null,
         estimate: null,
+        version: 1,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         assignee: null,
@@ -285,11 +286,12 @@ interface BulkUpdateTicketsContext {
 }
 
 function toTicketUpdateInput(
-  ticketId: number,
+  ticket: Ticket,
   input: BulkUpdateTicketsInput,
 ): UpdateTicketInput {
   return {
-    ticketId,
+    ticketId: ticket.id,
+    version: ticket.version,
     assigneeId: input.assigneeId,
     status: input.status,
     cycleId: input.cycleId,
@@ -345,7 +347,7 @@ export function useBulkUpdateTickets(projectId: number) {
         selected.has(ticket.id)
           ? applyTicketPatch(
               ticket,
-              toTicketUpdateInput(ticket.id, variables),
+              toTicketUpdateInput(ticket, variables),
               members,
             )
           : ticket;

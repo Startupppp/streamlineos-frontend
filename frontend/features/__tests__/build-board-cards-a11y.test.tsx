@@ -49,6 +49,7 @@ const ticket = {
   type: "TASK",
   ticketNumber: 12,
   points: 3,
+  version: 4,
 };
 
 /**

@@ -46,6 +46,7 @@ export interface EpicCardProps {
     status: string | null;
     priority?: string | null;
     points?: number | null;
+    version: number;
   };
   stories: Ticket[];
   projectId: number;

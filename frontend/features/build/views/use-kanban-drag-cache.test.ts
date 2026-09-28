@@ -15,7 +15,7 @@ jest.mock("sonner", () => ({ toast: { error: jest.fn() } }));
 it("failed drag restores only its fields without removing newer local edits", async () => {
   const client = createAppQueryClient();
   client.setDefaultOptions({ mutations: { retry: false } });
-  const ticket = { id: 1, title: "Before", status: "OPEN", type: "BUG", rank: "1000" };
+  const ticket = { id: 1, title: "Before", status: "OPEN", type: "BUG", rank: "1000", version: 1 };
   const pending = Promise.withResolvers<void>();
   jest.mocked(apiClient.patch).mockReset().mockImplementationOnce(async () => { await pending.promise; throw new Error("conflict"); });
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
@@ -40,7 +40,7 @@ it("failed drag restores only its fields without removing newer local edits", as
 it.each([false, true])("persists drag on an infinite board and restores its page metadata on failure=%s", async (fails) => {
   const client = createAppQueryClient();
   client.setDefaultOptions({ mutations: { retry: false } });
-  const ticket = { id: 1, title: "Before", status: "OPEN", type: "BUG", rank: "a0" };
+  const ticket = { id: 1, title: "Before", status: "OPEN", type: "BUG", rank: "a0", version: 1 };
   const original = { pages: [{ data: [ticket], pagination: { nextCursor: null } }], pageParams: [undefined] };
   const keys = [queryKeys.projects.tickets({ projectId: 42, view: "board" }), queryKeys.projects.tickets({ projectId: 42, view: "board", priority: "HIGH" })];
   for (const key of keys) client.setQueryData(key, original);

@@ -106,7 +106,7 @@ const EPIC_B = { ...EPIC_A, id: 2, title: "Epic Beta", ticketNumber: 2, sequence
 
 const makeMutation = () => ({ mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false });
 
-const defaultFilters = { search: "", debouncedSearch: "", setSearch: jest.fn(), value: jest.fn(() => ""), setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: false };
+const defaultFilters = { search: "", debouncedSearch: "", setSearch: jest.fn(), value: jest.fn(() => "all"), isActive: jest.fn(() => false), setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: false };
 
 const params = Promise.resolve({ projectId: "1" });
 
@@ -136,7 +136,7 @@ it("search filter narrows displayed epics without showing the excluded title", a
 });
 
 it("status filter shows only epics that match the value and excludes the rest", async () => {
-  mockUseBuildListFilters.mockReturnValue({ ...defaultFilters, value: (key: string) => key === "status" ? "TODO" : "" });
+  mockUseBuildListFilters.mockReturnValue({ ...defaultFilters, value: (key: string) => key === "status" ? "TODO" : "all" });
 
   await act(async () => { render(<EpicsPage params={params} />); });
 

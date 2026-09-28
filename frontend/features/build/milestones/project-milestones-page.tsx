@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -31,6 +30,10 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
+import {
+  toMilestoneStatus,
+  toMilestoneTargetDate,
+} from "@/features/build/milestones/milestone-status";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isPast, isToday } from "date-fns";
@@ -121,8 +124,8 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   const achieved = milestones.filter((m) => m.status === "ACHIEVED").length;
   const pending = milestones.filter((m) => m.status === "PENDING").length;
   const overdue = milestones.filter((m) => {
-    const d = new Date(m.targetDate);
-    return isPast(d) && !isToday(d) && m.status === "PENDING";
+    const d = toMilestoneTargetDate(m.targetDate);
+    return d !== null && isPast(d) && !isToday(d) && m.status === "PENDING";
   }).length;
 
   const handleRetry = useCallback(() => {
@@ -165,15 +168,17 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   );
   const handleBulkStatusChange = useCallback(
     (status: string) => {
-      const typed = status as "PENDING" | "ACHIEVED" | "MISSED";
+      const typed = toMilestoneStatus(status);
       selectedMilestoneIds.forEach((milestoneId) => {
-        updateMilestone.mutate({ milestoneId, status: typed }, {
+        const target = milestones.find((m) => m.id === milestoneId);
+        if (!target) return;
+        updateMilestone.mutate({ milestoneId, version: target.version, status: typed }, {
           onError: (err) => toast.error(getErrorMessage(err)),
         });
       });
       setSelectedMilestoneIds(new Set<number>());
     },
-    [selectedMilestoneIds, updateMilestone],
+    [selectedMilestoneIds, updateMilestone, milestones],
   );
   const handleOpenByIndex = useCallback(
     (index: number) => {
@@ -255,14 +260,18 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   if (
     pageState.kind !== "ready" &&
     pageState.kind !== "empty" &&
-    pageState.kind !== "error" &&
     pageState.kind !== "loading"
   )
     return (
-      <PageWrapper title="Milestones">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
-          {null}
-        </PageState>
+      <PageWrapper
+        title="Milestones"
+        subtitle="Key checkpoints and target dates for this project"
+      >
+        <PmPageShell>
+          <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+            {null}
+          </PageState>
+        </PmPageShell>
       </PageWrapper>
     );
 
@@ -281,24 +290,6 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
               ))}
             </div>
           </div>
-        </PmPageShell>
-      </PageWrapper>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PageWrapper
-        title="Milestones"
-        subtitle="Key checkpoints and target dates for this project"
-      >
-        <PmPageShell>
-          <ErrorState
-            className="flex-1"
-            title="Couldn't load milestones"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
         </PmPageShell>
       </PageWrapper>
     );

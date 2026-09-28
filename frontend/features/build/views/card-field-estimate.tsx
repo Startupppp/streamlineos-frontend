@@ -13,12 +13,14 @@ import { parseTicketPointsInput } from "../shared/ticket-points";
 interface InlineEstimateProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentPoints?: number | null;
 }
 
 export const InlineEstimate = memo(function InlineEstimate({
   ticketId,
   projectId,
+  version,
   currentPoints,
 }: InlineEstimateProps) {
   const [editing, setEditing] = useState(false);
@@ -42,7 +44,7 @@ export const InlineEstimate = memo(function InlineEstimate({
     }
     const prev = currentPoints ?? null;
     if (next !== prev) {
-      updateTicket.mutate({ ticketId, points: next });
+      updateTicket.mutate({ ticketId, version, points: next });
     }
     setEditing(false);
   }

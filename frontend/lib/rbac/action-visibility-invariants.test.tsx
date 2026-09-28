@@ -139,6 +139,7 @@ const EPIC = {
   description: null,
   priority: "HIGH",
   points: null,
+  version: 2,
 };
 
 function noop(): void {

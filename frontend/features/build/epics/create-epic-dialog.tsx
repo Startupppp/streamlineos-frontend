@@ -32,11 +32,25 @@ import { activationProps } from "@/lib/keyboard-activation";
 interface CreateEpicDialogProps {
   projectId: number;
   trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CreateEpicDialog({
+  projectId,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: CreateEpicDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const controlled = controlledOpen !== undefined;
+  const open = controlled ? controlledOpen : uncontrolledOpen;
   const createTicket = useCreateTicket();
+
+  const setOpen = (next: boolean) => {
+    if (!controlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
 
   const handleOpen = () => setOpen(true);
 

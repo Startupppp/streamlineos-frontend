@@ -18,12 +18,18 @@ export interface RecurrenceRule {
   endDate?: string | null;
 }
 
+export interface SetRecurrenceInput {
+  version: number;
+  rule: RecurrenceRule | null;
+}
+
 export function useSetRecurrence(projectId: number, ticketId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [...queryKeyBase, "projects", projectId, "tickets", ticketId, "recurrence"],
-    mutationFn: (rule: RecurrenceRule | null) =>
+    mutationFn: ({ version, rule }: SetRecurrenceInput) =>
       apiClient.patch(`/build/${projectId}/tickets/${ticketId}`, {
+        version,
         isRecurring: rule !== null,
         recurrenceRule: rule,
       }, undefined, ticketUpdateResultLazy),

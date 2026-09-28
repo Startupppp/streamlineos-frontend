@@ -15,6 +15,7 @@ const ticketRelationRelatedTicketSchema = z
     priority: ticketPriorityContract.nullable(),
     type: ticketTypeContract.nullable(),
     points: z.number().nullable(),
+    version: z.number().int(),
     assigneeMembershipId: z.number().int().nullable(),
     projectId: z.number().int().nullable(),
     assignee: z
@@ -148,6 +149,31 @@ export const ticketUpdateResultContract = z.object({
   version: z.number().int(),
 });
 
+export const ticketUpdateRequestContract = z
+  .object({
+    title: z.string().trim().min(3).max(500).optional(),
+    description: z.string().nullable().optional(),
+    type: ticketTypeContract.optional(),
+    status: z.string().optional(),
+    priority: ticketPriorityContract.optional(),
+    assigneeId: z.string().optional(),
+    assigneeIds: z.array(z.string()).max(20).optional(),
+    epicId: z.number().nullable().optional(),
+    moduleId: z.number().nullable().optional(),
+    points: z.number().int().min(0).nullable().optional(),
+    originalEstimate: z.number().min(0).nullable().optional(),
+    startDate: z.string().nullable().optional(),
+    dueDate: z.string().nullable().optional(),
+    cycleId: z.number().nullable().optional(),
+    expectedUpdatedAt: z.string().optional(),
+    version: z.number().int().positive(),
+    isRecurring: z.boolean().optional(),
+    recurrenceRule: z.unknown(),
+    customerId: z.number().int().positive().nullable().optional(),
+    parentTicketId: z.number().int().positive().nullable().optional(),
+  })
+  .strict();
+
 export const columnCountsContract = z.record(z.string(), z.number().int());
 
 export const ticketRowListContract = z.array(ticketRowContract);
@@ -229,6 +255,7 @@ const allWorkItemSchema = z.object({
   points: z.number().nullable(),
   estimate: z.number().nullable(),
   rank: z.string().nullable(),
+  version: z.number().int(),
   createdAt: z.string(),
   updatedAt: z.string(),
   assigneeId: z.string().nullable(),

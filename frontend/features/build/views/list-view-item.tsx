@@ -60,6 +60,7 @@ export const ListViewItem = memo(function ListViewItem({
 
   const hasProjectId = projectId != null;
   const hasDragHandle = dragHandleProps != null;
+  const version = ticket.version;
 
   return (
     <motion.div
@@ -103,6 +104,7 @@ export const ListViewItem = memo(function ListViewItem({
           <InlineStatus
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentStatus={ticket.status}
             projectStatuses={projectStatuses}
           />
@@ -113,6 +115,7 @@ export const ListViewItem = memo(function ListViewItem({
           <InlineType
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentType={ticket.type}
           />
         ) : (
@@ -140,6 +143,7 @@ export const ListViewItem = memo(function ListViewItem({
           <InlinePriority
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentPriority={ticket.priority}
           />
         ) : showPriority && ticket.priority ? (
@@ -149,6 +153,7 @@ export const ListViewItem = memo(function ListViewItem({
           <InlineEstimate
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentPoints={ticket.points}
           />
         ) : showEstimate && ticket.points != null && ticket.points > 0 ? (
@@ -158,6 +163,7 @@ export const ListViewItem = memo(function ListViewItem({
           <InlineDueDate
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentDueDate={ticket.dueDate}
           />
         )}
@@ -165,6 +171,7 @@ export const ListViewItem = memo(function ListViewItem({
           <InlineAssignee
             ticketId={ticket.id}
             projectId={projectId}
+            version={version}
             currentAssigneeId={ticket.assigneeId ?? ticket.assignee?.id}
             assignee={ticket.assignee}
           />

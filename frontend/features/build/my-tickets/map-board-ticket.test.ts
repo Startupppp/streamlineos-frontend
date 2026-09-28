@@ -25,6 +25,7 @@ const base: Ticket = {
   cycleId: null,
   sequenceId: null,
   estimate: null,
+  version: 6,
   createdAt: "2026-09-09T00:00:00Z",
   updatedAt: "2026-09-09T00:00:00Z",
 };

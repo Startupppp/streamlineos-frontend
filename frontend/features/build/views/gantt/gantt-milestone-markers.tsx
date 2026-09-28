@@ -2,6 +2,11 @@
 
 import { memo } from "react";
 import type { ProjectMilestone } from "@/types/projects";
+import {
+  toMilestoneStatus,
+  toMilestoneTargetDate,
+  type MilestoneStatus,
+} from "@/features/build/milestones/milestone-status";
 
 interface Props {
   milestones: ProjectMilestone[];
@@ -12,7 +17,7 @@ interface Props {
   totalHeight: number;
 }
 
-const STATUS_FILL: Record<ProjectMilestone["status"], string> = {
+const STATUS_FILL: Record<MilestoneStatus, string> = {
   PENDING: "#f59e0b",
   ACHIEVED: "#22c55e",
   MISSED: "#ef4444",
@@ -29,7 +34,9 @@ export const GanttMilestoneMarkers = memo(function GanttMilestoneMarkers({
   totalHeight,
 }: Props) {
   const inView = milestones.filter((m) => {
-    const day = Math.floor((new Date(m.targetDate).getTime() - startOfWeek.getTime()) / MS_PER_DAY);
+    const target = toMilestoneTargetDate(m.targetDate);
+    if (target === null) return false;
+    const day = Math.floor((target.getTime() - startOfWeek.getTime()) / MS_PER_DAY);
     return day >= 0 && day <= numDays - 1;
   });
   if (inView.length === 0) return null;
@@ -37,9 +44,11 @@ export const GanttMilestoneMarkers = memo(function GanttMilestoneMarkers({
   return (
     <g pointerEvents="none">
       {inView.map((m) => {
-        const day = Math.floor((new Date(m.targetDate).getTime() - startOfWeek.getTime()) / MS_PER_DAY);
+        const target = toMilestoneTargetDate(m.targetDate);
+        if (target === null) return null;
+        const day = Math.floor((target.getTime() - startOfWeek.getTime()) / MS_PER_DAY);
         const x = labelWidth + day * dayWidth + dayWidth / 2;
-        const fill = STATUS_FILL[m.status];
+        const fill = STATUS_FILL[toMilestoneStatus(m.status)];
         return (
           <g key={m.id}>
             <title>{m.name}</title>

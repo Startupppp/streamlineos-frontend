@@ -8,6 +8,7 @@ import {
   milestoneFormSchema,
   type MilestoneFormValues,
 } from "@/features/build/milestones/milestone-schema";
+import { toMilestoneStatus } from "@/features/build/milestones/milestone-status";
 import {
   Sheet,
   SheetContent,
@@ -62,7 +63,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
       name: milestone?.name ?? "",
       description: milestone?.description ?? "",
       targetDate: milestone?.targetDate ?? "",
-      status: milestone?.status ?? "PENDING",
+      status: toMilestoneStatus(milestone?.status),
     },
   });
   useRegisterDirtyState(form.formState.isDirty);
@@ -92,7 +93,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
 
       if (isEdit) {
         update.mutate(
-          { milestoneId: milestone.id, ...payload },
+          { milestoneId: milestone.id, version: milestone.version, ...payload },
           {
             onSuccess: () => { toast.success("Milestone updated"); onClose(); },
             onError: (err) => toast.error(getErrorMessage(err)),

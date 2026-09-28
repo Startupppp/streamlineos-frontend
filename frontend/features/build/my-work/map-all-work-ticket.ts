@@ -20,6 +20,7 @@ export function mapAllWorkTicketToKanban(t: AllWorkTicket): KanbanTicket {
     rank: t.rank ?? undefined,
     epicId: t.epicId ?? undefined,
     assigneeId: t.assigneeId ?? undefined,
+    version: t.version,
     cycleId: t.cycleId ?? null,
     dueDate: t.dueDate ?? null,
     startDate: t.startDate ?? null,

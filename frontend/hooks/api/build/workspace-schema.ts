@@ -3,14 +3,15 @@ import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 const milestoneRowSchema = z.object({
   id: z.number(),
-  projectId: z.number(),
+  projectId: z.number().nullable(),
   orgId: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  targetDate: z.string(),
-  status: z.enum(["PENDING", "ACHIEVED", "MISSED"]),
+  targetDate: z.string().nullable(),
+  status: z.string().nullable(),
   createdBy: z.string().nullable(),
   clientVisible: z.boolean(),
+  version: z.number().int(),
   deletedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -138,6 +139,15 @@ const analyticsSchema = z.object({
 
 export const milestoneListContract = cursorPageContract(milestoneRowSchema);
 export const milestoneRowContract = milestoneRowSchema;
+export const milestoneUpdateRequestContract = z
+  .object({
+    version: z.number().int().positive(),
+    name: z.string().min(1).trim().max(200).optional(),
+    description: z.string().max(1000).optional(),
+    targetDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    status: z.enum(["PENDING", "ACHIEVED", "MISSED"]).optional(),
+  })
+  .strict();
 export const intakeItemContract = intakeItemSchema;
 export const intakeListContract = intakeListSchema;
 export const viewRowContract = viewRowSchema;

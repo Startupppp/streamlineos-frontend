@@ -18,6 +18,7 @@ import { InlineFieldWrapper } from "./card-field-wrapper";
 interface InlineTitleProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentTitle: string;
   className?: string;
 }
@@ -25,6 +26,7 @@ interface InlineTitleProps {
 export const InlineTitle = memo(function InlineTitle({
   ticketId,
   projectId,
+  version,
   currentTitle,
   className,
 }: InlineTitleProps) {
@@ -46,7 +48,7 @@ export const InlineTitle = memo(function InlineTitle({
       return;
     }
     updateTicket.mutate(
-      { ticketId, title: trimmed },
+      { ticketId, version, title: trimmed },
       { onSuccess: () => setOpen(false) },
     );
   }
@@ -107,12 +109,14 @@ export const InlineTitle = memo(function InlineTitle({
 interface InlineDescriptionProps {
   ticketId: number;
   projectId: number;
+  version: number;
   currentDescription: string | null;
 }
 
 export const InlineDescription = memo(function InlineDescription({
   ticketId,
   projectId,
+  version,
   currentDescription,
 }: InlineDescriptionProps) {
   const [open, setOpen] = useState(false);
@@ -133,7 +137,7 @@ export const InlineDescription = memo(function InlineDescription({
       return;
     }
     updateTicket.mutate(
-      { ticketId, description: trimmed || undefined },
+      { ticketId, version, description: trimmed || undefined },
       { onSuccess: () => setOpen(false) },
     );
   }
