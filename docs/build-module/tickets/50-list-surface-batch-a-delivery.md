@@ -110,13 +110,14 @@ Batched by blast radius so each batch fits one fresh context window. Land them i
 
 ## Progress on the file-size criterion — 2026-09-28 (Lane-SEAM)
 
-Two of the four over-500 source files in the batch's directories are now under the
+Three of the four over-500 source files in the batch's directories are now under the
 limit. The box stays unchecked until all four are.
 
 | File | Before | After | New sibling |
 |---|---|---|---|
 | `features/build/views/use-board-url-state.ts` | 501 | **391** | `board-filter-params.ts` (159) |
 | `features/build/views/workload-view.tsx` | 538 | **396** | `workload-unassigned-row.tsx` (164) |
+| `features/build/milestones/planning-surfaces-gallery.tsx` | 521 | **356** | `planning-surfaces-fixtures.ts` (173) |
 
 `useBoardFilterParams` takes the twelve filter params, the order-by/order-dir
 parsing, the query-filter and active-filter derivations and the effect that clears
@@ -153,6 +154,52 @@ Commands and results:
   `use-board-url-state.test.tsx`, `project-board-content.test.tsx` and
   `project-board-page.test.tsx` pass unchanged.
 
-Still over 500, and held back on purpose because live lanes own those directories:
-`epics/epics-page.tsx` (531) and `milestones/planning-surfaces-gallery.tsx` (521,
-was 526 — that lane is editing it).
+Still over 500: `epics/epics-page.tsx` (531), held back on purpose because the
+execution lane owns `epics/**`. It is the only source file left in the batch's
+directories above the limit, so it is the last thing between this criterion and a
+tick.
+
+### The milestones gallery split — 2026-09-28 (Lane-SEAM)
+
+`planning-surfaces-gallery.tsx` 521 → **356**, with `planning-surfaces-fixtures.ts`
+at 173. What moved is fixture data, not composition: `STUB_MILESTONES`,
+`STUB_RELEASES`, `MILESTONE_STATUS_OPTIONS`, `RELEASE_STATUS_OPTIONS` and
+`STUB_NOOP`. The name follows the sibling this gallery already sits beside,
+`features/build/shared/build-list-fixtures.ts`. `PlanningSurfacesGallery`'s export is
+unchanged and its single caller,
+`app/(public)/design-system/planning-surfaces/page.tsx:3`, is untouched.
+
+Checked before choosing what to extract, the same way the `views/` splits were: no
+test asserts on this file's source text. The three `features/build/` suites that read
+source from disk each name their targets explicitly and none names this file —
+`build-ui-consistency.test.ts` and `build-programmatic-navigation-guard.test.ts` both
+carry literal path lists, and `build-dirty-state-coverage.test.ts` walks the tree for
+`useForm` owners, which this gallery is not (`grep -c useForm` → 0). The extracted
+file could therefore not be swept into a ratchet it does not satisfy.
+
+- `pnpm check:file-sizes:self-test` → `check-file-sizes self-tests: 65 passed`.
+- `pnpm check:file-sizes` → `planning-surfaces-gallery.tsx` is **off** the over-500
+  list. The only remaining `planning-surfaces` row is `e2e/planning-surfaces-a11y.spec.ts`
+  (723), which is not in this batch. The repo total read 57 at this run against 55
+  earlier, entirely from other lanes' in-flight growth — `cycles/cycles-page.tsx`
+  598 → 678 and `webhooks/project-webhooks-page.tsx` 774 → 794.
+- `npx tsc -p tsconfig.json --noEmit` → no error names `features/build/milestones/**`.
+  One was found and fixed during the split: the `Release` type is still referenced by
+  the gallery's `ReleasesReadyTable`, so its type import was kept rather than moved.
+- `npx eslint features/build/milestones/` → **0 errors.** The 7 warnings are all in
+  `milestone-upsert-sheet.tsx` (4) and `project-milestones-page.tsx` (3), that lane's
+  files, none in either file this split touched.
+- `npx jest --maxWorkers=2 features/build/milestones features/build/releases
+  features/build/shared/build-list` → **9 of 10 suites, 119 of 127 tests passing.**
+  Every `milestones/` and `build-list` suite passes. The single failure is
+  `releases/releases-page.test.tsx` (8 tests, all context-menu), whose subject
+  `releases/releases-table-columns.tsx` was uncommitted and mid-edit by the releases
+  lane at run time; `releases-page.test.tsx` does not reference this gallery
+  (`grep -c planning-surfaces` → 0).
+
+After this split, the over-500 source files under `features/build/` are
+`cycles/cycle-form-sheet.tsx` (517), `cycles/cycles-page.tsx` (678),
+`epics/epics-page.tsx` (531), `incidents/incident-sheet.tsx` (501),
+`portfolios/portfolio-detail-page.tsx` (511), `teams/team-home-page.tsx` (531),
+`webhooks/project-webhooks-page.tsx` (794) and `whiteboard/whiteboard-page.tsx` (525).
+Of those, only `epics/epics-page.tsx` is in this batch.
