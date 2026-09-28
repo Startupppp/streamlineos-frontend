@@ -45,11 +45,13 @@ import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-key
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import {
   GoalCard,
+  GOAL_LEVEL_ORDER,
+} from "@/features/build/goals/goals-list-shared";
+import {
   GoalsListToolbar,
   GOAL_FILTER_DEFINITIONS,
-  GOAL_LEVEL_ORDER,
   resolveGoalOutcomeParams,
-} from "@/features/build/goals/goals-list-shared";
+} from "@/features/build/goals/goals-list-toolbar";
 
 interface ProductGoalsPageProps {
   managedProductId: number;

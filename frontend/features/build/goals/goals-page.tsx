@@ -50,11 +50,13 @@ import { useBuildListFilters } from "@/features/build/shared/use-build-list-filt
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   GoalCard,
+  GOAL_LEVEL_ORDER,
+} from "@/features/build/goals/goals-list-shared";
+import {
   GoalsListToolbar,
   GOAL_FILTER_DEFINITIONS,
-  GOAL_LEVEL_ORDER,
   resolveGoalOutcomeParams,
-} from "@/features/build/goals/goals-list-shared";
+} from "@/features/build/goals/goals-list-toolbar";
 
 const CREATE_ACTION = { id: "create", label: "New Goal", icon: Plus, primary: true as const };
 

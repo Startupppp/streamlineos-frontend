@@ -20,10 +20,7 @@ import type {
   CreateManagedProductInput,
   UpdateManagedProductInput,
 } from "@/types/projects";
-import type {
-  ManagedProductInsights,
-  ManagedProductOwner,
-} from "@/hooks/api/build/managed-products-schema";
+import type { ManagedProductInsights } from "@/hooks/api/build/managed-products-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
@@ -162,21 +159,17 @@ export function useInfiniteManagedProducts(
   });
 }
 
-export type ManagedProductDetail = ManagedProduct & {
-  owner?: ManagedProductOwner | null;
-};
-
 export function useManagedProduct(
   managedProductId: number,
-  options?: Pick<UseQueryOptions<ManagedProductDetail | null>, "throwOnError">,
+  options?: Pick<UseQueryOptions<ManagedProduct | null>, "throwOnError">,
 ) {
   const canView = useCan("build:managed-products:view");
-  return useQuery<ManagedProductDetail | null>({
+  return useQuery<ManagedProduct | null>({
     queryKey:
       buildWorkQueryKeys.projects.managedProducts.detail(managedProductId),
     queryFn: async ({ signal }) => {
       try {
-        return await apiClient.get<ManagedProductDetail>(
+        return await apiClient.get<ManagedProduct>(
           `/build/managed-products/${managedProductId}`,
           undefined,
           signal,

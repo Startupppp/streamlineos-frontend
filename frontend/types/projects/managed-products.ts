@@ -1,5 +1,13 @@
 export type ManagedProductStatus = "active" | "archived";
 
+export interface ManagedProductOwner {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  image: string | null;
+}
+
 export interface ManagedProduct {
   id: number;
   orgId: string;
@@ -16,6 +24,7 @@ export interface ManagedProduct {
   targetLaunchDate: string | null;
   successMetrics: unknown;
   ownerMembershipId: number | null;
+  owner?: ManagedProductOwner | null;
   version: number;
   deletedAt: string | null;
   createdAt: string;

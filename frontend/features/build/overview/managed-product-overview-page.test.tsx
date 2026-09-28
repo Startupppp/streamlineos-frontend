@@ -69,6 +69,19 @@ jest.mock("@/hooks/api/build/roadmap", () => ({
   })),
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCan: jest.fn(() => true),
+}));
+
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembers: jest.fn(() => ({ data: { data: [] } })),
+}));
+
+jest.mock("@/features/build/managed-products/managed-product-form-sheet", () => ({
+  ManagedProductFormSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="managed-product-edit-sheet" /> : null,
+}));
+
 jest.mock("@/hooks/api/goals", () => ({
   useGoalsPage: jest.fn(() => ({
     data: undefined,

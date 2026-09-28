@@ -152,6 +152,10 @@ jest.mock("@/features/build/goals/goals-list-shared", () => ({
       ) : null}
     </div>
   ),
+  GOAL_LEVEL_ORDER: ["company", "team", "individual"],
+}));
+
+jest.mock("@/features/build/goals/goals-list-toolbar", () => ({
   GoalsListToolbar: () => <div data-testid="goals-list-toolbar" />,
   GOAL_FILTER_DEFINITIONS: [
     { param: "level", options: ["company", "team", "individual"] },
@@ -161,7 +165,6 @@ jest.mock("@/features/build/goals/goals-list-shared", () => ({
     { param: "due" },
     { param: "scope" },
   ],
-  GOAL_LEVEL_ORDER: ["company", "team", "individual"],
   resolveGoalOutcomeParams: () => ({}),
 }));
 

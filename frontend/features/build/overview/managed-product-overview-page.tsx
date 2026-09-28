@@ -1,13 +1,18 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   useManagedProduct,
   useManagedProductInsights,
 } from "@/hooks/api/build/managed-products";
-import type { ManagedProduct } from "@/types/projects/managed-products";
+import { useCan } from "@/hooks/api/access";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/lib/person-display";
+import { ManagedProductFormSheet } from "@/features/build/managed-products/managed-product-form-sheet";
+import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
+import { Pencil } from "lucide-react";
 import { useProjects } from "@/hooks/api/build/projects";
 import { useRoadmapItems } from "@/hooks/api/build/roadmap";
 import { useGoalsPage } from "@/hooks/api/goals";
@@ -27,11 +32,24 @@ import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { cn } from "@/lib/utils";
 
+const PROJECT_SORT_VALUES = ["name_asc", "priority_desc", "due_asc", "due_desc"] as const;
+
 const OVERVIEW_FILTER_DEFINITIONS = [
   { param: "ownerId" },
   { param: "status" },
   { param: "cursor" },
+  { param: "sort", options: PROJECT_SORT_VALUES },
 ] as const;
+
+const PROJECT_SORT_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "Newest first" },
+  { value: "name_asc", label: "Name A–Z" },
+  { value: "priority_desc", label: "Priority high to low" },
+  { value: "due_asc", label: "Due soonest" },
+  { value: "due_desc", label: "Due latest" },
+];
+
+const EDIT_ACTION = { id: "edit", label: "Edit product", icon: Pencil, primary: true as const };
 
 const PROJECT_STATUS_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All statuses" },
@@ -66,9 +84,13 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     rawStatus === "ACTIVE" || rawStatus === "COMPLETED" || rawStatus === "ARCHIVED" || rawStatus === "ALL"
       ? rawStatus
       : undefined;
+  const rawSort = listFilters.value("sort");
+  const sortParam = PROJECT_SORT_VALUES.find((value) => value === rawSort);
   const rawCursor = listFilters.value("cursor");
-  const afterId =
+  const parsedCursor =
     rawCursor && rawCursor !== BUILD_FILTER_ALL ? parseInt(rawCursor, 10) : undefined;
+  const afterId =
+    sortParam === undefined && Number.isInteger(parsedCursor) ? parsedCursor : undefined;
 
   const productQuery = useManagedProduct(managedProductId);
   const projectsQuery = useProjects(
@@ -78,11 +100,15 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
       search: searchValue,
       managerId,
       status: statusParam,
-      afterId,
+      ...(sortParam ? { sort: sortParam } : {}),
+      ...(afterId === undefined ? {} : { afterId }),
     },
     { enabled: !!managedProductId },
   );
   const insightsQuery = useManagedProductInsights(managedProductId);
+  const { data: membersRes } = useOrgMembers(1, 100);
+  const canEdit = useCan("build:managed-products:update");
+  const [editOpen, setEditOpen] = useState(false);
   const roadmapQuery = useRoadmapItems({ managedProductId, limit: 5 });
   const goalsQuery = useGoalsPage({ managedProductId });
 
@@ -142,6 +168,43 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     [listFilters],
   );
 
+  const handleSortChange = useCallback(
+    (value: string) => listFilters.setValue("sort", value),
+    [listFilters],
+  );
+
+  const handleOwnerChange = useCallback(
+    (value: string) => listFilters.setValue("ownerId", value),
+    [listFilters],
+  );
+
+  const handleOpenEdit = useCallback(() => setEditOpen(true), []);
+
+  const ownerOptions = useMemo(() => {
+    const members = membersRes?.data ?? [];
+    return [
+      { value: BUILD_FILTER_ALL, label: "All owners" },
+      ...members.map((member) => ({
+        value: member.userId,
+        label: getUserDisplayName(member),
+      })),
+    ];
+  }, [membersRes]);
+
+  const overviewSubtitle = useMemo(() => {
+    if (!product) return undefined;
+    const parts: string[] = [];
+    if (product.status) parts.push(product.status);
+    parts.push(`Owner ${getUserDisplayName(product.owner)}`);
+    if (product.updatedAt) parts.push(`updated ${product.updatedAt.slice(0, 10)}`);
+    return parts.join(" · ");
+  }, [product]);
+
+  const editActions = useMemo(
+    () => (canEdit ? [{ ...EDIT_ACTION, onSelect: handleOpenEdit }] : []),
+    [canEdit, handleOpenEdit],
+  );
+
   const handleShortcutHelp = useCallback(() => {
     setShortcutHelpOpen(true);
   }, []);
@@ -158,11 +221,8 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
     <PageWrapper
       title={product?.name ?? "Product overview"}
       badge={product?.key}
-      subtitle={
-        product?.status && product?.updatedAt
-          ? `${product.status} · updated ${product.updatedAt.slice(0, 10)}`
-          : product?.status ?? undefined
-      }
+      subtitle={overviewSubtitle}
+      actions={<BuildHeaderActions actions={editActions} />}
       filters={
         <BuildListToolbar
           search={{
@@ -173,6 +233,32 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
             inputRef: searchInputRef,
           }}
           filters={[
+            {
+              id: "owner",
+              label: "Owner",
+              active: listFilters.isActive("ownerId"),
+              control: (
+                <BuildFilterSelect
+                  label="Owner"
+                  value={rawOwner}
+                  onValueChange={handleOwnerChange}
+                  options={ownerOptions}
+                />
+              ),
+            },
+            {
+              id: "sort",
+              label: "Sort",
+              active: listFilters.isActive("sort"),
+              control: (
+                <BuildFilterSelect
+                  label="Sort"
+                  value={rawSort}
+                  onValueChange={handleSortChange}
+                  options={PROJECT_SORT_OPTIONS}
+                />
+              ),
+            },
             {
               id: "status",
               label: "Status",
@@ -192,6 +278,14 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
       }
     >
       <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
+      {product ? (
+        <ManagedProductFormSheet
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          mode="edit"
+          defaultValues={product}
+        />
+      ) : null}
       <PageState
         resolution={resolution}
         loading={<ManagedProductOverviewSkeleton />}
