@@ -89,3 +89,35 @@ it("parses roadmap and feedback outcome aggregates from managed-product insights
   expect(insights.roadmapItemsByStatus.completed).toBe(1);
   expect(insights.linkedFeedbackVoteCount).toBe(7);
 });
+
+it("keeps the resolved owner projection the detail endpoint sends, because z.object strips unknown keys and a stripped owner leaves the page with only a raw id to render", () => {
+  const row = managedProductRowContract.parse({
+    ...baseRow("active"),
+    ownerId: "user-1",
+    ownerMembershipId: 9,
+    owner: {
+      id: "user-1",
+      firstName: "Ada",
+      lastName: "Lovelace",
+      email: "ada@example.com",
+      image: null,
+    },
+  });
+
+  expect(row.owner).toEqual({
+    id: "user-1",
+    firstName: "Ada",
+    lastName: "Lovelace",
+    email: "ada@example.com",
+    image: null,
+  });
+});
+
+it("parses a list row that omits owner, because only the detail endpoint resolves it", () => {
+  expect(() => managedProductRowContract.parse(baseRow("active"))).not.toThrow();
+});
+
+it("parses a detail row whose owner is null, because a managed product need not have an owner membership", () => {
+  const row = managedProductRowContract.parse({ ...baseRow("active"), owner: null });
+  expect(row.owner).toBeNull();
+});

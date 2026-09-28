@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+export const managedProductOwnerContract = z.object({
+  id: z.string(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string(),
+  image: z.string().nullable(),
+});
+
+export type ManagedProductOwner = z.infer<typeof managedProductOwnerContract>;
+
 export const managedProductRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -16,6 +26,7 @@ export const managedProductRowContract = z.object({
   targetLaunchDate: z.string().nullable(),
   successMetrics: z.unknown(),
   ownerMembershipId: z.number().int().nullable(),
+  owner: managedProductOwnerContract.nullish(),
   version: z.number().int(),
   deletedAt: z.string().nullable(),
   createdAt: z.string(),
