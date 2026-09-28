@@ -6,21 +6,40 @@ a human driving a real browser against a deployed environment, and that is delib
 scope for the remediation programme.
 
 This file exists so the unchecked count in `docs/build-module/**` can be read honestly: a reader
-seeing 250 unchecked boxes outside `tickets/` should know that 168 of them are this, and 82 are
+seeing 202 unchecked boxes outside `tickets/` should know that 170 of them are this, and 32 are
 real remaining work.
 
 ## The counts
 
-Measured 2026-09-27 by classifying every `- [ ]` line outside `docs/build-module/tickets/`.
+Re-measured 2026-09-28 by classifying every `- [ ]` line outside `docs/build-module/tickets/`.
+The 2026-09-27 figures are superseded: the total outside `tickets/` was 250 and is now 202,
+because 48 boxes were earned in between. The browser-excluded classes barely moved, which is the
+point of separating them — they cannot be earned by the work that closed the other 48.
 
-| class | boxes | files |
+| class | boxes |
+|---|---|
+| Keyboard, screen-reader, reduced-motion, 375 px and high-density desktop checks | 86 |
+| Production browser evidence for ready / empty / filtered-empty / error / denied / conflict | 80 |
+| Browser-dependent boxes outside the two standard texts, listed below | 4 |
+| **Excluded total** | **170** |
+| Not browser work — real remaining scope, excluded from this note | 32 |
+| **Total unchecked outside `tickets/`** | **202** |
+
+Reproduce the three classes with `grep -rc "^\s*- \[ \]"` filtered on the box texts quoted below.
+The 32 split as 15 copies of the "implemented and tested" box and 17 design, decision and
+measurement boxes.
+
+### The 4 browser-dependent boxes outside the two standard texts
+
+| file | box | why it needs a browser |
 |---|---|---|
-| Keyboard, screen-reader, reduced-motion, 375 px and high-density desktop checks | 87 | 78 |
-| Production browser evidence for ready / empty / filtered-empty / error / denied / conflict | 80 | 76 |
-| Narrow-viewport layout, stated separately from the combined check above | 1 | 1 |
-| **Excluded total** | **168** | **~80** |
-| Not browser work — real remaining scope, excluded from this note | 82 | 36 |
-| **Total unchecked outside `tickets/`** | **250** | |
+| `01-ia-navigation.md` | Collapsed, mobile, keyboard and screen-reader navigation expose equivalent names and badges | jsdom reports no collapsed width and no real screen-reader output |
+| `04-shared-components.md` | Shared modules own loading, error, empty, denied, focus and responsive mechanics | four of the six are gate-checkable; `focus` and `responsive` are not observable from any gate in this repo |
+| `05-performance-caching.md` | Production skeletons resolve to ready, empty, denied or error within a measured budget | needs a real paint timeline against a deployed environment, not a jsdom render |
+| `RELEASE-STATUS.md` | Authenticated desktop and mobile browser matrices pass for the full Build route census | a browser matrix is the box |
+
+Two of the four are partly settleable without a browser and say so in their own entries; they are
+counted here in full because neither can be *ticked* without the browser half.
 
 ## The two box texts this is almost entirely made of
 
@@ -68,20 +87,25 @@ block above.
 
 ## What this note does not cover
 
-The 82 non-browser boxes outside `tickets/` are real scope. The largest concentrations:
+The 32 non-browser boxes outside `tickets/` are real scope. The largest concentrations:
 
 | boxes | file | character |
 |---|---|---|
 | 10 | `lanes/status/LANE-5-STATUS.md` | a previous programme's status file; mixed |
-| 8 | `05-performance-caching.md` | measurement work needing a load environment |
-| 6 | `00-overview.md` | programme-level completeness assertions |
-| 5 each | `01-ia-navigation.md`, `02-schemas.md`, `03-api-contracts.md` | design-document completeness |
-| 4 | `99-kill-list.md` | route retirement decisions |
-| 3 | `04-shared-components.md`, `99-open-questions.md` | |
-| 1 each | 27 `10-*.md` page docs | the "every core field … implemented and tested" box |
+| 4 | `05-performance-caching.md` | measurement work needing a load environment |
+| 3 each | `99-kill-list.md`, `04-shared-components.md` | route retirement decisions; shared-module ownership |
+| 2 each | `02-schemas.md`, `03-api-contracts.md`, `99-open-questions.md`, `RELEASE-STATUS.md`, `performance-followup/cache-policy.md` | design-document completeness, owner decisions, deploy and cache measurement |
+| 1 | `01-ia-navigation.md` | counted above as browser-dependent |
+| 1 | `lanes/status/LANE-5-STATUS.md` | a previous programme's status file |
+| 1 each | 13 `10-*.md` page docs | the "every core field … implemented and tested" box |
 
-Several of these are whole-page completeness claims that can only be answered once the page's
-implementation tickets land, so they are correctly last rather than skipped.
+Re-derived 2026-09-28. `00-overview.md` is no longer listed because its 6 boxes are now earned,
+and the `10-*.md` tail is 13 files rather than 27 for the same reason — so this table shrank
+because the work landed, not because it was reclassified. Four of the rows above are the
+browser-dependent boxes itemised in the counts section and are not additional scope.
+
+The remaining `10-*.md` boxes are whole-page completeness claims that can only be answered once
+the page's implementation tickets land, so they are correctly last rather than skipped.
 
 ## How to retire this note
 
