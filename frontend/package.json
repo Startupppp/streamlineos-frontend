@@ -183,6 +183,7 @@
     "axios": ">=1.16.0",
     "class-variance-authority": "^0.7.1",
     "cmdk": "^1.1.1",
+    "cn": "^0.2.6",
     "countries-and-timezones": "^3.9.0",
     "date-fns": "^4.1.0",
     "exceljs": "^4.4.0",
@@ -218,8 +219,7 @@
     "sharp": "^0.35.4",
     "sonner": "^2.0.7",
     "vaul": "^1.1.2",
-    "zod": "^4.1.13",
-    "cn": "^0.2.6"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@auth/core": "0.41.3",
@@ -241,9 +241,9 @@
     "jest-axe": "^11.0.0",
     "jest-environment-jsdom": "^29.7.0",
     "knip": "^6.31.0",
+    "madge": "^8.0.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "madge": "^8.0.0",
     "yaml": "2.9.0"
   },
   "pnpm": {
@@ -258,6 +258,9 @@
       "uuid": "^11.1.1",
       "nanoid@<3.3.18": "^3.3.18",
       "nanoid@4": "^5.1.16"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
