@@ -139,6 +139,25 @@ including a soft delete, so a tombstoning write is never mistaken for no change.
 - [x] Client and server validation constraints have automated parity evidence. `frontend/package.json:50` registers `check:contract-parity` which runs `scripts/check-contract-parity.mjs --backend-file contracts/openapi.json`; `check:contract-drift` at line 52 guards against in-flight drift. Per-entity schema tests live in `frontend/hooks/api/build/*-schema.test.ts`.
 - [ ] Soft delete, restore, retention, audit, and outbox behavior is specified for every mutable entity. **2026-09-28 NOT EARNED. Re-measured this lane; the Build-territory figure was wrong and is corrected.**
 
+  **2026-09-28 — one more unfiltered read found, while projecting the concurrency token onto
+  relations.** `projects-ticket-relations.service.ts:97-110` (`listRelations`) filters only on
+  `workItemRelations.orgId` and the two id columns. Neither the relation row nor the joined
+  ticket is filtered on `tickets.deletedAt`, so a **soft-deleted** ticket still appears in the
+  relations panel of every ticket that references it. Both FKs on `work_item_relations` are
+  `ON DELETE CASCADE` (`ticket-core.ts:170-171`), so a *hard* delete removes the relation row and
+  cannot leak — but a soft delete leaves the row intact and the `with:` join succeeds, which is
+  exactly the BE-54 case where a soft-deleted parent never fires a child's cascade.
+
+  Two consequences worth separating. The read is a BE-50 violation and shows retired work as live.
+  Separately, the frontend contract declares `relatedTicket` **nullable** and carries a test named
+  "still accepts a relation whose related ticket has been deleted (null relatedTicket)" — that
+  state is unreachable under the cascade, so the test asserts a case that cannot occur. It is
+  vacuous rather than wrong, and the backend's non-nullable declaration is the correct one.
+
+  Not fixed here, because whether a relation to a soft-deleted ticket should vanish or render as
+  a tombstone is a product decision, and the list is capped at 100 rows so post-filtering would
+  silently shrink pages. Naming it rather than guessing.
+
   Gate run, `backend/`, verbatim:
 
   ```
