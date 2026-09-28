@@ -1,217 +1,25 @@
-import React from "react";
-import { render, screen, act, fireEvent } from "@testing-library/react";
+import { screen, act, fireEvent } from "@testing-library/react";
+import {
+  captured,
+  installWorkloadMocks,
+  mockReplace,
+  mockUse,
+  mockUseBuildListKeyboard,
+  mockUseOnlineStatus,
+  mockUsePageState,
+  mockUseProject,
+  mockUseProjectBoardTickets,
+  mockUseWorkloadCapacity,
+  renderPage,
+  setSearchParams,
+  READY_PROJECT,
+} from "./workload-board-page-test-harness";
 
-const mockUse = jest.fn();
-
-jest.mock("react", () => {
-  const actual = jest.requireActual<typeof import("react")>("react");
-  return { ...actual, use: (...args: unknown[]) => mockUse(...args) };
-});
-
-const mockReplace = jest.fn();
-const mockPush = jest.fn();
-let mockSearchParams = new URLSearchParams();
-
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mockReplace, push: mockPush }),
-  usePathname: () => "/build/1/workload",
-  useSearchParams: () => mockSearchParams,
-  notFound: () => null,
-}));
-
-const mockUseProject = jest.fn();
-
-jest.mock("@/hooks/api/build/projects", () => ({
-  useProject: (...args: unknown[]) => mockUseProject(...args),
-}));
-
-const mockUseProjectBoardTickets = jest.fn();
-
-jest.mock("@/hooks/api/build/tickets", () => ({
-  useProjectBoardTickets: (...args: unknown[]) =>
-    mockUseProjectBoardTickets(...args),
-}));
-
-const mockUseWorkloadCapacity = jest.fn((..._args: unknown[]) => new Map());
-
-jest.mock("@/hooks/api/build/workload-capacity", () => ({
-  useWorkloadCapacity: (...args: unknown[]) =>
-    mockUseWorkloadCapacity(...args),
-}));
-
-const mockUseProjectTeams = jest.fn(
-  (..._args: unknown[]) => ({ data: undefined }) as { data: unknown },
-);
-
-jest.mock("@/hooks/api/build/teams", () => ({
-  useProjectTeams: (...args: unknown[]) => mockUseProjectTeams(...args),
-}));
-
-const mockUsePageState = jest.fn(
-  (..._args: unknown[]) => ({ kind: "ready" }) as { kind: string; permission?: string },
-);
-
-jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: (...args: unknown[]) => mockUsePageState(...args),
-}));
-
-const mockUseOnlineStatus = jest.fn(() => true);
-
-jest.mock("@/hooks/common/use-online-status", () => ({
-  useOnlineStatus: () => mockUseOnlineStatus(),
-}));
-
-const mockUseBuildListKeyboard = jest.fn((..._args: unknown[]) => ({
-  focusedIndex: null,
-}));
-
-jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
-  useBuildListKeyboard: (...args: unknown[]) =>
-    mockUseBuildListKeyboard(...args),
-}));
-
-let capturedFilterBarProps: {
-  onFilterChange?: (key: string, value: unknown) => void;
-  onClearFilters?: () => void;
-  filters?: Record<string, unknown>;
-} = {};
-
-jest.mock("@/features/build/views/workload-filter-bar", () => ({
-  WorkloadFilterBar: (props: {
-    onFilterChange: (key: string, value: unknown) => void;
-    onClearFilters: () => void;
-    filters: Record<string, unknown>;
-    leading?: React.ReactNode;
-  }) => {
-    capturedFilterBarProps = props;
-    return <div data-testid="workload-filter-bar">{props.leading}</div>;
-  },
-}));
-
-let capturedWorkloadViewGroup: string | undefined;
-
-jest.mock("@/features/build/views/workload-view", () => ({
-  WorkloadView: (props: { group?: string }) => {
-    capturedWorkloadViewGroup = props.group;
-    return <div data-testid="workload-view" />;
-  },
-}));
-
-jest.mock("@/features/build/views/view-switcher", () => ({
-  ViewSwitcher: () => null,
-}));
-
-jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
-  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
-    open ? <div data-testid="shortcut-help-dialog" /> : null,
-}));
-
-jest.mock("@/features/build/tickets/create-ticket-dialog", () => ({
-  CreateTicketDialog: ({ externalOpen }: { externalOpen: boolean }) =>
-    externalOpen ? <div data-testid="create-ticket-dialog" /> : null,
-}));
-
-jest.mock("@/features/build/shared/project-load-fallback", () => ({
-  ProjectLoadFallback: () => <div data-testid="project-load-fallback" />,
-}));
-
-jest.mock("@/components/shared/page-state", () => ({
-  PageState: ({
-    resolution,
-    loading,
-    children,
-  }: {
-    resolution: { kind: string; permission?: string | null };
-    loading: React.ReactNode;
-    children: React.ReactNode;
-  }) => {
-    if (resolution.kind === "loading") return <>{loading}</>;
-    if (
-      resolution.kind === "denied" ||
-      resolution.kind === "module-disabled" ||
-      resolution.kind === "module-denied" ||
-      resolution.kind === "plan-required"
-    )
-      return <div data-testid="denied-state" />;
-    if (resolution.kind === "error") return <div data-testid="error-state" />;
-    return <>{children}</>;
-  },
-}));
-
-jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, filters, actions }: { children: React.ReactNode; filters?: React.ReactNode; actions?: React.ReactNode }) => (
-    <div>
-      {filters}
-      {actions}
-      {children}
-    </div>
-  ),
-}));
-
-jest.mock("@/components/ui/kanban-skeleton", () => ({
-  KanbanBoardSkeleton: () => <div data-testid="kanban-board-skeleton" />,
-}));
-
-jest.mock("@/components/ui/skeleton", () => ({
-  Skeleton: () => <span />,
-}));
-
-jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({ title }: { title: string }) => (
-    <div data-testid="offline-empty-state">{title}</div>
-  ),
-}));
-
-jest.mock("@/features/build/my-tickets/map-board-ticket", () => ({
-  mapBoardTicketToKanban: (t: unknown) => t,
-}));
-
-import { WorkloadBoardPage } from "./workload-board-page";
-
-const READY_PROJECT = {
-  data: {
-    id: 1,
-    name: "My Project",
-    key: "TST",
-    description: null,
-    statuses: [],
-    members: [],
-  },
-  isLoading: false,
-  isError: false,
-  error: null,
-  refetch: jest.fn(),
-};
-
-const TICKETS_RESULT = {
-  data: [],
-  isLoading: false,
-  isError: false,
-  error: null,
-};
-
-beforeEach(() => {
-  jest.clearAllMocks();
-  capturedFilterBarProps = {};
-  capturedWorkloadViewGroup = undefined;
-  mockSearchParams = new URLSearchParams();
-  mockUse.mockReturnValue({ projectId: "1" });
-  mockUseProject.mockReturnValue(READY_PROJECT);
-  mockUseProjectBoardTickets.mockReturnValue(TICKETS_RESULT);
-  mockUseProjectTeams.mockReturnValue({ data: undefined });
-  mockUsePageState.mockReturnValue({ kind: "ready" });
-  mockUseOnlineStatus.mockReturnValue(true);
-});
-
-function renderPage() {
-  return render(
-    <WorkloadBoardPage params={Promise.resolve({ projectId: "1" })} />,
-  );
-}
+beforeEach(installWorkloadMocks);
 
 describe("WorkloadBoardPage — URL param forwarding to useWorkloadCapacity", () => {
   it("passes from and to query params as start and end to useWorkloadCapacity so shared links preserve the capacity window", () => {
-    mockSearchParams = new URLSearchParams("from=2026-01-01&to=2026-01-14");
+    setSearchParams("from=2026-01-01&to=2026-01-14");
     renderPage();
     expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
       1,
@@ -233,7 +41,7 @@ describe("WorkloadBoardPage — URL param forwarding to useWorkloadCapacity", ()
   });
 
   it("passes teamId as a number to useWorkloadCapacity when the teamId URL param is present so the capacity endpoint can filter by team", () => {
-    mockSearchParams = new URLSearchParams("teamId=5");
+    setSearchParams("teamId=5");
     renderPage();
     expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
       1,
@@ -256,7 +64,7 @@ describe("WorkloadBoardPage — URL param forwarding to useWorkloadCapacity", ()
 
 describe("WorkloadBoardPage — URL param forwarding to useProjectBoardTickets", () => {
   it("passes memberId from the URL as assigneeId to useProjectBoardTickets so the member filter persists across reloads", () => {
-    mockSearchParams = new URLSearchParams("memberId=user-abc");
+    setSearchParams("memberId=user-abc");
     renderPage();
     expect(mockUseProjectBoardTickets).toHaveBeenCalledWith(
       1,
@@ -276,7 +84,7 @@ describe("WorkloadBoardPage — URL param forwarding to useProjectBoardTickets",
 describe("WorkloadBoardPage — filter change writes memberId to URL", () => {
   it("calls router.replace with memberId in the URL when the assigneeId filter changes to a non-all value, so the selection is bookmarkable", () => {
     renderPage();
-    capturedFilterBarProps.onFilterChange?.("assigneeId", "user-xyz");
+    captured.filterBarProps.onFilterChange?.("assigneeId", "user-xyz");
     expect(mockReplace).toHaveBeenCalledWith(
       expect.stringContaining("memberId=user-xyz"),
       expect.anything(),
@@ -284,18 +92,18 @@ describe("WorkloadBoardPage — filter change writes memberId to URL", () => {
   });
 
   it("removes memberId from the URL when the assigneeId filter is cleared to all, so the URL stays clean when no filter is active", () => {
-    mockSearchParams = new URLSearchParams("memberId=user-abc");
+    setSearchParams("memberId=user-abc");
     renderPage();
-    capturedFilterBarProps.onFilterChange?.("assigneeId", "all");
+    captured.filterBarProps.onFilterChange?.("assigneeId", "all");
     const callArg: string = mockReplace.mock.calls[0][0];
     expect(callArg).not.toContain("memberId=");
   });
 
   it("removes memberId from the URL when onClearFilters fires", () => {
-    mockSearchParams = new URLSearchParams("memberId=user-abc");
+    setSearchParams("memberId=user-abc");
     renderPage();
     act(() => {
-      capturedFilterBarProps.onClearFilters?.();
+      captured.filterBarProps.onClearFilters?.();
     });
     const callArg: string = mockReplace.mock.calls[0][0];
     expect(callArg).not.toContain("memberId=");
@@ -305,7 +113,7 @@ describe("WorkloadBoardPage — filter change writes memberId to URL", () => {
 describe("WorkloadBoardPage — URL param forwarding: teamId writes to URL", () => {
   it("calls router.replace with teamId in the URL when the teamId filter changes to a non-all value, so capacity is filtered to that team", () => {
     renderPage();
-    capturedFilterBarProps.onFilterChange?.("teamId", "7");
+    captured.filterBarProps.onFilterChange?.("teamId", "7");
     expect(mockReplace).toHaveBeenCalledWith(
       expect.stringContaining("teamId=7"),
       expect.anything(),
@@ -313,243 +121,31 @@ describe("WorkloadBoardPage — URL param forwarding: teamId writes to URL", () 
   });
 
   it("removes teamId from the URL when the teamId filter is cleared to all, so the URL stays clean when no team filter is active", () => {
-    mockSearchParams = new URLSearchParams("teamId=7");
+    setSearchParams("teamId=7");
     renderPage();
-    capturedFilterBarProps.onFilterChange?.("teamId", "all");
+    captured.filterBarProps.onFilterChange?.("teamId", "all");
     const callArg: string = mockReplace.mock.calls[0][0];
     expect(callArg).not.toContain("teamId=");
   });
 
   it("removes teamId from the URL when onClearFilters fires", () => {
-    mockSearchParams = new URLSearchParams("teamId=7");
+    setSearchParams("teamId=7");
     renderPage();
     act(() => {
-      capturedFilterBarProps.onClearFilters?.();
+      captured.filterBarProps.onClearFilters?.();
     });
     const callArg: string = mockReplace.mock.calls[0][0];
     expect(callArg).not.toContain("teamId=");
   });
 
   it("derives teamId for workloadFilters from URL so a page reload re-applies the filter without a separate state sync", () => {
-    mockSearchParams = new URLSearchParams("teamId=9");
+    setSearchParams("teamId=9");
     renderPage();
-    expect(capturedFilterBarProps.filters?.["teamId"]).toBe("9");
+    expect(captured.filterBarProps.filters?.["teamId"]).toBe("9");
   });
 
   it("shows no teamId filter when teamId is absent from the URL — filters.teamId defaults to all", () => {
     renderPage();
-    expect(capturedFilterBarProps.filters?.["teamId"]).toBe("all");
-  });
-});
-
-describe("WorkloadBoardPage — access resolution", () => {
-  it("a denied resolution renders the denied surface and not the workload view, so a blank page is never the outcome of a permission check", () => {
-    mockUseProject.mockReturnValue({ ...READY_PROJECT, data: undefined });
-    mockUsePageState.mockReturnValue({ kind: "denied", permission: "build:view" });
-    renderPage();
-    expect(screen.getByTestId("denied-state")).toBeDefined();
-    expect(screen.queryByTestId("workload-view")).toBeNull();
-  });
-
-  it("an access-check still resolving renders the kanban skeleton and not the workload view, so a permitted user never sees a denial flash", () => {
-    mockUseProject.mockReturnValue({ ...READY_PROJECT, isLoading: true });
-    mockUsePageState.mockReturnValue({ kind: "loading" });
-    renderPage();
-    expect(screen.getByTestId("kanban-board-skeleton")).toBeDefined();
-    expect(screen.queryByTestId("workload-view")).toBeNull();
-  });
-
-  it("a ready resolution renders the workload view and not the skeleton", () => {
-    renderPage();
-    expect(screen.getByTestId("workload-view")).toBeDefined();
-    expect(screen.queryByTestId("kanban-board-skeleton")).toBeNull();
-  });
-});
-
-describe("WorkloadBoardPage — project error path", () => {
-  it("a project read failure renders the ProjectLoadFallback retry surface and not the generic error state", () => {
-    mockUseProject.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: true,
-      error: new Error("network error"),
-      refetch: jest.fn(),
-    });
-    renderPage();
-    expect(screen.getByTestId("project-load-fallback")).toBeDefined();
-    expect(screen.queryByTestId("error-state")).toBeNull();
-  });
-});
-
-describe("WorkloadBoardPage — usePageState inputs", () => {
-  it("passes the error value to usePageState so a 402 shows the upgrade path rather than a generic message (FE-41)", () => {
-    const projectErr = new Error("payment required");
-    mockUseProject.mockReturnValue({
-      ...READY_PROJECT,
-      isError: true,
-      error: projectErr,
-      data: undefined,
-    });
-    renderPage();
-    expect(mockUsePageState).toHaveBeenCalledWith(
-      expect.objectContaining({ isError: true, error: projectErr }),
-    );
-  });
-});
-
-describe("WorkloadBoardPage — offline state", () => {
-  it("renders the offline empty state and hides the workload view when the device goes offline (CCG-5)", () => {
-    mockUseOnlineStatus.mockReturnValue(false);
-    renderPage();
-    expect(screen.getByTestId("offline-empty-state")).toBeDefined();
-    expect(screen.queryByTestId("workload-view")).toBeNull();
-  });
-
-  it("renders the workload view when online and not the offline empty state", () => {
-    mockUseOnlineStatus.mockReturnValue(true);
-    renderPage();
-    expect(screen.getByTestId("workload-view")).toBeDefined();
-    expect(screen.queryByTestId("offline-empty-state")).toBeNull();
-  });
-});
-
-describe("WorkloadBoardPage — keyboard shortcuts", () => {
-  it("wires onShortcutHelp to useBuildListKeyboard so the ? key opens the shortcut help dialog (CCG-4)", () => {
-    renderPage();
-    const call = mockUseBuildListKeyboard.mock.calls[0]?.[0] as {
-      onShortcutHelp?: () => void;
-    };
-    expect(typeof call.onShortcutHelp).toBe("function");
-  });
-
-  it("calling onShortcutHelp from useBuildListKeyboard opens the ShortcutHelpDialog", () => {
-    renderPage();
-    const call = mockUseBuildListKeyboard.mock.calls[0]?.[0] as {
-      onShortcutHelp?: () => void;
-    };
-    act(() => {
-      call.onShortcutHelp?.();
-    });
-    expect(screen.getByTestId("shortcut-help-dialog")).toBeDefined();
-  });
-
-  it("wires onCreate to useBuildListKeyboard so the c key opens the create ticket dialog", () => {
-    renderPage();
-    const call = mockUseBuildListKeyboard.mock.calls[0]?.[0] as {
-      onCreate?: () => void;
-    };
-    expect(typeof call.onCreate).toBe("function");
-  });
-
-  it("keyboard is always enabled on the workload page so j/k navigation works immediately", () => {
-    renderPage();
-    expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
-      expect.objectContaining({ enabled: true }),
-    );
-  });
-});
-
-describe("WorkloadBoardPage — group is deliberately not a parameter because both grid axes are already occupied", () => {
-  it("ignores a group query param, since the row axis is already the member and the column axis is the calendar day", () => {
-    mockSearchParams = new URLSearchParams("group=assignee");
-    renderPage();
-    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
-      1,
-      expect.any(String),
-      expect.any(String),
-      undefined,
-    );
-    expect(capturedFilterBarProps.filters).not.toHaveProperty("group");
-  });
-
-  it("ignores group=status and group=priority, which are ticket attributes already expressed as filters rather than a second grid axis", () => {
-    mockSearchParams = new URLSearchParams("group=status");
-    renderPage();
-    expect(capturedFilterBarProps.filters).not.toHaveProperty("group");
-    expect(capturedFilterBarProps.filters?.["status"]).toBe("all");
-    expect(capturedFilterBarProps.filters?.["priority"]).toBe("all");
-  });
-
-  it("still honours teamId, the one member-level dimension the page does express, so the group assertions above are not passing merely because the page ignores every query param", () => {
-    mockSearchParams = new URLSearchParams("group=team&teamId=7");
-    renderPage();
-    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
-      1,
-      expect.any(String),
-      expect.any(String),
-      7,
-    );
-    expect(capturedFilterBarProps.filters?.["teamId"]).toBe("7");
-  });
-});
-
-describe("WorkloadBoardPage — projectId is the path param and never read from the query string", () => {
-  it("ignores a conflicting projectId query param and keeps using the route param, so the path stays the single source of truth", () => {
-    mockSearchParams = new URLSearchParams("projectId=999");
-    mockUse.mockReturnValue({ projectId: "1" });
-    renderPage();
-    expect(mockUseProject).toHaveBeenCalledWith(1);
-    expect(mockUseProjectBoardTickets).toHaveBeenCalledWith(1, expect.anything());
-    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
-      1,
-      expect.any(String),
-      expect.any(String),
-      undefined,
-    );
-  });
-
-  it("follows the route param when it changes, proving the id is read from the path rather than hardcoded (positive control)", () => {
-    mockUse.mockReturnValue({ projectId: "42" });
-    renderPage();
-    expect(mockUseProject).toHaveBeenCalledWith(42);
-    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
-      42,
-      expect.any(String),
-      expect.any(String),
-      undefined,
-    );
-  });
-});
-
-describe("WorkloadBoardPage — group URL parameter", () => {
-  it("passes group=team to the view when the URL asks for it, so a shared link renders the grouped table", () => {
-    mockSearchParams = new URLSearchParams("group=team");
-    renderPage();
-    expect(capturedWorkloadViewGroup).toBe("team");
-  });
-
-  it("passes group=none when the URL carries no group — paired with the present case above", () => {
-    renderPage();
-    expect(capturedWorkloadViewGroup).toBe("none");
-  });
-
-  it("falls back to none for a grouping dimension the view does not implement, rather than rendering an empty table", () => {
-    mockSearchParams = new URLSearchParams("group=astrology");
-    renderPage();
-    expect(capturedWorkloadViewGroup).toBe("none");
-  });
-
-  it("renders a grouping control, so the parameter is writable and not a read-only deep link", () => {
-    renderPage();
-    expect(screen.getByRole("combobox", { name: "Group members by" })).toBeInTheDocument();
-  });
-
-  it("writes group=team to the URL when the control selects it", () => {
-    renderPage();
-    fireEvent.keyDown(screen.getByRole("combobox", { name: "Group members by" }), {
-      key: "Enter",
-    });
-    fireEvent.click(screen.getByRole("option", { name: "Group by team" }));
-    expect(String(mockReplace.mock.calls.at(-1)?.[0])).toContain("group=team");
-  });
-
-  it("clears the group param when grouping returns to none, so the URL stays clean at the default", () => {
-    mockSearchParams = new URLSearchParams("group=team");
-    renderPage();
-    fireEvent.keyDown(screen.getByRole("combobox", { name: "Group members by" }), {
-      key: "Enter",
-    });
-    fireEvent.click(screen.getByRole("option", { name: "No grouping" }));
-    expect(String(mockReplace.mock.calls.at(-1)?.[0])).not.toContain("group=");
+    expect(captured.filterBarProps.filters?.["teamId"]).toBe("all");
   });
 });
