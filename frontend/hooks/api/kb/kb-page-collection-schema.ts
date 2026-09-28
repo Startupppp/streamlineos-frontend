@@ -58,6 +58,7 @@ export const kbPageCollectionResponseSchema = z.object({
           count: z.number().int(),
         }),
       ),
+      isExact: z.boolean(),
     })
     .nullable(),
   boundedCount: z.object({

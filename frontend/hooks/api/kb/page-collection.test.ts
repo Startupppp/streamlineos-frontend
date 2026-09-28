@@ -80,6 +80,38 @@ describe("KB page collection — response contract parity (FE-28)", () => {
       expect(item).toHaveProperty(field);
     }
   });
+
+  it("decodes a populated facets object including its exactness flag, because every fixture here sends facets: null and so covered none of the facet shape at all", () => {
+    const faceted = {
+      ...WIRE_FIXTURE,
+      facets: {
+        status: [{ value: "published", count: 4 }],
+        space: [{ spaceId: 7, count: 3 }],
+        owner: [{ ownerMembershipId: 11, count: 4 }],
+        isExact: false,
+      },
+    };
+
+    const parsed = kbPageCollectionResponseSchema.parse(faceted);
+
+    expect(parsed.facets?.isExact).toBe(false);
+    expect(parsed.facets?.status).toEqual([{ value: "published", count: 4 }]);
+  });
+
+  it("rejects a facets object with no exactness flag, so a backend that stopped sending it fails the contract instead of decoding to undefined and presenting a sampled distribution as a census", () => {
+    const withoutFlag = {
+      ...WIRE_FIXTURE,
+      facets: {
+        status: [{ value: "published", count: 4 }],
+        space: [{ spaceId: 7, count: 3 }],
+        owner: [{ ownerMembershipId: 11, count: 4 }],
+      },
+    };
+
+    expect(kbPageCollectionResponseSchema.safeParse(withoutFlag).success).toBe(
+      false,
+    );
+  });
 });
 
 describe("KB_PAGE_COLLECTION_QUERY_FIELDS — the cross-repo half of the collection query fixture", () => {
