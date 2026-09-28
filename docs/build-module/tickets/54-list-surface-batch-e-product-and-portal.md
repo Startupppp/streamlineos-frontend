@@ -60,6 +60,7 @@ The portal pages carry the extra constraint: an external client's list must neve
   non-list pages (settings, reports, detail pages, galleries) and is the foundation of `build-list-surface.tsx`
   itself. `DataTableSkeleton` is used in the surface implementation and in gallery demos. The box stays
   permanently unchecked.
+  LANE-ADJ-B 2026-09-28: Re-verified independently. `grep -rl 'usePageState' features/build/ --include="*.tsx" --include="*.ts" | wc -l` → 137; `grep -rl 'DataTableSkeleton' features/build/ --include="*.tsx" --include="*.ts" | wc -l` → 42. `build-list-surface.tsx` imports both at lines 4 and 8, so neither can lose all callers while the surface exists. No other build-module assembly helper was found to be caller-less. Prior verdict stands.
 - [x] Each page's rows can be supplied as props
   Earned 2026-09-27 for both lists in the batch. `managed-products-page.tsx` passes `rows={displayed}` and
   `product-feedback-page.tsx` passes `rows={data?.data ?? []}`, so either table can be driven from a fixture

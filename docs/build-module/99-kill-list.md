@@ -213,6 +213,40 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   **STILL NOT EARNED, for the same reason and with more of it.** Every finding is a source file and out of this lane's write scope. Routed to the orchestrator. **SETTLES WHEN** the `modules.sprints` flag is removed from both contracts and the wizard, and the `sprint.started` / `sprint.completed` pair is removed from all six declaration sites — two backend (`core/dto/automation.schemas.ts:32-33`, `notifications/notification-events-build.catalog.ts:29,:33`) and four frontend (`hooks/api/build/automations.ts:35-36`, `features/build/automations/automation-schema.ts:21-22`, `hooks/api/build/build-project-schema.ts:274-275`, `features/build/webhooks/project-webhooks-page.tsx:89-90`) — after which the sheet, the page filter and the URL param fall away as consumers. The Sprint 410 adapter stays.
 - [ ] Product copy does not advertise removed or unimplemented capabilities. **2026-09-28 NOT EARNED. The previous entry proposed option (A) as the settling check and asserted its result without running it. This lane ran it. The asserted result was FALSE.** **Re-checked later the same day by a second lane: the withdrawal is upheld, two of its counts are wrong, the pattern it used cannot match the plural "Sprints", and the `features/build/` scope hid public landing/SEO copy plus a second class of finding — retention copy that promises deletion nothing performs. The verification decision is resolved in the second-lane note below.**
 
+  **2026-09-28 — public copy fixed, two findings remain and both are owner decisions.** The five
+  public strings naming the retired concept are renamed: `features/landing/data/pillars.ts:20`
+  ("sprint boards" → "cycle boards"), `:65` ("Run sprints" → "Run cycles"), `:67` ("sprints" →
+  "cycles"), `:68` ("Sprint velocity tracking" → "Cycle velocity tracking") and
+  `features/seo/structured-data.tsx:128` ("Project & sprint planning" → "Project & cycle
+  planning"). Renames, not deletions — the capability ships, under a different name. `grep -ni
+  sprint` over both files now returns nothing; app typecheck 0.
+
+  A third instance of the same class was found and fixed in the same pass, outside the public
+  copy: the Visibility tab of `features/build/client-portal/client-portal-management-page.tsx:453`
+  told the operator to "switch to the Tickets and Milestones sections in the Client Visibility
+  panel" — a panel that is rendered nowhere. `ClientVisibilityPage` exists, is complete, and is
+  imported only by its two tests and the internal gallery; no `app/**` route reaches it, and none
+  ever did (`git log --diff-filter=D` over `app/**/client-portal/**` is empty). The copy now states
+  that per-item visibility is not available on this surface yet, which is the same correction
+  applied to the retention copy: stop promising what nothing performs.
+
+  **Wiring that panel is not the one-line import it looks like, and that matters for whoever picks
+  it up.** `ClientVisibilityPage` is a page, not a panel — it opens its own `PageWrapper` with its
+  own title at `client-visibility-page.tsx:165` and carries its own `Tabs` + `PageTabsToolbar`
+  inside it. Dropping it into the management page's Visibility tab nests a `PageWrapper` in a
+  `PageWrapper` (two `<h1>`, FE-101) and a `Tabs` in a `Tabs`. It also carries a "Load more
+  milestones" control, which FE-125 forbids outright — currently harmless because nothing routes
+  the component, but routing it as-is would newly ship a banned control and raise a shrink-only
+  count. Earning this means hoisting the two inner tabs into the management page's tab set and
+  replacing the reveal button with infinite scroll or cursor controls, not adding an import.
+
+  **The remaining testimonial is deliberately untouched.** `features/landing/data/testimonials.ts:18`
+  quotes a named customer saying "The sprint + CRM combo is game-changing. We track leads and
+  sprints in the same view." Editing words inside an attributed quotation falsifies a statement a
+  real person is said to have made, so a rename is not available here. The options are to leave it
+  as a dated quote, remove the testimonial, or source a real replacement — fabricating a
+  substitute is not one of them. Owner's call; this box cannot be earned until it is made.
+
   **CLAIM WITHDRAWN.** The previous entry's settling evidence read: "`grep -r "PM Workspace\|Sprint " frontend/features/ frontend/app/` returns no visible UI strings outside the tombstone and migration docs." Run this lane, the grep returns **72 hits for `\bSprint\b` and 4 for `PM Workspace`** across `frontend/features/` and `frontend/app/`; **65 of the sprint hits are in non-test files**, and a substantial number are user-visible strings. The check was the right check; it was recorded as passing without being executed.
 
   **PM Workspace — CLEAN.** All 4 hits are test *descriptions* asserting the removal, which is the correct place for the words to survive: `build-quick-create.test.tsx:157,:236`, `use-build-scope-directory.test.ts:312`, `use-build-list-url-state.test.ts:179`. Nothing user-visible.

@@ -149,6 +149,14 @@ tickets group repo-wide rather than across `src/modules/build/**` only, and
 resolves `jest.mock`, `require` and dynamic `import` specifiers as well as
 `from`, failing any that points at nothing on disk. See ticket 27.
 
+## Correction to "External modules: 0" — 2026-09-28 (Lane-Adj-A)
+
+The remeasurement above claims "External modules: 0." One external non-spec caller was missed: `backend/src/modules/goals/goals.service.ts:25` imports `TicketVersionConflictException` directly from `../build/core/tickets/ticket-version-conflict.exception` rather than from the barrel. `TicketVersionConflictException` is exported from the barrel (`core/tickets/index.ts:22`), so the bypass is gratuitous — the file could route through the barrel. A second call site is the spec `goals-edit-tokens-and-rollup.spec.ts:7` (same import, same file).
+
+Additionally `build/import-export/ticket-points-column.spec.ts:7` imports `queryTickets` from `../core/tickets/projects-tickets-read.query` — `queryTickets` is not in the barrel, so this import is forced. That file is in `build/import-export/`, outside `build/core/`.
+
+Criterion 3 stays unticked. The sibling half (thirteen-plus non-spec imports across `analytics`, `automation`, `custom-fields`, `custom-states`, `members`, `notifications`, `project-crud`, `releases`, `roadmap`, `webhooks` and `projects.module.ts`) is the primary blocker; the `goals/` external bypass is an additional violation the gate (`check:build-core-surface`) should cover. What would settle it: zero results from `grep -r "from.*core/tickets/" backend/src --include="*.ts" -l` outside `build/core/tickets/` and `build/core/index.ts`.
+
 ## Verification
 
 `tsc` reports zero unresolved modules. `check:module-di` finds every ticket

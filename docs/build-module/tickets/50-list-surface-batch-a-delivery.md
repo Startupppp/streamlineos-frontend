@@ -61,3 +61,4 @@ Batched by blast radius so each batch fits one fresh context window. Land them i
   → 438, also under 500). The migration did shrink both files it touched, but nothing crossed 500 in either
   direction, so treating this as earned would be counting a threshold that was never breached.
   LANE-50 re-measurement confirms no file in the batch exceeded 500 either before or after migration.
+  LANE-ADJ-B 2026-09-28: All five files re-measured independently. Current counts: `project-backlog-page.tsx` 412, `project-submissions-inbox.tsx` 333, `releases/releases-page.tsx` 439, `views/table-view.tsx` 286, `project-detail/project-budget-page.tsx` 279. No file in the batch crossed 500 in either direction. Prior verdict stands; box has no earnable subject.
