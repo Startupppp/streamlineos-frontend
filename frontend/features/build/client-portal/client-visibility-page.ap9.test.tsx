@@ -119,7 +119,7 @@ jest.mock("@/hooks/api/build/client-portal", () => ({
     mockUseUpdateMilestoneVisibility(...args),
 }));
 
-const mockInfiniteScrollSentinel = jest.fn(() => null);
+const mockInfiniteScrollSentinel = jest.fn((_props: Record<string, unknown>) => null);
 jest.mock("@/components/ui/infinite-scroll-sentinel", () => ({
   InfiniteScrollSentinel: (props: Record<string, unknown>) => mockInfiniteScrollSentinel(props),
 }));
@@ -217,12 +217,11 @@ describe("C4: ClientVisibilityPage uses IntersectionObserver sentinel so lists a
     render(<ClientVisibilityPage projectId={1} />);
 
     const sentinelCalls = mockInfiniteScrollSentinel.mock.calls;
-    const ticketSentinelCall = sentinelCalls.find(
-      ([props]: [Record<string, unknown>]) =>
-        (props as { label?: string }).label === "Load more tickets",
-    );
-    expect(ticketSentinelCall).toBeDefined();
-    expect(ticketSentinelCall![0]).toEqual(
+    const ticketSentinelProps = sentinelCalls
+      .map(([props]) => props)
+      .find((props) => props.label === "Load more tickets");
+    expect(ticketSentinelProps).toBeDefined();
+    expect(ticketSentinelProps).toEqual(
       expect.objectContaining({ hasNextPage: false }),
     );
   });
