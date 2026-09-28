@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState, type MouseEvent } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +43,11 @@ export const ListViewItem = memo(function ListViewItem({
     [onSelect, ticket.id],
   );
   const shouldReduceMotion = useReducedMotion();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setMenuOpen(true);
+  }, []);
   const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
@@ -73,6 +78,7 @@ export const ListViewItem = memo(function ListViewItem({
         isKeyboardFocused &&
           "bg-primary/[0.06] ring-1 ring-inset ring-primary/40",
       )}
+      onContextMenu={handleContextMenu}
       initial={shouldReduceMotion ? false : { opacity: 0, x: -4 }}
       animate={{ opacity: 1, x: 0 }}
       transition={pmSnappy}
@@ -201,6 +207,11 @@ export const ListViewItem = memo(function ListViewItem({
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}
+          projectKey={projectKey}
+          ticketNumber={ticket.ticketNumber}
+          onOpen={onClick}
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
           className="opacity-0 translate-x-1 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-within:translate-x-0 group-focus-within:opacity-100"
         />
       </div>

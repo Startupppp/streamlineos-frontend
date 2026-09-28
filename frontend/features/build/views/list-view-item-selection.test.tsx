@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 let mockTicketQuickActionsClassName: string | undefined;
@@ -60,9 +60,9 @@ jest.mock("./card-inline-date-fields", () => ({
 }));
 
 jest.mock("./ticket-quick-actions", () => ({
-  TicketQuickActions: ({ className }: { className?: string }) => {
+  TicketQuickActions: ({ className, open }: { className?: string; open?: boolean }) => {
     mockTicketQuickActionsClassName = className;
-    return null;
+    return open ? <div data-testid="row-menu-open" /> : null;
   },
 }));
 
@@ -321,5 +321,25 @@ describe("ListViewItem — row actions remain visible with focus", () => {
         "group-focus-within:opacity-100",
       ]),
     );
+  });
+});
+
+describe("ListViewItem — right click opens the row's own action menu", () => {
+  function renderRow() {
+    return render(<ListViewItem ticket={TICKET} onClick={jest.fn()} />);
+  }
+
+  it("keeps the menu closed until the row is right clicked", () => {
+    renderRow();
+    expect(screen.queryByTestId("row-menu-open")).toBeNull();
+  });
+
+  it("opens the menu on contextmenu and suppresses the browser menu", () => {
+    const { container } = renderRow();
+    const row = container.firstElementChild;
+    if (row === null) throw new Error("the list row rendered nothing");
+    const notPrevented = fireEvent.contextMenu(row);
+    expect(notPrevented).toBe(false);
+    expect(screen.getByTestId("row-menu-open")).toBeInTheDocument();
   });
 });
