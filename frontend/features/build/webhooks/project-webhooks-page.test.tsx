@@ -272,7 +272,11 @@ describe("Webhook list contract — secret redaction (BLD-X-FE-SETTINGS-WH-015)"
           url: "https://example.com/hook",
           events: ["ticket.created"],
           isActive: true,
+          hasSecret: true,
+          secretSetAt: "2026-01-01T00:00:00.000Z",
+          version: 1,
           createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
           lastDeliveryAt: null,
           lastDeliveryStatus: null,
           failureRate: null,
@@ -293,14 +297,46 @@ describe("Webhook list contract — secret redaction (BLD-X-FE-SETTINGS-WH-015)"
     );
     const raw = {
       data: [
-        { id: 1, orgId: "o", projectId: 1, url: "https://a.com", events: [], isActive: true, createdAt: "2026-01-01T00:00:00Z", lastDeliveryAt: null, lastDeliveryStatus: null, failureRate: null },
-        { id: 2, orgId: "o", projectId: 1, url: "https://b.com", events: [], isActive: false, createdAt: "2026-01-01T00:00:00Z", lastDeliveryAt: null, lastDeliveryStatus: null, failureRate: null },
+        { id: 1, orgId: "o", projectId: 1, url: "https://a.com", events: [], isActive: true, hasSecret: true, secretSetAt: "2026-01-01T00:00:00Z", version: 1, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z", lastDeliveryAt: null, lastDeliveryStatus: null, failureRate: null },
+        { id: 2, orgId: "o", projectId: 1, url: "https://b.com", events: [], isActive: false, hasSecret: false, secretSetAt: null, version: 4, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z", lastDeliveryAt: null, lastDeliveryStatus: null, failureRate: null },
       ],
       hasMore: false,
       nextCursor: null,
     };
     expect(() => projectWebhookPageContract.parse(raw)).not.toThrow();
     expect(projectWebhookPageContract.parse(raw).data[1].isActive).toBe(false);
+  });
+});
+
+describe("Webhook update request contract mirrors the backend strict body", () => {
+  it("rejects an update with no concurrency token, because the backend body requires one and an omitted token is a 400 rather than a silent no-op", async () => {
+    const { projectWebhookUpdateRequestContract } = await import(
+      "@/hooks/api/build/build-project-schema"
+    );
+
+    expect(projectWebhookUpdateRequestContract.safeParse({ isActive: false }).success).toBe(false);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: 3, isActive: false }).success).toBe(true);
+  });
+
+  it("rejects a zero or negative token, so a defaulted token cannot pass for a real one", async () => {
+    const { projectWebhookUpdateRequestContract } = await import(
+      "@/hooks/api/build/build-project-schema"
+    );
+
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: 0, isActive: true }).success).toBe(false);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: -1, isActive: true }).success).toBe(false);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: 1, isActive: true }).success).toBe(true);
+  });
+
+  it("accepts url and events on update, which delete-and-recreate was the only route to before, and rejects an undeclared key", async () => {
+    const { projectWebhookUpdateRequestContract } = await import(
+      "@/hooks/api/build/build-project-schema"
+    );
+
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: 2, url: "https://ci.example.com/hook", events: ["ticket.created"] }).success).toBe(true);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: 2, url: "not-a-url" }).success).toBe(false);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: 2, events: [] }).success).toBe(false);
+    expect(projectWebhookUpdateRequestContract.safeParse({ version: 2, secret: "rotate-me" }).success).toBe(false);
   });
 });
 

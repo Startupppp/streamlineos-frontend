@@ -244,9 +244,9 @@ export function ProjectWebhooksPage({
   );
 
   const handleToggle = useCallback(
-    (webhookId: number, isActive: boolean) => {
+    (webhook: Pick<ProjectWebhook, "id" | "version">, isActive: boolean) => {
       updateWebhook.mutate(
-        { webhookId, isActive },
+        { webhookId: webhook.id, version: webhook.version, isActive },
         {
           onSuccess: () =>
             toast.success(isActive ? "Webhook enabled" : "Webhook disabled"),

@@ -85,12 +85,20 @@ export function useCreateWebhook(projectId: number) {
   });
 }
 
+export interface UpdateWebhookVariables {
+  webhookId: number;
+  version: number;
+  url?: string;
+  events?: string[];
+  isActive?: boolean;
+}
+
 export function useUpdateWebhook(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "webhooks", "update"],
-    mutationFn: ({ webhookId, isActive }: { webhookId: number; isActive: boolean }) =>
-      apiClient.patch<ProjectWebhook>(`/build/${projectId}/webhooks/${webhookId}`, { isActive }, undefined, projectWebhookRowContract),
+    mutationFn: ({ webhookId, ...body }: UpdateWebhookVariables) =>
+      apiClient.patch<ProjectWebhook>(`/build/${projectId}/webhooks/${webhookId}`, body, undefined, projectWebhookRowContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.webhooks(projectId) }),
   });
 }

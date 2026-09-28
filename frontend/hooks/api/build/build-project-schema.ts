@@ -233,7 +233,11 @@ const projectWebhookSchema = z.object({
   url: z.string(),
   events: z.array(z.string()),
   isActive: z.boolean(),
+  hasSecret: z.boolean(),
+  secretSetAt: z.string().nullable(),
+  version: z.number(),
   createdAt: z.string(),
+  updatedAt: z.string(),
   lastDeliveryAt: z.string().nullable(),
   lastDeliveryStatus: z.enum(['success', 'failed', 'pending']).nullable(),
   failureRate: z.number().nullable(),
@@ -358,6 +362,13 @@ export const projectReleaseRowContract = projectReleaseRowSchema;
 export const projectWebhookPageContract = idCursorPageContract(projectWebhookSchema);
 export const projectWebhookListContract = projectWebhookPageContract;
 export const projectWebhookRowContract = projectWebhookSchema;
+
+export const projectWebhookUpdateRequestContract = z.object({
+  version: z.number().int().positive(),
+  url: z.string().url().optional(),
+  events: z.array(z.string().min(1)).min(1).optional(),
+  isActive: z.boolean().optional(),
+}).strict();
 export const webhookDeliveryListContract = z.array(webhookDeliverySchema);
 export const webhookTestResultContract = webhookTestResultSchema;
 export const projectAutomationListContract = z.array(projectAutomationListItemSchema);

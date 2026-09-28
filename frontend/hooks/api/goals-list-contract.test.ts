@@ -26,6 +26,8 @@ const GOAL_ROW = {
   level: "company",
   status: "on_track",
   progress: 42,
+  confidence: 70,
+  version: 1,
   startDate: "2026-01-01",
   dueDate: "2026-12-31",
   parentGoalId: null,
@@ -45,6 +47,8 @@ const GOAL_OWNER = {
 
 const GOAL_LIST_ITEM = {
   ...GOAL_ROW,
+  target: "5000000",
+  current: "2100000",
   owner: GOAL_OWNER,
   keyResultCount: 3,
 };

@@ -33,6 +33,8 @@ export const goalRowContract = z.object({
   level: goalLevelContract,
   status: goalStatusContract,
   progress: z.number().int(),
+  confidence: z.number().int().nullable(),
+  version: z.number().int(),
   startDate: z.string().nullable(),
   dueDate: z.string().nullable(),
   parentGoalId: z.number().int().nullable(),
@@ -45,6 +47,8 @@ export const goalRowContract = z.object({
 
 /** `goalListItemSchema` — row + owner + keyResultCount. */
 export const goalListItemContract = goalRowContract.extend({
+  target: z.string().nullable(),
+  current: z.string().nullable(),
   owner: goalOwnerContract.nullable(),
   keyResultCount: z.number().int(),
 });

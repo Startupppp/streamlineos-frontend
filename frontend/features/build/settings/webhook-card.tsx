@@ -110,7 +110,7 @@ interface WebhookCardProps {
   webhook: ProjectWebhook;
   projectId: number;
   onDelete: (id: number) => void;
-  onToggle?: (id: number, isActive: boolean) => void;
+  onToggle?: (webhook: Pick<ProjectWebhook, "id" | "version">, isActive: boolean) => void;
   canManage?: boolean;
 }
 
@@ -161,9 +161,9 @@ export function WebhookCard({
 
   const handleActiveToggle = useCallback(
     (checked: boolean) => {
-      onToggle?.(webhook.id, checked);
+      onToggle?.({ id: webhook.id, version: webhook.version }, checked);
     },
-    [onToggle, webhook.id],
+    [onToggle, webhook.id, webhook.version],
   );
 
   if (accessState === "denied" || accessState === "loading") return null;

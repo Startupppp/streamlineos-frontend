@@ -97,6 +97,7 @@ export interface CreateGoalInput {
 }
 
 interface UpdateGoalInput {
+  version: number;
   title?: string;
   description?: string | null;
   ownerId?: string | null;

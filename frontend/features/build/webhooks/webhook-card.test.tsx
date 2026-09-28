@@ -21,11 +21,16 @@ jest.mock("@/components/pm-chrome", () => ({
 
 const BASE_WEBHOOK: ProjectWebhook = {
   id: 7,
+  orgId: "org-1",
   projectId: 3,
   url: "https://ci.example.com/hook",
   events: ["ticket.created", "ticket.updated"],
   isActive: true,
+  hasSecret: true,
+  secretSetAt: "2026-06-01T00:00:00.000Z",
+  version: 9,
   createdAt: "2026-06-01T00:00:00.000Z",
+  updatedAt: "2026-06-02T00:00:00.000Z",
   lastDeliveryAt: null,
   lastDeliveryStatus: null,
   failureRate: null,
@@ -151,7 +156,7 @@ describe("WebhookCard — enable / disable toggle (BLD-X-FE-SETTINGS-WH-024)", (
       />,
     );
     fireEvent.click(screen.getByRole("switch", { name: /disable webhook/i }));
-    expect(onToggle).toHaveBeenCalledWith(7, false);
+    expect(onToggle).toHaveBeenCalledWith({ id: 7, version: 9 }, false);
   });
 
   it("calls onToggle with true when the switch is checked on an inactive webhook — enabling sends the right payload", () => {
@@ -166,7 +171,7 @@ describe("WebhookCard — enable / disable toggle (BLD-X-FE-SETTINGS-WH-024)", (
       />,
     );
     fireEvent.click(screen.getByRole("switch", { name: /enable webhook/i }));
-    expect(onToggle).toHaveBeenCalledWith(7, true);
+    expect(onToggle).toHaveBeenCalledWith({ id: 7, version: 9 }, true);
   });
 
   it("hides the toggle switch when canManage is false — mutation control fails closed", () => {

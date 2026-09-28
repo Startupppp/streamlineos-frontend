@@ -91,6 +91,7 @@ export function GoalFormSheet({
       updateGoal.mutate(
         {
           id: goal.id,
+          version: goal.version,
           title: values.title.trim(),
           description: values.description.trim() || null,
           level: values.level,
