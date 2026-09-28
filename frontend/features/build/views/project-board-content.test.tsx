@@ -277,7 +277,11 @@ describe("ProjectBoardContent — workload capacity wiring", () => {
         "user-1",
         {
           capacityHours: 40,
+          leaveDays: 0,
           loggedHours: 48,
+          estimateHours: 44,
+          allocationPercent: 120,
+          varianceHours: 8,
           isOverAllocated: true,
           isZeroCapacity: false,
           utilizationPercent: 120,
@@ -299,7 +303,11 @@ describe("ProjectBoardContent — workload capacity wiring", () => {
   it("a member with low ticket count but isOverAllocated=true is flagged over-capacity — revert the wiring and this fails", () => {
     const overAllocated: MemberCapacityData = {
       capacityHours: 8,
+      leaveDays: 0,
       loggedHours: 10,
+      estimateHours: 9,
+      allocationPercent: 125,
+      varianceHours: 2,
       isOverAllocated: true,
       isZeroCapacity: false,
       utilizationPercent: 125,

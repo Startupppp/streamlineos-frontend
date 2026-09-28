@@ -26,7 +26,7 @@ jest.mock("@/components/ui/select", () => {
   }: {
     value?: string;
     onValueChange?: (v: string) => void;
-    children?: Reactm.ReactNode;
+    children?: React.ReactNode;
   }) {
     return <Ctx.Provider value={{ onValueChange }}>{children}</Ctx.Provider>;
   }
@@ -36,7 +36,7 @@ jest.mock("@/components/ui/select", () => {
     "aria-label": ariaLabel,
     className,
   }: {
-    children?: Reactm.ReactNode;
+    children?: React.ReactNode;
     "aria-label"?: string;
     className?: string;
   }) {
@@ -51,7 +51,7 @@ jest.mock("@/components/ui/select", () => {
     return <span>{placeholder}</span>;
   }
 
-  function SelectContent({ children }: { children?: Reactm.ReactNode }) {
+  function SelectContent({ children }: { children?: React.ReactNode }) {
     return <>{children}</>;
   }
 
@@ -61,7 +61,7 @@ jest.mock("@/components/ui/select", () => {
     className,
   }: {
     value: string;
-    children?: Reactm.ReactNode;
+    children?: React.ReactNode;
     className?: string;
   }) {
     const { onValueChange } = Reactm.useContext(Ctx);
