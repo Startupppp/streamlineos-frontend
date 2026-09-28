@@ -51,7 +51,6 @@ export function StepReview({ draft }: StepReviewProps) {
       : "Blank";
 
   const moduleEntries: Array<[string, boolean]> = [
-    ["Sprints", draft.modules.sprints],
     ["Epics", draft.modules.epics],
     ["Time Tracking", draft.modules.timeTracking],
     ["Wiki", draft.modules.wiki],

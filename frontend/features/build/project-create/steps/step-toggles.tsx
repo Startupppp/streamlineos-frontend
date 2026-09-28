@@ -16,7 +16,6 @@ const GROUPS: { title: string; items: ToggleDef[] }[] = [
     title: "Work",
     items: [
       { kind: "feature", key: "backlog", label: "Backlog", desc: "Unscheduled work queue" },
-      { kind: "feature", key: "sprints", label: "Sprints", desc: "Agile sprint cycles", syncMod: "sprints" },
       { kind: "feature", key: "kanban", label: "Kanban Board", desc: "Visual workflow board" },
       { kind: "module", key: "epics", label: "Epics", desc: "Large initiative groupings" },
       { kind: "feature", key: "bugs", label: "Bug Tracker", desc: "Dedicated bug reporting" },
@@ -59,7 +58,6 @@ const GROUPS: { title: string; items: ToggleDef[] }[] = [
 
 function applyToModules(draft: WizardDraft, key: ModKey, v: boolean): ModulesType {
   return {
-    sprints: key === "sprints" ? v : draft.modules.sprints,
     epics: key === "epics" ? v : draft.modules.epics,
     timeTracking: key === "timeTracking" ? v : draft.modules.timeTracking,
     wiki: key === "wiki" ? v : draft.modules.wiki,

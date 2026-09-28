@@ -73,7 +73,6 @@ const projectRowSchema = z.object({
   settings: z
     .object({
       modules: z.object({
-        sprints: z.boolean(),
         epics: z.boolean(),
         timeTracking: z.boolean(),
         wiki: z.boolean(),

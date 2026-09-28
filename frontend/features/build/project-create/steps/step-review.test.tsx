@@ -56,7 +56,7 @@ function makeDraft(memberIds: string[]): WizardDraft {
     endDate: "",
     projectType: "",
     templateId: null,
-    modules: { sprints: true, epics: true, timeTracking: true, wiki: true },
+    modules: { epics: true, timeTracking: true, wiki: true },
     features: {},
     workflow: "simple",
     memberIds,
