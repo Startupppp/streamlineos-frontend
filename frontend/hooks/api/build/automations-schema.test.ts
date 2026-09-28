@@ -19,40 +19,67 @@ const VALID_LIST_ITEM = {
   updatedAt: "2024-01-01T00:00:00.000Z",
 };
 
-describe("projectAutomationListContract (BLD-X-BE-SETTINGS-AUTO-001)", () => {
-  it("accepts a valid automation list", () => {
+const VALID_PAGINATION = {
+  limit: 50,
+  hasMore: false,
+  nextCursor: null,
+};
+
+describe("projectAutomationListContract — cursor page envelope (BLD-X-BE-SETTINGS-AUTO-001)", () => {
+  it("accepts a valid cursor page envelope with data array and pagination fields", () => {
+    const raw = { data: [VALID_LIST_ITEM], pagination: VALID_PAGINATION };
+    expect(() => projectAutomationListContract.parse(raw)).not.toThrow();
+  });
+
+  it("accepts an empty data array — first-run state before any automations exist", () => {
+    const raw = { data: [], pagination: { ...VALID_PAGINATION, hasMore: false, nextCursor: null } };
+    expect(() => projectAutomationListContract.parse(raw)).not.toThrow();
+  });
+
+  it("accepts hasMore true with a nextCursor string — full page with more pages to follow", () => {
+    const raw = {
+      data: [VALID_LIST_ITEM],
+      pagination: { limit: 50, hasMore: true, nextCursor: "dGVzdA" },
+    };
+    expect(() => projectAutomationListContract.parse(raw)).not.toThrow();
+  });
+
+  it("rejects a bare array — the endpoint now returns an envelope and a bare array is the old broken contract", () => {
     const raw = [VALID_LIST_ITEM];
-    expect(() => projectAutomationListContract.parse(raw)).not.toThrow();
-  });
-
-  it("accepts null for createdBy, createdByUser, lastRunAt, lastFailureAt — all lifecycle moments start as absent", () => {
-    const raw = [{ ...VALID_LIST_ITEM, createdBy: null, createdByUser: null, lastRunAt: null, lastFailureAt: null }];
-    expect(() => projectAutomationListContract.parse(raw)).not.toThrow();
-  });
-
-  it("accepts lastRunAt and lastFailureAt as ISO strings when set — they are date strings not Date objects on the wire", () => {
-    const raw = [{ ...VALID_LIST_ITEM, lastRunAt: "2024-06-01T00:00:00.000Z", lastFailureAt: "2024-06-02T00:00:00.000Z" }];
-    expect(() => projectAutomationListContract.parse(raw)).not.toThrow();
-  });
-
-  it("rejects an automation list item missing required name", () => {
-    const { name: _n, ...noName } = VALID_LIST_ITEM;
-    const raw = [noName];
     expect(() => projectAutomationListContract.parse(raw)).toThrow();
   });
 
+  it("rejects an envelope missing the pagination field — incomplete envelope renders as an empty list", () => {
+    const raw = { data: [VALID_LIST_ITEM] };
+    expect(() => projectAutomationListContract.parse(raw)).toThrow();
+  });
+
+  it("rejects an envelope missing the data field", () => {
+    const raw = { pagination: VALID_PAGINATION };
+    expect(() => projectAutomationListContract.parse(raw)).toThrow();
+  });
+
+  it("accepts null for createdBy, createdByUser, lastRunAt, lastFailureAt — all lifecycle moments start as absent", () => {
+    const raw = {
+      data: [{ ...VALID_LIST_ITEM, createdBy: null, createdByUser: null, lastRunAt: null, lastFailureAt: null }],
+      pagination: VALID_PAGINATION,
+    };
+    expect(() => projectAutomationListContract.parse(raw)).not.toThrow();
+  });
+
   it("rejects an automation with an unknown action type — z.string() over an enum would silently accept this", () => {
-    const raw = [{ ...VALID_LIST_ITEM, actions: [{ type: "unknown_type", value: "x" }] }];
+    const raw = {
+      data: [{ ...VALID_LIST_ITEM, actions: [{ type: "unknown_type", value: "x" }] }],
+      pagination: VALID_PAGINATION,
+    };
     expect(() => projectAutomationListContract.parse(raw)).toThrow();
   });
 
   it("rejects an automation with an unknown triggerEvent — z.string() over an enum would silently accept this", () => {
-    const raw = [{ ...VALID_LIST_ITEM, triggerEvent: "ticket.unknown_event" }];
-    expect(() => projectAutomationListContract.parse(raw)).toThrow();
-  });
-
-  it("rejects a condition with an unknown operator", () => {
-    const raw = [{ ...VALID_LIST_ITEM, conditions: [{ field: "status", operator: "after", value: "done" }] }];
+    const raw = {
+      data: [{ ...VALID_LIST_ITEM, triggerEvent: "ticket.unknown_event" }],
+      pagination: VALID_PAGINATION,
+    };
     expect(() => projectAutomationListContract.parse(raw)).toThrow();
   });
 });

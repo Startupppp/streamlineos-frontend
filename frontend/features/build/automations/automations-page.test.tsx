@@ -23,11 +23,22 @@ jest.mock("@/hooks/common/use-online-status", () => ({
 
 jest.mock("@/hooks/api/build/automations", () => ({
   useAutomations: () => ({
-    data: mockAutomations,
+    data: {
+      pages: [
+        {
+          data: mockAutomations,
+          pagination: { limit: 50, hasMore: false, nextCursor: null },
+        },
+      ],
+      pageParams: [undefined],
+    },
     isLoading: mockIsLoading,
     isError: mockIsError,
     error: null,
     refetch: jest.fn(),
+    fetchNextPage: jest.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
   }),
   useCreateAutomation: () => ({ mutate: jest.fn(), isPending: false }),
   useUpdateAutomation: () => ({ mutate: jest.fn(), isPending: false }),

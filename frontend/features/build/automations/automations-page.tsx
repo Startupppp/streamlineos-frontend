@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence } from "framer-motion";
 import { Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -94,14 +95,22 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
   };
 
   const {
-    data: automations = [],
+    data,
     isLoading,
     isError,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useAutomations(projectId, serverFilters);
 
-  const filteredAutomations = automations.filter((automation) => {
+  const allAutomations = useMemo(
+    () => data?.pages.flatMap((p) => p.data) ?? [],
+    [data],
+  );
+
+  const filteredAutomations = allAutomations.filter((automation) => {
     const q = listFilters.debouncedSearch.toLowerCase();
     if (q.length > 0 && !automation.name.toLowerCase().includes(q))
       return false;
@@ -225,6 +234,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
 
   const handleCloseSheet = useCallback(() => setSheetOpen(false), []);
   const handleRetry = useCallback(() => void refetch(), [refetch]);
+  const handleLoadMore = useCallback(() => void fetchNextPage(), [fetchNextPage]);
 
   const handleAppendCondition = useCallback(() => {
     appendCondition({ field: "status", operator: "equals", value: "" });
@@ -397,13 +407,13 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
             <StatCardGrid cols={2} className="mb-1">
               <StatCard
                 label="Active"
-                value={automations.filter((a) => a.isActive).length}
+                value={allAutomations.filter((a) => a.isActive).length}
                 icon={Zap}
                 tone="emerald"
               />
               <StatCard
                 label="Inactive"
-                value={automations.filter((a) => !a.isActive).length}
+                value={allAutomations.filter((a) => !a.isActive).length}
                 icon={Zap}
                 tone="default"
               />
@@ -438,6 +448,12 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
                 ))}
               </AnimatePresence>
             </PmStaggerList>
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage ?? false}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+              label="Load more automations"
+            />
           </PmSection>
         </PageState>
       </PmPageShell>

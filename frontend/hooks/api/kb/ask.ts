@@ -20,6 +20,8 @@ export interface KbAskScopedInput {
   sourceIds?: number[];
   pageIds?: number[];
   verifiedOnly?: boolean;
+  ownerMembershipId?: number;
+  status?: "draft" | "in_review" | "published" | "archived";
 }
 
 export function useKbAsk() {

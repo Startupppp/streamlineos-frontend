@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { buildWorkQueryKeys as queryKeys } from "@/lib/query-keys/build-work";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -14,7 +14,7 @@ const projectAutomationListContract = lazyContract(() =>
 );
 const projectAutomationRowContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then(
-    (m) => m.projectAutomationListContract.element,
+    (m) => m.projectAutomationRowContract,
   ),
 );
 const noContentContract = lazyContract(() =>
@@ -52,22 +52,31 @@ export function useAutomations(
   filters?: AutomationsFilters,
 ) {
   const canView = useCan("build:view");
-  const params = new URLSearchParams();
-  if (filters?.action) params.set("action", filters.action);
-  if (filters?.ownerId) params.set("ownerId", filters.ownerId);
-  const queryString = params.toString();
-  const url = queryString
-    ? `/build/${projectId}/automations?${queryString}`
-    : `/build/${projectId}/automations`;
-  return useQuery<ProjectAutomation[]>({
+  const baseParams: Record<string, string> = {};
+  if (filters?.action) baseParams["action"] = filters.action;
+  if (filters?.ownerId) baseParams["ownerId"] = filters.ownerId;
+  return useInfiniteQuery({
     queryKey: [...queryKeys.projects.automations(projectId), filters ?? {}],
-    queryFn: ({ signal }) =>
-      apiClient.get<ProjectAutomation[]>(
-        url,
-        undefined,
+    queryFn: ({ signal, pageParam }) => {
+      const params = pageParam
+        ? { ...baseParams, cursor: pageParam }
+        : baseParams;
+      return apiClient.get<{
+        data: ProjectAutomation[];
+        pagination: {
+          limit: number;
+          hasMore: boolean;
+          nextCursor: string | null;
+        };
+      }>(
+        `/build/${projectId}/automations`,
+        params,
         signal,
         projectAutomationListContract,
-      ),
+      );
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
