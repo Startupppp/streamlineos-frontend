@@ -344,6 +344,43 @@ including a soft delete, so a tombstoning write is never mistaken for no change.
 
   **AN ADJACENT DEFECT FOUND WHILE JUDGING #16, reported rather than fixed.** `projects-templates.service.ts:229-232` allocates `ticketNumber` with `count(tickets.id)` where `qa/test-runs.service.ts:420-423` correctly uses `COALESCE(MAX(ticket_number), 0)`, and the templates read filters **`projectId` only, with no `orgId`**. Both are harmless today because the project is created in the same transaction so the result is always zero — but the shape is a collision waiting for a caller that applies a template to an existing project, and the missing tenant predicate is a BE-01 gap. Routed rather than changed: altering number allocation is a data-integrity change that wants its own ticket. Separately, `approvals-read.service.ts:72`'s join carries **no `orgId` predicate** either (it relies on RLS and the approval's own org condition); only the lifecycle predicate was added there, to keep the diff on-topic.
 
+  **2026-09-28, fifth pass — BOTH TENANCY DEFECTS ARE NOW FIXED, and two claims in the paragraph above are corrected by the work.**
+
+  **`approvals-read.service.ts` — the join now pairs the tenant column.** `getInbox`'s `projects` join is `and(eq(projects.orgId, orgId), eq(projects.id, projectApprovals.projectId), isNull(projects.deletedAt))`. Swept the rest of the file as asked: it holds **exactly two queries**, and the other one, `listApprovals`, already carries `eq(projectApprovals.orgId, orgId)` on a plain `from()` and needed nothing. There is no third join.
+
+  **SEVERITY CORRECTED — it was not a cross-tenant leak, and the new spec does not claim one.** `projects.id` is `integer("id").primaryKey().generatedAlwaysAsIdentity()` (`src/db/schema/build/core.ts:32`) — a **global** identity, so an id resolves to exactly one project in exactly one org and the unfiltered join could not select another tenant's row. `projects` is also under RLS. What the missing predicate actually cost: the query's correctness rested on a global-uniqueness invariant two tables away rather than on the query itself, and it joined on the PK rather than the `uniq_projects_org_id` composite (`core.ts:63`) that `fk_project_approvals_org_project` already pairs on. This repo already has a file that names exactly this class and refuses to overstate it — `src/modules/build/core/build-cross-tenant-lookup.spec.ts`, whose docblock reads "Neither missing predicate was an exploitable cross-tenant read, and this file should not be read as claiming one … What they were is *unstated* — correctness resting on an invariant two tables away rather than on the query, which is the shape that becomes a leak the first time a caller passes ids from somewhere less constrained." That is the right reading here too.
+
+  **A CONSEQUENCE FOR THE TEST THAT WAS ASKED FOR, and it is worth stating plainly.** The requested shape was a test that fails without the predicate by seeding a row from a second org. **That test cannot be written for this join**: `projects.id` is globally unique, so no second-org row with a colliding id can exist, and a spec that appeared to prove tenancy by seeding one would be proving nothing — the fixture would have to invent a collision the schema forbids. So `approvals-read-tenant-isolation.spec.ts` follows the house pattern instead and asserts on the **join condition's bound values and columns**, which is a real discriminating assertion: **two of its four cases fail when the predicate is removed**, verified by reverting it in a scratch copy. Verbatim:
+
+  ```
+  $ nice -n 10 npx jest --maxWorkers=2 src/modules/build/approvals/approvals-read-tenant-isolation.spec.ts
+  ✓ binds the caller's organisation into the projects join, so the join does not rest on projects.id being globally unique
+  ✓ pairs the tenant column with the id it joins on, which is the composite the project FK already uses
+  ✓ still excludes a soft-deleted project, so a retired parent's approval stays out of the inbox
+  ✓ does not reach a second organisation's value, so the bound list is the caller's org alone
+  Tests: 4 passed
+
+  (with eq(projects.orgId, orgId) reverted)
+  ✕ binds the caller's organisation into the projects join …
+  ✕ pairs the tenant column with the id it joins on …
+  Tests: 2 failed, 2 passed
+  ```
+
+  **`projects-templates.service.ts` — the allocation is now `COALESCE(MAX(ticket_number), 0)` with `eq(tickets.orgId, orgId)`**, matching `qa/test-runs.service.ts:420`. Two corrections to the paragraph above, both from actually reading the caller:
+
+  1. **"a collision waiting for a caller that applies a template to an existing project" — no such caller can exist.** `applyTemplate` takes `(orgId, userId, templateId, input)` and **always inserts a new project** (`:200-212`); there is no parameter for a target project. The path is unreachable **by construction**, not by luck. The defect is that the arithmetic is wrong, not that a caller is one argument away — which lowers the urgency and does not change the fix.
+  2. **"a soft-deleted row makes it collide silently" was wrong, and the truth is sharper.** A soft-deleted row is still a row, so `count()` is unaffected by soft deletion; what breaks `count()` is a **hard** delete or any gap in the sequence. The real soft-delete hazard runs the other way: **`count()` is only correct while it deliberately omits a lifecycle predicate.** Row #16 was judged "deliberate" for exactly that reason — and it means the obvious BE-50 repair, adding `isNull(tickets.deletedAt)` to that count, would have dropped the count below the highest number issued and started **reissuing live ticket numbers**. `MAX(ticket_number)` is correct with or without the predicate, so the fix removes the trap rather than documenting it. **This is the clearest vindication in the sweep of judging site by site: the mechanical lifecycle fix on row #16 would have created a data-integrity bug.**
+
+  Five cases in `projects-templates-ticket-number.spec.ts`. Two discriminate — the org predicate and the MAX-not-COUNT projection — and fail when the old implementation is restored; three pin the arithmetic on an empty project, on a project already holding tickets, and on a sequence whose highest number exceeds its row count. Which cases discriminate is recorded because the other three pass against both implementations: they test the arithmetic, not the SQL, and citing them as proof of the fix would be the "specs that agree with the bug" failure.
+
+  ```
+  $ nice -n 10 npx jest --maxWorkers=2 src/modules/build/core/project-crud
+  Test Suites: 17 passed, 17 total
+  Tests:       87 passed, 87 total
+  ```
+
+  **Row #16's judgement is unchanged and is now safer.** The allocator still deliberately sees soft-deleted rows — `MAX(ticket_number)` over every row, live or retired, is what prevents a retired number being reissued — so its `ACCEPTED` entry stands. What changed is that it is no longer one careless edit away from a collision.
+
   **A GATE-SCOPE WANT, not taken.** `organization_people` behaves exactly like the four tables in `GLOBAL_IDENTITY_TABLES` (`users`, `organizations`, `accounts`, `sessions`) — rows #18 and #23 are display joins whose filtering would blank a departed colleague's name, which is the gate's own printed justification for that exclusion. Adding it would be correct **and** would silently lower candidate counts across every module, so it is an exclusion-widening change and this lane did not make it. Routed as a decision.
 
   **THE OUTBOX CLAUSE IS UNCHANGED AND STILL FAILS ON ITS OWN.** Re-measured this lane: 5 `OutboxWriter.emit` sites under `src/modules/build`, **3** distinct aggregate types (`ticket`, `release`, `project_webhook_delivery`), and Build owns no outbox table. Of the **15** rows in § Canonical entities, exactly **one** emits — WorkItem, as `ticket`. The `Emits?` column above is the per-site form of the same fact: only the two due-sweep rows emit anything at all, and what they emit is a notification, not a domain event. Audit coverage is patchy on the same surfaces — `grep -rl "audit\."` finds no audit call under `comment-drafts/`, `core/budget/`, `core/roadmap/`, `core/settings/`, `execution/` or `agent-pulse/`. And § Migration order still carries "Introduce audit/outbox fields before moving writers" as **step 7**, unstarted.
