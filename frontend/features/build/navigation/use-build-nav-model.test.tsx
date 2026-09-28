@@ -48,7 +48,7 @@ function projectFixture(
     endDate: null,
     status: null,
     settings: {
-      modules: { sprints: true, epics: true, timeTracking: true, wiki: true },
+      modules: { epics: true, timeTracking: true, wiki: true },
       features,
     },
   };

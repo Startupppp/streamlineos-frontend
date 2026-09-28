@@ -39,6 +39,7 @@ export function makeManagedProductsPage(
         targetLaunchDate: null,
         successMetrics: null,
         ownerMembershipId: null,
+        version: 1,
         deletedAt: null,
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-01T00:00:00Z",

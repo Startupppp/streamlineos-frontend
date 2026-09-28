@@ -185,7 +185,7 @@ it("adding a dependency invalidates the critical path the new edge moves", async
   jest.mocked(apiClient.post).mockResolvedValue({ id: 5 });
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useAddTicketRelation(1, 42), { wrapper });
-  await act(async () => { await result.current.mutateAsync({ relatedTicketId: 2, relationType: "BLOCKS" }); });
+  await act(async () => { await result.current.mutateAsync({ relatedTicketId: 2, relationType: "blocks" }); });
   expect(client.getQueryState(criticalPath)?.isInvalidated).toBe(true);
   client.clear();
 });

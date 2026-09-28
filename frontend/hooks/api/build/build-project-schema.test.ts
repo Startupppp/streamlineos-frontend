@@ -154,7 +154,7 @@ describe("projectDetailContract — GET /build/{projectId} response contract", (
     budgetMinor: 5000000,
     budgetCurrency: "USD",
     settings: {
-      modules: { sprints: true, epics: true, timeTracking: false, wiki: true },
+      modules: { epics: true, timeTracking: false, wiki: true },
       projectType: "software",
       workflow: "scrum",
     },

@@ -289,6 +289,7 @@ export const MANAGED_PRODUCT_GALLERY_ROWS: ManagedProduct[] = Array.from({ lengt
   currentPhase: null,
   targetLaunchDate: null,
   successMetrics: null,
+  version: 1,
   deletedAt: null,
   createdAt: "2024-01-01T00:00:00Z",
   updatedAt: "2024-11-01T00:00:00Z",

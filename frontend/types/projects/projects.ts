@@ -10,7 +10,6 @@ import type { Ticket } from "./tasks";
 
 export interface ProjectSettings {
   modules: {
-    sprints: boolean;
     epics: boolean;
     timeTracking: boolean;
     wiki: boolean;
@@ -230,7 +229,6 @@ export interface CreateProjectInput {
   startDate?: Date | string;
   priority?: ProjectPriority;
   modules?: {
-    sprints: boolean;
     epics: boolean;
     timeTracking: boolean;
     wiki: boolean;
