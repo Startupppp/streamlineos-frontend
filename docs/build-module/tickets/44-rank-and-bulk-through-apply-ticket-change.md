@@ -37,6 +37,41 @@ Both routes become callers that compute a change and delegate, so the effect set
   **Correction 2026-09-28 — the effect-family gap is structural, not a file-access limitation.** Box 5 below attributes the missing activity and notification coverage to `projects-activity*.ts` being outside a lane's write territory. That is not the binding constraint. `RankTicketEffectDeps` (`projects-tickets-rank-utils.ts:25-43`) and `BulkTicketEffectDeps` (`build-ticket-bulk-mutation.ts:31-49`) each declare exactly two members, `webhooksDispatch` and `automationRunner`. There is no activity writer and no notification dispatcher in either interface, so neither route can write a `ticket_activity_log` row or notify an assignee **whatever it is handed** — full write access to the excluded files would change nothing. `applyTicketChange` dispatches four families (`apply-ticket-change.ts:314` webhook, `:333` activity, `:346` notifyNewAssignees, `:375-380` automation); rank and bulk can carry two. Closing this means widening the two interfaces and threading the two services through the call sites, which is real work with a real authorization question attached — not an exclusion-list edit. Until then the opening paragraph's "a drag writes no activity row and sends no notification" remains true of the shipped code, and box 1 stays unchecked for that reason as much as for the two costs above.
 
   The spec's own describe names claimed the full set ("rank route fires same effects as detail route") while asserting two families. Renamed 2026-09-28 to name the ceiling and why it is the ceiling, since code comments are banned and the test name is the only place that fact can live.
+
+  **Adjudication 2026-09-28 (lane EXEC) — NOT EARNABLE as written, and for a third reason neither
+  earlier note found. Box stays unchecked.** Asked to decide honestly whether this box can be
+  earned, I read `apply-ticket-change.ts` end to end, both callers, and `UpdateTicketInput`.
+
+  `applyTicketChange` cannot express the change the rank route makes. `rank` appears nowhere in
+  `backend/src/modules/build/core/tickets/apply-ticket-change.ts` (`grep -c rank` → 0) and nowhere in
+  `updateTicketSchema` (`core/dto/ticket.schemas.ts`), so there is no input by which a caller could
+  ask the change module to move a card's position. `rankTicket`
+  (`core/tickets/projects-tickets-rank-utils.ts:61-225`) does not merely write a column: it takes the
+  project advisory lock, reads the target and both neighbours, rebalances the whole project's ranks
+  when a gap is exhausted or a fraction exceeds 20 digits, re-reads, computes the midpoint as
+  `numeric` in the database, and 409s when another writer has slipped a row into the gap. A
+  "delegation" would have to move that entire protocol into the change module — which is merging the
+  two routes, not making one a caller of the other. Until `applyTicketChange` accepts a rank
+  position, the rank half of this criterion is not implementable, independently of transactions,
+  authorization cost, or conflict tokens.
+
+  The 2026-09-28 orchestrator correction above is right that the transaction boundary is not a
+  blocker, and I confirmed the mechanism it describes: `projects-tickets-update.service.ts` injects
+  `DRIZZLE`, which is `createTenantAwareDb`'s proxy, so `deps.db.transaction` inside an ambient
+  tenant transaction is a savepoint. That removes the architectural objection and leaves the two cost
+  objections it names. Of those, only one is a genuine blocker rather than a price: bulk has no
+  per-row concurrency token and no partial-failure contract, so routing it through a module that
+  throws `TicketVersionConflictException` per row (`apply-ticket-change.ts:242`) forces a product
+  decision — does one stale row abort the batch? — that this ticket never made and that no lane can
+  make on the owner's behalf.
+
+  So the box needs three things this ticket does not authorize: a rank position on the change
+  module's input, a partial-failure contract for bulk, and the per-row authorization cost that
+  contract implies. What the ticket actually cares about — effect parity for the drag gesture — is
+  proven by `drag-vs-panel-effects.spec.ts` for the two families rank and bulk can carry, and the
+  ceiling on the other two families is recorded accurately in the correction above. No code changed
+  for this adjudication; it corrects the record only.
+
 - [x] A status change by drag produces the same effects as the same status change by panel edit, asserted side by side in one test — `drag-vs-panel-effects.spec.ts` has 8 rank tests and 8 bulk tests; covered effects are webhook and automation (the customer-visible pair). Activity and in-app notifications are produced by `ProjectsActivityService` and `NotificationDispatchService`; both files match the `projects-activity*.ts` exclusion and cannot be touched this lane.
 - [x] A bulk transition produces the per-ticket effects for every row it moved — `bulkMutateTickets` loops over `updated` and enqueues one webhook + runs one automation per row; the spec covers the single-ticket case; the loop generalizes
 - [x] Rank-only changes produce only the effects a rank change warrants — the diff decides, not the route — spec asserts webhook and automation `ticket.status_changed` are absent when no status change; `ticket.updated` fires in both cases
