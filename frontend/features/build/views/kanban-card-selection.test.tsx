@@ -28,6 +28,7 @@ jest.mock("./card-inline-date-fields", () => ({
 }));
 
 import { KanbanTicketCard } from "./kanban-ticket-card";
+import { ModuleNamesProvider } from "./module-names-context";
 import type { KanbanTicket } from "../shared/types";
 
 const ticket = {
@@ -151,5 +152,37 @@ describe("KanbanTicketCard — right click opens the card's own action menu", ()
     const notPrevented = fireEvent.contextMenu(card);
     expect(notPrevented).toBe(false);
     expect(screen.getByTestId("card-menu-open")).toBeInTheDocument();
+  });
+});
+
+describe("KanbanTicketCard — the module renders by name", () => {
+  it("shows the module name when the board knows it", () => {
+    render(
+      <ModuleNamesProvider modules={[{ id: 3, name: "Payments" }]}>
+        <KanbanTicketCard
+          ticket={{ ...ticket, moduleId: 3 }}
+          projectId={1}
+          projectKey="P1"
+          isDragging={false}
+          onSelect={jest.fn()}
+        />
+      </ModuleNamesProvider>,
+    );
+    expect(screen.getByText("Payments")).toBeInTheDocument();
+  });
+
+  it("shows no module chip when the card has no module, so the chip tracks the field", () => {
+    render(
+      <ModuleNamesProvider modules={[{ id: 3, name: "Payments" }]}>
+        <KanbanTicketCard
+          ticket={ticket}
+          projectId={1}
+          projectKey="P1"
+          isDragging={false}
+          onSelect={jest.fn()}
+        />
+      </ModuleNamesProvider>,
+    );
+    expect(screen.queryByText("Payments")).not.toBeInTheDocument();
   });
 });

@@ -26,6 +26,8 @@ import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import type { ProjectStatus, BoardMember } from "./use-board-url-state";
 import { useCan } from "@/hooks/api/access";
+import { useModules } from "@/hooks/api/build/advanced";
+import { ModuleNamesProvider } from "./module-names-context";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -131,6 +133,7 @@ export function ProjectBoardContent({
   const shouldReduceMotion = useReducedMotion();
   const isOnline = useOnlineStatus();
   const canUpdate = useCan("build:tickets:update");
+  const { data: modules } = useModules(projectId);
   const resolution = usePageState({
     permission: "build:tickets:view",
     isLoading,
@@ -380,6 +383,7 @@ export function ProjectBoardContent({
   }
 
   return (
+    <ModuleNamesProvider modules={modules}>
     <div className={cn(PAGE_CHROME_X, "flex min-h-0 flex-1 flex-col")}>
       <PageState
         resolution={resolution}
@@ -399,5 +403,6 @@ export function ProjectBoardContent({
         />
       </PageState>
     </div>
+    </ModuleNamesProvider>
   );
 }

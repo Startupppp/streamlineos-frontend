@@ -106,6 +106,7 @@ jest.mock("@/components/ui/avatar", () => ({
 }));
 
 import { ListViewItem } from "./list-view-item";
+import { ModuleNamesProvider } from "./module-names-context";
 import type { Ticket } from "./list-view-shared";
 
 const TICKET: Ticket = {
@@ -272,15 +273,81 @@ describe("ListViewItem — cycle and module metadata", () => {
     expect(screen.queryByText("Sprint 7")).toBeNull();
   });
 
-  it("shows the module badge when the ticket has a moduleId", () => {
+  it("shows the module by name, never by id, when the board knows the module", () => {
     const ticket: Ticket = { ...TICKET, moduleId: 11 };
-    render(<ListViewItem ticket={ticket} onClick={jest.fn()} />);
-    expect(screen.getByText("M-11")).toBeDefined();
+    render(
+      <ModuleNamesProvider modules={[{ id: 11, name: "Payments" }]}>
+        <ListViewItem ticket={ticket} onClick={jest.fn()} />
+      </ModuleNamesProvider>,
+    );
+    expect(screen.getByText("Payments")).toBeDefined();
+    expect(screen.queryByText("M-11")).toBeNull();
+  });
+
+  it("shows no module badge for a moduleId the board has no name for, rather than printing the id", () => {
+    const ticket: Ticket = { ...TICKET, moduleId: 11 };
+    render(
+      <ModuleNamesProvider modules={[{ id: 4, name: "Payments" }]}>
+        <ListViewItem ticket={ticket} onClick={jest.fn()} />
+      </ModuleNamesProvider>,
+    );
+    expect(screen.queryByText("Payments")).toBeNull();
+    expect(screen.queryByText(/11/)).toBeNull();
   });
 
   it("does not show a module badge when moduleId is null", () => {
     render(<ListViewItem ticket={TICKET} onClick={jest.fn()} />);
     expect(screen.queryByText(/M-\d+/)).toBeNull();
+  });
+});
+
+describe("ListViewItem — the assignee set, not only the first assignee", () => {
+  const THREE_ASSIGNEES: Ticket = {
+    ...TICKET,
+    assignees: [
+      { user: { id: "u1", name: "Ada Lovelace" } },
+      { user: { id: "u2", name: "Grace Hopper" } },
+      { user: { id: "u3", name: "Alan Turing" } },
+    ],
+  };
+
+  it("counts the assignees beyond the first one", () => {
+    render(<ListViewItem ticket={THREE_ASSIGNEES} onClick={jest.fn()} />);
+    expect(screen.getByText("+2")).toBeDefined();
+  });
+
+  it("shows no overflow count for a single assignee, so the count is the set size and not a constant", () => {
+    render(
+      <ListViewItem
+        ticket={{ ...TICKET, assignees: [{ user: { id: "u1", name: "Ada Lovelace" } }] }}
+        onClick={jest.fn()}
+      />,
+    );
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+
+  it("shows no overflow count when the row carries no assignee set at all", () => {
+    render(<ListViewItem ticket={TICKET} onClick={jest.fn()} />);
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+});
+
+describe("ListViewItem — rank is surfaced as the drag handle, not as a printed lexorank", () => {
+  it("offers the reorder handle when the row is manually orderable", () => {
+    render(
+      <ListViewItem
+        ticket={{ ...TICKET, rank: "0|hzzzzz:" }}
+        onClick={jest.fn()}
+        dragHandleProps={{} as never}
+      />,
+    );
+    expect(screen.getByLabelText("Drag to reorder")).toBeDefined();
+  });
+
+  it("never prints the lexorank string, which is an internal ordering key", () => {
+    render(<ListViewItem ticket={{ ...TICKET, rank: "0|hzzzzz:" }} onClick={jest.fn()} />);
+    expect(screen.queryByText("0|hzzzzz:")).toBeNull();
+    expect(screen.queryByLabelText("Drag to reorder")).toBeNull();
   });
 });
 

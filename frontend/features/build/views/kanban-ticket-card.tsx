@@ -13,6 +13,8 @@ import { getUserDisplayName } from "@/lib/person-display";
 import { Calendar } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { useCan } from "@/hooks/api/access";
+import { Badge } from "@/components/ui/badge";
+import { useModuleName } from "./module-names-context";
 
 interface KanbanTicketCardProps {
   ticket: KanbanTicket;
@@ -37,6 +39,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
 }: KanbanTicketCardProps) {
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
+  const moduleName = useModuleName(ticket.moduleId);
   const handleActivate = useCallback(() => {
     onSelect(ticket.id);
   }, [ticket.id, onSelect]);
@@ -179,6 +182,12 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             version={version}
             currentCycleId={ticket.cycleId}
           />
+        ) : null}
+
+        {moduleName !== null ? (
+          <Badge variant="secondary" className="shrink-0 text-micro">
+            {moduleName}
+          </Badge>
         ) : null}
 
         {projectId && canUpdate ? (

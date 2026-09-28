@@ -32,6 +32,10 @@ jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => mockIsOnline,
 }));
 
+jest.mock("@/hooks/api/build/advanced", () => ({
+  useModules: () => ({ data: [{ id: 11, name: "Payments" }] }),
+}));
+
 jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
