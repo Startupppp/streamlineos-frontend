@@ -203,3 +203,65 @@ After this split, the over-500 source files under `features/build/` are
 `portfolios/portfolio-detail-page.tsx` (511), `teams/team-home-page.tsx` (531),
 `webhooks/project-webhooks-page.tsx` (794) and `whiteboard/whiteboard-page.tsx` (525).
 Of those, only `epics/epics-page.tsx` is in this batch.
+
+### The epics split, and a full re-measurement of the batch — 2026-09-28 (Lane-SEAM)
+
+`epics/epics-page.tsx` 531 → 760 → **490**. It was 531 when this ticket first recorded
+it and 760 by the time it was handed over, because the epic list moved onto its own
+keyset-paginated endpoint in between. Three cohesive pieces came out:
+`use-epic-bulk-actions.ts` (167) owns selection and every bulk mutation,
+`epics-list-section.tsx` (210) owns the list region and its empty states, and
+`epics-filter-toolbar.tsx` (124) owns the toolbar with `EPIC_HEALTH_OPTIONS` and
+`EPIC_FILTER_DEFINITIONS`.
+
+`epics/epics-page.test.tsx` 781 → **385**, behind `epics-page-test-harness.tsx` (307)
+and `epics-page-state-ladder.test.tsx` (146). Test count across `features/build/epics`
+is **69 before and 69 after** — the split moved tests rather than dropping them.
+
+Two things worth keeping, because both were caught by a tool rather than by reading:
+
+- `epics-list-section.tsx`'s props were hand-typed on the first attempt and `tsc`
+  rejected four of them. `onCreateStory`'s real signature is `(title, epicId)`, not the
+  `(epicId, title)` the invented type claimed. The props now derive from the exported
+  `EpicCardProps`, so the component cannot disagree with the card it renders.
+- `epicPageResult`'s overrides type never allowed `refetch`, while a caller had passed
+  it since before this split (`HEAD~1:epics-page.test.tsx:380`). `tsc -p
+  tsconfig.specs.json` reported it and it is now declared. `pnpm type-check` cannot see
+  spec files (FE-121), which is why it had survived.
+
+The page's hand-rolled `visitedCursors` pager was left alone. `useBuildCursorPager`
+(`features/build/shared/`, 19 callers) does the same job and keeps its stack in the URL
+under `cursors`, which is better — but adopting it changes the URL contract and makes
+paging survive a reload, a visible behaviour change this batch forbids. Recorded for
+whoever reconciles the two.
+
+**Re-measured the whole batch rather than trusting the table above, and the box still
+does not tick — for a reason none of the earlier notes reached.**
+
+Every **non-test source file** in the batch's directories is now under 500. The largest
+are `views/gantt-view.tsx` 494, `epics/epics-page.tsx` 490,
+`milestones/project-milestones-page.tsx` 472, `views/workload-view.tsx` 460,
+`epics/epic-card.tsx` 451, `releases/releases-page.tsx` 440.
+
+But `check:file-sizes` counts **spec files**, and FE-57 — which this criterion cites by
+name — is enforced by that gate. Four specs in the batch's directories are over 500:
+
+| Spec | Lines | In scope? |
+|---|---|---|
+| `releases/releases-page.test.tsx` | 596 | yes — was 551 earlier this session |
+| `views/use-board-url-state.test.tsx` | 555 | yes |
+| `workload/workload-board-page.test.tsx` | 555 | yes — was 504, then 510, earlier this session |
+| `project-detail/project-board-page.test.tsx` | 676 | no — `project-detail/` is not one of the seven surfaces |
+
+So the criterion reads two ways and the choice is not this lane's to make:
+
+- **Source files only** → earned. Every page and component in the batch is under 500.
+- **Per FE-57 as its gate enforces it** → not earned. Three in-scope specs are over.
+
+The box stays unchecked on the stricter reading, which is the one the criterion's own
+words support. It is also worth saying plainly that two of those three **grew while this
+work was in progress** — `releases-page.test.tsx` 551 → 596 and
+`workload-board-page.test.tsx` 504 → 510 → 555, from `dff5b6452` and `772abfcde` — so
+this is a moving target owned by live lanes, not a fixed backlog. Splitting them is a
+separate unit, and `project-board-page.test.tsx` should be excluded from it for the same
+reason the earlier measurements were wrong to include `project-detail/` files at all.
