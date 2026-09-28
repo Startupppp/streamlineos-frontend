@@ -1,13 +1,13 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
 
-jest.mock("@/hooks/api/build", () => ({
+jest.mock("@/hooks/api/build/ticket-search", () => ({
   useTicketSearch: jest.fn(),
 }));
 
 const { useTicketSearch } = jest.requireMock<{
   useTicketSearch: jest.Mock;
-}>("@/hooks/api/build");
+}>("@/hooks/api/build/ticket-search");
 
 function renderPicker() {
   render(

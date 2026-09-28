@@ -10,8 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useTicketSearch } from "@/hooks/api/build";
-import type { TicketSearchResult } from "@/hooks/api/build";
+import { useTicketSearch } from "@/hooks/api/build/ticket-search";
+import type { TicketSearchResult } from "@/hooks/api/build/ticket-search";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface TicketPickerDialogProps {
