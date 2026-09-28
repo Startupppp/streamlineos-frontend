@@ -57,6 +57,16 @@ export function useKbResearchBriefs() {
   });
 }
 
+export const RESEARCH_BRIEF_POLL_MS = 3_000;
+
+export function researchBriefPollInterval(
+  status: KbResearchBrief["status"] | undefined,
+): number | false {
+  return status === "queued" || status === "running"
+    ? RESEARCH_BRIEF_POLL_MS
+    : false;
+}
+
 export function useKbResearchBrief(briefId: number | undefined) {
   const canViewPages = useCan("kb:pages:view");
   return useQuery({
@@ -65,11 +75,7 @@ export function useKbResearchBrief(briefId: number | undefined) {
     enabled: canViewPages && briefId !== undefined,
     staleTime: 10_000,
     ...INLINE_READ_ERROR,
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      if (data?.status === "queued" || data?.status === "running") return 3_000;
-      return false;
-    },
+    refetchInterval: (query) => researchBriefPollInterval(query.state.data?.status),
   });
 }
 
