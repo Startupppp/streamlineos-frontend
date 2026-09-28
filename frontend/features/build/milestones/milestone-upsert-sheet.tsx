@@ -55,7 +55,8 @@ import { getUserDisplayName } from "@/lib/person-display";
 const CONFLICT_EMPTY = "Not set";
 
 function displayConflictValue(value: unknown): string {
-  if (value === null || value === undefined || value === "") return CONFLICT_EMPTY;
+  if (value === null || value === undefined || value === "")
+    return CONFLICT_EMPTY;
   return String(value);
 }
 
@@ -64,11 +65,36 @@ function buildMilestoneConflictDiffs(
   baseline: ProjectMilestone,
   ownerLabel: (membershipId: number | null) => string,
 ): TicketConflictFieldDiff[] {
-  const pairs: Array<{ key: string; label: string; server: unknown; pending: unknown }> = [
-    { key: "name", label: "Name", server: baseline.name, pending: values.name.trim() },
-    { key: "description", label: "Description", server: baseline.description ?? null, pending: values.description?.trim() || null },
-    { key: "targetDate", label: "Target date", server: baseline.targetDate ?? null, pending: values.targetDate || null },
-    { key: "status", label: "Status", server: toMilestoneStatus(baseline.status), pending: values.status },
+  const pairs: Array<{
+    key: string;
+    label: string;
+    server: unknown;
+    pending: unknown;
+  }> = [
+    {
+      key: "name",
+      label: "Name",
+      server: baseline.name,
+      pending: values.name.trim(),
+    },
+    {
+      key: "description",
+      label: "Description",
+      server: baseline.description ?? null,
+      pending: values.description?.trim() || null,
+    },
+    {
+      key: "targetDate",
+      label: "Target date",
+      server: baseline.targetDate ?? null,
+      pending: values.targetDate || null,
+    },
+    {
+      key: "status",
+      label: "Status",
+      server: toMilestoneStatus(baseline.status),
+      pending: values.status,
+    },
     {
       key: "ownerMembershipId",
       label: "Owner",
@@ -77,7 +103,9 @@ function buildMilestoneConflictDiffs(
     },
   ];
   return pairs
-    .filter(({ server, pending }) => String(server ?? "") !== String(pending ?? ""))
+    .filter(
+      ({ server, pending }) => String(server ?? "") !== String(pending ?? ""),
+    )
     .map(({ key, label, server, pending }) => ({
       key,
       label,
@@ -92,18 +120,30 @@ interface MilestoneUpsertSheetProps {
   onClose: () => void;
 }
 
-export function MilestoneUpsertSheet({ projectId, milestone, onClose }: MilestoneUpsertSheetProps) {
+export function MilestoneUpsertSheet({
+  projectId,
+  milestone,
+  onClose,
+}: MilestoneUpsertSheetProps) {
   const isEdit = !!milestone;
   const create = useCreateMilestone(projectId);
   const update = useUpdateMilestone(projectId);
   const isPending = create.isPending || update.isPending;
 
-  const [conflictFields, setConflictFields] = useState<TicketConflictFieldDiff[] | null>(null);
+  const [conflictFields, setConflictFields] = useState<
+    TicketConflictFieldDiff[] | null
+  >(null);
   const { data: membersPage } = useOrgMembers(1, 100);
   const members = useMemo(() => membersPage?.data ?? [], [membersPage]);
 
   const candidates = useMemo(
-    () => members.map((m) => ({ id: m.userId, name: m.name, email: m.email, image: m.image })),
+    () =>
+      members.map((m) => ({
+        id: m.userId,
+        name: m.name,
+        email: m.email,
+        image: m.image,
+      })),
     [members],
   );
   const userIdByMembershipId = useMemo(
@@ -166,14 +206,26 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
         update.mutate(
           { milestoneId: milestone.id, version: milestone.version, ...payload },
           {
-            onSuccess: () => { toast.success("Milestone updated"); onClose(); },
+            onSuccess: () => {
+              toast.success("Milestone updated");
+              onClose();
+            },
             onError: (err) => {
-              if (isApiError(err) && getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT") {
-                const diffs = buildMilestoneConflictDiffs(values, milestone, ownerLabel);
+              if (
+                isApiError(err) &&
+                getApiErrorCode(err) === "PROJECTS_TICKET_CONFLICT"
+              ) {
+                const diffs = buildMilestoneConflictDiffs(
+                  values,
+                  milestone,
+                  ownerLabel,
+                );
                 if (diffs.length > 0) {
                   setConflictFields(diffs);
                 } else {
-                  toast.warning("This milestone was modified by another user. Your changes were not saved.");
+                  toast.warning(
+                    "This milestone was modified by another user. Your changes were not saved.",
+                  );
                 }
                 return;
               }
@@ -182,13 +234,13 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
           },
         );
       } else {
-        create.mutate(
-          payload,
-          {
-            onSuccess: () => { toast.success("Milestone created"); onClose(); },
-            onError: (err) => toast.error(getErrorMessage(err)),
+        create.mutate(payload, {
+          onSuccess: () => {
+            toast.success("Milestone created");
+            onClose();
           },
-        );
+          onError: (err) => toast.error(getErrorMessage(err)),
+        });
       }
     },
     [isEdit, milestone, create, update, onClose, ownerLabel],
@@ -196,82 +248,51 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
 
   return (
     <>
-    <Sheet open onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-md flex flex-col gap-0 p-0">
-        <SheetHeader className="px-6 py-4 border-b">
-          <SheetTitle>{isEdit ? "Edit Milestone" : "New Milestone"}</SheetTitle>
-          <SheetDescription>
-            {isEdit
-              ? "Update the milestone details and keep its delivery status current."
-              : "Create a checkpoint with an owner, target date, and delivery status."}
-          </SheetDescription>
-        </SheetHeader>
+      <Sheet open onOpenChange={handleOpenChange}>
+        <SheetContent className="w-full sm:max-w-md flex flex-col gap-0 p-0">
+          <SheetHeader className="px-6 py-4 border-b">
+            <SheetTitle>
+              {isEdit ? "Edit Milestone" : "New Milestone"}
+            </SheetTitle>
+            <SheetDescription>
+              {isEdit
+                ? "Update the milestone details and keep its delivery status current."
+                : "Create a checkpoint with an owner, target date, and delivery status."}
+            </SheetDescription>
+          </SheetHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-            <SheetBody className="px-6 py-5 space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. MVP Launch" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea rows={3} placeholder="Optional description…" className="resize-none" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="ownerMembershipId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Owner</FormLabel>
-                    <FormControl>
-                      <MemberPicker
-                        candidates={candidates}
-                        value={field.value != null ? (userIdByMembershipId.get(field.value) ?? undefined) : undefined}
-                        onChange={(userId) => field.onChange(userId != null ? (membershipIdByUserId.get(userId) ?? null) : null)}
-                        allowUnassigned
-                        placeholder="Unassigned"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-3">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="flex flex-col flex-1 min-h-0"
+            >
+              <SheetBody className="px-6 py-5 space-y-4">
                 <FormField
                   control={form.control}
-                  name="targetDate"
-                  render={() => (
+                  name="name"
+                  render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Target Date *</FormLabel>
+                      <FormLabel>Name *</FormLabel>
                       <FormControl>
-                        <DatePicker
-                          value={targetDateValue}
-                          onChange={handleTargetDateChange}
-                          placeholder="Pick a date"
-                          className="text-sm"
-                          disablePast
+                        <Input placeholder="e.g. MVP Launch" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          rows={3}
+                          placeholder="Optional description…"
+                          className="resize-none"
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -281,49 +302,108 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
 
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="ownerMembershipId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="PENDING">Pending</SelectItem>
-                          <SelectItem value="ACHIEVED">Achieved</SelectItem>
-                          <SelectItem value="MISSED">Missed</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Owner</FormLabel>
+                      <FormControl>
+                        <MemberPicker
+                          candidates={candidates}
+                          value={
+                            field.value != null
+                              ? (userIdByMembershipId.get(field.value) ??
+                                undefined)
+                              : undefined
+                          }
+                          onChange={(userId) =>
+                            field.onChange(
+                              userId != null
+                                ? (membershipIdByUserId.get(userId) ?? null)
+                                : null,
+                            )
+                          }
+                          allowUnassigned
+                          placeholder="Unassigned"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
-            </SheetBody>
 
-            <SheetFooter className="px-6 py-4 border-t shrink-0">
-              <div className="grid w-full grid-cols-2 gap-2">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
-                  {isEdit ? "Save Changes" : "Create Milestone"}
-                </LoadingButton>
-              </div>
-            </SheetFooter>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
-    <TicketConflictDialog
-      open={conflictFields !== null}
-      fields={conflictFields ?? []}
-      onKeepMine={handleConflictDismiss}
-      onDiscard={handleConflictDismiss}
-    />
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="targetDate"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Target Date *</FormLabel>
+                        <FormControl>
+                          <DatePicker
+                            value={targetDateValue}
+                            onChange={handleTargetDateChange}
+                            placeholder="Pick a date"
+                            className="text-sm"
+                            disablePast
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="PENDING">Pending</SelectItem>
+                            <SelectItem value="ACHIEVED">Achieved</SelectItem>
+                            <SelectItem value="MISSED">Missed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </SheetBody>
+
+              <SheetFooter className="px-6 py-4 border-t shrink-0">
+                <div className="grid w-full grid-cols-2 gap-2">
+                  <Button type="button" variant="outline" onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <LoadingButton
+                    type="submit"
+                    isPending={isPending}
+                    loadingText="Saving…"
+                  >
+                    {isEdit ? "Save Changes" : "Create Milestone"}
+                  </LoadingButton>
+                </div>
+              </SheetFooter>
+            </form>
+          </Form>
+        </SheetContent>
+      </Sheet>
+      <TicketConflictDialog
+        open={conflictFields !== null}
+        fields={conflictFields ?? []}
+        onKeepMine={handleConflictDismiss}
+        onDiscard={handleConflictDismiss}
+      />
     </>
   );
 }

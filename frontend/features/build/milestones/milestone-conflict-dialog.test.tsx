@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MilestoneUpsertSheet } from "./milestone-upsert-sheet";
 import { ApiError } from "@/lib/api-envelope";
 import type { ProjectMilestone } from "@/hooks/api/build/milestones";
@@ -79,7 +79,7 @@ async function submitRenamedMilestone(): Promise<(e: unknown) => void> {
 
 it("opens a field-level comparison when a milestone update comes back 409, instead of only a toast", async () => {
   const onError = await submitRenamedMilestone();
-  onError(CONFLICT);
+  await act(async () => onError(CONFLICT));
   await waitFor(() => {
     expect(screen.getByText("Name")).toBeInTheDocument();
   });
@@ -89,7 +89,7 @@ it("opens a field-level comparison when a milestone update comes back 409, inste
 
 it("shows the server value and the pending value under their own labels so the two sides are distinguishable", async () => {
   const onError = await submitRenamedMilestone();
-  onError(CONFLICT);
+  await act(async () => onError(CONFLICT));
   await waitFor(() => {
     expect(screen.getByText("On the server now")).toBeInTheDocument();
   });
@@ -98,7 +98,7 @@ it("shows the server value and the pending value under their own labels so the t
 
 it("keeps an ordinary failure on the error toast and opens no comparison, so the 409 branch did not swallow errors", async () => {
   const onError = await submitRenamedMilestone();
-  onError(new ApiError("boom", 500, "INTERNAL"));
+  await act(async () => onError(new ApiError("boom", 500, "INTERNAL")));
   await waitFor(() => {
     expect(toast.error).toHaveBeenCalled();
   });
@@ -117,7 +117,7 @@ it("falls back to a warning toast when a 409 arrives with nothing edited, becaus
   if (form === null) throw new Error("the milestone upsert sheet rendered no form");
   fireEvent.submit(form);
   await screen.findByRole("button", { name: "Save Changes" });
-  capturedOnError?.(CONFLICT);
+  await act(async () => capturedOnError?.(CONFLICT));
   await waitFor(() => {
     expect(toast.warning).toHaveBeenCalled();
   });

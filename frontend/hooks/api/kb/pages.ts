@@ -75,7 +75,7 @@ const kbPageListContract = lazyContract(() =>
 
 const kbPageBacklinkContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then(
-    (m) => m.kbPageBacklinkContract,
+    (m) => m.kbPageBacklinksPageContract,
   ),
 );
 
@@ -372,14 +372,24 @@ export function useKbPage(pageId: number) {
 export function useKbPageBacklinks(pageId: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageBacklinks(pageId),
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageBacklink[]>(
+    queryFn: async ({ signal }) => {
+      const page = await apiClient.get<{
+        data: KbPageBacklink[];
+        pagination: {
+          limit: number;
+          hasMore: boolean;
+          nextCursor: string | null;
+        };
+      }>(
         `/kb/pages/${pageId}/backlinks`,
         undefined,
         signal,
         kbPageBacklinkContract,
-      ),
+      );
+      return page.data;
+    },
     staleTime: 60_000,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });

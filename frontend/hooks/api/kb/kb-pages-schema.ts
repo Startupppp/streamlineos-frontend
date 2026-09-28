@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 const kbPageBaseContract = z.object({
   id: z.number().int(),
@@ -82,12 +83,14 @@ export const kbPageEmptyTrashContract = z.object({
 export const kbPageSuccessContract = z.object({ success: z.boolean() });
 export const kbPagePermanentDeleteContract = z.undefined();
 
-export const kbPageBacklinkContract = z.array(
-  z.object({
-    id: z.number().int(),
-    title: z.string(),
-    icon: z.string().nullable(),
-  }),
+export const kbPageBacklinkContract = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  icon: z.string().nullable(),
+});
+
+export const kbPageBacklinksPageContract = cursorPageContract(
+  kbPageBacklinkContract,
 );
 
 const kbPageVersionItemContract = z.object({

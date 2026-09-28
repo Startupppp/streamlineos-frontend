@@ -1,4 +1,9 @@
-import { kbPageWithAncestorsContract } from "./kb-pages-schema";
+import {
+  kbPageBacklinkContract,
+  kbPageBacklinksPageContract,
+  kbPageWithAncestorsContract,
+} from "./kb-pages-schema";
+import { kbPageCommentListContract } from "./kb-comments-schema";
 
 const WIRE_FIXTURE = {
   id: 1,
@@ -86,5 +91,40 @@ describe("kbPageWithAncestorsContract — server/client schema parity for wiki p
     const { canEdit: _canEdit, ...withoutCanEdit } = WIRE_FIXTURE;
     const parsed = kbPageWithAncestorsContract.safeParse(withoutCanEdit);
     expect(parsed.success).toBe(true);
+  });
+});
+
+describe("kbPageBacklinksPageContract — server/client schema parity", () => {
+  it("parses the cursor page returned by the backlinks endpoint", () => {
+    const result = kbPageBacklinksPageContract.safeParse({
+      data: [{ id: 4, title: "Linked page", icon: null }],
+      pagination: { limit: 50, hasMore: false, nextCursor: null },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a bare array so a backend contract regression is caught", () => {
+    expect(kbPageBacklinksPageContract.safeParse([]).success).toBe(false);
+    expect(kbPageBacklinkContract.parse({ id: 4, title: "Linked page", icon: null })).toEqual({
+      id: 4,
+      title: "Linked page",
+      icon: null,
+    });
+  });
+});
+
+describe("kbPageCommentListContract — server/client schema parity", () => {
+  it("parses the cursor page returned by the comments endpoint", () => {
+    const result = kbPageCommentListContract.safeParse({
+      data: [],
+      pagination: { limit: 50, hasMore: false, nextCursor: null },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a bare array so a comments contract regression is caught", () => {
+    expect(kbPageCommentListContract.safeParse([]).success).toBe(false);
   });
 });

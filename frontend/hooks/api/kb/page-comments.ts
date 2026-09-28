@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -44,8 +45,19 @@ const kbPageCommentContract = lazyContract(() =>
 export function useKbPageComments(pageId: number) {
   const canViewPages = useCan("kb:pages:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageComments(pageId),
-    queryFn: ({ signal }) => apiClient.get<KbPageComment[]>(`/kb/pages/${pageId}/comments`, undefined, signal, kbPageCommentListContract),
+    queryFn: async ({ signal }) => {
+      const page = await apiClient.get<{
+        data: KbPageComment[];
+        pagination: {
+          limit: number;
+          hasMore: boolean;
+          nextCursor: string | null;
+        };
+      }>(`/kb/pages/${pageId}/comments`, undefined, signal, kbPageCommentListContract);
+      return page.data;
+    },
     staleTime: 30_000,
     enabled: canViewPages && pageId > 0,
   });

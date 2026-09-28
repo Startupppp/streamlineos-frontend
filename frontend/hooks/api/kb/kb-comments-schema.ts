@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
 const kbPageCommentWithAuthorContract = z.object({
   id: z.number().int(),
@@ -15,5 +16,7 @@ const kbPageCommentWithAuthorContract = z.object({
   authorName: z.string().nullable(),
 });
 
-export const kbPageCommentListContract = z.array(kbPageCommentWithAuthorContract);
+export const kbPageCommentListContract = cursorPageContract(
+  kbPageCommentWithAuthorContract,
+);
 export const kbPageCommentContract = kbPageCommentWithAuthorContract;
