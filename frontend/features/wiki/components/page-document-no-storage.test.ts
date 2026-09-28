@@ -50,7 +50,7 @@ describe("Wiki page body must not reach Web Storage", () => {
   it("(b) orgScopedStorage writes in wiki source do not use a content or contentText key", () => {
     const violations: string[] = [];
     const orgStoragePattern =
-      /orgScopedStorage\s*\.\s*\w+\s*\(\s*['"`][^'"`,]*(?:^content|contentText)[^'"`,]*['"`]/i;
+      /orgScopedStorage\s*\.\s*\w+\s*\(\s*['"`][^'"`,]*content[^'"`,]*['"`]/i;
     for (const file of sourceFiles) {
       const src = fs.readFileSync(file, "utf-8");
       if (orgStoragePattern.test(src)) {
@@ -103,6 +103,39 @@ describe("Wiki page body must not reach Web Storage", () => {
     const src = fs.readFileSync(storageLib, "utf-8");
     expect(src).not.toMatch(/localStorage\./);
     expect(src).not.toMatch(/sessionStorage\./);
+  });
+
+  const STORAGE_ACCESS_PATTERN =
+    /(?:localStorage|sessionStorage)\s*\.\s*(?:setItem|getItem|removeItem)\s*\(\s*([A-Za-z_$][\w$]*|['"`][^'"`]*['"`])/g;
+  const ALLOWED_STORAGE_KEYS = ["wiki-nav-groups", "wiki-right-panel-collapsed"];
+
+  function collectStorageKeys(): string[] {
+    const keys = new Set<string>();
+    for (const file of sourceFiles) {
+      const src = fs.readFileSync(file, "utf-8");
+      for (const match of src.matchAll(STORAGE_ACCESS_PATTERN)) {
+        const token = match[1];
+        if (/^['"`]/.test(token)) {
+          keys.add(token.slice(1, -1));
+          continue;
+        }
+        const declared = new RegExp(
+          `const\\s+${token}\\s*(?::[^=]*)?=\\s*['"\`]([^'"\`]*)['"\`]`,
+        ).exec(src);
+        keys.add(declared === null ? token : declared[1]);
+      }
+    }
+    return [...keys].sort();
+  }
+
+  it("(h) the complete set of Web Storage keys reachable from wiki source is the allowlist, so a page body cannot be persisted under a key whose name this scan does not already pattern-match", () => {
+    expect(collectStorageKeys()).toEqual(ALLOWED_STORAGE_KEYS);
+  });
+
+  it("(h) control: the extractor resolves both allowlisted keys to their literals, so the equality above cannot pass by finding nothing at all", () => {
+    const keys = collectStorageKeys();
+    expect(keys).toHaveLength(ALLOWED_STORAGE_KEYS.length);
+    expect(keys.every((key) => key.startsWith("wiki-"))).toBe(true);
   });
 
   it("(g) access-revocation transition — no wiki source writes localStorage or sessionStorage with a dynamic or org-scoped key: a mid-session 403 cannot cause page content to persist in storage", () => {
