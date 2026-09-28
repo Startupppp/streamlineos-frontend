@@ -797,6 +797,16 @@ describe("kbSearchResponseContract — cursor envelope (S-cursor-FE)", () => {
     });
     expect(result.nextCursor).toBeNull();
   });
+
+  it("S-cursor-FE-03: a pre-cursor response carrying only items is rejected, so shipping this contract against a backend that does not yet send the envelope fails loudly instead of rendering an empty result list", () => {
+    expect(() => kbSearchResponseContract.parse({ items: [] })).toThrow();
+  });
+
+  it("S-cursor-FE-03 control: the same payload parses once hasMore and nextCursor are present, proving the rejection is caused by the two envelope fields and not by the empty items array", () => {
+    expect(() =>
+      kbSearchResponseContract.parse({ items: [], hasMore: false, nextCursor: null }),
+    ).not.toThrow();
+  });
 });
 
 describe("WikiSearchPage — cross-cutting URL/local invariants (Box 1)", () => {
