@@ -14,6 +14,8 @@ export const kbSearchItemContract = z.object({
 
 export const kbSearchResponseContract = z.object({
   items: z.array(kbSearchItemContract),
+  hasMore: z.boolean(),
+  nextCursor: z.string().nullable(),
 });
 
 export type KbSearchItem = z.infer<typeof kbSearchItemContract>;

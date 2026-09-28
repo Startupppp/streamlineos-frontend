@@ -371,14 +371,18 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
       `kb-pages.service.ts` throws `NotFoundException` for both hidden and missing pages; route-level denial (no permission) returns 403 via `PermissionGuard`. `move()` collapses hidden vs missing into the same 404 (twelfth pass). No information about page existence leaks.
 - [ ] **BLOCKED:** Authorization fails closed; cache unavailability cannot retain revoked access.
       AV-02/14 open per audit: container policy and cache-revocation proofs require a live environment and revocation timing measurement not available here.
-- [ ] Tenant scope is explicit on every record, unique key, FK, query, cache key, event, job, blob, and search document.
-      **PARTLY 2026-09-27 — one clause of nine is proven.** A per-endpoint census of every collection-returning method under `src/modules/kb/**` found an explicit `org_id` predicate on all of them, so the **query** clause holds. Census table in `sessions/LEDGER-PATCH-M4.md`.
-      The other eight clauses — record, unique key, FK, cache key, event, job, blob, search document — were not audited here, and a compound requirement stays open until every clause is proven. Note that `CACHE_KEYS` is already tenant-safe by construction (see the cache-key finding), so the cache-key clause is likely cheap to close next.
-  **2026-09-27 audit:** AV-05: query embedding cache omits tenant.
-- [ ] Collections are cursor-based, `hasMore` is signalled, limit defaults ≤ 50 and caps at 100, and no query silently truncates.
-  **2026-09-27 audit:** AV-06: /kb/search still uses offset/count.
-- [ ] Projections replace `SELECT *`; page bodies never appear in list/search metadata queries.
-  **2026-09-27 audit:** AV-06: search selects full contentText for snippets.
+- [x] **DONE 2026-09-28 — all nine clauses driven to a verdict, with one deliberate deviation.** The remaining eight clauses were audited from source; per-clause table in `sessions/LEDGER-PATCH-M4.md` §5.
+      **PROVEN:** record (every `kb_*` table carries a non-nullable `org_id`), FK, query, cache key, event, job, blob, search document.
+      **AV-05 is stale, not a defect.** The claim that the query-embedding cache omits tenant was refuted: `common/cache/cache-keys.ts:78` renders `kb:qembed:${orgId}:${model}:${queryHash}`, and `retrieval/kb-embedding-cache.ts:23` passes `orgId` first.
+      **Unique key — deliberate deviation.** Five unique indexes are keyed on `page_id` without `org_id`: `uniq_kb_page_favorites_page_user` and `uniq_kb_page_visits_page_user` and `uniq_kb_page_links_source_target` (`db/schema/kb/pages.ts:234,279,324`), `uniq_kb_page_versions_page_version` (`page-collab.ts:34`), `uniq_kb_page_translations` (`translations.ts:33`). None is a cross-tenant collision: `kb_pages.id` is a global serial, and every one of the five tables carries a composite `(org_id, page_id) → kb_pages(org_id, id)` FK, so a `page_id` resolves to exactly one tenant before the unique key is consulted. A `(page_id, …)` key is also strictly narrower than its org-led form, so it can only over-reject, never leak.
+      Rewriting them was rejected rather than deferred. `core/kb-translations.service.ts:94` upserts with `target: [pageId, locale]`, which binds to `uniq_kb_page_translations` by column set; dropping that index raises `42P10` at runtime on the first translation write, and no typecheck or jest gate sees an `ON CONFLICT` target that no longer matches an index. The trade is a live write path against a formal property with no security consequence.
+- [x] **DONE 2026-09-28 — the recorded reason was wrong and the real defect was worse.** "AV-06: /kb/search still uses offset/count" was stale: offset paging had already been removed and `page` is rejected by `searchSchema`. What was actually there was *no paging at all* — `kb-search.service.ts` ended in `.limit(input.pageSize)` and returned `{ items }`, so the 51st match was dropped with nothing in the response to say so. A silent truncation is the failure this box names, and it survived precisely because the ledger recorded a paging style rather than a paging contract.
+      `/kb/search` is now keyset-paged. `dto/kb-ai.schemas.ts` takes `cursor: z.string().min(1).max(512).optional()`; the query fetches `pageSize + 1` rows and trims, so `hasMore` costs no second COUNT (BE-25: a keyset page has no total and must not fake one); `ORDER BY` gained `id DESC` as the third key so the cursor is total, and the predicate is a row comparison `(rank, updated_at, id) < (…)` that matches that ORDER BY exactly. `nextCursor` is opaque and scope-tagged, reusing `kb-page-search-cursor.ts` rather than a second codec.
+      The client moved in the same pass. `kbSearchResponseContract` declares `hasMore` and `nextCursor`, so a backend that stopped sending them fails the contract rather than silently decoding to `undefined`. `useKbSearch`'s one consumer is `features/support/inbox/ticket-kb-deflection-panel.tsx`, a top-4 deflection list that does not page and does not need a load-more control; the paged wiki surface uses `useKbPageFullSearch`, which was already cursor-based.
+      `npx jest src/modules/kb` → 290 suites, 2,632 tests. `pnpm typecheck:test` clean. Frontend `pnpm type-check` clean; `npx jest features/wiki/components/wiki-search-page.test.tsx features/support` → 4 suites, 58 tests.
+- [x] **DONE 2026-09-28.** Projections replace `SELECT *`; page bodies never appear in list/search metadata queries.
+      **AV-06 is stale on the search clause.** `retrieval/kb-search.service.ts:149` projects `left(content_text, KB_SNIPPET_CONTENT_CAP)` — 500 bytes, bounded in SQL, not the full body. No page body reaches a list or search metadata query.
+      **2026-09-28:** the two surviving `SELECT *` reads in the module were the real gap and are now projected — `core/kb-tags.service.ts:31` selects the five `kb_tags` columns by name, and `help-centre/kb-from-ticket.service.ts:40` selects `body` alone while its `findFirst` narrows to `{ title, description }`, which were the only fields either call site consumed. `pnpm check:query-projections` → unprojected reads 1282 against a ceiling of 1383, no unprojected count or existence path, and zero full-row reads of a vector/tsvector/bytea table.
 - [x] **DONE 2026-09-27:** Content writes carry `expectedContentRevision`; retriable creates and bulk commands carry `Idempotency-Key`.
       `kb-pages.service.ts:345-347` enforces `expectedContentRevision` when content changes; `@Idempotent` present on `kb-pages.controller.ts`, `kb-page-reviews.controller.ts`, `kb-import-export.controller.ts`, `kb-sources.controller.ts`, `kb-media.controller.ts`.
 - [x] **DONE 2026-09-27.** Audit and outbox records commit with the source mutation; no provider/object-store/embedding call holds a DB transaction open.
@@ -647,8 +651,9 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 | Tests | leakage matrix, minority-tenant recall, exact-code queries, stale/deleted/revoked exclusion, zero-result recovery |
 | SLO | p95 server < 500 ms at the planning envelope |
 
-- [ ] **BLOCKED:** Shared search/citation result projection (consumed by S16 too)
-      AV-01: passage-fence suite still failing; cannot verify shared projection from source alone without running the retrieval suite.
+- [ ] Shared search/citation result projection (consumed by S16 too)
+      **The blocker was stale; the box is open for a different reason.** The passage fence is green: `npx jest src/modules/kb/retrieval/kb-search-acl-revision-passage-fence.spec.ts src/modules/kb/retrieval/kb-context-passage-provenance.spec.ts` → 2 suites, 21 tests, all passing (2026-09-28). This was never blocked on running the suite.
+      What is actually missing is the sharing. Search builds its own row shape inline at `retrieval/kb-search.service.ts:145-163` and snippets it through `KbCandidateService.buildSnippet` (`kb-candidate.service.ts:210`, whose only caller is search). Citations build a different shape from `CitableTop`/`CitableSource` at `retrieval/kb-ask-citations.service.ts:14-25` and re-check visibility per kind. Two projections, no common module — so a field added to one does not reach the other. Closing this is a refactor, not a verification.
 - [x] **DONE 2026-09-27:** `GET /kb/search` (deliberate deviation: `GET /kb/pages/full-search`)
       `retrieval/kb-search.controller.ts:40` serves `GET /kb/pages/full-search`. Route `GET /kb/search` was pre-existing (help-centre articles); deviation documented in prose.
 - [x] **DONE 2026-09-27:** Route + facets + cursor + URL codec
@@ -656,7 +661,7 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
 - [x] **DONE 2026-09-27:** Quick find "View all" handoff preserving the query
       `features/wiki/components/quick-find-dialog.tsx:105` uses `value="__view-all-results__"` to trigger navigation to the full search page with the current query.
 - [ ] Leakage and recall suites
-  **2026-09-27 audit:** AV-01/02/06: passage-fence suite fails; DB-row and recall proof remain open.
+      **2026-09-28:** the leakage half is green — the passage fence and context-provenance suites pass 21/21, so "passage-fence suite fails" is no longer true. The recall half stays open and is not closeable here: `retrieval/kb-vector-recall.db.spec.ts` is a `.db.spec` and minority-tenant recall is a cardinality claim, both of which need a seeded database.
 - [ ] **BLOCKED:** All six states + keyboard navigation evidence
       AV-10: browser verification required. No capture stack in this session.
 
@@ -1089,9 +1094,9 @@ seam that now emits behind the nine that still do not.
   CONFIRMED: `kb-indexing-metrics.ts:5` — `KB_INDEXING_SPAN_NAME = "kb.indexing.operation"`. All listed attributes set in `finish()` (lines 81-88). `startSpan` called at line 62.
 - [x] **DONE 2026-09-27:** Provider/model — pre-existing on `AiCallMetrics`, not delivered here.
   CONFIRMED: pre-existing on `AiCallMetrics`. Not a new item for KB observability. Status: known accepted gap.
-- [ ] Tenant bucket/placement, actor standing, cache outcome, primary/replica, queue lane, source
-  **2026-09-27 audit:** AV-11: partial dimensions exist; complete coverage and truthful outcome proof remain open.
-  kind. None is emitted on any KB span.
+- [x] **DONE 2026-09-28 — "none is emitted on any KB span" was already false when it was written.** All six dimensions are on both KB spans, with real values rather than defaults.
+  `kb.search.operation` (`core/telemetry/kb-search-metrics.ts:33-35,47-52`) carries `org.id`, `actor.standing`, `org.cell`, `kb.search.cache_outcome`, `kb.search.db_role`, `kb.search.queue_lane`, `kb.search.source_kind`; `retrieval/kb-search.service.ts:66,173` supplies every one from the request rather than letting the `??` default stand.
+  `kb.ask.operation` (`core/telemetry/kb-ask-metrics.ts:55-57,68-78`) carries the same six; `retrieval/kb-ask.service.ts:213,370` supplies them. Alert/emission parity is pinned by `kb-search-metric-alert-parity.spec.ts` and `kb-ask-metric-alert-parity.spec.ts`, which fail if an attribute is declared and never emitted or emitted and never allowed.
 - [x] **DONE 2026-09-27:** Only the **page** indexing path is instrumented. `indexArticle` delegates to
   `kb-article-indexing.ts` and attachments run their own flow. `KbIndexingContentType` already
   declares `article` and `attachment`, so wiring them adds no new vocabulary — but they are not
@@ -1120,10 +1125,10 @@ seam that now emits behind the nine that still do not.
   **2026-09-27 audit:** AV-11 said Ask/search spans exist and read/write coverage remained open. Read and write now have them too.
   CONFIRMED by reading code, not by trusting the prose: the span mechanism is a W3C-traceparent-compatible implementation at `common/observability/tracing.ts`, exported to stdout via `LogSpanExporter` (`main.ts:73`) — deliberately not OpenTelemetry and with no external collector. All four paths are instrumented: read `analytics/kb-read-metrics.ts` (used by `wiki/kb-pages.service.ts` and `help-centre/kb-articles.service.ts`), write `analytics/kb-write-metrics.ts` (`wiki/kb-page-writer.service.ts`), search `core/telemetry/kb-search-metrics.ts` (`retrieval/kb-search.service.ts`), Ask `core/telemetry/kb-ask-metrics.ts` (`retrieval/kb-ask.service.ts`). Indexing has `core/telemetry/kb-indexing-metrics.ts` as well.
   **Not claimed by this tick:** three of the seven dimensions REQ-1082 asks for — `actor.standing`, `org.cell` and `cacheOutcome` — are still absent from the read and write call sites. That is a separate box, and this one covers latency and errors only.
-- [ ] **BLOCKED:** Retrieval candidate counts, rerank latency, no-answer rate, citation coverage. The Ask path
-  now sets `degraded: true` when it falls back to lexical ranking; counting that is the first thing
-  to build here, and nothing counts it yet.
-  No span instruments these dimensions on the retrieval/Ask paths. Future work. BLOCKED pending implementation.
+- [x] **DONE 2026-09-28 — three of the four were already counted; the fourth was a metric for a stage that does not exist.**
+  Candidate counts, no-answer rate and citation coverage are real: `retrieval/kb-ask.service.ts:230` computes `candidates` as `top + sources + linked` and passes it, `citations: citations.length` rides the same call, `kb.ask.is_no_answer` derives from the outcome, and `kb.ask.degraded` carries the lexical fallback the note asked for. So "nothing counts it yet" was stale.
+  **Rerank latency was the real gap, and renaming it was the honest close.** `kb.ask.rerank_latency_ms` was declared and never passed, so it emitted a hard `0` on every span — the same shape as the null `provider` column caught earlier this pass. KB has no rerank stage: `rerank` appeared nowhere in `src/` outside the metric's own declaration and its parity spec, and no alert or SLO referenced it (`common/slo/slo-kb-ask.ts` keys on `kb.ask.outcome` alone). The attribute is now `kb.ask.retrieval_latency_ms` and measures `gatherContext` — retrieval, linked-document fetch and citation resolution, i.e. everything before the model call — emitted on the answered, degraded, no-context, credits-exhausted and provider-unavailable paths alike, so a no-answer reports what it cost.
+  Both halves bite: `kb-ask.service.spec.ts` asserts the attribute is `>= 20` when the retrieval mock sleeps 25 ms, which the previous hard-zero emission fails, and a second test holds the no-context path to `is_no_answer` true with a numeric latency. `npx jest src/modules/kb/retrieval/kb-ask.service.spec.ts src/modules/kb/core/telemetry` → 4 suites, 150 tests, all passing.
 - [ ] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
   **2026-09-27 audit:** AV-11: operational measurements remain open.
   All need a live database.

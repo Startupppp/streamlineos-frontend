@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import WikiSearchPage from "./wiki-search-page";
+import { kbSearchResponseContract } from "@/hooks/api/kb/kb-search-schema";
 
 const mockRouterPush = jest.fn();
 const mockUseSearchParams = jest.fn(() => new URLSearchParams());
@@ -757,6 +758,44 @@ describe("WikiSearchPage — space facet filter (S05)", () => {
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ space: null }),
     );
+  });
+});
+
+describe("kbSearchResponseContract — cursor envelope (S-cursor-FE)", () => {
+  it("S-cursor-FE-01: the decoded response includes hasMore: true when the backend signals another page exists", () => {
+    const result = kbSearchResponseContract.parse({
+      items: [],
+      hasMore: true,
+      nextCursor: "opaque-cursor-abc",
+    });
+    expect(result.hasMore).toBe(true);
+  });
+
+  it("S-cursor-FE-01 control: hasMore is false when the response fits on one page, confirming the field is not a no-op constant", () => {
+    const result = kbSearchResponseContract.parse({
+      items: [],
+      hasMore: false,
+      nextCursor: null,
+    });
+    expect(result.hasMore).toBe(false);
+  });
+
+  it("S-cursor-FE-02: the decoded response includes nextCursor when hasMore is true so clients can page forward", () => {
+    const result = kbSearchResponseContract.parse({
+      items: [],
+      hasMore: true,
+      nextCursor: "opaque-cursor-abc",
+    });
+    expect(result.nextCursor).toBe("opaque-cursor-abc");
+  });
+
+  it("S-cursor-FE-02 control: nextCursor is null on the last page so clients do not need a separate empty-string check", () => {
+    const result = kbSearchResponseContract.parse({
+      items: [],
+      hasMore: false,
+      nextCursor: null,
+    });
+    expect(result.nextCursor).toBeNull();
   });
 });
 
