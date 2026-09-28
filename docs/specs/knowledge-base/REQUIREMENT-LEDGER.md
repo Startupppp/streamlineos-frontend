@@ -1217,9 +1217,33 @@ seam that now emits behind the nine that still do not.
   Candidate counts, no-answer rate and citation coverage are real: `retrieval/kb-ask.service.ts:230` computes `candidates` as `top + sources + linked` and passes it, `citations: citations.length` rides the same call, `kb.ask.is_no_answer` derives from the outcome, and `kb.ask.degraded` carries the lexical fallback the note asked for. So "nothing counts it yet" was stale.
   **Rerank latency was the real gap, and renaming it was the honest close.** `kb.ask.rerank_latency_ms` was declared and never passed, so it emitted a hard `0` on every span — the same shape as the null `provider` column caught earlier this pass. KB has no rerank stage: `rerank` appeared nowhere in `src/` outside the metric's own declaration and its parity spec, and no alert or SLO referenced it (`common/slo/slo-kb-ask.ts` keys on `kb.ask.outcome` alone). The attribute is now `kb.ask.retrieval_latency_ms` and measures `gatherContext` — retrieval, linked-document fetch and citation resolution, i.e. everything before the model call — emitted on the answered, degraded, no-context, credits-exhausted and provider-unavailable paths alike, so a no-answer reports what it cost.
   Both halves bite: `kb-ask.service.spec.ts` asserts the attribute is `>= 20` when the retrieval mock sleeps 25 ms, which the previous hard-zero emission fails, and a second test holds the no-context path to `is_no_answer` true with a numeric latency. `npx jest src/modules/kb/retrieval/kb-ask.service.spec.ts src/modules/kb/core/telemetry` → 4 suites, 150 tests, all passing.
-- [ ] DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
+- [x] **DONE 2026-09-28 — "all need a live database" was wrong, and running it against one found the alert lying.** DB connections, locks, slow queries, replica lag, cache hit rate, dropped invalidations.
   **2026-09-27 audit:** AV-11: operational measurements remain open.
-  All need a live database.
+      All six dimensions are covered by `src/scripts/alert-kb-db-health.mjs` plus its delegate
+      `alert-cache-invalidation-dropped.mjs`, and a local Postgres 18 exists, so this needed no live
+      environment. Run as `DATABASE_URL=postgresql://neondb_owner@127.0.0.1:5432/replay2 node
+      src/scripts/alert-kb-db-health.mjs` — never bare, because the script calls
+      `dotenv.config({ path: .env })` at line 5 and `.env` points at production RDS.
+      Measured against local `replay2`: connections 2 active against a threshold of 80, lock waits 0 of 5,
+      cache hit rate fired on `kb_spaces` 85.5% and `kb_space_members` 84.5% against a 90% floor — which
+      is a cold-cache artefact of a 69-block table, not a finding. Replica lag reports `blocked`
+      /`no-replica-endpoint` honestly. Dropped invalidations self-test 5/5.
+      **The finding is the slow-query dimension, and it was reporting the opposite of the truth.**
+      `pg_stat_statements` is not installed, so `slowQueries` stayed `[]`, and `slowQueriesFired` was
+      computed as `slowQueries.length > 0` — emitting `false`. An operator reading that JSON saw
+      "no slow queries" when the truth was "no statement can be seen at all". That is the same class as
+      the null `provider` column and the hard-zero rerank latency caught earlier this pass: a metric that
+      cannot fail is not a passing metric.
+      **Fixed** by giving the dimension the `status: "blocked"` shape the script already uses for replica
+      lag, so an unmeasurable dimension can no longer occupy the same slot as a clean one. The blocked
+      form deliberately carries **no `rows` key at all**, so a consumer cannot read an empty list off it,
+      and it deliberately does **not** fire — paging oncall because an extension is missing would be the
+      opposite mistake. Self-test 8 checks → 11, all passing, including an anti-vacuity check that the
+      measured path still reports `measured`. Mutation-proved: forcing `slowQueriesObservable = true`
+      fails `absentExtensionIsNotReportedAsClear` and exits 1; restored by content with an empty diff.
+      **Stated limit:** installing `pg_stat_statements` on production is a `shared_preload_libraries`
+      change requiring a restart, so the slow-query dimension remains genuinely unmeasured there — it is
+      now unmeasured *and says so*, which is the whole of what this tick claims.
 - [x] **DONE 2026-09-27:** ACL denial and not-found anomalies, revocation lag.
   CONFIRMED: `slo-kb-acl-anomaly.ts:15` (`KB_ACL_ANOMALY_SLO`) — 403/404 rate indicator on `kb.route` spans. `slo-kb-freshness.ts:31` (`KB_ACCESS_REVOCATION_SLO`) — revocation lag. Both registered in `SLO_CATALOGUE`.
 - [x] **DONE 2026-09-27:** Storage/index/embedding/AI cost by tenant tier. `tenant-cost` exists but is not KB-scoped.
