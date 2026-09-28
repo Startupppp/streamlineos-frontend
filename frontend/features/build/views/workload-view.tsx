@@ -1,33 +1,28 @@
 ﻿"use client";
 
 import {
+  Fragment,
   useState,
   useMemo,
   memo,
   useCallback,
   type ComponentType,
 } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { format, addDays, isSameDay, parseISO } from "date-fns";
-import {
-  ChevronDown,
-  ChevronRight,
-  Users,
-  AlertTriangle,
-  CheckCircle2,
-  TrendingUp,
-  ExternalLink,
-} from "lucide-react";
+import { Users, AlertTriangle, CheckCircle2, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
 import { isCompletedTicketStatus } from "../shared/completed-status";
-import { stopEvent, InlineAssignee } from "./card-inline-fields";
 import { WorkloadMemberRow } from "./workload-member-row";
-import type { FilterState, MemberCapacityData, StatFilter } from "./workload-types";
+import { WorkloadUnassignedRow } from "./workload-unassigned-row";
+import type {
+  FilterState,
+  MemberCapacityData,
+  StatFilter,
+  WorkloadGroup,
+} from "./workload-types";
 import { hasActiveWorkloadFilters, isMemberOverCapacity } from "./workload-types";
-import Link from "next/link";
-import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 
 interface WorkloadMember {
@@ -36,6 +31,21 @@ interface WorkloadMember {
   firstName: string | null;
   lastName: string | null;
   image?: string | null;
+}
+
+interface WorkloadMemberEntry {
+  member: WorkloadMember;
+  memberTickets: KanbanTicket[];
+  ticketsByDay: { day: Date; count: number }[];
+  total: number;
+  overdue: number;
+  points: number;
+}
+
+interface WorkloadGroupEntry {
+  key: string;
+  label: string | null;
+  rows: WorkloadMemberEntry[];
 }
 
 interface WorkloadViewProps {
@@ -52,6 +62,7 @@ interface WorkloadViewProps {
   onClearFilters: () => void;
   capacityByMemberId?: Map<string, MemberCapacityData>;
   focusedMemberId?: string | null;
+  group?: WorkloadGroup;
 }
 
 function applyTicketFilters(
@@ -183,6 +194,7 @@ export const WorkloadView = memo(function WorkloadView({
   onClearFilters,
   capacityByMemberId,
   focusedMemberId = null,
+  group = "none",
 }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
@@ -228,6 +240,32 @@ export const WorkloadView = memo(function WorkloadView({
     });
   }, [members, filteredTickets, days, filters.statCard, filters.assigneeId, capacityByMemberId, projectStatuses]);
 
+  const groupedWorkload = useMemo<WorkloadGroupEntry[]>(() => {
+    if (group !== "team")
+      return [{ key: "all", label: null, rows: memberWorkload }];
+    const byTeam = new Map<string, WorkloadGroupEntry>();
+    const withoutTeam: WorkloadMemberEntry[] = [];
+    for (const row of memberWorkload) {
+      const teams = capacityByMemberId?.get(row.member.id)?.teams ?? [];
+      if (teams.length === 0) {
+        withoutTeam.push(row);
+        continue;
+      }
+      for (const team of teams) {
+        const key = `team:${team.id}`;
+        const entry = byTeam.get(key) ?? { key, label: team.name, rows: [] };
+        entry.rows.push(row);
+        byTeam.set(key, entry);
+      }
+    }
+    const entries = [...byTeam.values()].sort((a, b) =>
+      (a.label ?? "").localeCompare(b.label ?? ""),
+    );
+    if (withoutTeam.length > 0)
+      entries.push({ key: "team:none", label: "No team", rows: withoutTeam });
+    return entries;
+  }, [group, memberWorkload, capacityByMemberId]);
+
   const unassigned = useMemo(
     () => filteredTickets.filter((t) => !t.assigneeId),
     [filteredTickets],
@@ -260,10 +298,6 @@ export const WorkloadView = memo(function WorkloadView({
     () => handleToggleExpand("__unassigned__"),
     [handleToggleExpand],
   );
-
-  function handleUnassignedKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") handleToggleUnassigned();
-  }
 
   function handleStatCardToggle(id: StatFilter) {
     onFilterChange("statCard", filters.statCard === id ? "all" : id);
@@ -358,177 +392,65 @@ export const WorkloadView = memo(function WorkloadView({
                 onClearFilters={onClearFilters}
               />
             ) : (
-              memberWorkload.map(
-                (
-                  {
-                    member,
-                    memberTickets,
-                    ticketsByDay,
-                    total,
-                    overdue,
-                    points,
-                  },
-                  idx,
-                ) => (
-                  <WorkloadMemberRow
-                    key={member.id}
-                    member={member}
-                    memberTickets={memberTickets}
-                    ticketsByDay={ticketsByDay}
-                    total={total}
-                    overdue={overdue}
-                    points={points}
-                    days={days}
-                    projectId={projectId}
-                    projectKey={projectKey}
-                    expanded={expandedMembers.has(member.id)}
-                    focused={focusedMemberId === member.id}
-                    motionDelay={idx * 0.04}
-                    reducedMotion={shouldReduceMotion}
-                    onToggle={handleToggleExpand}
-                    capacityData={capacityByMemberId?.get(member.id)}
-                  />
-                ),
-              )
+              groupedWorkload.map((groupEntry) => (
+                <Fragment key={groupEntry.key}>
+                  {groupEntry.label !== null && (
+                    <div
+                      data-testid="workload-group-caption"
+                      className="flex shrink-0 border-b border-border bg-muted/40 px-4 py-1.5 text-micro font-bold uppercase tracking-wider text-muted-foreground"
+                    >
+                      {groupEntry.label}
+                      <span className="ml-2 tabular-nums font-normal normal-case tracking-normal">
+                        {groupEntry.rows.length}
+                      </span>
+                    </div>
+                  )}
+                  {groupEntry.rows.map(
+                    (
+                      {
+                        member,
+                        memberTickets,
+                        ticketsByDay,
+                        total,
+                        overdue,
+                        points,
+                      },
+                      idx,
+                    ) => (
+                      <WorkloadMemberRow
+                        key={`${groupEntry.key}:${member.id}`}
+                        member={member}
+                        memberTickets={memberTickets}
+                        ticketsByDay={ticketsByDay}
+                        total={total}
+                        overdue={overdue}
+                        points={points}
+                        days={days}
+                        projectId={projectId}
+                        projectKey={projectKey}
+                        expanded={expandedMembers.has(member.id)}
+                        focused={focusedMemberId === member.id}
+                        motionDelay={idx * 0.04}
+                        reducedMotion={shouldReduceMotion}
+                        onToggle={handleToggleExpand}
+                        capacityData={capacityByMemberId?.get(member.id)}
+                      />
+                    ),
+                  )}
+                </Fragment>
+              ))
             )}
 
             {showUnassignedRow && (
-              <motion.div
-                initial={
-                  shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }
-                }
-                animate={
-                  shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }
-                }
-                transition={{
-                  delay: memberWorkload.length * 0.04,
-                  duration: 0.2,
-                  ease: "easeOut",
-                }}
-              >
-                <div
-                  data-testid="workload-unassigned-row"
-                  className={cn(
-                    "flex items-center border-b cursor-pointer hover:bg-muted/30 transition-colors bg-muted/20",
-                    expandedMembers.has("__unassigned__") &&
-                      "bg-status-warning-surface",
-                  )}
-                  role="button"
-                  onClick={handleToggleUnassigned}
-                  onKeyDown={handleUnassignedKeyDown}
-                  tabIndex={0}
-                  aria-expanded={expandedMembers.has("__unassigned__")}
-                >
-                  <div className="w-52 shrink-0 px-4 py-3 flex items-center gap-2">
-                    {expandedMembers.has("__unassigned__") ? (
-                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    ) : (
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    )}
-                    <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center shrink-0">
-                      <Users className="h-3 w-3 text-muted-foreground" />
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      Unassigned
-                    </span>
-                  </div>
-                  <div className="w-20 shrink-0 px-2 py-3 text-center">
-                    <span className="text-sm font-semibold text-status-warning-ink-strong">
-                      {unassigned.length}
-                    </span>
-                  </div>
-                  <div className="w-20 shrink-0 px-2 py-3 text-center">
-                    <span className="text-sm text-muted-foreground">—</span>
-                  </div>
-                  <div className="w-20 shrink-0 px-2 py-3 text-center">
-                    <span className="text-sm text-muted-foreground">—</span>
-                  </div>
-                  <div className="w-24 shrink-0 px-2 py-3 text-center">
-                    <span className="text-sm text-muted-foreground">—</span>
-                  </div>
-                  <div className="w-24 shrink-0 px-2 py-3 text-center">
-                    <span className="text-sm text-muted-foreground">—</span>
-                  </div>
-                  <div className="w-20 shrink-0 px-2 py-3 text-center">
-                    <span className="text-sm text-muted-foreground">—</span>
-                  </div>
-                  <div className="w-24 shrink-0 px-2 py-3 text-center">
-                    <span className="text-sm text-muted-foreground">—</span>
-                  </div>
-                </div>
-
-                {unassigned.length > 0 && (
-                  <div
-                    className={cn(
-                      "grid transition-[grid-template-rows] ease-in-out",
-                      shouldReduceMotion ? "duration-0" : "duration-200",
-                      expandedMembers.has("__unassigned__")
-                        ? "grid-rows-[1fr]"
-                        : "grid-rows-[0fr]",
-                    )}
-                  >
-                    <div className="overflow-hidden bg-status-warning-surface">
-                      {unassigned.slice(0, 10).map((ticket) => (
-                        <div
-                          key={ticket.id}
-                          className="group/unassigned flex min-w-0 items-center gap-2 border-b border-border/40 px-8 py-2"
-                        >
-                          <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground">
-                            #{ticket.ticketNumber}
-                          </span>
-                          <TruncatedText
-                            text={ticket.title}
-                            className="min-w-0 flex-1 text-xs text-foreground"
-                          />
-                          {ticket.points != null && (
-                            <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
-                              {ticket.points}pt
-                            </span>
-                          )}
-                          <Link
-                            href={
-                              ticket.ticketNumber != null
-                                ? getTicketDetailHref(
-                                    projectId,
-                                    projectKey,
-                                    ticket.ticketNumber,
-                                  )
-                                : `/build/${projectId}`
-                            }
-                            onMouseDown={stopEvent}
-                            onClick={stopEvent}
-                            className="shrink-0 opacity-0 group-hover/unassigned:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
-                            aria-label="Open ticket"
-                          >
-                            <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                          </Link>
-                          {ticket.version !== null ? (
-                            <span
-                              onMouseDown={stopEvent}
-                              onClick={stopEvent}
-                              onKeyDown={stopEvent}
-                              className="shrink-0 opacity-0 group-hover/unassigned:opacity-100 transition-opacity"
-                            >
-                              <InlineAssignee
-                                ticketId={ticket.id}
-                                projectId={projectId}
-                                version={ticket.version}
-                                currentAssigneeId={null}
-                                assignee={null}
-                              />
-                            </span>
-                          ) : null}
-                        </div>
-                      ))}
-                      {unassigned.length > 10 && (
-                        <div className="px-8 py-1.5 text-xs text-muted-foreground">
-                          +{unassigned.length - 10} more unassigned tickets
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
+              <WorkloadUnassignedRow
+                tickets={unassigned}
+                projectId={projectId}
+                projectKey={projectKey}
+                expanded={expandedMembers.has("__unassigned__")}
+                reducedMotion={shouldReduceMotion}
+                motionDelay={memberWorkload.length * 0.04}
+                onToggle={handleToggleUnassigned}
+              />
             )}
           </div>
         </div>

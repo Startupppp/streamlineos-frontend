@@ -73,7 +73,6 @@ const projectRowSchema = z.object({
   settings: z
     .object({
       modules: z.object({
-        sprints: z.boolean(),
         epics: z.boolean(),
         timeTracking: z.boolean(),
         wiki: z.boolean(),
@@ -452,6 +451,7 @@ export const ticketFieldValueCreateContract = z.object({
 export const projectReleaseListContract = cursorPageContract(
   projectReleaseListItemSchema,
 );
+export const projectReleaseListItemContract = projectReleaseListItemSchema;
 export const projectReleaseRowContract = projectReleaseRowSchema;
 export const projectWebhookPageContract =
   idCursorPageContract(projectWebhookSchema);

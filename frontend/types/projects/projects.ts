@@ -355,6 +355,8 @@ export interface ProjectFilters {
   status?: "ALL" | ProjectStatusValue;
   managedProductId?: number;
   managerId?: string;
+  health?: ProjectHealth;
+  sort?: "name_asc" | "priority_desc" | "due_asc" | "due_desc";
 }
 
 /** What `GET /build` actually answers. */

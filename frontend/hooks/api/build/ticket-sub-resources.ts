@@ -293,6 +293,10 @@ export function useAddTicketRelation(ticketId: number, projectId: number) {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.ticketRelations(ticketId),
       });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.criticalPath(projectId),
+        refetchType: "none",
+      });
     },
   });
 }
@@ -311,6 +315,10 @@ export function useRemoveTicketRelation(ticketId: number, projectId: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: buildWorkQueryKeys.projects.ticketRelations(ticketId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projectReports.criticalPath(projectId),
+        refetchType: "none",
       });
     },
   });

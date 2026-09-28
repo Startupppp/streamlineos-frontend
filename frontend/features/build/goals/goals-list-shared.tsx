@@ -1,10 +1,9 @@
 "use client";
 
-import type { RefObject } from "react";
-import { useCallback } from "react";
+import { useCallback, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { CalendarDays, ListChecks, Users } from "lucide-react";
+import { CalendarDays, Link2 as LinkIcon, ListChecks, Users } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -22,33 +21,7 @@ import { cn } from "@/lib/utils";
 import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { GoalLevel, GoalListItem } from "@/hooks/api/goals";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import type { BuildFilterOption } from "@/features/build/shared/build-filter-select";
-import {
-  BUILD_FILTER_ALL,
-  type BuildListFiltersState,
-} from "@/features/build/shared/use-build-list-filters";
-import { LEVEL_OPTIONS, STATUS_CONFIG, STATUS_OPTIONS } from "./constants";
-
-export const GOAL_LEVEL_FILTER_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "All levels" },
-  ...LEVEL_OPTIONS,
-];
-
-export const GOAL_STATUS_FILTER_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "All statuses" },
-  ...STATUS_OPTIONS,
-];
-
-export const GOAL_FILTER_DEFINITIONS = [
-  { param: "level", options: LEVEL_OPTIONS.map((option) => option.value) },
-  { param: "status", options: STATUS_OPTIONS.map((option) => option.value) },
-  { param: "ownerId" },
-  { param: "health" },
-  { param: "due" },
-  { param: "scope" },
-] as const;
+import { STATUS_CONFIG } from "./constants";
 
 export const GOAL_LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
 
@@ -56,15 +29,17 @@ interface GoalCardActionsProps {
   goal: GoalListItem;
   onEdit?: (goal: GoalListItem) => void;
   onDelete?: (goal: GoalListItem) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-function GoalCardActions({ goal, onEdit, onDelete }: GoalCardActionsProps) {
+function GoalCardActions({ goal, onEdit, onDelete, open, onOpenChange }: GoalCardActionsProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleEdit = useCallback(() => onEdit?.(goal), [goal, onEdit]);
   const handleDelete = useCallback(() => onDelete?.(goal), [goal, onDelete]);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -95,11 +70,23 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
   const cfg = STATUS_CONFIG[goal.status];
   const ownerName = goal.owner?.name ?? goal.owner?.email ?? null;
   const shouldReduceMotion = useReducedMotion();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const hasActions = Boolean(onEdit || onDelete);
+
+  const handleContextMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (!hasActions) return;
+      event.preventDefault();
+      setMenuOpen(true);
+    },
+    [hasActions],
+  );
 
   return (
     <motion.div
       variants={shouldReduceMotion ? listItemReduced : listItem}
       transition={pmSnappy}
+      onContextMenu={handleContextMenu}
     >
       <div className="group relative">
         <div
@@ -121,8 +108,14 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
               <Badge variant={cfg.variant} className="shrink-0 text-micro">
                 {cfg.label}
               </Badge>
-              {onEdit || onDelete ? (
-                <GoalCardActions goal={goal} onEdit={onEdit} onDelete={onDelete} />
+              {hasActions ? (
+                <GoalCardActions
+                  goal={goal}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  open={menuOpen}
+                  onOpenChange={setMenuOpen}
+                />
               ) : null}
             </div>
           </div>
@@ -150,6 +143,19 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
             </span>
           </div>
 
+          <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <LinkIcon className="h-3.5 w-3.5 shrink-0" />
+            {goal.linkCount === 0 ? (
+              <span>No linked initiatives</span>
+            ) : (
+              <span>
+                {goal.linkCount} linked ({goal.linkedProjectCount} project
+                {goal.linkedProjectCount === 1 ? "" : "s"}, {goal.linkedTicketCount} ticket
+                {goal.linkedTicketCount === 1 ? "" : "s"})
+              </span>
+            )}
+          </div>
+
           {goal.target !== null ? (
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>KR total</span>
@@ -175,85 +181,5 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
         </div>
       </div>
     </motion.div>
-  );
-}
-
-interface GoalsListToolbarProps {
-  listFilters: BuildListFiltersState;
-  ownerOptions?: readonly BuildFilterOption[];
-  searchInputRef?: RefObject<HTMLInputElement | null>;
-}
-
-export function GoalsListToolbar({
-  listFilters,
-  ownerOptions,
-  searchInputRef,
-}: GoalsListToolbarProps) {
-  const handleLevelChange = (value: string) =>
-    listFilters.setValue("level", value);
-  const handleStatusChange = (value: string) =>
-    listFilters.setValue("status", value);
-  const handleOwnerChange = (value: string) =>
-    listFilters.setValue("ownerId", value);
-
-  const ownerValue = listFilters.value("ownerId");
-  const resolvedOwnerOptions: readonly BuildFilterOption[] = ownerOptions
-    ? [{ value: BUILD_FILTER_ALL, label: "All owners" }, ...ownerOptions]
-    : [{ value: BUILD_FILTER_ALL, label: "All owners" }];
-
-  const filters = [
-    {
-      id: "level",
-      label: "Level",
-      active: listFilters.isActive("level"),
-      control: (
-        <BuildFilterSelect
-          label="Level"
-          value={listFilters.value("level")}
-          onValueChange={handleLevelChange}
-          options={GOAL_LEVEL_FILTER_OPTIONS}
-        />
-      ),
-    },
-    {
-      id: "status",
-      label: "Status",
-      active: listFilters.isActive("status"),
-      control: (
-        <BuildFilterSelect
-          label="Status"
-          value={listFilters.value("status")}
-          onValueChange={handleStatusChange}
-          options={GOAL_STATUS_FILTER_OPTIONS}
-        />
-      ),
-    },
-    {
-      id: "owner",
-      label: "Owner",
-      active: listFilters.isActive("ownerId"),
-      control: (
-        <BuildFilterSelect
-          label="Owner"
-          value={ownerValue}
-          onValueChange={handleOwnerChange}
-          options={resolvedOwnerOptions}
-        />
-      ),
-    },
-  ] as const;
-
-  return (
-    <BuildListToolbar
-      search={{
-        value: listFilters.search,
-        onValueChange: listFilters.setSearch,
-        placeholder: "Search goals…",
-        label: "Search goals",
-        inputRef: searchInputRef,
-      }}
-      filters={filters}
-      onClearAll={listFilters.clearAll}
-    />
   );
 }

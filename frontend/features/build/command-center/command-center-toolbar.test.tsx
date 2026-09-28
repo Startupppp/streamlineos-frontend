@@ -1,6 +1,9 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, render, renderHook, screen } from "@testing-library/react";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
-import { COMMAND_CENTER_FILTER_DEFINITIONS } from "./command-center-toolbar";
+import {
+  COMMAND_CENTER_FILTER_DEFINITIONS,
+  CommandCenterToolbar,
+} from "./command-center-toolbar";
 
 const replace = jest.fn();
 let currentParams = new URLSearchParams();
@@ -111,5 +114,60 @@ describe("COMMAND_CENTER_FILTER_DEFINITIONS — owner filter writes user-id to U
     expect(params.has("scope")).toBe(false);
     expect(params.has("owner")).toBe(false);
     expect(params.has("due")).toBe(false);
+  });
+});
+
+describe("COMMAND_CENTER_FILTER_DEFINITIONS — health filter writes the project health band to the URL", () => {
+  it("setValue('health', 'at_risk') writes health=at_risk to the URL", () => {
+    const { result } = renderHook(() =>
+      useBuildListFilters({ withSearch: false, filters: COMMAND_CENTER_FILTER_DEFINITIONS }),
+    );
+    act(() => result.current.setValue("health", "at_risk"));
+    expect(lastParams().get("health")).toBe("at_risk");
+  });
+
+  it("setValue('health', 'all') clears the health param when the user resets to any health", () => {
+    currentParams = new URLSearchParams("health=at_risk");
+    const { result } = renderHook(() =>
+      useBuildListFilters({ withSearch: false, filters: COMMAND_CENTER_FILTER_DEFINITIONS }),
+    );
+    act(() => result.current.setValue("health", "all"));
+    expect(lastUrl()).not.toContain("health=");
+  });
+
+  it("value('health') falls back to the sentinel for a band the backend enum does not define", () => {
+    currentParams = new URLSearchParams("health=exploding");
+    const { result } = renderHook(() =>
+      useBuildListFilters({ withSearch: false, filters: COMMAND_CENTER_FILTER_DEFINITIONS }),
+    );
+    expect(result.current.value("health")).toBe("all");
+    expect(result.current.isActive("health")).toBe(false);
+  });
+
+  it("clearAll removes health along with scope, owner and due in one navigation", () => {
+    currentParams = new URLSearchParams("scope=all&owner=user-abc&health=at_risk&due=overdue");
+    const { result } = renderHook(() =>
+      useBuildListFilters({ withSearch: false, filters: COMMAND_CENTER_FILTER_DEFINITIONS }),
+    );
+    act(() => result.current.clearAll());
+    expect(lastParams().has("health")).toBe(false);
+  });
+});
+
+describe("CommandCenterToolbar — every URL-backed filter has a control that writes it", () => {
+  it("renders the scope, owner, health and due controls, so no declared parameter is read-only", () => {
+    render(<CommandCenterToolbar />);
+    expect(screen.getByRole("combobox", { name: "Issue scope" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Project owner" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Project health" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Due date" })).toBeInTheDocument();
+  });
+
+  it("shows the health band from the URL on the control, so a shared link renders its own filter state", () => {
+    currentParams = new URLSearchParams("health=off_track");
+    render(<CommandCenterToolbar />);
+    expect(screen.getByRole("combobox", { name: "Project health" })).toHaveTextContent(
+      "Off track",
+    );
   });
 });

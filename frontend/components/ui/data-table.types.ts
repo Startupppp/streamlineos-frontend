@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import type { RowData } from "@tanstack/react-table";
 
 declare module "@tanstack/react-table" {
@@ -86,6 +86,7 @@ export interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
   getRowKey: (row: T, index: number) => string | number;
   onRowClick?: (row: T) => void;
+  onRowContextMenu?: (row: T, event: MouseEvent) => void;
   selection?: {
     selected: ReadonlySet<string | number>;
     onChange: (sel: Set<string | number>) => void;

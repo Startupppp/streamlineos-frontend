@@ -98,7 +98,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 
 - [x] The canonical route and disposition are implemented, with old callers and redirects covered by a route census.
 - [x] The page satisfies the stated user job and success metric without duplicating another module owner.
-- [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+- [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
   - Audited item by item 2026-09-28. Collection-shaped items — search/`q`, the fourteen list query parameters, bulk actions, `j/k`/`Enter`/`c` — have no target on a detail page and are not required (CCG-4).
   - **Conflict state: CLOSED 2026-09-28.** The field-level server/current comparison the 2026-09-27 note demanded now exists. `ticket-conflict-diff.ts` diffs the pending patch against the refetched row and resolves assignee/epic/module/cycle ids to names; `ticket-conflict-dialog.tsx` renders one "On the server now" / "Your edit" pair per drifted field with Keep/Discard; `use-ticket-detail-conflict.test.tsx` covers single-field drift, multi-field drift, a drift the server already agrees with (no dialog), id→name resolution, keep-replays-against-the-displayed-version, and discard-sends-nothing.
   - **P0 FIXED 2026-09-28 — the concurrency token was never sent, so every save on this page returned 400.** `backend/src/modules/build/core/dto/ticket.schemas.ts:174` requires `version: z.number().int().positive()` on `updateTicketSchema`; the schema is `.strict()` and is bound at `projects-tickets.controller.ts:249` `@Validate({ body: updateTicketSchema })`. The frontend sent `ticketId` + `expectedUpdatedAt` only. Every schema test stayed green because the frontend had no request contract at all. Fixed:
@@ -112,6 +112,61 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     - FE-122 pairs for the three mutation gates. `canUpdate`/`canAssign` (`ticket-detail-page.tsx:63-64`) and `canDeleteTicket` (`ticket-detail-toolbar.tsx:30`) are all wired, but every detail test hardcodes the granted case (`ticket-detail-errors.test.tsx:50` `useCan: () => true`), so no denial is asserted and no negative is paired with a positive.
     - Runtime enforcement of `ticketUpdateRequestContract` inside `useUpdateTicket`'s `mutationFn`. The schema module is a `lazyContract` to keep it out of the route bundle, so the only non-regressing wiring is an `await import` in `mutationFn` — which times out 14 tests across `ticket-cache-regression`, `column-count-invalidation` and `mutation-invalidation`. The required-`version` type chain is what forces the token today; the parse is declared and tested but not in the request path.
     - `useSetRecurrence` (`hooks/api/build/recurring.ts:26`) PATCHes the same endpoint with `{ isRecurring, recurrenceRule }` and no `version`, so recurrence changes still 400. That hook is outside this page's territory and is unfixed.
+  - **2026-09-28 (lane EXEC) — EARNED. Four of the five "still missing" items above were already
+    closed by the time this pass read the source; the fifth is now closed.** Verified item by item
+    against current files, not against the notes:
+    - `rank` **is** rendered and tested — `frontend/features/build/ticket-details/ticket-sidebar-metadata.tsx:93-96`
+      (a mono `PropertyRow`), piped `ticket-sidebar.tsx:263` ← `ticket-detail-right-panel.tsx:73`,
+      with `ticket-sidebar-metadata.test.tsx:4` (present) and `:9` (absent) as the pair. It is
+      read-only here by design: `updateTicketSchema` carries no `rank` and reranking is the board
+      gesture's own endpoint, so an editable control here would have nothing to call.
+    - `useSetRecurrence` **does** send the token — `frontend/hooks/api/build/recurring.ts:22-35`,
+      tested at `hooks/api/build/recurring.test.ts:28,44`. A repo-wide grep for
+      `apiClient.patch(\`/build/` finds exactly two call sites and both carry `version`.
+    - `ticketUpdateRequestContract` **is** parsed in the request path —
+      `hooks/api/build/ticket-update-mutation.ts:116`, via a static import at `:15`. The
+      `lazyContract`/`await import` timeout the note describes no longer exists.
+    - The three mutation gates **are** FE-122 paired — `ticket-detail-errors.test.tsx:222/230`
+      (`canUpdate`), `:238/245` (`canAssign`), `:252/259` (delete), driven by a switchable `useCan`
+      mock at `:57-65`, not a hardcoded `true`.
+    - Offline is now complete. `use-ticket-detail.ts:54-57, 206-211, 240-248` holds an edit made
+      offline in a draft, reports which fields it is holding, and replays them as one patch when
+      connectivity returns instead of dropping the save; `ticket-detail-page.tsx:326-345` dates the
+      banner from the read's own `dataUpdatedAt` and counts the unsent changes.
+
+    Coverage added this pass, all under `frontend/features/build/ticket-details/`:
+    `sidebar-core-fields.test.tsx` — seven tests over the nine core fields that had no test file at
+    all (status, priority, type, estimate, epic, module, cycle labels and stored values; the
+    disabled/enabled pair for the update gate; start and due dates with and without a value; the
+    assignee set by display name with no visible id, plus the cannot-assign pair).
+    `ticket-detail-title-field.test.tsx` — the title control, editable and read-only.
+    `ticket-detail-errors.test.tsx` — the key in the header, the offline freshness line and its
+    never-loaded counterpart, and the unsent-change count and its nothing-held counterpart.
+    `use-ticket-detail.test.tsx` — three offline-draft tests: no command while offline, the held
+    patch sent on reconnect with the live version token, and the immediate send while online that
+    proves the branch is not always on.
+
+    Collection-shaped items stay out by CCG-4, as the earlier note recorded: search/`q`, the fourteen
+    list query parameters, the bulk set and `j`/`k`/`Enter`/`c` have no target on a detail page.
+    Conflict (`use-ticket-detail-conflict.test.tsx`, `ticket-conflict-dialog.test.tsx`) and the
+    request id (`ticket-detail-errors.test.tsx:170,178,186`) were already closed on 2026-09-28.
+
+    ```text
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/build/ticket-details
+    Test Suites: 17 passed, 17 total
+    Tests:       97 passed, 97 total
+
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/build/ticket-details features/build/inbox hooks/api/build/ticket
+    Test Suites: 38 passed, 38 total
+    Tests:       283 passed, 283 total
+    ```
+
+    Component-test-only, and labelled as such: jsdom cannot see focus order, paint or a real
+    reconnect. Two ceilings inside what is ticked: the offline draft is in-memory, so a reload while
+    offline loses it (comment drafts, by contrast, buffer durably in
+    `hooks/api/build/comment-draft-offline-buffer.ts`); and a replayed draft can land on a version
+    the server has since moved, which routes to the conflict dialog rather than to a silent
+    overwrite.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.

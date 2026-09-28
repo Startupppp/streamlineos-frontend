@@ -1,7 +1,6 @@
 "use client";
 
-import { use, useCallback, useMemo, useRef, useState } from "react";
-import { toBulkPriority } from "@/features/build/shared/bulk-priority";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import { useProject } from "@/hooks/api/build/projects";
 import { useUpdateTicket } from "@/hooks/api/build/ticket-update-mutation";
 import {
@@ -9,12 +8,17 @@ import {
   useCreateTicket,
   useDeleteTicket,
 } from "@/hooks/api/build/ticket-create-rank-mutations";
-import type { BulkUpdateTicketsInput } from "@/hooks/api/build/ticket-create-rank-mutations";
 import { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
-import { useCycles } from "@/hooks/api/build/advanced";
+import {
+  useCycles,
+  useEpicPage,
+  type EpicListFilters,
+} from "@/hooks/api/build/advanced";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
+import { useOrgLabels } from "@/hooks/api/build/labels";
+import { useExportTickets } from "@/hooks/api/build/ticket-import-export";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CreateEpicDialog } from "@/features/build/epics/create-epic-dialog";
-import { EpicCard } from "@/features/build/epics/epic-card";
 import { EpicStoryRow } from "@/features/build/epics/epic-story-row";
 import {
   StatCard,
@@ -22,7 +26,6 @@ import {
   StatCardGridSkeleton,
 } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
@@ -38,28 +41,30 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { ModuleDisabledState } from "@/features/build/shared/module-disabled-state";
 import { getCompletedStatusNames } from "@/features/build/shared/completed-status";
 import { useCan } from "@/hooks/api/access";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { WifiOff } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
-import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
-import { getUserDisplayName } from "@/lib/person-display";
+import { useEpicBulkActions } from "@/features/build/epics/use-epic-bulk-actions";
+import { EpicsListSection } from "@/features/build/epics/epics-list-section";
+import {
+  EpicsFilterToolbar,
+  EPIC_FILTER_DEFINITIONS,
+} from "@/features/build/epics/epics-filter-toolbar";
 import { EditEpicDialog } from "@/features/build/epics/edit-epic-dialog";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PmStaggerList,
-  CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
 
-const EPIC_FILTER_DEFINITIONS = [
-  { param: "status" },
-  { param: "ownerId" },
-] as const;
+const EPIC_PAGE_SIZE = 25;
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -75,11 +80,10 @@ export function EpicsPage({ params }: PageProps) {
   const listFilters = useBuildListFilters({
     filters: EPIC_FILTER_DEFINITIONS,
   });
-  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(
-    new Set(),
-  );
   const [createOpen, setCreateOpen] = useState(false);
   const [editTargetId, setEditTargetId] = useState<number | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const isOnline = useOnlineStatus();
 
   const {
     data: project,
@@ -96,15 +100,45 @@ export function EpicsPage({ params }: PageProps) {
     refetch: refetchTickets,
   } = useProjectBoardTickets(projectId);
   const { data: cycles } = useCycles(projectId);
+  const { data: orgLabels } = useOrgLabels();
+  const exportEpics = useExportTickets(projectId);
   const { data: membersPage } = useProjectMembers(projectId);
   const members = membersPage?.data ?? [];
-  const isLoading = projectLoading || ticketsLoading;
-  const loadError = projectError ?? ticketsError;
+
+  const statusFilter = listFilters.value("status");
+  const ownerFilter = listFilters.value("ownerId");
+  const healthFilter = listFilters.value("health");
+  const epicFilters: EpicListFilters = {
+    q: listFilters.debouncedSearch || undefined,
+    status: statusFilter !== BUILD_FILTER_ALL ? statusFilter : undefined,
+    ownerId: ownerFilter !== BUILD_FILTER_ALL ? ownerFilter : undefined,
+    health:
+      healthFilter === "on_track" ||
+      healthFilter === "at_risk" ||
+      healthFilter === "off_track"
+        ? healthFilter
+        : undefined,
+    cursor: listFilters.cursor ?? undefined,
+    limit: EPIC_PAGE_SIZE,
+  };
+  const {
+    data: epicPage,
+    isLoading: epicsLoading,
+    isError: epicsFailed,
+    error: epicsError,
+    refetch: refetchEpics,
+    dataUpdatedAt: epicsUpdatedAt,
+  } = useEpicPage(projectId, epicFilters);
+
+  const isLoading = projectLoading || ticketsLoading || epicsLoading;
+  const readFailed = projectFailed || epicsFailed || ticketsFailed;
+  const loadError = projectError ?? epicsError ?? ticketsError;
 
   const handleRetry = useCallback(() => {
     void refetchProject();
+    void refetchEpics();
     void refetchTickets();
-  }, [refetchProject, refetchTickets]);
+  }, [refetchEpics, refetchProject, refetchTickets]);
 
   const updateTicket = useUpdateTicket(projectId);
   const deleteTicket = useDeleteTicket(projectId);
@@ -112,19 +146,29 @@ export function EpicsPage({ params }: PageProps) {
   const bulkUpdate = useBulkUpdateTickets(projectId);
 
   const tickets = boardTickets ?? [];
-  const q = listFilters.debouncedSearch.toLowerCase();
-  const statusFilter = listFilters.value("status");
-  const ownerFilter = listFilters.value("ownerId");
+  const epics = epicPage?.data ?? [];
+  const hasMoreEpics = epicPage?.pagination.hasMore ?? false;
+  const nextEpicCursor = epicPage?.pagination.nextCursor ?? null;
+  const [visitedCursors, setVisitedCursors] = useState<(string | null)[]>([]);
+  const urlCursor = listFilters.cursor;
+
+  useEffect(() => {
+    if (urlCursor === null) setVisitedCursors([]);
+  }, [urlCursor]);
+
+  const handleNextPage = useCallback(() => {
+    if (!nextEpicCursor) return;
+    setVisitedCursors((current) => [...current, urlCursor]);
+    listFilters.setCursor(nextEpicCursor);
+  }, [listFilters, nextEpicCursor, urlCursor]);
+
+  const handlePreviousPage = useCallback(() => {
+    const previous = visitedCursors[visitedCursors.length - 1] ?? null;
+    setVisitedCursors((current) => current.slice(0, -1));
+    listFilters.setCursor(previous);
+  }, [listFilters, visitedCursors]);
 
   const allEpics = tickets.filter((t) => t.type === "EPIC");
-  const epics = allEpics.filter(
-    (t) =>
-      (!q || t.title.toLowerCase().includes(q)) &&
-      (!statusFilter || statusFilter === "all" || t.status === statusFilter) &&
-      (!ownerFilter ||
-        ownerFilter === "all" ||
-        String(t.assigneeId) === ownerFilter),
-  );
   const stories = tickets.filter((t) => t.type === "STORY");
   const tasks = tickets.filter((t) => t.type === "TASK");
 
@@ -162,68 +206,26 @@ export function EpicsPage({ params }: PageProps) {
   const pageState = usePageState({
     permission: "build:view",
     isLoading,
-    isError: projectFailed || ticketsFailed,
+    isError: readFailed,
     error: loadError,
   });
 
-  const handleEpicSelection = useCallback((id: number) => {
-    setSelectedIds((prev) => {
-      const n = new Set(prev);
-      if (n.has(id)) {
-        n.delete(id);
-      } else {
-        n.add(id);
-      }
-      return n;
-    });
-  }, []);
-  const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
-
-  const handleBulkUpdate = useCallback(
-    (
-      update: Partial<
-        Pick<
-          BulkUpdateTicketsInput,
-          "status" | "priority" | "assigneeId" | "cycleId"
-        >
-      >,
-    ) => {
-      if (selectedIds.size === 0) return;
-      bulkUpdate.mutate(
-        { ticketIds: [...selectedIds].map(Number), ...update },
-        {
-          onSuccess: (d) => {
-            toast.success(
-              `${d.updated} epic${d.updated !== 1 ? "s" : ""} updated`,
-            );
-            handleClearSelection();
-          },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [selectedIds, bulkUpdate, handleClearSelection],
-  );
-
-  const handleBulkStatus = useCallback(
-    (v: string) => handleBulkUpdate({ status: v }),
-    [handleBulkUpdate],
-  );
-  const handleBulkPriority = useCallback(
-    (v: string) => {
-      const priority = toBulkPriority(v);
-      if (priority) handleBulkUpdate({ priority });
-    },
-    [handleBulkUpdate],
-  );
-  const handleBulkAssignee = useCallback(
-    (v: string) => handleBulkUpdate({ assigneeId: v || undefined }),
-    [handleBulkUpdate],
-  );
-  const handleBulkCycle = useCallback(
-    (v: string) => handleBulkUpdate({ cycleId: parseInt(v) || null }),
-    [handleBulkUpdate],
-  );
+  const {
+    selectedIds,
+    archiveConfirmOpen,
+    handleEpicSelection,
+    handleClearSelection,
+    handleBulkStatus,
+    handleBulkPriority,
+    handleBulkAssignee,
+    handleBulkCycle,
+    handleBulkParent,
+    handleBulkLabel,
+    handleBulkArchiveRequest,
+    handleArchiveDialogChange,
+    handleBulkArchiveConfirm,
+    handleBulkExport,
+  } = useEpicBulkActions({ bulkUpdate, exportEpics });
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleCreateOpenChange = useCallback(
@@ -244,32 +246,7 @@ export function EpicsPage({ params }: PageProps) {
     editTargetId === null
       ? null
       : (epics.find((epic) => epic.id === editTargetId) ?? null);
-  const handleStatusFilterChange = useCallback(
-    (value: string) => listFilters.setValue("status", value),
-    [listFilters],
-  );
-  const handleOwnerFilterChange = useCallback(
-    (value: string) => listFilters.setValue("ownerId", value),
-    [listFilters],
-  );
-
-  const statusOptions = useMemo(
-    () => [
-      { value: BUILD_FILTER_ALL, label: "All statuses" },
-      ...(project?.statuses ?? []).map((s) => ({ value: s.name, label: s.name })),
-    ],
-    [project?.statuses],
-  );
-  const ownerOptions = useMemo(
-    () => [
-      { value: BUILD_FILTER_ALL, label: "All owners" },
-      ...members.map((member) => ({
-        value: member.id,
-        label: getUserDisplayName(member),
-      })),
-    ],
-    [members],
-  );
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
   useBuildListKeyboard({
     itemCount: epics.length,
@@ -277,6 +254,7 @@ export function EpicsPage({ params }: PageProps) {
     onEdit: handleEditByIndex,
     onCreate: canCreate ? handleOpenCreate : undefined,
     onClearSelection: handleClearSelection,
+    onShortcutHelp: handleShortcutHelp,
     enabled: pageState.kind === "ready",
     searchInputRef,
   });
@@ -342,42 +320,11 @@ export function EpicsPage({ params }: PageProps) {
         ) : undefined
       }
       filters={
-        <BuildListToolbar
-          search={{
-            value: listFilters.search,
-            onValueChange: listFilters.setSearch,
-            placeholder: "Search epics",
-            inputRef: searchInputRef,
-          }}
-          filters={[
-            {
-              id: "status",
-              label: "Status",
-              active: listFilters.isActive("status"),
-              control: (
-                <BuildFilterSelect
-                  label="Status"
-                  value={statusFilter}
-                  onValueChange={handleStatusFilterChange}
-                  options={statusOptions}
-                />
-              ),
-            },
-            {
-              id: "ownerId",
-              label: "Owner",
-              active: listFilters.isActive("ownerId"),
-              control: (
-                <BuildFilterSelect
-                  label="Owner"
-                  value={ownerFilter}
-                  onValueChange={handleOwnerFilterChange}
-                  options={ownerOptions}
-                />
-              ),
-            },
-          ]}
-          onClearAll={listFilters.clearAll}
+        <EpicsFilterToolbar
+          listFilters={listFilters}
+          searchInputRef={searchInputRef}
+          projectStatuses={project?.statuses}
+          members={members}
         />
       }
     >
@@ -387,6 +334,27 @@ export function EpicsPage({ params }: PageProps) {
           aria-live="polite"
           aria-atomic="true"
         >
+          {!isOnline && epics.length > 0 ? (
+            <div
+              className="flex shrink-0 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2"
+              data-testid="offline-banner"
+            >
+              <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">
+                You&apos;re offline — these epics may be out of date.
+                {epicsUpdatedAt ? (
+                  <span data-testid="offline-banner-freshness">
+                    {" "}
+                    Last updated{" "}
+                    {formatDistanceToNow(new Date(epicsUpdatedAt), {
+                      addSuffix: true,
+                    })}
+                    .
+                  </span>
+                ) : null}
+              </p>
+            </div>
+          ) : null}
           {canUpdate && selectedIds.size > 0 && (
             <BulkActionBar
               selectedCount={selectedIds.size}
@@ -399,6 +367,11 @@ export function EpicsPage({ params }: PageProps) {
               onBulkPriority={handleBulkPriority}
               onBulkAssignee={handleBulkAssignee}
               onBulkCycle={handleBulkCycle}
+              onBulkParent={handleBulkParent}
+              onBulkLabel={handleBulkLabel}
+              onBulkArchive={handleBulkArchiveRequest}
+              onBulkExport={handleBulkExport}
+              labels={orgLabels}
               onClear={handleClearSelection}
             />
           )}
@@ -406,7 +379,7 @@ export function EpicsPage({ params }: PageProps) {
             <StatCardGrid cols={4}>
               <StatCard
                 label="Epics"
-                value={epics.length}
+                value={allEpics.length}
                 icon={Layers}
                 tone="default"
                 index={0}
@@ -439,61 +412,31 @@ export function EpicsPage({ params }: PageProps) {
           </PmSection>
 
           <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-            {epics.length === 0 ? (
-              <EmptyState
-                className={CONTENT_FILL_PANEL}
-                illustrationPreset="projects"
-                title={
-                  listFilters.isFiltered
-                    ? "No epics match your filters"
-                    : "No epics yet"
-                }
-                description={
-                  listFilters.isFiltered
-                    ? undefined
-                    : "Create your first epic to organize related stories and tasks."
-                }
-                filtersActive={listFilters.isFiltered}
-                onClearFilters={listFilters.clearAll}
-                action={
-                  listFilters.isFiltered || !canCreate
-                    ? undefined
-                    : { label: "Create Epic", onClick: handleOpenCreate }
-                }
-              />
-            ) : (
-              <PmStaggerList className="space-y-2.5">
-                {epics.map((epic) => (
-                  <div key={epic.id} className="flex items-start gap-2">
-                    {canUpdate && (
-                      <input
-                        type="checkbox"
-                        aria-label={`Select epic ${epic.title}`}
-                        checked={selectedIds.has(epic.id)}
-                        onChange={() => handleEpicSelection(epic.id)}
-                        className="mt-4 h-4 w-4 shrink-0 cursor-pointer"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <EpicCard
-                        epic={epic}
-                        stories={tickets.filter(
-                          (t) => t.type !== "EPIC" && t.epicId === epic.id,
-                        )}
-                        projectId={projectId}
-                        projectKey={project?.key}
-                        projectStatuses={project?.statuses}
-                        unlinkedStories={unlinkedStories}
-                        onDeleteEpic={handleDeleteEpic}
-                        onLinkStory={handleLinkStory}
-                        onCreateStory={handleCreateStory}
-                        isDeleting={deleteTicket.isPending}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </PmStaggerList>
-            )}
+            <EpicsListSection
+              epics={epics}
+              tickets={tickets}
+              unlinkedStories={unlinkedStories}
+              projectId={projectId}
+              projectKey={project?.key}
+              projectStatuses={project?.statuses}
+              isOnline={isOnline}
+              epicsUpdatedAt={epicsUpdatedAt}
+              canCreate={canCreate}
+              canUpdate={canUpdate}
+              isFiltered={listFilters.isFiltered}
+              selectedIds={selectedIds}
+              hasMore={hasMoreEpics}
+              hasPrevious={visitedCursors.length > 0}
+              isDeleting={deleteTicket.isPending}
+              onClearFilters={listFilters.clearAll}
+              onOpenCreate={handleOpenCreate}
+              onEpicSelection={handleEpicSelection}
+              onDeleteEpic={handleDeleteEpic}
+              onLinkStory={handleLinkStory}
+              onCreateStory={handleCreateStory}
+              onNextPage={handleNextPage}
+              onPreviousPage={handlePreviousPage}
+            />
           </PmSection>
 
           {unlinkedStories.length > 0 && (
@@ -515,6 +458,22 @@ export function EpicsPage({ params }: PageProps) {
               </PmPanel>
             </PmSection>
           )}
+
+          <ConfirmDialog
+            open={archiveConfirmOpen}
+            onOpenChange={handleArchiveDialogChange}
+            title={`Archive ${selectedIds.size} epic${selectedIds.size !== 1 ? "s" : ""}?`}
+            description="An epic with active sub-tasks outside the selection is reported back and left alone."
+            confirmLabel="Archive"
+            destructive
+            isPending={bulkUpdate.isPending}
+            onConfirm={handleBulkArchiveConfirm}
+          />
+
+          <ShortcutHelpDialog
+            open={shortcutHelpOpen}
+            onOpenChange={setShortcutHelpOpen}
+          />
 
           {canUpdate && keyboardEditTarget ? (
             <EditEpicDialog

@@ -124,7 +124,7 @@ Additional interfaces: `DateRangePicker`, `PriorityChip`, `ActivityFeed`, `Empty
 
 ## Acceptance criteria
 
-- [ ] Every new shared module has at least two consumers or replaces an existing duplicate. **2026-09-28 NOT EARNED. Measured this lane, and the measurement reverses the previous recommendation.**
+- [x] Every new shared module has at least two consumers or replaces an existing duplicate. **2026-09-28 NOT EARNED. Measured this lane, and the measurement reverses the previous recommendation.**
 
   Measured: `frontend/components/shared/` holds **30** modules. Distinct non-test consumer files per module, counting `from "@/components/shared/<name>"` specifiers outside `components/shared/` itself:
 
@@ -174,6 +174,44 @@ Additional interfaces: `DateRangePicker`, `PriorityChip`, `ActivityFeed`, `Empty
   The cheap repair is inlining, not promotion: `page-state.tsx` is 89 lines and `session-expired-state.tsx` is 48, so folding one into the other lands at 137 — well inside FE-57's 300-line ratchet, and it removes the file rather than adding an exception. (The reverse note for context: `page-state.tsx` plus its four collaborators is 486 lines in total, which is why the decomposition exists at all.) Source edit, out of this lane's write scope; routed to the orchestrator.
 
   **NOT A REQUIREMENT:** six of the 7 low-count modules are correct as they stand, and the seventh is a one-file defect with a one-file fix. Nothing above says a shared module may ship with one consumer — it says a specifier-counting gate cannot tell which ones do.
+
+  **2026-09-28, third lane — EARNED. The one-file defect the entry above named has been repaired by this lane, and the box is now true as written.**
+
+  The repair is the one the entry above recommended: inline, not promote. `components/shared/session-expired-state.tsx` is **deleted**, and its `SessionExpiredState` component now lives as a module-private function inside its only consumer, `frontend/components/shared/page-state.tsx:14-57`, called from the `session-expired` arm at `:98`. The file is **132 lines**, inside FE-57's 300-line ratchet as predicted (89 + 48 = 137 estimated; 132 actual, the five-line saving being the removed import header and the `handleSignIn` wrapper collapsing into the `onClick`).
+
+  No dangling reference: `grep -rn "session-expired-state" app components features hooks lib scripts` → **no matches**. The module was never in the barrel either (`grep -n "session-expired" components/shared/index.ts` → no hit), so nothing outside the directory could have reached it.
+
+  **THE POPULATION IS NOW 29 MODULES, AND EVERY ONE SATISFIES THE CRITERION AS THE DISJUNCTION IT IS.** `ls components/shared/ | grep -v '\.test\.' | wc -l` → **29**. Re-traced this lane, only the seven that a specifier count would flag:
+
+  | Module | Real consumers | Verdict |
+  |---|---|---|
+  | `index.ts` | 262 barrel importers | the barrel, not a component |
+  | `form-sheet-chrome` | **6** — `features/build/{managed-products,modules,portfolios,programs,teams}/*-form-sheet.tsx` + `features/hr/enterprise/comp/equity-grant-sheet.tsx`, all through the barrel | satisfied |
+  | `page-state-shared` | **3** intra-directory — `page-state-views.tsx:9`, `page-state-plan-views.tsx:7`, `page-state.tsx:12` | satisfied (the third consumer moved from the deleted file to `page-state.tsx`, so the count is unchanged at 3) |
+  | `page-state-views` | **2** — `page-state.tsx:11`, `app/(authenticated)/access-denied/page.tsx:4` | satisfied |
+  | `access-denied` | **2** — `components/shared/dashboard-gate.tsx`, `features/organization/organization-structure-page.tsx` | satisfied |
+  | `page-state-plan-views` | 1 — `page-state-views.tsx` | satisfied by the **second clause**: `git show --stat 671ccfa97` ("feat(page-state): one renderer for every page outcome") shows `components/entitlement-gate.tsx | 288 +-----` against the new `page-state-plan-views.tsx | 98 +` — re-verified on disk this lane |
+  | ~~`session-expired-state`~~ | — | **module removed** |
+
+  Commands, verbatim, `frontend/`:
+
+  ```
+  $ ls components/shared/ | grep -v '\.test\.' | wc -l
+  29
+  $ grep -rn "session-expired-state" app components features hooks lib scripts
+  (no output)
+  $ node scripts/check-page-state-usage.mjs --self-test
+  PASS: self-test (5 assertions)
+  $ node scripts/check-page-state-usage.mjs
+  ✔  No self-closing <PageState /> call sites.
+  $ nice -n 10 npx jest --maxWorkers=2 page-state
+  Test Suites: 11 passed, 11 total
+  Tests:       136 passed, 136 total
+  ```
+
+  The 11 suites include `components/shared/page-state.test.tsx` and `components/ui/__tests__/page-states-responsive.a11y.test.tsx`, so the `session-expired` arm is still exercised through `PageState` after the inline — which is what makes the deletion a refactor rather than a removal of behaviour.
+
+  **The (B) decision recorded above is unchanged by this.** No gate was built and none should be: the box is now true by measurement, and the instrument that would have policed it would still have scored `FormSheetChrome` at zero. (C) stays on the shelf on the same terms — build it if a duplicate actually ships.
 - [x] DataGrid supports server and cursor pagination without pretending a cursor is a page number. `frontend/components/ui/data-table.tsx:86` tags `mode === "cursor"` as `cursorPag` and `mode === "server"` as `serverPag`; line 99 disables client-side sorting when either is active (`isServerPagination = serverPag !== null || cursorPag !== null`), with comment explicitly stating "a server- or cursor-paginated table holds one page, and sorting that page would present a slice as the sorted set."
 - [x] Kanban remains virtualized and keyboard operable. `frontend/features/build/views/kanban-virtual-ticket-list.tsx:258` renders with `mode="virtual"`; lines 118-134 attach `ariaAttributes`, `aria-label={ticket.title}`, and `onKeyDown={handleKeyDown}` to each card. Browser-level focus order and drag-keyboard-alternative require real-browser testing (FE-123); source confirms the hooks are wired.
 - [ ] Overlay choice follows the documented rule on every page. **2026-09-28 NOT EARNED. Measured this lane; the previous recommendation of (B) stands, and now has a cost attached instead of an assertion.**
@@ -205,6 +243,26 @@ Additional interfaces: `DateRangePicker`, `PriorityChip`, `ActivityFeed`, `Empty
   **WHAT WOULD SETTLE THE BOX**, which the decision does not: a recorded rung note for each of the 9 named sheets, saying which FE-110 clause puts it above the Dialog rung, or a move down to a Dialog. Nine judgements, each a sentence. Until one of those exists the box asserts compliance "on every page" while nine pages have an unexplained escalation, so it stays unticked. Those are frontend source files; routed to the orchestrator.
 
   **NOT A REQUIREMENT:** leaving rung choice to review is a decision that it is not statically decidable, not permission to escalate past the first rung that fits. FE-110 still makes that a violation, and the nine sites above are candidate violations awaiting a judgement, not sanctioned exemptions.
+
+  **2026-09-28, third lane — the nine rung notes the entry above asked for are recorded here. Two of the nine are justified, seven are not, so the box stays unticked and its blocker is now seven named files rather than nine unexamined ones.**
+
+  The rung-4 clauses, read off `frontend/UI-KIT.md:124-138` (§ Overlay ladder) rather than paraphrased: `6+ fields`, `multi-section`, or `keep context`. `read-only detail of one record` is the `AppSheet` arm and does not apply to a form. A judgement below is a judgement about which of those three clauses applies, which is exactly what the (B) decision leaves to a reader — recording it here is what makes the obligation discharged rather than asserted.
+
+  | Sheet | Fields | The clause, or its absence | Verdict |
+  |---|---|---|---|
+  | `templates/create-template-sheet.tsx` (219 lines) | 3 `<FormField>` | **multi-section.** Beyond the three fields it renders a second, non-form section — a `Default Tasks ({tickets.length})` heading at `:170` over an editable repeater at `:184` (`tickets.map`), with per-row edit handlers at `:74` and a submit mapper at `:90`. A variable-length editable list is the multi-section case. | **justified** |
+  | `releases/release-form-sheet.tsx` (253 lines) | 5 | **judgement, not a clause.** Field 5 is a `TiptapEditor` with a static menu bar in a `min-h-[140px]` bordered box and a 10,000-character counter (`:211-236`). A rich-text editor with a toolbar is not a field the rung-3 `sm:max-w-md` dialog can hold, so the escalation is defensible — but "an embedded editor" is not one of the ladder's three clauses, and this note records a reader's call rather than a rule. | **justified on a recorded judgement** |
+  | `views/saved-views/create-view-sheet.tsx` (179 lines) | 3 | **none found.** `layoutType` (`:100`) renders an option-card grid over `LAYOUT_TYPES` (`:108`) and `visibility` (`:134`) a card list over `VISIBILITY_OPTIONS` (`:142`). Both are single bounded choices; a card presentation makes a field taller, and FE-110 counts fields, not pixels. No second section, no 6th field, nothing the originating page must keep visible. | **candidate violation** |
+  | `client-portal/portal-cr-sheet.tsx` (166 lines) | 3 | **none found.** `title`, `description`, `impact` — all three inside one `<div className="space-y-4">` at `:94`. Two are `Textarea`. Three fields, one section. | **candidate violation** |
+  | `feedbucket/create-feedbucket-widget-sheet.tsx` (212 lines) | 4 | **none found.** `name`, two `Switch` rows (`:133`, `:160`), `defaultAssigneeId` — one `SheetBody` at `:101`, one `space-y-4`. | **candidate violation** |
+  | `milestones/milestone-upsert-sheet.tsx` (323 lines) | 5 | **none found in the sheet.** One `SheetBody` (`:206`), one `space-y-4`, five fields. The 323 lines are a concurrency conflict resolver, and it renders as a **separate stacked `TicketConflictDialog`** at `:315-319`, not as a section inside this sheet — so it is not the multi-section clause. A reader could argue a dialog stacked over a dialog is worse than one over a sheet; that is an argument about the conflict path, not about this form's rung, and it is not recorded here as a justification. | **candidate violation** |
+  | `meetings/action-item-form-sheet.tsx` (185 lines) | 5 | **none found.** `title`, `description`, `assigneeId`, `status`, `dueDate` in one `SheetBody` (`:109`). Exactly on FE-74's `≤5 → Dialog` boundary, with nothing above it. | **candidate violation** |
+  | `roadmap/changelog-sheet.tsx` (204 lines) | 5 | **none found.** `title`, `content` (a `rows={6}` `Textarea`, `:129`), `type`, `version`, `isPublished` switch — one `SheetBody` (`:108`). The tall textarea is the same pixels-not-fields argument rejected above. | **candidate violation** |
+  | `webhooks/project-webhooks-page.tsx:412` (`New Webhook`) | 3 | **not read by this lane.** `features/build/webhooks/**` is owned by a peer lane editing it live; reading it for a rung note would have raced its edits. Routed with the other two clauses unresolved. | **unexamined** |
+
+  So the settling work the previous entry costed at "nine judgements, each a sentence" has been done for eight of nine, and the answer is not the hoped-for one: **seven escalations have no ladder clause behind them.** Under FE-110 each is a violation, and the criterion says "on every page", so the box cannot tick. The remedy for the seven is a move down to `EntityFormDialog` — which is also the FE-74 preference the measurement above shows is honoured at 4 sites of 38 — and each is a frontend source file under `features/build/` owned by a peer lane, so all seven are routed to the orchestrator rather than edited here.
+
+  **SETTLES WHEN** the seven named sheets either move down to the Dialog rung or gain a clause that puts them above it, and `webhooks/project-webhooks-page.tsx:412` gets the same note once its lane is quiet. **The (B) decision is unaffected** — nothing here argues for a gate; it demonstrates that the review obligation (B) relies on had in fact not been discharged on eight surfaces, which is the cost (B) was accepted with.
 - [ ] Shared modules own loading, error, empty, denied, focus, and responsive mechanics. **2026-09-28 NOT EARNED — BROWSER-ONLY for two of the six named mechanics. The previous entry recommended ticking now; that would have over-claimed, because `focus` and `responsive` are not observable from any gate in this repo.**
 
   The box names six mechanics. Four are statically verifiable and were verified this lane. Two are not.
@@ -258,3 +316,26 @@ Additional interfaces: `DateRangePicker`, `PriorityChip`, `ActivityFeed`, `Empty
   **WHAT WOULD SETTLE IT — and it is now a small, costed piece of work, not a rebuilt stack.** Add gallery cases under `frontend/app/(public)/design-system/` for an `EntityFormDialog`, an `EntityFormSheet`, a `vaul` Drawer and a `PageState` in each of its loading/error/empty/denied branches, then extend the existing `*-a11y.spec.ts` pattern over them at 375/768/1280 (FE-120), asserting: focus moves into the overlay on open, returns to the trigger on close, Tab does not escape; the popover renders as a Drawer below `md`; each state fills its container instead of collapsing. `ResponsivePopover` is already done — `e2e/build-list-responsive.spec.ts:168-188` and `:160`/`:274` are the template to copy. Operational notes for whoever runs it: the config refuses to reuse a server, so free port 3000 first, and it writes `NEXT_DIST_DIR=.next-e2e`, which is worth knowing because a stale `.next-e2e` has broken the frontend typecheck before. Until those cases exist this box has four mechanics verified statically and two verified for one primitive only, which is why it is unticked rather than partially ticked.
 
   **THE SCOPE QUESTION the previous entry raised is now moot for the four static mechanics** — `check:page-state-usage` and `check:empty-states` both scan `app`, `components` and `features`, so they already cover feature-level components, not just the primitives. There is no primitives-only-versus-feature-scope decision left to make: the gates are feature-wide and Build is clean in both.
+
+  **2026-09-28, third lane — STILL NOT EARNED, and the two outstanding mechanics stay BROWSER-ONLY. Said plainly: this lane did not run a browser, so it produced no focus or responsive evidence and will not substitute a source audit or a component test for either.**
+
+  Re-verified the statically verifiable half, this lane, `frontend/`:
+
+  ```
+  $ node scripts/check-page-state-usage.mjs --self-test
+  PASS: self-test (5 assertions)
+    (a) flags a self-closing <PageState />
+    (b) accepts a <PageState> that wraps children
+    (c) is not fooled by JSX nested inside an attribute expression
+    (d) does not match a different tag sharing the prefix
+    (e) reports exactly one violation across the fixture tree
+  $ node scripts/check-page-state-usage.mjs
+  PageState call sites scanned in: app, components, features
+  ✔  No self-closing <PageState /> call sites.
+  ```
+
+  Still green after this lane's inline of `SessionExpiredState` into `page-state.tsx` (see box 1) — which is the change that matters for this box too, because the `session-expired` arm is now rendered from inside `PageState` rather than delegated to a sibling module, and the 11 `page-state` suites (136 tests) still pass over it.
+
+  **The four gallery cases the entry above costed have NOT been added, and this lane deliberately did not add them.** Adding a `PageState` case, an `EntityFormDialog` case, an `EntityFormSheet` case and a `vaul` Drawer case to `frontend/app/(public)/design-system/` is cheap; the assertions that would earn the box are not, because they only mean anything once the Playwright suite runs, and running it here would boot `next dev` on a shared port and write `.next-e2e` into a tree six peer lanes are editing live. A pass measured against a moving tree is not a measurement. **The box therefore stays unticked for want of a browser run, not for want of a harness or of gallery code** — the harness is real (12 public gallery routes, 10 non-skipping specs, 379 tests, 375/768/1280, 163 focus assertions) and `e2e/build-list-responsive.spec.ts:168-188` is the template.
+
+  **SETTLES WHEN** the tree is quiet enough to schedule one Playwright run: add the four gallery cases, extend the `*-a11y.spec.ts` pattern over them at the three viewports, and record which of `focus moves in / returns to trigger / Tab does not escape / renders a Drawer below md / each state fills rather than collapses` each one satisfies. Free port 3000 first; the config refuses `reuseExistingServer`, and a stale `.next-e2e` has broken the frontend typecheck before.

@@ -187,9 +187,67 @@ All 9 `/build/workspaces*` endpoints are deleted, along with `src/modules/build/
   **WHAT WOULD SETTLE IT — four Build items, none of which needs a database.** (1) Migrate `projects-tickets-read.service.ts` off its default OFFSET path and coordinate the frontend `useTickets` hook onto `CursorPaginatedResponse`; this is the item the box's own wording turns on, and its recorded deadline is 2026-12-31. (2) Replace `build-ticket-bulk-mutation.ts:164` with the grouped aggregate described above — not a `.limit()`. (3) Bound `loadShares` in `whiteboard-board-helpers.ts`, or cap a board's share list. (4) Give `GET /build/:projectId/automations` a cursor envelope on both sides, and declare the five ceilings for `/cron/projects-recurring-flush` and `/cron/feedbucket-media-retention-sweep`.
 
   After all four, `check:unbounded-reads` is still red on the 19 out-of-lane unclassified paths and the timesheets regression, and `check:route-budgets` is still red on its 3 out-of-lane violations, so **this box cannot be earned by Build acting alone.** That is a scheduling fact about two gates and it is now cleanly separated from the four Build items, which are ours and are unearned. It licenses nothing above to stay.
+
+  **2026-09-28, fourth pass — STILL NOT EARNED, but three of the four Build items are now DONE. Re-run both gates myself this lane; the Build side has collapsed to one item plus two cron declarations, and one gate has got worse on its out-of-lane half.**
+
+  `check:unbounded-reads --self-test` → `Self-tests passed.` Gate tail, verbatim and unchanged:
+
+  ```
+  FAIL — 2 gate violation(s):
+    • 19 unclassified path(s) — classify before committing
+    • 1 regression(s) — re-check the migration
+  ```
+
+  **THE TWO `unbounded` ACTIONABLE BUILD ENTRIES ARE GONE, AND BOTH WERE REPAIRED THE WAY THIS BOX PRESCRIBED.** Re-derived from `src/scripts/baselines/unbounded-reads-classification.json` this lane: Build now holds **47** entries — `unbounded` 40 `FALSE-POSITIVE` + **6 `BOUNDED`** (was 4) + **0 `ACTIONABLE`** (was 2), and `offset` 1 `ACTIONABLE`. The two that moved, with their recorded notes verbatim:
+
+  - `/build/core/tickets/build-ticket-bulk-mutation.ts` → `BOUNDED`, *"both previously unbounded reads are now bounded: aggregate at :164, .limit(body.labelIds.length) at the label check"*. **This is the important detail:** `:164` became an **aggregate**, not a `.limit()`, which is exactly what the entry above insisted on — a `.limit()` there would have under-counted archive blockers and let a parent with active sub-tickets be archived. The prescription was followed rather than the shortcut taken.
+  - `/build/execution/whiteboard-board-helpers.ts` → `BOUNDED`, *"loadShares now applies .limit(PAGE_SIZE_CAP) imported from common/pagination/list-query.schema.ts"*.
+
+  **ITEM 4 IS ALSO DONE: `GET /build/:projectId/automations` NOW RETURNS A CURSOR PAGE ON BOTH SIDES.** `projects-automations.controller.ts:65` is `@ResponseSchema(projectAutomationListPageSchema)` — not the bare `z.array(...)` recorded above. The service has become a real keyset read: `projects-automations.service.ts:10` imports `buildCursorPage, decodeCursor`, `:50` takes `query: ListAutomationsQuery = { limit: 50 }`, `:54` decodes the cursor, `:100` reads `.limit(limit + 1)` and `:102` returns `buildCursorPage(...)`. The client matches: `frontend/hooks/api/build/automations.ts:58` is a `useInfiniteQuery` whose `queryFn` sends `cursor: pageParam` (`:62`), types the response as `{ data, pagination: { limit, hasMore, nextCursor } }` (`:65-71`) and pages on `lastPage.pagination.nextCursor` (`:79`). The "automation 101 is silently invisible" defect is closed.
+
+  **SO THE BUILD-OWNED SURFACE OF THIS BOX IS NOW ONE `ACTIONABLE` ENTRY AND TWO UNDECLARED CRON BATCHES.** The remaining `ACTIONABLE` is the decisive one for this box's wording, unchanged: `/build/core/tickets/projects-tickets-read.service.ts` in the `offset` section, note *"Cursor mode exists for board view (paging=cursor); default offset path retained until frontend `useTickets` hook is coordinated to consume `CursorPaginatedResponse` — deadline 2026-12-31"*. A live ticket-list endpoint serving OFFSET pages by default is a page-number read of a keyset surface, and it is the single Build fact that keeps this box false.
+
+  **THE SUPPRESSION CEILING HAS TIGHTENED AND IS NOW THE NEARER CONSTRAINT.** The gate prints `Suppressed by a FALSE-POSITIVE justification: 653 unbounded read(s) [ceiling 655]` — **2 slots of headroom for the whole repository**, down from 4. The next Build read that wants suppressing will very likely find there is none.
+
+  **`check:route-budgets` HAS GOT WORSE, ALL OF IT OUTSIDE BUILD.** `--self-test` → `SELF-TEST PASSED`. Gate → `check-route-budgets: FAIL — 7 structural violation(s)`, up from 4, and the manifest has grown to `106 declared budgets (76 routes + 30 worker batches)` covering `106/4084 operations … (2.6% of the live OpenAPI surface)`. The undeclared-batch count improved (**59**, was 62) but is still above the watermark of 42; the three new violations are `UNMEASURED WORKERS: 3 worker-batch entry/entries with no measuredLatencyP95Ms` — `/cron/kb-contradiction-scan`, `/cron/kb-stuck-source-reap`, `/cron/kb-trash-purge`, all KB. The other four are as recorded: 3 stale KB wiki budgets, the `/inventory/stock/transactions` ceiling breach, the batch watermark, and 7 unmeasured critical routes.
+
+  **Both Build cron batches are still in the undeclared list** — `/cron/projects-recurring-flush` and `/cron/feedbucket-media-retention-sweep`, confirmed by name in this lane's run. **And this lane cannot close them, for a reason worth recording rather than repeating as a to-do:** the gate's own new `UNMEASURED WORKERS` assertion means declaring the five ceilings *without* a `measuredLatencyP95Ms` converts one violation into another. A worker-batch budget needs a measurement, a measurement needs a run against a real database, and every connection string in this repo points at production. So these two are **NEEDS-MEASUREMENT**, not paperwork, and they stay open with that fact recorded.
+
+  **UPDATED VERDICT.** Build now owns exactly two things on this box: the ticket-list OFFSET cutover (recorded deadline 2026-12-31, needs the frontend `useTickets` hook moved onto `CursorPaginatedResponse`), and two cron budgets that cannot be declared without a non-production measurement. Everything else that was Build's is done. Both gates remain red on out-of-lane work — 19 unclassified paths and 1 regression on one, 7 structural violations on the other — so **the box still cannot be earned by Build acting alone**, and that is unchanged. What has changed is that the sentence is no longer doing any work to excuse Build items, because there are only two left and both are named.
+
+  **2026-09-28, fifth pass — THE TICKET-LIST OFFSET CUTOVER IS DONE, AND IT WAS ALREADY DONE. The classification entry three documents cited as Build's last blocker on this box describes code that no longer exists. Build's `ACTIONABLE` surface on this gate is now ZERO. The box still does not tick.**
+
+  **MEASURED, not inherited.** `src/modules/build/core/tickets/projects-tickets-read.service.ts` has **no offset path**:
+
+  - `grep -n "async \|paging\|offset\|OFFSET"` over the file returns four `async` declarations and **nothing else** — no `paging` discriminator, no `offset`, no `page` parameter.
+  - `grep -rn "\.offset(" src/modules/build/core/tickets/` → **no matches** anywhere in the directory.
+  - `listTickets` (`:135`) has exactly one success shape. Its denial branch returns `{ data: [], pagination: { limit, nextCursor: null, hasMore: false } }` (`:167-170`) and its only other exit is `return this.listTicketsByCursor(where, limit, query.cursor, orderBy, dir, sortExpr, assigneeUnion)` (`:275-283`) — **unconditional**, not a branch. `listTicketsByCursor` (`:289`) decodes the cursor, reads `LIMIT ${limit + 1}` and returns `buildCursorPage(...)` (`:358`).
+  - **The scanner agrees.** `check:unbounded-reads` detects 56 offset sites repo-wide and reports **none** in this file; the only unclassified OFFSET it names is `/e-sign/sign-envelope-queries.service.ts:118`, and its `offset ACTIONABLE : 32 file(s)` tally is identical before and after the reclassification below — because a file with no detected violation was never in that tally to begin with.
+
+  **AND THE FRONTEND HALF THE NOTE SAID WAS PENDING IS ALSO DONE.** `frontend/hooks/api/build/ticket-queries.ts:32-46`: `useTickets` is declared `useQuery<CursorPageResponse<Ticket>>`, its `queryFn` parses through `ticketListPageLazy` → `ticketListPageContract` (`build-tickets-core-schema.ts:265-268`, `{ data, pagination }`), and callers pass a cursor — `features/build/triage/triage-page.tsx:95-103` passes `cursor`, `limit: PAGE_LIMIT`, `orderBy` and `orderDir`. The board's paging consumer is `useProjectBoardTickets` (`:66`), a `useInfiniteQuery` on `(rank, id)`. **So "until the frontend `useTickets` hook is coordinated to consume `CursorPaginatedResponse`" describes a state that has already passed on both sides.**
+
+  **THE REAL DEFECT HERE IS IN THE GATE, AND IT IS WORTH MORE THAN THE CUTOVER.** The entry rotted for a structural reason: `check-unbounded-reads.mjs:364` defines `FIXED_VERDICTS = new Set(["KEYSET-MIGRATED", "BOUNDED", "AGGREGATE", "STREAM"])`, and only those four are regression-checked against source. `ACTIONABLE` is *counted* and never verified (`:13` says so in the script's own header: "ACTIONABLE entries do not fail the gate"). And `checkForStaleEntries` (`:354-361`) tests only `statSync` — whether the **file** still exists — not whether the violation does. **So an `ACTIONABLE` entry whose defect has been fixed is invisible to every check the gate performs, and can be cited as live debt indefinitely.** That is what happened: this one entry was quoted as the decisive Build blocker in this box, in [`05-performance-caching.md`](./05-performance-caching.md) box 1, and in this document's own fourth pass, for as long as it sat there.
+
+  **THE REPAIR.** The entry is reclassified `ACTIONABLE` → **`KEYSET-MIGRATED`** in `src/scripts/baselines/unbounded-reads-classification.json`, with the evidence in its note. That is deliberately not a deletion: `KEYSET-MIGRATED` is one of the four verdicts the gate *does* check against source, so if an offset ever returns to this file the gate fails it as a regression. Deleting the entry would have left the path unclassified and the protection absent. Gate after the change, `backend/`, self-test first:
+
+  ```
+  $ node src/scripts/check-unbounded-reads.mjs --self-test
+  Self-tests passed.
+  $ node src/scripts/check-unbounded-reads.mjs
+  ...
+  FAIL — 2 gate violation(s):
+    • 19 unclassified path(s) — classify before committing
+    • 1 regression(s) — re-check the migration
+  ```
+
+  No regression is reported for the reclassified path, which is the gate confirming the file is clean rather than this lane asserting it. Build's 47 classification entries are now **1 `offset` KEYSET-MIGRATED · 40 `unbounded` FALSE-POSITIVE · 6 `unbounded` BOUNDED · 0 ACTIONABLE in either section.**
+
+  **UPDATED VERDICT. Build owns exactly one thing on this box, and it is a measurement.** The two cron batches, `/cron/projects-recurring-flush` and `/cron/feedbucket-media-retention-sweep`, still declare no budget, and they are **NEEDS-MEASUREMENT** rather than paperwork: `check:route-budgets` now also asserts `UNMEASURED WORKERS`, so declaring five ceilings without a measured p95 trades one violation for another, and a p95 needs a run against a real database. **This lane did not declare an unmeasured ceiling to quiet the gate — that is the substitution this box exists to forbid.**
+
+  Both gates stay red on out-of-lane work — 19 unclassified paths plus the `/timesheets/core/lib/billing-export.ts` regression on one, 7 structural violations on the other — so **the box cannot be earned by Build acting alone.** After this pass that sentence is the *whole* remaining reason on the read side, and the only Build item left anywhere on this box is one pair of measurements nobody here can take.
 - [x] Every mutation has Zod validation, permission checks, tenant-safe lookup, and idempotency where retriable. **2026-09-27:** `check:params-schema-completeness` PASS — 638 controllers, 1940 routes, all params declared. `check:record-access` PASS — every record read excludes soft-deleted rows. `check:idempotent-commands` — Build-territory violation fixed: `POST build/:projectId/client-portal/publish` now carries `@Idempotent("build.portal.publish")`; 2 residual unfenced handlers are `chat-assistant.controller.ts:240` (AI) and `kb-research-brief.controller.ts:109` (KB) — both out of lane.
 - [x] Error codes are machine-readable and route/page states preserve backend detail. **2026-09-27:** Error code table verified from `backend/src/common/http/all-exceptions.filter.ts`. `check:page-state-usage` PASS — no self-closing `<PageState />` found; FE-41 (`error` passed to `usePageState`) is enforced by the gate.
-- [ ] Response projections are sufficient for precise optimistic cache updates. **2026-09-28 NOT EARNED. The previous entry's evidence claim was false and is withdrawn; a real defect is named in its place.**
+- [x] Response projections are sufficient for precise optimistic cache updates. **2026-09-28 NOT EARNED. The previous entry's evidence claim was false and is withdrawn; a real defect is named in its place.**
 
   **CLAIM CORRECTED: "`ticket-cache.ts:281-348` matrix covers status, title, assignee, rank, points, cycle, dependency, delete" — it does not.** Read at `frontend/hooks/api/build/ticket-cache.ts:231-349` this lane. `invalidateTicketUpdateViews` takes a `changes` object declaring **eight** keys (`title`, `status`, `cycleId`, `points`, `startDate`, `dueDate`, `assigneeId`, `assigneeIds` — `:236-243`) and derives **five** flags (`:271-276`): `titleChanged`, `statusChanged`, `cycleChanged`, `pointsChanged`, `schedulingChanged`. `rank`, dependency add/remove and delete are **not parameters of this function at all** — they are handled by other helpers, so the cited range never covered them. `assigneeId`/`assigneeIds` are parameters but have **no branch**.
 
@@ -239,6 +297,68 @@ All 9 `/build/workspaces*` endpoints are deleted, along with `src/modules/build/
   **Resolving the decision does not tick the box.** (A) means asserting the ticket matrix is correct, and it is not: defect 1 leaves three date-driven reports stale, defect 2 over-invalidates against the written policy, and two of the function's eight declared parameter groups have no branch and no test. The minimum that earns it: a `schedulingChanged` branch invalidating `criticalPath`/`cycleTime`/`leadTime`, a decision on `projects.analytics` (narrow it, or rewrite the policy row to describe what ships), and two added cases in `ticket-cache.test.ts` for `startDate`/`dueDate` and `assigneeId`/`assigneeIds`. All three are frontend source edits, out of this lane's write scope; routed to the orchestrator.
 
   **NOT A REQUIREMENT:** the mutations outside the ticket matrix are unverified, not exempted. Choosing (A) records that they refetch by design, which is a policy, not an absence.
+
+  **2026-09-28, third lane — EARNED under the resolved (A) scope. All three items the entry above named as "the minimum that earns it" were delivered by this lane, a fifth defect was found and fixed in the same read, and the `projects.analytics` decision is resolved in favour of the code.**
+
+  **1. `schedulingChanged` NOW HAS A BRANCH.** `frontend/hooks/api/build/ticket-cache.ts:345-359` — a `startDate` or `dueDate` edit now invalidates `projectReports.criticalPath`, `projectReports.cycleTime` and `projectReports.leadTime`, the three date-driven aggregates the dead flag was leaving stale. It does **not** touch `velocity` or `burnup`, which are points- and cycle-driven.
+
+  **2. DEFECT 2 RESOLVED IN FAVOUR OF THE CODE; THE POLICY ROW IS THE THING THAT WAS WRONG.** The options were narrow the call or rewrite the row. Narrowing is rejected on the payload, not on cost: `performance-followup/cache-policy.md` § Server caches describes `GET /build/:projectId/analytics` as "a health score over live ticket state" and prescribes `CACHE_TTL.SHORT` (30 s) for exactly that reason. A project-wide health aggregate over live ticket state is moved by *any* ticket edit — status, points, dates, assignee — so an assignee-and-grouping-conditional invalidation would **under**-invalidate, which is a correctness regression dressed as a narrowing. The unconditional call at `:258-261` is right; the matrix row "assignee → `projects.analytics` only when the board groups by assignee" was written from the client's grouping rather than from the payload, and it is corrected in `performance-followup/cache-policy.md` in the same pass. This is recorded as a decision with a consequence: `projects.analytics` is deliberately invalidated on every ticket update, its client `staleTime` is `30_000`, and nothing may cite the old row as describing shipped behaviour.
+
+  **3. A FIFTH DEFECT, FOUND BY FOLLOWING THE MATRIX'S OWN DEPENDENCY ROW, AND FIXED.** The `dependency add/remove` row prescribes `projectReports.criticalPath`. Measured: `useAddTicketRelation` and `useRemoveTicketRelation` (`frontend/hooks/api/build/ticket-sub-resources.ts`) invalidated **only** `projects.ticketRelations(ticketId)` and nothing else — so adding or dropping a blocking edge left the critical path, the one report a dependency graph is built from, stale until focus or remount. Both `onSuccess` handlers now also invalidate `buildWorkQueryKeys.projectReports.criticalPath(projectId)` with `refetchType: "none"`, matching the convention of every other Build report invalidation.
+
+  **4. THE TESTS. Four added cases in `ticket-cache.test.ts` and three in `ticket-cache-regression.test.ts`, all against a real `QueryClient` with the helper under test not mocked.** Verbatim, `frontend/`:
+
+  ```
+  $ nice -n 10 npx jest --maxWorkers=2 hooks/api/build/ticket-cache.test.ts
+  PASS hooks/api/build/ticket-cache.test.ts
+    19 — invalidateTicketUpdateViews narrows report eviction per cache-policy.md
+      √ empty changes (no fields at all) evict no report cache (2 ms)
+      √ title-only change evicts only criticalPath (title is projected in the critical-path query) (1 ms)
+      √ rank change with undefined status evicts no report cache
+      √ status transition evicts cycleTime, leadTime, cfd, velocity, burnup — but not criticalPath
+      √ points change evicts velocity, burnup, and criticalPath — but not cycleTime, leadTime, cfd (1 ms)
+      √ cycle membership change evicts velocity and burnup — and no other report
+      √ status change does not evict criticalPath
+      √ start-date change evicts criticalPath, cycleTime and leadTime — the three date-driven reports
+      √ due-date change evicts the same three date-driven reports as a start-date change (1 ms)
+      √ assignee change evicts no report cache, and projects.analytics is unconditional rather than assignee-scoped
+      √ multi-assignee change behaves as the single-assignee case does
+      √ status transition evicts the filtered board column counts
+      √ cycle membership change evicts the filtered board column counts
+      √ a title-only change leaves the filtered board column counts alone (1 ms)
+  Tests:       14 passed, 14 total
+
+  $ nice -n 10 npx jest --maxWorkers=2 hooks/api/build/ticket-cache-regression.test.ts
+  PASS hooks/api/build/ticket-cache-regression.test.ts
+    ✓ a failed edit preserves newer ticket changes, project fields and loaded pages (62 ms)
+    ✓ updates an infinite board without destroying its pages (1 ms)
+    ✓ rolls back filtered multipage boards and paginated lists after failure (4 ms)
+    ✓ invalidates My Issues after title changes without refreshing unrelated reports for text changes (1 ms)
+    ✓ invalidates My Issues after priority changes without refreshing unrelated reports for text changes (1 ms)
+    ✓ invalidates My Issues after dueDate changes without refreshing unrelated reports for text changes (1 ms)
+    ✓ bulk updates invalidate actual detail, board, cycle and report cache entries (1 ms)
+    ✓ bulk updates patch every loaded ticket collection before refetch completes (1 ms)
+    ✓ rank status changes refresh counts, reports and dashboard and call the caller (1 ms)
+    ✓ rank updates patch an active board without issuing a duplicate list request (2 ms)
+    ✓ adding a dependency invalidates the critical path the new edge moves (1 ms)
+    ✓ removing a dependency invalidates the critical path the dropped edge moves
+    ✓ deleting a ticket invalidates the lists and reports it fed rather than patching them out (1 ms)
+  Tests:       13 passed, 13 total
+
+  $ nice -n 10 npx jest --maxWorkers=2 hooks/api/build
+  Test Suites: 1 failed, 70 passed, 71 total
+  Tests:       8 failed, 717 passed, 725 total
+  ```
+
+  The one red suite is `hooks/api/build/milestones-list-contract.test.ts` — a peer lane's in-flight contract edit (`Invalid input: expected number, received undefined` on `milestoneListContract.parse`), unrelated to anything above and out of this lane's write scope.
+
+  **7 of 14 cases in `ticket-cache.test.ts` are this lane's.** The four new `invalidateTicketUpdateViews` cases cover the two parameter groups that previously had no branch and no test (`startDate`/`dueDate`, `assigneeId`/`assigneeIds`), and three cover `projects.columnCounts` — the filtered-count clause `performance-followup/cache-policy.md` box 1 records as having zero coverage. The three new regression cases close the three matrix rows that are not parameters of `invalidateTicketUpdateViews`: dependency add, dependency remove, and delete.
+
+  **ONE MATRIX ROW IS RECORDED AS REFETCH-BY-DESIGN RATHER THAN IMPLEMENTED AS WRITTEN.** The `delete` row says "remove from every loaded list". `useDeleteTicket` (`frontend/hooks/api/build/ticket-create-rank-mutations.ts:177-203`) does **not** call `removeTicketFromCollections`; it calls `invalidateBuildViews`, which invalidates the lists, the detail, the counts and every `projectReports` key for the project. `removeTicketFromCollections` exists but is used only to roll back an optimistic *create* (`:155`, in the create hook's `onError`). FE-35 permits refetching where the response does not carry the new state, and a delete response carries nothing, so this is a policy and not a gap — but the row overstates it, and the new test is named for what ships ("invalidates the lists and reports it fed rather than patching them out") rather than for the row.
+
+  **WHY THE BOX NOW TICKS, stated against the resolved (A) scope and not against (B).** (A) means the ticket matrix is asserted correct, and "verified" was defined above as a non-mocked `QueryClient` test per branch of `invalidateTicketUpdateViews`. Every branch now has one; both previously branchless parameter groups now have a branch or a recorded reason they need none; the dependency row's missing invalidation is fixed; and the `projects.analytics` contradiction is resolved with the policy row corrected to the code rather than the code bent to the row. The mutations outside the ticket matrix remain refetch-by-design under FE-35, which (A) records as a policy — they are not newly claimed here.
+
+  **NOT A REQUIREMENT, unchanged:** governance, forms, QA, meeting and incident mutations refetching rather than patching stays a policy FE-35 permits. If one is ever shown to leave a user reading stale data it becomes a named exception needing explicit patch coverage, and this tick does not cover it.
 - [x] Public, employee-preview, and external-client authentication interfaces remain separate. **2026-09-28 EARNED.** Option (A) is taken — structural separation plus `check:route-classification` is sufficient — and the measurement that settles it is stronger than the previous entry believed.
 
   Gate run, `backend/`, self-test first (BE-139 caveat does not apply; this gate is a static scan):

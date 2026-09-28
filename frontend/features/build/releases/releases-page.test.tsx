@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { ReleasesPage } from "./releases-page";
 
 let mockIsOnline = true;
+const mockPreventDefault = jest.fn();
+let mockDataTableProps: Record<string, unknown> = {};
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => mockIsOnline,
 }));
@@ -73,13 +75,36 @@ jest.mock("@/components/ui/data-table", () => ({
     emptyState,
     data,
     selection,
+    onRowContextMenu,
+    ...rest
   }: {
     isLoading?: boolean;
     emptyState?: React.ReactNode;
-    data?: unknown[];
+    data?: { id: number; name: string }[];
     selection?: { onChange: (s: Set<number>) => void };
-  }) =>
-    isLoading ? <div data-testid="table-loading" /> : data?.length === 0 ? <>{emptyState}</> : <div data-testid="table-rows" onClick={() => selection?.onChange(new Set([1]))} />,
+    onRowContextMenu?: (row: { id: number; name: string }, event: { preventDefault: () => void; clientX: number; clientY: number }) => void;
+  }) => {
+    mockDataTableProps = { selection, onRowContextMenu, ...rest };
+    if (isLoading) return <div data-testid="table-loading" />;
+    if (data?.length === 0) return <>{emptyState}</>;
+    const handleSelect = () => selection?.onChange(new Set([1]));
+    return (
+      <div data-testid="table-rows" onClick={handleSelect}>
+        {(data ?? []).map((row) => {
+          const handleContextMenu = () =>
+            onRowContextMenu?.(row, { preventDefault: mockPreventDefault, clientX: 120, clientY: 240 });
+          return (
+            <button
+              key={row.id}
+              type="button"
+              data-testid={`row-contextmenu-${row.id}`}
+              onClick={handleContextMenu}
+            />
+          );
+        })}
+      </div>
+    );
+  },
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 
@@ -121,7 +146,8 @@ jest.mock("@/components/ui/button", () => ({
 }));
 
 jest.mock("@/components/ui/confirm-dialog", () => ({
-  ConfirmDialog: () => null,
+  ConfirmDialog: ({ open, description }: { open: boolean; description?: string }) =>
+    open ? <div data-testid="confirm-delete">{description}</div> : null,
 }));
 
 jest.mock("./releases-page-parts", () => ({
@@ -137,7 +163,19 @@ jest.mock("./release-form-sheet", () => ({
 }));
 
 import { fireEvent } from "@testing-library/react";
-import { useReleases, useDeleteRelease, useUpdateRelease } from "@/hooks/api/build/releases";
+import { ReleaseMobileCard, buildReleasesColumns } from "./releases-table-columns";
+import type { Release } from "@/hooks/api/build/releases";
+
+function releaseColumnCell(
+  key: string,
+  handlers: { canManage: boolean; onEdit: (r: Release) => void; onDelete: (r: Release) => void },
+) {
+  const column = buildReleasesColumns(handlers).find((c) => c.key === key);
+  const cell = column?.cell;
+  if (cell === undefined) throw new Error(`the releases table has no ${key} column with a cell`);
+  return cell;
+}
+import { useReleases, useDeleteRelease } from "@/hooks/api/build/releases";
 import { useCan, useAccess } from "@/hooks/api/access";
 
 const mockReplace = jest.fn();
@@ -157,7 +195,6 @@ beforeEach(() => {
 
 const mockUseReleases = useReleases as jest.Mock;
 const mockUseDeleteRelease = useDeleteRelease as jest.Mock;
-const mockUseUpdateRelease = useUpdateRelease as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 
@@ -187,11 +224,12 @@ function cursorPage<T>(items: T[]) {
 
 beforeEach(() => {
   mockIsOnline = true;
+  mockPreventDefault.mockClear();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([]) }));
   mockUseDeleteRelease.mockReturnValue({ mutate: jest.fn(), isPending: false });
-  mockUseUpdateRelease.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockDataTableProps = {};
 });
 
 it("renders NoPermissionState when build:view is denied instead of empty releases table", () => {
@@ -265,43 +303,6 @@ const OWNER = {
   email: "ada@example.test",
 };
 
-it("shows bulk action bar with count after row is selected", () => {
-  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
-  render(<ReleasesPage projectId={1} />);
-  expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
-  fireEvent.click(screen.getByTestId("table-rows"));
-  expect(screen.getByText("1 selected")).toBeInTheDocument();
-});
-
-it("sends the row's rowVersion with a bulk status change, because the backend rejects an untokened update", () => {
-  const mutate = jest.fn();
-  mockUseUpdateRelease.mockReturnValue({ mutate, isPending: false });
-  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
-  render(<ReleasesPage projectId={1} />);
-  fireEvent.click(screen.getByTestId("table-rows"));
-  fireEvent.click(screen.getByTestId("select-released"));
-  expect(mutate).toHaveBeenCalledTimes(1);
-  expect(mutate.mock.calls[0]?.[0]).toEqual({ releaseId: 1, rowVersion: 4, status: "released" });
-});
-
-it("sends no bulk update for a selected id that is not on the current page, so no row is saved without its token", () => {
-  const mutate = jest.fn();
-  mockUseUpdateRelease.mockReturnValue({ mutate, isPending: false });
-  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([{ ...releaseRow, id: 99 }]) }));
-  render(<ReleasesPage projectId={1} />);
-  fireEvent.click(screen.getByTestId("table-rows"));
-  fireEvent.click(screen.getByTestId("select-released"));
-  expect(mutate).not.toHaveBeenCalled();
-});
-
-it("hides bulk action bar after clear button is clicked", () => {
-  mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
-  render(<ReleasesPage projectId={1} />);
-  fireEvent.click(screen.getByTestId("table-rows"));
-  fireEvent.click(screen.getByLabelText("Clear selection"));
-  expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
-});
-
 it("shows the offline notice when the user loses connectivity", () => {
   mockIsOnline = false;
   render(<ReleasesPage projectId={1} />);
@@ -363,36 +364,28 @@ it("accepts a release row where createdBy is null since the column may be unset"
 });
 
 it("renders the plain-text notes below the version in the name column cell", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const nameColumn = columns.find((c: { key: string }) => c.key === "name");
-  render(nameColumn.cell({ ...releaseRow, description: "<p>Bug fixes and performance</p>" }));
+  const nameCell = releaseColumnCell("name", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(nameCell({ ...releaseRow, description: "<p>Bug fixes and performance</p>" }));
   expect(screen.getByText("Bug fixes and performance")).toBeInTheDocument();
 });
 
 it("omits the notes text from the name cell when description is null so the cell stays compact", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const nameColumn = columns.find((c: { key: string }) => c.key === "name");
-  render(nameColumn.cell({ ...releaseRow, description: null }));
+  const nameCell = releaseColumnCell("name", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(nameCell({ ...releaseRow, description: null }));
   expect(screen.queryByText("Bug fixes and performance")).not.toBeInTheDocument();
 });
 
 it("renders the owner display name in the createdBy column cell and never the raw user id (FE-85)", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
-  render(createdByColumn.cell({ ...releaseRow, createdBy: OWNER_USER_ID, createdByUser: OWNER }));
+  const createdByCell = releaseColumnCell("createdBy", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(createdByCell({ ...releaseRow, createdBy: OWNER_USER_ID, createdByUser: OWNER }));
   expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
   expect(screen.queryByText(OWNER_USER_ID)).not.toBeInTheDocument();
 });
 
 it("renders the email local part in the createdBy cell for an owner with no name, still never the raw user id", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
+  const createdByCell = releaseColumnCell("createdBy", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
   render(
-    createdByColumn.cell({
+    createdByCell({
       ...releaseRow,
       createdBy: OWNER_USER_ID,
       createdByUser: { name: null, firstName: null, lastName: null, email: "ada@example.test" },
@@ -403,24 +396,19 @@ it("renders the email local part in the createdBy cell for an owner with no name
 });
 
 it("renders a dash in the createdBy cell when createdByUser is null, so an unresolvable owner is an absent value and not a blank loading cell", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
-  render(createdByColumn.cell({ ...releaseRow, createdBy: null, createdByUser: null }));
+  const createdByCell = releaseColumnCell("createdBy", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(createdByCell({ ...releaseRow, createdBy: null, createdByUser: null }));
   expect(screen.getByText("—")).toBeInTheDocument();
 });
 
 it("renders a dash and not the id when createdBy still holds an id whose user row is gone", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
-  render(createdByColumn.cell({ ...releaseRow, createdBy: OWNER_USER_ID, createdByUser: null }));
+  const createdByCell = releaseColumnCell("createdBy", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(createdByCell({ ...releaseRow, createdBy: OWNER_USER_ID, createdByUser: null }));
   expect(screen.getByText("—")).toBeInTheDocument();
   expect(screen.queryByText(OWNER_USER_ID)).not.toBeInTheDocument();
 });
 
 it("renders the release description as notes text in the mobile card", () => {
-  const { ReleaseMobileCard } = require("./releases-table-columns");
   render(
     <ReleaseMobileCard
       release={{ ...releaseRow, description: "<p>Bug fixes and performance improvements</p>", createdBy: null }}
@@ -433,7 +421,6 @@ it("renders the release description as notes text in the mobile card", () => {
 });
 
 it("renders the owner display name in the mobile card and never the raw user id (FE-85)", () => {
-  const { ReleaseMobileCard } = require("./releases-table-columns");
   render(
     <ReleaseMobileCard
       release={{ ...releaseRow, description: null, createdBy: OWNER_USER_ID, createdByUser: OWNER }}
@@ -447,7 +434,6 @@ it("renders the owner display name in the mobile card and never the raw user id 
 });
 
 it("omits the created-by row from the mobile card when createdByUser is null, rather than falling back to the id", () => {
-  const { ReleaseMobileCard } = require("./releases-table-columns");
   render(
     <ReleaseMobileCard
       release={{ ...releaseRow, description: null, createdBy: OWNER_USER_ID, createdByUser: null }}
@@ -535,25 +521,76 @@ it("accepts a release row whose createdByUser is the four-field user object the 
 });
 
 it("renders a dash in the published column for a draft release that has never been released", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const publishedColumn = columns.find((c: { key: string }) => c.key === "publishedAt");
-  render(publishedColumn.cell({ ...releaseRow, status: "draft", publishedAt: null }));
+  const publishedCell = releaseColumnCell("publishedAt", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(publishedCell({ ...releaseRow, status: "draft", publishedAt: null }));
   expect(screen.getByText("—")).toBeInTheDocument();
 });
 
 it("renders a formatted date in the published column for a released row that has a known publication date", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const publishedColumn = columns.find((c: { key: string }) => c.key === "publishedAt");
-  render(publishedColumn.cell({ ...releaseRow, status: "released", publishedAt: "2026-09-01T10:00:00Z" }));
+  const publishedCell = releaseColumnCell("publishedAt", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(publishedCell({ ...releaseRow, status: "released", publishedAt: "2026-09-01T10:00:00Z" }));
   expect(screen.getByText("Sep 1, 2026")).toBeInTheDocument();
 });
 
 it("renders Unknown in the published column for a released row with null publishedAt because the release predates the migration", () => {
-  const { buildReleasesColumns } = require("./releases-table-columns");
-  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
-  const publishedColumn = columns.find((c: { key: string }) => c.key === "publishedAt");
-  render(publishedColumn.cell({ ...releaseRow, status: "released", publishedAt: null }));
+  const publishedCell = releaseColumnCell("publishedAt", { canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  render(publishedCell({ ...releaseRow, status: "released", publishedAt: null }));
   expect(screen.getByText("Unknown")).toBeInTheDocument();
+});
+
+describe("right click on a release row opens the row's authorized actions", () => {
+  function renderWithRows() {
+    mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
+    render(<ReleasesPage projectId={1} />);
+  }
+
+  it("opens Edit and Delete for a viewer who can manage releases, and suppresses the browser menu", () => {
+    renderWithRows();
+    expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("row-contextmenu-1"));
+    expect(mockPreventDefault).toHaveBeenCalled();
+    expect(screen.getByRole("menuitem", { name: "Edit" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Delete" })).toBeInTheDocument();
+  });
+
+  it("opens nothing and leaves the browser menu alone for a viewer who cannot manage releases", () => {
+    mockUseCan.mockReturnValue(false);
+    renderWithRows();
+    fireEvent.click(screen.getByTestId("row-contextmenu-1"));
+    expect(mockPreventDefault).not.toHaveBeenCalled();
+    expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
+  });
+
+  it("opens the edit sheet for the row the menu was opened on", () => {
+    renderWithRows();
+    fireEvent.click(screen.getByTestId("row-contextmenu-1"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+    expect(screen.getByTestId("release-form-sheet")).toBeInTheDocument();
+  });
+
+  it("opens the destructive confirmation naming the row, rather than deleting it outright", () => {
+    renderWithRows();
+    fireEvent.click(screen.getByTestId("row-contextmenu-1"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    expect(screen.getByTestId("confirm-delete")).toHaveTextContent("v1.0.0");
+  });
+});
+
+describe("a release is never selected as a row, because it is this page's primary record", () => {
+  it("passes no selection to the table, so no checkbox column and no bulk status strip exist", () => {
+    mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
+    render(<ReleasesPage projectId={1} />);
+    expect(mockDataTableProps.selection).toBeUndefined();
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Set status…")).not.toBeInTheDocument();
+  });
+
+  it("still reaches one release's status through its own edit sheet, so removing the strip removed no capability", () => {
+    mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([releaseRow]) }));
+    render(<ReleasesPage projectId={1} />);
+    expect(screen.queryByTestId("release-form-sheet")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("row-contextmenu-1"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+    expect(screen.getByTestId("release-form-sheet")).toBeInTheDocument();
+  });
 });

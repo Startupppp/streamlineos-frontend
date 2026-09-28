@@ -17,9 +17,9 @@ import {
 } from "./command-center-constants";
 
 const IMPACT_TONE: Record<string, string> = {
-  high: "text-red-600 dark:text-red-400",
-  medium: "text-yellow-600 dark:text-yellow-400",
-  low: "text-green-600 dark:text-green-400",
+  high: "text-status-danger-ink-strong",
+  medium: "text-status-warning-ink-strong",
+  low: "text-status-success-ink-strong",
 };
 
 function RiskRow({ title, impact, status }: { title: string; impact: string; status: string }) {

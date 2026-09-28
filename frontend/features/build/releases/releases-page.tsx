@@ -1,18 +1,22 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
-import { Plus, X, WifiOff } from "lucide-react";
+import { useState, useCallback, useMemo, useRef, type MouseEvent } from "react";
+import { Plus, WifiOff } from "lucide-react";
 import { Tag, CheckCircle2, Archive, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import {
   useReleases,
   useDeleteRelease,
-  useUpdateRelease,
   type Release,
 } from "@/hooks/api/build/releases";
 import { useCan } from "@/hooks/api/access";
@@ -24,16 +28,7 @@ import {
   PmPageShell,
   PmSection,
   CONTENT_FILL_PANEL,
-  PM_TOOLBAR,
 } from "@/components/pm-chrome";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { BuildHeaderActions } from "@/features/build/shared/build-header-actions";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
@@ -102,14 +97,15 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   const canManage = useCan("build:manage");
   const isOnline = useOnlineStatus();
   const deleteRelease = useDeleteRelease(projectId);
-  const updateRelease = useUpdateRelease(projectId);
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [selectedReleaseIds, setSelectedReleaseIds] = useState<Set<number>>(
-    new Set<number>(),
-  );
   const [editTarget, setEditTarget] = useState<Release | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Release | null>(null);
+  const [contextTarget, setContextTarget] = useState<{
+    release: Release;
+    x: number;
+    y: number;
+  } | null>(null);
 
   const releases = data?.data ?? [];
   const pagination = data?.pagination;
@@ -163,6 +159,31 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     void refetch();
   }, [refetch]);
 
+  const handleRowContextMenu = useCallback(
+    (row: Release, event: MouseEvent) => {
+      if (!canManage) return;
+      event.preventDefault();
+      setContextTarget({ release: row, x: event.clientX, y: event.clientY });
+    },
+    [canManage],
+  );
+
+  const handleContextMenuOpenChange = useCallback((open: boolean) => {
+    if (!open) setContextTarget(null);
+  }, []);
+
+  const handleContextEdit = useCallback(() => {
+    if (!contextTarget) return;
+    handleOpenEdit(contextTarget.release);
+    setContextTarget(null);
+  }, [contextTarget, handleOpenEdit]);
+
+  const handleContextDelete = useCallback(() => {
+    if (!contextTarget) return;
+    setDeleteTarget(contextTarget.release);
+    setContextTarget(null);
+  }, [contextTarget]);
+
   const handleStatusFilterChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
     [listFilters],
@@ -177,27 +198,8 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   );
 
   const handleClearSelection = useCallback(() => {
-    setSelectedReleaseIds(new Set<number>());
+    setContextTarget(null);
   }, []);
-  const handleSelectionChange = useCallback((ids: Set<string | number>) => {
-    setSelectedReleaseIds(new Set(Array.from(ids).map(Number)));
-  }, []);
-  const handleBulkStatusChange = useCallback(
-    (status: string) => {
-      if (!isReleaseStatus(status)) return;
-      releases.forEach((row) => {
-        if (!selectedReleaseIds.has(row.id)) return;
-        updateRelease.mutate(
-          { releaseId: row.id, rowVersion: row.rowVersion, status },
-          {
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
-      });
-      setSelectedReleaseIds(new Set<number>());
-    },
-    [releases, selectedReleaseIds, updateRelease],
-  );
   const handleOpenByIndex = useCallback(
     (index: number) => {
       const row = releases[index];
@@ -349,38 +351,6 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         </PmSection>
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-          {selectedReleaseIds.size > 0 && (
-            <div
-              className={cn(
-                PM_TOOLBAR,
-                "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2",
-              )}
-            >
-              <span className="text-sm font-medium">
-                {selectedReleaseIds.size} selected
-              </span>
-              <div className="flex items-center gap-2">
-                <Select onValueChange={handleBulkStatusChange}>
-                  <SelectTrigger className="h-8 w-[160px] text-sm">
-                    <SelectValue placeholder="Set status…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="released">Released</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Clear selection"
-                  onClick={handleClearSelection}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
           <BuildListSurface<Release>
             permission="build:view"
             rows={releases}
@@ -391,12 +361,8 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             isFiltered={listFilters.isFiltered}
             getRowKey={(r) => r.id}
             onRowClick={handleOpenEdit}
+            onRowContextMenu={handleRowContextMenu}
             mobileCard={renderMobileCard}
-            selection={{
-              selected: selectedReleaseIds,
-              onChange: handleSelectionChange,
-              getRowLabel: (r) => `${r.name} v${r.version}`,
-            }}
             pagination={{
               mode: "cursor",
               pageSize: 25,
@@ -436,6 +402,27 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
             onClose={handleCloseSheet}
           />
         ) : null}
+
+        <DropdownMenu open={contextTarget !== null} onOpenChange={handleContextMenuOpenChange}>
+          <DropdownMenuTrigger asChild>
+            <span
+              aria-hidden
+              tabIndex={-1}
+              className="fixed h-0 w-0"
+              style={
+                contextTarget === null
+                  ? undefined
+                  : { left: contextTarget.x, top: contextTarget.y }
+              }
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onSelect={handleContextEdit}>Edit</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onSelect={handleContextDelete}>
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <ConfirmDialog
           open={!!deleteTarget}

@@ -11,6 +11,7 @@ import {
 } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Switch } from "@/components/ui/switch";
@@ -131,6 +132,12 @@ interface WebhookCardProps {
   onToggle?: (webhook: Pick<ProjectWebhook, "id" | "version">, isActive: boolean) => void;
   onEdit?: (webhook: ProjectWebhook) => void;
   canManage?: boolean;
+  density?: "compact" | "comfortable";
+  selected?: boolean;
+  onSelectedChange?: (webhookId: number, selected: boolean) => void;
+  focused?: boolean;
+  expanded?: boolean;
+  onExpandedChange?: (webhookId: number, expanded: boolean) => void;
 }
 
 export function WebhookCard({
@@ -140,9 +147,16 @@ export function WebhookCard({
   onToggle,
   onEdit,
   canManage = false,
+  density = "compact",
+  selected = false,
+  onSelectedChange,
+  focused = false,
+  expanded: expandedProp,
+  onExpandedChange,
 }: WebhookCardProps) {
   const accessState = useCanState("build:manage");
-  const [expanded, setExpanded] = useState(false);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const expanded = expandedProp ?? internalExpanded;
   const [menuOpen, setMenuOpen] = useState(false);
   const { data: deliveries = [], isLoading } = useWebhookDeliveries(
     projectId,
@@ -156,8 +170,12 @@ export function WebhookCard({
     useAnimatedIcon();
 
   const handleToggle = useCallback(() => {
-    setExpanded((v) => !v);
-  }, []);
+    if (onExpandedChange) {
+      onExpandedChange(webhook.id, !expanded);
+      return;
+    }
+    setInternalExpanded((v) => !v);
+  }, [onExpandedChange, webhook.id, expanded]);
 
   const handleConfirmDelete = useCallback(
     () => onDelete(webhook.id),
@@ -174,17 +192,25 @@ export function WebhookCard({
             `Test delivery failed (HTTP ${result.responseCode ?? "—"})`,
           );
         }
-        setExpanded(true);
+        if (onExpandedChange) onExpandedChange(webhook.id, true);
+        else setInternalExpanded(true);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [sendTest, webhook.id]);
+  }, [sendTest, webhook.id, onExpandedChange]);
 
   const handleActiveToggle = useCallback(
     (checked: boolean) => {
       onToggle?.({ id: webhook.id, version: webhook.version }, checked);
     },
     [onToggle, webhook.id, webhook.version],
+  );
+
+  const handleSelectedChange = useCallback(
+    (checked: boolean | "indeterminate") => {
+      onSelectedChange?.(webhook.id, checked === true);
+    },
+    [onSelectedChange, webhook.id],
   );
 
   const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
@@ -216,10 +242,24 @@ export function WebhookCard({
       className={cn(
         PM_PANEL,
         "group/card overflow-hidden transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md",
+        focused && "ring-2 ring-inset ring-primary/40",
       )}
       onContextMenu={handleContextMenu}
     >
-      <div className="flex items-center gap-3 p-3.5">
+      <div
+        className={cn(
+          "flex items-center gap-3",
+          density === "comfortable" ? "p-3.5" : "p-2",
+        )}
+      >
+        {onSelectedChange && (
+          <Checkbox
+            checked={selected}
+            onCheckedChange={handleSelectedChange}
+            aria-label={`Select ${webhook.url}`}
+            className="shrink-0"
+          />
+        )}
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
           <Zap className="h-4 w-4 text-muted-foreground" />
         </div>

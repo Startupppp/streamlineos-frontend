@@ -1,6 +1,14 @@
 export type StatFilter = "all" | "assigned" | "unassigned" | "over-capacity";
 
+export const WORKLOAD_GROUPS = ["none", "team"] as const;
+export type WorkloadGroup = (typeof WORKLOAD_GROUPS)[number];
+
+export function isWorkloadGroup(value: string): value is WorkloadGroup {
+  return (WORKLOAD_GROUPS as readonly string[]).includes(value);
+}
+
 export interface MemberCapacityData {
+  teams?: { id: number; name: string }[];
   capacityHours: number | null;
   leaveDays: number;
   loggedHours: number;

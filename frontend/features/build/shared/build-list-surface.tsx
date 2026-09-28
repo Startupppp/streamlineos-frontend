@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import type { DataTableSortState } from "@/components/ui/data-table.types";
@@ -50,6 +50,7 @@ export interface BuildListSurfaceProps<TRow> {
   onRetry?: () => void;
   getRowKey: (row: TRow, index: number) => string | number;
   onRowClick?: (row: TRow) => void;
+  onRowContextMenu?: (row: TRow, event: MouseEvent) => void;
   mobileCard?: (row: TRow, index: number) => ReactNode;
   selection?: {
     selected: ReadonlySet<string | number>;
@@ -85,6 +86,7 @@ export function BuildListSurface<TRow>({
   onRetry,
   getRowKey,
   onRowClick,
+  onRowContextMenu,
   mobileCard,
   selection,
   isFetchingMore,
@@ -134,6 +136,7 @@ export function BuildListSurface<TRow>({
           columns={columns}
           getRowKey={getRowKey}
           onRowClick={onRowClick}
+          onRowContextMenu={onRowContextMenu}
           mobileCard={mobileCard}
           selection={selection}
           pagination={

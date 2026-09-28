@@ -6,7 +6,7 @@ import {
   type DraggableProvidedDragHandleProps,
   type DraggableProvidedDraggableProps,
 } from "@hello-pangea/dnd";
-import { FileText, CircleCheck, CirclePlay } from "lucide-react";
+import { FileText, CircleCheck, CirclePlay, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { QuickAddInput } from "./kanban-quick-add";
@@ -34,6 +34,7 @@ export interface KanbanBoardColumnProps {
   isColumnDragging?: boolean;
   showHeaderQuickAdd?: boolean;
   stretch?: boolean;
+  hasActiveFilters?: boolean;
   minHeightClass?: string;
   onRename: (oldName: string, newName: string) => void;
   onColorChange: (statusId: number, color: string) => void;
@@ -56,6 +57,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
   wipLimit,
   serverCount,
   displayOptions,
+  hasActiveFilters = false,
   dragHandleProps,
   isColumnDragging = false,
   showHeaderQuickAdd = false,
@@ -118,7 +120,11 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
               )}
             >
               {!snapshot.isDraggingOver ? (
-                <ColumnEmptyState column={column} compact={minHeightClass === "min-h-[60px]"} />
+                <ColumnEmptyState
+                  column={column}
+                  compact={minHeightClass === "min-h-[60px]"}
+                  hasActiveFilters={hasActiveFilters}
+                />
               ) : null}
               {provided.placeholder}
             </div>
@@ -148,11 +154,13 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
 export function ColumnEmptyState({
   column,
   compact,
+  hasActiveFilters = false,
 }: {
   column: KanbanColumn;
   compact: boolean;
+  hasActiveFilters?: boolean;
 }) {
-  const kind = emptyColumnKind(column);
+  const kind = hasActiveFilters ? "filtered" : emptyColumnKind(column);
   const { Icon, title, hint } = EMPTY_COLUMN_COPY[kind];
 
   return (
@@ -192,6 +200,11 @@ const EMPTY_COLUMN_COPY = {
     Icon: FileText,
     title: "No tickets",
     hint: "Drop a ticket here to get started.",
+  },
+  filtered: {
+    Icon: SearchX,
+    title: "No matches here",
+    hint: "This column has tickets, but none match the current filters.",
   },
 } as const;
 

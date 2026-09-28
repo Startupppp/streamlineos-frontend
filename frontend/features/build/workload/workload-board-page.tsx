@@ -17,8 +17,11 @@ import { WorkloadFilterBar } from "@/features/build/views/workload-filter-bar";
 import { ViewSwitcher } from "@/features/build/views/view-switcher";
 import {
   INITIAL_FILTERS,
+  isWorkloadGroup,
   type FilterState as WorkloadFilterState,
+  type WorkloadGroup,
 } from "@/features/build/views/workload-types";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { CreateTicketDialog } from "@/features/build/tickets/create-ticket-dialog";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -28,6 +31,11 @@ import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { notFound } from "next/navigation";
 import type { ViewType } from "@/features/build/views/view-switcher";
+
+const GROUP_OPTIONS = [
+  { value: "none", label: "No grouping" },
+  { value: "team", label: "Group by team" },
+] as const;
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -45,6 +53,9 @@ export function WorkloadBoardPage({ params }: PageProps) {
   const to = searchParams.get("to");
   const memberId = searchParams.get("memberId");
   const teamIdStr = searchParams.get("teamId");
+  const rawGroup = searchParams.get("group");
+  const group: WorkloadGroup =
+    rawGroup !== null && isWorkloadGroup(rawGroup) ? rawGroup : "none";
   const teamIdParam = teamIdStr !== null ? parseInt(teamIdStr) : undefined;
 
   const capacityWindow = useMemo(() => {
@@ -168,6 +179,19 @@ export function WorkloadBoardPage({ params }: PageProps) {
       scroll: false,
     });
   }, [pathname, router, searchParams]);
+
+  const handleGroupChange = useCallback(
+    (value: string) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (value === "none") next.delete("group");
+      else next.set("group", value);
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
+    },
+    [pathname, router, searchParams],
+  );
 
   const handleCreateOpenChange = useCallback(
     (open: boolean) => {
@@ -293,6 +317,12 @@ export function WorkloadBoardPage({ params }: PageProps) {
   const filterLeading = (
     <div className="flex min-w-0 shrink-0 items-center gap-1">
       <ViewSwitcher activeView="workload" onViewChange={handleViewChange} />
+      <BuildFilterSelect
+        label="Group members by"
+        value={group}
+        onValueChange={handleGroupChange}
+        options={GROUP_OPTIONS}
+      />
     </div>
   );
 
@@ -345,6 +375,7 @@ export function WorkloadBoardPage({ params }: PageProps) {
             onClearFilters={handleClearWorkloadFilters}
             capacityByMemberId={capacityByMemberId}
             focusedMemberId={focusedMemberId}
+            group={group}
           />
         </div>
       )}

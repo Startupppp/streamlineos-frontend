@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { GoalCard } from "./goals-list-shared";
 import type { GoalListItem } from "@/hooks/api/goals";
 
@@ -106,6 +106,9 @@ function baseGoal(overrides: Partial<GoalListItem> = {}): GoalListItem {
     current: null,
     owner: null,
     keyResultCount: 0,
+    linkCount: 0,
+    linkedTicketCount: 0,
+    linkedProjectCount: 0,
     ...overrides,
   };
 }
@@ -154,5 +157,51 @@ describe("GoalCard renders target, current, and confidence when present (Task A)
     expect(screen.getByText("80.00 / 200.00")).toBeInTheDocument();
     expect(screen.getByText("Confidence")).toBeInTheDocument();
     expect(screen.getByText("60%")).toBeInTheDocument();
+  });
+});
+
+describe("GoalCard renders the linked-initiative count (BSN-GOALS-LINKS)", () => {
+  it("names the linked projects and tickets so the success metric is visible on the card", () => {
+    render(
+      <GoalCard
+        goal={baseGoal({ linkCount: 3, linkedProjectCount: 1, linkedTicketCount: 2 })}
+      />,
+    );
+    expect(screen.getByText("3 linked (1 project, 2 tickets)")).toBeInTheDocument();
+  });
+
+  it("pluralises a single ticket and multiple projects", () => {
+    render(
+      <GoalCard
+        goal={baseGoal({ linkCount: 3, linkedProjectCount: 2, linkedTicketCount: 1 })}
+      />,
+    );
+    expect(screen.getByText("3 linked (2 projects, 1 ticket)")).toBeInTheDocument();
+  });
+
+  it("says no linked initiatives rather than rendering a bare zero", () => {
+    render(<GoalCard goal={baseGoal()} />);
+    expect(screen.getByText("No linked initiatives")).toBeInTheDocument();
+    expect(screen.queryByText(/0 linked/)).not.toBeInTheDocument();
+  });
+});
+
+describe("GoalCard right-click mirrors the row menu (BSN-GOALS-CONTEXT)", () => {
+  it("opens the same edit and delete commands on right-click, so the menu is not the only path and the only path is not a hover target", () => {
+    const onEdit = jest.fn();
+    const onDelete = jest.fn();
+    const { container } = render(
+      <GoalCard goal={baseGoal()} onEdit={onEdit} onDelete={onDelete} />,
+    );
+    fireEvent.contextMenu(container.firstElementChild!);
+    expect(screen.getByText("Edit")).toBeInTheDocument();
+    expect(screen.getByText("Delete")).toBeInTheDocument();
+  });
+
+  it("offers no right-click menu to a viewer with neither command (FE-122 paired negative)", () => {
+    const { container } = render(<GoalCard goal={baseGoal()} />);
+    fireEvent.contextMenu(container.firstElementChild!);
+    expect(screen.queryByText("Edit")).not.toBeInTheDocument();
+    expect(screen.queryByText("Delete")).not.toBeInTheDocument();
   });
 });

@@ -1,0 +1,7 @@
+{
+  "allowed": {
+    "features/wiki/lib/starter-templates.ts:340": "generic agile vocabulary inside a user-facing retro template description, not a claim about a StreamlineOS surface; file is owned by the Knowledge Base workstream",
+    "features/landing/data/testimonials.ts:18": "OPEN OWNER DECISION, not a justification: an attributed customer quotation cannot be reworded without falsifying a statement a named person is said to have made. Options are to leave it dated, remove the testimonial, or source a replacement. Tracked in docs/build-module/99-kill-list.md, product-copy box, which stays unchecked because of this line."
+  },
+  "maxAcknowledged": 11
+}

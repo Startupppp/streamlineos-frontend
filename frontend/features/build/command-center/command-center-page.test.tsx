@@ -19,9 +19,10 @@ jest.mock("@/hooks/common/use-online-status", () => ({
 }));
 
 let mockSearchParams = new URLSearchParams();
+const mockRouterPush = jest.fn();
 jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useRouter: () => ({ push: mockRouterPush, replace: jest.fn() }),
   usePathname: () => "/build/command-center",
 }));
 
@@ -209,6 +210,7 @@ beforeEach(() => {
   mockUseAllWork.mockReturnValue({ data: undefined, refetch: jest.fn() });
   mockUseOnlineStatus.mockReturnValue(true);
   mockUseKeyboardShortcuts.mockReset();
+  mockRouterPush.mockClear();
   mockSearchParams = new URLSearchParams();
 });
 
@@ -379,6 +381,28 @@ it("passes no managerId to useProjects when the owner param is absent — paired
   );
 });
 
+it("passes the health URL param to useProjects, so the spec's health parameter filters server-side rather than inside one keyset page", () => {
+  mockSearchParams = new URLSearchParams("health=at_risk");
+  render(<CommandCenterPage />);
+  expect(mockUseProjects).toHaveBeenCalledWith(
+    expect.objectContaining({ health: "at_risk" }),
+    expect.objectContaining({ throwOnError: false }),
+  );
+});
+
+it("passes no health to useProjects when the health param is absent — paired with the health-present test above", () => {
+  render(<CommandCenterPage />);
+  const [filters] = mockUseProjects.mock.calls.at(-1) as [Record<string, unknown>];
+  expect("health" in filters).toBe(false);
+});
+
+it("ignores an unknown health value instead of forwarding it to a strict backend schema that would 400", () => {
+  mockSearchParams = new URLSearchParams("health=exploding");
+  render(<CommandCenterPage />);
+  const [filters] = mockUseProjects.mock.calls.at(-1) as [Record<string, unknown>];
+  expect("health" in filters).toBe(false);
+});
+
 it("passes a due-date window to useInfiniteAllWork when the due URL param is present, so the spec's due parameter is deep-linkable", () => {
   mockSearchParams = new URLSearchParams("due=overdue");
   render(<CommandCenterPage />);
@@ -463,5 +487,68 @@ describe("CommandCenterPage — FE-41: error forwarding to usePageState", () => 
     expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
     expect(screen.getByTestId("my-issues-panel")).toBeInTheDocument();
     expect(screen.getByTestId("projects-panel")).toBeInTheDocument();
+  });
+});
+
+describe("CommandCenterPage — Enter opens the focused personal-queue row", () => {
+  function keyboardOptions() {
+    const { useBuildListKeyboard } = jest.requireMock(
+      "@/features/build/shared/use-build-list-keyboard",
+    ) as { useBuildListKeyboard: jest.Mock };
+    return useBuildListKeyboard.mock.calls.at(-1)?.[0] as {
+      itemCount: number;
+      onOpen: (index: number) => void;
+    };
+  }
+
+  function renderWithOneIssue() {
+    mockUseInfiniteAllWork.mockReturnValue(
+      baseInfiniteResult({
+        data: {
+          pages: [
+            {
+              data: [
+                {
+                  id: 11,
+                  ticketNumber: 3,
+                  title: "Fix the thing",
+                  status: "TODO",
+                  priority: "HIGH",
+                  type: "TASK",
+                  projectId: 1,
+                  projectKey: "P",
+                  projectName: "Proj",
+                  dueDate: null,
+                  assigneeId: null,
+                },
+              ],
+              total: 1,
+            },
+          ],
+        },
+      }),
+    );
+    render(<CommandCenterPage />);
+  }
+
+  it("counts the personal-queue rows for j/k, so the cursor has something to move over", () => {
+    renderWithOneIssue();
+    expect(keyboardOptions().itemCount).toBe(1);
+  });
+
+  it("navigates to the focused issue when Enter fires, so the shortcut is not a no-op handler", () => {
+    renderWithOneIssue();
+    act(() => {
+      keyboardOptions().onOpen(0);
+    });
+    expect(mockRouterPush).toHaveBeenCalledWith("/build/1/tickets/T-1");
+  });
+
+  it("navigates nowhere when the focused index is past the end of the queue", () => {
+    renderWithOneIssue();
+    act(() => {
+      keyboardOptions().onOpen(9);
+    });
+    expect(mockRouterPush).not.toHaveBeenCalled();
   });
 });

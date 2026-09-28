@@ -210,9 +210,24 @@ describe("projectDetailContract — GET /build/{projectId} response contract", (
 
   it("decoded project detail carries the settings shape with module flags the nav sidebar toggles on", () => {
     const result = projectDetailContract.parse(REALISTIC_DETAIL_FIXTURE);
-    expect(result.settings?.modules.sprints).toBe(true);
     expect(result.settings?.modules.wiki).toBe(true);
     expect(result.settings?.modules.timeTracking).toBe(false);
+  });
+
+  it("strips the retired sprints module flag a legacy row still carries, instead of failing the parse", () => {
+    const result = projectDetailContract.parse(REALISTIC_DETAIL_FIXTURE);
+    expect("sprints" in result.settings!.modules).toBe(false);
+  });
+
+  it("parses a project provisioned after the sprints flag was retired, whose settings never carried it", () => {
+    const withoutFlag = {
+      ...REALISTIC_DETAIL_FIXTURE,
+      settings: {
+        ...REALISTIC_DETAIL_FIXTURE.settings,
+        modules: { epics: true, timeTracking: false, wiki: true },
+      },
+    };
+    expect(() => projectDetailContract.parse(withoutFlag)).not.toThrow();
   });
 
   it("decoded project detail carries statuses array the board view builds its columns from", () => {

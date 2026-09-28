@@ -69,9 +69,6 @@ export function filterVisibleProjects(
   if (activeFilters.status) {
     result = result.filter((p) => p.status === activeFilters.status);
   }
-  if (activeFilters.health) {
-    result = result.filter((p) => p.health === activeFilters.health);
-  }
   if (!showClosed) {
     result = result.filter(
       (p) => p.status !== "ARCHIVED" && p.status !== "COMPLETED",

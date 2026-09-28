@@ -8,9 +8,6 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { z } from "zod";
 
-const epicListContract = lazyContract(() =>
-  import("@/hooks/api/build/execution-schema").then((m) => m.epicListContract),
-);
 const cycleListContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.cycleListContract),
 );
@@ -57,7 +54,6 @@ const viewResponseLazy = lazyContract<{
   ),
 );
 import type {
-  Epic,
   Cycle,
   Module,
   ProjectView,
@@ -74,57 +70,70 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export function useEpics(
-  projectId: number,
-  options?: Omit<UseQueryOptions<Epic[]>, "queryKey" | "queryFn" | "enabled">
-) {
-  const canView = useCan("build:tickets:view");
-  return useQuery<Epic[]>({
-    queryKey: buildWorkQueryKeys.projects.epics(projectId),
-    queryFn: ({ signal }) => apiClient.get<Epic[]>(`/build/${projectId}/epics`, undefined, signal, epicListContract),
-    staleTime: 30_000,
-    ...options,
-    enabled: canView && !!projectId,
-  });
-}
-
+export {
+  useEpicPage,
+  useEpics,
+  type EpicListFilters,
+  type EpicPage,
+} from "@/hooks/api/build/epics";
 
 export interface CycleListFilters {
   status?: "draft" | "active" | "completed";
   q?: string;
   from?: string;
   to?: string;
+  cursor?: string;
+  limit?: number;
 }
 
-type CyclePage = {
+export type CyclePage = {
   data: Cycle[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
 
-export function useCycles(
-  projectId: number,
-  filters?: CycleListFilters,
-  options?: Omit<UseQueryOptions<Cycle[]>, "queryKey" | "queryFn" | "enabled">
-) {
-  const canView = useCan("build:cycles:view");
+function cyclePageQuery(projectId: number, filters?: CycleListFilters) {
   const activeFilters = filters ?? {};
   const queryParams: Record<string, string> = {};
-  if (activeFilters.status) queryParams.status = activeFilters.status;
-  if (activeFilters.q) queryParams.q = activeFilters.q;
-  if (activeFilters.from) queryParams.from = activeFilters.from;
-  if (activeFilters.to) queryParams.to = activeFilters.to;
-  return useQuery<Cycle[]>({
+  for (const [key, value] of Object.entries(activeFilters))
+    if (value !== undefined && value !== "") queryParams[key] = String(value);
+  return {
     queryKey: [...buildWorkQueryKeys.projects.cycles(projectId), activeFilters],
-    queryFn: async ({ signal }) => {
-      const page = await apiClient.get<CyclePage>(
+    queryFn: ({ signal }: { signal: AbortSignal }) =>
+      apiClient.get<CyclePage>(
         `/build/${projectId}/cycles`,
         Object.keys(queryParams).length > 0 ? queryParams : undefined,
         signal,
         cycleListContract,
-      );
-      return page.data;
-    },
+      ),
     staleTime: 60_000,
+  };
+}
+
+export function useCyclePage(
+  projectId: number,
+  filters?: CycleListFilters,
+  options?: Omit<UseQueryOptions<CyclePage>, "queryKey" | "queryFn" | "enabled">
+) {
+  const canView = useCan("build:cycles:view");
+  return useQuery<CyclePage>({
+    ...cyclePageQuery(projectId, filters),
+    ...options,
+    enabled: canView && !!projectId,
+  });
+}
+
+export function useCycles(
+  projectId: number,
+  filters?: CycleListFilters,
+  options?: Omit<
+    UseQueryOptions<CyclePage, Error, Cycle[]>,
+    "queryKey" | "queryFn" | "enabled" | "select"
+  >
+) {
+  const canView = useCan("build:cycles:view");
+  return useQuery<CyclePage, Error, Cycle[]>({
+    ...cyclePageQuery(projectId, filters),
+    select: (page) => page.data,
     ...options,
     enabled: canView && !!projectId,
   });

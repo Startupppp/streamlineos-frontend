@@ -1,8 +1,16 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useVelocityReport } from "@/hooks/api/build/reports";
-import { VelocityChart } from "@/features/build/reports/velocity-chart";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const VelocityChart = dynamic(
+  () =>
+    import("@/features/build/reports/velocity-chart").then((m) => ({
+      default: m.VelocityChart,
+    })),
+  { ssr: false, loading: () => <Skeleton className="h-72 w-full rounded-lg" /> },
+);
 
 export function CycleVelocityPanel({ projectId }: { projectId: number }) {
   const { data, isLoading, isError } = useVelocityReport(projectId);

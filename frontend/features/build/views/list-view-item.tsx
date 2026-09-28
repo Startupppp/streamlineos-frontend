@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState, type MouseEvent } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { pmSnappy } from "@/lib/motion-presets";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ListViewItemProps } from "./list-view-shared";
 import { useCan } from "@/hooks/api/access";
+import { useModuleName } from "./module-names-context";
 
 export const ListViewItem = memo(function ListViewItem({
   ticket,
@@ -43,9 +44,15 @@ export const ListViewItem = memo(function ListViewItem({
     [onSelect, ticket.id],
   );
   const shouldReduceMotion = useReducedMotion();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setMenuOpen(true);
+  }, []);
   const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
+  const moduleName = useModuleName(ticket.moduleId);
 
   const showId = displayOptions?.showId ?? true;
   const showPriority = displayOptions?.showPriority ?? true;
@@ -58,6 +65,15 @@ export const ListViewItem = memo(function ListViewItem({
   const labelIds = ticket.labels
     ?.map((l) => l.label?.id)
     .filter((v): v is number => v != null) ?? [];
+
+  const assigneeUsers =
+    ticket.assignees?.flatMap((entry) => (entry.user ? [entry.user] : [])) ?? [];
+  const primaryAssignee = assigneeUsers[0] ?? ticket.assignee ?? null;
+  const extraAssigneeCount = Math.max(0, assigneeUsers.length - 1);
+  const otherAssigneeNames = assigneeUsers
+    .slice(1)
+    .map((user) => getUserDisplayName(user))
+    .join(", ");
 
   const hasProjectId = projectId != null;
   const hasDragHandle = dragHandleProps != null;
@@ -73,6 +89,7 @@ export const ListViewItem = memo(function ListViewItem({
         isKeyboardFocused &&
           "bg-primary/[0.06] ring-1 ring-inset ring-primary/40",
       )}
+      onContextMenu={handleContextMenu}
       initial={shouldReduceMotion ? false : { opacity: 0, x: -4 }}
       animate={{ opacity: 1, x: 0 }}
       transition={pmSnappy}
@@ -173,20 +190,28 @@ export const ListViewItem = memo(function ListViewItem({
             ticketId={ticket.id}
             projectId={projectId}
             version={version}
-            currentAssigneeId={ticket.assigneeId ?? ticket.assignee?.id}
-            assignee={ticket.assignee}
+            currentAssigneeId={ticket.assigneeId ?? primaryAssignee?.id}
+            assignee={primaryAssignee}
           />
-        ) : showAssignee && ticket.assignee ? (
-          <Avatar className="h-6 w-6 flex-shrink-0" title={getUserDisplayName(ticket.assignee)}>
-            <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
-            <AvatarFallback className="text-micro">{getUserInitials(ticket.assignee)}</AvatarFallback>
+        ) : showAssignee && primaryAssignee ? (
+          <Avatar className="h-6 w-6 flex-shrink-0" title={getUserDisplayName(primaryAssignee)}>
+            <AvatarImage src={resolveImageUrl(primaryAssignee.image)} />
+            <AvatarFallback className="text-micro">{getUserInitials(primaryAssignee)}</AvatarFallback>
           </Avatar>
+        ) : null}
+        {showAssignee && extraAssigneeCount > 0 ? (
+          <span
+            className="flex-shrink-0 text-xs tabular-nums text-muted-foreground"
+            title={otherAssigneeNames}
+          >
+            +{extraAssigneeCount}
+          </span>
         ) : null}
         {showCycle && ticket.cycle ? (
           <Badge variant="outline" className="text-xs flex-shrink-0">{ticket.cycle.name}</Badge>
         ) : null}
-        {ticket.moduleId != null ? (
-          <Badge variant="secondary" className="text-xs flex-shrink-0 font-mono">M-{ticket.moduleId}</Badge>
+        {moduleName !== null ? (
+          <Badge variant="secondary" className="text-xs flex-shrink-0">{moduleName}</Badge>
         ) : null}
         <button
           onClick={handleClick}
@@ -201,6 +226,11 @@ export const ListViewItem = memo(function ListViewItem({
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}
+          projectKey={projectKey}
+          ticketNumber={ticket.ticketNumber}
+          onOpen={onClick}
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
           className="opacity-0 translate-x-1 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-within:translate-x-0 group-focus-within:opacity-100"
         />
       </div>

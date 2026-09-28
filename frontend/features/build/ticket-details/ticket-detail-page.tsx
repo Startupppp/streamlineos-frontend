@@ -28,6 +28,7 @@ import { PageState } from "@/components/shared/page-state";
 import { pageStateFromError } from "@/lib/page-state/resolve-page-state";
 import { resolveTicketBackHref } from "./build-ticket-detail-url";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { formatDistanceToNow } from "date-fns";
 
 
 interface TicketDetailPageProps {
@@ -99,6 +100,8 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     isLoading,
     ticketError,
     refetchTicket,
+    ticketUpdatedAt,
+    offlineDraftFields,
     subtasks,
     members,
     statuses,
@@ -324,7 +327,26 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           <div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-muted/40 px-4 py-2">
             <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
             <p className="text-xs text-muted-foreground">
-              You&apos;re offline — changes may not save until you reconnect.
+              You&apos;re offline — edits are kept here and sent when you
+              reconnect.
+              {offlineDraftFields.length > 0 ? (
+                <span data-testid="offline-draft-count">
+                  {" "}
+                  {offlineDraftFields.length === 1
+                    ? "1 unsent change."
+                    : `${offlineDraftFields.length} unsent changes.`}
+                </span>
+              ) : null}
+              {ticketUpdatedAt ? (
+                <span data-testid="offline-freshness">
+                  {" "}
+                  Last updated{" "}
+                  {formatDistanceToNow(new Date(ticketUpdatedAt), {
+                    addSuffix: true,
+                  })}
+                  .
+                </span>
+              ) : null}
             </p>
           </div>
         ) : null}

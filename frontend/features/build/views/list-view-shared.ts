@@ -21,6 +21,7 @@ export interface Ticket {
   rank?: string | null;
   version: number;
   assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } | null;
+  assignees?: { user?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } }[];
   labels?: { label?: { id: number; name: string; color?: string | null } }[];
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
 }

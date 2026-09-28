@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, memo } from "react";
+import { useCallback, memo, useState, type MouseEvent } from "react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { KanbanTicket, DisplayOptions } from "../shared/types";
@@ -13,6 +13,8 @@ import { getUserDisplayName } from "@/lib/person-display";
 import { Calendar } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { useCan } from "@/hooks/api/access";
+import { Badge } from "@/components/ui/badge";
+import { useModuleName } from "./module-names-context";
 
 interface KanbanTicketCardProps {
   ticket: KanbanTicket;
@@ -37,9 +39,15 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
 }: KanbanTicketCardProps) {
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
+  const moduleName = useModuleName(ticket.moduleId);
   const handleActivate = useCallback(() => {
     onSelect(ticket.id);
   }, [ticket.id, onSelect]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setMenuOpen(true);
+  }, []);
   const handleSelectedChange = useCallback(
     (next: boolean | "indeterminate") => {
       onSelectedChange?.(ticket.id, next === true);
@@ -81,6 +89,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           ? "z-20 rotate-1 scale-[1.02] border-primary/30 bg-card opacity-95 shadow-xl ring-1 ring-primary/25"
           : "hover:border-border hover:shadow-md",
       )}
+      onContextMenu={handleContextMenu}
     >
       <div className="flex items-start gap-1.5">
         {onSelectedChange !== undefined && (
@@ -105,6 +114,11 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}
+          projectKey={projectKey}
+          ticketNumber={ticket.ticketNumber}
+          onOpen={onSelect}
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
           className="-mr-1 -mt-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-within:opacity-100"
         />
       </div>
@@ -168,6 +182,12 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             version={version}
             currentCycleId={ticket.cycleId}
           />
+        ) : null}
+
+        {moduleName !== null ? (
+          <Badge variant="secondary" className="shrink-0 text-micro">
+            {moduleName}
+          </Badge>
         ) : null}
 
         {projectId && canUpdate ? (

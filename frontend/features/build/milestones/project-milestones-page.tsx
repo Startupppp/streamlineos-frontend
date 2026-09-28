@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -12,7 +12,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
-import { Diamond, CheckCircle2, Clock, AlertCircle, X } from "lucide-react";
+import { Diamond, CheckCircle2, Clock, AlertCircle, X, WifiOff } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import {
   BUILD_FILTER_ALL,
@@ -28,6 +28,9 @@ import {
   type ProjectMilestone,
 } from "@/hooks/api/build/milestones";
 import { useCan } from "@/hooks/api/access";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/lib/person-display";
 import { MilestoneUpsertSheet } from "@/features/build/milestones/milestone-upsert-sheet";
 import { MilestoneCard } from "@/features/build/milestones/milestone-card";
 import {
@@ -87,6 +90,16 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   const listFilters = useBuildListFilters({ filters: MILESTONE_FILTER_DEFINITIONS });
   const pager = useBuildCursorPager(listFilters.resetKey);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const isOnline = useOnlineStatus();
+  const { data: membersPage } = useOrgMembers(1, 100);
+  const members = useMemo(() => membersPage?.data ?? [], [membersPage]);
+  const ownerOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "Any owner" },
+      ...members.map((m) => ({ value: String(m.membershipId), label: getUserDisplayName(m) })),
+    ],
+    [members],
+  );
 
   const statusFilterValue = listFilters.value("status");
   const serverStatus =
@@ -95,6 +108,8 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
       : undefined;
   const fromValue = readDateFilter(listFilters.value("from"));
   const toValue = readDateFilter(listFilters.value("to"));
+  const ownerIdValue = listFilters.value("ownerId");
+  const ownerId = /^\d+$/.test(ownerIdValue) ? Number(ownerIdValue) : undefined;
 
   const {
     data,
@@ -108,6 +123,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
     q: listFilters.debouncedSearch || undefined,
     from: fromValue,
     to: toValue,
+    ownerId,
   });
   const pageState = usePageState({
     permission: "build:view",
@@ -173,11 +189,29 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
   const handleBulkStatusChange = useCallback(
     (status: string) => {
       const typed = toMilestoneStatus(status);
-      selectedMilestoneIds.forEach((milestoneId) => {
-        const target = milestones.find((m) => m.id === milestoneId);
-        if (!target) return;
-        updateMilestone.mutate({ milestoneId, version: target.version, status: typed }, {
-          onError: (err) => toast.error(getErrorMessage(err)),
+      const targets = Array.from(selectedMilestoneIds)
+        .map((milestoneId) => milestones.find((m) => m.id === milestoneId))
+        .filter((m): m is ProjectMilestone => m !== undefined);
+      let settled = 0;
+      const failures: string[] = [];
+      const report = () => {
+        settled += 1;
+        if (settled < targets.length) return;
+        if (failures.length === 0) {
+          toast.success(`${targets.length} milestones updated`);
+          return;
+        }
+        toast.error(
+          `${targets.length - failures.length} of ${targets.length} milestones updated. Failed: ${failures.join(", ")}`,
+        );
+      };
+      targets.forEach((target) => {
+        updateMilestone.mutate({ milestoneId: target.id, version: target.version, status: typed }, {
+          onSuccess: report,
+          onError: (err) => {
+            failures.push(`${target.name} — ${getErrorMessage(err)}`);
+            report();
+          },
         });
       });
       setSelectedMilestoneIds(new Set<number>());
@@ -220,6 +254,11 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
     [listFilters],
   );
 
+  const handleOwnerFilterChange = useCallback(
+    (value: string) => listFilters.setValue("ownerId", value === BUILD_FILTER_ALL ? "" : value),
+    [listFilters],
+  );
+
   const filterToolbar = (
     <BuildListToolbar
       search={{
@@ -240,6 +279,19 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
               value={statusFilterValue}
               onValueChange={handleStatusFilterChange}
               options={MILESTONE_STATUS_OPTIONS}
+            />
+          ),
+        },
+        {
+          id: "owner",
+          label: "Owner",
+          active: listFilters.isActive("ownerId"),
+          control: (
+            <BuildFilterSelect
+              label="Owner"
+              value={ownerId !== undefined ? String(ownerId) : BUILD_FILTER_ALL}
+              onValueChange={handleOwnerFilterChange}
+              options={ownerOptions}
             />
           ),
         },
@@ -307,6 +359,14 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
       filters={filterToolbar}
     >
       <PmPageShell>
+          {!isOnline ? (
+            <div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-muted/40 px-4 py-2">
+              <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              <p className="text-xs text-muted-foreground">
+                You&apos;re offline — results may not be up to date.
+              </p>
+            </div>
+          ) : null}
           <PmSection index={0} className="shrink-0">
             <StatCardGrid cols={4}>
               <StatCard label="This page" value={milestones.length} icon={Diamond} tone="default" index={0} />

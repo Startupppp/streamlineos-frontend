@@ -52,6 +52,12 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
 }));
 
+let mockIsOnline = true;
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockIsOnline,
+}));
+
 function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
@@ -81,6 +87,7 @@ beforeEach(() => {
   mockRefetchTicket.mockResolvedValue({ data: mockTicket, error: null });
   mockUpdateOptions = {};
   mockProject = { members: [], statuses: [] };
+  mockIsOnline = true;
 });
 
 function member(id: string, name: string) {
@@ -463,4 +470,62 @@ it("resyncs the title when the same ticket receives a newer server version", asy
   });
 
   expect(result.current.localTitle).toBe("Updated regression ticket");
+});
+
+describe("useTicketDetail offline drafts — an edit made offline is kept, not dropped", () => {
+  it("sends no command while the browser is offline and reports the field it is holding", () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    mockIsOnline = false;
+    const { result } = renderHook(() => useTicketDetail({ projectId: 5, ticketId: 7 }), {
+      wrapper: wrapper(client),
+    });
+    act(() => {
+      result.current.autoSave({ priority: "HIGH" });
+    });
+    expect(mockMutateAsync).not.toHaveBeenCalled();
+    expect(result.current.offlineDraftFields).toEqual(["priority"]);
+  });
+
+  it("sends the held draft once connectivity returns, so the offline edit is not lost", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    mockMutateAsync.mockResolvedValue({ updated: true });
+    mockIsOnline = false;
+    const { result, rerender } = renderHook(
+      () => useTicketDetail({ projectId: 5, ticketId: 7 }),
+      { wrapper: wrapper(client) },
+    );
+    act(() => {
+      result.current.autoSave({ priority: "HIGH" });
+      result.current.autoSave({ points: 3 });
+    });
+    expect(result.current.offlineDraftFields).toEqual(["priority", "points"]);
+    mockIsOnline = true;
+    await act(async () => {
+      rerender();
+    });
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    expect(mockMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ ticketId: 7, version: 4, priority: "HIGH", points: 3 }),
+    );
+    expect(result.current.offlineDraftFields).toEqual([]);
+  });
+
+  it("sends the command immediately when the browser is online, proving the offline branch is not always on", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    mockMutateAsync.mockResolvedValue({ updated: true });
+    const { result } = renderHook(() => useTicketDetail({ projectId: 5, ticketId: 7 }), {
+      wrapper: wrapper(client),
+    });
+    await act(async () => {
+      result.current.autoSave({ priority: "HIGH" });
+    });
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    expect(result.current.offlineDraftFields).toEqual([]);
+  });
 });

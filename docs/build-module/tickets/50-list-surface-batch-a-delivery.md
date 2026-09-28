@@ -53,8 +53,9 @@ Batched by blast radius so each batch fits one fresh context window. Land them i
   now declare `isFiltered`, `empty` and `filteredEmpty` separately, which is the module's rule, and the
   rendered copy is unchanged in each branch. The difference is recorded in the migration commit.
 - [ ] Files in the batch that exceeded 500 lines drop below it, per FE-57
-  **Left unchecked because the criterion has no subject: no file in this batch exceeded 500 lines before the
-  migration.** Measured, rather than asserted either way -- `project-backlog-page.tsx` 421 -> 412,
+  **Left unchecked. The original reason — "the criterion has no subject" — is corrected below:
+  `epics/epics-page.tsx` is a batch file at 531 lines, so the criterion is unmet rather than subject-less.**
+  The measurement the earlier lanes recorded, for the five files they chose -- `project-backlog-page.tsx` 421 -> 412,
   `project-submissions-inbox.tsx` 345 -> 333, `views/table-view.tsx` 284 (untouched),
   `project-detail/project-budget-page.tsx` 278 (untouched). `releases/releases-page.tsx` 438 (migrated as
   ticket 49's first adopter; unmeasured by the prior lane, measured now: `wc -l releases/releases-page.tsx`
@@ -62,3 +63,143 @@ Batched by blast radius so each batch fits one fresh context window. Land them i
   direction, so treating this as earned would be counting a threshold that was never breached.
   LANE-50 re-measurement confirms no file in the batch exceeded 500 either before or after migration.
   LANE-ADJ-B 2026-09-28: All five files re-measured independently. Current counts: `project-backlog-page.tsx` 412, `project-submissions-inbox.tsx` 333, `releases/releases-page.tsx` 439, `views/table-view.tsx` 286, `project-detail/project-budget-page.tsx` 279. No file in the batch crossed 500 in either direction. Prior verdict stands; box has no earnable subject.
+
+  **Premise correction 2026-09-28 (Lane-SEAM): the criterion does have a subject, and the two prior
+  measurements missed it by measuring a file set the batch does not define.**
+  All three prior notes measure the same five files: `project-backlog-page.tsx`,
+  `project-submissions-inbox.tsx`, `releases/releases-page.tsx`, `views/table-view.tsx` and
+  `project-detail/project-budget-page.tsx`. That set is inconsistent with this ticket's own scope. It reaches
+  *outside* the batch for two files — `views/table-view.tsx` is a presentation sub-component and
+  `project-detail/project-budget-page.tsx` is not one of the seven surfaces at all — while omitting surfaces
+  the batch names and the first criterion above explicitly inspected by name. The batch is
+  "backlog, issues, epics, milestones, releases, triage, workload", and criterion 1 above records having
+  checked `epics/`, `milestones/project-milestones-page.tsx`, `workload/workload-board-page.tsx` and
+  `triage/`. Those are batch files whether or not the migration touched them; "files in the batch" is not
+  "files the migration happened to edit".
+  Measured over the batch's surfaces, `epics/epics-page.tsx` is **531 lines** and has been since before this
+  batch — `git show HEAD:frontend/features/build/epics/epics-page.tsx | wc -l` → 531, so it is committed, not
+  another lane's in-flight growth. It is not a file the migration could have shrunk, because criterion 1
+  correctly found `epics/` renders a card grid rather than a `DataTable` and left it unmigrated. But it is a
+  file in the batch, it exceeds 500, and it has not dropped below it. **The criterion is unmet, not vacuous.**
+  This is confirmed by the project's own FE-57 gate rather than by a `wc -l` argument.
+  `pnpm check:file-sizes:self-test` → `check-file-sizes self-tests: 65 passed`. `pnpm check:file-sizes` exits
+  1 with `56 file(s) exceed 500 lines`, and among them, inside directories this batch names:
+
+  | File | Gate-reported lines |
+  |---|---|
+  | `features/build/epics/epics-page.tsx` | 531 |
+  | `features/build/views/workload-view.tsx` | 538 |
+  | `features/build/milestones/planning-surfaces-gallery.tsx` | 526 |
+  | `features/build/views/use-board-url-state.ts` | 501 |
+  | `features/build/workload/workload-board-page.test.tsx` | 504 |
+  | `features/build/releases/releases-page.test.tsx` | 551 |
+  | `features/build/views/use-board-url-state.test.tsx` | 555 |
+
+  The five prior-measured files are all genuinely under 500 and that half of the earlier measurement stands:
+  re-measured 2026-09-28, `project-backlog-page.tsx` 412, `project-submissions-inbox.tsx` 333,
+  `releases/releases-page.tsx` 449, `views/table-view.tsx` 286, `project-detail/project-budget-page.tsx` 279.
+  Nothing above contradicts them; the error was the scope, not the arithmetic.
+  The box stays unchecked, now for a stronger reason than before: the criterion is earnable and unearned.
+  Earning it means splitting `epics/epics-page.tsx` below 500, and — if the batch's `views/` and `workload/`
+  files are read into scope, which is the reading this correction argues for — the six others alongside it.
+  That is non-import content in `features/build/epics/**`, `features/build/milestones/**`,
+  `features/build/workload/**` and `features/build/views/**`; the first three belong to live lanes and none of
+  the four is in Lane-SEAM's territory, which is import statements and barrel files. The split is left to the
+  lane that owns those files, and FE-57's shrink-only counts make it their obligation regardless of this
+  ticket.
+
+## Progress on the file-size criterion — 2026-09-28 (Lane-SEAM)
+
+Three of the four over-500 source files in the batch's directories are now under the
+limit. The box stays unchecked until all four are.
+
+| File | Before | After | New sibling |
+|---|---|---|---|
+| `features/build/views/use-board-url-state.ts` | 501 | **391** | `board-filter-params.ts` (159) |
+| `features/build/views/workload-view.tsx` | 538 | **396** | `workload-unassigned-row.tsx` (164) |
+| `features/build/milestones/planning-surfaces-gallery.tsx` | 521 | **356** | `planning-surfaces-fixtures.ts` (173) |
+
+`useBoardFilterParams` takes the twelve filter params, the order-by/order-dir
+parsing, the query-filter and active-filter derivations and the effect that clears
+an invalid `priority` or `type` param. `WorkloadUnassignedRow` takes the unassigned
+row and its collapsible ticket list, and mirrors the props `WorkloadMemberRow`
+already takes beside it. Neither public export changed shape, so no caller changed:
+`project-detail/project-board-page.tsx:15`, `views/project-board-content.tsx:12,27`
+and `workload/workload-board-page.tsx:15` are untouched.
+
+`data.members.flatMap` was deliberately left inside `use-board-url-state.ts`:
+`hooks/api/build/board-server-filter.test.ts:259` asserts on that file's **source
+text** (`expect(source).toContain("data.members.flatMap")` and
+`expect(source).not.toContain("useProjectMembers")`), so extracting the member
+derivation would have broken a passing test without changing any behaviour.
+
+Commands and results:
+
+- `pnpm check:file-sizes:self-test` → `check-file-sizes self-tests: 65 passed`.
+- `pnpm check:file-sizes` → both files are **off** the over-500 list; the total moved
+  from 56 to 55 while the webhooks lane's in-flight files grew onto it
+  (`project-webhooks-page.test.tsx` 744 → 999, plus a new `webhook-card.test.tsx` at
+  513), so 55 understates the two removals.
+- `pnpm check:over-300:self-test` → `29 passed`. `pnpm check:over-300` is red
+  repo-wide and was before this change (`709 files exceed 300 lines — 196 above
+  baseline of 513`). Neither new file appears on it — 159 and 164 lines — and the two
+  split files were already over 300 at 501 and 538, so the count is unmoved by this
+  work.
+- `npx tsc -p tsconfig.json --noEmit` → no error names `features/build/views/**`.
+- `npx eslint` on all four files → clean, no new disables.
+- `npx jest --maxWorkers=2 features/build/views features/build/workload
+  features/build/project-detail/project-board-page.test.tsx` → **22 suites, 219 tests,
+  all passing.** `workload-view.test.tsx` still asserts the `workload-unassigned-row`
+  testid through the extracted component, and `board-server-filter.test.ts`,
+  `use-board-url-state.test.tsx`, `project-board-content.test.tsx` and
+  `project-board-page.test.tsx` pass unchanged.
+
+Still over 500: `epics/epics-page.tsx` (531), held back on purpose because the
+execution lane owns `epics/**`. It is the only source file left in the batch's
+directories above the limit, so it is the last thing between this criterion and a
+tick.
+
+### The milestones gallery split — 2026-09-28 (Lane-SEAM)
+
+`planning-surfaces-gallery.tsx` 521 → **356**, with `planning-surfaces-fixtures.ts`
+at 173. What moved is fixture data, not composition: `STUB_MILESTONES`,
+`STUB_RELEASES`, `MILESTONE_STATUS_OPTIONS`, `RELEASE_STATUS_OPTIONS` and
+`STUB_NOOP`. The name follows the sibling this gallery already sits beside,
+`features/build/shared/build-list-fixtures.ts`. `PlanningSurfacesGallery`'s export is
+unchanged and its single caller,
+`app/(public)/design-system/planning-surfaces/page.tsx:3`, is untouched.
+
+Checked before choosing what to extract, the same way the `views/` splits were: no
+test asserts on this file's source text. The three `features/build/` suites that read
+source from disk each name their targets explicitly and none names this file —
+`build-ui-consistency.test.ts` and `build-programmatic-navigation-guard.test.ts` both
+carry literal path lists, and `build-dirty-state-coverage.test.ts` walks the tree for
+`useForm` owners, which this gallery is not (`grep -c useForm` → 0). The extracted
+file could therefore not be swept into a ratchet it does not satisfy.
+
+- `pnpm check:file-sizes:self-test` → `check-file-sizes self-tests: 65 passed`.
+- `pnpm check:file-sizes` → `planning-surfaces-gallery.tsx` is **off** the over-500
+  list. The only remaining `planning-surfaces` row is `e2e/planning-surfaces-a11y.spec.ts`
+  (723), which is not in this batch. The repo total read 57 at this run against 55
+  earlier, entirely from other lanes' in-flight growth — `cycles/cycles-page.tsx`
+  598 → 678 and `webhooks/project-webhooks-page.tsx` 774 → 794.
+- `npx tsc -p tsconfig.json --noEmit` → no error names `features/build/milestones/**`.
+  One was found and fixed during the split: the `Release` type is still referenced by
+  the gallery's `ReleasesReadyTable`, so its type import was kept rather than moved.
+- `npx eslint features/build/milestones/` → **0 errors.** The 7 warnings are all in
+  `milestone-upsert-sheet.tsx` (4) and `project-milestones-page.tsx` (3), that lane's
+  files, none in either file this split touched.
+- `npx jest --maxWorkers=2 features/build/milestones features/build/releases
+  features/build/shared/build-list` → **9 of 10 suites, 119 of 127 tests passing.**
+  Every `milestones/` and `build-list` suite passes. The single failure is
+  `releases/releases-page.test.tsx` (8 tests, all context-menu), whose subject
+  `releases/releases-table-columns.tsx` was uncommitted and mid-edit by the releases
+  lane at run time; `releases-page.test.tsx` does not reference this gallery
+  (`grep -c planning-surfaces` → 0).
+
+After this split, the over-500 source files under `features/build/` are
+`cycles/cycle-form-sheet.tsx` (517), `cycles/cycles-page.tsx` (678),
+`epics/epics-page.tsx` (531), `incidents/incident-sheet.tsx` (501),
+`portfolios/portfolio-detail-page.tsx` (511), `teams/team-home-page.tsx` (531),
+`webhooks/project-webhooks-page.tsx` (794) and `whiteboard/whiteboard-page.tsx` (525).
+Of those, only `epics/epics-page.tsx` is in this batch.

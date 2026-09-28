@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 jest.mock("@/hooks/api/access", () => ({
@@ -6,7 +6,8 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 jest.mock("./ticket-quick-actions", () => ({
-  TicketQuickActions: () => null,
+  TicketQuickActions: ({ open }: { open?: boolean }) =>
+    open ? <div data-testid="card-menu-open" /> : null,
 }));
 
 jest.mock("./card-inline-fields", () => ({
@@ -27,6 +28,7 @@ jest.mock("./card-inline-date-fields", () => ({
 }));
 
 import { KanbanTicketCard } from "./kanban-ticket-card";
+import { ModuleNamesProvider } from "./module-names-context";
 import type { KanbanTicket } from "../shared/types";
 
 const ticket = {
@@ -134,5 +136,53 @@ describe("KanbanTicketCard — selection does not cost navigation", () => {
     renderCard();
 
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  });
+});
+
+describe("KanbanTicketCard — right click opens the card's own action menu", () => {
+  it("keeps the menu closed until the card is right clicked", () => {
+    renderCard();
+    expect(screen.queryByTestId("card-menu-open")).toBeNull();
+  });
+
+  it("opens the menu on contextmenu and suppresses the browser menu", () => {
+    renderCard();
+    const card = screen.getByText(ticket.title).closest("div");
+    if (card === null) throw new Error("the kanban card rendered nothing");
+    const notPrevented = fireEvent.contextMenu(card);
+    expect(notPrevented).toBe(false);
+    expect(screen.getByTestId("card-menu-open")).toBeInTheDocument();
+  });
+});
+
+describe("KanbanTicketCard — the module renders by name", () => {
+  it("shows the module name when the board knows it", () => {
+    render(
+      <ModuleNamesProvider modules={[{ id: 3, name: "Payments" }]}>
+        <KanbanTicketCard
+          ticket={{ ...ticket, moduleId: 3 }}
+          projectId={1}
+          projectKey="P1"
+          isDragging={false}
+          onSelect={jest.fn()}
+        />
+      </ModuleNamesProvider>,
+    );
+    expect(screen.getByText("Payments")).toBeInTheDocument();
+  });
+
+  it("shows no module chip when the card has no module, so the chip tracks the field", () => {
+    render(
+      <ModuleNamesProvider modules={[{ id: 3, name: "Payments" }]}>
+        <KanbanTicketCard
+          ticket={ticket}
+          projectId={1}
+          projectKey="P1"
+          isDragging={false}
+          onSelect={jest.fn()}
+        />
+      </ModuleNamesProvider>,
+    );
+    expect(screen.queryByText("Payments")).not.toBeInTheDocument();
   });
 });

@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -30,6 +31,10 @@ jest.mock("@/hooks/api/access", () => ({
 
 jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => mockIsOnline,
+}));
+
+jest.mock("@/hooks/api/build/advanced", () => ({
+  useModules: () => ({ data: [{ id: 11, name: "Payments" }] }),
 }));
 
 jest.mock("@/hooks/api/entitlements", () => ({
@@ -273,7 +278,11 @@ describe("ProjectBoardContent — workload capacity wiring", () => {
         "user-1",
         {
           capacityHours: 40,
+          leaveDays: 0,
           loggedHours: 48,
+          estimateHours: 44,
+          allocationPercent: 120,
+          varianceHours: 8,
           isOverAllocated: true,
           isZeroCapacity: false,
           utilizationPercent: 120,
@@ -295,12 +304,130 @@ describe("ProjectBoardContent — workload capacity wiring", () => {
   it("a member with low ticket count but isOverAllocated=true is flagged over-capacity — revert the wiring and this fails", () => {
     const overAllocated: MemberCapacityData = {
       capacityHours: 8,
+      leaveDays: 0,
       loggedHours: 10,
+      estimateHours: 9,
+      allocationPercent: 125,
+      varianceHours: 2,
       isOverAllocated: true,
       isZeroCapacity: false,
       utilizationPercent: 125,
     };
     expect(isMemberOverCapacity(1, overAllocated)).toBe(true);
     expect(isMemberOverCapacity(1, undefined)).toBe(false);
+  });
+});
+
+describe("ProjectBoardContent — a first run and a filtered-out list are different screens", () => {
+  beforeEach(() => {
+    mockScopes = { "build:tickets:view": true };
+    mockIsOnline = true;
+  });
+
+  it("offers the first-run copy when the collection is empty and no filter is active", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters={false} />);
+    expect(screen.getByText("No tickets yet")).toBeInTheDocument();
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+  });
+
+  it("offers the filtered copy with a clear action when a filter is active, not the first-run copy", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters />);
+    expect(screen.getByText("No tickets match your filters")).toBeInTheDocument();
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /clear all filters/i })).toBeInTheDocument();
+  });
+
+  it("offers the filtered copy when the page reports a filtered-empty result even without the filter flag", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} showEmptyFilterState />);
+    expect(screen.getByText("No tickets match your filters")).toBeInTheDocument();
+  });
+
+  it("prefers the offline panel over either empty copy, because the list may be stale rather than empty", () => {
+    mockIsOnline = false;
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters />);
+    expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+  });
+
+  it("renders neither empty copy once the collection has a row", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps([
+          { id: 1, title: "Widen the grain", type: "TASK", status: "TODO", version: 1 },
+        ])}
+        hasActiveFilters={false}
+      />,
+    );
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("No tickets match your filters")).not.toBeInTheDocument();
+  });
+
+  it("keeps the workload view rendering with no tickets, because it aggregates people and not only work", () => {
+    render(<ProjectBoardContent {...buildBaseProps()} hasActiveFilters={false} view="workload" />);
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+  });
+});
+
+describe("ProjectBoardContent — the tickets read's own failure keeps its backend semantics", () => {
+  beforeEach(() => {
+    mockScopes = { "build:tickets:view": true };
+    mockIsOnline = true;
+  });
+
+  it("resolves a 402 on the tickets read as a plan-locked module with its upgrade path, not as a generic failure (FE-41)", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={
+          new ApiError("module not enabled", 402, "MODULE_NOT_ENABLED", {
+            moduleKey: "build",
+            reason: "not-in-plan",
+            upgradePath: "/settings/billing",
+          })
+        }
+      />,
+    );
+    expect(screen.getByRole("link", { name: /upgrade|billing|plan/i })).toHaveAttribute(
+      "href",
+      "/settings/billing",
+    );
+    expect(screen.queryByText("No tickets yet")).not.toBeInTheDocument();
+  });
+
+  it("keeps the backend message for an ordinary tickets-read failure, so the 402 branch did not swallow errors", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={new ApiError("the ticket index is rebuilding", 500, "INTERNAL")}
+      />,
+    );
+    expect(screen.getByText(/the ticket index is rebuilding/i)).toBeInTheDocument();
+  });
+
+  it("exposes the request id of a failed tickets read, so a person can quote it to support", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={
+          new ApiError("boom", 500, "INTERNAL", { correlationId: "req-42ab" })
+        }
+      />,
+    );
+    expect(screen.getByText("req-42ab")).toBeInTheDocument();
+  });
+
+  it("renders no request id for a failure that carries none, so the reference tracks the envelope", () => {
+    render(
+      <ProjectBoardContent
+        {...buildBaseProps()}
+        isError
+        error={new ApiError("boom", 500, "INTERNAL")}
+      />,
+    );
+    expect(screen.queryByText(/^req-/)).not.toBeInTheDocument();
   });
 });

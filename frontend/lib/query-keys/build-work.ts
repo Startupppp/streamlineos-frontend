@@ -141,10 +141,15 @@ export const buildWorkQueryKeys = {
         [...base, "projects", "portal", projectId, "overview"] as const,
       changeRequests: (projectId: number) =>
         [...base, "projects", "portal", projectId, "change-requests"] as const,
-      visibility: (projectId: number, ticketCursor?: string, milestoneCursor?: string) =>
-        ticketCursor || milestoneCursor
-          ? ([...base, "projects", projectId, "client-visibility", ticketCursor ?? null, milestoneCursor ?? null] as const)
-          : ([...base, "projects", projectId, "client-visibility"] as const),
+      visibility: (projectId: number, ticketCursor?: string, milestoneCursor?: string) => {
+        const scope = [...base, "projects", projectId, "client-visibility"] as const;
+        const cursors: Record<string, string> = {};
+        if (ticketCursor) cursors.ticketCursor = ticketCursor;
+        if (milestoneCursor) cursors.milestoneCursor = milestoneCursor;
+        return Object.keys(cursors).length === 0
+          ? scope
+          : ([...scope, cursors] as const);
+      },
       settings: (projectId: number) =>
         [...base, "projects", projectId, "client-portal", "settings"] as const,
       preview: (projectId: number) =>

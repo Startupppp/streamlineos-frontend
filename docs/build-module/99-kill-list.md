@@ -160,6 +160,18 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   **OBSERVABLE: still absent, and now with a named cheapest fix.** `grep -rln "redirectHit\|redirect_count\|redirectMetric"` across the frontend returns zero. Nothing counts a redirect anywhere. But the two `proxy.ts` entries are already application code on the Node runtime, so they can be counted today with one call in `redirectTo` (`proxy.ts:135-144`) — the single function both go through. The 28 configuration entries still cannot be observed without moving them into that same function, which is the real cost of (A) and the reason it stays premature.
 
   **(B) STANDS, with the list corrected from 28 to 30 entries to eyeball.** The escalation trigger stays as written. **NOT EARNED:** *temporary* is satisfied 30/30, *removed after migration* is the open (A)/(B) choice, and *observable* is still a missing capability with zero implementation.
+
+  **2026-09-28, third lane. Every figure in both notes above reproduces, including the 30. NOT EARNED, and this lane declined to build the cheap partial fix — the reason is recorded rather than deferred.**
+
+  Re-derived, `frontend/`, verbatim values: `grep -c 'source: "/build' next.config.ts` → **28** · the `permanent` tally across those 28 → **28 false, 0 true** · first/last Build hits → **`:142`** (`source: "/build/:projectId(\\d+)"`) and **`:288`** (`source: "/build/workspaces"`) · repo-wide `source: "` → **53** · `permanent: false` → **44** · `permanent: true` → **7**, so the redirects array total of **51** holds and the 2 extra `source:` entries are still the `headers` array. `grep -n 'redirectTo(req, "/build' proxy.ts` → **`:177`** and **`:182`**. **Surface: 30 — 28 in configuration, 2 in code. Temporary: 30/30.**
+
+  **OBSERVABLE: still zero implementation.** `grep -rln "redirectHit\|redirect_count\|redirectMetric" app components features lib proxy.ts` → **no matches**. Nothing counts a redirect anywhere in the frontend.
+
+  **THE CHEAP PARTIAL FIX WAS AVAILABLE TO THIS LANE AND WAS NOT TAKEN.** The second-lane note is right that the two `proxy.ts` entries both pass through one function, `redirectTo` (`proxy.ts:135-144`), and could be counted today with one call. This lane deliberately did not add it, because a counter on 2 of 30 sources cannot answer the question this box needs answered. The criterion's purpose is to know when a deep link has finished migrating so the redirect can be removed; a counter covering `/projects` and `/product-management` tells you nothing about the 28 configuration entries, and shipping it would make the box *look* instrumented while leaving 93% of the surface blind — which is worse than a plainly absent capability, because the next reader would cite it. **Instrumenting 2 of 30 is not progress toward this box; it is a smaller version of the same gap with a metric attached.**
+
+  **WHAT WOULD ACTUALLY CLOSE `observable`, and it is a design decision, not a line of code.** A `next.config.ts` redirect is resolved by the Next.js routing layer before any application code runs, so it can never be counted where it lives. Closing this clause means **moving all 28 into `proxy.ts`'s `redirectTo`** — i.e. trading 28 declarative config entries for 28 imperative branches on the Node runtime — and then counting there. That is a real trade with a real cost (config is the better home for a static redirect; code is the only home that can observe one), and nobody has made it. Until it is made, *observable* has no implementation and (A)'s automated expiry stays premature because it would gate removal on a signal that does not exist.
+
+  **(B) STANDS at 30 entries, escalation trigger unchanged. NOT EARNED:** *temporary* 30/30 ✓ · *removed after deep-link migration* — the open (A)/(B) choice, blocked on the clause below · *observable* — no implementation, and the cheap partial was refused on purpose.
 - [ ] No removed surface retains a parallel schema, permission, cache key, or endpoint family. **2026-09-28 NOT EARNED. Every tombstone claim re-verified this lane and all hold; but the re-verification found two parallel survivals the previous entry missed, so "the only exception is deliberate" is no longer accurate.** **Re-checked later the same day by a second lane: every tombstone measurement reproduces, both survivals are confirmed — the trigger pair is now proven undispatchable by construction — and six further call sites plus two dead vestiges were added. See the second-lane note below.**
 
   **THE DELIBERATE EXCEPTION — re-verified, unchanged.** The Sprint endpoint family (`/build/:projectId/sprints`) is retained as a 410 tombstone. Measured on disk:
@@ -211,6 +223,77 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   **TWO DEAD VESTIGES worth one line each.** `Omit<FilterState, "sprintParam">` appears at `frontend/features/build/shared/filter-command-menu-types.ts:22` and `frontend/features/build/shared/use-filter-command-menu-state.ts:37`, but `FilterState` (`frontend/components/list-view/filter-types.ts:75`) has no `sprintParam` member — `Omit` accepts a key outside `keyof T`, so both are no-ops that typecheck. And `frontend/features/build/tickets/ticket-activity-log.tsx:41` keeps a `sprint_changed` icon entry, which is the legitimate case the previous entry described: a stored activity type keeps its old name so historical rows stay readable.
 
   **STILL NOT EARNED, for the same reason and with more of it.** Every finding is a source file and out of this lane's write scope. Routed to the orchestrator. **SETTLES WHEN** the `modules.sprints` flag is removed from both contracts and the wizard, and the `sprint.started` / `sprint.completed` pair is removed from all six declaration sites — two backend (`core/dto/automation.schemas.ts:32-33`, `notifications/notification-events-build.catalog.ts:29,:33`) and four frontend (`hooks/api/build/automations.ts:35-36`, `features/build/automations/automation-schema.ts:21-22`, `hooks/api/build/build-project-schema.ts:274-275`, `features/build/webhooks/project-webhooks-page.tsx:89-90`) — after which the sheet, the page filter and the URL param fall away as consumers. The Sprint 410 adapter stays.
+
+  **2026-09-28, third lane. SURVIVAL 2 IS GONE — all six declaration sites are now clear, the last two removed by this lane. SURVIVAL 1 remains and is bigger than "a settings flag". The box does not tick, and the reason is now one survival instead of two.**
+
+  **SURVIVAL 2 — CLOSED.** Measured across both repos this lane: `grep -rn "sprint.started\|sprint\.completed\|Sprint Started\|Sprint Completed" frontend/{app,components,features,hooks,lib}` → **no matches**, and `grep -rn "sprint.started\|sprint\.completed" backend/src | grep -v spec` → after this lane's edit, **no matches**. Where each of the six went:
+
+  | Site as recorded | State found | By whom |
+  |---|---|---|
+  | `backend/core/dto/automation.schemas.ts:32-33` | **already clear.** `createAutomationSchema.triggerEvent` is now `z.enum(["ticket.created","ticket.updated","ticket.status_changed","ticket.assigned"])` at `:27-32` — the citation `:32-33` is stale, those lines are the last two ticket events | peer lane |
+  | `frontend/hooks/api/build/automations.ts:35-36` | **already clear.** `TRIGGER_EVENTS` (`:30-36`) holds the four ticket events only | peer lane |
+  | `frontend/features/build/automations/automation-schema.ts:21-22` | **already clear.** The form `z.enum` (`:16-21`) holds the same four | peer lane |
+  | `frontend/hooks/api/build/build-project-schema.ts:274-275` | **already clear** | peer lane |
+  | `frontend/features/build/webhooks/project-webhooks-page.tsx:89-90` | **already clear** — and the section copy at `:361` ("tickets, sprints, or members") is gone too | peer lane |
+  | `backend/notifications/notification-events-build.catalog.ts:29,:33` | **removed by this lane** | this lane |
+
+  **A WINDOW WAS OPEN AND IS NOW SHUT, and it was worse than "dead".** Once the backend `z.enum` lost the pair while the frontend pickers still offered it, a user selecting "Sprint Started" would have been **400ed** rather than merely subscribed to nothing. Both halves are now clear, so the window is closed, but it is worth recording that a partial removal of a dead enum is a live defect rather than a harmless intermediate state — the next lane removing half a pair should remove the other half in the same commit.
+
+  **THE CATALOGUE EDIT, and a third change made in the same read.** `backend/src/modules/notifications/notification-events-build.catalog.ts` no longer registers `build.sprint.started` or `build.sprint.completed`. The surviving `build.sprint.ending` — the one event with a real producer (`build-due-sweep.service.ts:166`) — has had its catalogue **label** corrected from `"Sprint ending soon"` to `"Cycle ending soon"`, which the box below records as a class-3 finding; its internal event key keeps the old word so stored preference rows stay readable, and its dispatched title and body already said "Cycle". `grep -rn sprint notification-events-build.catalog.ts` → one hit, `:29`, the key of that live event. Gate evidence:
+
+  ```
+  $ nice -n 10 npx jest --maxWorkers=2 src/modules/notifications/notification-events
+  PASS src/modules/notifications/notification-events-visibility-kind.spec.ts
+    ✓ every build.ticket.* event declares visibilityResourceKind (2 ms)
+    ✓ every declared visibilityResourceKind on build.ticket.* uses BUILD_TICKET_RESOURCE
+    ✓ bites: a rogue build.ticket.* event without visibilityResourceKind is detected
+  Tests:       3 passed, 3 total
+
+  $ nice -n 10 npx jest --maxWorkers=2 src/modules/notifications
+  Test Suites: 1 failed, 82 passed, 83 total
+  Tests:       1 failed, 568 passed, 569 total
+  ```
+
+  The one red suite is `notification-delivery-class.spec.ts`, its `direct email caller inventory` ratchet, missing three files that reach `EmailService` — `modules/auth/auth-email-otp-claim.spec-fixtures.ts`, `modules/cron/cron-recruitment-reports.service.ts`, `modules/cron/cron-recruitment-sequences.service.ts`. Pre-existing, a peer lane's in-flight work, nothing to do with the catalogue.
+
+  **THE FREE-FORM WEBHOOK FIELD IS UNCHANGED AND STILL WORTH A DECISION.** `backend/src/modules/build/core/dto/webhook.schemas.ts:5` is still `events: z.array(z.string().min(1)).min(1)`, so a webhook subscription to *any* string is stored without validation against the event catalogue. Removing the two labels from the picker means nobody is offered them; it does not stop a direct API caller subscribing to `sprint.started` or to a typo. Routed as a decision: either that field becomes a `z.enum` over the catalogue, or the looseness is recorded as deliberate.
+
+  **SURVIVAL 1 — STILL PRESENT, AND ITS COST WAS UNDERSTATED.** `modules.sprints` survives at **13 sites across both repos**, re-derived this lane: `backend/src/db/schema/build/core.ts:53` (the `settings.modules` **type**) · `backend/src/modules/build/core/dto/project-core.schemas.ts:26` (`sprints: z.boolean()`, **required**, on the wire) · `projects-provision.service.ts:102` and `:215` (defaults `sprints: true`) · `core/settings/projects-settings-iterations.service.ts:51` (defaults `false`) · `frontend/hooks/api/build/build-project-schema.ts:76` · `frontend/features/build/project-create/use-project-create.ts:29,:46,:75` · `steps/step-toggles.tsx:19,:62` · `steps/step-review.tsx:54` · plus four test fixtures under `project-create/`. `grep -rn "modules\.sprints\|settings\.modules" backend/src` still returns **zero readers** — nothing consumes the value.
+
+  **This lane did not remove it, and the reason is a sequencing hazard the previous entries did not name.** `project-core.schemas.ts:26` declares `sprints: z.boolean()` as a **required** key of the wire object. So this is an expand–contract, not a deletion: drop it from the backend schema first and a frontend still sending it fails `.strict()`; drop it from the frontend first and a backend still requiring it 400s the project-create wizard. The correct order is (1) make the backend key optional, (2) stop the frontend sending it and remove the toggle, the review row and the four fixtures, (3) remove the key from the backend schema, the two provisioning defaults, the iterations default and the `core.ts:53` type. Three steps across two repos with a deploy between the first and the third — which is precisely the "the irreversible half depends on a deployment" shape this document's own kill list calls out for the Sprint/Cycle contraction. **Routed to the orchestrator with that ordering, not as a one-line fix.**
+
+  **TOMBSTONE RE-VERIFIED, unchanged, with two path corrections.** `wc -l src/modules/build/execution/sprints.service.ts` → **41**; `grep -c GoneException` → **6**; `SprintsController` at `iterations.controller.ts:76` (`CyclesController` at `:152`); `createSprintSchema` `execution/dto/iterations.schemas.ts:17`, `updateSprintSchema` `:35` (**:34 → :35**); `sprintListItemSchema` `execution/dto/execution-response.schemas.ts:11`, `sprintRowSchema` `:40`, `sprintDetailSchema` `:181` (**:172 → :181**); the frozen spec is **116** lines and lives at `src/modules/build/execution/sprint-create-frozen.spec.ts`, **not** `consolidation-guards/` as cited above; `grep -rn "sprints" src/db/schema/build/` → exactly one hit, `core.ts:53`, the dead settings boolean, and no table. The 410 adapter remains the only deliberate retention.
+
+  **2026-09-28, fourth lane — SURVIVAL 1 IS TWO-THIRDS RETIRED. Steps 1 and 2 of the three-step order are done and committed separately. Step 3 cannot be taken today and the exact reason is recorded below. The frontend is now entirely clean of the flag.**
+
+  **STEP 1 — the wire key is optional** (`backend b07a933c3`). `src/modules/build/core/dto/project-core.schemas.ts:26` is now `sprints: z.boolean().optional()` inside `projectModulesSchema`, which is a plain non-strict `z.object` used in exactly one place, `createProjectSchema.modules` (`:142`, itself `.optional()`). A deployed backend now accepts a create payload with or without the flag, so the frontend could stop sending it independently — the hazard this order exists to avoid.
+
+  The `$type` on `projects.settings` was loosened in the same commit — `src/db/schema/build/core.ts:53` is `sprints?: boolean` — and that was not tidying. Once the frontend stops sending the flag, newly provisioned projects store `settings.modules` without it, and a required `sprints: boolean` over a `jsonb` column is a type that lies with nothing at runtime to catch it. Nothing reads the field, so loosening broke no caller. `nice -n 10 npx jest --maxWorkers=2 src/modules/build/core/project-crud src/modules/build/core/settings` → **16 suites, 82 tests, passing.**
+
+  **STEP 2 — the frontend stops sending it, and the toggle is gone** (`frontend 907c3c2cf`). Removed: the toggle row at `steps/step-toggles.tsx:19` (`label: "Sprints"`, `desc: "Agile sprint cycles"`), the `modules.sprints` member of `WizardDraft`, the default literal, `applyToModules`' branch, the review row at `steps/step-review.tsx:54`, and the flag in four test fixtures under `project-create/`. `grep -rn "modules\.sprints\|modules: { sprints" frontend/{app,components,features,hooks,lib}` excluding tests → **no matches.**
+
+  **`features.sprints` went with it, deliberately.** The same toggle carried `kind: "feature", key: "sprints"` *and* `syncMod: "sprints"`, so one control wrote both `features.sprints` and `modules.sprints`. Measured: `grep -rn "features\.sprints"` across both repos returns nothing, and no backend code reads `settings.features` at all. Leaving `DEFAULT_FEATURES.sprints: true` behind a deleted toggle would have left a default nobody can change and nothing reads — the same defect one layer down — so it was removed in the same commit.
+
+  **THE RESPONSE-CONTRACT EDIT IN STEP 2 WAS LOAD-BEARING, NOT TIDYING, AND IT IS THE SHARPEST THING IN THIS PASS.** `frontend/hooks/api/build/build-project-schema.ts` declared `settings.modules.sprints` as a **required** `z.boolean()`. Had step 2 shipped without touching it, the first project provisioned without the key would have **thrown on parse in the client** — the project detail page failing on a field nobody reads. The field is now dropped from the contract, and because the object is non-strict a legacy row still carrying `sprints: true` has it silently stripped rather than rejected. Two tests pin both directions, named for what they protect: *"strips the retired sprints module flag a legacy row still carries, instead of failing the parse"* and *"parses a project provisioned after the sprints flag was retired, whose settings never carried it"*. `nice -n 10 npx jest --maxWorkers=2 features/build/navigation features/build/project-create hooks/api/build/build-project` → **27 suites, 315 tests, passing.**
+
+  Two gates checked around the change, `frontend/`: `check:contract-parity` is **unchanged at its pre-existing `FAIL: 48 NEW required field(s)`** (all out of lane) — dropping a frontend-declared field can only remove a finding, never add one, so no parity movement was possible; and `check:retired-vocabulary` acknowledged debt falls **14 → 11** as the three project-create wizard strings disappear, with the ceiling lowered to 11 in the same commit to hold the gain.
+
+  **STEP 3 IS NOT TAKEN, AND ONE OF ITS FOUR PARTS IS THE REASON.** The remainder is five lines across four backend files, re-derived this lane:
+
+  | Part | Site | Safe today? |
+  |---|---|---|
+  | drop the wire key | `core/dto/project-core.schemas.ts:26` | **yes** — `projectModulesSchema` is non-strict, so an old bundle still sending `sprints: true` has it stripped, not rejected |
+  | drop the provisioning defaults | `core/project-crud/projects-provision.service.ts:102`, `:215` | **NO — this is the gate** |
+  | drop the iterations default | `core/settings/projects-settings-iterations.service.ts:51` | yes — internal literal, unread |
+  | drop the `$type` member | `src/db/schema/build/core.ts:53` | yes — type-only, already optional |
+
+  **Why the provisioning defaults are the gate.** Remove them and a project created after that deploy stores `settings.modules` without `sprints`. Any browser still running the **pre-step-2 frontend bundle** parses that project through the old contract, which requires `sprints: z.boolean()`, and throws. That is the same failure step 2 avoided, arriving from the other direction. So the provisioning defaults may only drop once step 2 is deployed and old bundles have aged out.
+
+  Shipping the three safe parts without the fourth is worse than shipping none: it leaves the flag written by provisioning but no longer accepted on the wire and no longer in the type — incoherent, and it would read to the next lane as a finished job. **So this lane stopped at the last safe step, which is what the order is for.**
+
+  **SETTLES WHEN** step 2 is deployed, after which step 3 is one commit over those five lines, and this survival is closed. There is a second, unrelated dead flag worth a line while someone is in there: nothing in the backend reads `settings.features` at all, so the whole `features: Record<string, boolean>` blob may be dead — measured only for `sprints`, not for its other seventeen keys.
+
+  **SURVIVAL 2 needs nothing further; STILL NOT EARNED on survival 1's step 3.**
 - [ ] Product copy does not advertise removed or unimplemented capabilities. **2026-09-28 NOT EARNED. The previous entry proposed option (A) as the settling check and asserted its result without running it. This lane ran it. The asserted result was FALSE.** **Re-checked later the same day by a second lane: the withdrawal is upheld, two of its counts are wrong, the pattern it used cannot match the plural "Sprints", and the `features/build/` scope hid public landing/SEO copy plus a second class of finding — retention copy that promises deletion nothing performs. The verification decision is resolved in the second-lane note below.**
 
   **2026-09-28 — public copy fixed, two findings remain and both are owner decisions.** The five
@@ -331,3 +414,79 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   - **Sequencing is unchanged and now firmer.** Class 1 (webhook and automation triggers that cannot fire) and class 2 (a module toggle nothing reads) are functional defects; a vocabulary gate does not touch either, and shipping the gate first means its first report is dominated by defects it cannot fix. Class 4 needs no gate at all — it needs either the retention sweeper and the Visibility panel to exist, or the copy to stop promising them.
 
   **STILL NOT EARNED.** Every finding is a source file and out of this lane's write scope. Routed to the orchestrator. Class 4.1 is the one to route first: it is a compliance promise with no implementation behind it.
+
+  **2026-09-28, third lane. Most of classes 1–3 have landed. Two findings survive that no previous pass reached, both because every pass so far searched `features/` and `app/` and neither searched `components/`. And the box cannot be earned today for a reason no amount of grepping changes.**
+
+  **RE-DERIVED SCOPE.** `grep -rEn "\bSprints?\b" frontend/{app,components,features} | grep -vE '\.(test|spec)\.'` → **19 hits**. Note the pattern: `\bSprints?\b`, with the optional plural the second-lane note showed `\bSprint\b` could not match. What has gone since the entries above: the two webhook trigger labels and the webhooks section copy at `:361`, the danger-zone prose in `settings/danger-zone-section.tsx:38`, all four `features/landing/data/pillars.ts` strings, and `features/seo/structured-data.tsx:128`. Confirmed: `grep -in sprint` over `pillars.ts` and `structured-data.tsx` → **no matches**.
+
+  **TWO NEW FINDINGS IN `components/`, WHICH NO PASS HAS SEARCHED.**
+
+  1. **Public marketing copy, still live, and it is the same class the second lane declared fixed.** `frontend/components/brand/floating-composition.tsx:44` renders `<span …>Sprint 24</span>` above `12/24` and "Ship onboarding v3" — a mock iteration card inside the brand composition. It is rendered by `features/landing/components/landing-hero.tsx` **and** `features/auth/auth-right-panel.tsx`, so it appears on the public landing hero and on the sign-in page. The "public copy fixed" claim above is therefore incomplete: the five strings named were in `features/landing/data/` and `features/seo/`, and this one is in `components/brand/`. A rename to `Cycle 24` is the same one-word change the pillars took.
+
+  2. **A permanently-empty data-table column labelled with the retired noun, on a live authenticated HR surface.** `frontend/components/hr/employee-tickets-list.tsx:65-68` declares a column `{ key: "sprint", header: "Sprint", cell: (row) => row.sprint?.name || "-" }`, and the row type at `:20-22` declares `sprint: { name: string } | null`. The list is rendered by `features/hr/employees/detail/overview-tab.tsx:93` from `employee-details-view.tsx:327-331`, where the prop is a bare `as` cast over `ticketsResult?.data` with no schema validating a `sprint` field. No backend HR read projects one: `grep -rn "sprint:" backend/src/modules/hr` → nothing. **So the column renders `-` on every row, forever, under a heading naming a removed surface.** It is class 2 (advertises a removed module) and class 3 (stale vocabulary) at once, and it is also simply a dead column. The fix is to delete the column and the row-type field; the label is the lesser half.
+
+  Both are frontend source files outside this lane's write scope — `components/brand/` is shared landing/auth chrome and `components/hr/` belongs to the HR workstream — so both are routed to the orchestrator rather than edited here.
+
+  **ONE CLASS-3 ITEM WAS FIXED IN THIS LANE, in the notification catalogue.** `backend/src/modules/notifications/notification-events-build.catalog.ts:29` now reads `"Cycle ending soon"` instead of `"Sprint ending soon"`. That was the single case where the label lagged a producer whose own dispatched title and body already said "Cycle", so it was a pure wording correction with no behaviour attached. The two dead catalogue entries beside it were removed in the same edit; see the box above.
+
+  **STILL UNFIXED FROM THE LISTS ABOVE**, all re-confirmed on disk: the three project-create wizard strings (`step-toggles.tsx:19` `label: "Sprints"` / `desc: "Agile sprint cycles"`, `step-type.tsx:19` `desc: "Sprints & velocity"`, `step-review.tsx:54`) — class 2, and they cannot be fixed by renaming, because the flag behind them is dead and must be retired through the three-step order in the box above · the two placeholders (`qa/test-run-sheet.tsx:149`, `whiteboard/create-board-dialog.tsx:70`) · the dashboard card (`features/dashboard/sprint-card.tsx:44` "Active Sprint", `:87` `aria-label="Sprint progress"`, and the empty state at `:146-147` which instructs the user to "Start a sprint" — an instruction with no verb behind it) · `features/org-setup/lib/preview-mock-content.ts:32` "Sprint tracking" · and the four gallery-filler sites, lowest priority as recorded.
+
+  **THE BOX CANNOT BE EARNED TODAY, AND IT IS NOT A COUNTING PROBLEM.** `features/landing/data/testimonials.ts:18` still quotes a named customer: *"The sprint + CRM combo is game-changing. We track leads and sprints in the same view."* Editing words inside an attributed quotation falsifies a statement a real person is said to have made. The options remain: leave it as a dated quote, remove the testimonial, or source a real replacement — **fabricating a substitute is not one, and this lane will not do it.** That is an owner decision and it is the hard floor under this box: every other finding could be fixed this afternoon and the box would still be false while a public testimonial advertises the removed noun without permission to edit it.
+
+  **CLASS 4 IS UNCHANGED AND IS STILL THE MOST SERIOUS ITEM HERE.** Project retention and legal hold are advertised in detail (`features/build/settings/project-settings-retention-sections.tsx:33,:167-182,:340-341`) and enforced nowhere — the only Build retention job prunes `webhookDeliveries` on a hard-coded 90 days and reads none of the three configured fields. That is a compliance promise with no implementation, and it is also a silent answer to open question 10, which [`05-performance-caching.md`](./05-performance-caching.md)'s cross-module box now depends on for its own settling. Route it first, ahead of every wording item above.
+
+  **THE (A) DECISION IS UNCHANGED** — a rendered-string-literal scan with an allowlist, after classes 1 and 2 land — and this pass adds one requirement to its spec: **it must scan `components/` as well as `features/` and `app/`.** Both findings in this note were invisible to every previous pass for exactly that reason, and a gate seeded from a scope that has already missed two public surfaces would inherit the blind spot.
+
+  **2026-09-28, fourth lane — (A) IS BUILT. Both `components/` findings are FIXED. The box stays unchecked, and after this pass exactly one line keeps it that way.**
+
+  **THE TWO FIXES.**
+
+  - `frontend/components/brand/floating-composition.tsx:44` now renders `Cycle 24` instead of `Sprint 24`. That string appears on the **public landing hero** (`features/landing/components/landing-hero.tsx`) and the **sign-in page** (`features/auth/auth-right-panel.tsx`), so it was the same class as the four `pillars.ts` strings and the SEO payload — public marketing copy selling a removed noun — and it survived the pass that fixed those only because it lives in `components/brand/` rather than `features/landing/data/`.
+  - `frontend/components/hr/employee-tickets-list.tsx` — **the column is deleted, not relabelled**, together with the `sprint: { name: string } | null` member of its row type. No HR backend read ever projected that field and the prop arrives as a bare `as` cast, so the column rendered `-` on every row under a heading naming a removed surface. Relabelling it to "Cycle" would have preserved a permanently empty column; the right fix was to remove it. `grep -rn -i sprint` over both files → no matches. `nice -n 10 npx jest --maxWorkers=2 features/hr/employees` → **13 suites, 97 tests, all passing**.
+
+  **THE GATE, and it is a shrink-only ratchet rather than a red-on-day-one scanner.** `frontend/scripts/check-retired-vocabulary.mjs`, registered as `check:retired-vocabulary` with a `:self-test` sibling, baseline at `frontend/scripts/baselines/retired-vocabulary.json`.
+
+  - **Scope is `app`, `components`, `features`** — the one change over every manual pass, and the self-test asserts it (`(k) scans components/, which every previous manual pass omitted`) so the blind spot cannot silently come back.
+  - **It reads rendered positions, not raw file text**, which is what (A) specified: quoted string literals and JSX text nodes, filtered to things shaped like prose or a label (contains a space, or begins with a capital). That one rule replaces a pile of allowlist entries — it excludes dotted event keys, snake_case stored enum values, path and query segments, import specifiers and bare identifiers in a single pass. `EmptySprintIllustration` is invisible to it because it is an identifier; `build.sprint.ending` because it is a dotted key; `sprint_changed` because it is snake_case.
+  - **It matches the plural**, the failure the second-lane note identified in the hand-typed `\bSprint\b`. Self-test assertion `(b)` is exactly that case.
+  - **Design-system routes and `*-gallery.tsx` files are skipped by path** — 26 files — rather than allowlisted line by line. Gallery sample data advertises nothing, and the previous passes' repeated ranking of those hits as "lowest priority" is now a rule instead of a judgement.
+  - **Why a ratchet and not a hard fail:** this document's own (A) analysis warned that a gate shipped before the debt is cleared gets switched off. So the baseline records today's count as a ceiling that may only shrink, on the established `check:over-300` pattern, and the gate **lists every finding on every run** while failing only if the count grows. It also fails on a stale justification, and when the count drops it tells you to lower the ceiling.
+
+  Verbatim, `frontend/`, self-test first:
+
+  ```
+  $ node scripts/check-retired-vocabulary.mjs --self-test
+    [pass] (a) flags a retired word in a rendered label prop
+    [pass] (b) flags the PLURAL, which a \bSprint\b pattern cannot match
+    [pass] (c) flags a JSX text node
+    [pass] (d) flags a placeholder attribute
+    [pass] (e) does NOT flag a dotted event key
+    [pass] (f) does NOT flag a snake_case stored enum value
+    [pass] (g) does NOT flag an import specifier
+    [pass] (h) does NOT flag a bare identifier outside a string
+    [pass] (i) does NOT flag a query-key or path segment
+    [pass] (j) reports exactly one finding for one offending line
+    [pass] (k) scans components/, which every previous manual pass omitted
+    [pass] (l) skips a test file by name
+    [pass] (m) skips design-system and gallery fixture data
+    [pass] (n) does not skip an ordinary component path
+    [pass] (o) does NOT flag a bare barrel-export identifier line
+    [pass] (p) still flags a bare multi-word JSX text line
+    [pass] (q) the baseline is a shrink-only ratchet, not a mute switch
+  SELF-TEST PASS (17 assertions)
+
+  $ node scripts/check-retired-vocabulary.mjs
+  Retired-vocabulary scan: app, components, features
+    files 5067  ·  fixture files skipped 26  ·  findings 16  ·  justified 2  ·  acknowledged debt 14 [ceiling 14]
+  check-retired-vocabulary: OK
+  ```
+
+  Assertions (e) through (i) are what make `OK` mean "scanned and clean" rather than "matched nothing useful" — they prove the noise rules exclude the right things — and (a) through (d) plus (j), (p) prove it still bites. **Neither `components/brand/` nor `components/hr/` appears in the 14, which is the gate confirming this lane's two fixes rather than this lane asserting them.**
+
+  **THE 14 ACKNOWLEDGED, with owners.** `project-create/steps/{step-review.tsx:54, step-toggles.tsx:19 (×2), step-type.tsx:19}` — class 2, and **they cannot be fixed by renaming**: the flag behind them is dead and must be retired through the expand–contract in the box above · `qa/test-run-sheet.tsx:149` and `whiteboard/create-board-dialog.tsx:70` — placeholders · `webhooks/project-webhooks-page.tsx:599` — the section copy, still present and now at `:599` (it was cited at `:361`; a peer lane is live in that file, so this lane did not touch it) · `dashboard/dashboard-deferred-body.tsx:347` and `dashboard/sprint-card.tsx:44,:50,:87,:146,:147` — the card is live and Cycle-backed, so class 3, except `:147` *"Start a sprint in your project to see progress here."*, which instructs the user to do something the product has no verb for · `org-setup/lib/preview-mock-content.ts:32` — first-run onboarding preview.
+
+  **TWO JUSTIFIED, and one of them is not really a justification.** `features/wiki/lib/starter-templates.ts:340` is generic agile vocabulary in a retro template description and the file belongs to the Knowledge Base workstream. `features/landing/data/testimonials.ts:18` is recorded in the baseline with its reason spelled out as **an open owner decision, not an exemption** — an attributed customer quotation cannot be reworded without falsifying a statement a named person is said to have made, and fabricating a replacement is not an option this lane will take. It is in the baseline so the gate can be green over work engineering is able to do, and it is named in the baseline text as the reason **this box is not.**
+
+  **STILL NOT EARNED, and the blocker is now exactly one line.** Every `components/` finding is fixed, the public marketing copy is clean (`pillars.ts`, `structured-data.tsx`, `floating-composition.tsx` all check out), the gate exists with a non-vacuous self-test and cannot regress, and 14 wording items are held under a shrink-only ceiling with owners attached. The box says product copy "does not advertise removed or unimplemented capabilities", and `testimonials.ts:18` still does, publicly, in a voice nobody here may edit. **SETTLES WHEN** the owner chooses: leave it as a dated quote, remove the testimonial, or source a real replacement.
+
+  **AND CLASS 4 IS UNTOUCHED AND STILL RANKS FIRST.** The retention copy promises deletion nothing performs. A vocabulary gate cannot see it — "unimplemented" is not a word — so it is not in the 14 and never will be. It remains the most serious item in this box and the one to route ahead of every wording fix above.

@@ -5,9 +5,11 @@ import { createAppQueryClient } from "@/components/providers/query-provider";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";
 import { useUpdateTicket } from "./ticket-update-mutation";
-import { useBulkUpdateTickets, useRankTicket } from "./ticket-create-rank-mutations";
+import { useBulkUpdateTickets, useRankTicket, useDeleteTicket } from "./ticket-create-rank-mutations";
+import { useAddTicketRelation, useRemoveTicketRelation } from "./ticket-sub-resources";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
-jest.mock("@/lib/api-client", () => ({ apiClient: { patch: jest.fn(), post: jest.fn() } }));
+jest.mock("@/lib/api-client", () => ({ apiClient: { patch: jest.fn(), post: jest.fn(), delete: jest.fn() } }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true, useAccess: () => ({ data: { isOrgOwner: true }, refetch: jest.fn() }) }));
 beforeEach(() => jest.clearAllMocks());
 
@@ -173,5 +175,47 @@ it("rank updates patch an active board without issuing a duplicate list request"
   expect(client.getQueryState(board)?.isInvalidated).toBe(true);
   expect(queryFn).toHaveBeenCalledTimes(1);
   unsubscribe();
+  client.clear();
+});
+
+it("adding a dependency invalidates the critical path the new edge moves", async () => {
+  const client = createAppQueryClient();
+  const criticalPath = buildWorkQueryKeys.projectReports.criticalPath(42);
+  client.setQueryData(criticalPath, { criticalPath: [], totalDuration: 0 });
+  jest.mocked(apiClient.post).mockResolvedValue({ id: 5 });
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useAddTicketRelation(1, 42), { wrapper });
+  await act(async () => { await result.current.mutateAsync({ relatedTicketId: 2, relationType: "BLOCKS" }); });
+  expect(client.getQueryState(criticalPath)?.isInvalidated).toBe(true);
+  client.clear();
+});
+
+it("removing a dependency invalidates the critical path the dropped edge moves", async () => {
+  const client = createAppQueryClient();
+  const criticalPath = buildWorkQueryKeys.projectReports.criticalPath(42);
+  client.setQueryData(criticalPath, { criticalPath: [], totalDuration: 0 });
+  jest.mocked(apiClient.delete).mockResolvedValue(undefined);
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useRemoveTicketRelation(1, 42), { wrapper });
+  await act(async () => { await result.current.mutateAsync(2); });
+  expect(client.getQueryState(criticalPath)?.isInvalidated).toBe(true);
+  client.clear();
+});
+
+it("deleting a ticket invalidates the lists and reports it fed rather than patching them out", async () => {
+  const client = createAppQueryClient();
+  const board = queryKeys.projects.tickets({ projectId: 42, view: "board" });
+  const criticalPath = buildWorkQueryKeys.projectReports.criticalPath(42);
+  const velocity = buildWorkQueryKeys.projectReports.velocity(42);
+  client.setQueryData(board, { pages: [{ data: [{ id: 1, title: "Doomed" }], pagination: { nextCursor: null } }], pageParams: [undefined] });
+  client.setQueryData(criticalPath, { criticalPath: [], totalDuration: 0 });
+  client.setQueryData(velocity, { pages: [], pageParams: [] });
+  jest.mocked(apiClient.delete).mockResolvedValue(undefined);
+  const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
+  const { result } = renderHook(() => useDeleteTicket(42), { wrapper });
+  await act(async () => { await result.current.mutateAsync({ ticketId: 1 }); });
+  expect(client.getQueryState(board)?.isInvalidated).toBe(true);
+  expect(client.getQueryState(criticalPath)?.isInvalidated).toBe(true);
+  expect(client.getQueryState(velocity)?.isInvalidated).toBe(true);
   client.clear();
 });

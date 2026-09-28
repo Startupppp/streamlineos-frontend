@@ -43,6 +43,7 @@ export function useWorkloadCapacity(
       data.members.map((m) => [
         m.userId,
         {
+          teams: m.teams,
           capacityHours: m.capacityHours,
           leaveDays: m.leaveDays,
           loggedHours: m.loggedHours,

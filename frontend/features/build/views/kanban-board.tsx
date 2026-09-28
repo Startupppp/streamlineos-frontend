@@ -235,6 +235,7 @@ export function KanbanBoard({
                   <div className="kanban-scroll-container scrollbar-hide flex h-[min(480px,calc(100dvh-12rem))] max-h-[min(480px,calc(100dvh-12rem))] items-stretch gap-3 overflow-x-auto overflow-y-hidden pb-2 pt-0.5">
                     {visibleColumns.map((col) => (
                       <KanbanBoardColumn
+                        hasActiveFilters={hasActiveFilters}
                         key={col.id}
                         column={col}
                         tickets={rowByStatus.get(col.id) ?? []}
@@ -295,6 +296,7 @@ export function KanbanBoard({
                 >
                   {(columnProvided, columnSnapshot) => (
                     <KanbanBoardColumn
+                      hasActiveFilters={hasActiveFilters}
                       column={col}
                       tickets={columnTickets}
                       projectId={projectId}

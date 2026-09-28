@@ -61,6 +61,34 @@ The portal pages carry the extra constraint: an external client's list must neve
   itself. `DataTableSkeleton` is used in the surface implementation and in gallery demos. The box stays
   permanently unchecked.
   LANE-ADJ-B 2026-09-28: Re-verified independently. `grep -rl 'usePageState' features/build/ --include="*.tsx" --include="*.ts" | wc -l` → 137; `grep -rl 'DataTableSkeleton' features/build/ --include="*.tsx" --include="*.ts" | wc -l` → 42. `build-list-surface.tsx` imports both at lines 4 and 8, so neither can lose all callers while the surface exists. No other build-module assembly helper was found to be caller-less. Prior verdict stands.
+  LANE-SEAM 2026-09-28 — **adjudicated N/A, and the sweep is now exhaustive rather than two spot-checks.**
+  The two figures above reproduce exactly: `grep -rl 'usePageState' features/build/ --include='*.tsx'
+  --include='*.ts' | wc -l` → **137**, `grep -rl 'DataTableSkeleton' features/build/ --include='*.tsx'
+  --include='*.ts' | wc -l` → **42**. Repo-wide over `app components features hooks lib` the same greps give
+  **413** and **299**. `build-list-surface.tsx` imports `DataTableSkeleton` at line 4 and `usePageState` at
+  line 8, so neither can reach zero callers while the surface exists — the prior verdict holds on its own
+  terms.
+  The prior two adjudications only measured the two helpers they had been handed, which cannot decide a
+  criterion phrased over *any* remaining helper. Measured properly now: every one of the **38 non-test
+  modules** in `features/build/shared/` was checked for non-test importers. The minimum is **1**. Seven sit at
+  exactly one caller and each was confirmed by eye rather than by the counting grep —
+  `build-list-gallery` (`app/(public)/design-system/build-list/page.tsx:3`),
+  `filter-command-menu` (lazily imported at `ticket-filter-bar.tsx:37`),
+  `filter-command-menu-types`, `filter-flat-search`, `use-filter-command-menu-state` and
+  `assignee-filter-submenu` (all from `filter-command-menu.tsx`), and
+  `module-disabled-state` (`epics/epics-page.tsx:38`). **Nothing under `features/build/shared/` is
+  caller-less.** The largest counts are `types` (170), `use-build-list-filters` (53),
+  `use-build-list-keyboard` (50) and `build-list-toolbar` (48).
+  Separately, neither named helper is a Build assembly helper that this ticket could retire even if it were
+  caller-less. `usePageState` is `hooks/api/use-page-state` and FE-40 makes it the only sanctioned way a gated
+  surface decides what it renders; `DataTableSkeleton` is exported from `components/ui/data-table` and FE-59
+  makes it the single primitive of its class. Deleting either is a CLAUDE.md violation, not a cleanup.
+  **The criterion is therefore vacuous, not failed**: it is a conditional whose antecedent set is provably
+  empty. Per the tickets README completion rule — "N/A decisions are recorded separately and never counted as
+  implemented requirements" — it is recorded here as N/A and the box stays unchecked rather than ticked on an
+  empty set. It also stays un-reworded. What would change the verdict: a module under
+  `features/build/shared/` reaching zero non-test importers; the sweep command that would find one is the
+  per-module importer count over `app components features hooks lib` excluding `*.test.*`.
 - [x] Each page's rows can be supplied as props
   Earned 2026-09-27 for both lists in the batch. `managed-products-page.tsx` passes `rows={displayed}` and
   `product-feedback-page.tsx` passes `rows={data?.data ?? []}`, so either table can be driven from a fixture

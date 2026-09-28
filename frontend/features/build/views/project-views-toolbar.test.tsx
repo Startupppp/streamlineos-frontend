@@ -2,14 +2,22 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+let mockFetchedModules: { id: number; name: string }[] = [];
+const mockReplace = jest.fn();
+let mockSearchParams = new URLSearchParams();
+
+jest.mock("@/hooks/api/build/advanced", () => ({
+  useModules: () => ({ data: mockFetchedModules }),
+}));
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: jest.fn(), push: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
   usePathname: () => "/build/1/issues",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }));
 
 jest.mock("@/components/ui/select", () => {
-  const Reactm = require("react");
+  const Reactm = jest.requireActual<typeof import("react")>("react");
   const Ctx = Reactm.createContext<{ onValueChange?: (v: string) => void }>({});
 
   function Select({
@@ -18,7 +26,7 @@ jest.mock("@/components/ui/select", () => {
   }: {
     value?: string;
     onValueChange?: (v: string) => void;
-    children?: Reactm.ReactNode;
+    children?: React.ReactNode;
   }) {
     return <Ctx.Provider value={{ onValueChange }}>{children}</Ctx.Provider>;
   }
@@ -28,7 +36,7 @@ jest.mock("@/components/ui/select", () => {
     "aria-label": ariaLabel,
     className,
   }: {
-    children?: Reactm.ReactNode;
+    children?: React.ReactNode;
     "aria-label"?: string;
     className?: string;
   }) {
@@ -43,7 +51,7 @@ jest.mock("@/components/ui/select", () => {
     return <span>{placeholder}</span>;
   }
 
-  function SelectContent({ children }: { children?: Reactm.ReactNode }) {
+  function SelectContent({ children }: { children?: React.ReactNode }) {
     return <>{children}</>;
   }
 
@@ -53,7 +61,7 @@ jest.mock("@/components/ui/select", () => {
     className,
   }: {
     value: string;
-    children?: Reactm.ReactNode;
+    children?: React.ReactNode;
     className?: string;
   }) {
     const { onValueChange } = Reactm.useContext(Ctx);
@@ -191,6 +199,68 @@ function buildBaseToolbarProps() {
     onOpenSaveView: noop,
   };
 }
+
+beforeEach(() => {
+  mockFetchedModules = [];
+  mockReplace.mockClear();
+  mockSearchParams = new URLSearchParams();
+});
+
+describe("ProjectViewsToolbar — the module filter is a real control, not a declared one", () => {
+  it("renders the select from the project's own modules when the caller passes none", () => {
+    mockFetchedModules = [{ id: 7, name: "Payments" }];
+
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} />);
+
+    expect(screen.getByRole("combobox", { name: /filter by module/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Payments" })).toBeInTheDocument();
+  });
+
+  it("renders no select when the project has no modules at all, so an empty control never appears", () => {
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} />);
+
+    expect(screen.queryByRole("combobox", { name: /filter by module/i })).not.toBeInTheDocument();
+  });
+
+  it("writes the picked module into the URL when the caller wires no handler", async () => {
+    mockFetchedModules = [{ id: 7, name: "Payments" }];
+
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} />);
+    await userEvent.click(screen.getByRole("option", { name: "Payments" }));
+
+    expect(mockReplace).toHaveBeenCalledWith(
+      expect.stringContaining("module=7"),
+      { scroll: false },
+    );
+  });
+
+  it("clears the module parameter rather than writing an empty one", async () => {
+    mockFetchedModules = [{ id: 7, name: "Payments" }];
+    mockSearchParams = new URLSearchParams("module=7");
+
+    render(<ProjectViewsToolbar {...buildBaseToolbarProps()} />);
+    await userEvent.click(screen.getByRole("option", { name: /all modules/i }));
+
+    const url = String(mockReplace.mock.calls.at(-1)?.[0] ?? "");
+    expect(url).not.toContain("module=");
+  });
+
+  it("still defers to a caller's own handler when one is passed, so the page keeps control", async () => {
+    const onModuleFilterChange = jest.fn();
+    mockFetchedModules = [{ id: 7, name: "Payments" }];
+
+    render(
+      <ProjectViewsToolbar
+        {...buildBaseToolbarProps()}
+        onModuleFilterChange={onModuleFilterChange}
+      />,
+    );
+    await userEvent.click(screen.getByRole("option", { name: "Payments" }));
+
+    expect(onModuleFilterChange).toHaveBeenCalledWith("7");
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+});
 
 describe("ProjectViewsToolbar — module filter", () => {
   it("renders the module select when modules are provided", () => {

@@ -16,6 +16,7 @@ export const COMMAND_CENTER_FILTER_DEFINITIONS = [
     options: ["all", "mine", "created", "subscribed"],
   },
   { param: "owner" },
+  { param: "health", options: ["on_track", "at_risk", "off_track"] },
   { param: "due", options: ["overdue", "today", "week"] },
 ] as const;
 
@@ -24,6 +25,13 @@ const SCOPE_OPTIONS = [
   { value: "all", label: "All issues" },
   { value: "created", label: "Created by me" },
   { value: "subscribed", label: "Subscribed" },
+] as const;
+
+const HEALTH_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "Any health" },
+  { value: "on_track", label: "On track" },
+  { value: "at_risk", label: "At risk" },
+  { value: "off_track", label: "Off track" },
 ] as const;
 
 const DUE_OPTIONS = [
@@ -47,6 +55,7 @@ export function CommandCenterToolbar({
 
   const scopeValue = listFilters.value("scope");
   const ownerValue = listFilters.value("owner");
+  const healthValue = listFilters.value("health");
   const dueValue = listFilters.value("due");
 
   const handleScopeChange = useCallback(
@@ -55,6 +64,10 @@ export function CommandCenterToolbar({
   );
   const handleOwnerChange = useCallback(
     (value: string) => listFilters.setValue("owner", value),
+    [listFilters],
+  );
+  const handleHealthChange = useCallback(
+    (value: string) => listFilters.setValue("health", value),
     [listFilters],
   );
   const handleDueChange = useCallback(
@@ -92,6 +105,19 @@ export function CommandCenterToolbar({
               value={ownerValue}
               onValueChange={handleOwnerChange}
               options={resolvedOwnerOptions}
+            />
+          ),
+        },
+        {
+          id: "health",
+          label: "Health",
+          active: listFilters.isActive("health"),
+          control: (
+            <BuildFilterSelect
+              label="Project health"
+              value={healthValue}
+              onValueChange={handleHealthChange}
+              options={HEALTH_OPTIONS}
             />
           ),
         },

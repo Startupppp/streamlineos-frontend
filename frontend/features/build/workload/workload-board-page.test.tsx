@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 
 const mockUse = jest.fn();
 
@@ -32,20 +32,24 @@ jest.mock("@/hooks/api/build/tickets", () => ({
     mockUseProjectBoardTickets(...args),
 }));
 
-const mockUseWorkloadCapacity = jest.fn(() => new Map());
+const mockUseWorkloadCapacity = jest.fn((..._args: unknown[]) => new Map());
 
 jest.mock("@/hooks/api/build/workload-capacity", () => ({
   useWorkloadCapacity: (...args: unknown[]) =>
     mockUseWorkloadCapacity(...args),
 }));
 
-const mockUseProjectTeams = jest.fn(() => ({ data: undefined }));
+const mockUseProjectTeams = jest.fn(
+  (..._args: unknown[]) => ({ data: undefined }) as { data: unknown },
+);
 
 jest.mock("@/hooks/api/build/teams", () => ({
   useProjectTeams: (...args: unknown[]) => mockUseProjectTeams(...args),
 }));
 
-const mockUsePageState = jest.fn();
+const mockUsePageState = jest.fn(
+  (..._args: unknown[]) => ({ kind: "ready" }) as { kind: string; permission?: string },
+);
 
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: (...args: unknown[]) => mockUsePageState(...args),
@@ -57,7 +61,9 @@ jest.mock("@/hooks/common/use-online-status", () => ({
   useOnlineStatus: () => mockUseOnlineStatus(),
 }));
 
-const mockUseBuildListKeyboard = jest.fn(() => ({ focusedIndex: null }));
+const mockUseBuildListKeyboard = jest.fn((..._args: unknown[]) => ({
+  focusedIndex: null,
+}));
 
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
   useBuildListKeyboard: (...args: unknown[]) =>
@@ -75,27 +81,29 @@ jest.mock("@/features/build/views/workload-filter-bar", () => ({
     onFilterChange: (key: string, value: unknown) => void;
     onClearFilters: () => void;
     filters: Record<string, unknown>;
+    leading?: React.ReactNode;
   }) => {
     capturedFilterBarProps = props;
-    return <div data-testid="workload-filter-bar" />;
+    return <div data-testid="workload-filter-bar">{props.leading}</div>;
   },
 }));
 
+let capturedWorkloadViewGroup: string | undefined;
+
 jest.mock("@/features/build/views/workload-view", () => ({
-  WorkloadView: () => <div data-testid="workload-view" />,
+  WorkloadView: (props: { group?: string }) => {
+    capturedWorkloadViewGroup = props.group;
+    return <div data-testid="workload-view" />;
+  },
 }));
 
 jest.mock("@/features/build/views/view-switcher", () => ({
   ViewSwitcher: () => null,
 }));
 
-let capturedShortcutOpen: boolean | undefined;
-
 jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
-  ShortcutHelpDialog: ({ open }: { open: boolean }) => {
-    capturedShortcutOpen = open;
-    return open ? <div data-testid="shortcut-help-dialog" /> : null;
-  },
+  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));
 
 jest.mock("@/features/build/tickets/create-ticket-dialog", () => ({
@@ -185,7 +193,7 @@ const TICKETS_RESULT = {
 beforeEach(() => {
   jest.clearAllMocks();
   capturedFilterBarProps = {};
-  capturedShortcutOpen = undefined;
+  capturedWorkloadViewGroup = undefined;
   mockSearchParams = new URLSearchParams();
   mockUse.mockReturnValue({ projectId: "1" });
   mockUseProject.mockReturnValue(READY_PROJECT);
@@ -217,11 +225,11 @@ describe("WorkloadBoardPage — URL param forwarding to useWorkloadCapacity", ()
     renderPage();
     const calls = mockUseWorkloadCapacity.mock.calls;
     expect(calls.length).toBeGreaterThan(0);
-    const [, start, end] = calls[0];
+    const [, start, end] = calls[0] as unknown[];
     expect(typeof start).toBe("string");
     expect(typeof end).toBe("string");
-    expect(start.length).toBe(10);
-    expect(end.length).toBe(10);
+    expect(String(start).length).toBe(10);
+    expect(String(end).length).toBe(10);
   });
 
   it("passes teamId as a number to useWorkloadCapacity when the teamId URL param is present so the capacity endpoint can filter by team", () => {
@@ -408,7 +416,7 @@ describe("WorkloadBoardPage — offline state", () => {
 describe("WorkloadBoardPage — keyboard shortcuts", () => {
   it("wires onShortcutHelp to useBuildListKeyboard so the ? key opens the shortcut help dialog (CCG-4)", () => {
     renderPage();
-    const call = mockUseBuildListKeyboard.mock.calls[0][0] as {
+    const call = mockUseBuildListKeyboard.mock.calls[0]?.[0] as {
       onShortcutHelp?: () => void;
     };
     expect(typeof call.onShortcutHelp).toBe("function");
@@ -416,7 +424,7 @@ describe("WorkloadBoardPage — keyboard shortcuts", () => {
 
   it("calling onShortcutHelp from useBuildListKeyboard opens the ShortcutHelpDialog", () => {
     renderPage();
-    const call = mockUseBuildListKeyboard.mock.calls[0][0] as {
+    const call = mockUseBuildListKeyboard.mock.calls[0]?.[0] as {
       onShortcutHelp?: () => void;
     };
     act(() => {
@@ -427,7 +435,7 @@ describe("WorkloadBoardPage — keyboard shortcuts", () => {
 
   it("wires onCreate to useBuildListKeyboard so the c key opens the create ticket dialog", () => {
     renderPage();
-    const call = mockUseBuildListKeyboard.mock.calls[0][0] as {
+    const call = mockUseBuildListKeyboard.mock.calls[0]?.[0] as {
       onCreate?: () => void;
     };
     expect(typeof call.onCreate).toBe("function");
@@ -500,5 +508,48 @@ describe("WorkloadBoardPage — projectId is the path param and never read from 
       expect.any(String),
       undefined,
     );
+  });
+});
+
+describe("WorkloadBoardPage — group URL parameter", () => {
+  it("passes group=team to the view when the URL asks for it, so a shared link renders the grouped table", () => {
+    mockSearchParams = new URLSearchParams("group=team");
+    renderPage();
+    expect(capturedWorkloadViewGroup).toBe("team");
+  });
+
+  it("passes group=none when the URL carries no group — paired with the present case above", () => {
+    renderPage();
+    expect(capturedWorkloadViewGroup).toBe("none");
+  });
+
+  it("falls back to none for a grouping dimension the view does not implement, rather than rendering an empty table", () => {
+    mockSearchParams = new URLSearchParams("group=astrology");
+    renderPage();
+    expect(capturedWorkloadViewGroup).toBe("none");
+  });
+
+  it("renders a grouping control, so the parameter is writable and not a read-only deep link", () => {
+    renderPage();
+    expect(screen.getByRole("combobox", { name: "Group members by" })).toBeInTheDocument();
+  });
+
+  it("writes group=team to the URL when the control selects it", () => {
+    renderPage();
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Group members by" }), {
+      key: "Enter",
+    });
+    fireEvent.click(screen.getByRole("option", { name: "Group by team" }));
+    expect(String(mockReplace.mock.calls.at(-1)?.[0])).toContain("group=team");
+  });
+
+  it("clears the group param when grouping returns to none, so the URL stays clean at the default", () => {
+    mockSearchParams = new URLSearchParams("group=team");
+    renderPage();
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Group members by" }), {
+      key: "Enter",
+    });
+    fireEvent.click(screen.getByRole("option", { name: "No grouping" }));
+    expect(String(mockReplace.mock.calls.at(-1)?.[0])).not.toContain("group=");
   });
 });

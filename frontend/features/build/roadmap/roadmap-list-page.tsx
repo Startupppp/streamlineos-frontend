@@ -1,14 +1,19 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { MessageSquare, Megaphone, Plus, Sparkles } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
 import { Button } from "@/components/ui/button";
 import {
+  BUILD_FILTER_ALL,
   useBuildListFilters,
 } from "@/features/build/shared/use-build-list-filters";
+import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { Input } from "@/components/ui/input";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/lib/person-display";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import {
   Tabs,
@@ -32,6 +37,21 @@ import {
 } from "@/components/pm-chrome";
 
 type RoadmapTabValue = "roadmap" | "feedback" | "changelog";
+
+const ROADMAP_STATUS_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "All statuses" },
+  { value: "planned", label: "Planned" },
+  { value: "in_progress", label: "In progress" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+] as const;
+
+const ROADMAP_SORT_OPTIONS = [
+  { value: BUILD_FILTER_ALL, label: "Default order" },
+  { value: "updated_at", label: "Recently updated" },
+  { value: "created_at", label: "Recently created" },
+  { value: "title", label: "Title" },
+] as const;
 
 const FILTER_DEFINITIONS = [
   { param: "tab", options: ["roadmap", "feedback", "changelog"] },
@@ -105,6 +125,91 @@ export function RoadmapListPage() {
   }, []);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [horizonDraft, setHorizonDraft] = useState(horizon ?? "");
+  const { data: membersPage } = useOrgMembers(1, 100);
+  const ownerOptions = useMemo(
+    () => [
+      { value: BUILD_FILTER_ALL, label: "Any owner" },
+      ...(membersPage?.data ?? []).map((m) => ({ value: String(m.membershipId), label: getUserDisplayName(m) })),
+    ],
+    [membersPage],
+  );
+
+  const handleStatusFilterChange = useCallback(
+    (value: string) => listFilters.setValue("status", value),
+    [listFilters],
+  );
+  const handleSortFilterChange = useCallback(
+    (value: string) => listFilters.setValue("sort", value),
+    [listFilters],
+  );
+  const handleOwnerFilterChange = useCallback(
+    (value: string) => listFilters.setValue("ownerId", value === BUILD_FILTER_ALL ? "" : value),
+    [listFilters],
+  );
+  const handleHorizonDraftChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => setHorizonDraft(event.target.value),
+    [],
+  );
+  const handleHorizonCommit = useCallback(() => {
+    listFilters.setValue("horizon", horizonDraft.trim());
+  }, [listFilters, horizonDraft]);
+  const handleHorizonKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      listFilters.setValue("horizon", horizonDraft.trim());
+    },
+    [listFilters, horizonDraft],
+  );
+
+  const renderRoadmapFilters = useCallback(
+    () => (
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <BuildFilterSelect
+          label="Status"
+          value={statusValue}
+          onValueChange={handleStatusFilterChange}
+          options={ROADMAP_STATUS_OPTIONS}
+        />
+        <BuildFilterSelect
+          label="Sort"
+          value={sortValue}
+          onValueChange={handleSortFilterChange}
+          options={ROADMAP_SORT_OPTIONS}
+        />
+        <BuildFilterSelect
+          label="Owner"
+          value={ownerId !== undefined ? String(ownerId) : BUILD_FILTER_ALL}
+          onValueChange={handleOwnerFilterChange}
+          options={ownerOptions}
+        />
+        <Input
+          value={horizonDraft}
+          onChange={handleHorizonDraftChange}
+          onBlur={handleHorizonCommit}
+          onKeyDown={handleHorizonKeyDown}
+          placeholder="Horizon, e.g. Q3 2026"
+          aria-label="Filter by horizon"
+          className="w-40"
+        />
+      </div>
+    ),
+    [
+      statusValue,
+      sortValue,
+      ownerId,
+      ownerOptions,
+      horizonDraft,
+      handleStatusFilterChange,
+      handleSortFilterChange,
+      handleOwnerFilterChange,
+      handleHorizonDraftChange,
+      handleHorizonCommit,
+      handleHorizonKeyDown,
+    ],
+  );
+
   const handleClearSelection = useCallback(() => {}, []);
   useBuildListKeyboard({
     itemCount: roadmapItems.length,
@@ -166,6 +271,7 @@ export function RoadmapListPage() {
                   </TabsTrigger>
                 </TabsList>
               }
+              filters={activeTab === "roadmap" ? renderRoadmapFilters : undefined}
               search={
                 showSearch ? (
                   <SearchInput

@@ -51,6 +51,9 @@ const GOAL_LIST_ITEM = {
   current: "2100000",
   owner: GOAL_OWNER,
   keyResultCount: 3,
+  linkCount: 2,
+  linkedTicketCount: 1,
+  linkedProjectCount: 1,
 };
 
 const GOALS_LIST_PAGE = {

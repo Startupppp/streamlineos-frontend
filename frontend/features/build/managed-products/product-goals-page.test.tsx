@@ -177,10 +177,10 @@ describe("ProductGoalsPage — health/due/scope URL params forwarded (BSN-FILTER
   });
 
   it("forwards due URL param to useGoalsPage so due-date-filtered queries run server-side", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("due=overdue"));
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("due=2026-12-31"));
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).toMatchObject({ due: "overdue" });
+    expect(callParams).toMatchObject({ due: "2026-12-31" });
   });
 
   it("omits due from useGoalsPage params when the URL param is absent", () => {
@@ -190,15 +190,144 @@ describe("ProductGoalsPage — health/due/scope URL params forwarded (BSN-FILTER
   });
 
   it("forwards scope URL param to useGoalsPage so scope-filtered queries run server-side", () => {
-    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("scope=product"));
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("scope=own"));
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
-    expect(callParams).toMatchObject({ scope: "product" });
+    expect(callParams).toMatchObject({ scope: "own" });
   });
 
   it("omits scope from useGoalsPage params when the URL param is absent", () => {
     render(<ProductGoalsPage managedProductId={7} />);
     const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
     expect(callParams).not.toHaveProperty("scope");
+  });
+});
+
+describe("ProductGoalsPage — health/due/scope filter controls (BSN-FILTER-GOALS-03)", () => {
+  beforeEach(() => {
+    useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
+  });
+
+  it("renders a scope control so the deep-linkable scope param is reachable without editing the URL", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByLabelText("Scope")).toBeInTheDocument();
+  });
+
+  it("renders a health control so the deep-linkable health param is reachable without editing the URL", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByLabelText("Health")).toBeInTheDocument();
+  });
+
+  it("renders a native date control so the deep-linkable due param is reachable without editing the URL", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByLabelText("Due on or before")).toHaveAttribute(
+      "type",
+      "date",
+    );
+  });
+
+  it("writes the picked due date to the URL so the filtered list is shareable", () => {
+    render(<ProductGoalsPage managedProductId={7} />);
+    fireEvent.change(screen.getByLabelText("Due on or before"), {
+      target: { value: "2026-12-31" },
+    });
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      "/build/managed-products/7/goals?due=2026-12-31",
+      { scroll: false },
+    );
+  });
+
+  it("clearing the date control drops the due param instead of writing an empty value", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("due=2026-12-31"));
+    render(<ProductGoalsPage managedProductId={7} />);
+    fireEvent.change(screen.getByLabelText("Due on or before"), {
+      target: { value: "" },
+    });
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      "/build/managed-products/7/goals",
+      { scroll: false },
+    );
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+  });
+
+  it("shows the deep-linked due date in the control so a shared link is legible", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("due=2026-12-31"));
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByLabelText("Due on or before")).toHaveValue("2026-12-31");
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+  });
+});
+
+describe("ProductGoalsPage — outcome params are validated before the request (BSN-FILTER-GOALS-04)", () => {
+  beforeEach(() => {
+    useGoalsPage.mockReturnValue(EMPTY_GOALS_PAGE_RESULT);
+  });
+
+  it("drops a health value the backend list schema does not accept so the read cannot 400", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("health=urgent"));
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("health");
+  });
+
+  it("drops a scope value the backend list schema does not accept so the read cannot 400", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("scope=product"));
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("scope");
+  });
+
+  it("drops a due value that is not an ISO date so the read cannot 400", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("due=overdue"));
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("due");
+  });
+
+  it("forwards the scope sentinel as absent so the default all-goals read is unfiltered", () => {
+    mockUseSearchParams.mockReturnValueOnce(new URLSearchParams("scope=all"));
+    render(<ProductGoalsPage managedProductId={7} />);
+    const [callParams] = useGoalsPage.mock.calls[0] as [Record<string, unknown>];
+    expect(callParams).not.toHaveProperty("scope");
+  });
+});
+
+describe("ProductGoalsPage — offline state (BSN-STATE-GOALS-OFFLINE)", () => {
+  const onlineSpy = jest.spyOn(navigator, "onLine", "get");
+
+  afterEach(() => {
+    onlineSpy.mockReturnValue(true);
+  });
+
+  it("renders no offline notice while the browser is online, so the banner is not permanent furniture", () => {
+    onlineSpy.mockReturnValue(true);
+    useGoalsPage.mockReturnValue({ ...EMPTY_GOALS_PAGE_RESULT, dataUpdatedAt: Date.now() });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.queryByTestId("offline-notice")).not.toBeInTheDocument();
+  });
+
+  it("shows freshness rather than blanking the list when the browser goes offline", () => {
+    onlineSpy.mockReturnValue(false);
+    useGoalsPage.mockReturnValue({
+      ...EMPTY_GOALS_PAGE_RESULT,
+      data: { items: [], page: 1, pageSize: 20, total: 0 },
+      dataUpdatedAt: Date.now(),
+    });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.getByTestId("offline-notice")).toHaveTextContent(/Offline — showing data/);
+  });
+
+  it("withdraws the create action while offline, because a goal write is not an idempotent command", () => {
+    onlineSpy.mockReturnValue(false);
+    useGoalsPage.mockReturnValue({ ...EMPTY_GOALS_PAGE_RESULT, dataUpdatedAt: Date.now() });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.queryAllByRole("button", { name: /New Goal/i })).toHaveLength(0);
+  });
+
+  it("offers the create action again once online (FE-122 positive pair)", () => {
+    onlineSpy.mockReturnValue(true);
+    useGoalsPage.mockReturnValue({ ...EMPTY_GOALS_PAGE_RESULT, dataUpdatedAt: Date.now() });
+    render(<ProductGoalsPage managedProductId={7} />);
+    expect(screen.queryAllByRole("button", { name: /New Goal/i }).length).toBeGreaterThan(0);
   });
 });

@@ -164,6 +164,7 @@ function makeItem(overrides: Partial<RoadmapItem> = {}): RoadmapItem {
     targetQuarter: null,
     sortOrder: 0,
     votes: 0,
+    version: 1,
     createdBy: null,
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",

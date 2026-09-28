@@ -102,19 +102,16 @@ export function buildReleasesColumns({
     {
       key: "publishedAt",
       header: "Published",
-      cell: (r) => {
-        if (r.status !== "released") {
-          return <span className="text-dense text-muted-foreground">—</span>;
-        }
-        if (r.publishedAt !== null) {
-          return (
-            <span className="font-mono tabular-nums text-dense text-muted-foreground">
-              {format(new Date(r.publishedAt), "MMM d, yyyy")}
-            </span>
-          );
-        }
-        return <span className="text-dense text-muted-foreground">Unknown</span>;
-      },
+      cell: (r) =>
+        r.status !== "released" ? (
+          <span className="text-dense text-muted-foreground">—</span>
+        ) : r.publishedAt !== null ? (
+          <span className="font-mono tabular-nums text-dense text-muted-foreground">
+            {format(new Date(r.publishedAt), "MMM d, yyyy")}
+          </span>
+        ) : (
+          <span className="text-dense text-muted-foreground">Unknown</span>
+        ),
     },
     {
       key: "releaseDate",

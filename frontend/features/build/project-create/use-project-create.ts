@@ -26,7 +26,6 @@ export type WizardDraft = {
   projectType: string;
   templateId: number | null;
   modules: {
-    sprints: boolean;
     epics: boolean;
     timeTracking: boolean;
     wiki: boolean;
@@ -43,7 +42,6 @@ export type StepSharedProps = {
 
 const DEFAULT_FEATURES: Record<string, boolean> = {
   backlog: true,
-  sprints: true,
   kanban: true,
   qa: true,
   bugs: true,
@@ -72,7 +70,7 @@ function buildInitialDraft(creatorId: string | undefined): WizardDraft {
     endDate: "",
     projectType: "",
     templateId: null,
-    modules: { sprints: true, epics: true, timeTracking: true, wiki: true },
+    modules: { epics: true, timeTracking: true, wiki: true },
     features: { ...DEFAULT_FEATURES },
     workflow: "simple",
     memberIds: creatorId ? [creatorId] : [],

@@ -43,12 +43,17 @@ import { BuildHeaderActions } from "@/features/build/shared/build-header-actions
 import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import { BuildOfflineNotice } from "@/features/build/shared/build-offline-notice";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
   GoalCard,
-  GoalsListToolbar,
-  GOAL_FILTER_DEFINITIONS,
   GOAL_LEVEL_ORDER,
 } from "@/features/build/goals/goals-list-shared";
+import {
+  GoalsListToolbar,
+  GOAL_FILTER_DEFINITIONS,
+  resolveGoalOutcomeParams,
+} from "@/features/build/goals/goals-list-toolbar";
 
 interface ProductGoalsPageProps {
   managedProductId: number;
@@ -80,7 +85,8 @@ export function GoalsSkeleton() {
 }
 
 export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
-  const canManage = useCan("build:goals:manage");
+  const isOnline = useOnlineStatus();
+  const canManage = useCan("build:goals:manage") && isOnline;
   const listFilters = useBuildListFilters({ filters: GOAL_FILTER_DEFINITIONS });
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
@@ -97,9 +103,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
   const statusValue = listFilters.value("status");
 
   const ownerIdValue = listFilters.value("ownerId");
-  const healthValue = listFilters.value("health");
-  const dueValue = listFilters.value("due");
-  const scopeValue = listFilters.value("scope");
+  const readFilterValue = listFilters.value;
 
   const typedLevel = useMemo(
     () => LEVEL_OPTIONS.find((o) => o.value === levelValue)?.value,
@@ -128,14 +132,13 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
       ...(listFilters.debouncedSearch.trim()
         ? { search: listFilters.debouncedSearch.trim() }
         : {}),
-      ...(healthValue && healthValue !== BUILD_FILTER_ALL ? { health: healthValue } : {}),
-      ...(dueValue && dueValue !== BUILD_FILTER_ALL ? { due: dueValue } : {}),
-      ...(scopeValue && scopeValue !== BUILD_FILTER_ALL ? { scope: scopeValue } : {}),
+      ...resolveGoalOutcomeParams(readFilterValue),
     }),
-    [managedProductId, page, typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch, healthValue, dueValue, scopeValue],
+    [managedProductId, page, typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch, readFilterValue],
   );
 
-  const { data: goalsPage, isLoading, isError, error, refetch } = useGoalsPage(params);
+  const { data: goalsPage, isLoading, isError, error, refetch, dataUpdatedAt } =
+    useGoalsPage(params);
   const goals = goalsPage?.items ?? [];
   const totalGoals = goalsPage?.total ?? 0;
   const { data: stats } = useGoalStats();
@@ -234,10 +237,10 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
 
   const createActions = useMemo(
     () =>
-      resolution.kind !== "denied"
+      resolution.kind !== "denied" && isOnline
         ? [{ ...CREATE_ACTION, onSelect: handleOpenCreate }]
         : [],
-    [resolution.kind, handleOpenCreate],
+    [resolution.kind, handleOpenCreate, isOnline],
   );
 
   return (
@@ -280,6 +283,8 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
             />
           </StatCardGrid>
         </PmSection>
+
+        <BuildOfflineNotice dataUpdatedAt={dataUpdatedAt} />
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           <PageState

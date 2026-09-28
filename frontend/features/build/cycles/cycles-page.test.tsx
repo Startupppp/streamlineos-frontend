@@ -13,7 +13,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/hooks/api/build/advanced", () => ({
-  useCycles: jest.fn(),
+  useCyclePage: jest.fn(),
   useCreateCycle: jest.fn(),
   useUpdateCycle: jest.fn(),
   useDeleteCycle: jest.fn(),
@@ -129,7 +129,7 @@ jest.mock("./cycle-completion-sheet", () => ({
 }));
 
 jest.mock("./cycle-velocity-panel", () => ({
-  CycleVelocityPanel: () => null,
+  CycleVelocityPanel: () => <div data-testid="cycle-velocity-panel" />,
 }));
 
 jest.mock("@/components/shared/no-permission-state", () => ({
@@ -139,8 +139,13 @@ jest.mock("@/components/shared/no-permission-state", () => ({
 }));
 
 jest.mock("@/components/shared/error-state", () => ({
-  ErrorState: ({ description }: { description?: string }) => (
-    <div data-testid="error-state">{description}</div>
+  ErrorState: ({ description, error }: { description?: string; error?: unknown }) => (
+    <div data-testid="error-state">
+      {description}
+      <span data-testid="error-reference">
+        {jest.requireActual("@/lib/api-envelope").getCorrelationId(error) ?? ""}
+      </span>
+    </div>
   ),
 }));
 
@@ -153,7 +158,13 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/features/build/shared/build-list-toolbar", () => ({
-  BuildListToolbar: () => <div data-testid="build-list-toolbar" />,
+  BuildListToolbar: ({ onClearAll }: { onClearAll: () => void }) => (
+    <div data-testid="build-list-toolbar">
+      <button type="button" onClick={onClearAll}>
+        Clear all
+      </button>
+    </div>
+  ),
 }));
 
 jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
@@ -185,11 +196,11 @@ jest.mock("@/components/ui/date-picker", () => ({
   DatePicker: () => <input data-testid="date-picker" />,
 }));
 
-import { useCycles, useCreateCycle, useDeleteCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
+import { useCyclePage, useCreateCycle, useDeleteCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
-const mockUseCycles = useCycles as jest.Mock;
+const mockUseCyclePage = useCyclePage as jest.Mock;
 const mockUseCreateCycle = useCreateCycle as jest.Mock;
 const mockUseUpdateCycle = useUpdateCycle as jest.Mock;
 const mockUseDeleteCycle = useDeleteCycle as jest.Mock;
@@ -209,14 +220,26 @@ const ACCESS_DENIED = {
   isLoading: false,
 };
 
-function baseQueryResult(overrides = {}) {
+function baseQueryResult(
+  overrides: {
+    data?: unknown[];
+    hasMore?: boolean;
+    nextCursor?: string | null;
+    [key: string]: unknown;
+  } = {},
+) {
+  const { data, hasMore = false, nextCursor = null, ...rest } = overrides;
   return {
-    data: undefined,
+    data:
+      data === undefined
+        ? undefined
+        : { data, pagination: { limit: 25, hasMore, nextCursor } },
     isLoading: false,
     isError: false,
     error: undefined,
+    dataUpdatedAt: 0,
     refetch: jest.fn(),
-    ...overrides,
+    ...rest,
   };
 }
 
@@ -225,26 +248,26 @@ beforeEach(() => {
   mockSearchParamsContainer.current = new URLSearchParams();
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
+  mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [] }));
   mockUseCreateCycle.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseUpdateCycle.mockReturnValue({ mutate: mockUpdateMutate, isPending: false });
   mockUseDeleteCycle.mockReturnValue({ mutate: mockDeleteMutate, isPending: false });
   mockUseOnlineStatus.mockReturnValue(true);
   mockUpdateMutate.mockClear();
   mockDeleteMutate.mockClear();
-  mockUseCycles.mockClear();
+  mockUseCyclePage.mockClear();
 });
 
 it("renders NoPermissionState when build:cycles:view is denied instead of empty state", () => {
   mockUseAccess.mockReturnValue(ACCESS_DENIED);
-  mockUseCycles.mockReturnValue(baseQueryResult());
+  mockUseCyclePage.mockReturnValue(baseQueryResult());
   render(<CyclesPage projectId={1} />);
   expect(screen.getByTestId("no-permission")).toBeInTheDocument();
   expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
 });
 
 it("shows actual query error message on failure instead of hardcoded text", () => {
-  mockUseCycles.mockReturnValue(
+  mockUseCyclePage.mockReturnValue(
     baseQueryResult({ isError: true, error: new Error("Build module is not enabled for this project") }),
   );
   render(<CyclesPage projectId={1} />);
@@ -254,14 +277,14 @@ it("shows actual query error message on failure instead of hardcoded text", () =
 
 it("shows the skeleton, not a denial, while the access snapshot is still in flight, because useCan answers false before it lands", () => {
   mockUseAccess.mockReturnValue({ data: undefined, isLoading: true });
-  mockUseCycles.mockReturnValue(baseQueryResult());
+  mockUseCyclePage.mockReturnValue(baseQueryResult());
   render(<CyclesPage projectId={1} />);
   expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
   expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
 });
 
 it("offers the upgrade path the backend sent with a 402 rather than a generic failure", () => {
-  mockUseCycles.mockReturnValue(
+  mockUseCyclePage.mockReturnValue(
     baseQueryResult({
       isError: true,
       error: new ApiError("Build is not included in your current plan.", 402, "MODULE_NOT_ENABLED", {
@@ -292,7 +315,7 @@ describe("CyclesPage — the completed disclosure is shareable, not local compon
   };
 
   it("keeps completed cycles collapsed when the URL does not ask for them", () => {
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Completed (1)")).toBeDefined();
     expect(screen.queryByText("Closed cycle")).toBeNull();
@@ -300,13 +323,13 @@ describe("CyclesPage — the completed disclosure is shareable, not local compon
 
   it("expands completed cycles from completed=1 so the disclosure survives a reload or a shared link", () => {
     mockSearchParamsContainer.current = new URLSearchParams("completed=1");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Closed cycle")).toBeDefined();
   });
 
   it("writes the disclosure to the URL instead of mutating component state", () => {
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [COMPLETED_CYCLE] }));
     render(<CyclesPage projectId={1} />);
     screen.getByText("Completed (1)").click();
     expect(mockReplace).toHaveBeenCalledWith("/build/1/cycles?completed=1", {
@@ -329,14 +352,14 @@ describe("CyclesPage — cycle lifecycle actions", () => {
   };
 
   it("opens the edit sheet from the cycle action menu", () => {
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
     render(<CyclesPage projectId={1} />);
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
     expect(screen.getByTestId("cycle-form-sheet")).toHaveTextContent("Editing Current cycle");
   });
 
   it("completes an active cycle through a confirmation", () => {
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
     render(<CyclesPage projectId={1} />);
     fireEvent.click(screen.getByRole("button", { name: "Complete" }));
     expect(screen.getByRole("heading", { name: "Complete cycle?" })).toBeInTheDocument();
@@ -349,7 +372,7 @@ describe("CyclesPage — cycle lifecycle actions", () => {
 
   it("reopens a completed cycle from the expanded completed section", () => {
     mockSearchParamsContainer.current = new URLSearchParams("completed=1");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [{ ...ACTIVE_CYCLE, status: "completed" }] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [{ ...ACTIVE_CYCLE, status: "completed" }] }));
     render(<CyclesPage projectId={1} />);
     fireEvent.click(screen.getByRole("button", { name: "Reopen" }));
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Reopen" }));
@@ -360,7 +383,7 @@ describe("CyclesPage — cycle lifecycle actions", () => {
   });
 
   it("deletes a cycle only after confirmation", () => {
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
     render(<CyclesPage projectId={1} />);
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     expect(mockDeleteMutate).not.toHaveBeenCalled();
@@ -373,7 +396,7 @@ describe("CyclesPage — cycle lifecycle actions", () => {
 
   it("does not render mutation controls without manage permission", () => {
     mockUseCan.mockReturnValue(false);
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [ACTIVE_CYCLE] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Complete" })).not.toBeInTheDocument();
@@ -386,37 +409,37 @@ describe("CyclesPage — q search filter narrows displayed cycles", () => {
   const CYCLE_B = { id: 2, name: "Beta sprint", status: "draft" as const, startDate: "2026-10-01", endDate: "2026-10-14", progress: 0, completedItems: 0, totalItems: 0 };
 
   it("renders both cycles when no search term is set", () => {
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_A, CYCLE_B] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [CYCLE_A, CYCLE_B] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Alpha sprint")).toBeInTheDocument();
     expect(screen.getByText("Beta sprint")).toBeInTheDocument();
   });
 
-  it("passes q filter to useCycles so the DB narrows results server-side instead of the client filtering a full unbounded list", () => {
+  it("passes q filter to useCyclePage so the DB narrows results server-side instead of the client filtering a full unbounded list", () => {
     mockSearchParamsContainer.current = new URLSearchParams("q=Alpha");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_A] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [CYCLE_A] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Alpha sprint")).toBeInTheDocument();
     expect(screen.queryByText("Beta sprint")).not.toBeInTheDocument();
-    expect(mockUseCycles).toHaveBeenCalledWith(
+    expect(mockUseCyclePage).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ q: "Alpha" }),
     );
   });
 
   it("shows the BuildListToolbar so the search field is reachable via keyboard", () => {
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByTestId("build-list-toolbar")).toBeInTheDocument();
   });
 
-  it("passes status filter to useCycles so the DB filters by status server-side", () => {
+  it("passes status filter to useCyclePage so the DB filters by status server-side", () => {
     mockSearchParamsContainer.current = new URLSearchParams("status=active");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_A] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [CYCLE_A] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Alpha sprint")).toBeInTheDocument();
     expect(screen.queryByText("Beta sprint")).not.toBeInTheDocument();
-    expect(mockUseCycles).toHaveBeenCalledWith(
+    expect(mockUseCyclePage).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ status: "active" }),
     );
@@ -427,37 +450,37 @@ describe("CyclesPage — from/to date range filters narrow displayed cycles", ()
   const EARLY = { id: 1, name: "Early sprint", version: 1, status: "active" as const, startDate: "2026-08-01", endDate: "2026-08-14", progress: 80, completedItems: 4, totalItems: 5 };
   const RECENT = { id: 2, name: "Recent sprint", version: 1, status: "draft" as const, startDate: "2026-09-15", endDate: "2026-09-28", progress: 0, completedItems: 0, totalItems: 0 };
 
-  it("passes from filter to useCycles so the DB excludes cycles ending before the window boundary", () => {
+  it("passes from filter to useCyclePage so the DB excludes cycles ending before the window boundary", () => {
     mockSearchParamsContainer.current = new URLSearchParams("from=2026-09-01");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [RECENT] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [RECENT] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Recent sprint")).toBeInTheDocument();
     expect(screen.queryByText("Early sprint")).not.toBeInTheDocument();
-    expect(mockUseCycles).toHaveBeenCalledWith(
+    expect(mockUseCyclePage).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ from: "2026-09-01" }),
     );
   });
 
-  it("passes to filter to useCycles so the DB excludes cycles starting after the window boundary", () => {
+  it("passes to filter to useCyclePage so the DB excludes cycles starting after the window boundary", () => {
     mockSearchParamsContainer.current = new URLSearchParams("to=2026-08-31");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [EARLY] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [EARLY] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Early sprint")).toBeInTheDocument();
     expect(screen.queryByText("Recent sprint")).not.toBeInTheDocument();
-    expect(mockUseCycles).toHaveBeenCalledWith(
+    expect(mockUseCyclePage).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ to: "2026-08-31" }),
     );
   });
 
-  it("passes both from and to filters to useCycles and renders all cycles the server returns within the window", () => {
+  it("passes both from and to filters to useCyclePage and renders all cycles the server returns within the window", () => {
     mockSearchParamsContainer.current = new URLSearchParams("from=2026-08-10&to=2026-09-20");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [EARLY, RECENT] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [EARLY, RECENT] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Early sprint")).toBeInTheDocument();
     expect(screen.getByText("Recent sprint")).toBeInTheDocument();
-    expect(mockUseCycles).toHaveBeenCalledWith(
+    expect(mockUseCyclePage).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ from: "2026-08-10", to: "2026-09-20" }),
     );
@@ -468,7 +491,7 @@ describe("CyclesPage — the c and e shortcuts have a real target", () => {
   const CYCLE = { id: 4, name: "Focused sprint", version: 1, status: "active" as const, startDate: "2026-09-01", endDate: "2026-09-14", progress: 0, completedItems: 0, totalItems: 0 };
 
   it("passes onCreate to useBuildListKeyboard so c opens the create sheet when cycles can be managed", () => {
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
     render(<CyclesPage projectId={1} />);
     const args = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
     expect(typeof args?.onCreate).toBe("function");
@@ -476,14 +499,14 @@ describe("CyclesPage — the c and e shortcuts have a real target", () => {
 
   it("passes no onCreate when build:cycles:manage is denied, so c cannot open a sheet the caller may not submit", () => {
     mockUseCan.mockReturnValue(false);
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
     render(<CyclesPage projectId={1} />);
     const args = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
     expect(args?.onCreate).toBeUndefined();
   });
 
   it("opens the edit sheet on the focused cycle when onEdit fires, instead of the previous no-op handler", () => {
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
     render(<CyclesPage projectId={1} />);
     const args = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
     expect(screen.queryByTestId("cycle-form-sheet")).not.toBeInTheDocument();
@@ -494,7 +517,7 @@ describe("CyclesPage — the c and e shortcuts have a real target", () => {
   });
 
   it("opens the edit sheet on the focused cycle when Enter fires, so onOpen is not a no-op either", () => {
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [CYCLE] }));
     render(<CyclesPage projectId={1} />);
     const args = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
     act(() => {
@@ -508,14 +531,14 @@ describe("CyclesPage — the empty state tells a first run apart from a filtered
   const DRAFT = { id: 7, name: "Draft sprint", version: 1, status: "draft" as const, startDate: "2026-09-01", endDate: "2026-09-14", progress: 0, completedItems: 0, totalItems: 0 };
 
   it("offers first-run copy when nothing is filtered and the project has no cycles", () => {
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByTestId("empty-state").textContent).toBe("No cycles yet");
   });
 
   it("says the filters excluded everything when the server returns no cycles for the active status filter", () => {
     mockSearchParamsContainer.current = new URLSearchParams("status=completed");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByTestId("empty-state").textContent).toBe("No cycles match your filters");
   });
@@ -524,7 +547,7 @@ describe("CyclesPage — the empty state tells a first run apart from a filtered
 describe("CyclesPage — offline state", () => {
   it("renders the offline state instead of EmptyState when the browser is offline and no cycles are loaded", () => {
     mockUseOnlineStatus.mockReturnValue(false);
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByTestId("offline-state")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
@@ -533,9 +556,199 @@ describe("CyclesPage — offline state", () => {
   it("renders cycles normally and not the offline state when the browser is online", () => {
     mockUseOnlineStatus.mockReturnValue(true);
     const DRAFT = { id: 7, name: "Draft sprint", version: 1, status: "draft" as const, startDate: "2026-09-01", endDate: "2026-09-14", progress: 0, completedItems: 0, totalItems: 0 };
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [DRAFT] }));
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [DRAFT] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.queryByTestId("offline-state")).not.toBeInTheDocument();
     expect(screen.getByText("Draft sprint")).toBeInTheDocument();
+  });
+});
+
+describe("CyclesPage — the cursor is in the URL, so a page is shareable and the list is bounded", () => {
+  const PAGE_CYCLE = {
+    id: 9,
+    name: "Cycle 9",
+    status: "active" as const,
+    version: 1,
+    startDate: "2026-01-01",
+    endDate: "2026-01-14",
+    capacity: null,
+    goal: null,
+    description: null,
+    ticketCount: 0,
+    completedCount: 0,
+  };
+
+  it("asks the server for a bounded page and forwards the URL cursor, so the list cannot grow without bound", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("cursor=abc");
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [PAGE_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    expect(mockUseCyclePage).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ cursor: "abc", limit: 25 }),
+    );
+  });
+
+  it("writes the server's next cursor to the URL so the next page is a shareable link", () => {
+    mockUseCyclePage.mockReturnValue(
+      baseQueryResult({ data: [PAGE_CYCLE], hasMore: true, nextCursor: "next-token" }),
+    );
+    render(<CyclesPage projectId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(mockReplace).toHaveBeenCalledWith("/build/1/cycles?cursor=next-token", {
+      scroll: false,
+    });
+  });
+
+  it("disables Next when the server says there is no further page, so the control never promises a page that does not exist", () => {
+    mockUseCyclePage.mockReturnValue(
+      baseQueryResult({ data: [PAGE_CYCLE], hasMore: false, nextCursor: null }),
+    );
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+  });
+
+  it("offers no Previous on a deep-linked cursor, because the page before it was never visited here", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("cursor=abc");
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [PAGE_CYCLE], hasMore: true, nextCursor: "n" }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
+  });
+
+  it("returns to the cursor it came from when Previous is pressed after a Next", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("cursor=first");
+    mockUseCyclePage.mockReturnValue(
+      baseQueryResult({ data: [PAGE_CYCLE], hasMore: true, nextCursor: "second" }),
+    );
+    render(<CyclesPage projectId={1} />);
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    const previous = screen.getByRole("button", { name: "Previous page" });
+    expect(previous).not.toBeDisabled();
+    fireEvent.click(previous);
+    expect(mockReplace).toHaveBeenLastCalledWith("/build/1/cycles?cursor=first", {
+      scroll: false,
+    });
+  });
+
+  it("drops the cursor when a filter changes, so page two of one filter is never read as page two of another", () => {
+    mockSearchParamsContainer.current = new URLSearchParams("cursor=abc&status=active");
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [PAGE_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    fireEvent.click(screen.getByText("Clear all"));
+    const lastCall = mockReplace.mock.calls[mockReplace.mock.calls.length - 1];
+    expect(String(lastCall[0])).not.toContain("cursor");
+  });
+});
+
+describe("CyclesPage — offline freshness", () => {
+  const STALE_CYCLE = {
+    id: 11,
+    name: "Stale cycle",
+    status: "active" as const,
+    version: 1,
+    startDate: "2026-01-01",
+    endDate: "2026-01-14",
+    capacity: null,
+    goal: null,
+    description: null,
+    ticketCount: 0,
+    completedCount: 0,
+  };
+
+  it("dates the loaded cycles while offline, because a stale list without a timestamp cannot be judged", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    mockUseCyclePage.mockReturnValue(
+      baseQueryResult({ data: [STALE_CYCLE], dataUpdatedAt: Date.now() - 10 * 60 * 1000 }),
+    );
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByTestId("offline-banner-freshness")).toHaveTextContent(
+      /last updated .*10 minutes ago/i,
+    );
+  });
+
+  it("shows no offline banner over the list while online, so the notice is not always on", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    mockUseCyclePage.mockReturnValue(
+      baseQueryResult({ data: [STALE_CYCLE], dataUpdatedAt: Date.now() }),
+    );
+    render(<CyclesPage projectId={1} />);
+    expect(screen.queryByTestId("offline-banner")).not.toBeInTheDocument();
+  });
+
+  it("dates the empty offline state too, so a reader can tell a stale empty list from a fresh one", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    mockUseCyclePage.mockReturnValue(
+      baseQueryResult({ data: [], dataUpdatedAt: Date.now() - 3 * 60 * 1000 }),
+    );
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByTestId("offline-freshness")).toHaveTextContent(
+      /last updated .*3 minutes ago/i,
+    );
+  });
+});
+
+describe("CyclesPage — the ? shortcut has a target", () => {
+  it("opens the shortcut help dialog when ? fires, instead of passing no handler at all", () => {
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [] }));
+    render(<CyclesPage projectId={1} />);
+    const calls = mockUseBuildListKeyboard.mock.calls;
+    const options = calls[calls.length - 1][0];
+    expect(typeof options.onShortcutHelp).toBe("function");
+    act(() => {
+      options.onShortcutHelp();
+    });
+    expect(screen.getByRole("dialog")).toHaveTextContent(/shortcut/i);
+  });
+
+  it("keeps the shortcut help dialog closed until ? fires, so it is not always mounted open", () => {
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
+describe("CyclesPage — the failure surface carries the request id and the velocity panel is on the page", () => {
+  const ONE_CYCLE = {
+    id: 21,
+    name: "Cycle 21",
+    status: "active" as const,
+    version: 1,
+    startDate: "2026-01-01",
+    endDate: "2026-01-14",
+    capacity: null,
+    goal: null,
+    description: null,
+  };
+
+  it("hands the failing error down so the request id reaches the reader rather than only the message", () => {
+    mockUseCyclePage.mockReturnValue(
+      baseQueryResult({
+        isError: true,
+        error: new ApiError("Cycles unavailable", 500, "INTERNAL", {
+          correlationId: "req-cycles-42",
+        }),
+      }),
+    );
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByTestId("error-reference")).toHaveTextContent("req-cycles-42");
+  });
+
+  it("shows no request id for a failure that carries none, so the reference is never invented", () => {
+    mockUseCyclePage.mockReturnValue(
+      baseQueryResult({ isError: true, error: new TypeError("Failed to fetch") }),
+    );
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByTestId("error-reference")).toHaveTextContent("");
+  });
+
+  it("renders the velocity panel with the list, because velocity is one of the page's core fields", () => {
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [ONE_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByTestId("cycle-velocity-panel")).toBeInTheDocument();
+  });
+
+  it("offers no selection control on a cycle row, because the primary record is never selected here", () => {
+    mockUseCyclePage.mockReturnValue(baseQueryResult({ data: [ONE_CYCLE] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
 });
