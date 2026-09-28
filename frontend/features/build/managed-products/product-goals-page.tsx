@@ -48,11 +48,8 @@ import {
   GoalsListToolbar,
   GOAL_FILTER_DEFINITIONS,
   GOAL_LEVEL_ORDER,
-} from "@/features/build/goals/goals-list-shared";
-import {
-  ProductGoalOutcomeFilters,
   resolveGoalOutcomeParams,
-} from "./product-goal-outcome-filters";
+} from "@/features/build/goals/goals-list-shared";
 
 interface ProductGoalsPageProps {
   managedProductId: number;
@@ -244,12 +241,7 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
     <PageWrapper
       title="Goals & OKRs"
       subtitle="Product objectives and key results"
-      filters={
-        <div className="flex flex-col gap-2">
-          <GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} />
-          <ProductGoalOutcomeFilters listFilters={listFilters} />
-        </div>
-}
+      filters={<GoalsListToolbar listFilters={listFilters} searchInputRef={searchInputRef} />}
       actions={<BuildHeaderActions actions={createActions} />}
     >
       <PmPageShell>

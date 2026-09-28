@@ -1,13 +1,14 @@
 "use client";
 
-import type { RefObject } from "react";
+import type { ChangeEvent, RefObject } from "react";
 import { useCallback } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { CalendarDays, ListChecks, Users } from "lucide-react";
+import { CalendarDays, Link2 as LinkIcon, ListChecks, Users } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
@@ -23,7 +24,10 @@ import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { GoalLevel, GoalListItem } from "@/hooks/api/goals";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
-import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import {
+  BuildFilterSelect,
+  BUILD_FILTER_TRIGGER_CLASS,
+} from "@/features/build/shared/build-filter-select";
 import type { BuildFilterOption } from "@/features/build/shared/build-filter-select";
 import {
   BUILD_FILTER_ALL,
@@ -49,6 +53,44 @@ export const GOAL_FILTER_DEFINITIONS = [
   { param: "due" },
   { param: "scope" },
 ] as const;
+
+export const GOAL_SCOPE_VALUES = ["own", "all"] as const;
+export const GOAL_HEALTH_VALUES = ["on_track", "at_risk", "off_track"] as const;
+export const GOAL_DUE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+export const GOAL_DUE_FILTER_LABEL = "Due on or before";
+
+export const GOAL_SCOPE_FILTER_OPTIONS: readonly BuildFilterOption[] = [
+  { value: BUILD_FILTER_ALL, label: "All goals" },
+  { value: "own", label: "My goals" },
+];
+
+export const GOAL_HEALTH_FILTER_OPTIONS: readonly BuildFilterOption[] = [
+  { value: BUILD_FILTER_ALL, label: "Any health" },
+  { value: "on_track", label: "On track" },
+  { value: "at_risk", label: "At risk" },
+  { value: "off_track", label: "Off track" },
+];
+
+export interface GoalOutcomeParams {
+  health?: (typeof GOAL_HEALTH_VALUES)[number];
+  scope?: (typeof GOAL_SCOPE_VALUES)[number];
+  due?: string;
+}
+
+export function resolveGoalOutcomeParams(
+  read: (param: string) => string,
+): GoalOutcomeParams {
+  const params: GoalOutcomeParams = {};
+  const health = read("health");
+  const scope = read("scope");
+  const due = read("due");
+  if ((GOAL_HEALTH_VALUES as readonly string[]).includes(health)) {
+    params.health = health as GoalOutcomeParams["health"];
+  }
+  if (scope === "own") params.scope = "own";
+  if (GOAL_DUE_PATTERN.test(due)) params.due = due;
+  return params;
+}
 
 export const GOAL_LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
 
@@ -150,6 +192,19 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
             </span>
           </div>
 
+          <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <LinkIcon className="h-3.5 w-3.5 shrink-0" />
+            {goal.linkCount === 0 ? (
+              <span>No linked initiatives</span>
+            ) : (
+              <span>
+                {goal.linkCount} linked ({goal.linkedProjectCount} project
+                {goal.linkedProjectCount === 1 ? "" : "s"}, {goal.linkedTicketCount} ticket
+                {goal.linkedTicketCount === 1 ? "" : "s"})
+              </span>
+            )}
+          </div>
+
           {goal.target !== null ? (
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>KR total</span>
@@ -195,6 +250,14 @@ export function GoalsListToolbar({
     listFilters.setValue("status", value);
   const handleOwnerChange = (value: string) =>
     listFilters.setValue("ownerId", value);
+  const handleScopeChange = (value: string) =>
+    listFilters.setValue("scope", value);
+  const handleHealthChange = (value: string) =>
+    listFilters.setValue("health", value);
+  const handleDueChange = (event: ChangeEvent<HTMLInputElement>) =>
+    listFilters.setValue("due", event.target.value || BUILD_FILTER_ALL);
+
+  const dueValue = listFilters.value("due");
 
   const ownerValue = listFilters.value("ownerId");
   const resolvedOwnerOptions: readonly BuildFilterOption[] = ownerOptions
@@ -238,6 +301,46 @@ export function GoalsListToolbar({
           value={ownerValue}
           onValueChange={handleOwnerChange}
           options={resolvedOwnerOptions}
+        />
+      ),
+    },
+    {
+      id: "scope",
+      label: "Scope",
+      active: listFilters.isActive("scope"),
+      control: (
+        <BuildFilterSelect
+          label="Scope"
+          value={listFilters.value("scope")}
+          onValueChange={handleScopeChange}
+          options={GOAL_SCOPE_FILTER_OPTIONS}
+        />
+      ),
+    },
+    {
+      id: "health",
+      label: "Health",
+      active: listFilters.isActive("health"),
+      control: (
+        <BuildFilterSelect
+          label="Health"
+          value={listFilters.value("health")}
+          onValueChange={handleHealthChange}
+          options={GOAL_HEALTH_FILTER_OPTIONS}
+        />
+      ),
+    },
+    {
+      id: "due",
+      label: GOAL_DUE_FILTER_LABEL,
+      active: listFilters.isActive("due"),
+      control: (
+        <Input
+          type="date"
+          aria-label={GOAL_DUE_FILTER_LABEL}
+          value={dueValue === BUILD_FILTER_ALL ? "" : dueValue}
+          onChange={handleDueChange}
+          className={BUILD_FILTER_TRIGGER_CLASS}
         />
       ),
     },

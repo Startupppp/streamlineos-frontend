@@ -53,6 +53,7 @@ import {
   GoalsListToolbar,
   GOAL_FILTER_DEFINITIONS,
   GOAL_LEVEL_ORDER,
+  resolveGoalOutcomeParams,
 } from "@/features/build/goals/goals-list-shared";
 
 const CREATE_ACTION = { id: "create", label: "New Goal", icon: Plus, primary: true as const };
@@ -96,6 +97,7 @@ export function GoalsPage() {
   const levelValue = listFilters.value("level");
   const statusValue = listFilters.value("status");
   const ownerIdValue = listFilters.value("ownerId");
+  const readFilterValue = listFilters.value;
 
   const typedLevel = useMemo(
     () => LEVEL_OPTIONS.find((o) => o.value === levelValue)?.value,
@@ -115,10 +117,11 @@ export function GoalsPage() {
       ...(listFilters.debouncedSearch.trim()
         ? { search: listFilters.debouncedSearch.trim() }
         : {}),
+      ...resolveGoalOutcomeParams(readFilterValue),
       page,
       limit: GOALS_PAGE_SIZE,
     }),
-    [typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch, page],
+    [typedStatus, typedLevel, ownerIdValue, listFilters.debouncedSearch, page, readFilterValue],
   );
 
   const { data: goalsPage, isLoading, isError, error, refetch } = useGoalsPage(params);

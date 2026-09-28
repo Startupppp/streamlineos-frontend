@@ -45,12 +45,15 @@ export const goalRowContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-/** `goalListItemSchema` — row + owner + keyResultCount. */
+/** `goalListItemSchema` — row + owner + keyResultCount + link counts. */
 export const goalListItemContract = goalRowContract.extend({
   target: z.string().nullable(),
   current: z.string().nullable(),
   owner: goalOwnerContract.nullable(),
   keyResultCount: z.number().int(),
+  linkCount: z.number().int(),
+  linkedTicketCount: z.number().int(),
+  linkedProjectCount: z.number().int(),
 });
 
 /** `goalsListResponseSchema` — offset page (no totalPages on this backend schema). */

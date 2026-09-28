@@ -162,6 +162,7 @@ jest.mock("@/features/build/goals/goals-list-shared", () => ({
     { param: "scope" },
   ],
   GOAL_LEVEL_ORDER: ["company", "team", "individual"],
+  resolveGoalOutcomeParams: () => ({}),
 }));
 
 jest.mock("@/components/ui/confirm-dialog", () => ({
