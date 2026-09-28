@@ -94,37 +94,63 @@ export interface CycleListFilters {
   q?: string;
   from?: string;
   to?: string;
+  cursor?: string;
+  limit?: number;
 }
 
-type CyclePage = {
+export type CyclePage = {
   data: Cycle[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
 
-export function useCycles(
-  projectId: number,
-  filters?: CycleListFilters,
-  options?: Omit<UseQueryOptions<Cycle[]>, "queryKey" | "queryFn" | "enabled">
-) {
-  const canView = useCan("build:cycles:view");
+function cyclePageQuery(projectId: number, filters?: CycleListFilters) {
   const activeFilters = filters ?? {};
   const queryParams: Record<string, string> = {};
   if (activeFilters.status) queryParams.status = activeFilters.status;
   if (activeFilters.q) queryParams.q = activeFilters.q;
   if (activeFilters.from) queryParams.from = activeFilters.from;
   if (activeFilters.to) queryParams.to = activeFilters.to;
-  return useQuery<Cycle[]>({
+  if (activeFilters.cursor) queryParams.cursor = activeFilters.cursor;
+  if (activeFilters.limit !== undefined)
+    queryParams.limit = String(activeFilters.limit);
+  return {
     queryKey: [...buildWorkQueryKeys.projects.cycles(projectId), activeFilters],
-    queryFn: async ({ signal }) => {
-      const page = await apiClient.get<CyclePage>(
+    queryFn: ({ signal }: { signal: AbortSignal }) =>
+      apiClient.get<CyclePage>(
         `/build/${projectId}/cycles`,
         Object.keys(queryParams).length > 0 ? queryParams : undefined,
         signal,
         cycleListContract,
-      );
-      return page.data;
-    },
+      ),
     staleTime: 60_000,
+  };
+}
+
+export function useCyclePage(
+  projectId: number,
+  filters?: CycleListFilters,
+  options?: Omit<UseQueryOptions<CyclePage>, "queryKey" | "queryFn" | "enabled">
+) {
+  const canView = useCan("build:cycles:view");
+  return useQuery<CyclePage>({
+    ...cyclePageQuery(projectId, filters),
+    ...options,
+    enabled: canView && !!projectId,
+  });
+}
+
+export function useCycles(
+  projectId: number,
+  filters?: CycleListFilters,
+  options?: Omit<
+    UseQueryOptions<CyclePage, Error, Cycle[]>,
+    "queryKey" | "queryFn" | "enabled" | "select"
+  >
+) {
+  const canView = useCan("build:cycles:view");
+  return useQuery<CyclePage, Error, Cycle[]>({
+    ...cyclePageQuery(projectId, filters),
+    select: (page) => page.data,
     ...options,
     enabled: canView && !!projectId,
   });

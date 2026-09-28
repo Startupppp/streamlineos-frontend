@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Calendar, CheckCircle2, Clock, Gauge, MoreHorizontal, Pencil, Play, RotateCcw, Trash2 } from "lucide-react";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
+import { ArrowRight, Calendar, CheckCircle2, Clock, Gauge, Link2, MoreHorizontal, Pencil, Play, RotateCcw, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { writeToClipboard } from "@/lib/clipboard";
 import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import type { Cycle } from "@/types/projects";
@@ -39,9 +42,39 @@ export function CycleCard({
   const isCompleted = cycle.status === "completed";
   const statusAction = isCompleted ? "Reopen" : isActive ? "Complete" : "Start";
   const StatusIcon = isCompleted ? RotateCcw : isActive ? CheckCircle2 : Play;
+  const href = `/build/${projectId}/cycles/${cycle.id}`;
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!canManage) return;
+      event.preventDefault();
+      setMenuOpen(true);
+    },
+    [canManage],
+  );
+
+  const handleCopyLink = useCallback(() => {
+    const url =
+      typeof window === "undefined" ? href : `${window.location.origin}${href}`;
+    void writeToClipboard(url).then((copied) => {
+      if (copied) toast.success("Link copied");
+      else toast.error("Could not copy the link");
+    });
+  }, [href]);
+
+  const handlePlan = useCallback(() => onPlan(cycle), [cycle, onPlan]);
+  const handleEdit = useCallback(() => onEdit(cycle), [cycle, onEdit]);
+  const handleStatus = useCallback(() => {
+    if (cycle.status === "active") onComplete(cycle);
+    else onChangeStatus(cycle);
+  }, [cycle, onChangeStatus, onComplete]);
+  const handleDelete = useCallback(() => onDelete(cycle), [cycle, onDelete]);
 
   return (
-    <div className={cn(
+    <div
+      onContextMenu={handleContextMenu}
+      className={cn(
       "bg-card border border-border rounded-lg p-4 transition-all hover:border-primary/50",
       isCompleted && "opacity-70 hover:opacity-100",
     )}>
@@ -50,7 +83,7 @@ export function CycleCard({
           <div className="flex items-center gap-2 min-w-0">
             <Link
               className="min-w-0 truncate font-semibold text-sm hover:underline"
-              href={`/build/${projectId}/cycles/${cycle.id}`}
+              href={href}
               title={cycle.name}
             >
               {cycle.name}
@@ -82,28 +115,36 @@ export function CycleCard({
         <div className="flex shrink-0 items-center gap-1">
           {!canManage ? (
             <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-              <Link href={`/build/${projectId}/cycles/${cycle.id}`} aria-label={`Open ${cycle.name}`}>
+              <Link href={href} aria-label={`Open ${cycle.name}`}>
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
           ) : (
-            <DropdownMenu>
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Actions for ${cycle.name}`}>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => onPlan(cycle)}>
+                <DropdownMenuItem asChild>
+                  <Link href={href}>
+                    <ArrowRight /> Open
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleCopyLink}>
+                  <Link2 /> Copy link
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={handlePlan}>
                   <Calendar /> Plan work
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => onEdit(cycle)}>
+                <DropdownMenuItem onSelect={handleEdit}>
                   <Pencil /> Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => cycle.status === "active" ? onComplete(cycle) : onChangeStatus(cycle)}>
+                <DropdownMenuItem onSelect={handleStatus}>
                   <StatusIcon /> {statusAction}
                 </DropdownMenuItem>
-                <DropdownMenuItem variant="destructive" onSelect={() => onDelete(cycle)}>
+                <DropdownMenuItem variant="destructive" onSelect={handleDelete}>
                   <Trash2 /> Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>

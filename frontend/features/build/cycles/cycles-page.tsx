@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronDownIcon,
@@ -13,7 +13,7 @@ import {
   useProjectBoardTickets,
 } from "@/hooks/api/build/tickets";
 import {
-  useCycles,
+  useCyclePage,
   useDeleteCycle,
   useUpdateCycle,
   type CycleListFilters,
@@ -30,6 +30,7 @@ import {
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
+import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -39,6 +40,8 @@ import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { formatDistanceToNow } from "date-fns";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CycleCard } from "./cycle-card";
@@ -49,6 +52,8 @@ import { CycleVelocityPanel } from "./cycle-velocity-panel";
 import type { Cycle, CycleStatus } from "@/types/projects";
 
 type CyclesPageProps = { projectId: number };
+
+const CYCLE_PAGE_SIZE = 25;
 
 const CYCLE_STATUS_OPTIONS = [
   { value: BUILD_FILTER_ALL, label: "All statuses" },
@@ -85,6 +90,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     "backlog",
   );
   const [deleteTarget, setDeleteTarget] = useState<Cycle | null>(null);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const canManage = useCan("build:cycles:manage");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listFilters = useBuildListFilters({
@@ -106,14 +112,40 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     q: listFilters.debouncedSearch || undefined,
     from: dateFilterFrom,
     to: dateFilterTo,
+    cursor: listFilters.cursor ?? undefined,
+    limit: CYCLE_PAGE_SIZE,
   };
   const {
     error,
     refetch,
     isError,
     isLoading,
-    data: cycles,
-  } = useCycles(projectId, cycleFilters);
+    dataUpdatedAt,
+    data: cyclePage,
+  } = useCyclePage(projectId, cycleFilters);
+  const cycles = cyclePage?.data;
+  const hasMoreCycles = cyclePage?.pagination.hasMore ?? false;
+  const nextCycleCursor = cyclePage?.pagination.nextCursor ?? null;
+  const [visitedCursors, setVisitedCursors] = useState<(string | null)[]>([]);
+  const urlCursor = listFilters.cursor;
+
+  useEffect(() => {
+    if (urlCursor === null) setVisitedCursors([]);
+  }, [urlCursor]);
+
+  const handleNextPage = useCallback(() => {
+    if (!nextCycleCursor) return;
+    setVisitedCursors((current) => [...current, urlCursor]);
+    listFilters.setCursor(nextCycleCursor);
+  }, [listFilters, nextCycleCursor, urlCursor]);
+
+  const handlePreviousPage = useCallback(() => {
+    setVisitedCursors((current) => {
+      const previous = current[current.length - 1] ?? null;
+      listFilters.setCursor(previous);
+      return current.slice(0, -1);
+    });
+  }, [listFilters]);
   const { data: tickets = [] } = useProjectBoardTickets(projectId);
   const { data: projectData } = useProject(projectId);
   const projectStatuses = projectData?.statuses ?? [];
@@ -160,6 +192,8 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
 
   const handleNoSelection = useCallback(() => {}, []);
 
+  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+
   const handleStatusFilterChange = useCallback(
     (value: string) => listFilters.setValue("status", value),
     [listFilters],
@@ -179,6 +213,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     onEdit: handleEditByIndex,
     onCreate: canManage ? handleOpenCreate : undefined,
     onClearSelection: handleNoSelection,
+    onShortcutHelp: handleShortcutHelp,
     enabled: pageState.kind === "ready",
     searchInputRef,
   });
@@ -429,6 +464,27 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     >
       {hasCycles ? (
         <div className="flex flex-1 min-h-0 flex-col gap-6">
+          {!isOnline ? (
+            <div
+              className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2"
+              data-testid="offline-banner"
+            >
+              <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">
+                You&apos;re offline — these cycles may be out of date.
+                {dataUpdatedAt ? (
+                  <span data-testid="offline-banner-freshness">
+                    {" "}
+                    Last updated{" "}
+                    {formatDistanceToNow(new Date(dataUpdatedAt), {
+                      addSuffix: true,
+                    })}
+                    .
+                  </span>
+                ) : null}
+              </p>
+            </div>
+          ) : null}
           {activeCycles.length > 0 ? (
             <section>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
@@ -485,6 +541,14 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
             </>
           ) : null}
           <CycleVelocityPanel projectId={projectId} />
+          <TablePagination
+            mode="cursor"
+            rowCount={displayedCycles.length}
+            hasMore={hasMoreCycles}
+            hasPrevious={visitedCursors.length > 0}
+            onNext={handleNextPage}
+            onPrevious={handlePreviousPage}
+          />
         </div>
       ) : !isOnline ? (
         <div
@@ -503,6 +567,17 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                 Results may not be up to date. Reconnect to see the latest
                 cycles.
               </p>
+              {dataUpdatedAt ? (
+                <p
+                  className="text-xs text-muted-foreground"
+                  data-testid="offline-freshness"
+                >
+                  Last updated{" "}
+                  {formatDistanceToNow(new Date(dataUpdatedAt), {
+                    addSuffix: true,
+                  })}
+                </p>
+              ) : null}
             </div>
           </div>
         </div>
@@ -579,6 +654,11 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
         onMoveToChange={setCompletionMoveTo}
         onCancel={() => setCompletionTarget(null)}
         onConfirm={handleConfirmCompletion}
+      />
+
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
       />
 
       <ConfirmDialog
