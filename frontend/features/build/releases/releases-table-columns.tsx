@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState, type MouseEvent, type ReactNode } from "react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +68,40 @@ function ReleaseRowActions({
   );
 }
 
+function ReleaseContextMenuCell({
+  release,
+  canManage,
+  onEdit,
+  onDelete,
+  children,
+}: { release: Release; children: ReactNode } & ReleaseRowHandlers) {
+  const [open, setOpen] = useState(false);
+  const handleEdit = useCallback(() => onEdit(release), [release, onEdit]);
+  const handleDelete = useCallback(() => onDelete(release), [release, onDelete]);
+  const handleContextMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (!canManage) return;
+      event.preventDefault();
+      setOpen(true);
+    },
+    [canManage],
+  );
+  return (
+    <div onContextMenu={handleContextMenu} className={cn(TEXT_FLEX_CHILD, "overflow-hidden")}>
+      {children}
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <span aria-hidden tabIndex={-1} className="sr-only" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 export function buildReleasesColumns({
   canManage,
   onEdit,
@@ -79,19 +113,21 @@ export function buildReleasesColumns({
       header: "Name",
       className: TABLE_TITLE_CELL,
       cell: (r) => (
-        <div className={cn(TEXT_FLEX_CHILD, "space-y-0.5 overflow-hidden")}>
-          <TruncatedText text={r.name} className="text-dense font-medium text-foreground" />
-          <TruncatedText
-            text={r.version}
-            className="font-mono text-micro text-muted-foreground"
-          />
-          {r.description ? (
+        <ReleaseContextMenuCell release={r} canManage={canManage} onEdit={onEdit} onDelete={onDelete}>
+          <div className={cn(TEXT_FLEX_CHILD, "space-y-0.5 overflow-hidden")}>
+            <TruncatedText text={r.name} className="text-dense font-medium text-foreground" />
             <TruncatedText
-              text={r.description.replace(/<[^>]*>/g, "")}
-              className="text-micro text-muted-foreground"
+              text={r.version}
+              className="font-mono text-micro text-muted-foreground"
             />
-          ) : null}
-        </div>
+            {r.description ? (
+              <TruncatedText
+                text={r.description.replace(/<[^>]*>/g, "")}
+                className="text-micro text-muted-foreground"
+              />
+            ) : null}
+          </div>
+        </ReleaseContextMenuCell>
       ),
     },
     {

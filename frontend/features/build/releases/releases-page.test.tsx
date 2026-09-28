@@ -549,3 +549,41 @@ it("renders Unknown in the published column for a released row with null publish
   render(publishedColumn.cell({ ...releaseRow, status: "released", publishedAt: null }));
   expect(screen.getByText("Unknown")).toBeInTheDocument();
 });
+
+describe("release name cell — right click opens the same authorized actions as the row menu", () => {
+  function nameCell(canManage: boolean, onEdit = jest.fn(), onDelete = jest.fn()) {
+    const { buildReleasesColumns } = require("./releases-table-columns");
+    const columns = buildReleasesColumns({ canManage, onEdit, onDelete });
+    const nameColumn = columns.find((c: { key: string }) => c.key === "name");
+    render(nameColumn.cell(releaseRow));
+    return { onEdit, onDelete };
+  }
+
+  it("opens Edit and Delete on contextmenu for a viewer who can manage releases", () => {
+    nameCell(true);
+    expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
+    fireEvent.contextMenu(screen.getByText("v1.0.0"));
+    expect(screen.getByRole("menuitem", { name: "Edit" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Delete" })).toBeInTheDocument();
+  });
+
+  it("opens nothing on contextmenu for a viewer who cannot manage releases, so the menu never offers an unauthorized command", () => {
+    nameCell(false);
+    fireEvent.contextMenu(screen.getByText("v1.0.0"));
+    expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
+  });
+
+  it("calls the row's edit handler with the row the menu was opened on", () => {
+    const { onEdit } = nameCell(true);
+    fireEvent.contextMenu(screen.getByText("v1.0.0"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+    expect(onEdit).toHaveBeenCalledWith(releaseRow);
+  });
+
+  it("calls the row's delete handler from the context menu, so delete is reachable without the actions column", () => {
+    const { onDelete } = nameCell(true);
+    fireEvent.contextMenu(screen.getByText("v1.0.0"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    expect(onDelete).toHaveBeenCalledWith(releaseRow);
+  });
+});
