@@ -1,95 +1,19 @@
 import { renderHook, act } from "@testing-library/react";
-import type { ChangeEvent } from "react";
-
-let mockSearchParams = new URLSearchParams();
-const mockReplace = jest.fn();
-const mockPush = jest.fn();
-
-jest.mock("next/navigation", () => ({
-  useSearchParams: () => mockSearchParams,
-  useRouter: () => ({ replace: mockReplace, push: mockPush }),
-  usePathname: () => "/build/1/issues",
-}));
-
-const mockCreateViewMutate = jest.fn();
-const mockUpdateViewMutate = jest.fn();
-let mockViews: unknown[] = [];
-let mockBoardTickets: unknown[] = [];
-let mockBoardFilters: Record<string, unknown> | undefined;
-
-jest.mock("@/hooks/api/build/projects", () => ({
-  useProject: () => ({
-    data: { id: 1, key: "TEST", name: "Test", members: [], statuses: [] },
-  }),
-}));
-
-jest.mock("@/hooks/api/build/advanced", () => ({
-  useViews: () => ({
-    data: {
-      data: mockViews,
-      pagination: { limit: 100, hasMore: false, nextCursor: null },
-    },
-  }),
-  useCreateView: () => ({ mutate: mockCreateViewMutate, isPending: false }),
-  useUpdateView: () => ({ mutate: mockUpdateViewMutate, isPending: false }),
-}));
-
-jest.mock("@/hooks/api/build/tickets", () => ({
-  useProjectBoardTickets: (_projectId: number, filters: Record<string, unknown>) => {
-    mockBoardFilters = filters;
-    return {
-    data: mockBoardTickets,
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-    isTruncated: false,
-    fetchNextPage: jest.fn(),
-    isFetchingNextPage: false,
-    };
-  },
-}));
-
-let mockQaMatches: Array<{ id: number }> | undefined = undefined;
-const mockUseBugs = jest.fn();
-
-jest.mock("@/hooks/api/build/bugs", () => ({
-  useBugs: (projectId?: number, filters?: Record<string, string | undefined>) => {
-    mockUseBugs(projectId, filters);
-    return { data: mockQaMatches, isLoading: false };
-  },
-}));
-
-jest.mock("sonner", () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
-}));
-
+import {
+  boardState,
+  installBoardUrlStateMocks,
+  mockCreateViewMutate,
+  mockPush,
+  mockReplace,
+  mockUpdateViewMutate,
+  mockUseBugs,
+  nameEvent,
+  setParams,
+} from "./use-board-url-state-test-harness";
 import { useBoardUrlState } from "./use-board-url-state";
 import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-panel";
 
-function nameEvent(value: string) {
-  return { target: { value } } as ChangeEvent<HTMLInputElement>;
-}
-
-function setParams(init: Record<string, string>) {
-  mockSearchParams = new URLSearchParams(init);
-  const qs = mockSearchParams.toString();
-  window.history.replaceState({}, "", qs ? `/?${qs}` : "/");
-}
-
-beforeEach(() => {
-  mockViews = [];
-  mockBoardTickets = [];
-  mockBoardFilters = undefined;
-  mockQaMatches = undefined;
-  mockUseBugs.mockClear();
-  setParams({});
-  mockReplace.mockClear();
-  mockPush.mockClear();
-  mockCreateViewMutate.mockClear();
-  mockUpdateViewMutate.mockClear();
-  localStorage.clear();
-});
+beforeEach(installBoardUrlStateMocks);
 
 describe("useBoardUrlState — saving a view persists every filter the board was showing", () => {
   it("fails closed for malformed enum filters instead of sending a request that crashes the page", () => {
@@ -97,7 +21,7 @@ describe("useBoardUrlState — saving a view persists every filter the board was
 
     renderHook(() => useBoardUrlState(1));
 
-    expect(mockBoardFilters).toEqual({
+    expect(boardState.boardFilters).toEqual({
       q: undefined,
       status: undefined,
       priority: undefined,
@@ -155,7 +79,7 @@ describe("useBoardUrlState — saving a view persists every filter the board was
 
     const { result } = renderHook(() => useBoardUrlState(1));
 
-    expect(mockBoardFilters).toMatchObject({
+    expect(boardState.boardFilters).toMatchObject({
       dueDateFrom: "2026-01-01",
       dueDateTo: "2026-01-31",
     });
@@ -198,7 +122,7 @@ describe("useBoardUrlState — saving a view persists every filter the board was
 
 describe("useBoardUrlState — ticket round trips preserve issue collection state", () => {
   it("records the allowlisted issue query when opening a ticket", () => {
-    mockBoardTickets = [
+    boardState.boardTickets = [
       {
         id: 22,
         ticketNumber: 81,
@@ -229,7 +153,7 @@ describe("useBoardUrlState — ticket round trips preserve issue collection stat
 
 describe("useBoardUrlState — Calendar has one canonical owner", () => {
   it("normalizes an Issues calendar deep link to the unified Calendar without rendering the local calendar layout", () => {
-    mockViews = [
+    boardState.views = [
       {
         id: 9,
         name: "Saved list",
@@ -273,124 +197,9 @@ describe("useBoardUrlState — Calendar has one canonical owner", () => {
   });
 });
 
-describe("useBoardUrlState — grouping, sort and column config survive a copied link", () => {
-  it("reads groupBy, orderBy, rowBy, columnBy and completed straight off the URL so a shared link reproduces the sender's grouping", () => {
-    setParams({
-      groupBy: "assignee",
-      orderBy: "priority",
-      rowBy: "cycle",
-      columnBy: "label",
-      completed: "last-week",
-    });
-
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    expect(result.current.displayOptions.groupBy).toBe("assignee");
-    expect(result.current.displayOptions.orderBy).toBe("priority");
-    expect(result.current.displayOptions.rowBy).toBe("cycle");
-    expect(result.current.displayOptions.columnBy).toBe("label");
-    expect(result.current.displayOptions.completedIssues).toBe("last-week");
-  });
-
-  it("takes column visibility from the cols param, so toggling a column off is reproduced for the recipient", () => {
-    setParams({ cols: "showId,showStatus" });
-
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    expect(result.current.displayOptions.showId).toBe(true);
-    expect(result.current.displayOptions.showStatus).toBe(true);
-    expect(result.current.displayOptions.showAssignee).toBe(false);
-    expect(result.current.displayOptions.showPriority).toBe(false);
-  });
-
-  it("falls back to the localStorage preference for any option the URL does not carry, so existing users keep their saved layout", () => {
-    localStorage.setItem(
-      "unscoped::streamlineos:projects:display-options:v1:1",
-      JSON.stringify({
-        ...DEFAULT_DISPLAY_OPTIONS,
-        groupBy: "priority",
-        orderBy: "dueDate",
-      }),
-    );
-    setParams({ groupBy: "assignee" });
-
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    expect(result.current.displayOptions.groupBy).toBe("assignee");
-    expect(result.current.displayOptions.orderBy).toBe("dueDate");
-  });
-
-  it("writes the whole display configuration to the URL when it changes, so the address bar is always the shareable state", () => {
-    setParams({ view: "list" });
-
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    act(() => {
-      result.current.setDisplayOptions({
-        ...DEFAULT_DISPLAY_OPTIONS,
-        groupBy: "assignee",
-        orderBy: "priority",
-      });
-    });
-
-    expect(mockReplace).toHaveBeenCalled();
-    const written = new URLSearchParams(
-      (mockReplace.mock.calls.at(-1)?.[0] as string).slice(1),
-    );
-    expect(written.get("groupBy")).toBe("assignee");
-    expect(written.get("orderBy")).toBe("priority");
-    expect(written.get("view")).toBe("list");
-    expect(written.get("cols")).not.toBeNull();
-  });
-
-  it("keeps a deep-linked orderBy=updated on both the query sent to the backend and the display options, because the two read the same param with different vocabularies and the narrower one used to overwrite it", () => {
-    setParams({ orderBy: "updated" });
-
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    expect(result.current.boardFilters.orderBy).toBe("updated");
-    expect(result.current.displayOptions.orderBy).toBe("updated");
-  });
-
-  it("does not rewrite a deep-linked orderBy=updated back to the fallback when any other display option changes", () => {
-    setParams({ orderBy: "updated" });
-
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    act(() => {
-      result.current.setDisplayOptions({
-        ...result.current.displayOptions,
-        groupBy: "assignee",
-      });
-    });
-
-    const written = new URLSearchParams(
-      (mockReplace.mock.calls.at(-1)?.[0] as string).slice(1),
-    );
-    expect(written.get("orderBy")).toBe("updated");
-  });
-
-  it("still persists the changed display options to localStorage so the preference outlives the URL", () => {
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    act(() => {
-      result.current.setDisplayOptions({
-        ...DEFAULT_DISPLAY_OPTIONS,
-        groupBy: "cycle",
-      });
-    });
-
-    const stored = localStorage.getItem(
-      "unscoped::streamlineos:projects:display-options:v1:1",
-    );
-    expect(stored).not.toBeNull();
-    expect(JSON.parse(stored as string).groupBy).toBe("cycle");
-  });
-});
-
 describe("useBoardUrlState — an applied saved view can be updated in place from the board", () => {
   it("patches the active view with the filters, layout and display options currently on screen", () => {
-    mockViews = [
+    boardState.views = [
       {
         id: 9,
         name: "Sprint board",
@@ -441,115 +250,5 @@ describe("useBoardUrlState — an applied saved view can be updated in place fro
     });
 
     expect(mockUpdateViewMutate).not.toHaveBeenCalled();
-  });
-});
-
-describe("useBoardUrlState — QA filters replace the standalone Bugs page", () => {
-  it("does not query the bugs endpoint when no QA filter is set", () => {
-    setParams({ type: "BUG" });
-
-    renderHook(() => useBoardUrlState(1));
-
-    expect(mockUseBugs).toHaveBeenCalledWith(undefined, {
-      severity: undefined,
-      status: undefined,
-    });
-  });
-
-  it("does not query the bugs endpoint when a severity is set but the list is not scoped to bugs", () => {
-    setParams({ severity: "blocker" });
-
-    renderHook(() => useBoardUrlState(1));
-
-    expect(mockUseBugs).toHaveBeenCalledWith(undefined, {
-      severity: "blocker",
-      status: undefined,
-    });
-  });
-
-  it("queries the bugs endpoint with severity and QA state once the list is scoped to bugs", () => {
-    setParams({ type: "BUG", severity: "blocker", qaState: "ready_for_qa" });
-
-    renderHook(() => useBoardUrlState(1));
-
-    expect(mockUseBugs).toHaveBeenCalledWith(1, {
-      severity: "blocker",
-      status: "ready_for_qa",
-    });
-  });
-
-  it("counts a severity filter as an active filter so the empty state explains itself", () => {
-    setParams({ type: "BUG", severity: "blocker" });
-
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    expect(result.current.hasActiveFilters).toBe(true);
-  });
-
-  it("clears severity and QA state alongside the other filters", () => {
-    setParams({
-      type: "BUG",
-      severity: "blocker",
-      qaState: "verified",
-      dueDateFrom: "2026-01-01",
-      dueDateTo: "2026-01-31",
-    });
-
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    act(() => {
-      result.current.handleClearSearch();
-    });
-
-    const written = new URLSearchParams(mockReplace.mock.calls[0][0].slice(1));
-    expect(written.get("severity")).toBeNull();
-    expect(written.get("qaState")).toBeNull();
-    expect(written.get("dueDateFrom")).toBeNull();
-    expect(written.get("dueDateTo")).toBeNull();
-  });
-
-  it("writes a QA filter to the URL so a filtered defect list is shareable", () => {
-    setParams({ type: "BUG" });
-
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    act(() => {
-      result.current.handleQaFilterChange("severity", "critical");
-    });
-
-    const written = new URLSearchParams(mockReplace.mock.calls[0][0].slice(1));
-    expect(written.get("severity")).toBe("critical");
-  });
-
-  it("removes a QA filter from the URL when it is set back to any", () => {
-    setParams({ type: "BUG", severity: "critical" });
-
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    act(() => {
-      result.current.handleQaFilterChange("severity", "");
-    });
-
-    const written = new URLSearchParams(mockReplace.mock.calls[0][0].slice(1));
-    expect(written.get("severity")).toBeNull();
-  });
-
-  it("carries severity and QA state into a saved view so a defect view reopens filtered", () => {
-    setParams({ type: "BUG", severity: "major", qaState: "reopened" });
-
-    const { result } = renderHook(() => useBoardUrlState(1));
-
-    act(() => {
-      result.current.handleSaveViewNameChange(nameEvent("Open majors"));
-    });
-    act(() => {
-      result.current.handleSaveView();
-    });
-
-    const payload = mockCreateViewMutate.mock.calls[0][0] as {
-      filters: Record<string, string>;
-    };
-    expect(payload.filters.severity).toBe("major");
-    expect(payload.filters.qaState).toBe("reopened");
   });
 });
