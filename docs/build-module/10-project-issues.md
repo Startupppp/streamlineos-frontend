@@ -157,11 +157,15 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     banner, and a right click opening the row's own controlled menu — is what these six items need.
 
     ```text
-    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/build/project-detail features/build/views
-    (not re-run by this lane: `features/build/views/**` is another lane's territory this run and was
-     being edited concurrently; the two stale notes above were settled by reading the source and by
-     the existing test line numbers cited, not by a fresh run of that suite)
+    $ cd frontend && nice -n 10 npx jest --maxWorkers=2 features/build/project-detail
+    Test Suites: 2 passed, 2 total
+    Tests:       40 passed, 40 total
     ```
+
+    That run covers the two stale notes about this page's own component: the partial-success branches
+    and the board-view keyboard suppression. `features/build/views/**` was not re-run by this lane —
+    it is another lane's write territory this run and was being edited concurrently — so the six
+    items listed above are reported from source, not from a suite result.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
