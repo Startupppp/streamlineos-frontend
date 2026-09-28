@@ -5,6 +5,7 @@ import type { ProjectWebhook } from "@/hooks/api/build/webhooks";
 
 interface BuildListKeyboardOptions {
   itemCount?: number;
+  searchInputRef?: { current: HTMLInputElement | null };
   onOpen?: (index: number) => void;
   onEdit?: (index: number) => void;
   onCreate?: () => void;
@@ -13,9 +14,10 @@ interface BuildListKeyboardOptions {
   enabled?: boolean;
 }
 
+let mockFocusedIndex: number | null = null;
 const mockUseBuildListKeyboard = jest.fn(
   (_options?: BuildListKeyboardOptions) => ({
-    focusedIndex: null,
+    focusedIndex: mockFocusedIndex,
     setFocusedIndex: jest.fn(),
   }),
 );
@@ -129,6 +131,9 @@ jest.mock("@/features/build/settings/webhook-card", () => ({
     density,
     selected,
     onSelectedChange,
+    focused,
+    expanded,
+    onExpandedChange,
   }: {
     webhook: ProjectWebhook;
     onToggle?: (wh: Pick<ProjectWebhook, "id" | "version">, isActive: boolean) => void;
@@ -136,6 +141,9 @@ jest.mock("@/features/build/settings/webhook-card", () => ({
     density?: string;
     selected?: boolean;
     onSelectedChange?: (webhookId: number, selected: boolean) => void;
+    focused?: boolean;
+    expanded?: boolean;
+    onExpandedChange?: (webhookId: number, expanded: boolean) => void;
   }) => (
     <div
       data-testid="webhook-card"
@@ -143,7 +151,12 @@ jest.mock("@/features/build/settings/webhook-card", () => ({
       data-density={density}
       data-selected={selected === true ? "true" : "false"}
       data-selectable={onSelectedChange === undefined ? "false" : "true"}
+      data-focused={focused === true ? "true" : "false"}
+      data-expanded={expanded === true ? "true" : "false"}
     >
+      <button onClick={() => onExpandedChange?.(webhook.id, expanded !== true)}>
+        {`expand-${webhook.id}`}
+      </button>
       <button onClick={() => onToggle?.({ id: webhook.id, version: webhook.version }, false)}>
         toggle-off
       </button>
@@ -198,6 +211,7 @@ beforeEach(() => {
   mockUseWebhooks.mockClear();
   mockUseBuildCursorPager.mockClear();
   mockUseBuildListKeyboard.mockClear();
+  mockFocusedIndex = null;
   mockUpdateMutate.mockClear();
   mockUpdateMutateAsync.mockClear();
   mockUpdateMutateAsync.mockImplementation((_vars?: unknown) => Promise.resolve());
@@ -995,5 +1009,93 @@ describe("ProjectWebhooksPage — density toggle (BLD-X-FE-SETTINGS-WH-039)", ()
     fireEvent.click(screen.getByRole("button", { name: "Compact" }));
     fireEvent.click(screen.getByRole("button", { name: "Comfortable" }));
     expect(screen.getByTestId("webhook-card")).toHaveAttribute("data-density", "compact");
+  });
+});
+
+describe("ProjectWebhooksPage — j/k focus, Enter and / (BLD-X-FE-SETTINGS-WH-042)", () => {
+  it("hands the search input to the keyboard hook, so / focuses a real element rather than nothing", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    const lastArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(lastArgs?.searchInputRef?.current).toBe(
+      screen.getByRole("textbox", { name: /search webhooks/i }),
+    );
+  });
+
+  it("marks the j/k focused row as focused, so the moving cursor is visible on the list", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [
+      SAMPLE_WEBHOOK,
+      { ...SAMPLE_WEBHOOK, id: 2, url: "https://b.example.com" },
+    ];
+    mockFocusedIndex = 1;
+    render(<ProjectWebhooksPage projectId="1" />);
+    const cards = screen.getAllByTestId("webhook-card");
+    expect(cards[0]).toHaveAttribute("data-focused", "false");
+    expect(cards[1]).toHaveAttribute("data-focused", "true");
+  });
+
+  it("marks no row focused when the cursor has not moved — paired with the focused assertion above", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByTestId("webhook-card")).toHaveAttribute("data-focused", "false");
+  });
+
+  it("Enter on the focused row opens its delivery history, so the shortcut has a real target", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByTestId("webhook-card")).toHaveAttribute("data-expanded", "false");
+    const onOpen = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0]?.onOpen;
+    await act(async () => {
+      onOpen?.(0);
+    });
+    expect(screen.getByTestId("webhook-card")).toHaveAttribute("data-expanded", "true");
+  });
+
+  it("Enter on an already open row closes it again, so the shortcut is reversible", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    const onOpen = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0]?.onOpen;
+    await act(async () => {
+      onOpen?.(0);
+    });
+    await act(async () => {
+      onOpen?.(0);
+    });
+    expect(screen.getByTestId("webhook-card")).toHaveAttribute("data-expanded", "false");
+  });
+
+  it("Enter with an out-of-range focus opens nothing, so a stale cursor cannot expand the wrong row", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    const onOpen = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0]?.onOpen;
+    await act(async () => {
+      onOpen?.(9);
+    });
+    expect(screen.getByTestId("webhook-card")).toHaveAttribute("data-expanded", "false");
+  });
+
+  it("only one row is open at a time, so the expanded panel follows the cursor", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [
+      SAMPLE_WEBHOOK,
+      { ...SAMPLE_WEBHOOK, id: 2, url: "https://b.example.com" },
+    ];
+    render(<ProjectWebhooksPage projectId="1" />);
+    const onOpen = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0]?.onOpen;
+    await act(async () => {
+      onOpen?.(0);
+    });
+    await act(async () => {
+      onOpen?.(1);
+    });
+    const cards = screen.getAllByTestId("webhook-card");
+    expect(cards[0]).toHaveAttribute("data-expanded", "false");
+    expect(cards[1]).toHaveAttribute("data-expanded", "true");
   });
 });

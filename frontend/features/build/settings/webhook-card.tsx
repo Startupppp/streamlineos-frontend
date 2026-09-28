@@ -135,6 +135,9 @@ interface WebhookCardProps {
   density?: "compact" | "comfortable";
   selected?: boolean;
   onSelectedChange?: (webhookId: number, selected: boolean) => void;
+  focused?: boolean;
+  expanded?: boolean;
+  onExpandedChange?: (webhookId: number, expanded: boolean) => void;
 }
 
 export function WebhookCard({
@@ -147,9 +150,13 @@ export function WebhookCard({
   density = "compact",
   selected = false,
   onSelectedChange,
+  focused = false,
+  expanded: expandedProp,
+  onExpandedChange,
 }: WebhookCardProps) {
   const accessState = useCanState("build:manage");
-  const [expanded, setExpanded] = useState(false);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const expanded = expandedProp ?? internalExpanded;
   const [menuOpen, setMenuOpen] = useState(false);
   const { data: deliveries = [], isLoading } = useWebhookDeliveries(
     projectId,
@@ -163,8 +170,12 @@ export function WebhookCard({
     useAnimatedIcon();
 
   const handleToggle = useCallback(() => {
-    setExpanded((v) => !v);
-  }, []);
+    if (onExpandedChange) {
+      onExpandedChange(webhook.id, !expanded);
+      return;
+    }
+    setInternalExpanded((v) => !v);
+  }, [onExpandedChange, webhook.id, expanded]);
 
   const handleConfirmDelete = useCallback(
     () => onDelete(webhook.id),
@@ -181,11 +192,12 @@ export function WebhookCard({
             `Test delivery failed (HTTP ${result.responseCode ?? "—"})`,
           );
         }
-        setExpanded(true);
+        if (onExpandedChange) onExpandedChange(webhook.id, true);
+        else setInternalExpanded(true);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [sendTest, webhook.id]);
+  }, [sendTest, webhook.id, onExpandedChange]);
 
   const handleActiveToggle = useCallback(
     (checked: boolean) => {
@@ -230,6 +242,7 @@ export function WebhookCard({
       className={cn(
         PM_PANEL,
         "group/card overflow-hidden transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md",
+        focused && "ring-2 ring-inset ring-primary/40",
       )}
       onContextMenu={handleContextMenu}
     >

@@ -126,6 +126,7 @@ export function ProjectWebhooksPage({
   );
   const [density, setDensity] = useState<"compact" | "comfortable">("compact");
   const [bulkPending, setBulkPending] = useState(false);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [conflict, setConflict] = useState<{
     webhookId: number;
     patch: WebhookConflictPatch;
@@ -143,6 +144,7 @@ export function ProjectWebhooksPage({
 
   const [qInput, setQInput] = useState(qParam ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const pager = useBuildCursorPager(
     `${stateParam ?? ""}|${eventParam ?? ""}|${qParam ?? ""}|${fromParam ?? ""}|${toParam ?? ""}`,
@@ -345,7 +347,20 @@ export function ProjectWebhooksPage({
   const handleNextPage = useCallback(() => {
     pager.goNext(nextCursor === null ? undefined : String(nextCursor));
   }, [pager, nextCursor]);
-  const handleOpenWebhook = useCallback((_index: number) => {}, []);
+  const handleExpandedChange = useCallback(
+    (webhookId: number, next: boolean) => {
+      setExpandedId(next ? webhookId : null);
+    },
+    [],
+  );
+  const handleOpenWebhook = useCallback(
+    (index: number) => {
+      const focused = webhookList[index];
+      if (!focused) return;
+      setExpandedId((prev) => (prev === focused.id ? null : focused.id));
+    },
+    [webhookList],
+  );
   const handleClearWebhookSelection = useCallback(() => {
     setSelectedIds(new Set<number>());
   }, []);
@@ -473,13 +488,14 @@ export function ProjectWebhooksPage({
     },
     [webhookList, handleEdit],
   );
-  useBuildListKeyboard({
+  const { focusedIndex } = useBuildListKeyboard({
     itemCount: webhookList.length,
     onOpen: handleOpenWebhook,
     onEdit: canManage && isOnline ? handleEditFocusedWebhook : undefined,
     onCreate: canManage && isOnline ? handleShowForm : undefined,
     onClearSelection: handleClearWebhookSelection,
     onShortcutHelp: handleShortcutHelp,
+    searchInputRef,
     enabled: pageState.kind === "ready",
   });
 
@@ -497,6 +513,7 @@ export function ProjectWebhooksPage({
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Input
+              ref={searchInputRef}
               placeholder="Search by URL…"
               value={qInput}
               onChange={handleQChange}
@@ -610,7 +627,7 @@ export function ProjectWebhooksPage({
                 aria-label="Webhooks"
               >
                 <AnimatePresence initial={false}>
-                  {webhookList.map((wh) => (
+                  {webhookList.map((wh, index) => (
                     <div key={wh.id} role="listitem">
                       <WebhookCard
                         webhook={wh}
@@ -620,6 +637,9 @@ export function ProjectWebhooksPage({
                         onEdit={canManage ? handleEdit : undefined}
                         canManage={canManage}
                         density={density}
+                        focused={index === focusedIndex}
+                        expanded={expandedId === wh.id}
+                        onExpandedChange={handleExpandedChange}
                         selected={selectedIds.has(wh.id)}
                         onSelectedChange={
                           canManage ? handleSelectedChange : undefined

@@ -511,3 +511,57 @@ describe("diffWebhookConflictFields — field-level server/current comparison (B
     ).toEqual([]);
   });
 });
+
+describe("WebhookCard — page-controlled delivery panel (BLD-X-FE-SETTINGS-WH-043)", () => {
+  it("renders the delivery history when the page says the row is open, so Enter on the focused row can open it", () => {
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+        expanded
+        onExpandedChange={jest.fn()}
+      />,
+    );
+    expect(screen.getByText("Recent Deliveries")).toBeInTheDocument();
+  });
+
+  it("renders no delivery history when the page says the row is closed — paired with the open assertion above", () => {
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+        expanded={false}
+        onExpandedChange={jest.fn()}
+      />,
+    );
+    expect(screen.queryByText("Recent Deliveries")).not.toBeInTheDocument();
+  });
+
+  it("asks the page to close the row instead of holding its own state when the chevron is clicked", () => {
+    const onExpandedChange = jest.fn();
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+        expanded
+        onExpandedChange={onExpandedChange}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /hide deliveries/i }));
+    expect(onExpandedChange).toHaveBeenCalledWith(BASE_WEBHOOK.id, false);
+  });
+
+  it("still opens on its own when no page owns the state, so the card keeps working uncontrolled", () => {
+    render(
+      <WebhookCard webhook={BASE_WEBHOOK} projectId={3} onDelete={jest.fn()} canManage />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /show deliveries/i }));
+    expect(screen.getByText("Recent Deliveries")).toBeInTheDocument();
+  });
+});
