@@ -18,6 +18,8 @@ Round 5: 1 new tick (C4 SPEC 1 — client-portal bounded rendering). Confirmatio
 
 Round 6: 6 new ticks — C1/C3/C4/C5 for SPEC 3 (chat), C3 for SPEC 4 (updates), C5 for SPEC 6 (invitation rate-limit). 1 pre-existing test failure fixed (`project-updates-schema.test.ts` `minimalRow` missing fields).
 
+Round 7 (2026-09-28, documentation lane — no code touched): no new ticks. **R6 is shipped** — `grantId`, `from`, `to` are in `listGrantsQuerySchema` (backend HEAD `c785361e8`) and all six SPEC 1 URL params are wired and tested on the canonical route (26/26). SPEC 1 C3 stays blocked on a different item: grant actions, the bulk action and a mounted `ClientVisibilityPage` are absent from `/build/[projectId]/client-portal`. See the box for the measurement.
+
 Round 2 new ticks:
 - C1 updates: R3 confirmed `build-project-catalog.ts:85-90`.
 - C4-server-enforce: all 5 portal specs — 20 backend spec tests (9+6+5).
@@ -76,6 +78,10 @@ A definition without `options` passes any raw URL value straight through.
   - Tests: portal-separation.test.tsx 12 passed (same run above)
 
 - [ ] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
+  - ~~BLOCKED on the backend schema~~ **SUPERSEDED 2026-09-28.** The blocker below was correct when
+    written and is now cleared — a sibling lane landed the three fields. Retained verbatim because it
+    records what was filed as R6 and what actually shipped. The box stays unchecked for a different
+    reason; see the 2026-09-28 note after the test line.
   - BLOCKED — `section` URL param is backed. Remaining spec URL params `grantId`, `from`, `to`
     are absent from `listGrantsQuerySchema` (`.strict()`) at
     `backend/src/modules/portal/access/dto/portal-access.schemas.ts:32-49`. That schema has
@@ -90,6 +96,50 @@ A definition without `options` passes any raw URL value straight through.
     Also update `ListGrantsQuery` type (line 74) and the service method.
   - Tests: `npx jest --testPathPattern="client-visibility-page\.ap9" --cacheDirectory=D:/agent-work/jest-lane-5`
     → PASS 6 tests (AP-9 pattern × 4 + C4 sentinel × 2)
+  - **2026-09-28 — R6 SHIPPED, URL-STATE HALF EARNED, BOX STILL NOT EARNED.**
+  - The three fields landed exactly as R6 specified. `backend/src/modules/portal/access/dto/portal-access.schemas.ts:32-52`
+    now reads `limit`, `cursor`, `projectId`, `grantId: z.string().min(1).optional()`,
+    `from: z.coerce.date().optional()`, `to: z.coerce.date().optional()`, `q`, `permission`, `state`,
+    still `.strict()`. Provenance: backend HEAD `c785361e8` (2026-09-28); `git show --stat HEAD` lists
+    that file at `3 +`, and `git log -S "from: z.coerce.date().optional()" -- <path>` returns only that
+    commit. The line range in the note above (`:32-49`) is now `:32-52`.
+  - All six spec URL params are wired on the canonical route. `10-project-client-portal.md:45` declares
+    `grantId`, `section`, `status`, `from`, `to`, `cursor`. The route renders `ClientPortalManagementPage`
+    (`app/(authenticated)/build/[projectId]/client-portal/page.tsx`), which reads `section` at
+    `client-portal-management-page.tsx:287`, declares `GRANT_FILTER_DEFINITIONS` at `:42-47`, and forwards
+    `grantId`/`from`/`to`/`status`→`state` plus `cursor` to `useProjectClientGrants` at `:300-313`. The hook
+    accepts all of them (`hooks/api/portal-access/grants.ts:37-52`). `status` is the URL word and `state`
+    the wire word; the mapping is explicit at `:312`.
+  - Tests: `npx jest --testPathPattern="client-portal/client-portal-management-page" --cacheDirectory=D:/agent-work/jest-lane-kill --no-coverage`
+    → **1 suite passed, 26 tests passed**, including "forwards grantId, from, to, status and cursor from the
+    URL to the grants read", "drops an unknown status value rather than sending it, so a bookmarked URL
+    cannot 400 the strict backend schema", and four cursor-in-URL pagination tests.
+  - **THE REMAINING BLOCKER — two items the criterion names that this route does not have.**
+    1. **Actions, overlays and the `c`/`e` shortcuts have no target here, and neither does the bulk action.**
+       `GrantRow` (`:161-198`) is read-only: no row menu, no edit, no revoke. `useBuildListKeyboard` at
+       `:353-359` is passed `onOpen: noop` and `onClearSelection: noop` with no `onCreate`/`onEdit`, so only
+       `?` and `j/k` have targets. Grant create, edit, revoke and **bulk revoke** all live on a different
+       route — `features/portal-access/client-access-page.tsx:185` with `useBulkRevokeGrant` — which is why
+       the spec's context-menu requirement (`10-project-client-portal.md:51`) and the criterion's "bulk
+       action" have nothing to point at on `/build/[projectId]/client-portal`. Compare SPEC 2, whose
+       equivalent box was ticked on the strength of `onCreate`, `onEdit` and a selection-aware bulk bar.
+    2. **The Visibility tab is a dead end, so the core field "visible sections/fields" is unreachable.**
+       `:453-458` renders prose telling the user to "Switch to the Tickets and Milestones sections in the
+       Client Visibility panel" — with no link, and no such panel on the page.
+       `grep -rn "ClientVisibilityPage" frontend --include=*.ts --include=*.tsx` shows the component imported
+       only by its own two test files and by `features/portal/portals-gallery.tsx:264`, a design-system
+       gallery. **No authenticated route mounts it.** This also weakens the C2 tick above, whose evidence
+       cites `ClientVisibilityPage` as the surface that "manages ticket/milestone client-visibility grants":
+       the component exists and is tested, but no user can reach it. That tick is left as another lane wrote
+       it and is not altered here; the finding is routed to the orchestrator.
+  - One judgement recorded rather than hidden: the spec's **conflict** state ("field-level server/current
+    comparison for version conflicts") has no trigger on this route — the only mutation is publish/unpublish,
+    which is explicitly non-optimistic and confirmed through a `ConfirmDialog`. Absence of a conflict state
+    is read as CCG-4 (no target on this page), not as a gap.
+  - **SETTLES WHEN** either (a) row actions, selection with bulk revoke, and a mounted `ClientVisibilityPage`
+    land on this route, or (b) the owner rules that grant mutation and visibility toggling belong solely to
+    `/build/settings/client-access`, which would make the criterion earnable as written. The criterion is not
+    to be reworded to reach (b).
 
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
   - Evidence: `useClientVisibilityTicketsInfinite` and `useClientVisibilityMilestonesInfinite` hooks

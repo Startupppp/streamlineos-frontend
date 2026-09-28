@@ -1,5 +1,6 @@
 import type { ReactNode, HTMLAttributes } from "react";
 import { act, render, screen } from "@testing-library/react";
+import { format, subDays } from "date-fns";
 import { CommandCenterPage } from "./command-center-page";
 import { ApiError } from "@/lib/api-envelope";
 
@@ -361,6 +362,49 @@ it("passes no managerId to useProjects when the owner param is absent — paired
   expect(mockUseProjects).toHaveBeenCalledWith(
     expect.objectContaining({ managerId: undefined }),
     expect.objectContaining({ throwOnError: false }),
+  );
+});
+
+it("passes a due-date window to useInfiniteAllWork when the due URL param is present, so the spec's due parameter is deep-linkable", () => {
+  mockSearchParams = new URLSearchParams("due=overdue");
+  render(<CommandCenterPage />);
+  expect(mockUseInfiniteAllWork).toHaveBeenCalledWith(
+    expect.objectContaining({
+      dueDateTo: format(subDays(new Date(), 1), "yyyy-MM-dd"),
+    }),
+    expect.anything(),
+  );
+});
+
+it("passes no due-date window to useInfiniteAllWork when the due param is absent — paired control for the due-present test above", () => {
+  render(<CommandCenterPage />);
+  expect(mockUseInfiniteAllWork).toHaveBeenCalledWith(
+    expect.not.objectContaining({ dueDateTo: expect.anything() }),
+    expect.anything(),
+  );
+});
+
+it("ignores a due URL param outside the declared enum so a hand-edited URL cannot shape the read", () => {
+  mockSearchParams = new URLSearchParams("due=next-decade");
+  render(<CommandCenterPage />);
+  expect(mockUseInfiniteAllWork).toHaveBeenCalledWith(
+    expect.not.objectContaining({ dueDateTo: expect.anything() }),
+    expect.anything(),
+  );
+});
+
+it("keeps the Overdue statistic read on the overdue window even when due=today narrows the panel, so the stat is not zeroed by the panel filter", () => {
+  mockSearchParams = new URLSearchParams("due=today");
+  render(<CommandCenterPage />);
+  expect(mockUseAllWork).toHaveBeenCalledWith(
+    expect.not.objectContaining({ dueDateFrom: expect.anything() }),
+    expect.anything(),
+  );
+  expect(mockUseAllWork).toHaveBeenCalledWith(
+    expect.objectContaining({
+      dueDateTo: format(subDays(new Date(), 1), "yyyy-MM-dd"),
+    }),
+    expect.anything(),
   );
 });
 

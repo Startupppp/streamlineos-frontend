@@ -174,6 +174,28 @@ describe("PageDocument — the access snapshot loading window", () => {
   });
 });
 
+describe("PageDocument — the title is interactive only when inline rename is authorized", () => {
+  it("renders the title read-only when the record denies editing, so an unauthorized reader cannot start a rename", () => {
+    mockUseKbPage.mockReturnValue({
+      data: { ...makePage(), canEdit: false },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<PageDocument pageId={42} projectId={7} />);
+
+    expect(screen.getByLabelText("Page title")).toHaveAttribute("readonly");
+  });
+
+  it("renders the title editable when the record allows editing — paired positive control for the read-only test above", () => {
+    render(<PageDocument pageId={42} projectId={7} />);
+
+    expect(screen.getByLabelText("Page title")).not.toHaveAttribute("readonly");
+  });
+});
+
 describe("PageDocument — record-level misses stay indistinguishable 404s", () => {
   it("renders the not-found state for a 404 when kb:pages:view is granted, so the surface denial branch did not swallow record-level misses", () => {
     mockUseKbPage.mockReturnValue({

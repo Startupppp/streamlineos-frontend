@@ -6,7 +6,8 @@ Move them under a named directory. Structure only; no logic changes.
 
 **Blocked by:** 01 — Publish the Build core shared surface.
 
-**Status:** done except the cross-module callers
+**Status:** done except the `core/` sibling reaches, which are ticket 01's seam work
+(the cross-module callers are closed — see Remeasurement 2026-09-28)
 
 - [x] Ticket files live under one named directory
 - [x] Imports are updated; no file is orphaned
@@ -106,6 +107,47 @@ surface) is now split in two:
 - External modules (agent-access, ai/core, cron, feedbucket, integrations/git):
   11 non-spec callers remain, all in fenced territory belonging to other lanes.
   Criterion 3 stays unticked for this reason.
+
+## Remeasurement 2026-09-28 — the external half is closed, the sibling half is not
+
+Measured repo-wide over `src/` and `test/` (9,317 files, 807 specifiers aimed
+into `build/core`), resolving every specifier against its importer:
+
+- **External modules: 0.** All eleven non-spec callers, and the eight spec
+  callers alongside them, now enter through a sanctioned barrel — `build/core`
+  or `build/core/tickets`. Not one deep `from`-import into `core/tickets/`
+  remains anywhere outside `build/core/`.
+- **`core/` siblings: 25.** Unchanged in kind from the nine this ticket first
+  recorded, and still under the same cycle tension. Among them
+  `analytics/projects-reports.service.ts`, `automation/build-automation-actions.service.ts`,
+  `custom-fields/projects-custom-fields.service.ts`,
+  `custom-states/projects-custom-states.service.ts`,
+  `members/projects-members.service.ts`,
+  `notifications/build-notification-context.service.ts`,
+  `project-crud/projects-query.service.ts`, `releases/projects-releases.service.ts`,
+  `roadmap/projects-roadmap.service.ts` and `projects.module.ts`.
+- Three `jest.mock` automocks name an implementation module deeply
+  (`feedbucket/tests/` ×2, `build/execution/execution-cross-project-binding.spec.ts`).
+  These are test-harness targets, not dependency edges: mocking a 26-export
+  barrel would replace unrelated exports. They are left as they are.
+
+**Criterion 3 stays unticked, and the reason is now the sibling half alone.**
+
+This ticket's own first reason for not ticking it — nine `core/` siblings that
+cannot reach the barrel without a cycle BE-10 forbids — is unchanged, and
+closing it means moving the shared seams out to where both sides can depend on
+them, which is ticket 01's job. The second reason, the external callers, is
+fully closed.
+
+The sibling half is not a harmless exemption. Ticket 27 found eight suites that
+had been dead since `project-access` moved, every one of them an intra-`build`
+deep reach that no gate could see. Deep paths inside the tree are exactly the
+fragility this criterion exists to remove.
+
+The closed half can no longer regress: `check:build-core-surface` now fences the
+tickets group repo-wide rather than across `src/modules/build/**` only, and
+resolves `jest.mock`, `require` and dynamic `import` specifiers as well as
+`from`, failing any that points at nothing on disk. See ticket 27.
 
 ## Verification
 

@@ -97,7 +97,7 @@ export function ProjectSettingsRetentionPage({ projectId }: ProjectSettingsReten
       className={CONTENT_FILL_PANEL}
       illustrationPreset="projects"
       title="Retention policy not configured"
-      description="No retention policy is currently active for this project. Save a policy to begin managing data retention."
+      description="No retention policy has been recorded for this project. Saving one records the intended periods; automated enforcement is not active yet."
     />
   );
 

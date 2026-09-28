@@ -1,4 +1,29 @@
+import { addDays, format, subDays } from "date-fns";
 import type { MyWorkItem } from "@/types/projects/my-work";
+
+export const COMMAND_CENTER_DUE_VALUES = ["overdue", "today", "week"] as const;
+
+export type CommandCenterDue = (typeof COMMAND_CENTER_DUE_VALUES)[number];
+
+export interface CommandCenterDueWindow {
+  dueDateFrom?: string;
+  dueDateTo?: string;
+}
+
+export function isCommandCenterDue(value: string): value is CommandCenterDue {
+  return (COMMAND_CENTER_DUE_VALUES as readonly string[]).includes(value);
+}
+
+export function resolveDueWindow(
+  due: string | null,
+  today: Date,
+): CommandCenterDueWindow | undefined {
+  if (due === null || !isCommandCenterDue(due)) return undefined;
+  const day = format(today, "yyyy-MM-dd");
+  if (due === "overdue") return { dueDateTo: format(subDays(today, 1), "yyyy-MM-dd") };
+  if (due === "today") return { dueDateFrom: day, dueDateTo: day };
+  return { dueDateFrom: day, dueDateTo: format(addDays(today, 7), "yyyy-MM-dd") };
+}
 
 export type EmptyAction = {
   label: string;

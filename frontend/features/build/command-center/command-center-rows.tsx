@@ -15,6 +15,7 @@ import { ChevronRightIcon, LayoutGridIcon, LayoutListIcon, SettingsIcon } from "
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
+import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { isPast, isToday, parseISO } from "date-fns";
@@ -29,6 +30,23 @@ import { PM_ROW } from "@/components/pm-chrome";
 import { FLEX_TITLE_SLOT } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
+
+export const PROJECT_HEALTH_LABEL: Record<ProjectListItem["health"], string> = {
+  on_track: "On track",
+  at_risk: "At risk",
+  off_track: "Off track",
+};
+
+const PROJECT_HEALTH_TONE: Record<ProjectListItem["health"], StatusTone> = {
+  on_track: "success",
+  at_risk: "warning",
+  off_track: "danger",
+};
+
+export function projectHealthClasses(health: ProjectListItem["health"]): string {
+  const tone = statusToneClasses(PROJECT_HEALTH_TONE[health]);
+  return cn(tone.surface, tone.ink, tone.rule);
+}
 
 export const STATUS_COLOR: Record<string, string> = {
   ACTIVE:
@@ -180,6 +198,15 @@ export const ProjectCard = memo(function ProjectCard({
             <p className="font-mono text-micro text-muted-foreground">{project.key}</p>
           )}
         </Link>
+        <Badge
+          variant="outline"
+          className={cn(
+            "h-4 shrink-0 px-1.5 py-0 text-micro",
+            projectHealthClasses(project.health),
+          )}
+        >
+          {PROJECT_HEALTH_LABEL[project.health]}
+        </Badge>
         {project.progress.total > 0 ? (
           <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
             <div className="h-1 w-14 overflow-hidden rounded-full bg-muted">

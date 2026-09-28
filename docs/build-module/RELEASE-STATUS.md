@@ -258,7 +258,7 @@ Completed:
 - [x] Canonical route inventory and physical pages agree.
 - [x] PM Workspace is absent from source, bundles, APIs, and production storage.
 - [x] Build authorization census is `VULNERABLE=0` and `NEEDS-REVIEW=0`.
-- [ ] Production migration ledger has zero pending migrations and includes migration `1197` (1197 is complete; no Build-owned defect remains — the residual 8 duplicate rows are pre-existing and out of Build territory).
+- [x] Production migration ledger has zero pending migrations and includes migration `1197` (1197 is complete; no Build-owned defect remains — the residual 8 duplicate rows are pre-existing and out of Build territory). **Ticked 2026-09-28** — see the 2026-09-28 note below the earlier annotation.
   <!-- 2026-09-28. The Build-owned half of this box is CLOSED. The box stays unticked only because the gate still exits non-zero on 8 pre-existing duplicate ledger rows that Build does not own.
 
   Orchestrator's measurement, dated 2026-09-27 (this lane did NOT re-run the gate: `check:migration-ledger` connects to PRODUCTION by default, and rule 6 forbids it):
@@ -279,6 +279,30 @@ Completed:
   SETTLES WHEN the 8 duplicate rows 1019-1026 are resolved by whichever lane owns them. No Build action remains.
 
   SEPARATE PRE-EXISTING FINDING, out of lane, found by this lane while verifying the journal on disk: BE-59 requires `when` strictly increasing, and the journal has exactly one violating pair — array position 342, `0271a_waitlist_admission@1803000010178` followed by `0619_chain_creates_what_production_has@1787895425277`. `idx` values are all unique, so the other half of BE-59 holds. Neither entry is Build-owned. Routed to the orchestrator, not fixed here. -->
+  <!-- 2026-09-28 TICKED. Both clauses of the criterion are measured TRUE against production. Neither clause is about a gate's exit code, so the gate's red does not hold the box open; the note above deferred on that reading and this note supersedes it.
+
+  PRODUCTION LEDGER, read over IAM auth on 2026-09-28 by the orchestrator (verbatim):
+
+      Ledger: 1040 applied row(s) against 1019 journal entr(ies).
+      Watermark 1803093634725; 0 migration(s) pending.
+
+  CORROBORATED ON DISK by this lane — read-only, no database, no gate. `python` over `backend/migrations/meta/_journal.json`:
+
+      journal entries: 1019
+      max when: 1803093634725
+      1197 entries: [(953, 1081, '1197_build_cycle_permissions', 1803000010712)]
+
+  The journal count and the watermark match the production reading exactly, and `1197_build_cycle_permissions` is journalled exactly once (array position 953, `idx` 1081). Its file and rollback are both present: `backend/migrations/1197_build_cycle_permissions.sql` (116 lines) and `backend/migrations/rollback/1197_build_cycle_permissions.down.sql`.
+
+  ARITHMETIC TIE-IN. 1040 applied rows − 1019 journal entries = 21 surplus rows, which is exactly the "21 historical unknown ledger rows" already recorded in § Current verified delta. Those are surplus rows, not pending migrations; `pendingCount` counts journal entries with no matching row, and it is 0.
+
+  WHY THE RED GATE DOES NOT BLOCK THE BOX. `check:migration-ledger` exits 1 with `8 duplicate row(s): 1019, 1020, 1021, 1022, 1023, 1024, 1025, 1026`. Diagnosed by the orchestrator: **no migration file is recorded twice — zero duplicate hashes across all 1040 rows.** Each of the 8 is a `created_at` collision between a correctly-journalled row and an older reconciliation row whose hash matches no journal entry at all; the gate joins on `created_at` rather than hash, so it misreads a collision as a duplicate. Those 8 are therefore unknown-hash rows and a subset of the 21 surplus above. The gate repair is the orchestrator's. A lane must not run it: `check:migration-ledger` and every `db:*` script connect to PRODUCTION by default.
+
+  1197 IS APPLIED AND CORRECT BUT IS NOT PRECEDENT (BE-111a). It rewrote `build:sprints:view/manage` to `build:cycles:view/manage` in place across four grant tables, which BE-111 forbids, and it cannot replay on an empty database: `backend/migrations/1197_build_cycle_permissions.sql:10` raises `1197 precondition: legacy Build iteration permissions are missing` when the legacy rows are absent, so it cannot satisfy BE-66. Ticking this box records that 1197 is present and its result is right. It does not make 1197 an example to copy.
+
+  STILL OPEN, out of lane and unchanged: the single BE-59 violating pair at array position 342 reproduces on today's journal (`0271a_waitlist_admission` followed by `0619_chain_creates_what_production_has`). Not Build-owned. -->
+
+  Re-runnable: `python -c "import json,io; j=json.load(io.open('migrations/meta/_journal.json',encoding='utf-8')); e=j['entries']; print(len(e), max(x['when'] for x in e), [(i,x['idx'],x['tag']) for i,x in enumerate(e) if '1197' in x['tag']])"` from `backend/`.
 - [x] Frontend and backend focused tests and typechecks pass.
 - [ ] Authenticated desktop and mobile browser matrices pass for the full Build route census against the production API.
   <!-- BROWSER-EXCLUDED (2026-09-27). Desktop 74-route sweep passed 2026-09-25 (75 routes now — the wiki/[pageId]/history page was added); mobile matrix explicitly open (see § Browser verification "The mobile matrix remains open"). Settles when the mobile matrix is executed against the production API without console errors. -->
@@ -302,4 +326,18 @@ Completed:
   2. **Frontend.** Vercel injects `VERCEL_GIT_COMMIT_SHA` (and `NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA` for client access). A grep of the frontend tree for `VERCEL_GIT_COMMIT_SHA`, `NEXT_PUBLIC_COMMIT`, `VERCEL_ENV` returns **zero** hits — same situation. Either surface the SHA from the build (it is not a secret, so `NEXT_PUBLIC_` is permitted here and FE-12 is not engaged) or read the Vercel project's deployment history out of band. The in-repo option is preferable because it is checkable by the same browser pass that verifies the routes.
 
   UNTIL ONE OF THOSE LANDS, every production browser observation in § Browser verification is evidence about *an* unidentified deployment, not about the release commit. That is the actual cost of this gap and the reason it is worth closing. -->
+  <!-- 2026-09-28 STILL NOT EARNED. Re-verified on disk this lane, no network call; the finding above holds unchanged, and two platform facts are added because both are load-bearing and neither is derivable from this repository.
+
+  RE-MEASURED, both repositories:
+    · `backend/src/health/health.controller.ts` still declares exactly four routes — `@Get()` (`:144`), `@Get("ready")` (`:150`), `@Get("workflows")` (`:180`), `@Get("db")` (`:234`) — under `@Public() @Controller("health")` (`:75-76`). No `version` route. `grep -rn "RAILWAY" backend/src backend/.env.example` → zero hits.
+    · `grep -rn "VERCEL_GIT_COMMIT_SHA\|NEXT_PUBLIC_COMMIT\|VERCEL_ENV" frontend` (excluding `node_modules`) → zero hits.
+  Both remedies are still unbuilt, so the running commit is still unobservable from here, for either service.
+
+  FACT 1 — THE BACKEND DEPLOYS ITSELF. Railway ships every push to the backend repository; there is no pipeline to trigger and no approval step. This narrows the running backend commit to *an ancestor of* `origin/main` and rules out "pushed but never deployed" as an explanation for a stale response — but it does not identify the commit, which is what this box asks for. Merging is still not deploying for the frontend.
+
+  FACT 2 — A RED VERCEL DEPLOYMENT IS NOT A FAILED BUILD. Three consecutive red frontend deployments were a **rate limit**, not a build failure. Read the deployment's `description` field; do not infer a build failure from the colour. Recording this here because an earlier reading of "red" as "broken build" would send a lane to debug a build that never ran.
+
+  NET EFFECT ON THIS BOX: unchanged verdict, sharper blocker. The backend half needs one `@Get("version")` handler on the existing health controller returning `RAILWAY_GIT_COMMIT_SHA` through `@nestjs/config` (BE-99) with a `@ResponseSchema` (BE-18). The frontend half needs the Vercel SHA surfaced at build time, or the deployment's `description` and commit read out of band. Neither is in this lane's write scope. -->
+
+
 - [x] Production-domain Build smoke passes without current console errors.

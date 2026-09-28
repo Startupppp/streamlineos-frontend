@@ -143,8 +143,9 @@ export function PolicySection({ settings, projectId, canEdit }: PolicySectionPro
           <div className="mb-3 border-b border-border pb-3">
             <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Retention policy</h3>
             <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
-              Configure how long this project&apos;s work artifacts are retained before
-              automatic deletion. Null retention means records are kept indefinitely.
+              Record how long this project&apos;s work artifacts should be retained. These values
+              are stored as policy — no automated job deletes on their basis yet, so nothing is
+              removed today. Null retention means records are kept indefinitely.
             </p>
           </div>
           <div className="flex items-center justify-between py-2">
@@ -265,8 +266,9 @@ export function HoldsSection({ settings, projectId, canEdit }: HoldsSectionProps
           <div className="mb-3 border-b border-border pb-3">
             <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Legal hold</h3>
             <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
-              A legal hold suspends all automatic retention deletion for this project. Use
-              it when a project&apos;s data may be subject to litigation or regulatory review.
+              A legal hold records that this project&apos;s data may be subject to litigation or
+              regulatory review. Because no automated retention deletion runs yet, the hold
+              documents that intent rather than interrupting an active process.
             </p>
           </div>
           <div className="flex items-start gap-3">
@@ -299,7 +301,7 @@ export function HoldsSection({ settings, projectId, canEdit }: HoldsSectionProps
                 <p className="text-xs text-muted-foreground">
                   Current retention period:{" "}
                   <span className="font-medium">
-                    {retentionDaysLabel(settings.closedTicketRetentionDays)} (suspended)
+                    {retentionDaysLabel(settings.closedTicketRetentionDays)} (hold recorded)
                   </span>
                 </p>
               ) : null}
@@ -337,8 +339,8 @@ export function HoldsSection({ settings, projectId, canEdit }: HoldsSectionProps
         title={pendingActive ? "Apply legal hold?" : "Remove legal hold?"}
         description={
           pendingActive
-            ? "All automatic retention deletion will be suspended until the hold is removed. This cannot be undone without explicit action."
-            : "Retention deletion will resume according to the configured policy. Records retained beyond the hold period will be eligible for deletion."
+            ? "The hold is recorded against this project and stays until it is removed. No automated deletion runs on this project today, so the hold documents intent rather than interrupting an active process."
+            : "The hold is lifted and the configured retention values apply again as policy. No automated deletion job runs yet, so no records become eligible for removal as a result."
         }
         confirmLabel={pendingActive ? "Apply hold" : "Remove hold"}
         destructive={pendingActive}

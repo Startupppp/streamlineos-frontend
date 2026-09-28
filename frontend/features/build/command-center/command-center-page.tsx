@@ -7,7 +7,11 @@ import { format, subDays } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
 import { Briefcase, CheckSquare, AlertCircle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import {
+  StatCard,
+  StatCardGrid,
+  StatCardGridSkeleton,
+} from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -34,6 +38,7 @@ import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
 import {
   resolveMyIssuesEmptyActions,
   mapAllWorkTicketToMyWorkItem,
+  resolveDueWindow,
 } from "./command-center-utils";
 import {
   MY_ISSUES_LOAD_MORE_THRESHOLD,
@@ -48,7 +53,12 @@ import { AgentRunsPanel } from "./command-center-agent-runs-panel";
 import { RisksPanel } from "./command-center-risks-panel";
 import { ReleasesPanel } from "./command-center-releases-panel";
 
-const COMMAND_CENTER_SCOPE_VALUES = ["all", "mine", "created", "subscribed"] as const;
+const COMMAND_CENTER_SCOPE_VALUES = [
+  "all",
+  "mine",
+  "created",
+  "subscribed",
+] as const;
 type CommandCenterScope = (typeof COMMAND_CENTER_SCOPE_VALUES)[number];
 
 function isCommandCenterScope(v: string): v is CommandCenterScope {
@@ -63,7 +73,10 @@ const ProjectCreateWizard = dynamic(
   { ssr: false },
 );
 
-export function resolveProjectsStatValue(count: number, hasMore: boolean): string | number {
+export function resolveProjectsStatValue(
+  count: number,
+  hasMore: boolean,
+): string | number {
   if (hasMore) return `${count}+`;
   return count;
 }
@@ -97,8 +110,11 @@ export function CommandCenterPage() {
   const searchParams = useSearchParams();
   const rawUrlScope = searchParams.get("scope");
   const urlScope: CommandCenterScope | null =
-    rawUrlScope !== null && isCommandCenterScope(rawUrlScope) ? rawUrlScope : null;
+    rawUrlScope !== null && isCommandCenterScope(rawUrlScope)
+      ? rawUrlScope
+      : null;
   const urlOwner = searchParams.get("owner") ?? undefined;
+  const urlDue = searchParams.get("due");
   const overdueDueDateTo = format(subDays(new Date(), 1), "yyyy-MM-dd");
 
   const {
@@ -107,14 +123,25 @@ export function CommandCenterPage() {
     isError: projectsError,
     error: projectsRawError,
     refetch: refetchProjects,
-  } = useProjects({ status: "ACTIVE", managerId: urlOwner }, { throwOnError: false });
+  } = useProjects(
+    { status: "ACTIVE", managerId: urlOwner },
+    { throwOnError: false },
+  );
 
-  const myIssuesFilters = useMemo(
+  const myIssuesScopeFilters = useMemo(
     () =>
       urlScope !== null
         ? { ...COMMAND_CENTER_MY_ISSUES_FILTERS, scope: urlScope }
         : COMMAND_CENTER_MY_ISSUES_FILTERS,
     [urlScope],
+  );
+
+  const myIssuesFilters = useMemo(
+    () => ({
+      ...myIssuesScopeFilters,
+      ...(resolveDueWindow(urlDue, new Date()) ?? {}),
+    }),
+    [myIssuesScopeFilters, urlDue],
   );
 
   const {
@@ -128,13 +155,11 @@ export function CommandCenterPage() {
     isFetchingNextPage,
   } = useInfiniteAllWork(myIssuesFilters, { enabled: canViewTickets });
 
-  const {
-    data: overdueIssuesSummary,
-    refetch: refetchOverdueIssuesSummary,
-  } = useAllWork(
-    { ...myIssuesFilters, limit: 1, dueDateTo: overdueDueDateTo },
-    { enabled: canViewTickets },
-  );
+  const { data: overdueIssuesSummary, refetch: refetchOverdueIssuesSummary } =
+    useAllWork(
+      { ...myIssuesScopeFilters, limit: 1, dueDateTo: overdueDueDateTo },
+      { enabled: canViewTickets },
+    );
 
   const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
 
@@ -156,7 +181,11 @@ export function CommandCenterPage() {
 
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
 
-  useKeyboardShortcuts(handleOpenWizard, handleCreateIssueShortcut, handleShortcutHelp);
+  useKeyboardShortcuts(
+    handleOpenWizard,
+    handleCreateIssueShortcut,
+    handleShortcutHelp,
+  );
 
   const handleRetry = useCallback(() => {
     void refetchProjects();
@@ -164,7 +193,10 @@ export function CommandCenterPage() {
     void refetchOverdueIssuesSummary();
   }, [refetchMyIssues, refetchOverdueIssuesSummary, refetchProjects]);
 
-  const handleMyIssuesRetry = useCallback(() => void refetchMyIssues(), [refetchMyIssues]);
+  const handleMyIssuesRetry = useCallback(
+    () => void refetchMyIssues(),
+    [refetchMyIssues],
+  );
 
   const myWorkItems = useMemo(() => {
     if (!myIssuesPages?.pages) return [];
@@ -176,9 +208,13 @@ export function CommandCenterPage() {
   const stats = useMemo(() => {
     const projectList = projectsData?.data ?? [];
     return {
-      activeProjects: resolveProjectsStatValue(projectList.length, projectsData?.hasMore ?? false),
+      activeProjects: resolveProjectsStatValue(
+        projectList.length,
+        projectsData?.hasMore ?? false,
+      ),
       openIssues: myIssuesPages?.pages[0]?.total ?? myWorkItems.length,
-      overdueIssues: overdueIssuesSummary?.total ?? overdueIssuesSummary?.data.length ?? 0,
+      overdueIssues:
+        overdueIssuesSummary?.total ?? overdueIssuesSummary?.data.length ?? 0,
     };
   }, [myIssuesPages, myWorkItems.length, projectsData, overdueIssuesSummary]);
 
@@ -191,14 +227,25 @@ export function CommandCenterPage() {
         onCreateIssue: handleCreateIssueShortcut,
         onCreateProject: handleOpenWizard,
       }),
-    [canCreateIssue, canCreateProject, projects.length, handleCreateIssueShortcut, handleOpenWizard],
+    [
+      canCreateIssue,
+      canCreateProject,
+      projects.length,
+      handleCreateIssueShortcut,
+      handleOpenWizard,
+    ],
   );
 
   const handleMyIssuesScroll = useCallback(
     (e: UIEvent<HTMLDivElement>) => {
       const el = e.currentTarget;
-      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-      if (distanceFromBottom <= MY_ISSUES_LOAD_MORE_THRESHOLD && hasNextPage && !isFetchingNextPage) {
+      const distanceFromBottom =
+        el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (
+        distanceFromBottom <= MY_ISSUES_LOAD_MORE_THRESHOLD &&
+        hasNextPage &&
+        !isFetchingNextPage
+      ) {
         void fetchNextPage();
       }
     },
@@ -249,13 +296,27 @@ export function CommandCenterPage() {
                   whileHover={shouldReduceMotion ? undefined : { y: -2 }}
                   transition={pmSnappy}
                 >
-                  <StatCard label="Projects" value={stats.activeProjects} icon={Briefcase} tone="default" index={0} href="/build" />
+                  <StatCard
+                    label="Projects"
+                    value={stats.activeProjects}
+                    icon={Briefcase}
+                    tone="default"
+                    index={0}
+                    href="/build"
+                  />
                 </motion.div>
                 <motion.div
                   whileHover={shouldReduceMotion ? undefined : { y: -2 }}
                   transition={pmSnappy}
                 >
-                  <StatCard label="Open issues" value={stats.openIssues} icon={CheckSquare} tone="default" index={1} href="/build/my-work" />
+                  <StatCard
+                    label="Open issues"
+                    value={stats.openIssues}
+                    icon={CheckSquare}
+                    tone="default"
+                    index={1}
+                    href="/build/my-work"
+                  />
                 </motion.div>
                 <motion.div
                   whileHover={shouldReduceMotion ? undefined : { y: -2 }}
@@ -266,12 +327,22 @@ export function CommandCenterPage() {
                       : undefined
                   }
                 >
-                  <StatCard label="Overdue" value={stats.overdueIssues} icon={AlertCircle} tone={stats.overdueIssues > 0 ? "red" : "default"} index={2} href="/build/my-work" />
+                  <StatCard
+                    label="Overdue"
+                    value={stats.overdueIssues}
+                    icon={AlertCircle}
+                    tone={stats.overdueIssues > 0 ? "red" : "default"}
+                    index={2}
+                    href="/build/my-work"
+                  />
                 </motion.div>
               </StatCardGrid>
             </PmSection>
 
-            <PmSection index={1} className="min-w-0 w-full max-w-full overflow-hidden">
+            <PmSection
+              index={1}
+              className="min-w-0 w-full max-w-full overflow-hidden"
+            >
               <PmPanel className={COMMAND_CENTER_JUMP_PANEL}>
                 <p className="mb-1.5 px-0.5 text-micro font-medium uppercase tracking-wider text-muted-foreground">
                   Jump to
@@ -316,21 +387,47 @@ export function CommandCenterPage() {
               animate={{ opacity: 1 }}
               transition={{ ...pmSnappy, delay: 0.28 }}
             >
-              Shortcuts · <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd> project ·{" "}
-              <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">T</kbd> issue ·{" "}
-              <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">M</kbd> my issues ·{" "}
-              <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
-              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd> projects
+              Shortcuts ·{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                C
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                P
+              </kbd>{" "}
+              project ·{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                C
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                T
+              </kbd>{" "}
+              issue ·{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                G
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                M
+              </kbd>{" "}
+              my issues ·{" "}
+              <kbd className="rounded border border-border bg-muted/80 px-1">
+                G
+              </kbd>
+              <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">
+                P
+              </kbd>{" "}
+              projects
             </motion.p>
           </PmPageShell>
         </PageState>
       </PageWrapper>
 
-      {isReady && <ProjectCreateWizard open={wizardOpen} onOpenChange={setWizardOpen} />}
-      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
+      {isReady && (
+        <ProjectCreateWizard open={wizardOpen} onOpenChange={setWizardOpen} />
+      )}
+      <ShortcutHelpDialog
+        open={shortcutHelpOpen}
+        onOpenChange={setShortcutHelpOpen}
+      />
     </>
   );
 }
