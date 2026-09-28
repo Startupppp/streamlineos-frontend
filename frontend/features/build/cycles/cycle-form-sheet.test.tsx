@@ -6,6 +6,7 @@ import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
 import type { Cycle } from "@/types/projects";
 import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
 import { ApiError } from "@/lib/api-envelope";
+import { toast } from "sonner";
 
 jest.mock("@/hooks/api/build/advanced", () => ({
   useCreateCycle: jest.fn(),
@@ -38,7 +39,13 @@ jest.mock("@/components/ui/loading-button", () => ({
   ),
 }));
 
-jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
+jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn() } }));
+
+let mockIsOnline = true;
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockIsOnline,
+}));
 
 jest.mock("@/features/build/ticket-details/ticket-conflict-dialog", () => ({
   TicketConflictDialog: ({ open, fields, onKeepMine, onDiscard }: {
@@ -86,6 +93,7 @@ const COMPLETED_CYCLE: Cycle = {
 };
 
 beforeEach(() => {
+  mockIsOnline = true;
   mockUpdateMutate.mockClear();
   mockUseCreateCycle.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseUpdateCycle.mockReturnValue({ mutate: mockUpdateMutate, isPending: false });
@@ -311,4 +319,47 @@ it("shows a field-level conflict dialog instead of a toast when a 409 PROJECTS_T
 
   await waitFor(() => expect(screen.getByTestId("conflict-dialog")).toBeInTheDocument());
   expect(screen.getByTestId("conflict-field-name")).toBeInTheDocument();
+});
+
+it("sends no command while the browser is offline and keeps the typed draft in the form", async () => {
+  mockIsOnline = false;
+  renderWithClient(
+    <CycleFormSheet
+      projectId={1}
+      cycles={[COMPLETED_CYCLE]}
+      cycle={COMPLETED_CYCLE}
+      open
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  await waitFor(() => expect(screen.getByLabelText("Name")).toHaveValue("Completed cycle"));
+  fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Offline draft" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+  await waitFor(() =>
+    expect(toast.warning).toHaveBeenCalledWith(
+      "You're offline — your draft is kept here and nothing was sent.",
+    ),
+  );
+  expect(mockUpdateMutate).not.toHaveBeenCalled();
+  expect(screen.getByLabelText("Name")).toHaveValue("Offline draft");
+});
+
+it("sends the command once the browser is online, so the offline guard is not always on", async () => {
+  mockIsOnline = true;
+  renderWithClient(
+    <CycleFormSheet
+      projectId={1}
+      cycles={[COMPLETED_CYCLE]}
+      cycle={COMPLETED_CYCLE}
+      open
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  await waitFor(() => expect(screen.getByLabelText("Name")).toHaveValue("Completed cycle"));
+  fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+  await waitFor(() => expect(mockUpdateMutate).toHaveBeenCalled());
 });

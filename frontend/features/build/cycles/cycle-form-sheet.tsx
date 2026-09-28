@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
@@ -187,6 +188,7 @@ export function CycleFormSheet({
   onOpenChange,
 }: CycleFormSheetProps) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
   const createCycle = useCreateCycle();
   const updateCycle = useUpdateCycle();
   const isEdit = cycle !== null;
@@ -265,6 +267,12 @@ export function CycleFormSheet({
 
   const handleSubmit = useCallback(
     (values: CycleFormValues) => {
+      if (!isOnline) {
+        toast.warning(
+          "You're offline — your draft is kept here and nothing was sent.",
+        );
+        return;
+      }
       const capacity = values.capacity === "" ? null : Number(values.capacity);
       if (cycle) {
         updateCycle.mutate(
@@ -333,7 +341,7 @@ export function CycleFormSheet({
         },
       );
     },
-    [createCycle, cycle, onOpenChange, projectId, queryClient, updateCycle],
+    [createCycle, cycle, isOnline, onOpenChange, projectId, queryClient, updateCycle],
   );
 
   const isPending = createCycle.isPending || updateCycle.isPending;
