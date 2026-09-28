@@ -5,6 +5,7 @@ import { CycleFormSheet } from "./cycle-form-sheet";
 import { useCreateCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
 import type { Cycle } from "@/types/projects";
 import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
+import { ApiError } from "@/lib/api-envelope";
 
 jest.mock("@/hooks/api/build/advanced", () => ({
   useCreateCycle: jest.fn(),
@@ -38,6 +39,21 @@ jest.mock("@/components/ui/loading-button", () => ({
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
+
+jest.mock("@/features/build/ticket-details/ticket-conflict-dialog", () => ({
+  TicketConflictDialog: ({ open, fields, onKeepMine, onDiscard }: {
+    open: boolean;
+    fields: { key: string; label: string }[];
+    onKeepMine: () => void;
+    onDiscard: () => void;
+  }) => open ? (
+    <div data-testid="conflict-dialog">
+      {fields.map((f) => <span key={f.key} data-testid={`conflict-field-${f.key}`}>{f.label}</span>)}
+      <button type="button" onClick={onKeepMine}>Keep mine</button>
+      <button type="button" onClick={onDiscard}>Discard</button>
+    </div>
+  ) : null,
+}));
 
 const ITERATIONS_SCHEMAS = "src/modules/build/execution/dto/iterations.schemas.ts";
 
@@ -271,4 +287,28 @@ it("passes version from the cycle prop to the update mutation so the server can 
       expect.any(Object),
     ),
   );
+});
+
+it("shows a field-level conflict dialog instead of a toast when a 409 PROJECTS_TICKET_CONFLICT is returned, surfacing which fields diverged", async () => {
+  const conflictError = new ApiError("Version conflict", 409, "PROJECTS_TICKET_CONFLICT", { currentVersion: 3 });
+  mockUpdateMutate.mockImplementation((_payload: unknown, { onError }: { onError: (e: unknown) => void }) => {
+    onError(conflictError);
+  });
+
+  renderWithClient(
+    <CycleFormSheet
+      projectId={1}
+      cycles={[COMPLETED_CYCLE]}
+      cycle={COMPLETED_CYCLE}
+      open
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  await waitFor(() => expect(screen.getByLabelText("Name")).toHaveValue("Completed cycle"));
+  fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Renamed cycle" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+  await waitFor(() => expect(screen.getByTestId("conflict-dialog")).toBeInTheDocument());
+  expect(screen.getByTestId("conflict-field-name")).toBeInTheDocument();
 });

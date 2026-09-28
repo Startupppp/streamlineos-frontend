@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, WifiOff } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
@@ -27,6 +27,7 @@ import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageState } from "@/components/shared/page-state";
 import { pageStateFromError } from "@/lib/page-state/resolve-page-state";
 import { resolveTicketBackHref } from "./build-ticket-detail-url";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
 
 interface TicketDetailPageProps {
@@ -59,6 +60,7 @@ function DetailSkeleton() {
 }
 
 export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps) {
+  const isOnline = useOnlineStatus();
   const canViewAccess = useCanState("build:tickets:view");
   const canUpdate = useCan("build:tickets:update");
   const canAssign = useCan("build:tickets:assign");
@@ -318,6 +320,14 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           className="pointer-events-none absolute -top-6 right-1/3 h-32 w-32 rounded-full bg-primary/[0.05] blur-3xl"
         />
 
+        {!isOnline ? (
+          <div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-muted/40 px-4 py-2">
+            <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">
+              You&apos;re offline — changes may not save until you reconnect.
+            </p>
+          </div>
+        ) : null}
         <div className="min-h-0 min-w-0 flex-1 basis-0 overflow-y-auto bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 scrollbar-hide md:px-6 md:pb-5">
           <TicketDetailMainSection
             ticket={versionedTicket}

@@ -38,6 +38,7 @@ const DETAIL_RESPONSE = {
   dueDate: null,
   moduleId: null,
   cycleId: null,
+  health: null,
   sequenceId: null,
   estimate: null,
   createdAt: "2026-09-18T10:00:00.000Z",

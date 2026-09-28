@@ -162,7 +162,16 @@ export function PageDocumentToolbar({
       case "export": handleExport(); break;
       case "delete": onDelete(); break;
       case "backlinks": break;
+      case "copyLink": handleCopyLink(); break;
     }
+  }
+
+  function handleCopyLink() {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    navigator.clipboard.writeText(url).then(
+      () => toast.success("Link copied"),
+      () => toast.error("Failed to copy"),
+    );
   }
 
   return (
@@ -173,7 +182,20 @@ export function PageDocumentToolbar({
         onApplyImprovement={onApplyImprovement}
         onInsertSummary={onInsertSummary}
       />
-      {canUpdate && <PageSharePopover page={page} />}
+      {canUpdate ? (
+        <PageSharePopover page={page} />
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-9 w-9 px-0"
+          aria-label="Copy link"
+          onClick={handleCopyLink}
+        >
+          <KbLink2Icon className="h-4 w-4" />
+        </Button>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

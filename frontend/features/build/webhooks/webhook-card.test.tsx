@@ -19,6 +19,25 @@ jest.mock("@/components/pm-chrome", () => ({
   PM_PANEL: "",
 }));
 
+jest.mock("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
+    open ? <div role="menu">{children}</div> : null,
+  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuItem: ({
+    children,
+    onSelect,
+  }: {
+    children: React.ReactNode;
+    onSelect?: () => void;
+  }) => (
+    <button role="menuitem" onClick={onSelect}>
+      {children}
+    </button>
+  ),
+  DropdownMenuSeparator: () => <hr />,
+}));
+
 const BASE_WEBHOOK: ProjectWebhook = {
   id: 7,
   orgId: "org-1",
@@ -249,5 +268,113 @@ describe("WebhookCard — failure rate on card face (BLD-X-FE-SETTINGS-WH-026)",
       />,
     );
     expect(screen.queryByText(/failure/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("WebhookCard — secret age uses secretSetAt not createdAt (BLD-X-FE-SETTINGS-WH-027)", () => {
+  const ROTATED_WEBHOOK: ProjectWebhook = {
+    ...BASE_WEBHOOK,
+    createdAt: "2025-01-01T00:00:00.000Z",
+    secretSetAt: "2026-09-01T00:00:00.000Z",
+  };
+
+  it("shows the rotation date when hasSecret is true and secretSetAt differs from createdAt — so a rotated secret shows its rotation month", () => {
+    render(
+      <WebhookCard
+        webhook={ROTATED_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    expect(screen.getByText(/sep.*2026|2026.*sep/i)).toBeInTheDocument();
+  });
+
+  it("does not show the original creation date when the secret was rotated after creation — the old date must be absent", () => {
+    render(
+      <WebhookCard
+        webhook={ROTATED_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    expect(screen.queryByText(/jan.*2025|2025.*jan/i)).not.toBeInTheDocument();
+  });
+
+  it("falls back to createdAt when hasSecret is false — a webhook with no secret shows its creation date", () => {
+    const noSecret: ProjectWebhook = {
+      ...BASE_WEBHOOK,
+      hasSecret: false,
+      secretSetAt: null,
+      createdAt: "2025-06-01T00:00:00.000Z",
+    };
+    render(
+      <WebhookCard
+        webhook={noSecret}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    expect(screen.getByText(/jun.*2025|2025.*jun/i)).toBeInTheDocument();
+  });
+});
+
+describe("WebhookCard — right-click context menu (BLD-X-FE-SETTINGS-WH-028)", () => {
+  it("right-clicking the card opens the context menu — the menu is reachable without keyboard navigation", () => {
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    fireEvent.contextMenu(screen.getByText("https://ci.example.com/hook"));
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+  });
+
+  it("normal left-click on the card body does not open the context menu — existing click behaviour is preserved", () => {
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    fireEvent.click(screen.getByText("https://ci.example.com/hook"));
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("the context menu shows an Edit item when onEdit is provided and canManage is true", () => {
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        onEdit={jest.fn()}
+        canManage
+      />,
+    );
+    fireEvent.contextMenu(screen.getByText("https://ci.example.com/hook"));
+    expect(screen.getByRole("menuitem", { name: /edit/i })).toBeInTheDocument();
+  });
+
+  it("clicking Edit in the context menu calls onEdit with the webhook — so the edit Sheet can be opened", () => {
+    const onEdit = jest.fn();
+    render(
+      <WebhookCard
+        webhook={BASE_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        onEdit={onEdit}
+        canManage
+      />,
+    );
+    fireEvent.contextMenu(screen.getByText("https://ci.example.com/hook"));
+    fireEvent.click(screen.getByRole("menuitem", { name: /edit/i }));
+    expect(onEdit).toHaveBeenCalledWith(BASE_WEBHOOK);
   });
 });

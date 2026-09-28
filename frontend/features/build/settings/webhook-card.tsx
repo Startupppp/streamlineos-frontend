@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type MouseEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Clock } from "lucide-react";
+import { Zap, Clock, Ellipsis } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   ChevronDownIcon,
@@ -14,6 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Switch } from "@/components/ui/switch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -111,6 +118,7 @@ interface WebhookCardProps {
   projectId: number;
   onDelete: (id: number) => void;
   onToggle?: (webhook: Pick<ProjectWebhook, "id" | "version">, isActive: boolean) => void;
+  onEdit?: (webhook: ProjectWebhook) => void;
   canManage?: boolean;
 }
 
@@ -119,10 +127,12 @@ export function WebhookCard({
   projectId,
   onDelete,
   onToggle,
+  onEdit,
   canManage = false,
 }: WebhookCardProps) {
   const accessState = useCanState("build:manage");
   const [expanded, setExpanded] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { data: deliveries = [], isLoading } = useWebhookDeliveries(
     projectId,
     webhook.id,
@@ -166,6 +176,27 @@ export function WebhookCard({
     [onToggle, webhook.id, webhook.version],
   );
 
+  const handleContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setMenuOpen(true);
+  }, []);
+
+  const handleCopyUrl = useCallback(() => {
+    void navigator.clipboard.writeText(webhook.url);
+    toast.success("URL copied");
+    setMenuOpen(false);
+  }, [webhook.url]);
+
+  const handleEditFromMenu = useCallback(() => {
+    onEdit?.(webhook);
+    setMenuOpen(false);
+  }, [onEdit, webhook]);
+
+  const handleToggleFromMenu = useCallback(() => {
+    onToggle?.({ id: webhook.id, version: webhook.version }, !webhook.isActive);
+    setMenuOpen(false);
+  }, [onToggle, webhook]);
+
   if (accessState === "denied" || accessState === "loading") return null;
 
   return (
@@ -173,8 +204,9 @@ export function WebhookCard({
       layout
       className={cn(
         PM_PANEL,
-        "overflow-hidden transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md",
+        "group/card overflow-hidden transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md",
       )}
+      onContextMenu={handleContextMenu}
     >
       <div className="flex items-center gap-3 p-3.5">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
@@ -215,7 +247,9 @@ export function WebhookCard({
             )}
             <span className="text-micro text-muted-foreground ml-auto shrink-0">
               since{" "}
-              {new Date(webhook.createdAt).toLocaleDateString(undefined, {
+              {new Date(
+                webhook.hasSecret && webhook.secretSetAt ? webhook.secretSetAt : webhook.createdAt,
+              ).toLocaleDateString(undefined, {
                 month: "short",
                 year: "numeric",
               })}
@@ -286,6 +320,31 @@ export function WebhookCard({
             }
           />
         )}
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Webhook actions"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-opacity hover:bg-muted opacity-0 focus-visible:opacity-100 group-hover/card:opacity-100 data-[state=open]:opacity-100"
+            >
+              <Ellipsis className="h-3.5 w-3.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem onSelect={handleCopyUrl}>Copy URL</DropdownMenuItem>
+            {canManage && onEdit && (
+              <DropdownMenuItem onSelect={handleEditFromMenu}>Edit</DropdownMenuItem>
+            )}
+            {canManage && onToggle && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleToggleFromMenu}>
+                  {webhook.isActive ? "Disable" : "Enable"}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <AnimatePresence>

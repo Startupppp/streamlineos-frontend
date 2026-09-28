@@ -53,6 +53,7 @@ export const ListViewItem = memo(function ListViewItem({
   const showEstimate = displayOptions?.showEstimate ?? true;
   const showLabels = displayOptions?.showLabels ?? true;
   const showDueDate = displayOptions?.showDueDate ?? true;
+  const showCycle = displayOptions?.showCycle ?? true;
 
   const labelIds = ticket.labels
     ?.map((l) => l.label?.id)
@@ -180,6 +181,12 @@ export const ListViewItem = memo(function ListViewItem({
             <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
             <AvatarFallback className="text-micro">{getUserInitials(ticket.assignee)}</AvatarFallback>
           </Avatar>
+        ) : null}
+        {showCycle && ticket.cycle ? (
+          <Badge variant="outline" className="text-xs flex-shrink-0">{ticket.cycle.name}</Badge>
+        ) : null}
+        {ticket.moduleId != null ? (
+          <Badge variant="secondary" className="text-xs flex-shrink-0 font-mono">M-{ticket.moduleId}</Badge>
         ) : null}
         <button
           onClick={handleClick}

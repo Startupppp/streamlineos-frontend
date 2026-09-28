@@ -163,3 +163,36 @@ describe("PageDocumentToolbar", () => {
     expect(onOpenLinkedRecords).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("PageDocumentToolbar — copy link for read-only viewers (task L)", () => {
+  it("shows the Share page button when the user has kb:pages:update", () => {
+    mockUseCan.mockReturnValue(true);
+    renderToolbar();
+
+    expect(screen.getByRole("button", { name: /share page/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /copy link/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the Copy link button instead of Share page when the user lacks kb:pages:update so view-only users can share the URL", () => {
+    mockUseCan.mockImplementation((key: string) => key !== "kb:pages:update");
+    renderToolbar();
+
+    expect(screen.getByRole("button", { name: /copy link/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /share page/i })).not.toBeInTheDocument();
+  });
+
+  it("copy link button writes window.location.href to the clipboard when clicked", async () => {
+    const user = userEvent.setup();
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
+    mockUseCan.mockImplementation((key: string) => key !== "kb:pages:update");
+    renderToolbar();
+
+    await user.click(screen.getByRole("button", { name: /copy link/i }));
+
+    expect(writeText).toHaveBeenCalledWith(window.location.href);
+  });
+});

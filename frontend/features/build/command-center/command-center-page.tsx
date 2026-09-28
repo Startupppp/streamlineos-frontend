@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback, useState, type UIEvent } from "react";
 import dynamic from "next/dynamic";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format, subDays } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
 import { Briefcase, CheckSquare, AlertCircle } from "lucide-react";
@@ -35,6 +35,9 @@ import {
 import { pmSnappy } from "@/lib/motion-presets";
 import { cn } from "@/lib/utils";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
+import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
+import { CommandCenterToolbar } from "./command-center-toolbar";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import {
   resolveMyIssuesEmptyActions,
   mapAllWorkTicketToMyWorkItem,
@@ -99,6 +102,8 @@ function CommandCenterLoading() {
 }
 
 export function CommandCenterPage() {
+  const router = useRouter();
+
   const [wizardOpen, setWizardOpen] = useState(false);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const { openCreateTicket } = useCommandPalette();
@@ -207,6 +212,26 @@ export function CommandCenterPage() {
       page.data.map(mapAllWorkTicketToMyWorkItem),
     );
   }, [myIssuesPages]);
+
+  const handleOpenItem = useCallback(
+    (index: number) => {
+      const item = myWorkItems[index];
+      if (!item) return;
+      router.push(
+        getTicketDetailHref(item.projectId, item.projectKey, item.ticketNumber),
+      );
+    },
+    [myWorkItems, router],
+  );
+
+  const handleClearMyIssuesSelection = useCallback(() => {}, []);
+
+  const { focusedIndex } = useBuildListKeyboard({
+    itemCount: myWorkItems.length,
+    onOpen: handleOpenItem,
+    onClearSelection: handleClearMyIssuesSelection,
+    onShortcutHelp: handleShortcutHelp,
+  });
 
   const stats = useMemo(() => {
     const projectList = projectsData?.data ?? [];
@@ -354,6 +379,10 @@ export function CommandCenterPage() {
               </PmPanel>
             </PmSection>
 
+            <PmSection index={2} className="min-w-0 w-full max-w-full">
+              <CommandCenterToolbar />
+            </PmSection>
+
             <div className={COMMAND_CENTER_PANELS_GRID}>
               <MyIssuesPanel
                 items={myWorkItems}
@@ -363,6 +392,7 @@ export function CommandCenterPage() {
                 error={myIssuesRawError}
                 isFetchingNextPage={isFetchingNextPage}
                 emptyActions={myIssuesEmpty}
+                focusedIndex={focusedIndex}
                 onRetry={handleMyIssuesRetry}
                 onScroll={handleMyIssuesScroll}
                 onCreateIssue={handleCreateIssueShortcut}

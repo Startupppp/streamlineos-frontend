@@ -119,10 +119,10 @@ it("cycleListContract preserves progress stats on list items — totalItems/comp
     progress: 33,
   };
 
-  const result = cycleListContract.parse([listRow]);
-  expect(result[0]?.totalItems).toBe(12);
-  expect(result[0]?.completedItems).toBe(4);
-  expect(result[0]?.progress).toBe(33);
+  const result = cycleListContract.parse({ data: [listRow], pagination: { limit: 50, hasMore: false, nextCursor: null } });
+  expect(result.data[0]?.totalItems).toBe(12);
+  expect(result.data[0]?.completedItems).toBe(4);
+  expect(result.data[0]?.progress).toBe(33);
 });
 
 it("cycleListContract preserves version and goal on list items — version enables stale-write detection; goal is a core cycle field", () => {
@@ -134,9 +134,9 @@ it("cycleListContract preserves version and goal on list items — version enabl
     version: 4,
     goal: "Ship login revamp",
   };
-  const result = cycleListContract.parse([listRow]);
-  expect(result[0]?.version).toBe(4);
-  expect(result[0]?.goal).toBe("Ship login revamp");
+  const result = cycleListContract.parse({ data: [listRow], pagination: { limit: 50, hasMore: false, nextCursor: null } });
+  expect(result.data[0]?.version).toBe(4);
+  expect(result.data[0]?.goal).toBe("Ship login revamp");
 });
 
 it("cycleListContract rejects a list item missing progress — the iteration dashboard summary would silently show 0 without this guard", () => {
@@ -146,7 +146,12 @@ it("cycleListContract rejects a list item missing progress — the iteration das
     completedItems: 2,
     progress: 40,
   };
-  expect(cycleListContract.safeParse([withoutProgress]).success).toBe(false);
+  expect(cycleListContract.safeParse({ data: [withoutProgress], pagination: { limit: 50, hasMore: false, nextCursor: null } }).success).toBe(false);
+});
+
+it("cycleListContract rejects a bare array so the pagination cutover cannot silently decode a first-page-only response as the full list", () => {
+  const listRow = { ...baseCycleRow, totalItems: 0, completedItems: 0, progress: 0 };
+  expect(cycleListContract.safeParse([listRow]).success).toBe(false);
 });
 
 const baseCapacityMember = {

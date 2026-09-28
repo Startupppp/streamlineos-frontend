@@ -24,7 +24,7 @@ jest.mock("@/components/shared/dirty-state-context", () => ({
 }));
 
 jest.mock("sonner", () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
+  toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn() },
 }));
 
 const mockUseCan = jest.fn((_key: string) => false);
@@ -199,6 +199,12 @@ jest.mock("@/components/ui/skeleton", () => ({
   Skeleton: () => <span />,
 }));
 
+jest.mock("@/components/ui/empty-state", () => ({
+  EmptyState: ({ title }: { title?: string }) => (
+    <div data-testid="first-run-empty-state">{title}</div>
+  ),
+}));
+
 jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => String(e),
 }));
@@ -234,6 +240,7 @@ const BOARD_URL_STATE_DEFAULT = {
   wipLimits: {},
   doneCount: 0,
   showEmptyFilterState: false,
+  showFirstRunState: false,
   hasActiveFilters: false,
   boardFilters: {},
   activeView: null,
@@ -478,6 +485,45 @@ describe("ProjectBoardPage — bulk archive", () => {
       expect.any(Object),
     );
   });
+
+  it("shows a warning toast on partial success so the user knows some tickets were archived and some were blocked, not all-or-nothing", () => {
+    const { toast } = jest.requireMock<{ toast: { warning: jest.Mock } }>("sonner");
+    const bulkMutate = jest.fn();
+    mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      selectedIds: new Set([10, 11, 12]),
+    });
+    renderPage();
+    act(() => { capturedBoardContentProps.onBulkArchive?.(); });
+    fireEvent.click(screen.getByTestId("confirm-dialog-confirm"));
+    const [, callbacks] = bulkMutate.mock.calls[0] as [unknown, { onSuccess: (d: { updated: number; blocked?: Array<{ ticketId: number; reason: string }> }) => void }];
+    act(() => { callbacks.onSuccess({ updated: 2, blocked: [{ ticketId: 12, reason: "has_subtasks" }] }); });
+    expect(toast.warning).toHaveBeenCalledWith(
+      expect.stringContaining("2 archived"),
+    );
+    expect(toast.warning).toHaveBeenCalledWith(
+      expect.stringContaining("1 could not be archived"),
+    );
+  });
+
+  it("shows an error toast with 'Nothing was changed' when all selected tickets are blocked, not a misleading partial message", () => {
+    const { toast } = jest.requireMock<{ toast: { error: jest.Mock } }>("sonner");
+    const bulkMutate = jest.fn();
+    mockUseBulkUpdateTickets.mockReturnValue({ mutate: bulkMutate, isPending: false });
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      selectedIds: new Set([10, 11]),
+    });
+    renderPage();
+    act(() => { capturedBoardContentProps.onBulkArchive?.(); });
+    fireEvent.click(screen.getByTestId("confirm-dialog-confirm"));
+    const [, callbacks] = bulkMutate.mock.calls[0] as [unknown, { onSuccess: (d: { updated: number; blocked?: Array<{ ticketId: number; reason: string }> }) => void }];
+    act(() => { callbacks.onSuccess({ updated: 0, blocked: [{ ticketId: 10, reason: "has_subtasks" }, { ticketId: 11, reason: "has_subtasks" }] }); });
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.stringContaining("Nothing was changed"),
+    );
+  });
 });
 
 describe("ProjectBoardPage — workload capacity", () => {
@@ -584,11 +630,47 @@ describe("ProjectBoardPage — create shortcut permission gate", () => {
     expect(handleCreateOpenChange).toHaveBeenCalledWith(true);
   });
 
+  it("pressing c in board view does not open the create-ticket dialog even when the viewer has permission, because keyboard shortcuts are suppressed outside list view", () => {
+    const handleCreateOpenChange = jest.fn();
+    mockUseCan.mockReturnValue(true);
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      view: "board",
+      handleCreateOpenChange,
+    });
+    renderPage();
+    fireEvent.keyDown(document, { key: "c" });
+    expect(handleCreateOpenChange).not.toHaveBeenCalled();
+  });
+
   it("passes onCreate undefined to useBuildListKeyboard when create is denied, matching the suppression the webhooks page already uses", () => {
     mockUseCan.mockReturnValue(false);
     renderPage();
     expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
       expect.objectContaining({ onCreate: undefined }),
     );
+  });
+});
+
+describe("ProjectBoardPage — first-run vs filtered-empty empty state", () => {
+  it("renders the first-run empty state instead of ProjectBoardContent when showFirstRunState is true so a new project does not show an empty board", () => {
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      showFirstRunState: true,
+      allTickets: [],
+    });
+    renderPage();
+    expect(screen.getByTestId("first-run-empty-state")).toBeDefined();
+    expect(screen.queryByTestId("project-board-content")).toBeNull();
+  });
+
+  it("renders ProjectBoardContent and not the first-run empty state when showFirstRunState is false", () => {
+    mockUseBoardUrlState.mockReturnValue({
+      ...BOARD_URL_STATE_DEFAULT,
+      showFirstRunState: false,
+    });
+    renderPage();
+    expect(screen.queryByTestId("first-run-empty-state")).toBeNull();
+    expect(screen.getByTestId("project-board-content")).toBeDefined();
   });
 });

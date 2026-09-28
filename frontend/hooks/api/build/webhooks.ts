@@ -14,6 +14,8 @@ export interface WebhookListFilters {
   event?: string;
   q?: string;
   cursor?: number;
+  from?: string;
+  to?: string;
 }
 
 type WebhookPage = {

@@ -64,7 +64,7 @@ function backendListQueryKeys(): { keys: Set<string>; strict: boolean } {
   if (!block) throw new Error(`listProjectsSchema not found in ${BACKEND_SCHEMA}`);
   const keys = new Set<string>();
   for (const line of (block[1] ?? "").split("\n")) {
-    const named = /^\s{2}([A-Za-z_$][\w$]*)\s*:/.exec(line);
+    const named = /^\s+([A-Za-z_$][\w$]*)\s*:/.exec(line);
     if (named?.[1]) keys.add(named[1]);
   }
   return { keys, strict: Boolean(block[2]) };
@@ -76,7 +76,7 @@ function projectFiltersKeys(): Set<string> {
   if (!block) throw new Error("ProjectFilters not found");
   const keys = new Set<string>();
   for (const line of (block[1] ?? "").split("\n")) {
-    const named = /^\s{2}([A-Za-z_$][\w$]*)\??\s*:/.exec(line);
+    const named = /^\s+([A-Za-z_$][\w$]*)\??\s*:/.exec(line);
     if (named?.[1]) keys.add(named[1]);
   }
   return keys;

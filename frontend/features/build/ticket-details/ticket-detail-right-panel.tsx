@@ -70,6 +70,7 @@ interface TicketDetailRightPanelProps {
     updatedAt?: Date | string | null;
     isRecurring?: boolean | null;
     recurrenceRule?: RecurrenceRule | null;
+    rank?: string | null;
   };
   ticketId: number;
   projectId: number;

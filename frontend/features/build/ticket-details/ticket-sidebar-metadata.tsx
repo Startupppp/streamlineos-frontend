@@ -25,6 +25,7 @@ interface TicketSidebarMetadataProps {
   createdAt?: Date | string | null;
   updatedAt?: Date | string | null;
   reporter?: ReporterShape | null;
+  rank?: string | null;
 }
 
 function PropertyRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -44,6 +45,7 @@ export function TicketSidebarMetadata({
   createdAt,
   updatedAt,
   reporter,
+  rank,
 }: TicketSidebarMetadataProps) {
   const timeSpent = timeSpentStr ? parseFloat(timeSpentStr) : 0;
   const originalEstimate = originalEstimateStr ? parseFloat(originalEstimateStr) : 0;
@@ -87,6 +89,12 @@ export function TicketSidebarMetadata({
           </span>
         </div>
       </div>
+
+      {rank ? (
+        <PropertyRow label="Rank">
+          <span className="font-mono text-xs text-muted-foreground">{rank}</span>
+        </PropertyRow>
+      ) : null}
 
       {reporter && (
         <div className="flex items-center gap-2">

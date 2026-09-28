@@ -54,6 +54,7 @@ interface PageTreeItemProps {
   depth: number;
   onCloseMobile?: () => void;
   spaceId?: number;
+  baseHref?: string;
 }
 
 const PageTreeItem = memo(function PageTreeItemInner({
@@ -61,6 +62,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
   depth,
   onCloseMobile,
   spaceId,
+  baseHref,
 }: PageTreeItemProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -70,7 +72,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
   const [renameValue, setRenameValue] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const renameInputRef = useRef<HTMLInputElement>(null);
-  const nodeHref = pageHref(node.id);
+  const nodeHref = baseHref ? `${baseHref}/${node.id}` : pageHref(node.id);
   const isActive = pathname === nodeHref || pathname.startsWith(`${nodeHref}/`);
   const canCreate = useCan("kb:pages:create");
   const canDelete = useCan("kb:pages:delete");
@@ -117,7 +119,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
       {
         onSuccess: (page) => {
           setExpanded(true);
-          router.push(pageHref(page.id));
+          router.push(baseHref ? `${baseHref}/${page.id}` : pageHref(page.id));
         },
         onError: () => toast.error("Failed to create page"),
       }
@@ -149,7 +151,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
     deletePage.mutate(node.id, {
       onSuccess: () => {
         toast.success("Page moved to trash");
-        if (isActive) router.push(KNOWLEDGE_BASE);
+        if (isActive) router.push(baseHref ?? KNOWLEDGE_BASE);
       },
       onError: () => toast.error("Failed to delete page"),
     });
@@ -360,6 +362,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   depth={depth + 1}
                   onCloseMobile={onCloseMobile}
                   spaceId={spaceId}
+                  baseHref={baseHref}
                 />
               ))}
               <InfiniteScrollSentinel

@@ -2,11 +2,16 @@ import { render, screen } from "@testing-library/react";
 import { RoadmapTab } from "./roadmap-tab";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
 jest.mock("@/hooks/api/build/roadmap", () => ({
   useRoadmapItems: jest.fn(),
   useDeleteRoadmapItem: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   ROADMAP_SORTS: ["updated_at", "created_at", "title"],
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -110,6 +115,7 @@ jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
 
 const mockUseRoadmapItems = useRoadmapItems as jest.Mock;
 const mockUsePageState = usePageState as jest.Mock;
+const mockUseOnlineStatus = useOnlineStatus as jest.Mock;
 
 const BASE_QUERY = {
   data: {
@@ -160,6 +166,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockUseRoadmapItems.mockReturnValue(BASE_QUERY);
   mockUsePageState.mockReturnValue({ kind: "ready" });
+  mockUseOnlineStatus.mockReturnValue(true);
 });
 
 describe("RoadmapTab — denial-is-not-emptiness", () => {
@@ -273,5 +280,35 @@ describe("RoadmapTab — the list read carries only keys roadmapListQuerySchema 
       cursor: undefined,
       status: undefined,
     });
+  });
+
+  it("passes projectId through to the query so project-scoped items are filtered server-side", () => {
+    render(<RoadmapTab search="" projectId={42} />);
+    expect(mockUseRoadmapItems).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: 42 }),
+    );
+  });
+
+  it("passes horizon through to the query so a deep-linked horizon reaches the backend", () => {
+    render(<RoadmapTab search="" horizon="Q3 2026" />);
+    expect(mockUseRoadmapItems).toHaveBeenCalledWith(
+      expect.objectContaining({ horizon: "Q3 2026" }),
+    );
+  });
+});
+
+describe("RoadmapTab — offline state", () => {
+  it("renders the offline panel when useOnlineStatus returns false and the page is empty — positive: offline node present", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    mockUsePageState.mockReturnValue({ kind: "empty" });
+    render(<RoadmapTab search="" />);
+    expect(screen.getByText("You're offline")).toBeInTheDocument();
+  });
+
+  it("does not render the offline panel when online — negative: offline node absent", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    mockUsePageState.mockReturnValue({ kind: "empty" });
+    render(<RoadmapTab search="" />);
+    expect(screen.queryByText("You're offline")).not.toBeInTheDocument();
   });
 });

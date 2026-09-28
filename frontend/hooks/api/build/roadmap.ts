@@ -98,6 +98,8 @@ interface RoadmapItemFilters {
   limit?: number;
   managedProductId?: number;
   sort?: string;
+  projectId?: number;
+  horizon?: string;
 }
 
 interface CreateRoadmapItemInput {

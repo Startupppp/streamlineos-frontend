@@ -118,7 +118,15 @@ const epicRowSchema = z.object({
   updatedAt: z.string().nullable(),
 });
 
-export const cycleListContract = z.array(cycleListItemSchema);
+export const cyclePageContract = z.object({
+  data: z.array(cycleListItemSchema),
+  pagination: z.object({
+    limit: z.number(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
+});
+export const cycleListContract = cyclePageContract;
 export const cycleRowContract = cycleRowSchema;
 export const moduleListContract = z.array(moduleListItemSchema);
 export const modulePageContract = z.object({

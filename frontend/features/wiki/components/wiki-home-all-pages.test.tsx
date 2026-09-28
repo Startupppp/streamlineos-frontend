@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { WikiHomeAllPages } from "./wiki-home-all-pages";
 import {
@@ -34,6 +34,15 @@ jest.mock("@/hooks/api/kb", () => ({
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useKbPageBacklinks: jest.fn(() => ({ data: [] })),
+}));
+
+jest.mock("@/hooks/api/kb/record-links", () => ({
+  useKbPageRecordLinks: jest.fn(() => ({ data: [] })),
+}));
+
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembersByIds: jest.fn(() => ({ data: undefined })),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -177,6 +186,18 @@ jest.mock("@/components/ui/confirm-dialog", () => ({
 const { useKbPageCollection } = jest.requireMock(
   "@/hooks/api/kb/page-collection",
 ) as { useKbPageCollection: jest.Mock };
+
+const { useOrgMembersByIds } = jest.requireMock(
+  "@/hooks/api/organization",
+) as { useOrgMembersByIds: jest.Mock };
+
+const { useKbPageBacklinks } = jest.requireMock(
+  "@/hooks/api/kb",
+) as { useKbPageBacklinks: jest.Mock };
+
+const { useKbPageRecordLinks } = jest.requireMock(
+  "@/hooks/api/kb/record-links",
+) as { useKbPageRecordLinks: jest.Mock };
 
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
@@ -533,5 +554,123 @@ describe("WikiHomeAllPages — error forwarding to usePageState (FE-41)", () => 
     expect(usePageState).toHaveBeenCalledWith(
       expect.objectContaining({ isError: false }),
     );
+  });
+});
+
+describe("WikiHomeAllPages — owner display name in list view (task B)", () => {
+  it("renders the resolved owner display name in the owner column so the page shows a name not an ID", () => {
+    mockSearchParams = new URLSearchParams();
+    const row = makeItem(1, { ownerUserId: "user-abc" });
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([row]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    useOrgMembersByIds.mockReturnValue({
+      data: {
+        data: [{ userId: "user-abc", name: "Alice Smith", email: "alice@test.com" }],
+      },
+    });
+
+    render(<WikiHomeAllPages />);
+    const cell = renderListCell("owner", row);
+
+    expect(within(cell.container).getByText("Alice Smith")).toBeInTheDocument();
+  });
+
+  it("renders the owner-missing badge in the owner column when ownerUserId is null so the page is flagged unowned", () => {
+    mockSearchParams = new URLSearchParams();
+    const row = makeItem(2, { ownerUserId: null });
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([row]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<WikiHomeAllPages />);
+    const cell = renderListCell("owner", row);
+
+    expect(within(cell.container).getByText("Owner missing")).toBeInTheDocument();
+  });
+});
+
+describe("WikiHomeAllPages — backlinks and linked-records columns at collection level (task C)", () => {
+  it("renders a backlink count for each row from the per-page hook so the count is visible without opening the page", () => {
+    mockSearchParams = new URLSearchParams();
+    const row = makeItem(99);
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([row]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    useKbPageBacklinks.mockReturnValue({ data: [{ id: 1 }, { id: 2 }] });
+
+    render(<WikiHomeAllPages />);
+    const cell = renderListCell("backlinks", row);
+
+    expect(within(cell.container).getByTestId("backlink-count-99")).toHaveTextContent("2");
+  });
+
+  it("renders a linked-records count for each row from the per-page hook", () => {
+    mockSearchParams = new URLSearchParams();
+    const row = makeItem(77);
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([row]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    useKbPageRecordLinks.mockReturnValue({ data: [{ id: 10 }, { id: 11 }, { id: 12 }] });
+
+    render(<WikiHomeAllPages />);
+    const cell = renderListCell("linkedRecords", row);
+
+    expect(within(cell.container).getByTestId("record-link-count-77")).toHaveTextContent("3");
+  });
+});
+
+describe("WikiHomeAllPages — right-click context menu on card view (task G)", () => {
+  it("right-clicking a card calls e.preventDefault to suppress the native browser context menu", () => {
+    render(<WikiHomeAllPages />);
+
+    const pageActionsBtn = screen.getByRole("button", { name: /page actions/i });
+    const notCancelled = fireEvent.contextMenu(pageActionsBtn);
+
+    expect(notCancelled).toBe(false);
+  });
+});
+
+describe("WikiHomeAllPages — offline indicator (task I)", () => {
+  it("shows the offline indicator when the browser goes offline", () => {
+    render(<WikiHomeAllPages />);
+
+    expect(screen.queryByTestId("offline-indicator")).not.toBeInTheDocument();
+
+    act(() => {
+      window.dispatchEvent(new Event("offline"));
+    });
+
+    expect(screen.getByTestId("offline-indicator")).toBeInTheDocument();
+  });
+
+  it("hides the offline indicator when the browser comes back online", () => {
+    render(<WikiHomeAllPages />);
+
+    act(() => {
+      window.dispatchEvent(new Event("offline"));
+    });
+
+    act(() => {
+      window.dispatchEvent(new Event("online"));
+    });
+
+    expect(screen.queryByTestId("offline-indicator")).not.toBeInTheDocument();
   });
 });

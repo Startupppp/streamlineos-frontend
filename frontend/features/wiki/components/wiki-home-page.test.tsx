@@ -23,6 +23,22 @@ jest.mock("@/hooks/api/kb", () => ({
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useKbPageBacklinks: jest.fn(() => ({ data: [] })),
+}));
+
+jest.mock("@/hooks/api/kb/record-links", () => ({
+  useKbPageRecordLinks: jest.fn(() => ({ data: [] })),
+}));
+
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembersByIds: jest.fn(() => ({ data: undefined })),
+}));
+
+jest.mock("./page-tree", () => ({
+  __esModule: true,
+  default: jest.fn(({ projectId, baseHref }: { projectId?: number; baseHref?: string }) => (
+    <div data-testid="page-tree" data-project-id={String(projectId ?? "")} data-base-href={baseHref ?? ""} />
+  )),
 }));
 
 jest.mock("@/hooks/api/kb/page-collection", () => ({
@@ -236,13 +252,23 @@ beforeEach(() => {
   usePageState.mockReturnValue({ kind: "ready" });
 });
 
-describe("WikiHomePage — tree hook never called", () => {
-  it("does not call the infinite tree hook on mount", () => {
+describe("WikiHomePage — page tree mounting", () => {
+  it("does not mount the page tree for the non-project-scoped wiki", () => {
     render(<WikiHomePage />);
-    expect(useKbPageTreeInfinite).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("page-tree")).not.toBeInTheDocument();
   });
 
-  it("calls the cursor-based collection hook to drive All pages instead", () => {
+  it("mounts the page tree for the project-scoped wiki so the user can navigate pages", () => {
+    render(<WikiHomePage projectId={7} />);
+    expect(screen.getByTestId("page-tree")).toBeInTheDocument();
+  });
+
+  it("passes the project-scoped baseHref to the page tree so links stay within the project", () => {
+    render(<WikiHomePage projectId={7} />);
+    expect(screen.getByTestId("page-tree")).toHaveAttribute("data-base-href", "/build/7/wiki");
+  });
+
+  it("calls the cursor-based collection hook to drive All pages", () => {
     render(<WikiHomePage />);
     expect(useKbPageCollection).toHaveBeenCalled();
   });
@@ -494,10 +520,10 @@ describe("WikiHomePage — keyboard shortcuts wired via useBuildListKeyboard", (
     expect(options.searchInputRef).toBeDefined();
   });
 
-  it("passes searchInputRef as undefined for a project-scoped wiki because there is no search input in that view", () => {
+  it("passes searchInputRef for the project-scoped wiki because the search input is now rendered there too", () => {
     render(<WikiHomePage projectId={7} />);
     const options = lastKeyboardOptions();
-    expect(options.searchInputRef).toBeUndefined();
+    expect(options.searchInputRef).toBeDefined();
   });
 });
 
@@ -597,5 +623,62 @@ describe("WikiHomePage — the create control fails closed on kb:pages:create", 
     render(<WikiHomePage />);
     const options = lastKeyboardOptions();
     expect(options.onCreate).toBeUndefined();
+  });
+});
+
+describe("WikiHomePage — keyboard handler wiring (task F)", () => {
+  beforeEach(() => {
+    mockUseBuildListKeyboard.mockClear();
+  });
+
+  it("passes the real item count from the collection to useBuildListKeyboard so j/k/Enter work", () => {
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([makeItem(1), makeItem(2), makeItem(3)]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<WikiHomePage />);
+
+    const options = lastKeyboardOptions();
+    expect(options.itemCount).toBe(3);
+  });
+
+  it("passes itemCount 0 when the collection is empty so j/k are inert on an empty list", () => {
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<WikiHomePage />);
+
+    const options = lastKeyboardOptions();
+    expect(options.itemCount).toBe(0);
+  });
+
+  it("passes a real onOpen handler so Enter navigates to the page at the focused index", () => {
+    render(<WikiHomePage />);
+    const options = lastKeyboardOptions();
+    expect(typeof options.onOpen).toBe("function");
+    const onOpen = options.onOpen as (index: number) => void;
+    onOpen(0);
+    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining("1"));
+  });
+
+  it("search input is present for the non-project-scoped wiki so / can focus it", () => {
+    render(<WikiHomePage />);
+    expect(screen.getByRole("search")).toBeInTheDocument();
+  });
+
+  it("search input is also present for the project-scoped wiki now that it has been added", () => {
+    render(<WikiHomePage projectId={7} />);
+    expect(screen.getByRole("search")).toBeInTheDocument();
   });
 });

@@ -41,6 +41,8 @@ const FILTER_DEFINITIONS = [
     options: ["planned", "in_progress", "completed", "cancelled"],
   },
   { param: "sort", options: ROADMAP_SORTS },
+  { param: "projectId" },
+  { param: "horizon" },
 ] as const;
 
 export function RoadmapListPage() {
@@ -82,6 +84,9 @@ export function RoadmapListPage() {
   const managedProductId = /^\d+$/.test(productIdValue)
     ? Number(productIdValue)
     : undefined;
+  const projectIdValue = listFilters.value("projectId");
+  const projectId = /^\d+$/.test(projectIdValue) ? Number(projectIdValue) : undefined;
+  const horizon = listFilters.value("horizon") || undefined;
 
   const handleRoadmapEditByIndex = useCallback((index: number) => {
     const item = roadmapItemsRef.current[index];
@@ -186,6 +191,8 @@ export function RoadmapListPage() {
                   status={statusValue !== "all" ? statusValue : undefined}
                   managedProductId={managedProductId}
                   sort={sortValue !== "all" ? sortValue : undefined}
+                  projectId={projectId}
+                  horizon={horizon}
                   onClearFilters={listFilters.clearAll}
                   onItemsChange={handleRoadmapItemsChange}
                   externalEditTarget={externalEditTarget}

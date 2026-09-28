@@ -12,6 +12,7 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
+import { ticketUpdateRequestContract } from "./build-tickets-subresource-schema";
 import {
   invalidateTicketUpdateViews,
   patchTicketCollections,
@@ -111,13 +112,15 @@ export function useUpdateTicket(
   >("build:tickets:update", {
     ...options,
     mutationKey: ["projects", "tickets", "update"],
-    mutationFn: ({ ticketId, ...data }) =>
-      apiClient.patch<UpdateTicketResponse>(
+    mutationFn: ({ ticketId, ...data }) => {
+      ticketUpdateRequestContract.parse(data);
+      return apiClient.patch<UpdateTicketResponse>(
         `/build/${projectId}/tickets/${ticketId}`,
         data,
         undefined,
         ticketUpdateResultLazy,
-      ),
+      );
+    },
     onMutate: async (variables) => {
       const detailKey = buildWorkQueryKeys.projects.detail(projectId);
       const ticketKey = buildWorkQueryKeys.projects.ticket(projectId, variables.ticketId);

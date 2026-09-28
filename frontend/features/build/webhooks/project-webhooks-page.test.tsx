@@ -1,4 +1,4 @@
-import { render, screen, act, fireEvent } from "@testing-library/react";
+import { render, screen, act, fireEvent, waitFor } from "@testing-library/react";
 import type { AccessState } from "@/lib/rbac/gate";
 import { ProjectWebhooksPage } from "./project-webhooks-page";
 import type { ProjectWebhook } from "@/hooks/api/build/webhooks";
@@ -33,10 +33,11 @@ jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
     open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));
 
+let mockSearchParams = new URLSearchParams();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ replace: jest.fn() }),
   usePathname: () => "/build/1/settings/integrations/webhooks",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }));
 
 let mockAccessState: AccessState = "denied";
@@ -95,7 +96,7 @@ jest.mock("@/hooks/api/build/webhooks", () => ({
   },
   useCreateWebhook: () => ({ mutate: jest.fn(), isPending: false }),
   useDeleteWebhook: () => ({ mutate: jest.fn(), isPending: false }),
-  useUpdateWebhook: () => ({ mutate: jest.fn(), isPending: false }),
+  useUpdateWebhook: () => ({ mutate: mockUpdateMutate, isPending: false }),
 }));
 
 jest.mock("@/components/shared/dirty-state-context", () => ({
@@ -103,9 +104,29 @@ jest.mock("@/components/shared/dirty-state-context", () => ({
   useNavigationLeave: () => (action: () => void) => action(),
 }));
 
+const mockUpdateMutate = jest.fn();
+jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
+jest.mock("@/lib/api-envelope", () => ({
+  isApiError: (e: unknown): e is { status: number; details?: unknown } =>
+    typeof e === "object" && e !== null && "status" in e,
+}));
+
 jest.mock("@/features/build/settings/webhook-card", () => ({
-  WebhookCard: ({ webhook }: { webhook: ProjectWebhook }) => (
-    <div data-testid="webhook-card" data-url={webhook.url} />
+  WebhookCard: ({
+    webhook,
+    onToggle,
+    onEdit,
+  }: {
+    webhook: ProjectWebhook;
+    onToggle?: (wh: Pick<ProjectWebhook, "id" | "version">, isActive: boolean) => void;
+    onEdit?: (wh: ProjectWebhook) => void;
+  }) => (
+    <div data-testid="webhook-card" data-url={webhook.url}>
+      <button onClick={() => onToggle?.({ id: webhook.id, version: webhook.version }, false)}>
+        toggle-off
+      </button>
+      <button onClick={() => onEdit?.(webhook)}>edit-webhook</button>
+    </div>
   ),
 }));
 
@@ -152,6 +173,8 @@ beforeEach(() => {
   mockUseWebhooks.mockClear();
   mockUseBuildCursorPager.mockClear();
   mockUseBuildListKeyboard.mockClear();
+  mockUpdateMutate.mockClear();
+  mockSearchParams = new URLSearchParams();
   (
     jest.requireMock("@/hooks/common/use-online-status") as {
       useOnlineStatus: jest.Mock;
@@ -161,11 +184,16 @@ beforeEach(() => {
 
 const SAMPLE_WEBHOOK: ProjectWebhook = {
   id: 1,
+  orgId: "org-1",
   projectId: 5,
   url: "https://example.com/hook",
   events: ["ticket.created"],
   isActive: true,
+  hasSecret: false,
+  secretSetAt: null,
+  version: 1,
   createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-01T00:00:00.000Z",
   lastDeliveryAt: null,
   lastDeliveryStatus: null,
   failureRate: null,
@@ -474,7 +502,7 @@ describe("ProjectWebhooksPage — URL-backed cursor pagination (BLD-X-FE-SETTING
     mockAccessState = "granted";
     mockWebhooks = [SAMPLE_WEBHOOK];
     render(<ProjectWebhooksPage projectId="1" />);
-    expect(mockUseBuildCursorPager).toHaveBeenCalledWith("||");
+    expect(mockUseBuildCursorPager).toHaveBeenCalledWith("||||");
   });
 
   it("forwards the URL-backed cursor to useWebhooks as a number so page 2 is fetched server-side", () => {
@@ -541,5 +569,113 @@ describe("ProjectWebhooksPage — URL-backed cursor pagination (BLD-X-FE-SETTING
     render(<ProjectWebhooksPage projectId="1" />);
     fireEvent.click(screen.getByRole("button", { name: /previous page/i }));
     expect(mockGoPrevious).toHaveBeenCalled();
+  });
+});
+
+describe("ProjectWebhooksPage — from/to date filters (BLD-X-FE-SETTINGS-WH-035)", () => {
+  it("renders the from date input so the operator can filter by creation start date", () => {
+    mockAccessState = "granted";
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByLabelText("Filter from date")).toBeInTheDocument();
+  });
+
+  it("renders the to date input — paired with from so both are always present", () => {
+    mockAccessState = "granted";
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(screen.getByLabelText("Filter to date")).toBeInTheDocument();
+  });
+
+  it("forwards from and to to useWebhooks when the URL carries those params so the filter narrows results server-side", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    mockPagerCursor = undefined;
+    mockSearchParams = new URLSearchParams("from=2026-01-01&to=2026-06-30");
+    render(<ProjectWebhooksPage projectId="1" />);
+    expect(mockUseWebhooks).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ from: "2026-01-01", to: "2026-06-30" }),
+    );
+  });
+
+  it("includes from and to in the pager reset key so pagination resets when the date range changes", () => {
+    mockAccessState = "granted";
+    mockSearchParams = new URLSearchParams("from=2026-01-01");
+    render(<ProjectWebhooksPage projectId="1" />);
+    const lastArg = mockUseBuildCursorPager.mock.calls.at(-1)?.[0] as string;
+    expect(lastArg).toContain("2026-01-01");
+  });
+});
+
+describe("ProjectWebhooksPage — edit Sheet (BLD-X-FE-SETTINGS-WH-036)", () => {
+  it("opens the Sheet in edit mode when onEdit is called on a webhook card — title changes to Edit Webhook", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: /edit-webhook/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Edit Webhook")).toBeInTheDocument();
+    });
+  });
+
+  it("submitting the edit form calls updateWebhook.mutate with url, events and version", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: /edit-webhook/i }));
+    await waitFor(() => screen.getByText("Edit Webhook"));
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    await waitFor(() => {
+      expect(mockUpdateMutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          webhookId: SAMPLE_WEBHOOK.id,
+          version: SAMPLE_WEBHOOK.version,
+          url: SAMPLE_WEBHOOK.url,
+          events: SAMPLE_WEBHOOK.events,
+        }),
+        expect.any(Object),
+      );
+    });
+  });
+
+  it("the Sheet shows New Webhook title before any edit is triggered — the title is create-mode by default", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getByRole("button", { name: /add webhook/i }));
+    expect(screen.getByText("New Webhook")).toBeInTheDocument();
+  });
+});
+
+describe("ProjectWebhooksPage — 409 conflict UX on toggle (BLD-X-FE-SETTINGS-WH-037)", () => {
+  it("a 409 from updateWebhook shows a field-level conflict toast, not the generic error string", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [{ ...SAMPLE_WEBHOOK, isActive: true }];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getAllByRole("button", { name: /toggle-off/i })[0]);
+    const [[, options]] = mockUpdateMutate.mock.calls as [
+      [unknown, { onError?: (e: unknown) => void }],
+    ];
+    act(() => {
+      options.onError?.({ status: 409, details: { currentVersion: 5 } });
+    });
+    const { toast } = jest.requireMock("sonner") as { toast: { error: jest.Mock } };
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.stringMatching(/conflict|active/i),
+    );
+  });
+
+  it("a non-409 error from updateWebhook shows the plain toast — the 409 branch does not swallow other errors", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    fireEvent.click(screen.getAllByRole("button", { name: /toggle-off/i })[0]);
+    const [[, options]] = mockUpdateMutate.mock.calls as [
+      [unknown, { onError?: (e: unknown) => void }],
+    ];
+    const { toast } = jest.requireMock("sonner") as { toast: { error: jest.Mock } };
+    act(() => {
+      options.onError?.(new Error("network error"));
+    });
+    expect(toast.error).toHaveBeenCalledWith(expect.not.stringMatching(/conflict/i));
   });
 });

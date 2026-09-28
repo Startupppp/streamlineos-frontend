@@ -42,6 +42,9 @@ const CYCLE: Cycle = {
   projectId: 42,
   name: "Iteration 5",
   description: null,
+  goal: null,
+  capacity: null,
+  version: 1,
   status: "active",
   startDate: "2026-09-01",
   endDate: "2026-09-14",
@@ -86,12 +89,12 @@ it("PATCHes the canonical cycle route and merges the response into the rendered 
   const { result } = renderHook(() => useUpdateCycle(), { wrapper: wrap(client) });
 
   await act(async () => {
-    await result.current.mutateAsync({ projectId: 42, cycleId: 5, status: "completed" });
+    await result.current.mutateAsync({ projectId: 42, cycleId: 5, version: 1, status: "completed" });
   });
 
   expect(getApiClient().patch).toHaveBeenCalledWith(
     "/build/42/cycles/5",
-    { status: "completed" },
+    { version: 1, status: "completed" },
     undefined,
     expect.anything(),
   );

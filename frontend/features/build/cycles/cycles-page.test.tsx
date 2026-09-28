@@ -58,6 +58,10 @@ jest.mock("@/lib/date-refinements", () => ({
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn().mockReturnValue(true),
+}));
+
 jest.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => <div {...rest}>{children}</div>,
@@ -183,6 +187,7 @@ jest.mock("@/components/ui/date-picker", () => ({
 
 import { useCycles, useCreateCycle, useDeleteCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
 import { useCan, useAccess } from "@/hooks/api/access";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
 const mockUseCycles = useCycles as jest.Mock;
 const mockUseCreateCycle = useCreateCycle as jest.Mock;
@@ -191,6 +196,7 @@ const mockUseDeleteCycle = useDeleteCycle as jest.Mock;
 const mockUseCan = useCan as jest.Mock;
 const mockUseAccess = useAccess as jest.Mock;
 const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
+const mockUseOnlineStatus = useOnlineStatus as jest.Mock;
 const mockUpdateMutate = jest.fn();
 const mockDeleteMutate = jest.fn();
 
@@ -223,8 +229,10 @@ beforeEach(() => {
   mockUseCreateCycle.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUseUpdateCycle.mockReturnValue({ mutate: mockUpdateMutate, isPending: false });
   mockUseDeleteCycle.mockReturnValue({ mutate: mockDeleteMutate, isPending: false });
+  mockUseOnlineStatus.mockReturnValue(true);
   mockUpdateMutate.mockClear();
   mockDeleteMutate.mockClear();
+  mockUseCycles.mockClear();
 });
 
 it("renders NoPermissionState when build:cycles:view is denied instead of empty state", () => {
@@ -384,12 +392,16 @@ describe("CyclesPage — q search filter narrows displayed cycles", () => {
     expect(screen.getByText("Beta sprint")).toBeInTheDocument();
   });
 
-  it("hides cycles whose names do not match the q param and shows matching cycles", () => {
+  it("passes q filter to useCycles so the DB narrows results server-side instead of the client filtering a full unbounded list", () => {
     mockSearchParamsContainer.current = new URLSearchParams("q=Alpha");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_A, CYCLE_B] }));
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_A] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Alpha sprint")).toBeInTheDocument();
     expect(screen.queryByText("Beta sprint")).not.toBeInTheDocument();
+    expect(mockUseCycles).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ q: "Alpha" }),
+    );
   });
 
   it("shows the BuildListToolbar so the search field is reachable via keyboard", () => {
@@ -398,12 +410,16 @@ describe("CyclesPage — q search filter narrows displayed cycles", () => {
     expect(screen.getByTestId("build-list-toolbar")).toBeInTheDocument();
   });
 
-  it("hides cycles with status=draft when status filter is set to active", () => {
+  it("passes status filter to useCycles so the DB filters by status server-side", () => {
     mockSearchParamsContainer.current = new URLSearchParams("status=active");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_A, CYCLE_B] }));
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [CYCLE_A] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Alpha sprint")).toBeInTheDocument();
     expect(screen.queryByText("Beta sprint")).not.toBeInTheDocument();
+    expect(mockUseCycles).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ status: "active" }),
+    );
   });
 });
 
@@ -411,28 +427,40 @@ describe("CyclesPage — from/to date range filters narrow displayed cycles", ()
   const EARLY = { id: 1, name: "Early sprint", version: 1, status: "active" as const, startDate: "2026-08-01", endDate: "2026-08-14", progress: 80, completedItems: 4, totalItems: 5 };
   const RECENT = { id: 2, name: "Recent sprint", version: 1, status: "draft" as const, startDate: "2026-09-15", endDate: "2026-09-28", progress: 0, completedItems: 0, totalItems: 0 };
 
-  it("hides cycles that ended before the from date so only overlapping cycles appear", () => {
+  it("passes from filter to useCycles so the DB excludes cycles ending before the window boundary", () => {
     mockSearchParamsContainer.current = new URLSearchParams("from=2026-09-01");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [EARLY, RECENT] }));
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [RECENT] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Recent sprint")).toBeInTheDocument();
     expect(screen.queryByText("Early sprint")).not.toBeInTheDocument();
+    expect(mockUseCycles).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ from: "2026-09-01" }),
+    );
   });
 
-  it("hides cycles that started after the to date so only overlapping cycles appear", () => {
+  it("passes to filter to useCycles so the DB excludes cycles starting after the window boundary", () => {
     mockSearchParamsContainer.current = new URLSearchParams("to=2026-08-31");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [EARLY, RECENT] }));
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [EARLY] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Early sprint")).toBeInTheDocument();
     expect(screen.queryByText("Recent sprint")).not.toBeInTheDocument();
+    expect(mockUseCycles).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ to: "2026-08-31" }),
+    );
   });
 
-  it("shows cycles that overlap the from/to window even if they extend beyond it", () => {
+  it("passes both from and to filters to useCycles and renders all cycles the server returns within the window", () => {
     mockSearchParamsContainer.current = new URLSearchParams("from=2026-08-10&to=2026-09-20");
     mockUseCycles.mockReturnValue(baseQueryResult({ data: [EARLY, RECENT] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByText("Early sprint")).toBeInTheDocument();
     expect(screen.getByText("Recent sprint")).toBeInTheDocument();
+    expect(mockUseCycles).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ from: "2026-08-10", to: "2026-09-20" }),
+    );
   });
 });
 
@@ -485,10 +513,29 @@ describe("CyclesPage — the empty state tells a first run apart from a filtered
     expect(screen.getByTestId("empty-state").textContent).toBe("No cycles yet");
   });
 
-  it("says the filters excluded everything when a status filter hides every cycle", () => {
+  it("says the filters excluded everything when the server returns no cycles for the active status filter", () => {
     mockSearchParamsContainer.current = new URLSearchParams("status=completed");
-    mockUseCycles.mockReturnValue(baseQueryResult({ data: [DRAFT] }));
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
     render(<CyclesPage projectId={1} />);
     expect(screen.getByTestId("empty-state").textContent).toBe("No cycles match your filters");
+  });
+});
+
+describe("CyclesPage — offline state", () => {
+  it("renders the offline state instead of EmptyState when the browser is offline and no cycles are loaded", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.getByTestId("offline-state")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  });
+
+  it("renders cycles normally and not the offline state when the browser is online", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    const DRAFT = { id: 7, name: "Draft sprint", version: 1, status: "draft" as const, startDate: "2026-09-01", endDate: "2026-09-14", progress: 0, completedItems: 0, totalItems: 0 };
+    mockUseCycles.mockReturnValue(baseQueryResult({ data: [DRAFT] }));
+    render(<CyclesPage projectId={1} />);
+    expect(screen.queryByTestId("offline-state")).not.toBeInTheDocument();
+    expect(screen.getByText("Draft sprint")).toBeInTheDocument();
   });
 });

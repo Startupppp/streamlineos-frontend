@@ -25,6 +25,7 @@ const TICKET_ROW = {
   dueDate: null,
   moduleId: null,
   cycleId: null,
+  health: null,
   sequenceId: null,
   estimate: null,
   completionPercentage: 0,

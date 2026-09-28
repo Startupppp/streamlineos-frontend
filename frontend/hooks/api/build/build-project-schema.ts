@@ -273,6 +273,7 @@ const projectReleaseListItemSchema = z.object({
   status: z.enum(["draft", "released", "archived"]),
   releaseDate: z.string().nullable(),
   ticketCount: z.number(),
+  createdBy: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -287,6 +288,7 @@ const projectReleaseRowSchema = z.object({
   status: z.enum(["draft", "released", "archived"]),
   releaseDate: z.string().nullable(),
   ticketCount: z.number(),
+  createdBy: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

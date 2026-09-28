@@ -239,6 +239,51 @@ describe("ListViewItem — keyboard focus is visible and announced", () => {
   });
 });
 
+describe("ListViewItem — cycle and module metadata", () => {
+  it("shows the cycle name badge when showCycle is true and the ticket has a cycle", () => {
+    const ticket: Ticket = {
+      ...TICKET,
+      cycleId: 3,
+      cycle: { id: 3, name: "Sprint 7", status: "active", startDate: "2026-01-01", endDate: "2026-01-14" },
+    };
+    render(
+      <ListViewItem
+        ticket={ticket}
+        onClick={jest.fn()}
+        displayOptions={{ showCycle: true } as never}
+      />,
+    );
+    expect(screen.getByText("Sprint 7")).toBeDefined();
+  });
+
+  it("hides the cycle name badge when showCycle is false", () => {
+    const ticket: Ticket = {
+      ...TICKET,
+      cycleId: 3,
+      cycle: { id: 3, name: "Sprint 7", status: "active", startDate: "2026-01-01", endDate: "2026-01-14" },
+    };
+    render(
+      <ListViewItem
+        ticket={ticket}
+        onClick={jest.fn()}
+        displayOptions={{ showCycle: false } as never}
+      />,
+    );
+    expect(screen.queryByText("Sprint 7")).toBeNull();
+  });
+
+  it("shows the module badge when the ticket has a moduleId", () => {
+    const ticket: Ticket = { ...TICKET, moduleId: 11 };
+    render(<ListViewItem ticket={ticket} onClick={jest.fn()} />);
+    expect(screen.getByText("M-11")).toBeDefined();
+  });
+
+  it("does not show a module badge when moduleId is null", () => {
+    render(<ListViewItem ticket={TICKET} onClick={jest.fn()} />);
+    expect(screen.queryByText(/M-\d+/)).toBeNull();
+  });
+});
+
 describe("ListViewItem — row actions remain visible with focus", () => {
   it("reveals the drag handle for focus within the row without changing hover behavior", () => {
     render(

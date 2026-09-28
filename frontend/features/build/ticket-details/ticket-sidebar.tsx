@@ -69,6 +69,7 @@ interface TicketSidebarProps {
     updatedAt?: Date | string | null;
     isRecurring?: boolean | null;
     recurrenceRule?: RecurrenceRule | null;
+    rank?: string | null;
   };
   ticketId: number;
   projectId?: number;
@@ -259,6 +260,7 @@ export function TicketSidebar({
         createdAt={ticket.createdAt}
         updatedAt={ticket.updatedAt}
         reporter={ticket.reporter}
+        rank={ticket.rank}
       />
     </div>
   );

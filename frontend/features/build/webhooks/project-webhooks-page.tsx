@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
+import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
@@ -113,6 +115,7 @@ export function ProjectWebhooksPage({
   const isOnline = useOnlineStatus();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const [editingWebhook, setEditingWebhook] = useState<ProjectWebhook | null>(null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -121,22 +124,26 @@ export function ProjectWebhooksPage({
   const stateParam = searchParams.get("state") as "active" | "inactive" | null;
   const eventParam = searchParams.get("event") ?? undefined;
   const qParam = searchParams.get("q") ?? undefined;
+  const fromParam = searchParams.get("from") ?? undefined;
+  const toParam = searchParams.get("to") ?? undefined;
 
   const [qInput, setQInput] = useState(qParam ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   const pager = useBuildCursorPager(
-    `${stateParam ?? ""}|${eventParam ?? ""}|${qParam ?? ""}`,
+    `${stateParam ?? ""}|${eventParam ?? ""}|${qParam ?? ""}|${fromParam ?? ""}|${toParam ?? ""}`,
   );
   const cursorParam = pager.cursor ? Number(pager.cursor) : undefined;
 
   const filters =
-    stateParam || eventParam || qParam || cursorParam !== undefined
+    stateParam || eventParam || qParam || cursorParam !== undefined || fromParam || toParam
       ? {
           state: stateParam ?? undefined,
           event: eventParam,
           q: qParam,
           cursor: cursorParam,
+          from: fromParam,
+          to: toParam,
         }
       : undefined;
 
@@ -167,6 +174,20 @@ export function ProjectWebhooksPage({
   const handleEventChange = useCallback(
     (value: string) => {
       updateUrl({ event: value === "all" ? undefined : value });
+    },
+    [updateUrl],
+  );
+
+  const handleFromChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      updateUrl({ from: e.target.value || undefined });
+    },
+    [updateUrl],
+  );
+
+  const handleToChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      updateUrl({ to: e.target.value || undefined });
     },
     [updateUrl],
   );
@@ -212,23 +233,34 @@ export function ProjectWebhooksPage({
 
   const handleSubmit = useCallback(
     (values: WebhookFormValues) => {
-      createWebhook.mutate(
-        {
-          url: values.url,
-          events: values.events,
-          secret: values.secret || undefined,
-        },
-        {
-          onSuccess: () => {
-            form.reset();
-            setSheetOpen(false);
-            toast.success("Webhook created");
+      if (editingWebhook) {
+        updateWebhook.mutate(
+          { webhookId: editingWebhook.id, version: editingWebhook.version, url: values.url, events: values.events },
+          {
+            onSuccess: () => {
+              form.reset();
+              setSheetOpen(false);
+              setEditingWebhook(null);
+              toast.success("Webhook updated");
+            },
+            onError: (e) => toast.error(getErrorMessage(e)),
           },
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
+        );
+      } else {
+        createWebhook.mutate(
+          { url: values.url, events: values.events, secret: values.secret || undefined },
+          {
+            onSuccess: () => {
+              form.reset();
+              setSheetOpen(false);
+              toast.success("Webhook created");
+            },
+            onError: (e) => toast.error(getErrorMessage(e)),
+          },
+        );
+      }
     },
-    [createWebhook, form],
+    [createWebhook, updateWebhook, editingWebhook, form],
   );
 
   const handleDelete = useCallback(
@@ -248,7 +280,23 @@ export function ProjectWebhooksPage({
         {
           onSuccess: () =>
             toast.success(isActive ? "Webhook enabled" : "Webhook disabled"),
-          onError: (e) => toast.error(getErrorMessage(e)),
+          onError: (e) => {
+            if (isApiError(e) && e.status === 409) {
+              const diff: TicketConflictFieldDiff[] = [
+                {
+                  key: "isActive",
+                  label: "Active",
+                  serverValue: "changed — reload to see current",
+                  pendingValue: isActive ? "Enabled" : "Disabled",
+                },
+              ];
+              toast.error(
+                `Webhook conflict on "${diff[0].label}": you set "${diff[0].pendingValue}" but the server has a newer version. Reload to retry.`,
+              );
+            } else {
+              toast.error(getErrorMessage(e));
+            }
+          },
         },
       );
     },
@@ -259,8 +307,18 @@ export function ProjectWebhooksPage({
     void refetch();
   }, [refetch]);
 
+  const handleEdit = useCallback(
+    (webhook: ProjectWebhook) => {
+      setEditingWebhook(webhook);
+      form.reset({ url: webhook.url, events: webhook.events, secret: "" });
+      setSheetOpen(true);
+    },
+    [form],
+  );
+
   const handleCancelForm = useCallback(() => {
     setSheetOpen(false);
+    setEditingWebhook(null);
     form.reset();
   }, [form]);
 
@@ -283,7 +341,7 @@ export function ProjectWebhooksPage({
     enabled: pageState.kind === "ready",
   });
 
-  const hasActiveFilters = !!(stateParam || eventParam || qParam);
+  const hasActiveFilters = !!(stateParam || eventParam || qParam || fromParam || toParam);
 
   return (
     <PageWrapper
@@ -326,6 +384,20 @@ export function ProjectWebhooksPage({
                 ))}
               </SelectContent>
             </Select>
+            <Input
+              type="date"
+              value={fromParam ?? ""}
+              onChange={handleFromChange}
+              className="h-8 text-sm w-36 shrink-0"
+              aria-label="Filter from date"
+            />
+            <Input
+              type="date"
+              value={toParam ?? ""}
+              onChange={handleToChange}
+              className="h-8 text-sm w-36 shrink-0"
+              aria-label="Filter to date"
+            />
           </div>
           <PageState
             resolution={pageState}
@@ -382,6 +454,7 @@ export function ProjectWebhooksPage({
                         projectId={projectId}
                         onDelete={handleDelete}
                         onToggle={canManage ? handleToggle : undefined}
+                        onEdit={canManage ? handleEdit : undefined}
                         canManage={canManage}
                       />
                     </div>
@@ -407,7 +480,7 @@ export function ProjectWebhooksPage({
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md overflow-hidden">
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>New Webhook</SheetTitle>
+            <SheetTitle>{editingWebhook ? "Edit Webhook" : "New Webhook"}</SheetTitle>
           </SheetHeader>
           <SheetBody className="px-6 py-5">
             <Form {...form}>
@@ -475,28 +548,30 @@ export function ProjectWebhooksPage({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="secret"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">
-                        Signing Secret{" "}
-                        <span className="text-muted-foreground font-normal">
-                          (optional)
-                        </span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Used to sign payloads"
-                          type="password"
-                          className="text-sm font-mono"
-                          {...field}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                {!editingWebhook && (
+                  <FormField
+                    control={form.control}
+                    name="secret"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Signing Secret{" "}
+                          <span className="text-muted-foreground font-normal">
+                            (optional)
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Used to sign payloads"
+                            type="password"
+                            className="text-sm font-mono"
+                            {...field}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
               </form>
             </Form>
           </SheetBody>
@@ -509,10 +584,10 @@ export function ProjectWebhooksPage({
                 size="sm"
                 type="submit"
                 form="webhook-form"
-                isPending={createWebhook.isPending}
-                loadingText="Creating…"
+                isPending={editingWebhook ? updateWebhook.isPending : createWebhook.isPending}
+                loadingText={editingWebhook ? "Saving…" : "Creating…"}
               >
-                Create Webhook
+                {editingWebhook ? "Save Changes" : "Create Webhook"}
               </LoadingButton>
             </div>
           </div>

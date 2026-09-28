@@ -21,6 +21,20 @@ jest.mock("@/hooks/common/use-online-status", () => ({
 let mockSearchParams = new URLSearchParams();
 jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  usePathname: () => "/build/command-center",
+}));
+
+jest.mock("./command-center-toolbar", () => ({
+  CommandCenterToolbar: () => <div data-testid="command-center-toolbar" />,
+}));
+
+jest.mock("@/features/build/shared/use-build-list-keyboard", () => ({
+  useBuildListKeyboard: jest.fn(() => ({ focusedIndex: null, setFocusedIndex: jest.fn() })),
+}));
+
+jest.mock("@/components/shared/format-ticket-key", () => ({
+  getTicketDetailHref: jest.fn(() => "/build/1/tickets/T-1"),
 }));
 
 jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({

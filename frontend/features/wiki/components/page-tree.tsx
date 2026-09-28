@@ -18,12 +18,14 @@ interface PageTreeProps {
   onCloseMobile?: () => void;
   spaceId?: number;
   projectId?: number;
+  baseHref?: string;
 }
 
 export default function PageTree({
   onCloseMobile,
   spaceId,
   projectId,
+  baseHref,
 }: PageTreeProps) {
   const router = useRouter();
   const createPage = useCreateKbPage();
@@ -48,7 +50,7 @@ export default function PageTree({
       { spaceId, projectId },
       {
         onSuccess: (page) => {
-          router.push(pageHref(page.id));
+          router.push(baseHref ? `${baseHref}/${page.id}` : pageHref(page.id));
           onCloseMobile?.();
         },
         onError: () => {
@@ -125,6 +127,7 @@ export default function PageTree({
           depth={0}
           onCloseMobile={onCloseMobile}
           spaceId={spaceId}
+          baseHref={baseHref}
         />
       ))}
       <InfiniteScrollSentinel

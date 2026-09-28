@@ -41,6 +41,7 @@ export type KbPageActionId =
   | "saveTemplate"
   | "export"
   | "backlinks"
+  | "copyLink"
   | "delete";
 
 export type KbPageActionGroup = "view" | "organize" | "danger";
@@ -243,6 +244,15 @@ const KB_PAGE_ACTION_DEFINITIONS: readonly KbPageActionDefinition[] = [
     label: "Export HTML",
     icon: KbFileDownIcon,
     isPermitted: permitsExport,
+  },
+  {
+    id: "copyLink",
+    group: "organize",
+    permission: null,
+    destructive: false,
+    label: "Copy link",
+    icon: KbLink2Icon,
+    isPermitted: alwaysPermitted,
   },
   {
     id: "delete",

@@ -34,6 +34,7 @@ import { PageState } from "@/components/shared/page-state";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -85,6 +86,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     wipLimits,
     doneCount,
     showEmptyFilterState,
+    showFirstRunState,
     hasActiveFilters,
     boardFilters,
     activeView,
@@ -186,10 +188,18 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         { ticketIds: [...selectedIds].map(Number), ...update },
         {
           onSuccess: (d) => {
-            if (d.blocked && d.blocked.length > 0) {
+            const blockedCount = d.blocked?.length ?? 0;
+            if (blockedCount > 0 && d.updated === 0) {
               toast.error(
-                `${d.blocked.length} ticket${d.blocked.length !== 1 ? "s" : ""} could not be archived — ${d.blocked.length !== 1 ? "they have" : "it has"} active sub-tasks not in the selection. Nothing was changed.`,
+                `${blockedCount} ticket${blockedCount !== 1 ? "s" : ""} could not be archived — ${blockedCount !== 1 ? "they have" : "it has"} active sub-tasks not in the selection. Nothing was changed.`,
               );
+              return;
+            }
+            if (blockedCount > 0) {
+              toast.warning(
+                `${d.updated} archived, ${blockedCount} could not be archived — ${blockedCount !== 1 ? "they have" : "it has"} active sub-tasks not in the selection.`,
+              );
+              handleClearSelection();
               return;
             }
             toast.success(
@@ -373,13 +383,13 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         />
       }
     >
-      {/*
-        A 500 on GET /build/:id/tickets used to arrive here as `[]`, so the
-        board rendered its "No tickets yet — create a ticket to get started"
-        empty state over a project that has thousands, and people created
-        duplicates.
-      */}
-      <ProjectBoardContent
+      {showFirstRunState ? (
+        <EmptyState
+          title="No tickets yet"
+          description="Create your first ticket to get started tracking work."
+          className="flex-1"
+        />
+      ) : <ProjectBoardContent
         view={view}
         focusedTicketId={focusedTicketId}
         filteredTickets={filteredTickets}
@@ -419,7 +429,7 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
         isError={ticketsError}
         error={ticketsErrorValue}
         onRetry={handleRetryTickets}
-      />
+      />}
       <SaveViewDialog
         open={saveViewOpen}
         onOpenChange={setSaveViewOpen}

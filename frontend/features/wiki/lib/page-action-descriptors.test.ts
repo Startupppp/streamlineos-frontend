@@ -51,6 +51,7 @@ describe("kb page action descriptors", () => {
       "backlinks",
       "favorite",
       "linkedRecords",
+      "copyLink",
     ]);
   });
 
@@ -117,12 +118,33 @@ describe("kb page action descriptors", () => {
     expect(destructive).toEqual(["delete"]);
   });
 
-  it("drops a group entirely when the actor holds none of its actions", () => {
+  it("drops a group entirely when the actor holds none of its gated actions — copyLink being alwaysPermitted keeps organize alive", () => {
     const groups = groupKbPageActions(
       resolveKbPageActions(NEUTRAL_SUBJECT, NO_CAPABILITIES),
     );
 
-    expect(groups).toHaveLength(1);
+    expect(groups).toHaveLength(2);
     expect(groups[0]?.every((action) => action.group === "view")).toBe(true);
+    expect(groups[1]?.every((action) => action.group === "organize")).toBe(true);
+  });
+
+  it("copyLink is always permitted regardless of capabilities so view-only users can share the URL (task H)", () => {
+    expect(idsFor(NO_CAPABILITIES)).toContain("copyLink");
+    expect(idsFor(FULL_CAPABILITIES)).toContain("copyLink");
+  });
+
+  it("copyLink carries no permission requirement so the resolver never gates it on a backend key (task H)", () => {
+    const action = resolveKbPageActions(NEUTRAL_SUBJECT, FULL_CAPABILITIES).find(
+      (a) => a.id === "copyLink",
+    );
+    expect(action?.permission).toBeNull();
+  });
+
+  it("copyLink is in the organize group so it appears alongside duplicate and move (task H)", () => {
+    const groups = groupKbPageActions(
+      resolveKbPageActions(NEUTRAL_SUBJECT, FULL_CAPABILITIES),
+    );
+    const organizeGroup = groups.find((g) => g[0]?.group === "organize");
+    expect(organizeGroup?.map((a) => a.id)).toContain("copyLink");
   });
 });

@@ -20,6 +20,7 @@ export const RELEASES_TABLE_HEADERS = [
   "Status",
   "Release Date",
   "Tickets",
+  "Created By",
   "Actions",
 ] as const;
 
@@ -82,6 +83,12 @@ export function buildReleasesColumns({
             text={r.version}
             className="font-mono text-micro text-muted-foreground"
           />
+          {r.description ? (
+            <TruncatedText
+              text={r.description.replace(/<[^>]*>/g, "")}
+              className="text-micro text-muted-foreground"
+            />
+          ) : null}
         </div>
       ),
     },
@@ -110,6 +117,16 @@ export function buildReleasesColumns({
           {r.ticketCount}
         </span>
       ),
+    },
+    {
+      key: "createdBy",
+      header: "Created By",
+      cell: (r) =>
+        r.createdBy ? (
+          <span className="text-dense text-muted-foreground">{r.createdBy}</span>
+        ) : (
+          <span className="text-dense text-muted-foreground">—</span>
+        ),
     },
     {
       key: "actions",
@@ -144,6 +161,12 @@ export function ReleaseMobileCard({
             : "—",
         },
         { label: "Tickets", value: release.ticketCount },
+        ...(release.description
+          ? [{ label: "Notes", value: release.description.replace(/<[^>]*>/g, "") }]
+          : []),
+        ...(release.createdBy
+          ? [{ label: "Created by", value: release.createdBy }]
+          : []),
       ]}
       actions={
         canManage ? (

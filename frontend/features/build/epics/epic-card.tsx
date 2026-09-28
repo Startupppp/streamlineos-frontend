@@ -29,7 +29,7 @@ import {
 import { EditEpicDialog } from "./edit-epic-dialog";
 import { EpicStoryRow } from "./epic-story-row";
 import { EmptyState } from "@/components/ui/empty-state";
-import { cn } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
 import { PM_PANEL } from "@/components/pm-chrome";
@@ -37,6 +37,9 @@ import { getCompletedStatusNames } from "@/features/build/shared/completed-statu
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
+import { format, parseISO, isValid } from "date-fns";
 
 export interface EpicCardProps {
   epic: {
@@ -47,6 +50,17 @@ export interface EpicCardProps {
     priority?: string | null;
     points?: number | null;
     version: number;
+    assigneeMembershipId?: number | null;
+    startDate?: string | null;
+    dueDate?: string | null;
+    assignee?: {
+      id: string;
+      name?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
+      email?: string | null;
+      image?: string | null;
+    } | null;
   };
   stories: Ticket[];
   projectId: number;
@@ -267,6 +281,25 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                 </DropdownMenuContent>
               </DropdownMenu>}
             </div>
+          </div>
+
+          <div className="ml-7 mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-micro text-muted-foreground">
+            {epic.assignee ? (
+              <span className="flex items-center gap-1 min-w-0">
+                <Avatar className="h-4 w-4 shrink-0">
+                  <AvatarImage src={resolveImageUrl(epic.assignee.image)} />
+                  <AvatarFallback className="text-micro">{getUserInitials(epic.assignee)}</AvatarFallback>
+                </Avatar>
+                <span className="min-w-0 truncate">{getUserDisplayName(epic.assignee)}</span>
+              </span>
+            ) : null}
+            {(epic.startDate || epic.dueDate) ? (
+              <span className="shrink-0 tabular-nums">
+                {epic.startDate && isValid(parseISO(epic.startDate)) ? format(parseISO(epic.startDate), "MMM d") : null}
+                {epic.startDate && epic.dueDate && isValid(parseISO(epic.startDate)) && isValid(parseISO(epic.dueDate)) ? " → " : null}
+                {epic.dueDate && isValid(parseISO(epic.dueDate)) ? format(parseISO(epic.dueDate), "MMM d, yyyy") : null}
+              </span>
+            ) : null}
           </div>
 
           <div className="ml-7 mt-2 space-y-1">

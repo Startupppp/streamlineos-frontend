@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,6 +46,43 @@ import { ROADMAP_STATUS_OPTIONS } from "./roadmap-constants";
 import { RoadmapDeliveryProgress } from "./roadmap-delivery-progress";
 import { RoadmapRiceFormFields } from "./roadmap-rice-form-fields";
 import type { ScorableRoadmapItem } from "./roadmap-item-card";
+import { TicketConflictDialog } from "@/features/build/ticket-details/ticket-conflict-dialog";
+import type { TicketConflictFieldDiff } from "@/features/build/ticket-details/ticket-conflict-diff";
+
+const CONFLICT_EMPTY = "Not set";
+
+function displayConflictValue(value: unknown): string {
+  if (value === null || value === undefined || value === "") return CONFLICT_EMPTY;
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return String(value);
+}
+
+function buildRoadmapConflictDiffs(
+  values: RoadmapItemFormValues,
+  riceValues: { reach: number | null; impact: number | null; confidence: number | null; effort: number | null },
+  baseline: ScorableRoadmapItem,
+): TicketConflictFieldDiff[] {
+  const pairs: Array<{ key: string; label: string; server: unknown; pending: unknown }> = [
+    { key: "title", label: "Title", server: baseline.title, pending: values.title.trim() },
+    { key: "description", label: "Description", server: baseline.description ?? null, pending: values.description.trim() || null },
+    { key: "status", label: "Status", server: baseline.status, pending: values.status },
+    { key: "category", label: "Category", server: baseline.category ?? null, pending: values.category.trim() || null },
+    { key: "targetQuarter", label: "Target quarter", server: baseline.targetQuarter ?? null, pending: values.targetQuarter.trim() || null },
+    { key: "isPublic", label: "Public", server: baseline.isPublic, pending: values.isPublic },
+    { key: "reach", label: "Reach", server: baseline.reach, pending: riceValues.reach },
+    { key: "impact", label: "Impact", server: baseline.impact, pending: riceValues.impact },
+    { key: "confidence", label: "Confidence", server: baseline.confidence, pending: riceValues.confidence },
+    { key: "effort", label: "Effort", server: baseline.effort, pending: riceValues.effort },
+  ];
+  return pairs
+    .filter(({ server, pending }) => String(server ?? "") !== String(pending ?? ""))
+    .map(({ key, label, server, pending }) => ({
+      key,
+      label,
+      serverValue: displayConflictValue(server),
+      pendingValue: displayConflictValue(pending),
+    }));
+}
 
 interface RoadmapItemSheetProps {
   item?: ScorableRoadmapItem;
@@ -61,6 +99,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
   const create = useCreateRoadmapItem();
   const update = useUpdateRoadmapItem();
   const isPending = create.isPending || update.isPending;
+  const [conflictFields, setConflictFields] = useState<TicketConflictFieldDiff[] | null>(null);
 
   const form = useForm<RoadmapItemFormValues, unknown, RoadmapItemFormValues>({
     resolver: zodResolver(roadmapItemSchema),
@@ -112,7 +151,12 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
           onError: (e) => {
             if (isApiError(e) && getApiErrorCode(e) === "PROJECTS_TICKET_CONFLICT") {
               void queryClient.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.items() });
-              toast.warning("This roadmap item was modified by another user. Your changes were not saved — the form shows the latest version.");
+              const diffs = item ? buildRoadmapConflictDiffs(values, rice, item) : [];
+              if (diffs.length > 0) {
+                setConflictFields(diffs);
+              } else {
+                toast.warning("This roadmap item was modified by another user. Your changes were not saved.");
+              }
               return;
             }
             toast.error(getErrorMessage(e));
@@ -137,6 +181,7 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
   }
 
   return (
+    <>
     <Sheet open onOpenChange={onClose}>
       <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
@@ -258,5 +303,12 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
         </Form>
       </SheetContent>
     </Sheet>
+    <TicketConflictDialog
+      open={conflictFields !== null}
+      fields={conflictFields ?? []}
+      onKeepMine={() => setConflictFields(null)}
+      onDiscard={() => setConflictFields(null)}
+    />
+    </>
   );
 }

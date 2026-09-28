@@ -101,6 +101,26 @@ describe("useBuildListFilters", () => {
     expect(lastParams().get("q")).toBe("lo");
   });
 
+  it("resets the debounce window when a second keystroke arrives before the timer fires, so rapid typing does not submit stale partial words", () => {
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("lo"));
+    act(() => { jest.advanceTimersByTime(200); });
+    act(() => result.current.setSearch("log"));
+    act(() => { jest.advanceTimersByTime(299); });
+    expect(replace).not.toHaveBeenCalled();
+    act(() => { jest.advanceTimersByTime(1); });
+    expect(lastParams().get("q")).toBe("log");
+  });
+
+  it("exposes the raw (undebounced) search for the controlled input so the typed characters appear immediately without waiting for the URL write", () => {
+    const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));
+    act(() => result.current.setSearch("ty"));
+    expect(result.current.search).toBe("ty");
+    expect(result.current.debouncedSearch).toBe("");
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(result.current.debouncedSearch).toBe("ty");
+  });
+
   it("clears every filter and the search in one write", () => {
     setUrl("status=open&severity=high&q=login&cursor=abc");
     const { result } = renderHook(() => useBuildListFilters({ filters: FILTERS }));

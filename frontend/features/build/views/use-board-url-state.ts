@@ -346,6 +346,11 @@ export function useBoardUrlState(
     hasActiveFilters &&
     filteredTickets.length === 0;
 
+  const showFirstRunState =
+    !ticketsLoading &&
+    !hasActiveFilters &&
+    allTickets.length === 0;
+
   const ticketCollectionReturnHref = useMemo(
     () => buildTicketCollectionReturnHref(projectId, pathname, searchParams),
     [projectId, pathname, searchParams],
@@ -475,6 +480,7 @@ export function useBoardUrlState(
     wipLimits,
     doneCount,
     showEmptyFilterState,
+    showFirstRunState,
     hasActiveFilters,
     boardFilters,
     handleViewChange,

@@ -150,6 +150,22 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
             </span>
           </div>
 
+          {goal.target !== null ? (
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>KR total</span>
+              <span className="tabular-nums font-mono">
+                {goal.current ?? "0"} / {goal.target}
+              </span>
+            </div>
+          ) : null}
+
+          {goal.confidence !== null ? (
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Confidence</span>
+              <span className="tabular-nums">{goal.confidence}%</span>
+            </div>
+          ) : null}
+
           {goal.dueDate ? (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CalendarDays className="h-3.5 w-3.5" />

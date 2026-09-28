@@ -11,7 +11,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AlertCircle, ListPlus } from "lucide-react";
-import { ChevronRightIcon, LayoutGridIcon, LayoutListIcon, SettingsIcon } from "@animateicons/react/lucide";
+import {
+  ChevronRightIcon,
+  LayoutGridIcon,
+  LayoutListIcon,
+  SettingsIcon,
+} from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
@@ -43,7 +48,9 @@ const PROJECT_HEALTH_TONE: Record<ProjectListItem["health"], StatusTone> = {
   off_track: "danger",
 };
 
-export function projectHealthClasses(health: ProjectListItem["health"]): string {
+export function projectHealthClasses(
+  health: ProjectListItem["health"],
+): string {
   const tone = statusToneClasses(PROJECT_HEALTH_TONE[health]);
   return cn(tone.surface, tone.ink, tone.rule);
 }
@@ -55,10 +62,8 @@ export const STATUS_COLOR: Record<string, string> = {
     "text-status-info-ink-strong border-status-info-rule bg-status-info-surface",
   ON_HOLD:
     "text-status-warning-ink-strong border-status-warning-rule bg-status-warning-surface",
-  COMPLETED:
-    "text-muted-foreground border-border bg-muted",
-  ARCHIVED:
-    "text-muted-foreground border-border bg-muted",
+  COMPLETED: "text-muted-foreground border-border bg-muted",
+  ARCHIVED: "text-muted-foreground border-border bg-muted",
 };
 
 export function isOverdue(item: MyWorkItem): boolean {
@@ -73,13 +78,15 @@ export function isOverdue(item: MyWorkItem): boolean {
 
 export const MyWorkRow = memo(function MyWorkRow({
   item,
+  isFocused = false,
 }: {
   item: MyWorkItem;
-  index?: number;
+  isFocused?: boolean;
 }) {
   const shouldReduceMotion = useReducedMotion();
   const overdue = isOverdue(item);
-  const { iconRef: chevronRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
+  const { iconRef: chevronRef, hoverHandlers: chevronHoverHandlers } =
+    useAnimatedIcon();
 
   return (
     <motion.div
@@ -89,13 +96,20 @@ export const MyWorkRow = memo(function MyWorkRow({
       className="min-w-0"
     >
       <Link
-        href={getTicketDetailHref(item.projectId, item.projectKey, item.ticketNumber)}
-        className={PM_ROW}
+        href={getTicketDetailHref(
+          item.projectId,
+          item.projectKey,
+          item.ticketNumber,
+        )}
+        className={cn(PM_ROW, isFocused && "ring-1 ring-primary/40")}
+        aria-current={isFocused ? "true" : undefined}
         {...chevronHoverHandlers}
       >
         <motion.div
           className="shrink-0"
-          whileHover={shouldReduceMotion ? undefined : { scale: 1.08, rotate: -4 }}
+          whileHover={
+            shouldReduceMotion ? undefined : { scale: 1.08, rotate: -4 }
+          }
           transition={pmSpring}
         >
           <PriorityBadge priority={item.priority} size="sm" />
@@ -123,7 +137,10 @@ export const MyWorkRow = memo(function MyWorkRow({
               animate={{ scale: 1, opacity: 1 }}
               transition={pmSpring}
             >
-              <AlertCircle className="h-3.5 w-3.5 text-status-danger-ink" aria-label="Overdue" />
+              <AlertCircle
+                className="h-3.5 w-3.5 text-status-danger-ink"
+                aria-label="Overdue"
+              />
             </motion.span>
           ) : null}
           <StatusBadge status={item.status} className="text-dense" />
@@ -150,9 +167,12 @@ export const ProjectCard = memo(function ProjectCard({
   const shouldReduceMotion = useReducedMotion();
   const progress = project.progress.percentage;
 
-  const { iconRef: boardRef, hoverHandlers: boardHoverHandlers } = useAnimatedIcon();
-  const { iconRef: backlogRef, hoverHandlers: backlogHoverHandlers } = useAnimatedIcon();
-  const { iconRef: settingsRef, hoverHandlers: settingsHoverHandlers } = useAnimatedIcon();
+  const { iconRef: boardRef, hoverHandlers: boardHoverHandlers } =
+    useAnimatedIcon();
+  const { iconRef: backlogRef, hoverHandlers: backlogHoverHandlers } =
+    useAnimatedIcon();
+  const { iconRef: settingsRef, hoverHandlers: settingsHoverHandlers } =
+    useAnimatedIcon();
 
   const handleCreateIssue = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
@@ -193,9 +213,14 @@ export const ProjectCard = memo(function ProjectCard({
             className="text-label font-medium text-foreground transition-colors group-hover:text-primary"
           />
           {project.description ? (
-            <TruncatedText text={project.description} className="text-dense text-muted-foreground" />
+            <TruncatedText
+              text={project.description}
+              className="text-dense text-muted-foreground"
+            />
           ) : (
-            <p className="font-mono text-micro text-muted-foreground">{project.key}</p>
+            <p className="font-mono text-micro text-muted-foreground">
+              {project.key}
+            </p>
           )}
         </Link>
         <Badge
@@ -214,7 +239,11 @@ export const ProjectCard = memo(function ProjectCard({
                 className="h-full w-full origin-left rounded-full bg-primary"
                 initial={shouldReduceMotion ? false : { scaleX: 0 }}
                 animate={{ scaleX: progress / 100 }}
-                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.12 }}
+                transition={{
+                  duration: 0.45,
+                  ease: [0.22, 1, 0.36, 1],
+                  delay: 0.12,
+                }}
               />
             </div>
             <span className="w-7 text-right text-micro tabular-nums text-muted-foreground">

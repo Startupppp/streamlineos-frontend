@@ -15,6 +15,7 @@ export interface Ticket {
   sequenceId?: string | null;
   assigneeId?: string | null;
   cycleId?: number | null;
+  moduleId?: number | null;
   dueDate?: string | null;
   startDate?: string | null;
   rank?: string | null;

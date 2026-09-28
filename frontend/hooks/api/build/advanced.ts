@@ -89,14 +89,41 @@ export function useEpics(
 }
 
 
+export interface CycleListFilters {
+  status?: "draft" | "active" | "completed";
+  q?: string;
+  from?: string;
+  to?: string;
+}
+
+type CyclePage = {
+  data: Cycle[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
+
 export function useCycles(
   projectId: number,
+  filters?: CycleListFilters,
   options?: Omit<UseQueryOptions<Cycle[]>, "queryKey" | "queryFn" | "enabled">
 ) {
   const canView = useCan("build:cycles:view");
+  const activeFilters = filters ?? {};
+  const queryParams: Record<string, string> = {};
+  if (activeFilters.status) queryParams.status = activeFilters.status;
+  if (activeFilters.q) queryParams.q = activeFilters.q;
+  if (activeFilters.from) queryParams.from = activeFilters.from;
+  if (activeFilters.to) queryParams.to = activeFilters.to;
   return useQuery<Cycle[]>({
-    queryKey: buildWorkQueryKeys.projects.cycles(projectId),
-    queryFn: ({ signal }) => apiClient.get<Cycle[]>(`/build/${projectId}/cycles`, undefined, signal, cycleListContract),
+    queryKey: [...buildWorkQueryKeys.projects.cycles(projectId), activeFilters],
+    queryFn: async ({ signal }) => {
+      const page = await apiClient.get<CyclePage>(
+        `/build/${projectId}/cycles`,
+        Object.keys(queryParams).length > 0 ? queryParams : undefined,
+        signal,
+        cycleListContract,
+      );
+      return page.data;
+    },
     staleTime: 60_000,
     ...options,
     enabled: canView && !!projectId,
@@ -140,7 +167,7 @@ export function useUpdateCycle(options?: Parameters<typeof useMutation>[0]) {
       apiClient.patch<Cycle>(`/build/${projectId}/cycles/${cycleId}`, data, undefined, cycleRowContract),
     onSuccess: (cycle: Cycle, variables: UpdateCycleInput) => {
       const queryKey = buildWorkQueryKeys.projects.cycles(variables.projectId);
-      queryClient.setQueryData<Cycle[]>(queryKey, (current) =>
+      queryClient.setQueriesData<Cycle[]>({ queryKey }, (current) =>
         current?.map((item) => item.id === cycle.id ? { ...item, ...cycle } : item),
       );
       queryClient.invalidateQueries({ queryKey });
@@ -166,7 +193,7 @@ export function useDeleteCycle(options?: Parameters<typeof useMutation>[0]) {
       apiClient.delete<void>(`/build/${projectId}/cycles/${cycleId}`, undefined, undefined, noContentLazy),
     onSuccess: (_: unknown, variables: { projectId: number; cycleId: number }) => {
       const queryKey = buildWorkQueryKeys.projects.cycles(variables.projectId);
-      queryClient.setQueryData<Cycle[]>(queryKey, (current) =>
+      queryClient.setQueriesData<Cycle[]>({ queryKey }, (current) =>
         current?.filter((cycle) => cycle.id !== variables.cycleId),
       );
       queryClient.invalidateQueries({ queryKey });

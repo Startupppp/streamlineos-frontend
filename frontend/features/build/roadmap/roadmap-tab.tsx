@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect } from "react";
+import { WifiOff } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -14,7 +15,12 @@ import {
 } from "@/hooks/api/build/roadmap";
 import type { RoadmapStatus } from "@/types/projects/roadmap";
 
-const ROADMAP_STATUSES: readonly RoadmapStatus[] = ["planned", "in_progress", "completed", "cancelled"];
+const ROADMAP_STATUSES: readonly RoadmapStatus[] = [
+  "planned",
+  "in_progress",
+  "completed",
+  "cancelled",
+];
 function toRoadmapStatus(s: string): RoadmapStatus | undefined {
   return ROADMAP_STATUSES.find((v) => v === s);
 }
@@ -23,9 +29,15 @@ function toRoadmapSort(s: string): RoadmapSort | undefined {
 }
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmPanel, PmStaggerList, CONTENT_FILL_PANEL, PM_PANEL } from "@/components/pm-chrome";
+import {
+  PmPanel,
+  PmStaggerList,
+  CONTENT_FILL_PANEL,
+  PM_PANEL,
+} from "@/components/pm-chrome";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { ROADMAP_COLUMNS } from "./roadmap-constants";
 import { RoadmapItemCard, type ScorableRoadmapItem } from "./roadmap-item-card";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";
@@ -39,6 +51,8 @@ interface RoadmapTabProps {
   status?: string;
   managedProductId?: number;
   sort?: string;
+  projectId?: number;
+  horizon?: string;
   onClearFilters?: () => void;
   onItemsChange?: (items: ScorableRoadmapItem[]) => void;
   externalEditTarget?: ScorableRoadmapItem | null;
@@ -68,11 +82,14 @@ export function RoadmapTab({
   status,
   managedProductId,
   sort,
+  projectId,
+  horizon,
   onClearFilters,
   onItemsChange,
   externalEditTarget,
   onExternalEditClose,
 }: RoadmapTabProps) {
+  const isOnline = useOnlineStatus();
   const sortValue = sort ? toRoadmapSort(sort) : undefined;
   const { data, isLoading, isError, error, refetch } = useRoadmapItems({
     ...(search.trim() ? { search: search.trim() } : {}),
@@ -80,20 +97,50 @@ export function RoadmapTab({
     ...(status ? { status: toRoadmapStatus(status) } : {}),
     ...(managedProductId !== undefined ? { managedProductId } : {}),
     ...(sortValue ? { sort: sortValue } : {}),
+    ...(projectId !== undefined ? { projectId } : {}),
+    ...(horizon ? { horizon } : {}),
   });
   const deleteItem = useDeleteRoadmapItem();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<ScorableRoadmapItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(null);
+  const [editTarget, setEditTarget] = useState<ScorableRoadmapItem | null>(
+    null,
+  );
+  const [deleteTarget, setDeleteTarget] = useState<ScorableRoadmapItem | null>(
+    null,
+  );
 
   const isEmpty = (data?.data ?? []).length === 0 && !cursor;
   const isFiltered = Boolean(
-    search.trim() || status || managedProductId !== undefined,
+    search.trim() ||
+    status ||
+    managedProductId !== undefined ||
+    projectId !== undefined ||
+    horizon,
   );
 
-  useEffect(() => {
-    onItemsChange?.(data?.data ?? []);
-  }, [data?.data, onItemsChange]);
+  const offlineEmptyState = (
+    <div className="relative flex h-full flex-1 flex-col items-center justify-center py-12">
+      <div
+        className={cn(
+          PM_PANEL,
+          "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
+        )}
+      >
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
+          <WifiOff className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground">
+            You&apos;re offline
+          </p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Results may not be up to date. Reconnect to see the latest roadmap
+            items.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 
   const resolution = usePageState({
     permission: "build:roadmap:view",
@@ -104,7 +151,9 @@ export function RoadmapTab({
   });
 
   const isCreateControlled = onCreateOpenChange !== undefined;
-  const sheetOpen = isCreateControlled ? (createOpen ?? false) : internalCreateOpen;
+  const sheetOpen = isCreateControlled
+    ? (createOpen ?? false)
+    : internalCreateOpen;
 
   const grouped = useMemo(() => {
     const map: Record<string, ScorableRoadmapItem[]> = {
@@ -168,33 +217,41 @@ export function RoadmapTab({
 
   const hasNext = data?.pagination.hasMore ?? false;
 
+  useEffect(() => {
+    onItemsChange?.(data?.data ?? []);
+  }, [data?.data, onItemsChange]);
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <PageState
         resolution={resolution}
         loading={<RoadmapBoardSkeleton />}
         empty={
-          <EmptyState
-            className={CONTENT_FILL_PANEL}
-            illustrationPreset="projects"
-            title={
-              isFiltered
-                ? "No roadmap items match your filters"
-                : "No roadmap items yet"
-            }
-            description={
-              isFiltered
-                ? undefined
-                : "Plan what's coming and share it publicly with your users."
-            }
-            filtersActive={isFiltered}
-            onClearFilters={onClearFilters}
-            action={
-              isFiltered
-                ? undefined
-                : { label: "Add roadmap item", onClick: handleOpenSheet }
-            }
-          />
+          isOnline ? (
+            <EmptyState
+              className={CONTENT_FILL_PANEL}
+              illustrationPreset="projects"
+              title={
+                isFiltered
+                  ? "No roadmap items match your filters"
+                  : "No roadmap items yet"
+              }
+              description={
+                isFiltered
+                  ? undefined
+                  : "Plan what's coming and share it publicly with your users."
+              }
+              filtersActive={isFiltered}
+              onClearFilters={onClearFilters}
+              action={
+                isFiltered
+                  ? undefined
+                  : { label: "Add roadmap item", onClick: handleOpenSheet }
+              }
+            />
+          ) : (
+            offlineEmptyState
+          )
         }
         onRetry={handleRetry}
         className={CONTENT_FILL_PANEL}
@@ -202,7 +259,10 @@ export function RoadmapTab({
         <div className="flex min-h-0 flex-1 flex-col gap-2">
           <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             {ROADMAP_COLUMNS.map((col) => (
-              <PmPanel key={col.status} className="flex min-h-[120px] flex-col p-2">
+              <PmPanel
+                key={col.status}
+                className="flex min-h-[120px] flex-col p-2"
+              >
                 <div className="mb-2 flex items-center justify-between px-1">
                   <span className="text-dense font-semibold uppercase tracking-wide text-muted-foreground">
                     {col.label}
@@ -242,7 +302,9 @@ export function RoadmapTab({
       </PageState>
 
       {sheetOpen ? <RoadmapItemSheet onClose={handleCloseSheet} /> : null}
-      {editTarget ? <RoadmapItemSheet item={editTarget} onClose={handleCloseEdit} /> : null}
+      {editTarget ? (
+        <RoadmapItemSheet item={editTarget} onClose={handleCloseEdit} />
+      ) : null}
       {externalEditTarget ? (
         <RoadmapItemSheet
           item={externalEditTarget}

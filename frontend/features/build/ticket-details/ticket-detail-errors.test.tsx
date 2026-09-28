@@ -10,11 +10,19 @@ let mockByKeyError: Error | null = null;
 let mockByKeyTicket: { id: number } | undefined = { id: 1 };
 let mockTicketError: Error | null = null;
 let mockCanViewAccess: "loading" | "granted" | "denied" = "granted";
+let mockCanUpdateResult = true;
+let mockCanAssignResult = true;
+let mockCanDeleteResult = true;
+let mockIsOnline = true;
 let mockIsMobile = false;
 let mockResolvedTicket:
-  | { id: number; ticketNumber: number; title: string; version?: number }
+  | { id: number; ticketNumber: number; title: string; version?: number; rank?: string }
   | undefined;
 let mockRightPanelOpen = false;
+let mockMainSectionCanUpdate: boolean | undefined;
+let mockPanelCanUpdate: boolean | undefined;
+let mockPanelCanAssign: boolean | undefined;
+let mockTicketActionsCalled = false;
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -47,10 +55,18 @@ jest.mock("@/hooks/api/build/advanced", () => ({
 }));
 jest.mock("@/hooks/api/build/ticket-queries", () => ({ useProjectBoardTickets: jest.fn() }));
 jest.mock("@/hooks/api/access", () => ({
-  useCan: () => true,
+  useCan: (key: string) => {
+    if (key === "build:tickets:update") return mockCanUpdateResult;
+    if (key === "build:tickets:assign") return mockCanAssignResult;
+    if (key === "build:tickets:delete") return mockCanDeleteResult;
+    return true;
+  },
   useCanState: () => mockCanViewAccess,
 }));
 jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => mockIsMobile }));
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockIsOnline,
+}));
 jest.mock("./use-ticket-detail", () => ({
   useTicketDetail: () => ({
     ticket: mockResolvedTicket,
@@ -69,15 +85,22 @@ jest.mock("./use-ticket-detail", () => ({
     isDeleting: false,
   }),
 }));
-jest.mock("./ticket-detail-main-section", () => ({ TicketDetailMainSection: () => null }));
+jest.mock("./ticket-detail-main-section", () => ({
+  TicketDetailMainSection: ({ canUpdate }: { canUpdate: boolean }) => {
+    mockMainSectionCanUpdate = canUpdate;
+    return null;
+  },
+}));
 jest.mock("./ticket-detail-right-panel", () => ({
-  TicketDetailRightPanel: ({ open }: { open: boolean }) => {
+  TicketDetailRightPanel: ({ open, canUpdate, canAssign }: { open: boolean; canUpdate: boolean; canAssign: boolean }) => {
     mockRightPanelOpen = open;
+    mockPanelCanUpdate = canUpdate;
+    mockPanelCanAssign = canAssign;
     return open ? <div role="dialog" aria-label="Ticket properties" /> : null;
   },
 }));
 jest.mock("./ticket-detail-actions", () => ({
-  TicketDetailActions: () => null,
+  TicketDetailActions: () => { mockTicketActionsCalled = true; return null; },
   TicketDetailDeleteDialog: () => null,
   TicketDetailDeleteMenuItem: () => null,
 }));
@@ -88,9 +111,17 @@ beforeEach(() => {
   mockByKeyTicket = { id: 1 };
   mockTicketError = null;
   mockCanViewAccess = "granted";
+  mockCanUpdateResult = true;
+  mockCanAssignResult = true;
+  mockCanDeleteResult = true;
+  mockIsOnline = true;
   mockIsMobile = false;
   mockResolvedTicket = undefined;
   mockRightPanelOpen = false;
+  mockMainSectionCanUpdate = undefined;
+  mockPanelCanUpdate = undefined;
+  mockPanelCanAssign = undefined;
+  mockTicketActionsCalled = false;
   jest.clearAllMocks();
 });
 
@@ -186,4 +217,62 @@ it("keeps mobile ticket properties closed until the user opens them", () => {
   fireEvent.click(screen.getByRole("button", { name: "Expand details panel" }));
   expect(mockRightPanelOpen).toBe(true);
   expect(screen.getByRole("dialog", { name: "Ticket properties" })).toBeInTheDocument();
+});
+
+it("passes canUpdate=false to main section and right panel when build:tickets:update is denied", () => {
+  mockCanUpdateResult = false;
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(mockMainSectionCanUpdate).toBe(false);
+  expect(mockPanelCanUpdate).toBe(false);
+});
+
+it("passes canUpdate=true to main section and right panel when build:tickets:update is granted", () => {
+  mockCanUpdateResult = true;
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(mockMainSectionCanUpdate).toBe(true);
+  expect(mockPanelCanUpdate).toBe(true);
+});
+
+it("passes canAssign=false to the right panel when build:tickets:assign is denied", () => {
+  mockCanAssignResult = false;
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(mockPanelCanAssign).toBe(false);
+});
+
+it("passes canAssign=true to the right panel when build:tickets:assign is granted", () => {
+  mockCanAssignResult = true;
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(mockPanelCanAssign).toBe(true);
+});
+
+it("hides the delete action when build:tickets:delete is denied", () => {
+  mockCanDeleteResult = false;
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(mockTicketActionsCalled).toBe(false);
+});
+
+it("shows the delete action when build:tickets:delete is granted", () => {
+  mockCanDeleteResult = true;
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(mockTicketActionsCalled).toBe(true);
+});
+
+it("shows an offline notice when the user loses network connectivity", () => {
+  mockIsOnline = false;
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+});
+
+it("hides the offline notice when the user is online", () => {
+  mockIsOnline = true;
+  mockResolvedTicket = { id: 1, ticketNumber: 1, title: "Versioned ticket", version: 3 };
+  render(<TicketDetailPage projectId={9} ticketKey="TEST-1" />);
+  expect(screen.queryByText(/you're offline/i)).not.toBeInTheDocument();
 });

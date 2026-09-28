@@ -29,6 +29,7 @@ interface MyIssuesPanelProps {
   error?: unknown;
   isFetchingNextPage: boolean;
   emptyActions: { action: EmptyAction; secondaryAction?: EmptyAction };
+  focusedIndex: number | null;
   onRetry: () => void;
   onScroll: (e: UIEvent<HTMLDivElement>) => void;
   onCreateIssue: () => void;
@@ -43,6 +44,7 @@ export function MyIssuesPanel({
   error,
   isFetchingNextPage,
   emptyActions,
+  focusedIndex,
   onRetry,
   onScroll,
   onCreateIssue,
@@ -63,7 +65,12 @@ export function MyIssuesPanel({
                 onCreateForProject={onCreateForProject}
                 onCreateIssue={onCreateIssue}
               />
-              <Button variant="ghost" size="sm" className="gap-1 text-xs" asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-xs"
+                asChild
+              >
                 <Link href="/build/my-work">
                   View all <ArrowRight className="h-3 w-3" />
                 </Link>
@@ -106,8 +113,12 @@ export function MyIssuesPanel({
           >
             <div className="min-w-0 w-full max-w-full overscroll-contain">
               <PmStaggerList>
-                {items.map((item) => (
-                  <MyWorkRow key={item.id} item={item} />
+                {items.map((item, i) => (
+                  <MyWorkRow
+                    key={item.id}
+                    item={item}
+                    isFocused={focusedIndex === i}
+                  />
                 ))}
               </PmStaggerList>
               {isFetchingNextPage ? (

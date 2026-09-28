@@ -1,23 +1,40 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from "@animateicons/react/lucide";
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  PlusIcon,
+} from "@animateicons/react/lucide";
 import { toast } from "sonner";
-import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/build/tickets";
-import { useCycles, useDeleteCycle, useUpdateCycle } from "@/hooks/api/build/advanced";
+import {
+  useBulkUpdateTickets,
+  useProjectBoardTickets,
+} from "@/hooks/api/build/tickets";
+import {
+  useCycles,
+  useDeleteCycle,
+  useUpdateCycle,
+  type CycleListFilters,
+} from "@/hooks/api/build/advanced";
 import { useProject } from "@/hooks/api/build/projects";
 import { isCompletedTicketStatus } from "@/features/build/shared/completed-status";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { BUILD_FILTER_ALL, useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
+import {
+  BUILD_FILTER_ALL,
+  useBuildListFilters,
+} from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import { WifiOff } from "lucide-react";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
@@ -64,20 +81,39 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   const [statusTarget, setStatusTarget] = useState<Cycle | null>(null);
   const [planningTarget, setPlanningTarget] = useState<Cycle | null>(null);
   const [completionTarget, setCompletionTarget] = useState<Cycle | null>(null);
-  const [completionMoveTo, setCompletionMoveTo] = useState<"backlog" | "next">("backlog");
+  const [completionMoveTo, setCompletionMoveTo] = useState<"backlog" | "next">(
+    "backlog",
+  );
   const [deleteTarget, setDeleteTarget] = useState<Cycle | null>(null);
   const canManage = useCan("build:cycles:manage");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listFilters = useBuildListFilters({
     filters: CYCLE_FILTER_DEFINITIONS,
   });
-  const dateFilterFromValue = listFilters.value("from");
-  const dateFilterToValue = listFilters.value("to");
+  const isOnline = useOnlineStatus();
+  const statusFilterValue = listFilters.value("status");
+  const fromFilterValue = listFilters.value("from");
+  const toFilterValue = listFilters.value("to");
   const dateFilterFrom =
-    dateFilterFromValue === BUILD_FILTER_ALL ? undefined : dateFilterFromValue;
+    fromFilterValue !== BUILD_FILTER_ALL ? fromFilterValue : undefined;
   const dateFilterTo =
-    dateFilterToValue === BUILD_FILTER_ALL ? undefined : dateFilterToValue;
-  const { error, refetch, isError, isLoading, data: cycles } = useCycles(projectId);
+    toFilterValue !== BUILD_FILTER_ALL ? toFilterValue : undefined;
+  const cycleFilters: CycleListFilters = {
+    status:
+      statusFilterValue !== BUILD_FILTER_ALL
+        ? (statusFilterValue as "draft" | "active" | "completed")
+        : undefined,
+    q: listFilters.debouncedSearch || undefined,
+    from: dateFilterFrom,
+    to: dateFilterTo,
+  };
+  const {
+    error,
+    refetch,
+    isError,
+    isLoading,
+    data: cycles,
+  } = useCycles(projectId, cycleFilters);
   const { data: tickets = [] } = useProjectBoardTickets(projectId);
   const { data: projectData } = useProject(projectId);
   const projectStatuses = projectData?.statuses ?? [];
@@ -91,21 +127,21 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     permission: "build:cycles:view",
   });
 
-  const filteredCycles = useMemo(() => {
-    const q = listFilters.debouncedSearch.toLowerCase();
-    const statusFilter = listFilters.value("status");
-    const fromFilter = listFilters.value("from");
-    const toFilter = listFilters.value("to");
-    const from = fromFilter !== BUILD_FILTER_ALL ? fromFilter : null;
-    const to = toFilter !== BUILD_FILTER_ALL ? toFilter : null;
-    return (cycles ?? []).filter((cycle) => {
-      if (q && !cycle.name.toLowerCase().includes(q)) return false;
-      if (statusFilter !== BUILD_FILTER_ALL && cycle.status !== statusFilter) return false;
-      if (from && cycle.endDate < from) return false;
-      if (to && cycle.startDate > to) return false;
-      return true;
-    });
-  }, [cycles, listFilters]);
+  const activeCycles = (cycles ?? []).filter(
+    (cycle) => cycle.status === "active",
+  );
+  const upcomingCycles = (cycles ?? []).filter(
+    (cycle) => cycle.status === "draft",
+  );
+  const completedCycles = (cycles ?? []).filter(
+    (cycle) => cycle.status === "completed",
+  );
+  const displayedCycles = [
+    ...activeCycles,
+    ...upcomingCycles,
+    ...completedCycles,
+  ];
+  const hasCycles = displayedCycles.length > 0;
 
   const handleOpenCreate = useCallback(() => {
     setEditTarget(null);
@@ -114,12 +150,12 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
 
   const handleEditByIndex = useCallback(
     (index: number) => {
-      const cycle = filteredCycles[index];
+      const cycle = displayedCycles[index];
       if (!cycle) return;
       setEditTarget(cycle);
       setFormOpen(true);
     },
-    [filteredCycles],
+    [displayedCycles],
   );
 
   const handleNoSelection = useCallback(() => {}, []);
@@ -138,7 +174,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
   );
 
   useBuildListKeyboard({
-    itemCount: filteredCycles.length,
+    itemCount: displayedCycles.length,
     onOpen: handleEditByIndex,
     onEdit: handleEditByIndex,
     onCreate: canManage ? handleOpenCreate : undefined,
@@ -146,11 +182,6 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     enabled: pageState.kind === "ready",
     searchInputRef,
   });
-
-  const activeCycles = filteredCycles.filter((cycle) => cycle.status === "active");
-  const upcomingCycles = filteredCycles.filter((cycle) => cycle.status === "draft");
-  const completedCycles = filteredCycles.filter((cycle) => cycle.status === "completed");
-  const hasCycles = activeCycles.length > 0 || upcomingCycles.length > 0 || completedCycles.length > 0;
 
   const router = useRouter();
   const pathname = usePathname();
@@ -162,7 +193,9 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     if (showCompleted) next.delete("completed");
     else next.set("completed", "1");
     const query = next.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
   }, [pathname, router, searchParams, showCompleted]);
 
   const handleEdit = useCallback((cycle: Cycle) => {
@@ -195,30 +228,46 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     );
   }, [projectId, statusTarget, updateCycle]);
 
-  const handleConfirmCompletion = useCallback(async (targetCycleId: number | null) => {
-    if (!completionTarget) return;
-    const incompleteTicketIds = tickets
-      .filter((ticket) => ticket.cycleId === completionTarget.id && !isCompletedTicketStatus(ticket.status, projectStatuses))
-      .map((ticket) => ticket.id);
-    try {
-      if (incompleteTicketIds.length > 0) {
-        await bulkUpdateTickets.mutateAsync({ ticketIds: incompleteTicketIds, cycleId: targetCycleId });
-      }
-      updateCycle.mutate(
-        { projectId, cycleId: completionTarget.id, version: completionTarget.version, status: "completed" },
-        {
-          onSuccess: () => {
-            toast.success("Cycle completed");
-            setCompletionTarget(null);
-            setCompletionMoveTo("backlog");
+  const handleConfirmCompletion = useCallback(
+    async (targetCycleId: number | null) => {
+      if (!completionTarget) return;
+      const incompleteTicketIds = tickets
+        .filter(
+          (ticket) =>
+            ticket.cycleId === completionTarget.id &&
+            !isCompletedTicketStatus(ticket.status, projectStatuses),
+        )
+        .map((ticket) => ticket.id);
+      try {
+        if (incompleteTicketIds.length > 0) {
+          await bulkUpdateTickets.mutateAsync({
+            ticketIds: incompleteTicketIds,
+            cycleId: targetCycleId,
+          });
+        }
+        updateCycle.mutate(
+          {
+            projectId,
+            cycleId: completionTarget.id,
+            version: completionTarget.version,
+            status: "completed",
           },
-          onError: (mutationError) => toast.error(getErrorMessage(mutationError)),
-        },
-      );
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }, [bulkUpdateTickets, completionTarget, projectId, tickets, updateCycle]);
+          {
+            onSuccess: () => {
+              toast.success("Cycle completed");
+              setCompletionTarget(null);
+              setCompletionMoveTo("backlog");
+            },
+            onError: (mutationError) =>
+              toast.error(getErrorMessage(mutationError)),
+          },
+        );
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [bulkUpdateTickets, completionTarget, projectId, tickets, updateCycle],
+  );
 
   const handleConfirmDelete = useCallback(() => {
     if (!deleteTarget) return;
@@ -238,12 +287,24 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     void refetch();
   }, [refetch]);
 
-  const { iconRef: completedChevronRef, hoverHandlers: completedChevronHoverHandlers } = useAnimatedIcon();
+  const {
+    iconRef: completedChevronRef,
+    hoverHandlers: completedChevronHoverHandlers,
+  } = useAnimatedIcon();
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+  if (
+    pageState.kind !== "ready" &&
+    pageState.kind !== "empty" &&
+    pageState.kind !== "loading"
+  ) {
     return (
       <PageWrapper title="Cycles">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState
+          resolution={pageState}
+          loading={null}
+          onRetry={handleRetry}
+          className="flex-1"
+        >
           {null}
         </PageState>
       </PageWrapper>
@@ -270,7 +331,10 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
           <div className="space-y-2">
             <Skeleton className="h-3 w-20" />
             {Array.from({ length: 2 }).map((_, index) => (
-              <div key={index} className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
+              <div
+                key={index}
+                className="bg-card border border-border rounded-lg p-4 flex items-center justify-between"
+              >
                 <div className="space-y-1.5">
                   <Skeleton className="h-4 w-36" />
                   <Skeleton className="h-3 w-44" />
@@ -301,17 +365,27 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     />
   );
 
-  const statusAction = statusTarget ? statusActionLabel(statusTarget.status) : "Update";
+  const statusAction = statusTarget
+    ? statusActionLabel(statusTarget.status)
+    : "Update";
 
   return (
     <PageWrapper
       title="Cycles"
       subtitle="Time-box work into focused iterations"
-      actions={canManage ? (
-        <AnimatedIconButton size="sm" icon={PlusIcon} iconSize={16} iconClassName="mr-1" onClick={handleOpenCreate}>
-          New Cycle
-        </AnimatedIconButton>
-      ) : undefined}
+      actions={
+        canManage ? (
+          <AnimatedIconButton
+            size="sm"
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1"
+            onClick={handleOpenCreate}
+          >
+            New Cycle
+          </AnimatedIconButton>
+        ) : undefined
+      }
       filters={
         <BuildListToolbar
           search={{
@@ -357,23 +431,35 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
         <div className="flex flex-1 min-h-0 flex-col gap-6">
           {activeCycles.length > 0 ? (
             <section>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Active</p>
-              <div className="grid gap-3">{activeCycles.map(renderCycleCard)}</div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Active
+              </p>
+              <div className="grid gap-3">
+                {activeCycles.map(renderCycleCard)}
+              </div>
             </section>
           ) : null}
 
-          {activeCycles.length > 0 && upcomingCycles.length > 0 ? <div className="border-t border-border" /> : null}
+          {activeCycles.length > 0 && upcomingCycles.length > 0 ? (
+            <div className="border-t border-border" />
+          ) : null}
 
           {upcomingCycles.length > 0 ? (
             <section>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Upcoming</p>
-              <div className="grid gap-3">{upcomingCycles.map(renderCycleCard)}</div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Upcoming
+              </p>
+              <div className="grid gap-3">
+                {upcomingCycles.map(renderCycleCard)}
+              </div>
             </section>
           ) : null}
 
           {completedCycles.length > 0 ? (
             <>
-              {activeCycles.length > 0 || upcomingCycles.length > 0 ? <div className="border-t border-border" /> : null}
+              {activeCycles.length > 0 || upcomingCycles.length > 0 ? (
+                <div className="border-t border-border" />
+              ) : null}
               <section>
                 <button
                   type="button"
@@ -391,17 +477,43 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                   Completed ({completedCycles.length})
                 </button>
                 {showCompleted ? (
-                  <div id="completed-cycles" className="grid gap-3">{completedCycles.map(renderCycleCard)}</div>
+                  <div id="completed-cycles" className="grid gap-3">
+                    {completedCycles.map(renderCycleCard)}
+                  </div>
                 ) : null}
               </section>
             </>
           ) : null}
           <CycleVelocityPanel projectId={projectId} />
         </div>
+      ) : !isOnline ? (
+        <div
+          className="relative flex flex-1 flex-col items-center justify-center py-12"
+          data-testid="offline-state"
+        >
+          <div className="relative flex w-full max-w-sm flex-col items-center gap-3 rounded-xl border border-border bg-card px-6 py-8 text-center shadow-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
+              <WifiOff className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">
+                You&apos;re offline
+              </p>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Results may not be up to date. Reconnect to see the latest
+                cycles.
+              </p>
+            </div>
+          </div>
+        </div>
       ) : (
         <EmptyState
           illustration={<EmptyCalendarIllustration />}
-          title={listFilters.isFiltered ? "No cycles match your filters" : "No cycles yet"}
+          title={
+            listFilters.isFiltered
+              ? "No cycles match your filters"
+              : "No cycles yet"
+          }
           description={
             listFilters.isFiltered
               ? undefined
@@ -429,13 +541,17 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
 
       <ConfirmDialog
         open={statusTarget !== null}
-        onOpenChange={(open) => { if (!open) setStatusTarget(null); }}
+        onOpenChange={(open) => {
+          if (!open) setStatusTarget(null);
+        }}
         title={`${statusAction} cycle?`}
-        description={statusTarget?.status === "completed"
-          ? "This cycle will return to the active section."
-          : statusTarget?.status === "active"
-            ? "This cycle will move to the completed section and can be reopened later."
-            : "This cycle will become the active cycle for the project."}
+        description={
+          statusTarget?.status === "completed"
+            ? "This cycle will return to the active section."
+            : statusTarget?.status === "active"
+              ? "This cycle will move to the completed section and can be reopened later."
+              : "This cycle will become the active cycle for the project."
+        }
         confirmLabel={statusAction}
         isPending={updateCycle.isPending}
         onConfirm={handleConfirmStatus}
@@ -446,12 +562,16 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
         tickets={tickets}
         projectId={projectId}
         open={planningTarget !== null}
-        onOpenChange={(open) => { if (!open) setPlanningTarget(null); }}
+        onOpenChange={(open) => {
+          if (!open) setPlanningTarget(null);
+        }}
       />
 
       <CycleCompletionSheet
         cycle={completionTarget}
-        nextCycle={upcomingCycles.find((cycle) => cycle.id !== completionTarget?.id)}
+        nextCycle={upcomingCycles.find(
+          (cycle) => cycle.id !== completionTarget?.id,
+        )}
         tickets={tickets}
         projectStatuses={projectStatuses}
         moveTo={completionMoveTo}
@@ -463,7 +583,9 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
         title="Delete cycle?"
         description={`${deleteTarget?.name ?? "This cycle"} will be permanently deleted. Its tickets will remain in the project without a cycle.`}
         confirmLabel="Delete"

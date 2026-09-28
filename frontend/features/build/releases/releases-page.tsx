@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, WifiOff } from "lucide-react";
 import { Tag, CheckCircle2, Archive, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -16,6 +16,7 @@ import {
   type Release,
 } from "@/hooks/api/build/releases";
 import { useCan } from "@/hooks/api/access";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { ReleaseFormSheet } from "./release-form-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -95,6 +96,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   });
 
   const canManage = useCan("build:manage");
+  const isOnline = useOnlineStatus();
   const deleteRelease = useDeleteRelease(projectId);
   const updateRelease = useUpdateRelease(projectId);
 
@@ -301,6 +303,14 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
       }
     >
       <PmPageShell>
+        {!isOnline ? (
+          <div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-muted/40 px-4 py-2">
+            <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">
+              You&apos;re offline — results may not be up to date.
+            </p>
+          </div>
+        ) : null}
         <PmSection index={0}>
           <StatCardGrid cols={4}>
             <StatCard

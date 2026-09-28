@@ -28,6 +28,7 @@ const RELEASE_ROW = {
   description: null,
   status: "draft",
   releaseDate: null,
+  createdBy: null,
   ticketCount: 0,
   createdAt: "2026-09-19T10:00:00.000Z",
   updatedAt: "2026-09-19T10:00:00.000Z",

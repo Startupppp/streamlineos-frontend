@@ -28,6 +28,7 @@ import { WikiHomeAllPages } from "./wiki-home-all-pages";
 import { WikiCompanyDocumentsStrip } from "./wiki-company-documents-strip";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
+import PageTree from "./page-tree";
 
 interface WikiHomePageProps {
   projectId?: number;
@@ -38,7 +39,9 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const [pageItemCount, setPageItemCount] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const allPagesRowsRef = useRef<{ id: number }[]>([]);
 
   const { data: recentPages = [] } = useKbPagesRecent();
   const { data: favoritePages = [] } = useKbPagesFavorites();
@@ -72,13 +75,27 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
   const handleClearSelection = useCallback(() => {}, []);
 
+  const handleOpenPage = useCallback((index: number) => {
+    const row = allPagesRowsRef.current[index];
+    if (!row) return;
+    router.push(resolveHref(row.id));
+  }, [router]);
+
+  const handleRowsChange = useCallback((rows: readonly { id: number }[]) => {
+    allPagesRowsRef.current = [...rows];
+  }, []);
+
+  const handleItemCountChange = useCallback((count: number) => {
+    setPageItemCount(count);
+  }, []);
+
   useBuildListKeyboard({
-    itemCount: 0,
-    onOpen: () => {},
+    itemCount: pageItemCount,
+    onOpen: handleOpenPage,
     onCreate: canCreate ? handleNewPage : undefined,
     onClearSelection: handleClearSelection,
     onShortcutHelp: handleShortcutHelp,
-    searchInputRef: isProjectScoped ? undefined : searchInputRef,
+    searchInputRef: searchInputRef,
   });
 
   const newPageAction = canCreate ? (
@@ -96,6 +113,8 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     </AnimatedIconButton>
   ) : undefined;
 
+  const baseHref = isProjectScoped ? `/build/${projectId}/wiki` : undefined;
+
   return (
     <>
     <PageWrapper
@@ -104,17 +123,15 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
       actions={newPageAction}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-6">
-        {!isProjectScoped && (
-          <form onSubmit={handleSearchSubmit} role="search">
-            <SearchInput
-              ref={searchInputRef}
-              value={searchValue}
-              onValueChange={setSearchValue}
-              placeholder="Search wiki pages…"
-              fill
-            />
-          </form>
-        )}
+        <form onSubmit={handleSearchSubmit} role="search">
+          <SearchInput
+            ref={searchInputRef}
+            value={searchValue}
+            onValueChange={setSearchValue}
+            placeholder="Search wiki pages…"
+            fill
+          />
+        </form>
 
         {!isProjectScoped && recentPages.length > 0 && (
           <section>
@@ -162,14 +179,28 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
 
         {!isProjectScoped && <WikiCompanyDocumentsStrip />}
 
-        <section className="flex min-h-0 flex-1 flex-col">
-          {!isProjectScoped && (
-            <h2 className="text-sm font-semibold text-foreground mb-3">
-              All pages
-            </h2>
+        <div className="flex min-h-0 flex-1 gap-4">
+          {isProjectScoped && (
+            <aside
+              className="hidden w-[200px] shrink-0 flex-col overflow-y-auto rounded-lg border border-border/60 bg-card/50 p-3 md:flex"
+              aria-label="Page tree"
+            >
+              <PageTree projectId={projectId} baseHref={baseHref} />
+            </aside>
           )}
-          <WikiHomeAllPages projectId={isProjectScoped ? projectId : undefined} />
-        </section>
+          <section className="flex min-h-0 flex-1 flex-col">
+            {!isProjectScoped && (
+              <h2 className="text-sm font-semibold text-foreground mb-3">
+                All pages
+              </h2>
+            )}
+            <WikiHomeAllPages
+              projectId={isProjectScoped ? projectId : undefined}
+              onItemCountChange={handleItemCountChange}
+              onRowsChange={handleRowsChange}
+            />
+          </section>
+        </div>
       </div>
     </PageWrapper>
     <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />

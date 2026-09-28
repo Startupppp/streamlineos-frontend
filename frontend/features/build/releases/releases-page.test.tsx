@@ -1,6 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { ReleasesPage } from "./releases-page";
 
+let mockIsOnline = true;
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: () => mockIsOnline,
+}));
+
 jest.mock("@/hooks/api/build/releases", () => ({
   useReleases: jest.fn(),
   useDeleteRelease: jest.fn(),
@@ -181,6 +186,7 @@ function cursorPage<T>(items: T[]) {
 }
 
 beforeEach(() => {
+  mockIsOnline = true;
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([]) }));
@@ -276,4 +282,119 @@ it("hides bulk action bar after clear button is clicked", () => {
   fireEvent.click(screen.getByTestId("table-rows"));
   fireEvent.click(screen.getByLabelText("Clear selection"));
   expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
+});
+
+it("shows the offline notice when the user loses connectivity", () => {
+  mockIsOnline = false;
+  render(<ReleasesPage projectId={1} />);
+  expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+});
+
+it("hides the offline notice when the user is online", () => {
+  mockIsOnline = true;
+  render(<ReleasesPage projectId={1} />);
+  expect(screen.queryByText(/you're offline/i)).not.toBeInTheDocument();
+});
+
+it("rejects a release row that omits the createdBy key so a future dropped projection cannot decode silently", async () => {
+  const { projectReleaseListContract } = await import("@/hooks/api/build/build-project-schema");
+  const rowWithoutCreatedBy = {
+    id: 1,
+    projectId: 1,
+    name: "v1",
+    version: "1.0.0",
+    rowVersion: 1,
+    description: null,
+    status: "draft",
+    releaseDate: null,
+    ticketCount: 0,
+    createdAt: "2026-09-01T00:00:00Z",
+    updatedAt: "2026-09-01T00:00:00Z",
+  };
+  const result = projectReleaseListContract.safeParse({
+    data: [rowWithoutCreatedBy],
+    pagination: { limit: 25, hasMore: false, nextCursor: null },
+  });
+  expect(result.success).toBe(false);
+});
+
+it("accepts a release row where createdBy is null since the column may be unset", async () => {
+  const { projectReleaseListContract } = await import("@/hooks/api/build/build-project-schema");
+  const rowWithNullCreatedBy = {
+    id: 1,
+    projectId: 1,
+    name: "v1",
+    version: "1.0.0",
+    rowVersion: 1,
+    description: null,
+    status: "draft",
+    releaseDate: null,
+    ticketCount: 0,
+    createdBy: null,
+    createdAt: "2026-09-01T00:00:00Z",
+    updatedAt: "2026-09-01T00:00:00Z",
+  };
+  const result = projectReleaseListContract.safeParse({
+    data: [rowWithNullCreatedBy],
+    pagination: { limit: 25, hasMore: false, nextCursor: null },
+  });
+  expect(result.success).toBe(true);
+});
+
+it("renders the plain-text notes below the version in the name column cell", () => {
+  const { buildReleasesColumns } = require("./releases-table-columns");
+  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  const nameColumn = columns.find((c: { key: string }) => c.key === "name");
+  render(nameColumn.cell({ ...releaseRow, description: "<p>Bug fixes and performance</p>" }));
+  expect(screen.getByText("Bug fixes and performance")).toBeInTheDocument();
+});
+
+it("omits the notes text from the name cell when description is null so the cell stays compact", () => {
+  const { buildReleasesColumns } = require("./releases-table-columns");
+  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  const nameColumn = columns.find((c: { key: string }) => c.key === "name");
+  render(nameColumn.cell({ ...releaseRow, description: null }));
+  expect(screen.queryByText("Bug fixes and performance")).not.toBeInTheDocument();
+});
+
+it("renders the createdBy identifier in the createdBy column cell", () => {
+  const { buildReleasesColumns } = require("./releases-table-columns");
+  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
+  render(createdByColumn.cell({ ...releaseRow, createdBy: "user-abc123" }));
+  expect(screen.getByText("user-abc123")).toBeInTheDocument();
+});
+
+it("renders a dash in the createdBy cell when the field is null", () => {
+  const { buildReleasesColumns } = require("./releases-table-columns");
+  const columns = buildReleasesColumns({ canManage: false, onEdit: jest.fn(), onDelete: jest.fn() });
+  const createdByColumn = columns.find((c: { key: string }) => c.key === "createdBy");
+  render(createdByColumn.cell({ ...releaseRow, createdBy: null }));
+  expect(screen.getByText("—")).toBeInTheDocument();
+});
+
+it("renders the release description as notes text in the mobile card", () => {
+  const { ReleaseMobileCard } = require("./releases-table-columns");
+  render(
+    <ReleaseMobileCard
+      release={{ ...releaseRow, description: "<p>Bug fixes and performance improvements</p>", createdBy: null }}
+      canManage={false}
+      onEdit={jest.fn()}
+      onDelete={jest.fn()}
+    />,
+  );
+  expect(screen.getByText("Bug fixes and performance improvements")).toBeInTheDocument();
+});
+
+it("renders the createdBy identifier in the mobile card", () => {
+  const { ReleaseMobileCard } = require("./releases-table-columns");
+  render(
+    <ReleaseMobileCard
+      release={{ ...releaseRow, description: null, createdBy: "user-abc123" }}
+      canManage={false}
+      onEdit={jest.fn()}
+      onDelete={jest.fn()}
+    />,
+  );
+  expect(screen.getByText("user-abc123")).toBeInTheDocument();
 });

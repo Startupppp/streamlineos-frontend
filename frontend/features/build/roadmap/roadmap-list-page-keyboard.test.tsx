@@ -142,12 +142,19 @@ describe("RoadmapListPage — only forwards parameters GET /build/roadmap accept
     expect(capturedTabProps?.managedProductId).toBe(42);
   });
 
-  it("sends no horizon or ownerId key, because roadmapListQuerySchema is strict and has neither", () => {
-    mockSearchParams = new URLSearchParams("horizon=2026-Q1&ownerId=user-7");
+  it("forwards horizon to RoadmapTab because roadmapListQuerySchema now declares it — a deep-linked horizon reaches the backend", () => {
+    mockSearchParams = new URLSearchParams("horizon=2026-Q1");
 
     render(<RoadmapListPage />);
 
-    expect(capturedTabProps).not.toHaveProperty("horizon");
+    expect(capturedTabProps?.horizon).toBe("2026-Q1");
+  });
+
+  it("sends no ownerId key, because roadmapListQuerySchema is strict and ownerId is not declared", () => {
+    mockSearchParams = new URLSearchParams("ownerId=user-7");
+
+    render(<RoadmapListPage />);
+
     expect(capturedTabProps).not.toHaveProperty("ownerId");
   });
 });

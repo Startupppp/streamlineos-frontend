@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useCallback, useMemo } from "react";
+import { Fragment, useState, useCallback, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LayoutList, LayoutGrid } from "lucide-react";
 import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
@@ -11,7 +11,10 @@ import {
   useDeleteKbPage,
   useDuplicateKbPage,
   useToggleFavoriteKbPage,
+  useKbPageBacklinks,
 } from "@/hooks/api/kb";
+import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
+import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -59,7 +62,8 @@ import {
   type KbPageActionSubject,
   toKbPageActionId,
 } from "@/features/wiki/lib/page-action-descriptors";
-import { KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
+import { KbAlertCircleIcon, KbLink2Icon, KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
+import { getUserDisplayName } from "@/lib/person-display";
 
 const SORT_VALUES = ["updated_desc", "created_desc", "title_asc"] as const;
 const VIEW_VALUES = ["list", "card"] as const;
@@ -81,6 +85,7 @@ const PAGE_LIMIT = 50;
 
 function buildColumns(
   resolveHref: (id: number) => string,
+  ownerNames: Map<string, string>,
 ): DataTableColumn<KbPageCollectionItem>[] {
   return [
     {
@@ -111,6 +116,29 @@ function buildColumns(
       ),
     },
     {
+      key: "owner",
+      header: "Owner",
+      cell: (row) => {
+        if (!row.ownerUserId) return <OwnerMissingBadge ownerMembershipId={null} />;
+        const name = ownerNames.get(row.ownerUserId);
+        return (
+          <span className="text-sm text-foreground tabular-nums">
+            {name ?? "—"}
+          </span>
+        );
+      },
+    },
+    {
+      key: "backlinks",
+      header: "Backlinks",
+      cell: (row) => <BacklinkCount pageId={row.id} />,
+    },
+    {
+      key: "linkedRecords",
+      header: "Links",
+      cell: (row) => <RecordLinkCount pageId={row.id} />,
+    },
+    {
       key: "updatedAt",
       header: "Updated",
       cell: (row) => (
@@ -129,12 +157,32 @@ function buildColumns(
   ];
 }
 
+function BacklinkCount({ pageId }: { pageId: number }) {
+  const { data: backlinks = [] } = useKbPageBacklinks(pageId);
+  return (
+    <span className="tabular-nums text-sm text-muted-foreground" data-testid={`backlink-count-${pageId}`}>
+      {backlinks.length}
+    </span>
+  );
+}
+
+function RecordLinkCount({ pageId }: { pageId: number }) {
+  const { data: links = [] } = useKbPageRecordLinks(pageId);
+  return (
+    <span className="tabular-nums text-sm text-muted-foreground" data-testid={`record-link-count-${pageId}`}>
+      {links.length}
+    </span>
+  );
+}
+
 interface AllPagesItemMenuProps {
   page: KbPageCollectionItem;
   resolveHref: (id: number) => string;
+  menuOpen?: boolean;
+  onMenuOpenChange?: (open: boolean) => void;
 }
 
-function AllPagesItemMenu({ page, resolveHref }: AllPagesItemMenuProps) {
+function AllPagesItemMenu({ page, resolveHref, menuOpen: controlledOpen, onMenuOpenChange }: AllPagesItemMenuProps) {
   const router = useRouter();
   const canCreate = useCan("kb:pages:create");
   const canUpdate = useCan("kb:pages:update");
@@ -145,7 +193,19 @@ function AllPagesItemMenu({ page, resolveHref }: AllPagesItemMenuProps) {
   const toggleFavorite = useToggleFavoriteKbPage();
   const duplicatePage = useDuplicateKbPage();
   const deletePage = useDeleteKbPage();
+  const [internalOpen, setInternalOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const isControlled = controlledOpen !== undefined;
+  const actualMenuOpen = isControlled ? controlledOpen : internalOpen;
+
+  function handleMenuOpenChange(val: boolean) {
+    if (isControlled) {
+      onMenuOpenChange?.(val);
+    } else {
+      setInternalOpen(val);
+    }
+  }
 
   const capabilities: KbPageActionCapabilities = {
     canCreate,
@@ -198,6 +258,13 @@ function AllPagesItemMenu({ page, resolveHref }: AllPagesItemMenuProps) {
       });
     } else if (actionId === "delete") {
       setDeleteOpen(true);
+    } else if (actionId === "copyLink") {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const url = `${origin}${resolveHref(page.id)}`;
+      navigator.clipboard.writeText(url).then(
+        () => toast.success("Link copied"),
+        () => toast.error("Failed to copy"),
+      );
     } else {
       router.push(resolveHref(page.id));
     }
@@ -215,7 +282,7 @@ function AllPagesItemMenu({ page, resolveHref }: AllPagesItemMenuProps) {
         onOpenChange={handleDeleteOpenChange}
         onConfirm={handleDeleteConfirm}
       />
-      <DropdownMenu>
+      <DropdownMenu open={actualMenuOpen} onOpenChange={handleMenuOpenChange}>
         <DropdownMenuTrigger asChild>
           <Button
             type="button"
@@ -256,31 +323,54 @@ interface AllPagesCardGridProps {
 }
 
 function AllPagesCardGrid({ row, resolveHref }: AllPagesCardGridProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setMenuOpen(true);
+  }, []);
+
   return (
-    <WikiPageCard
-      href={resolveHref(row.id)}
-      title={row.title}
-      icon={row.icon}
-      coverImage={row.coverImage}
-      subtitle={kbTimeAgo(row.updatedAt)}
-      menu={<AllPagesItemMenu page={row} resolveHref={resolveHref} />}
-    >
-      <StatusBadge status={row.status} />
-      <TrustBadge trustState={row.trustState} />
-      <OwnerMissingBadge ownerMembershipId={row.ownerMembershipId} />
-    </WikiPageCard>
+    <div onContextMenu={handleContextMenu}>
+      <WikiPageCard
+        href={resolveHref(row.id)}
+        title={row.title}
+        icon={row.icon}
+        coverImage={row.coverImage}
+        subtitle={kbTimeAgo(row.updatedAt)}
+        menu={<AllPagesItemMenu page={row} resolveHref={resolveHref} menuOpen={menuOpen} onMenuOpenChange={setMenuOpen} />}
+      >
+        <StatusBadge status={row.status} />
+        <TrustBadge trustState={row.trustState} />
+        <OwnerMissingBadge ownerMembershipId={row.ownerMembershipId} />
+      </WikiPageCard>
+    </div>
   );
 }
 
 export interface WikiHomeAllPagesProps {
   projectId?: number;
+  onItemCountChange?: (count: number) => void;
+  onRowsChange?: (rows: readonly { id: number }[]) => void;
 }
 
-export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
+export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }: WikiHomeAllPagesProps) {
   const isProjectScoped = projectId !== undefined && projectId > 0;
   const searchParams = useSearchParams();
   const router = useRouter();
   const { update } = useUrlFilters();
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    function handleOnline() { setIsOffline(false); }
+    function handleOffline() { setIsOffline(true); }
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   const resolveHref = useCallback(
     (pageId: number) =>
@@ -289,8 +379,6 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
         : pageHref(pageId),
     [projectId],
   );
-
-  const columns = useMemo(() => buildColumns(resolveHref), [resolveHref]);
 
   const status = searchParams.get("status") ?? "";
   const spaceParam = searchParams.get("space") ?? "";
@@ -326,6 +414,30 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
 
   const rows = data?.data ?? [];
   const isEmpty = data !== undefined && rows.length === 0;
+
+  useEffect(() => {
+    onItemCountChange?.(rows.length);
+  }, [rows.length, onItemCountChange]);
+
+  useEffect(() => {
+    onRowsChange?.(rows);
+  }, [rows, onRowsChange]);
+
+  const ownerUserIds = useMemo(
+    () => [...new Set(rows.map((r) => r.ownerUserId).filter((id): id is string => id !== null))],
+    [rows],
+  );
+
+  const { data: ownersPage } = useOrgMembersByIds(ownerUserIds);
+  const ownerNames = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const member of ownersPage?.data ?? []) {
+      map.set(member.userId, getUserDisplayName({ name: member.name, email: member.email }));
+    }
+    return map;
+  }, [ownersPage]);
+
+  const columns = useMemo(() => buildColumns(resolveHref, ownerNames), [resolveHref, ownerNames]);
 
   const pageState = usePageState({
     permission: "kb:pages:view",
@@ -415,6 +527,15 @@ export function WikiHomeAllPages({ projectId }: WikiHomeAllPagesProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
+      {isOffline && (
+        <span
+          className="flex items-center gap-1 text-xs text-status-warning-ink"
+          data-testid="offline-indicator"
+        >
+          <KbAlertCircleIcon className="h-3 w-3" />
+          Offline — data may be stale
+        </span>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <Select value={status || "all"} onValueChange={handleStatusChange}>
           <SelectTrigger className="h-9 w-36 shrink-0">
