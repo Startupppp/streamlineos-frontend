@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
+import { useFlushableDebouncedValue } from "@/hooks/common/use-debounce";
+import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { useCan } from "@/hooks/api/access";
 import {
   useKbPagesFavorites,
@@ -24,7 +26,10 @@ import {
   WikiPageCard,
   WIKI_PAGE_CARD_GRID_CLASS,
 } from "@/features/wiki/components/wiki-page-card";
-import { WikiHomeAllPages } from "./wiki-home-all-pages";
+import {
+  WikiHomeAllPages,
+  KB_PAGE_CURSOR_PARAM,
+} from "./wiki-home-all-pages";
 import { WikiCompanyDocumentsStrip } from "./wiki-company-documents-strip";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
@@ -37,29 +42,59 @@ interface WikiHomePageProps {
 export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const isProjectScoped = projectId !== undefined && projectId > 0;
   const router = useRouter();
-  const [searchValue, setSearchValue] = useState("");
+  const searchParams = useSearchParams();
+  const urlQuery = (searchParams.get("q") ?? "").trim();
+  const [searchValue, setSearchValue] = useState(urlQuery);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const [pageItemCount, setPageItemCount] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const allPagesRowsRef = useRef<{ id: number }[]>([]);
+
+  const [debouncedSearch, flushSearch] = useFlushableDebouncedValue(
+    searchValue,
+    300,
+  );
+  const { update } = useUrlFilters({ pageParam: KB_PAGE_CURSOR_PARAM });
+  const updateRef = useRef(update);
+
+  useEffect(() => {
+    updateRef.current = update;
+  }, [update]);
+
+  useEffect(() => {
+    if (!isProjectScoped) return;
+    const next = debouncedSearch.trim();
+    if (next === urlQuery) return;
+    updateRef.current({ q: next === "" ? null : next });
+  }, [isProjectScoped, debouncedSearch, urlQuery]);
 
   const { data: recentPages = [] } = useKbPagesRecent();
   const { data: favoritePages = [] } = useKbPagesFavorites();
   const createPage = useCreateKbPage();
   const canCreate = useCan("kb:pages:create");
 
-  function resolveHref(pageId: number): string {
-    return projectId !== undefined && projectId > 0
-      ? projectPageHref(projectId, pageId)
-      : pageHref(pageId);
-  }
+  const resolveHref = useCallback(
+    (pageId: number): string =>
+      projectId !== undefined && projectId > 0
+        ? projectPageHref(projectId, pageId)
+        : pageHref(pageId),
+    [projectId],
+  );
 
-  function handleSearchSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleSearchSubmit() {
+    if (isProjectScoped) {
+      flushSearch();
+      return;
+    }
     const q = searchValue.trim();
     if (q) {
       router.push(`${KB_SEARCH}?q=${encodeURIComponent(q)}`);
     }
+  }
+
+  function handleSearchFormSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    handleSearchSubmit();
   }
 
   function handleNewPage() {
@@ -79,7 +114,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     const row = allPagesRowsRef.current[index];
     if (!row) return;
     router.push(resolveHref(row.id));
-  }, [router]);
+  }, [router, resolveHref]);
 
   const handleRowsChange = useCallback((rows: readonly { id: number }[]) => {
     allPagesRowsRef.current = [...rows];
@@ -92,6 +127,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   useBuildListKeyboard({
     itemCount: pageItemCount,
     onOpen: handleOpenPage,
+    onEdit: handleOpenPage,
     onCreate: canCreate ? handleNewPage : undefined,
     onClearSelection: handleClearSelection,
     onShortcutHelp: handleShortcutHelp,
@@ -123,12 +159,17 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
       actions={newPageAction}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-6">
-        <form onSubmit={handleSearchSubmit} role="search">
+        <form onSubmit={handleSearchFormSubmit} role="search">
           <SearchInput
             ref={searchInputRef}
             value={searchValue}
             onValueChange={setSearchValue}
-            placeholder="Search wiki pages…"
+            onSubmitSearch={handleSearchSubmit}
+            placeholder={
+              isProjectScoped
+                ? "Filter this project's pages…"
+                : "Search wiki pages…"
+            }
             fill
           />
         </form>

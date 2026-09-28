@@ -41,6 +41,13 @@ jest.mock("@/hooks/api/kb/record-links", () => ({
   useKbPageRecordLinks: jest.fn(() => ({ data: [] })),
 }));
 
+function setNavigatorOnline(online: boolean) {
+  Object.defineProperty(window.navigator, "onLine", {
+    configurable: true,
+    get: () => online,
+  });
+}
+
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembersByIds: jest.fn(() => ({ data: undefined })),
 }));
@@ -191,14 +198,6 @@ const { useOrgMembersByIds } = jest.requireMock(
   "@/hooks/api/organization",
 ) as { useOrgMembersByIds: jest.Mock };
 
-const { useKbPageBacklinks } = jest.requireMock(
-  "@/hooks/api/kb",
-) as { useKbPageBacklinks: jest.Mock };
-
-const { useKbPageRecordLinks } = jest.requireMock(
-  "@/hooks/api/kb/record-links",
-) as { useKbPageRecordLinks: jest.Mock };
-
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
 };
@@ -298,6 +297,7 @@ const NEUTRAL_SUBJECT: KbPageActionSubject = {
 beforeEach(() => {
   mockReplace.mockClear();
   mockPush.mockClear();
+  setNavigatorOnline(true);
   mockSearchParams = new URLSearchParams("view=card");
   useKbPageCollection.mockReturnValue({
     data: makeResponse([makeItem(1)]),
@@ -598,41 +598,37 @@ describe("WikiHomeAllPages — owner display name in list view (task B)", () => 
   });
 });
 
-describe("WikiHomeAllPages — backlinks and linked-records columns at collection level (task C)", () => {
-  it("renders a backlink count for each row from the per-page hook so the count is visible without opening the page", () => {
+describe("WikiHomeAllPages — no per-row backlink or linked-record column, because /kb/pages carries no aggregate for either (task I)", () => {
+  it("declares no backlinks column, because one fetch per row over a fifty-row page is an N+1 the list projection cannot serve", () => {
     mockSearchParams = new URLSearchParams();
-    const row = makeItem(99);
-    useKbPageCollection.mockReturnValue({
-      data: makeResponse([row]),
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
-    useKbPageBacklinks.mockReturnValue({ data: [{ id: 1 }, { id: 2 }] });
-
     render(<WikiHomeAllPages />);
-    const cell = renderListCell("backlinks", row);
 
-    expect(within(cell.container).getByTestId("backlink-count-99")).toHaveTextContent("2");
+    expect(
+      lastRenderedListColumns().map((column) => column.key),
+    ).not.toContain("backlinks");
   });
 
-  it("renders a linked-records count for each row from the per-page hook", () => {
+  it("declares no linkedRecords column for the same reason as backlinks", () => {
     mockSearchParams = new URLSearchParams();
-    const row = makeItem(77);
-    useKbPageCollection.mockReturnValue({
-      data: makeResponse([row]),
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
-    useKbPageRecordLinks.mockReturnValue({ data: [{ id: 10 }, { id: 11 }, { id: 12 }] });
-
     render(<WikiHomeAllPages />);
-    const cell = renderListCell("linkedRecords", row);
 
-    expect(within(cell.container).getByTestId("record-link-count-77")).toHaveTextContent("3");
+    expect(
+      lastRenderedListColumns().map((column) => column.key),
+    ).not.toContain("linkedRecords");
+  });
+
+  it("does declare the columns the list projection can serve, so the two absences above are not a component that failed to render", () => {
+    mockSearchParams = new URLSearchParams();
+    render(<WikiHomeAllPages />);
+
+    expect(lastRenderedListColumns().map((column) => column.key)).toEqual([
+      "title",
+      "status",
+      "trustState",
+      "owner",
+      "updatedAt",
+      "actions",
+    ]);
   });
 });
 
@@ -647,13 +643,14 @@ describe("WikiHomeAllPages — right-click context menu on card view (task G)", 
   });
 });
 
-describe("WikiHomeAllPages — offline indicator (task I)", () => {
+describe("WikiHomeAllPages — offline indicator reads the shared useOnlineStatus store (task G)", () => {
   it("shows the offline indicator when the browser goes offline", () => {
     render(<WikiHomeAllPages />);
 
     expect(screen.queryByTestId("offline-indicator")).not.toBeInTheDocument();
 
     act(() => {
+      setNavigatorOnline(false);
       window.dispatchEvent(new Event("offline"));
     });
 
@@ -664,13 +661,159 @@ describe("WikiHomeAllPages — offline indicator (task I)", () => {
     render(<WikiHomeAllPages />);
 
     act(() => {
+      setNavigatorOnline(false);
       window.dispatchEvent(new Event("offline"));
     });
 
     act(() => {
+      setNavigatorOnline(true);
       window.dispatchEvent(new Event("online"));
     });
 
     expect(screen.queryByTestId("offline-indicator")).not.toBeInTheDocument();
+  });
+
+  it("renders the indicator on first paint when navigator is already offline, so a page loaded while offline is not silently stale", () => {
+    setNavigatorOnline(false);
+
+    render(<WikiHomeAllPages />);
+
+    expect(screen.getByTestId("offline-indicator")).toBeInTheDocument();
+  });
+});
+
+describe("WikiHomeAllPages — the q URL parameter reaches the collection request (task B)", () => {
+  it("sends the trimmed q URL parameter as the collection query so the list filters server-side", () => {
+    mockSearchParams = new URLSearchParams("q=%20runbook%20");
+
+    render(<WikiHomeAllPages />);
+
+    expect(useKbPageCollection).toHaveBeenLastCalledWith(
+      expect.objectContaining({ q: "runbook" }),
+    );
+  });
+
+  it("sends no q key at all for a whitespace-only q URL parameter, because /kb/pages declares q as min(1) and would answer an empty string with a 400 for the whole list", () => {
+    mockSearchParams = new URLSearchParams("q=%20%20");
+
+    render(<WikiHomeAllPages />);
+
+    const params = useKbPageCollection.mock.calls.at(-1)?.[0] as Record<
+      string,
+      unknown
+    >;
+    expect(params.q).toBeUndefined();
+  });
+
+  it("treats a q URL parameter as an active filter so the empty state offers clear-filters rather than the first-run copy", () => {
+    mockSearchParams = new URLSearchParams("q=nothing-matches");
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<WikiHomeAllPages />);
+
+    expect(
+      screen.getByRole("button", { name: /clear filters/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Your wiki starts here")).not.toBeInTheDocument();
+  });
+
+  it("clear-filters removes q alongside the other filter params in one URL write", async () => {
+    const user = userEvent.setup();
+    mockSearchParams = new URLSearchParams("q=nothing-matches&status=draft");
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "empty" });
+
+    render(<WikiHomeAllPages />);
+    await user.click(screen.getByRole("button", { name: /clear filters/i }));
+
+    const url = mockReplace.mock.calls.at(-1)?.[0] as string;
+    expect(url).not.toContain("q=");
+    expect(url).not.toContain("status=");
+  });
+});
+
+describe("WikiHomeAllPages — the cursor is URL-backed so page two is deep-linkable (task C)", () => {
+  function lastPagerUrlOptions() {
+    const call = useCursorPager.mock.calls.at(-1);
+    if (!call) throw new Error("useCursorPager was never called");
+    return call[1] as {
+      initialCursor: string | undefined;
+      onCursorChange: (cursor: string | undefined) => void;
+    };
+  }
+
+  it("seeds the pager from the cursor URL parameter so a shared page-two link opens on page two", () => {
+    mockSearchParams = new URLSearchParams("cursor=cursor-from-url");
+
+    render(<WikiHomeAllPages />);
+
+    expect(lastPagerUrlOptions().initialCursor).toBe("cursor-from-url");
+  });
+
+  it("seeds the pager with no cursor when the URL carries none — paired control for the deep-link test above", () => {
+    mockSearchParams = new URLSearchParams();
+
+    render(<WikiHomeAllPages />);
+
+    expect(lastPagerUrlOptions().initialCursor).toBeUndefined();
+  });
+
+  it("writes the advanced cursor into the URL so the second page can be reloaded and shared", () => {
+    mockSearchParams = new URLSearchParams();
+
+    render(<WikiHomeAllPages />);
+    act(() => {
+      lastPagerUrlOptions().onCursorChange("cursor-page-two");
+    });
+
+    const url = mockReplace.mock.calls.at(-1)?.[0] as string;
+    expect(url).toContain("cursor=cursor-page-two");
+  });
+
+  it("writes no URL update when the pager reports the cursor the URL already holds, because an unconditional write from a cursor effect is the render loop this pager was hardened against", () => {
+    mockSearchParams = new URLSearchParams("cursor=cursor-page-two");
+
+    render(<WikiHomeAllPages />);
+    act(() => {
+      lastPagerUrlOptions().onCursorChange("cursor-page-two");
+    });
+
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("drops the cursor parameter in the same router.replace that applies a status filter, so page two of the old filter is never requested under the new one", async () => {
+    const user = userEvent.setup();
+    mockSearchParams = new URLSearchParams("view=card&cursor=cursor-page-two");
+
+    render(<WikiHomeAllPages />);
+    await user.click(screen.getByRole("button", { name: /list view/i }));
+
+    const url = mockReplace.mock.calls.at(-1)?.[0] as string;
+    expect(url).not.toContain("cursor=");
+  });
+
+  it("keys the pager reset on q so a new search cannot reuse the previous query's cursor", () => {
+    mockSearchParams = new URLSearchParams("q=alpha");
+    render(<WikiHomeAllPages />);
+    const keyForAlpha = useCursorPager.mock.calls.at(-1)?.[0] as string;
+
+    mockSearchParams = new URLSearchParams("q=beta");
+    render(<WikiHomeAllPages />);
+    const keyForBeta = useCursorPager.mock.calls.at(-1)?.[0] as string;
+
+    expect(keyForAlpha).not.toBe(keyForBeta);
   });
 });

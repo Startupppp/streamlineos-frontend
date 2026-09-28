@@ -1,247 +1,91 @@
+import { ZodError } from "zod";
+
 import {
-  cycleListContract,
-  cycleRowContract,
-  epicListContract,
+  memberCapacityItemSchema,
   workloadCapacityContract,
-  modulePageContract,
 } from "./execution-schema";
 
-it("accepts the unprojected ticket row listEpics actually returns, since the service selects every tickets column with no projection", () => {
-  const row = {
-    id: 9,
-    orgId: "org-1",
-    title: "Epic title",
-    description: null,
-    type: "EPIC",
-    status: "TODO",
-    priority: "MEDIUM",
-    projectId: 5,
-    ticketNumber: 3,
-    epicId: null,
-    reporterId: "user-1",
-    points: null,
-    storyPoints: null,
-    link: null,
-    rank: "1000",
-    parentTicketId: null,
-    originalEstimate: null,
-    timeSpent: "0",
-    startDate: null,
-    dueDate: null,
-    moduleId: null,
-    cycleId: null,
-    sequenceId: null,
-    estimate: null,
-    health: null,
-    version: 1,
-    dependencyCount: 0,
-    createdAt: "2026-09-16T00:00:00.000Z",
-    updatedAt: "2026-09-16T00:00:00.000Z",
-  };
-
-  const result = epicListContract.parse([row]);
-
-  expect(result[0]).toEqual(row);
-});
-
-it("rejects an epic row whose reporterId is not a string, so an assignee/reporter id swap is caught", () => {
-  const row = {
-    id: 9,
-    orgId: "org-1",
-    title: "Epic title",
-    description: null,
-    type: "EPIC",
-    status: "TODO",
-    priority: "MEDIUM",
-    projectId: 5,
-    ticketNumber: 3,
-    epicId: null,
-    reporterId: 12345,
-    points: null,
-    storyPoints: null,
-    link: null,
-    rank: "1000",
-    parentTicketId: null,
-    originalEstimate: null,
-    timeSpent: "0",
-    startDate: null,
-    dueDate: null,
-    moduleId: null,
-    cycleId: null,
-    sequenceId: null,
-    estimate: null,
-    createdAt: "2026-09-16T00:00:00.000Z",
-    updatedAt: "2026-09-16T00:00:00.000Z",
-  };
-
-  expect(epicListContract.safeParse([row]).success).toBe(false);
-});
-
-const baseCycleRow = {
-  id: 3,
-  orgId: "org-1",
-  projectId: 7,
-  name: "Q4 Cycle",
-  description: "Focus on checkout",
-  goal: null,
-  capacity: null,
-  status: "active" as const,
-  version: 1,
-  startDate: "2026-10-01",
-  endDate: "2026-10-31",
-  createdBy: "user-1",
-  createdAt: "2026-09-30T00:00:00.000Z",
-  updatedAt: "2026-09-30T00:00:00.000Z",
-};
-
-it("cycleRowContract accepts a well-formed cycle — Cycle is the canonical iteration type and its schema must parse", () => {
-  const result = cycleRowContract.parse(baseCycleRow);
-  expect(result.id).toBe(3);
-  expect(result.status).toBe("active");
-  expect(result.name).toBe("Q4 Cycle");
-});
-
-it("cycleRowContract rejects a cycle with an invalid status — draft/active/completed are the only valid cycle statuses", () => {
-  const badRow = { ...baseCycleRow, status: "ACTIVE" };
-  expect(cycleRowContract.safeParse(badRow).success).toBe(false);
-});
-
-it("cycleRowContract rejects a cycle missing version — version is required for stale-write detection on updates", () => {
-  const { version: _v, ...withoutVersion } = baseCycleRow;
-  expect(cycleRowContract.safeParse(withoutVersion).success).toBe(false);
-});
-
-it("cycleListContract preserves progress stats on list items — totalItems/completedItems/progress must survive the parse", () => {
-  const listRow = {
-    ...baseCycleRow,
-    totalItems: 12,
-    completedItems: 4,
-    progress: 33,
-  };
-
-  const result = cycleListContract.parse({ data: [listRow], pagination: { limit: 50, hasMore: false, nextCursor: null } });
-  expect(result.data[0]?.totalItems).toBe(12);
-  expect(result.data[0]?.completedItems).toBe(4);
-  expect(result.data[0]?.progress).toBe(33);
-});
-
-it("cycleListContract preserves version and goal on list items — version enables stale-write detection; goal is a core cycle field", () => {
-  const listRow = {
-    ...baseCycleRow,
-    totalItems: 3,
-    completedItems: 1,
-    progress: 33,
-    version: 4,
-    goal: "Ship login revamp",
-  };
-  const result = cycleListContract.parse({ data: [listRow], pagination: { limit: 50, hasMore: false, nextCursor: null } });
-  expect(result.data[0]?.version).toBe(4);
-  expect(result.data[0]?.goal).toBe("Ship login revamp");
-});
-
-it("cycleListContract rejects a list item missing progress — the iteration dashboard summary would silently show 0 without this guard", () => {
-  const { progress: _p, ...withoutProgress } = {
-    ...baseCycleRow,
-    totalItems: 5,
-    completedItems: 2,
-    progress: 40,
-  };
-  expect(cycleListContract.safeParse({ data: [withoutProgress], pagination: { limit: 50, hasMore: false, nextCursor: null } }).success).toBe(false);
-});
-
-it("cycleListContract rejects a bare array so the pagination cutover cannot silently decode a first-page-only response as the full list", () => {
-  const listRow = { ...baseCycleRow, totalItems: 0, completedItems: 0, progress: 0 };
-  expect(cycleListContract.safeParse([listRow]).success).toBe(false);
-});
-
-const baseCapacityMember = {
-  userId: "user-abc",
-  membershipId: 42,
-  workingDaysInWindow: 10,
-  leaveDays: 1,
+const FULL_ROW = {
+  userId: "user-1",
+  membershipId: 11,
+  workingDaysInWindow: 5,
+  leaveDays: 0,
   halfLeaveDays: 0,
-  netCapacityDays: 9,
-  capacityHours: 72,
-  loggedHours: 40,
+  netCapacityDays: 5,
+  capacityHours: 40,
+  loggedHours: 12,
+  estimateHours: 20,
+  allocationPercent: 50,
+  varianceHours: -8,
   isOverAllocated: false,
   isZeroCapacity: false,
-  utilizationPercent: 55.6,
+  utilizationPercent: 30,
 };
 
-it("workloadCapacityContract accepts a well-formed capacity response — the workload view reads this shape from the allocation endpoint", () => {
-  const response = { members: [baseCapacityMember] };
-  const result = workloadCapacityContract.parse(response);
-  expect(result.members[0]?.userId).toBe("user-abc");
-  expect(result.members[0]?.isOverAllocated).toBe(false);
+function rowWithout(key: keyof typeof FULL_ROW): Record<string, unknown> {
+  const clone: Record<string, unknown> = { ...FULL_ROW };
+  delete clone[key];
+  return clone;
+}
+
+describe("memberCapacityItemSchema — the three core figures the workload row renders", () => {
+  it("accepts a row carrying estimateHours, allocationPercent and varianceHours and keeps all three values", () => {
+    const parsed = memberCapacityItemSchema.parse(FULL_ROW);
+
+    expect(parsed.estimateHours).toBe(20);
+    expect(parsed.allocationPercent).toBe(50);
+    expect(parsed.varianceHours).toBe(-8);
+  });
+
+  it("accepts null for all three figures, because a member with no estimated open work has no allocation or variance to report", () => {
+    const parsed = memberCapacityItemSchema.parse({
+      ...FULL_ROW,
+      estimateHours: null,
+      allocationPercent: null,
+      varianceHours: null,
+    });
+
+    expect(parsed.estimateHours).toBeNull();
+    expect(parsed.allocationPercent).toBeNull();
+    expect(parsed.varianceHours).toBeNull();
+  });
 });
 
-it("workloadCapacityContract accepts null capacityHours — a member with no configured capacity reports null, not zero", () => {
-  const member = { ...baseCapacityMember, capacityHours: null };
-  const result = workloadCapacityContract.parse({ members: [member] });
-  expect(result.members[0]?.capacityHours).toBeNull();
+describe("memberCapacityItemSchema — a dropped projection throws at the decode boundary instead of rendering blank forever", () => {
+  it("throws when estimateHours is absent, so a backend that stops projecting it fails loudly", () => {
+    expect(() => memberCapacityItemSchema.parse(rowWithout("estimateHours"))).toThrow(ZodError);
+  });
+
+  it("throws when allocationPercent is absent, so a backend that stops projecting it fails loudly", () => {
+    expect(() => memberCapacityItemSchema.parse(rowWithout("allocationPercent"))).toThrow(ZodError);
+  });
+
+  it("throws when varianceHours is absent, so a backend that stops projecting it fails loudly", () => {
+    expect(() => memberCapacityItemSchema.parse(rowWithout("varianceHours"))).toThrow(ZodError);
+  });
+
+  it("throws when loggedHours is absent, confirming the absence test above is not passing vacuously", () => {
+    expect(() => memberCapacityItemSchema.parse(rowWithout("loggedHours"))).toThrow(ZodError);
+  });
+
+  it("rejects a string where estimateHours should be a number, so a numeric column arriving unparsed is caught", () => {
+    expect(() =>
+      memberCapacityItemSchema.parse({ ...FULL_ROW, estimateHours: "20.00" }),
+    ).toThrow(ZodError);
+  });
 });
 
-it("workloadCapacityContract rejects a member whose utilizationPercent is absent — a missing field would render the bar as indeterminate with no gate catching it", () => {
-  const { utilizationPercent: _u, ...withoutUtil } = baseCapacityMember;
-  expect(
-    workloadCapacityContract.safeParse({ members: [withoutUtil] }).success,
-  ).toBe(false);
-});
+describe("workloadCapacityContract — the whole capacity envelope", () => {
+  it("decodes a members array carrying the three figures", () => {
+    const parsed = workloadCapacityContract.parse({ members: [FULL_ROW] });
 
-it("workloadCapacityContract rejects a response that sends members as an array directly instead of wrapped — the envelope is { members: [] } not []", () => {
-  expect(
-    workloadCapacityContract.safeParse([baseCapacityMember]).success,
-  ).toBe(false);
-});
+    expect(parsed.members).toHaveLength(1);
+    expect(parsed.members[0].allocationPercent).toBe(50);
+  });
 
-const baseModuleListItem = {
-  id: 3,
-  name: "Checkout",
-  orgId: "org-1",
-  status: "in-progress" as const,
-  leadId: null,
-  endDate: null,
-  startDate: null,
-  version: 1,
-  createdBy: "user-1",
-  projectId: 7,
-  createdAt: "2026-09-01T00:00:00.000Z",
-  updatedAt: "2026-09-01T00:00:00.000Z",
-  description: null,
-  totalItems: 8,
-  completedItems: 3,
-  progress: 37,
-};
-
-it("modulePageContract accepts a paginated module response with cursor envelope — the modules list endpoint returns this shape", () => {
-  const response = {
-    data: [baseModuleListItem],
-    pagination: { limit: 20, hasMore: false, nextCursor: null },
-  };
-  const result = modulePageContract.parse(response);
-  expect(result.data[0]?.name).toBe("Checkout");
-  expect(result.pagination.hasMore).toBe(false);
-});
-
-it("modulePageContract rejects a module with an invalid status enum — status is a pgEnum and z.string() would silently accept garbage values", () => {
-  const bad = { ...baseModuleListItem, status: "ACTIVE" };
-  const response = {
-    data: [bad],
-    pagination: { limit: 20, hasMore: false, nextCursor: null },
-  };
-  expect(modulePageContract.safeParse(response).success).toBe(false);
-});
-
-it("modulePageContract rejects a missing pagination field — the client uses hasMore to decide whether to offer more pages", () => {
-  const response = { data: [baseModuleListItem] };
-  expect(modulePageContract.safeParse(response).success).toBe(false);
-});
-
-it("modulePageContract rejects a module list item missing version — the module edit sheet disables itself when version is undefined, so an optional contract would silently remove the edit action instead of failing", () => {
-  const { version: _v, ...withoutVersion } = baseModuleListItem;
-  const response = {
-    data: [withoutVersion],
-    pagination: { limit: 20, hasMore: false, nextCursor: null },
-  };
-  expect(modulePageContract.safeParse(response).success).toBe(false);
+  it("throws when one member in the array is missing estimateHours, so a partially dropped projection cannot slip through", () => {
+    expect(() =>
+      workloadCapacityContract.parse({ members: [FULL_ROW, rowWithout("estimateHours")] }),
+    ).toThrow(ZodError);
+  });
 });

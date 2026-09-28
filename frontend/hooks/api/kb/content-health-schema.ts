@@ -46,6 +46,12 @@ export const contentHealthCountsContract = z.object({
 
 export type ContentHealthCountsResult = z.infer<typeof contentHealthCountsContract>;
 
+const repairActionSchema = z.enum([
+  "assign_owner",
+  "request_review",
+  "mark_needs_content",
+]);
+
 export const dismissHealthItemContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -61,6 +67,7 @@ export const dismissHealthItemContract = z.object({
   dismissedAt: z.string().nullable(),
   dismissedReason: z.string().nullable(),
   dismissalExpiresAt: z.string().nullable(),
+  repairAction: repairActionSchema.nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

@@ -47,6 +47,22 @@ interface WorkloadMemberRowProps {
   capacityData?: MemberCapacityData;
 }
 
+export function formatEstimateHours(capacityData: MemberCapacityData | undefined): string {
+  if (capacityData == null || capacityData.estimateHours === null) return "—";
+  return `${capacityData.estimateHours}h`;
+}
+
+export function formatAllocationPercent(capacityData: MemberCapacityData | undefined): string {
+  if (capacityData == null || capacityData.allocationPercent === null) return "—";
+  return `${capacityData.allocationPercent}%`;
+}
+
+export function formatVarianceHours(capacityData: MemberCapacityData | undefined): string {
+  if (capacityData == null || capacityData.varianceHours === null) return "—";
+  const variance = capacityData.varianceHours;
+  return variance > 0 ? `+${variance}h` : `${variance}h`;
+}
+
 function getUtilizationClass(count: number): string {
   if (count === 0) return "bg-muted";
   if (count <= 2) return "bg-status-success-surface text-status-success-ink-strong";
@@ -81,6 +97,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
       transition={{ delay: motionDelay, duration: 0.2, ease: "easeOut" }}
     >
       <div
+        data-testid="workload-member-row"
         className={cn(
           "flex items-center border-b cursor-pointer hover:bg-muted/30 transition-colors",
           expanded && "bg-muted/40",
@@ -167,9 +184,46 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
           </span>
         </div>
 
+        <div className="w-24 shrink-0 px-2 py-3 text-center">
+          <span
+            data-testid="workload-allocation"
+            className={cn(
+              "text-sm tabular-nums",
+              capacityData?.allocationPercent != null && capacityData.allocationPercent > 100
+                ? "text-status-danger-ink-strong font-semibold"
+                : "text-muted-foreground",
+            )}
+          >
+            {formatAllocationPercent(capacityData)}
+          </span>
+        </div>
+
+        <div className="w-24 shrink-0 px-2 py-3 text-center">
+          <span
+            data-testid="workload-estimate"
+            className="text-sm tabular-nums text-muted-foreground"
+          >
+            {formatEstimateHours(capacityData)}
+          </span>
+        </div>
+
         <div className="w-20 shrink-0 px-2 py-3 text-center">
           <span className="text-sm tabular-nums text-muted-foreground">
             {capacityData != null ? `${capacityData.loggedHours}h` : "—"}
+          </span>
+        </div>
+
+        <div className="w-24 shrink-0 px-2 py-3 text-center">
+          <span
+            data-testid="workload-variance"
+            className={cn(
+              "text-sm tabular-nums",
+              capacityData?.varianceHours != null && capacityData.varianceHours > 0
+                ? "text-status-danger-ink-strong font-semibold"
+                : "text-muted-foreground",
+            )}
+          >
+            {formatVarianceHours(capacityData)}
           </span>
         </div>
 

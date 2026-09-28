@@ -302,7 +302,7 @@ describe("WebhookCard — secret age uses secretSetAt not createdAt (BLD-X-FE-SE
     expect(screen.queryByText(/jan.*2025|2025.*jan/i)).not.toBeInTheDocument();
   });
 
-  it("falls back to createdAt when hasSecret is false — a webhook with no secret shows its creation date", () => {
+  it("says there is no signing secret when hasSecret is false, instead of passing the creation date off as a secret age", () => {
     const noSecret: ProjectWebhook = {
       ...BASE_WEBHOOK,
       hasSecret: false,
@@ -317,7 +317,40 @@ describe("WebhookCard — secret age uses secretSetAt not createdAt (BLD-X-FE-SE
         canManage
       />,
     );
-    expect(screen.getByText(/jun.*2025|2025.*jun/i)).toBeInTheDocument();
+    expect(screen.getByText(/no signing secret/i)).toBeInTheDocument();
+    expect(screen.queryByText(/jun.*2025|2025.*jun/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/since/i)).not.toBeInTheDocument();
+  });
+
+  it("says the secret age is unknown when a secret exists but was set before the column recorded it, rather than borrowing createdAt", () => {
+    const unknownAge: ProjectWebhook = {
+      ...BASE_WEBHOOK,
+      hasSecret: true,
+      secretSetAt: null,
+      createdAt: "2025-06-01T00:00:00.000Z",
+    };
+    render(
+      <WebhookCard
+        webhook={unknownAge}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    expect(screen.getByText(/secret age unknown/i)).toBeInTheDocument();
+    expect(screen.queryByText(/jun.*2025|2025.*jun/i)).not.toBeInTheDocument();
+  });
+
+  it("labels the date as the secret's, not the webhook's, so the slot cannot be misread (BE-141 positive pair)", () => {
+    render(
+      <WebhookCard
+        webhook={ROTATED_WEBHOOK}
+        projectId={3}
+        onDelete={jest.fn()}
+        canManage
+      />,
+    );
+    expect(screen.getByText(/secret since/i)).toBeInTheDocument();
   });
 });
 

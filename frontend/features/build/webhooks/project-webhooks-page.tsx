@@ -332,9 +332,17 @@ export function ProjectWebhooksPage({
   }, [pager, nextCursor]);
   const handleOpenWebhook = useCallback((_index: number) => {}, []);
   const handleClearWebhookSelection = useCallback(() => {}, []);
+  const handleEditFocusedWebhook = useCallback(
+    (index: number) => {
+      const focused = webhookList[index];
+      if (focused) handleEdit(focused);
+    },
+    [webhookList, handleEdit],
+  );
   useBuildListKeyboard({
     itemCount: webhookList.length,
     onOpen: handleOpenWebhook,
+    onEdit: canManage && isOnline ? handleEditFocusedWebhook : undefined,
     onCreate: canManage && isOnline ? handleShowForm : undefined,
     onClearSelection: handleClearWebhookSelection,
     onShortcutHelp: handleShortcutHelp,

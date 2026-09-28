@@ -440,3 +440,65 @@ describe("WorkloadBoardPage — keyboard shortcuts", () => {
     );
   });
 });
+
+describe("WorkloadBoardPage — group is deliberately not a parameter because both grid axes are already occupied", () => {
+  it("ignores a group query param, since the row axis is already the member and the column axis is the calendar day", () => {
+    mockSearchParams = new URLSearchParams("group=assignee");
+    renderPage();
+    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
+      1,
+      expect.any(String),
+      expect.any(String),
+      undefined,
+    );
+    expect(capturedFilterBarProps.filters).not.toHaveProperty("group");
+  });
+
+  it("ignores group=status and group=priority, which are ticket attributes already expressed as filters rather than a second grid axis", () => {
+    mockSearchParams = new URLSearchParams("group=status");
+    renderPage();
+    expect(capturedFilterBarProps.filters).not.toHaveProperty("group");
+    expect(capturedFilterBarProps.filters?.["status"]).toBe("all");
+    expect(capturedFilterBarProps.filters?.["priority"]).toBe("all");
+  });
+
+  it("still honours teamId, the one member-level dimension the page does express, so the group assertions above are not passing merely because the page ignores every query param", () => {
+    mockSearchParams = new URLSearchParams("group=team&teamId=7");
+    renderPage();
+    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
+      1,
+      expect.any(String),
+      expect.any(String),
+      7,
+    );
+    expect(capturedFilterBarProps.filters?.["teamId"]).toBe("7");
+  });
+});
+
+describe("WorkloadBoardPage — projectId is the path param and never read from the query string", () => {
+  it("ignores a conflicting projectId query param and keeps using the route param, so the path stays the single source of truth", () => {
+    mockSearchParams = new URLSearchParams("projectId=999");
+    mockUse.mockReturnValue({ projectId: "1" });
+    renderPage();
+    expect(mockUseProject).toHaveBeenCalledWith(1);
+    expect(mockUseProjectBoardTickets).toHaveBeenCalledWith(1, expect.anything());
+    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
+      1,
+      expect.any(String),
+      expect.any(String),
+      undefined,
+    );
+  });
+
+  it("follows the route param when it changes, proving the id is read from the path rather than hardcoded (positive control)", () => {
+    mockUse.mockReturnValue({ projectId: "42" });
+    renderPage();
+    expect(mockUseProject).toHaveBeenCalledWith(42);
+    expect(mockUseWorkloadCapacity).toHaveBeenCalledWith(
+      42,
+      expect.any(String),
+      expect.any(String),
+      undefined,
+    );
+  });
+});

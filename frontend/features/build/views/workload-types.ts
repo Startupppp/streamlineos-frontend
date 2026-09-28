@@ -4,6 +4,9 @@ export interface MemberCapacityData {
   capacityHours: number | null;
   leaveDays: number;
   loggedHours: number;
+  estimateHours: number | null;
+  allocationPercent: number | null;
+  varianceHours: number | null;
   isOverAllocated: boolean;
   isZeroCapacity: boolean;
   utilizationPercent: number | null;

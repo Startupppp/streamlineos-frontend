@@ -11,10 +11,9 @@ import {
   useDeleteKbPage,
   useDuplicateKbPage,
   useToggleFavoriteKbPage,
-  useKbPageBacklinks,
 } from "@/hooks/api/kb";
-import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -62,7 +61,7 @@ import {
   type KbPageActionSubject,
   toKbPageActionId,
 } from "@/features/wiki/lib/page-action-descriptors";
-import { KbAlertCircleIcon, KbLink2Icon, KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
+import { KbAlertCircleIcon, KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
 import { getUserDisplayName } from "@/lib/person-display";
 
 const SORT_VALUES = ["updated_desc", "created_desc", "title_asc"] as const;
@@ -82,6 +81,8 @@ const STATUS_OPTIONS = [
 ] as const;
 
 const PAGE_LIMIT = 50;
+
+export const KB_PAGE_CURSOR_PARAM = "cursor";
 
 function buildColumns(
   resolveHref: (id: number) => string,
@@ -121,22 +122,8 @@ function buildColumns(
       cell: (row) => {
         if (!row.ownerUserId) return <OwnerMissingBadge ownerMembershipId={null} />;
         const name = ownerNames.get(row.ownerUserId);
-        return (
-          <span className="text-sm text-foreground tabular-nums">
-            {name ?? "—"}
-          </span>
-        );
+        return <span className="text-sm text-foreground">{name ?? "—"}</span>;
       },
-    },
-    {
-      key: "backlinks",
-      header: "Backlinks",
-      cell: (row) => <BacklinkCount pageId={row.id} />,
-    },
-    {
-      key: "linkedRecords",
-      header: "Links",
-      cell: (row) => <RecordLinkCount pageId={row.id} />,
     },
     {
       key: "updatedAt",
@@ -155,24 +142,6 @@ function buildColumns(
       ),
     },
   ];
-}
-
-function BacklinkCount({ pageId }: { pageId: number }) {
-  const { data: backlinks = [] } = useKbPageBacklinks(pageId);
-  return (
-    <span className="tabular-nums text-sm text-muted-foreground" data-testid={`backlink-count-${pageId}`}>
-      {backlinks.length}
-    </span>
-  );
-}
-
-function RecordLinkCount({ pageId }: { pageId: number }) {
-  const { data: links = [] } = useKbPageRecordLinks(pageId);
-  return (
-    <span className="tabular-nums text-sm text-muted-foreground" data-testid={`record-link-count-${pageId}`}>
-      {links.length}
-    </span>
-  );
 }
 
 interface AllPagesItemMenuProps {
@@ -358,19 +327,8 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
   const isProjectScoped = projectId !== undefined && projectId > 0;
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { update } = useUrlFilters();
-  const [isOffline, setIsOffline] = useState(false);
-
-  useEffect(() => {
-    function handleOnline() { setIsOffline(false); }
-    function handleOffline() { setIsOffline(true); }
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
+  const { update } = useUrlFilters({ pageParam: KB_PAGE_CURSOR_PARAM });
+  const isOffline = !useOnlineStatus();
 
   const resolveHref = useCallback(
     (pageId: number) =>
@@ -381,6 +339,8 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
   );
 
   const status = searchParams.get("status") ?? "";
+  const query = (searchParams.get("q") ?? "").trim();
+  const urlCursor = searchParams.get(KB_PAGE_CURSOR_PARAM) ?? "";
   const spaceParam = searchParams.get("space") ?? "";
   const parsedSpaceId = spaceParam !== "" ? Number(spaceParam) : Number.NaN;
   const spaceId =
@@ -391,10 +351,25 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
 
   const filtersActive =
-    status !== "" || spaceId !== undefined || ownerParam !== "" || sort !== "updated_desc";
+    status !== "" ||
+    spaceId !== undefined ||
+    ownerParam !== "" ||
+    query !== "" ||
+    sort !== "updated_desc";
 
-  const filterKey = `${status}|${spaceValue}|${ownerParam}|${sort}`;
-  const pager = useCursorPager(filterKey);
+  const filterKey = `${status}|${spaceValue}|${ownerParam}|${sort}|${query}`;
+
+  const handleCursorChange = useCallback(
+    (nextCursor: string | undefined) => {
+      if ((nextCursor ?? "") === urlCursor) return;
+    },
+    [update, urlCursor],
+  );
+
+  const pager = useCursorPager(filterKey, {
+    initialCursor: urlCursor === "" ? undefined : urlCursor,
+    onCursorChange: handleCursorChange,
+  });
 
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data;
@@ -404,6 +379,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
 
   const { data, isLoading, isError, error, refetch } = useKbPageCollection({
     sort,
+    q: query || undefined,
     status: status || undefined,
     spaceId,
     projectId: isProjectScoped ? projectId : undefined,
@@ -484,7 +460,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
   }, [refetch]);
 
   const handleClearFilters = useCallback(() => {
-    update({ status: null, space: null, owner: null, sort: null });
+    update({ status: null, space: null, owner: null, sort: null, q: null });
   }, [update]);
 
   function handleNewPage() {

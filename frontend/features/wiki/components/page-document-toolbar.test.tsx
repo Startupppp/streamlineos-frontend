@@ -25,7 +25,12 @@ jest.mock("./kb-page-ai-actions", () => ({
 
 jest.mock("./page-share-popover", () => ({
   __esModule: true,
-  default: () => <button type="button" aria-label="Share page" />,
+  default: () => (
+    <>
+      <button type="button" aria-label="Share page" />
+      <button type="button">Manage access</button>
+    </>
+  ),
 }));
 
 jest.mock("@/hooks/api/kb/export-page", () => ({
@@ -194,5 +199,63 @@ describe("PageDocumentToolbar — copy link for read-only viewers (task L)", () 
     await user.click(screen.getByRole("button", { name: /copy link/i }));
 
     expect(writeText).toHaveBeenCalledWith(window.location.href);
+  });
+
+  it("offers Copy link in the More options menu to a viewer who holds no page permission at all, so the context menu mirrors the visible command", async () => {
+    const user = userEvent.setup();
+    mockUseCan.mockReturnValue(false);
+    renderToolbar();
+
+    await user.click(screen.getByRole("button", { name: "More options" }));
+
+    expect(screen.getByRole("menuitem", { name: /copy link/i })).toBeInTheDocument();
+  });
+
+  it("copies the page URL from the More options menu item as well as from the toolbar button", async () => {
+    const user = userEvent.setup();
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
+    mockUseCan.mockReturnValue(false);
+    renderToolbar();
+
+    await user.click(screen.getByRole("button", { name: "More options" }));
+    await user.click(screen.getByRole("menuitem", { name: /copy link/i }));
+
+    expect(writeText).toHaveBeenCalledWith(window.location.href);
+  });
+
+  it("keeps Manage access and the share trigger unreachable for the same viewer who can reach Copy link, so the ungated copy affordance did not ungate the permission editor", async () => {
+    const user = userEvent.setup();
+    mockUseCan.mockImplementation((key: string) => key !== "kb:pages:update");
+    renderToolbar();
+
+    expect(screen.getByRole("button", { name: /copy link/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /share page/i })).toBeNull();
+    expect(screen.queryByText("Manage access")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "More options" }));
+
+    expect(screen.queryByText("Manage access")).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: /^move$/i })).toBeNull();
+  });
+
+  it("reaches Manage access and the share trigger for a viewer who does hold kb:pages:update, so the absence above is the gate and not a control that cannot render", () => {
+    mockUseCan.mockImplementation((key: string) => key === "kb:pages:update");
+    renderToolbar();
+
+    expect(screen.getByRole("button", { name: /share page/i })).toBeInTheDocument();
+    expect(screen.getByText("Manage access")).toBeInTheDocument();
+  });
+
+  it("renders Copy link and hides the share trigger while the access response has not arrived, because useCan reports false for every key until it resolves and the privileged control must fail closed", () => {
+    mockUseCan.mockReturnValue(false);
+    renderToolbar();
+
+    expect(screen.getByRole("button", { name: /copy link/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /share page/i })).toBeNull();
+    expect(screen.queryByText("Manage access")).toBeNull();
   });
 });

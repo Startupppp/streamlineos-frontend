@@ -113,6 +113,17 @@ function LastDeliveryMeta({
   );
 }
 
+function secretAgeLabel(
+  webhook: Pick<ProjectWebhook, "hasSecret" | "secretSetAt">,
+): string {
+  if (!webhook.hasSecret) return "no signing secret";
+  if (!webhook.secretSetAt) return "secret age unknown";
+  return `secret since ${new Date(webhook.secretSetAt).toLocaleDateString(undefined, {
+    month: "short",
+    year: "numeric",
+  })}`;
+}
+
 interface WebhookCardProps {
   webhook: ProjectWebhook;
   projectId: number;
@@ -246,13 +257,7 @@ export function WebhookCard({
               </Badge>
             )}
             <span className="text-micro text-muted-foreground ml-auto shrink-0">
-              since{" "}
-              {new Date(
-                webhook.hasSecret && webhook.secretSetAt ? webhook.secretSetAt : webhook.createdAt,
-              ).toLocaleDateString(undefined, {
-                month: "short",
-                year: "numeric",
-              })}
+              {secretAgeLabel(webhook)}
             </span>
           </div>
           <LastDeliveryMeta

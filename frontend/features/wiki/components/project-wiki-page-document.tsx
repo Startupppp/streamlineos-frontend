@@ -15,6 +15,14 @@ interface ProjectWikiPageDocumentProps {
   pageId: number;
 }
 
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+  if (target.isContentEditable) return true;
+  return target.closest('[contenteditable="true"]') !== null;
+}
+
 export default function ProjectWikiPageDocument({ projectId, pageId }: ProjectWikiPageDocumentProps) {
   const router = useRouter();
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
@@ -32,14 +40,7 @@ export default function ProjectWikiPageDocument({ projectId, pageId }: ProjectWi
     function handleKeyDown(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key !== "?") return;
-      const target = e.target;
-      if (
-        target instanceof HTMLElement &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable)
-      )
-        return;
+      if (isTypingTarget(e.target)) return;
       e.preventDefault();
       setShortcutHelpOpen(true);
     }

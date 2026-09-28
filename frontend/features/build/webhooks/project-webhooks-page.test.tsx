@@ -637,6 +637,40 @@ describe("ProjectWebhooksPage — edit Sheet (BLD-X-FE-SETTINGS-WH-036)", () => 
     });
   });
 
+  it("wires onEdit into the keyboard hook so the e shortcut has a target now that update accepts url and events", () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    const lastArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(typeof lastArgs?.onEdit).toBe("function");
+  });
+
+  it("does not wire onEdit when the viewer cannot manage — the e shortcut must fail closed", () => {
+    mockAccessState = "denied";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    const lastArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0];
+    expect(lastArgs?.onEdit).toBeUndefined();
+  });
+
+  it("the onEdit callback the keyboard hook receives opens the Sheet in edit mode for the focused row", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    const onEdit = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0]?.onEdit;
+    await act(async () => { onEdit?.(0); });
+    expect(screen.getByText("Edit Webhook")).toBeInTheDocument();
+  });
+
+  it("an out-of-range focused index does not open the Sheet, so a stale focus after a page change cannot edit the wrong row", async () => {
+    mockAccessState = "granted";
+    mockWebhooks = [SAMPLE_WEBHOOK];
+    render(<ProjectWebhooksPage projectId="1" />);
+    const onEdit = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0]?.onEdit;
+    await act(async () => { onEdit?.(9); });
+    expect(screen.queryByText("Edit Webhook")).not.toBeInTheDocument();
+  });
+
   it("the Sheet shows New Webhook title before any edit is triggered — the title is create-mode by default", () => {
     mockAccessState = "granted";
     mockWebhooks = [SAMPLE_WEBHOOK];

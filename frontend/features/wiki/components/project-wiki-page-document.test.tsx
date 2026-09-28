@@ -1,4 +1,5 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import ProjectWikiPageDocument from "./project-wiki-page-document";
 
 const mockPush = jest.fn();
@@ -32,11 +33,6 @@ jest.mock("./page-tree", () => ({
       />
     ),
   ),
-}));
-
-jest.mock("@/features/build/shared/shortcut-help-dialog", () => ({
-  ShortcutHelpDialog: ({ open }: { open: boolean }) =>
-    open ? <div data-testid="shortcut-help-dialog" /> : null,
 }));
 
 describe("ProjectWikiPageDocument — renders and propagates props", () => {
@@ -78,42 +74,121 @@ describe("ProjectWikiPageDocument — page tree mounts with project-scoped baseH
   });
 });
 
+async function pressQuestionMarkOn(target: EventTarget) {
+  await act(async () => {
+    target.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "?", bubbles: true, cancelable: true }),
+    );
+  });
+}
+
+function queryShortcutHelp() {
+  return screen.queryByRole("heading", { name: /keyboard shortcuts/i });
+}
+
 describe("ProjectWikiPageDocument — ? shortcut opens the shortcut help dialog (task K)", () => {
-  it("ShortcutHelpDialog is hidden before the ? key is pressed — paired negative control", () => {
+  it("the shortcut help dialog is absent before the ? key is pressed, so the opening assertion below is not vacuous", () => {
     render(<ProjectWikiPageDocument projectId={7} pageId={42} />);
 
-    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+    expect(queryShortcutHelp()).not.toBeInTheDocument();
   });
 
-  it("pressing ? on the document opens the ShortcutHelpDialog", async () => {
+  it("pressing ? on the page body opens the real ShortcutHelpDialog with its keyboard shortcuts table", async () => {
     render(<ProjectWikiPageDocument projectId={7} pageId={42} />);
 
-    await act(async () => {
-      document.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "?", bubbles: true, cancelable: true }),
-      );
-    });
+    await pressQuestionMarkOn(document);
 
-    expect(screen.getByTestId("shortcut-help-dialog")).toBeInTheDocument();
+    expect(queryShortcutHelp()).toBeInTheDocument();
+    expect(screen.getByText("Show keyboard shortcuts")).toBeInTheDocument();
   });
 
-  it("pressing ? while focused on an input does not open the dialog so the shortcut does not interfere with typing", async () => {
-    const { container } = render(
+  it("pressing Escape closes the shortcut help dialog that ? opened", async () => {
+    const user = userEvent.setup();
+    render(<ProjectWikiPageDocument projectId={7} pageId={42} />);
+
+    await pressQuestionMarkOn(document);
+    expect(queryShortcutHelp()).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => expect(queryShortcutHelp()).not.toBeInTheDocument());
+  });
+
+  it("pressing ? inside a text input does not open the dialog, so a question mark typed into a field reaches the field", async () => {
+    render(
       <>
-        <input data-testid="text-input" />
+        <input aria-label="A text field" />
         <ProjectWikiPageDocument projectId={7} pageId={42} />
       </>,
     );
 
-    const input = container.querySelector("input[data-testid='text-input']") as HTMLInputElement;
+    const input = screen.getByRole("textbox", { name: "A text field" });
     input.focus();
+    await pressQuestionMarkOn(input);
+
+    expect(queryShortcutHelp()).not.toBeInTheDocument();
+  });
+
+  it("pressing ? inside a textarea does not open the dialog", async () => {
+    render(
+      <>
+        <textarea aria-label="A multiline field" />
+        <ProjectWikiPageDocument projectId={7} pageId={42} />
+      </>,
+    );
+
+    const textarea = screen.getByRole("textbox", { name: "A multiline field" });
+    textarea.focus();
+    await pressQuestionMarkOn(textarea);
+
+    expect(queryShortcutHelp()).not.toBeInTheDocument();
+  });
+
+  it("pressing ? on a descendant of the contenteditable page editor does not open the dialog, so a question mark typed into a document body reaches the document", async () => {
+    render(
+      <>
+        <div contentEditable suppressContentEditableWarning data-testid="page-editor">
+          <span data-testid="editor-leaf">paragraph text</span>
+        </div>
+        <ProjectWikiPageDocument projectId={7} pageId={42} />
+      </>,
+    );
+
+    const leaf = screen.getByTestId("editor-leaf");
+    await pressQuestionMarkOn(leaf);
+
+    expect(queryShortcutHelp()).not.toBeInTheDocument();
+  });
+
+  it("pressing ? on an element outside the editor still opens the dialog, so the editor guard is scoped and not a blanket suppression", async () => {
+    render(
+      <>
+        <div contentEditable suppressContentEditableWarning data-testid="page-editor">
+          <span data-testid="editor-leaf">paragraph text</span>
+        </div>
+        <ProjectWikiPageDocument projectId={7} pageId={42} />
+      </>,
+    );
+
+    await pressQuestionMarkOn(screen.getByTestId("page-document"));
+
+    expect(queryShortcutHelp()).toBeInTheDocument();
+  });
+
+  it("pressing ? with a modifier held does not open the dialog, so browser and command palette chords are not intercepted", async () => {
+    render(<ProjectWikiPageDocument projectId={7} pageId={42} />);
 
     await act(async () => {
-      input.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "?", bubbles: true, cancelable: true }),
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "?",
+          metaKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
       );
     });
 
-    expect(screen.queryByTestId("shortcut-help-dialog")).not.toBeInTheDocument();
+    expect(queryShortcutHelp()).not.toBeInTheDocument();
   });
 });

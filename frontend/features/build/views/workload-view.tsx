@@ -294,7 +294,10 @@ export const WorkloadView = memo(function WorkloadView({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
         <div className="min-h-0 flex-1 overflow-auto">
           <div className="flex min-h-full min-w-max flex-col">
-            <div className="sticky top-0 z-10 flex shrink-0 border-b bg-secondary">
+            <div
+              data-testid="workload-header-row"
+              className="sticky top-0 z-10 flex shrink-0 border-b bg-secondary"
+            >
               <div className="w-52 shrink-0 px-4 py-2.5 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                 Member
               </div>
@@ -307,8 +310,17 @@ export const WorkloadView = memo(function WorkloadView({
               <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
                 Leave
               </div>
+              <div className="w-24 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+                Allocation
+              </div>
+              <div className="w-24 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+                Estimate
+              </div>
               <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
                 Actual
+              </div>
+              <div className="w-24 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+                Variance
               </div>
               {days.map((day, i) => (
                 <div
@@ -395,6 +407,7 @@ export const WorkloadView = memo(function WorkloadView({
                 }}
               >
                 <div
+                  data-testid="workload-unassigned-row"
                   className={cn(
                     "flex items-center border-b cursor-pointer hover:bg-muted/30 transition-colors bg-muted/20",
                     expandedMembers.has("__unassigned__") &&
@@ -425,6 +438,21 @@ export const WorkloadView = memo(function WorkloadView({
                     </span>
                   </div>
                   <div className="w-20 shrink-0 px-2 py-3 text-center">
+                    <span className="text-sm text-muted-foreground">—</span>
+                  </div>
+                  <div className="w-20 shrink-0 px-2 py-3 text-center">
+                    <span className="text-sm text-muted-foreground">—</span>
+                  </div>
+                  <div className="w-24 shrink-0 px-2 py-3 text-center">
+                    <span className="text-sm text-muted-foreground">—</span>
+                  </div>
+                  <div className="w-24 shrink-0 px-2 py-3 text-center">
+                    <span className="text-sm text-muted-foreground">—</span>
+                  </div>
+                  <div className="w-20 shrink-0 px-2 py-3 text-center">
+                    <span className="text-sm text-muted-foreground">—</span>
+                  </div>
+                  <div className="w-24 shrink-0 px-2 py-3 text-center">
                     <span className="text-sm text-muted-foreground">—</span>
                   </div>
                 </div>
