@@ -2,7 +2,13 @@
 
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import type { FormAction, FormField } from "@/types/projects/forms";
 
@@ -35,10 +41,28 @@ function getTitleField(action: FormAction): string {
   return typeof v === "string" ? v : "";
 }
 
-function ActionRow({ action, idx, fields, onTypeChange, onTitleFieldChange, onRemove }: ActionRowProps) {
-  function handleTypeChange(v: string) { onTypeChange(idx, v); }
-  function handleTitleFieldChange(v: string) { onTitleFieldChange(idx, v); }
-  function handleRemove() { onRemove(idx); }
+function getSelectableFields(fields: FormField[]): FormField[] {
+  return fields.filter((field) => field.key.trim().length > 0);
+}
+
+function ActionRow({
+  action,
+  idx,
+  fields,
+  onTypeChange,
+  onTitleFieldChange,
+  onRemove,
+}: ActionRowProps) {
+  function handleTypeChange(v: string) {
+    onTypeChange(idx, v);
+  }
+  function handleTitleFieldChange(v: string) {
+    onTitleFieldChange(idx, v);
+  }
+  function handleRemove() {
+    onRemove(idx);
+  }
+  const selectableFields = getSelectableFields(fields);
 
   return (
     <div className="rounded-lg border bg-card p-3 flex flex-wrap items-center gap-2">
@@ -48,35 +72,53 @@ function ActionRow({ action, idx, fields, onTypeChange, onTitleFieldChange, onRe
         </SelectTrigger>
         <SelectContent>
           {ACTION_TYPE_OPTIONS.map((t) => (
-            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+            <SelectItem key={t.value} value={t.value}>
+              {t.label}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      {TICKET_ACTION_TYPES.has(action.type) && fields.length > 0 && (
+      {TICKET_ACTION_TYPES.has(action.type) && selectableFields.length > 0 && (
         <div className="flex items-center gap-1.5">
-          <Label className="text-xs text-muted-foreground whitespace-nowrap">Title from</Label>
-          <Select value={getTitleField(action)} onValueChange={handleTitleFieldChange}>
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">
+            Title from
+          </Label>
+          <Select
+            value={getTitleField(action) || undefined}
+            onValueChange={handleTitleFieldChange}
+          >
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Select field…" />
             </SelectTrigger>
             <SelectContent>
-              {fields.map((f) => (
-                <SelectItem key={f.key} value={f.key}>{f.label || f.key}</SelectItem>
+              {selectableFields.map((f) => (
+                <SelectItem key={f.key} value={f.key}>
+                  {f.label || f.key}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       )}
       <AnimatedIconButton
-        type="button" variant="ghost" size="icon" icon={XIcon} iconSize={14}
+        type="button"
+        variant="ghost"
+        size="icon"
+        icon={XIcon}
+        iconSize={14}
         className="w-8 ml-auto text-muted-foreground hover:text-destructive"
-        onClick={handleRemove} aria-label="Remove action"
+        onClick={handleRemove}
+        aria-label="Remove action"
       />
     </div>
   );
 }
 
-export function FormActionsEditor({ actions, fields, onChange }: FormActionsEditorProps) {
+export function FormActionsEditor({
+  actions,
+  fields,
+  onChange,
+}: FormActionsEditorProps) {
   function handleAdd() {
     onChange([...actions, { type: "create_task", config: {} }]);
   }
@@ -92,7 +134,9 @@ export function FormActionsEditor({ actions, fields, onChange }: FormActionsEdit
   function handleTitleFieldChange(idx: number, fieldKey: string) {
     onChange(
       actions.map((a, i) =>
-        i === idx ? { ...a, config: { ...(a.config ?? {}), titleField: fieldKey } } : a,
+        i === idx
+          ? { ...a, config: { ...(a.config ?? {}), titleField: fieldKey } }
+          : a,
       ),
     );
   }
@@ -110,7 +154,16 @@ export function FormActionsEditor({ actions, fields, onChange }: FormActionsEdit
           onRemove={handleRemove}
         />
       ))}
-      <AnimatedIconButton type="button" variant="outline" size="sm" icon={PlusIcon} iconSize={14} iconClassName="mr-1" className="text-xs w-full" onClick={handleAdd}>
+      <AnimatedIconButton
+        type="button"
+        variant="outline"
+        size="sm"
+        icon={PlusIcon}
+        iconSize={14}
+        iconClassName="mr-1"
+        className="text-xs w-full"
+        onClick={handleAdd}
+      >
         Add Action
       </AnimatedIconButton>
     </div>

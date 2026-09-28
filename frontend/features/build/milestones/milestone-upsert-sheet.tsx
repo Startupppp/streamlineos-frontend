@@ -14,6 +14,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
@@ -99,7 +100,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
 
   const [conflictFields, setConflictFields] = useState<TicketConflictFieldDiff[] | null>(null);
   const { data: membersPage } = useOrgMembers(1, 100);
-  const members = membersPage?.data ?? [];
+  const members = useMemo(() => membersPage?.data ?? [], [membersPage]);
 
   const candidates = useMemo(
     () => members.map((m) => ({ id: m.userId, name: m.name, email: m.email, image: m.image })),
@@ -199,6 +200,11 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
       <SheetContent className="w-full sm:max-w-md flex flex-col gap-0 p-0">
         <SheetHeader className="px-6 py-4 border-b">
           <SheetTitle>{isEdit ? "Edit Milestone" : "New Milestone"}</SheetTitle>
+          <SheetDescription>
+            {isEdit
+              ? "Update the milestone details and keep its delivery status current."
+              : "Create a checkpoint with an owner, target date, and delivery status."}
+          </SheetDescription>
         </SheetHeader>
 
         <Form {...form}>

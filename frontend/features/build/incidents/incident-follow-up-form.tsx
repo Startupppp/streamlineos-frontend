@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -90,6 +91,9 @@ export function EditFollowUpDialog({
       <DialogContent className="gap-3 p-4 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit follow-up</DialogTitle>
+          <DialogDescription>
+            Update the follow-up owner, due date, and notes.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form

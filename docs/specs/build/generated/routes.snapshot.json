@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "generatedAt": "2026-09-25T19:06:37.355Z",
+  "generatedAt": "2026-09-28T15:25:45.240Z",
   "source": "frontend/app",
-  "count": 83,
+  "count": 84,
   "routes": [
     {
       "path": "/accept-invitation",
@@ -207,6 +207,10 @@
     {
       "path": "/build/{projectId}/wiki/{pageId}",
       "file": "frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/page.tsx"
+    },
+    {
+      "path": "/build/{projectId}/wiki/{pageId}/history",
+      "file": "frontend/app/(authenticated)/build/[projectId]/wiki/[pageId]/history/page.tsx"
     },
     {
       "path": "/build/{projectId}/workload",

@@ -9,6 +9,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -57,6 +58,9 @@ export function CreateBoardDialog({
       <DialogContent className="gap-3 p-4 sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>New Board</DialogTitle>
+          <DialogDescription>
+            Create a collaborative canvas for ideas, diagrams, and planning.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">

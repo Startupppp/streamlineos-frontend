@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -165,6 +165,9 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Share board</DialogTitle>
+          <DialogDescription>
+            Choose who can access this board and what they can do.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-5 py-1">
           <div className="space-y-2">

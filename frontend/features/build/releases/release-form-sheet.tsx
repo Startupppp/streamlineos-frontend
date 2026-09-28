@@ -9,6 +9,7 @@ import { releaseFormSchema, type ReleaseFormValues } from "./release-form-schema
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetFooter,
@@ -171,6 +172,11 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
       <SheetContent className="sm:max-w-lg flex flex-col gap-0 p-0">
         <SheetHeader className="px-6 py-4 border-b">
           <SheetTitle>{isEdit ? "Edit Release" : "New Release"}</SheetTitle>
+          <SheetDescription>
+            {isEdit
+              ? "Update the release version, status, date, and notes."
+              : "Create a release to track a shipped version and its notes."}
+          </SheetDescription>
         </SheetHeader>
 
         <Form {...form}>

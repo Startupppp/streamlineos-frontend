@@ -5,7 +5,7 @@ import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm, useWatch, type Control, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { incidentFormSchema, type IncidentFormValues } from "@/features/build/incidents/incident-schema";
-import { Sheet, SheetBody, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -244,6 +244,11 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
           <SheetTitle>
             {editIncident ? "Edit Incident" : "New Incident"}
           </SheetTitle>
+          <SheetDescription>
+            {editIncident
+              ? "Update the incident details, ownership, and response milestones."
+              : "Record the impact, owner, and response timeline for this incident."}
+          </SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
