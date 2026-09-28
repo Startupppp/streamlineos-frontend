@@ -36,7 +36,7 @@ which is precisely the FE-127 violation this gate exists to stop —
 | | Before | After |
 |---|---|---|
 | Roots walked | `features/build` | `features`, `components`, `app`, `lib` |
-| Production files reached | 1,196 under `features/build` | the four roots, tests excluded as before |
+| Production files reached | 626 under `features/build` | 5,383 across the four roots (`features` 3,350 · `app` 1,290 · `components` 433 · `lib` 310), tests excluded as before |
 | Violations the gate could see | 0 of 47 outside Build | all of them |
 
 **Counts at the moment of widening.** 47 production files imported `@/hooks/api` or
