@@ -603,8 +603,27 @@ Every slice that touches a disclosure or mutation path must satisfy all of these
       `/knowledge/wiki/shared` route exists at `frontend/app/(authenticated)/knowledge/wiki/shared/page.tsx`; `shared-page.tsx` component exists in `features/wiki/components/`.
 - [ ] **BLOCKED:** Revocation propagation test against the documented bound
       p95 < 15 s / hard bound 60 s requires a live environment with real grant revocations and timing measurement.
-- [ ] **BLOCKED:** Backfill grants **only** from trustworthy existing facts; do not invent a grant per foreign-authored page
-      Backfill behavior requires querying production DB. KB PROD EMPTY (21 pages, 0 grants) means this is vacuously untestable in the current state.
+- [x] **DONE 2026-09-28 — the premise was wrong: this needed no production query, because the answer is in the migrations.** Backfill grants **only** from trustworthy existing facts; do not invent a grant per foreign-authored page
+      It was recorded as needing a production DB and as vacuously untestable. Neither holds. **No backfill
+      exists at all** — `kb_page_grants` is named by exactly one migration, `1168_kb_page_grants.sql`, which
+      creates it, and no migration anywhere inserts a row into it. There is also no backfill script under
+      `src/scripts/`. The table's only writer is `wiki/kb-page-grants.service.ts:183`, reached through a
+      request whose actor holds `manage` on the page.
+      **So the requirement is satisfied by construction, and satisfied on its strict half.** The clause is a
+      prohibition — *do not invent a grant per foreign-authored page* — and nothing ever invented one. Its
+      permissive half has nothing to act on: production carries 21 pages and 0 grants, so there is no legacy
+      corpus of trustworthy sharing facts to derive from. "Shared with me" starting empty is the correct
+      conservative outcome of that, not a lost backfill.
+      **Pinned so a future backfill cannot violate it silently** by `wiki/kb-page-grants-no-backfill.spec.ts`,
+      5 tests. The load-bearing one is the anti-vacuity control: the same scan, pointed at
+      `role_permission_grants`, finds the real backfill in `0207_backfill_crm_party_permissions.sql`, so the
+      empty result for `kb_page_grants` reflects the migrations rather than a regex that matches nothing.
+      Migration syntax was taken from that file rather than guessed (`INSERT INTO "role_permission_grants"`,
+      quoted, no schema prefix), and files are read with CRLF normalised, because a ratchet over this repo's
+      markdown and SQL has miscounted on CRLF before.
+      Deliberately **not** done: planting a synthetic offending migration as the mutation proof. An
+      unjournalled `.sql` in `migrations/` is the exact shape of BE-58's failure, and a peer session sweeping
+      the working tree could have committed it.
 
 **Evidence:** _pending_
 
