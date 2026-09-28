@@ -2,42 +2,19 @@
 
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence } from "framer-motion";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetBody,
-} from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
 import { WebhookBulkBar } from "@/features/build/webhooks/webhook-bulk-bar";
+import { WebhookFormSheet } from "@/features/build/webhooks/webhook-form-sheet";
+import { WebhookFilterToolbar } from "@/features/build/webhooks/webhook-filter-toolbar";
 import {
   WebhookConflictDialog,
   diffWebhookConflictFields,
@@ -55,20 +32,17 @@ import {
   useUpdateWebhook,
   type ProjectWebhook,
 } from "@/hooks/api/build/webhooks";
-import { cn } from "@/lib/utils";
 import {
   PmPageShell,
   PmSection,
   PmStaggerList,
   CONTENT_FILL_PANEL,
 } from "@/components/pm-chrome";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { WebhookCard } from "@/features/build/settings/webhook-card";
 import {
   webhookSchema,
   type WebhookFormValues,
 } from "@/features/build/webhooks/webhook-schema";
-import { setListMembership } from "@/lib/toggle-in-list";
 import { TablePagination } from "@/components/ui/table-pagination";
 import {
   BUILD_CURSOR_STACK_PARAM,
@@ -77,26 +51,6 @@ import {
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/features/build/shared/shortcut-help-dialog";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-
-function subscribeToEvent(
-  onChange: (events: string[]) => void,
-  subscribed: string[],
-  event: string,
-): (checked: boolean | "indeterminate") => void {
-  return function handleEventSubscriptionToggle(checked) {
-    onChange(setListMembership(subscribed, event, checked !== false));
-  };
-}
-
-const WEBHOOK_EVENTS = [
-  { value: "ticket.created", label: "Ticket Created" },
-  { value: "ticket.updated", label: "Ticket Updated" },
-  { value: "ticket.deleted", label: "Ticket Deleted" },
-  { value: "ticket.assigned", label: "Ticket Assigned" },
-  { value: "comment.created", label: "Comment Added" },
-  { value: "member.added", label: "Member Added" },
-  { value: "member.removed", label: "Member Removed" },
-];
 
 function AddWebhookButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -246,7 +200,6 @@ export function ProjectWebhooksPage({
     resolver: zodResolver(webhookSchema),
     defaultValues: { url: "", events: [], secret: "" },
   });
-  useRegisterDirtyState(sheetOpen && form.formState.isDirty);
 
   const handleMutationError = useCallback(
     (error: unknown, webhookId: number, patch: WebhookConflictPatch) => {
@@ -511,62 +464,21 @@ export function ProjectWebhooksPage({
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <Input
-              ref={searchInputRef}
-              placeholder="Search by URL…"
-              value={qInput}
-              onChange={handleQChange}
-              className="h-8 text-sm w-48 shrink-0"
-              aria-label="Search webhooks"
-            />
-            <Select value={stateParam ?? "all"} onValueChange={handleStateChange}>
-              <SelectTrigger className="h-8 text-sm w-36 shrink-0" aria-label="Filter by state">
-                <SelectValue placeholder="All states" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All states</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={eventParam ?? "all"} onValueChange={handleEventChange}>
-              <SelectTrigger className="h-8 text-sm w-44 shrink-0" aria-label="Filter by event">
-                <SelectValue placeholder="All events" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All events</SelectItem>
-                {WEBHOOK_EVENTS.map((ev) => (
-                  <SelectItem key={ev.value} value={ev.value}>
-                    {ev.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              type="date"
-              value={fromParam ?? ""}
-              onChange={handleFromChange}
-              className="h-8 text-sm w-36 shrink-0"
-              aria-label="Filter from date"
-            />
-            <Input
-              type="date"
-              value={toParam ?? ""}
-              onChange={handleToChange}
-              className="h-8 text-sm w-36 shrink-0"
-              aria-label="Filter to date"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              aria-pressed={density === "comfortable"}
-              onClick={handleDensityToggle}
-            >
-              {density === "comfortable" ? "Comfortable" : "Compact"}
-            </Button>
-          </div>
+          <WebhookFilterToolbar
+            searchInputRef={searchInputRef}
+            search={qInput}
+            state={stateParam}
+            event={eventParam}
+            from={fromParam}
+            to={toParam}
+            density={density}
+            onSearchChange={handleQChange}
+            onStateChange={handleStateChange}
+            onEventChange={handleEventChange}
+            onFromChange={handleFromChange}
+            onToChange={handleToChange}
+            onDensityToggle={handleDensityToggle}
+          />
           <PageState
             resolution={pageState}
             loading={
@@ -673,122 +585,15 @@ export function ProjectWebhooksPage({
         onDiscard={handleConflictDiscard}
       />
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md overflow-hidden">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-            <SheetTitle>{editingWebhook ? "Edit Webhook" : "New Webhook"}</SheetTitle>
-          </SheetHeader>
-          <SheetBody className="px-6 py-5">
-            <Form {...form}>
-              <form
-                id="webhook-form"
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">
-                        Payload URL
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://example.com/webhook"
-                          className="text-sm font-mono"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="events"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">
-                        Events to subscribe
-                      </FormLabel>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {WEBHOOK_EVENTS.map((ev) => (
-                          <label
-                            key={ev.value}
-                            className={cn(
-                              "flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-all duration-150 select-none",
-                              field.value.includes(ev.value)
-                                ? "border-primary bg-primary/5 text-foreground"
-                                : "border-border hover:border-border/80 bg-card",
-                            )}
-                          >
-                            <Checkbox
-                              checked={field.value.includes(ev.value)}
-                              onCheckedChange={subscribeToEvent(
-                                field.onChange,
-                                field.value,
-                                ev.value,
-                              )}
-                              className="h-3.5 w-3.5"
-                            />
-                            <span className="text-xs font-medium">
-                              {ev.label}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-
-                {!editingWebhook && (
-                  <FormField
-                    control={form.control}
-                    name="secret"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">
-                          Signing Secret{" "}
-                          <span className="text-muted-foreground font-normal">
-                            (optional)
-                          </span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Used to sign payloads"
-                            type="password"
-                            className="text-sm font-mono"
-                            {...field}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </form>
-            </Form>
-          </SheetBody>
-          <div className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" onClick={handleCancelForm}>
-                Cancel
-              </Button>
-              <LoadingButton
-                size="sm"
-                type="submit"
-                form="webhook-form"
-                isPending={editingWebhook ? updateWebhook.isPending : createWebhook.isPending}
-                loadingText={editingWebhook ? "Saving…" : "Creating…"}
-              >
-                {editingWebhook ? "Save Changes" : "Create Webhook"}
-              </LoadingButton>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <WebhookFormSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        isEditing={editingWebhook !== null}
+        isPending={editingWebhook ? updateWebhook.isPending : createWebhook.isPending}
+        form={form}
+        onSubmit={handleSubmit}
+        onCancel={handleCancelForm}
+      />
     </PageWrapper>
   );
 }
