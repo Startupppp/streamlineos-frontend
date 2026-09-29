@@ -85,6 +85,7 @@ export type BusinessPermissionKey =
   | "build:qa:view"
   | "build:qa:manage"
   | "build:qa:execute"
+  | "build:qa:restore"
   | "build:bugs:view"
   | "build:bugs:create"
   | "build:bugs:update"
