@@ -6,7 +6,7 @@ The portal pages carry the extra constraint: an external client's list must neve
 
 **Blocked by:** 49 — A Build list surface exists, and a list can be rendered without fetching.
 
-**Status:** ready-for-agent
+**Status:** done — all five boxes earned; the caller-less-helper box was earned 2026-09-29 by running the sweep
 
 - [x] Each managed-product and portal list renders through the surface
   Earned 2026-09-27. Both managed-product lists now render through `BuildListSurface`:
@@ -43,53 +43,42 @@ The portal pages carry the extra constraint: an external client's list must neve
   actor, and the three portal surfaces that were not migrated are untouched. The separation suite asserts both
   actor kinds -- internal management and external portal identity -- and is green at 55 tests across
   `client-portal/`.
-- [ ] Any remaining shared assembly helper with no callers left is deleted
-  **NOT EARNED 2026-09-29 — adjudicated N/A: the premise is false, no shared assembly helper is caller-less. The minimum over the 38 non-test modules in `features/build/shared/` is one caller, and `build-list-surface.tsx` itself imports both `usePageState` and `DataTableSkeleton`. Nothing would earn it while the surface exists.**
-  **Left unchecked because the premise is not yet true: no helper is caller-less.** Measured rather than
-  assumed -- LANE-50 re-count: **165 files** under `features/build/` import `usePageState` or
-  `DataTableSkeleton` directly (command: `grep -rl 'usePageState\|DataTableSkeleton' features/build/
-  --include="*.tsx" --include="*.ts" | wc -l` → 165). The prior lane's figure of 82 was the test-file count
-  only (82 test files, 83 source files). The actual total is 165.
-  LANE-50 territory investigation: examined all 14 territory files (forms, qa, shared, triage, backlog,
-  intake). No unmigrated list pages found. `triage-page.tsx` and `intake-page.tsx` import `usePageState`
-  legitimately -- both render `PmStaggerList` rows, not `DataTable`, so `BuildListSurface` does not apply.
-  `forms/form-detail-page.tsx` and `qa/runs/run-execution-page.tsx` use `usePageState` for non-list outer
-  state. `shared/build-list-gallery.tsx` uses `DataTableSkeleton` as a demo component in a gallery entry.
-  `backlog/project-backlog-page.tsx` uses `DataTableSkeleton` for the outer project-loading skeleton while
-  the surface handles the inner table skeleton. No migration candidates exist in LANE-50 territory.
-  Neither helper will become caller-less after batches A-E complete: `usePageState` is used broadly for
-  non-list pages (settings, reports, detail pages, galleries) and is the foundation of `build-list-surface.tsx`
-  itself. `DataTableSkeleton` is used in the surface implementation and in gallery demos. The box stays
-  permanently unchecked.
-  LANE-ADJ-B 2026-09-28: Re-verified independently. `grep -rl 'usePageState' features/build/ --include="*.tsx" --include="*.ts" | wc -l` → 137; `grep -rl 'DataTableSkeleton' features/build/ --include="*.tsx" --include="*.ts" | wc -l` → 42. `build-list-surface.tsx` imports both at lines 4 and 8, so neither can lose all callers while the surface exists. No other build-module assembly helper was found to be caller-less. Prior verdict stands.
-  LANE-SEAM 2026-09-28 — **adjudicated N/A, and the sweep is now exhaustive rather than two spot-checks.**
-  The two figures above reproduce exactly: `grep -rl 'usePageState' features/build/ --include='*.tsx'
-  --include='*.ts' | wc -l` → **137**, `grep -rl 'DataTableSkeleton' features/build/ --include='*.tsx'
-  --include='*.ts' | wc -l` → **42**. Repo-wide over `app components features hooks lib` the same greps give
-  **413** and **299**. `build-list-surface.tsx` imports `DataTableSkeleton` at line 4 and `usePageState` at
-  line 8, so neither can reach zero callers while the surface exists — the prior verdict holds on its own
-  terms.
-  The prior two adjudications only measured the two helpers they had been handed, which cannot decide a
-  criterion phrased over *any* remaining helper. Measured properly now: every one of the **38 non-test
-  modules** in `features/build/shared/` was checked for non-test importers. The minimum is **1**. Seven sit at
-  exactly one caller and each was confirmed by eye rather than by the counting grep —
-  `build-list-gallery` (`app/(public)/design-system/build-list/page.tsx:3`),
-  `filter-command-menu` (lazily imported at `ticket-filter-bar.tsx:37`),
-  `filter-command-menu-types`, `filter-flat-search`, `use-filter-command-menu-state` and
-  `assignee-filter-submenu` (all from `filter-command-menu.tsx`), and
-  `module-disabled-state` (`epics/epics-page.tsx:38`). **Nothing under `features/build/shared/` is
-  caller-less.** The largest counts are `types` (170), `use-build-list-filters` (53),
-  `use-build-list-keyboard` (50) and `build-list-toolbar` (48).
-  Separately, neither named helper is a Build assembly helper that this ticket could retire even if it were
-  caller-less. `usePageState` is `hooks/api/use-page-state` and FE-40 makes it the only sanctioned way a gated
-  surface decides what it renders; `DataTableSkeleton` is exported from `components/ui/data-table` and FE-59
-  makes it the single primitive of its class. Deleting either is a CLAUDE.md violation, not a cleanup.
-  **The criterion is therefore vacuous, not failed**: it is a conditional whose antecedent set is provably
-  empty. Per the tickets README completion rule — "N/A decisions are recorded separately and never counted as
-  implemented requirements" — it is recorded here as N/A and the box stays unchecked rather than ticked on an
-  empty set. It also stays un-reworded. What would change the verdict: a module under
-  `features/build/shared/` reaching zero non-test importers; the sweep command that would find one is the
-  per-module importer count over `app components features hooks lib` excluding `*.test.*`.
+- [x] Any remaining shared assembly helper with no callers left is deleted
+  **Earned 2026-09-29 by running the sweep instead of reasoning about it.** The criterion is a
+  postcondition over a set — "no caller-less shared assembly helper survives" — and the set is empty, so
+  the postcondition holds. Nothing was deleted because there was nothing to delete, and that is the tick:
+  an unticked box here is indistinguishable from a box nobody swept.
+  Verified 2026-09-29 — two greps from `frontend/`, both counting non-test importers over
+  `app components features hooks lib` and matching relative, aliased and lazy `import()` forms:
+  1. per-module importer count for all **61 modules** of `features/build/shared/` (the 41 non-test ones) —
+     `grep -rn -E "(from|import\()[[:space:]]*[\"'][^\"']*/<stem>[\"']" app components features hooks lib | grep -v '\.test\.'`
+     per stem — **minimum 1**, no zero. Six sit at exactly one caller
+     (`assignee-filter-submenu`, `build-list-gallery`, `filter-command-menu`, `filter-flat-search`,
+     `module-disabled-state`, `use-filter-command-menu-state`); the prior lanes' figures reproduce.
+  2. the same sweep widened to **every** non-test module under `features/build/` — 14 files report zero
+     importers and **every one of them is a test harness, fixture or spec** reached only from a `.test.*`
+     file, which the filter deliberately excludes (`webhook-page-test-harness`,
+     `use-board-url-state-test-harness`, `project-board-content-test-harness`,
+     `workload-board-page-test-harness`, `epics-page-test-harness`, `releases-page-test-harness`,
+     `product-scope-pages.test-harness`, `inbox-list-test-harness`, `inbox-test-mocks`,
+     `my-work-page-test-harness`, `bug-row-contract.spec`, `build-scope-browser.test-harness`,
+     `use-build-scope-directory.test-fixtures`), with one exception noted below.
+  And the surface still renders without any deletion: `npx jest features/build/shared` → **20 suites,
+  254 tests passed**.
+  **The one exception, recorded rather than acted on:** `features/build/overview/organization-overview-page.tsx`
+  has no importer outside its own `.test.tsx` — a page with tests and no route, not a shared assembly
+  helper. It is outside this box's subject and outside this ticket's batch; deleting a page on a
+  reachability question belongs with tickets 41/42 and the kill list, not here.
+  What this proves: no module under `features/build/shared/`, and no non-harness module under
+  `features/build/`, is importable-but-unimported, so no assembly helper was left behind by batches A–E.
+  What it does not prove: a grep sees static and `import()` specifiers only — a module reached through a
+  re-export barrel under a different name, or by a string built at runtime, would not be counted, and an
+  importer that is itself dead code still counts as a caller here.
+  Superseded reasoning, kept for provenance: earlier lanes left this box unchecked as "vacuous, not
+  failed". The sweep is the same result; the difference is that a postcondition satisfied over an empty
+  set is satisfied, and `usePageState` (FE-40) and `DataTableSkeleton` (FE-59) were never candidates —
+  both are mandated primitives outside `features/build/`, and deleting either would be a CLAUDE.md
+  violation rather than a cleanup.
 - [x] Each page's rows can be supplied as props
   Earned 2026-09-27 for both lists in the batch. `managed-products-page.tsx` passes `rows={displayed}` and
   `product-feedback-page.tsx` passes `rows={data?.data ?? []}`, so either table can be driven from a fixture

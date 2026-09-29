@@ -6,7 +6,7 @@ The deletion test says it must not simply go: delete the gallery and the complex
 
 **Blocked by:** 50 — Batch A. 51 — Batch B. 52 — Batch C. 53 — Batch D. 54 — Batch E.
 
-**Status:** ready-for-agent
+**Status:** done for everything automation can reach — four boxes earned; the fifth is browser-only and waived 2026-09-29
 
 - [x] Each gallery entry renders the real surface with a fixture, not a rebuilt copy of it
   Earned 2026-09-27. Every list entry in both governance gallery files now renders through `BuildListSurface`
@@ -23,8 +23,7 @@ The deletion test says it must not simply go: delete the gallery and the complex
   assertion with it (line 263: `riskPage(GOVERNANCE_RISK_ROWS)`). All 9 tests pass after the change.
   Command: `node node_modules/jest/bin/jest.js --runInBand --no-cache --cacheDirectory D:/agent-work/jest-lane5
   --runTestsByPath features/build/governance/risks-page.test.tsx` — 9 passed, 0 failed.
-- [ ] Every visual case the galleries covered is still reachable in a browser, including overflow and focus order
-  **NOT EARNED 2026-09-29 — browser-only: all 13 gallery cases are present by grep, but overflow widths, computed control heights and focus order are not observable in jsdom. Earned by a Playwright pass over `/design-system/governance-qa` and `/design-system/qa-execution`.**
+- [ ] Every visual case the galleries covered is still reachable in a browser, including overflow and focus order — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; the box names the browser in its own text, and overflow widths, computed control heights and focus order are not observable in jsdom, so no command in this checkout can settle it. The static half — all 13 cases still exist and are routed — is verified below; the waived half is a Playwright or human pass over `/design-system/governance-qa` and `/design-system/qa-execution`.)
   **BROWSER-ONLY.** All 13 cases that existed before the split are still present: `RisksTable`,
   `IncidentsTable`, `DecisionsTable`, `ApprovalsTable`, `RisksWithSelection`, five loading-skeleton entries,
   an empty state and an error state live in `governance-qa-gallery.tsx` (route `/design-system/governance-qa`).

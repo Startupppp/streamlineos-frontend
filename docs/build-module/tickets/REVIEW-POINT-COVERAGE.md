@@ -174,9 +174,62 @@ two and is an owner decision, not an oversight.
 - [ ] **`idx_project_approvals_approver_status` cannot supply the order.** It is
       `(org_id, approver_membership_id, status)` with no trailing `created_at, id`, while the read
       orders by `(created_at DESC, id DESC)` — `db/schema/build/approvals.ts:50`. Correctness is fine;
-      the sort is not index-served. **Unmeasured** — no `EXPLAIN` was run, every connection string
-      here points at production.
-      **NOT EARNED 2026-09-29 — unmeasured: no `EXPLAIN` can be run from this checkout, because every connection string here points at production. Earned by an `EXPLAIN` on a non-production database, then adding the trailing `(created_at, id)` to the index if the sort is not index-served.**
+      the sort is not index-served.
+      **AUTHORED 2026-09-29 — APPLY-PENDING, NOT EARNED.** The index now exists as DDL and as a schema
+      declaration; it is not in any database, so the box stays open.
+
+      `migrations/1500_build_project_approvals_inbox_cursor_index.sql`, journal `idx` 1153, and
+      `db/schema/build/approvals.ts:51`:
+
+      ```sql
+      CREATE INDEX IF NOT EXISTS "idx_project_approvals_approver_created_id"
+        ON "build"."project_approvals" ("org_id", "approver_membership_id", "created_at" DESC, "id" DESC, "status")
+        WHERE "deleted_at" IS NULL;
+      ```
+
+      **Why that column order and no other.** The read is
+      `approvals/build-approvals-inbox.service.ts:36-67` over
+      `pendingApprovalsForActorCondition` (`approvals/build-inbox-count.service.ts:7-18`): equalities on
+      `org_id` and `approver_membership_id`, `status IN ('pending','escalated')`,
+      `deleted_at IS NULL`, `ORDER BY created_at DESC, id DESC`, keyset bound on `(created_at, id)`.
+      A keyset scan needs the equality columns as the leading prefix, then the ordering columns in the
+      order and direction the `ORDER BY` uses, and nothing between them. `org_id` leads per BE-44 and
+      must be *in* the index per BE-79, because the RLS qual is not leakproof. `status` is an `IN` over
+      two values, so it cannot sit before `created_at`: it would split the index into two internally
+      ordered ranges that are not globally ordered, and the planner would re-sort. It sits last, where
+      it is an in-index filter that never disturbs the ordered range. `deleted_at` is the partial
+      predicate rather than a column, per BE-51. No total is computed, per BE-25.
+
+      **No plan was measured for this DDL, and none can be from this checkout** — every connection
+      string here points at production, in a different AWS account, so `EXPLAIN` is not available and
+      was not attempted. The column order is not a guess: ticket
+      `67-approvals-inbox-cursor-ordering.md` records a 2026-09-27 measurement on a **non-production**
+      local cold replay (`replay2`, PostgreSQL 18, 4,000 planted rows, run as `streamline_app` under
+      the tenant GUC per BE-76, buffers per BE-77) in which the order-leading candidate
+      `(org_id, approver_membership_id, created_at DESC, id DESC)` — a strict prefix of the index above —
+      scanned with **no sort node at 205 buffers** against the baseline's 506, while the status-leading
+      candidate kept the sort *and was not used at all* (seq scan). The trailing `status` column is the
+      only part of this DDL that measurement did not cover; it cannot change the scan order.
+      **Earned by:** applying 1500 and re-running that `EXPLAIN (ANALYZE, BUFFERS)` against a database
+      that holds real approvals, confirming the sort node is gone.
+
+      Verified 2026-09-29 — `pnpm typecheck` (exit 0, 10240 MB per BE-139); `node
+      src/scripts/check-migration-rollback.mjs` and `check-migration-discipline.mjs` name no 1500
+      finding once its rollback landed; `check-migration-immutability.mjs` → "every sealed migration
+      still builds the same database"; `check-tenant-indexes.mjs` and `check-partial-index-upserts.mjs`
+      unchanged; `npx jest --runTestsByPath` over the eight approvals and unified-inbox unit specs →
+      **8 suites, 73 tests passed**. What this proves: the DDL is journalled, reversible, immutable-safe
+      and the schema declaration compiles, and the inbox read's behaviour is unchanged. What it does not
+      prove: none of this touches a database, so the index does not exist anywhere and its effect on the
+      plan is still unmeasured.
+
+      Two adjacent findings from the same ticket stay open and are **not** this box:
+      `idx_project_approvals_approver_status` has no `WHERE deleted_at IS NULL` (a BE-51 gap), and the
+      cursor predicate is written as `(created_at < ?) OR (created_at = ? AND id < ?)`, which the
+      planner cannot seek on — row-wise `(created_at, id) < (?, ?)` would make it an `Index Cond`.
+      Neither is fixed here. The narrow existing index is **not** dropped: a narrow `(org_id, …)` index
+      is not made redundant by a wider one that leads with it, and 1500's post-check refuses to run if
+      it has gone missing.
 
 ## A8 — Collapse the project-access waterfall
 

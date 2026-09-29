@@ -190,6 +190,16 @@ function readBaseline() {
   };
 }
 
+export function baselineAdditions(previous, next) {
+  const added = [];
+  for (const bucket of ["missing", "extras", "typeMismatches", "dbCoverage"]) {
+    const frozen = new Set(previous[bucket] ?? []);
+    const arriving = (next[bucket] ?? []).filter((key) => !frozen.has(key));
+    if (arriving.length > 0) added.push({ bucket, keys: arriving });
+  }
+  return added;
+}
+
 function writeBaseline(result, document, dbResult) {
   const dedup = (arr) => [...new Set(arr)].sort();
   const obj = {
@@ -200,13 +210,28 @@ function writeBaseline(result, document, dbResult) {
     typeMismatches: dedup(result.typeMismatches.map(findingKey)),
   };
   if (dbResult !== null) obj.dbCoverage = dedup(dbResult.findings.map(findingKey));
+
+  const added = baselineAdditions(readBaseline(), obj);
+  if (added.length > 0) {
+    console.error("FAIL: --update-baseline prunes, it does not capture. This run would ADD frozen debt:");
+    for (const { bucket, keys } of added) {
+      console.error(`  ${bucket}: ${keys.length} new entry(entries)`);
+      for (const key of keys.slice(0, 20)) console.error(`    ${key}`);
+      if (keys.length > 20) console.error(`    ... and ${keys.length - 20} more`);
+    }
+    console.error("");
+    console.error("Fix the finding, or add the key to scripts/contract-parity-baseline.json by hand so a reviewer sees it in the diff.");
+    console.error("Nothing was written; the committed baseline is unchanged.");
+    return 1;
+  }
   writeFileSync(BASELINE_FILE, `${JSON.stringify(obj, null, 2)}\n`, "utf8");
+  return 0;
 }
 
 export function staleFailures(staleKeys) {
   if (staleKeys.length === 0) return [];
   return [
-    `${staleKeys.length} frozen baseline entry(entries) no longer reproduce — run --update-baseline to prune scripts/contract-parity-baseline.json`,
+    `${staleKeys.length} frozen baseline entry(entries) no longer reproduce — run --update-baseline to prune scripts/contract-parity-baseline.json (it refuses to write if the run would add an entry)`,
   ];
 }
 
@@ -415,7 +440,8 @@ async function main() {
     console.log(USAGE);
     return 0;
   }
-  if (options.selfTest) return runSelfTest(evaluate, floorFailures, partitionFindings, staleFailures, checkDbCoverage);
+  if (options.selfTest)
+    return runSelfTest(evaluate, floorFailures, partitionFindings, staleFailures, checkDbCoverage, baselineAdditions);
 
   const document = readBackendDocument(options);
   if (document.error !== undefined) {
@@ -466,9 +492,12 @@ async function main() {
   }
 
   if (options.updateBaseline) {
-    writeBaseline(result, document, dbResult);
+    const before = readBaseline();
+    const refused = writeBaseline(result, document, dbResult);
+    if (refused !== 0) return refused;
+    const after = readBaseline();
     console.log(
-      `Baseline written: ${result.missing.length} missing and ${result.extras.length} strict-extra finding(s) frozen against ${document.revision}.`,
+      `Baseline pruned: missing ${before.missing.length} -> ${after.missing.length}, strict-extra ${before.extras.length} -> ${after.extras.length}, type-mismatch ${(before.typeMismatches ?? []).length} -> ${(after.typeMismatches ?? []).length}, db-coverage ${(before.dbCoverage ?? []).length} -> ${(after.dbCoverage ?? []).length}, against ${document.revision}.`,
     );
     return 0;
   }
