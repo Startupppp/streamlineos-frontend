@@ -228,7 +228,26 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
 
     **What would unblock this box.** Give `RankTicketEffectDeps` and `BulkTicketEffectDeps` an `activity` and a `dispatch` member, dispatch them on the same diff that drives the webhook, and extend `drag-vs-panel-effects.spec.ts` to assert all four families side by side — or rename its describe blocks to the two families they actually cover and record the audit hole as an accepted gap. Ticket 44's box 1 is not the blocker; its box 2 is. Neither file is in this lane's write territory.
 - [ ] **P1: repair current wrong answers.** Close 04-07, 09, 15-17, 19/20, 33, 39 and 67 with behavior-level tests, not matching mocks. Do not keep invalidation recipes that contradict actual report dependencies.
-  - **NOT EARNED 2026-09-29 — re-counted today: of 04-07, 09, 15-17, 19/20, 33, 39 and 67, only ticket 16 still carries a box and it is adjudicated permanent N/A, so the counts are clear. The box stays open on the two substantive qualifiers recorded below, which this pass did not re-measure. Earned by re-measuring them.**
+  - **NOT EARNED 2026-09-29 (reconciliation lane, settled child by child) — ALL THIRTEEN CHILDREN ARE AT ZERO OPEN BOXES, so no child blocks this box. Ticket 16's last box has closed since this morning. Of the two substantive qualifiers, BLOCKER 1 IS NOW CLEARED and BLOCKER 2 IS STILL LIVE, re-measured today rather than carried forward. Earned when ticket 19's invalidation recipe stops contradicting the report SQL.**
+
+    Child census, 2026-09-29: `04 0 · 05 0 · 06 0 · 07 0 · 09 0 · 15 0 · 16 0 · 17 0 · 19 0 · 20 0 · 33 0 · 39 0 · 67 0` open boxes.
+
+    **BLOCKER 1 (ticket 07, qualifier "behavior-level tests, not matching mocks") — CLEARED.** The 2026-09-27 entry recorded `ticket-schema-bounds.spec.ts` as red at HEAD, `Tests: 10 failed, 40 passed, 50 total`, with the surviving negatives passing only because `version` was absent. Re-run today from `backend/`:
+
+    ```
+    node --max-old-space-size=3072 node_modules/jest/bin/jest.js --runInBand --no-cache \
+      --coverage=false --runTestsByPath src/modules/build/core/dto/ticket-schema-bounds.spec.ts
+    → Test Suites: 1 passed, 1 total · Tests: 51 passed, 51 total
+    ```
+
+    Fixed by backend `3f15149cd` (2026-09-28) "test(build): repair two specs that were passing for the wrong reason" — every positive case now supplies `version: 1` (`:27`, `:39`, `:44`, `:59`, `:73`, `:79`, `:84`), and the suite gained the 51st test at `:42`, which asserts that a body with **no** version is rejected, so each enum and bounds rejection is attributable to the field under test rather than to the missing token. That is the vacuity the qualifier was guarding against, now pinned by an assertion instead of an argument. **What this proves:** the cited suite is green and its negatives are non-vacuous. **What it does not prove:** nothing about the other twelve tickets' suites, which were not re-run this pass.
+
+    **BLOCKER 2 (ticket 19, qualifier "do not keep invalidation recipes that contradict actual report dependencies") — STILL LIVE, re-verified on disk today.** Both halves reproduce at HEAD:
+
+    - *Omission.* `frontend/hooks/api/build/ticket-cache.ts:344-350` invalidates **only** `criticalPath` on a title change, and `:278-279` is `if (!titleChanged && !statusChanged && !cycleChanged && !pointsChanged && !schedulingChanged) return;` — so a rank-only change invalidates no report at all. `backend/src/modules/build/core/analytics/projects-reports.service.ts` still computes burnup, cycleTime and leadTime from `tickets.updatedAt`, which every edit bumps.
+    - *Over-invalidation on a false premise.* `:329-341` evicts velocity, burnup and criticalPath on a `points` change. `backend/src/db/schema/build/ticket-core.ts:47,48` still declares `points` and `storyPoints` as two distinct columns, and `apply-ticket-change.ts:178` still writes only `points` (`if (input.points !== undefined) updateData.points = input.points;`) while the reports read `storyPoints`. So that eviction cannot be moved by that mutation.
+
+    Two commits have touched the recipe since (`3039901f1` "derive the report dependency matrix from the backend, not the doc", `3c319eb6b` "give schedulingChanged a branch"), and neither addressed either half. The unblock is unchanged: make the recipe match the SQL in both directions, and re-point `ticket-cache.test.ts`, whose "title-only change evicts only criticalPath" case currently pins the omission.
   - Not earned 2026-09-27 (Lane ROLLUP). Box counts are effectively clear, but **both substantive qualifiers fail**. Two independent blockers, below. Box counting alone would have ticked this box; it is wrong to tick.
 
     **Box counts — re-derived, line-anchored and CRLF-safe** (a `- \[ \]` match anywhere in the line is what earlier passes used; both forms agree here). From `D:/projects/personal/Streamlineos/`:
@@ -354,7 +373,9 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
     - Ticket 62 (`docs/build-module/tickets/62-cycle-invariants-in-the-database.md`): 1371 journalled idx 1125, applied, proved as application role (complete per addendum).
     - Ticket 65 (`docs/build-module/tickets/65-okr-links-exclusive-arc.md`): 1372 journalled idx 1126; both rejecting and accepting inserts proved as `streamline_app` in rolled-back transaction against `replay_test`; Drizzle schema reflects constraint; no malformed links found in production survey. The note "No production DDL was executed here" is superseded — 1372 has since been applied to production (ledger row id 1007 documented in ticket 65).
 - [ ] **P1: scalable reads.** Complete 14/18/46-48 using bounded SQL/pagination and measured plans. Request-local access caching cannot coalesce two HTTP requests; avoid global permission caches and unbounded ID arrays. Track buffers, dataset size, query count, cache hits/misses and p95 duration under the application role.
-  - **NOT EARNED 2026-09-29 — re-counted today: ticket 14's last box has since closed, so 14, 18 and 46-48 are all at zero open boxes and the count blocker the 2026-09-28 note named is gone. The box stays open on the "measured plans" qualifier alone, which needs an `EXPLAIN` against a non-production database.**
+  - **NOT EARNED 2026-09-29 (reconciliation lane, settled child by child) — ALL FIVE CHILDREN ARE AT ZERO OPEN BOXES, re-counted today: `14 0 · 18 0 · 46 0 · 47 0 · 48 0`. NO CHILD BLOCKS THIS BOX. The sole blocker is this box's own "measured plans" qualifier, which needs `EXPLAIN (ANALYZE, BUFFERS)` as the application role against a production-shaped, non-production database. Earned by that one measurement, and by nothing available in this checkout.**
+
+    Restated so the next lane does not re-derive it: the blocker is an instrument, not unwritten work. Every connection string reachable here resolves to production — `02-schemas.md`'s composite-index box records that `src/scripts/run-read-cost-budgets.mjs` autoloads `backend/.env`, so even `--self-test` opens a connection to the production host. Nothing in this box may be settled by running a read-cost harness from this machine.
   - Not earned 2026-09-28 (Lane ROLLUP). Blocked twice over: by ticket 14's one unchecked box, and by the "measured plans" qualifier, which ticket 14 cannot satisfy from any database this programme may open.
 
     18, 46, 47 and 48 are at zero boxes. Ticket 14 is `1 unchecked of 6`, and it is the criterion this box's first clause names: `docs/build-module/tickets/14-assignee-predicate-union.md:12`, "The combined filter is expressed as a union of independently indexable branches." Its **Status** line reads "partial — locality done, BE-81 not satisfied"; its correction at `:17-39` explains why the implemented correlated `EXISTS` cannot deliver the index win (first branch has no `FROM`, so there is no relation to probe; the whole predicate is opaque to row selection). Adjudicated in addendum 3 as correctly unchecked.
@@ -429,7 +450,11 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
 
     **What would unblock this box.** Re-read and re-anchor the 191 REVIEWED entries once the `build/core/` moves settle, so `--check` exits 0; then re-key the ratchet from four integers to a map of `controller#handler → verdict` so a retire-and-add cannot net to zero. Both live in `backend/`, outside this lane's write territory.
 - [ ] **P2: controlled reuse/restructure.** Keep 01-03/21-28/49-56 behind stable contracts. Preserve useful adapters; delete pure forwarding, not encapsulation. Pilot two compatible list pages, compose domain-specific controls, preserve primitive/query ownership, and do not force dashboards/editors/boards into one table configuration.
-  - **NOT EARNED 2026-09-29 — re-counted today: the per-ticket table below is stale. Of 01-03, 21-28 and 49-56, only 50, 51, 54 and 55 still carry a box and all four are adjudicated permanent N/A or browser-only; tickets 25 and 27 are at zero. The box stays open on its own qualifiers (stable contracts, adapters that encapsulate rather than forward, no forced single table configuration), which this pass did not re-measure. Earned by re-measuring them.**
+  - **NOT EARNED 2026-09-29 (reconciliation lane, settled child by child) — re-counted today, and the figure moved again: ticket 54's last box has closed since this morning, so of 01-03, 21-28 and 49-56 exactly THREE children still carry a box — 50, 51 and 55, one each — and ALL THREE CARRY THE `OUT OF SCOPE — browser verification` WAIVER. No child blocks this box on engineering work. The box stays open on its own four qualifiers, which no lane has ever measured against source. Earned by measuring them.**
+
+    Child census, 2026-09-29: `01 0 · 02 0 · 03 0 · 21 0 · 22 0 · 23 0 · 24 0 · 25 0 · 26 0 · 27 0 · 28 0 · 49 0 · 50 1 · 51 1 · 52 0 · 53 0 · 54 0 · 55 1 · 56 0`. The three open boxes are `50-list-surface-batch-a-delivery.md:31`, `51-list-surface-batch-b-governance.md:37` (both "no page in the batch changes visibly") and `55-gallery-collapses-onto-the-surface.md:26` ("every visual case is still reachable in a browser"). Each names the browser in its own text and each already carries the 2026-09-29 waiver.
+
+    **THE FOUR UNMEASURED QUALIFIERS, named so the next lane does not have to re-read this box to find them:** (1) "keep 01-03/21-28/49-56 behind stable contracts"; (2) "pilot two compatible list pages"; (3) "compose domain-specific controls, preserve primitive/query ownership"; (4) "do not force dashboards/editors/boards into one table configuration". Only the adapter clause has ever been checked, and only as far as tickets 01 and 02 record it (BE-143 deleted `checkProjectAccess` rather than leaving it forwarding). The other four were never measured against source, by any pass including this one, and this box must not be read as clearing them.
   - Not earned 2026-09-28 (Lane ROLLUP). Real unstarted work, not an adjudication problem. Eleven of the sixteen unchecked boxes left in the whole 68-ticket set belong to this box.
 
     Of its fifteen tickets, nine are at zero (01, 02, 03, 21, 22, 23, 24, 28, 49, 52, 53, 56 — twelve, counting the list-surface batches that landed). Six carry boxes, and ticket 27 has not started:
@@ -577,7 +602,23 @@ check `git -c core.autocrlf=false -c core.whitespace=cr-at-eol diff --check -- d
 - [x] Invalid or overbroad architecture recommendations were corrected and assigned explicit follow-up work.
 - [x] Existing code/UI changes were preserved; this pass changed documentation only.
 - [ ] All 68 remediation tickets are implemented, verified and tested. This remains unfinished product work, not an audit claim.
-  - **NOT EARNED 2026-09-29 — re-counted today and the 2026-09-28 figure is corrected: 60 of 68 tickets are at zero open boxes, and 8 tickets hold exactly one box each (11, 16, 38, 44, 50, 51, 54, 55), all eight adjudicated permanent N/A or browser-only — not 11 tickets holding 16 boxes. The box still cannot tick, because it is about shipped behaviour and the P0/P1/P2 blockers above are live.**
+  - **NOT EARNED 2026-09-29 (reconciliation lane, settled child by child) — re-counted at 17:20 and the figure from earlier today is itself stale: 65 OF 68 TICKETS ARE AT ZERO OPEN BOXES, and 3 tickets hold exactly one box each — 50, 51 and 55 — ALL THREE BROWSER-WAIVED. Tickets 11, 16, 38, 44 and 54 have closed since the morning count. So the 68-ticket set holds no open engineering box at all. The box still cannot tick, and the reason is now entirely in the rollups above, not in the tickets.**
+
+    Counting command, run from `docs/build-module/tickets/`:
+
+    ```
+    python3 -c "
+    import glob,re,os
+    for f in sorted(glob.glob('*.md')):
+        m=re.match(r'^(\d+)-',os.path.basename(f))
+        if not m: continue
+        d=open(f,'rb').read()
+        u=len(re.findall(rb'(?m)^[ \t]*- \[ \]',d))
+        if u: print(int(m.group(1)), u, f)"
+    → 50 1 · 51 1 · 55 1   (68 ticket files scanned)
+    ```
+
+    **WHAT STILL BLOCKS IT, stated as the three things they are.** `P1: repair current wrong answers` — ticket 19's invalidation recipe still contradicts the report SQL in both directions (re-verified today). `P1: scalable reads` — no `EXPLAIN` against a production-shaped non-production database exists. `P2: controlled reuse/restructure` — four of its own qualifiers have never been measured against source. `Release proof` is separately waived as browser work. **Three named items, none of them a ticket, and two of the three need an instrument rather than a decision.**
   - Not earned 2026-09-28 (Lane ROLLUP). **57 of 68 tickets have zero unchecked boxes; 11 tickets hold 16 unchecked boxes between them.** Counting command, line-anchored so a CRLF line cannot be missed, run from `D:/projects/personal/Streamlineos/`:
     ```
     PYTHONIOENCODING=utf-8 python -c "
