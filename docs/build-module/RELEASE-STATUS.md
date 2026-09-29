@@ -1,6 +1,6 @@
 # Build Module Release Status
 
-**Updated:** 2026-09-27 (architecture audit; older execution evidence retains its original date)
+**Updated:** 2026-09-29 (engineering pass and documentation reconciliation; older execution evidence retains its original date). Read § Two findings first — two release-relevant defects landed today that no lane in this checkout can close.
 **Authority:** This is the single release-status document for the Build module. Product contracts remain in the numbered specifications; future competitive work remains in `06-prioritized-backlog.md`.
 
 **2026-09-27 architecture-audit qualification:** The phase table and test/migration results below
@@ -17,11 +17,102 @@ module and sidebar PRDs (658 total, counted directly from the current PRD tree).
 completion; use `docs/specs/build/module/README.md` and its child PRDs for the
 complete product definition of done.
 
+## Two findings from 2026-09-29 that no lane in this checkout can close — READ THESE FIRST
+
+Both were found by reading code, both are release-relevant, and neither can be settled from this
+machine. They are recorded here rather than inside a checkbox because a reader who only skims the
+box list would not see them.
+
+### FINDING 1 — `deleteProject` appears unable to succeed for any project that holds a ticket
+
+This is not "may be unable". It is a static chain with no branch that avoids it, and it means
+project restore is reachable only for empty projects. **It still needs a DB-enabled lane to confirm
+the constraint is live on a real database**, which is the one step this checkout may not take.
+
+| Link | Evidence |
+|---|---|
+| The FK has no `ON DELETE` | `backend/migrations/0146_status_model_single_table.sql:41-47` — `ALTER TABLE tickets ADD CONSTRAINT fk_tickets_status FOREIGN KEY (org_id, project_id, status) REFERENCES project_statuses (org_id, project_id, name) ON UPDATE CASCADE NOT VALID;` then `VALIDATE CONSTRAINT` at `:47`. No `ON DELETE` clause, so Postgres defaults to `NO ACTION`; no `DEFERRABLE`, so it is checked at statement end, not at commit. |
+| Independently confirmed, not inferred | `backend/migrations/meta/0464_snapshot.json` records `{"name": "fk_tickets_status", …, "onDelete": "no action", "onUpdate": "cascade"}`. |
+| Still live at HEAD | `backend/src/db/schema/build/ticket-core.ts:100-104` declares the same `foreignKey({name: "fk_tickets_status", …}).onUpdate("cascade")` with no `.onDelete(...)`. No migration ever drops it — `grep -rln fk_tickets_status migrations/` returns only 0146. |
+| The delete soft-deletes the children then hard-deletes the parent | `backend/src/modules/build/core/project-crud/projects-write.service.ts:271-334`, one transaction: `:310-313` `update(tickets).set({deletedAt: now})` — rows and their `status` values stay — then `:322-329` `tx.delete(projectStatuses)`, the FK parent. |
+| Every surviving ticket still points at a parent | `ticket-core.ts:37` is `status: text("status").notNull().default("TODO")`. **NOT NULL**, and the constraint was VALIDATEd, so every live-or-soft-deleted ticket row has a `project_statuses` parent, and `:322-329` deletes exactly those parents while the children are present. |
+| Nothing prevents it | No ticket hard-delete on this path (the only `tickets` write is the soft update). No `status` nulling — impossible, the column is NOT NULL. No deferred constraint. No `ON DELETE SET NULL` or `CASCADE` anywhere on this constraint. |
+| How it would surface | `backend/src/common/http/all-exceptions.filter.ts:124-128` maps `23503` to `400` / `VALIDATION_FAILED` / `"Validation failed."`. So `DELETE /build/:projectId` (`projects-by-id.controller.ts:72`) would return **400 "Validation failed."** for any non-empty project — not a 500, and never a success. |
+| Why no test catches it | `projects-write-tenant-isolation.spec.ts:27-38` is the only delete happy path and its `tx` is a hand-rolled jest mock (`:29-34`, `delete: jest.fn().mockReturnValue({where: jest.fn().mockResolvedValue([])})`). No FK enforcement, so `:37 resolves.not.toThrow()` passes vacuously. This is the "specs that agree with the bug" shape. |
+
+**Consequence for restore.** `restoreProject` requires `project.deletedAt` to be non-null
+(`projects-restore.service.ts:47`), and `deleteProject` is the only writer of that column on this
+path. So **`POST /build/:projectId/restore` is reachable only for projects that had zero tickets.**
+
+**A SECOND, SEPARATE DEFECT FOUND IN THE SAME READ: even for an empty project, restore is lossy.**
+`deleteProject` hard-deletes `projectMembers` (`:314-321`), `projectStatuses` (`:322-329`),
+`ticketAssignees`, `ticketAttachments`, `ticketLabelMappings` and `timesheets` (`:298-309`).
+`restoreProject` (`projects-restore.service.ts:69-121`) restores only `projects`, `tickets` and
+`ticketComments`. A restored project comes back with no statuses and no members. That is the other
+side of the same design problem and it does not need a database to see.
+
+**WHAT A DB-ENABLED LANE MUST DO:** on a non-production database, confirm `fk_tickets_status` exists
+with `confdeltype = 'a'` (NO ACTION) and `convalidated = true`, then attempt
+`DELETE /build/:projectId` against a project holding one ticket, in a rolled-back transaction as the
+application role. If it raises 23503, the fix is a decision about the delete's order of operations,
+not a schema patch.
+
+### FINDING 2 — thirteen routes that landed today are absent from the vendored contract, so the frontend cannot call any of them
+
+`openapi:generate` was banned in every lane today, and the vendored contract was last regenerated
+**2026-09-28 18:57:55** (`frontend/contracts/openapi.json`, commit `cf34aace0`, `chore(api): vendor
+the republished contract`; byte-identical to `streamlineos-backend/openapi.json` at `da5eacbe9c`,
+sha256 `89ef110d…`). The file records no generation timestamp of its own — its `info.version` is the
+static string `"1.0"`. **Every route below landed 2026-09-29, after that vendoring.**
+
+Absent from `frontend/contracts/openapi.json`, confirmed by grepping each literal path and
+cross-checked by a JSON pass over all 3,075 paths (the only `restore` paths present belong to
+inventory, kb, organizations and users; the only `retention` paths are the settings pair plus
+fourteen unrelated `/cron/*-retention-*` sweeps). Measured directly:
+`python3 -c "import json; d=json.load(open('openapi.json')); print(len(d['paths']), [p for p in d['paths'] if 'restore' in p and p.startswith('/build')], [p for p in d['paths'] if 'retention-purge' in p])"`
+→ **3075 paths, `[]`, `[]`.** Twelve restore routes exist in the backend controllers; zero are in the contract.
+
+- H1's four restore routes — `POST /build/{projectId}/restore`, `POST /build/templates/{templateId}/restore`, `POST /build/{projectId}/tickets/{ticketId}/restore`, `POST /build/{projectId}/tickets/{ticketId}/comments/{commentId}/restore`.
+- H2's eight restore routes — `POST /build/roadmap/{itemId}/restore`, `POST /build/feedback/{postId}/restore`, `POST /build/{projectId}/releases/{releaseId}/restore`, `POST /build/{projectId}/milestones/{milestoneId}/restore`, `POST /build/{projectId}/whiteboards/{whiteboardId}/restore`, `POST /build/{projectId}/test-suites/{suiteId}/restore`, `POST /build/{projectId}/test-cases/{caseId}/restore`, `POST /build/{projectId}/test-runs/{runId}/restore`.
+- J's retention purge route, `GET` **and** `POST /cron/build-project-retention-purge` (`cron-build-project-retention.controller.ts:31`, `:41`).
+
+**THE FRONTEND CANNOT CALL ANY OF THEM UNTIL THE CONTRACT IS REGENERATED.** The permission keys are
+in place on both sides — `build:restore` and `build:tickets:restore` (frontend `64378742c`) and
+H2's five (frontend `879ead178`), each in the `PermissionKey` union, the runtime catalog and
+`frontend/contracts/permission-catalog.json` — so `useCan` answers them and the role editor can
+grant them. What is missing is the operation, not the permission.
+
+**AND THE TWO CHEAP GATES ARE STRUCTURALLY BLIND TO THIS, which is why nothing went red.**
+
+- `frontend/scripts/check-contract-vendor.mjs` — **green, and run this lane.** It compares SHA-256 of the vendored copy against the backend artifact. Both are equally stale, so it cannot see the gap by construction.
+- `backend/src/scripts/check-api-contract-registry.mjs` — fail-closed "every operation must be classified", but it enumerates operations *from* `openapi.json`. An operation missing from the document is invisible to it: vacuously green.
+- `backend/src/scripts/check-openapi-fresh.ts` (`pnpm openapi:check`) — **this is the gate that bites, and it is red.** `diffArtifacts()` (`:28-42`) indexes `METHOD path` from the committed document against a freshly generated one; the routes above would come back as `added` and it would fail. It was **not run**, because its line 4 imports `generateOpenApiJson` — it *is* `openapi:generate`, and it boots Nest. So this is a static verdict on the gate, not an execution of it.
+
+**WHAT CLOSES IT:** one `pnpm openapi:generate` in the backend, a copy into
+`frontend/contracts/openapi.json`, and `pnpm check:contract-vendor` green afterwards. Until then
+`check:contract-vendor` will keep reporting success over a contract that is a day behind the routes.
+
+### A third thing, smaller but operationally urgent
+
+**J's retention purge is armed to destroy automatically on the next backend deploy, and its indexes
+are not applied.** `src/modules/cron/cron-retention-scheduler.service.ts:104` registers
+`["build-project-retention-purge", () => buildProjectRetention.sweep({ confirm: true })]` — the
+scheduler is the one caller that passes `confirm: true`; the HTTP route stays a dry run without
+`?confirm=destroy`. It arms in `onModuleInit` (`:115-127`) and is on unless `NODE_ENV === "test"` or
+`RETENTION_SCHEDULER_ENABLED === "false"` (`:144-145`). So "never executed" is true of every
+database today and stops being true one day after the next deploy, while migration `1540` — the two
+partial indexes its selection depends on — is apply-pending. Whoever deploys next should decide
+`RETENTION_SCHEDULER_ENABLED` before the deploy, not after. The full clause-by-clause verification
+of the purge is in [`99-kill-list.md`](./99-kill-list.md) under the product-copy box.
+
 ## Checkout reconciliation
 
 The top-level frontend repository and nested backend repository are both on `main`
 and pushed to their configured remotes. The current Build fixes are frontend
-`1cd642429` and backend `5f6c91db8`. The backend working tree still contains
+`1cd642429` and backend `5f6c91db8`. **Stale as of 2026-09-29:** the heads this pass measured are
+backend `3e8c0f97e` and frontend `879ead178` plus this lane's documentation commits. As before, treat
+a commit as deployed only after the deployment identity is read from the running service — which, per
+the deployment-status box below, is not currently possible for either service. The backend working tree still contains
 unrelated uncommitted changes in `migrations/meta/_journal.json` and
 `test/helpers/e2e-app.ts`; they were preserved and are not part of the Build fix.
 Treat a commit as deployed only after the deployment identity is read from the
@@ -100,6 +191,11 @@ checkbox state of every file under `docs/build-module/`.
   `- [x]` under `docs/build-module/**`. With browser verification waived, the in-scope remainder is
   **40 open boxes, of which 5 are Tarun decisions and 23 are unfinished product work** — the other 166
   are out of scope, not outstanding.
+  **SUPERSEDED 2026-09-29 by the engineering pass below: 1,108 earned of 1,284, 176 open, of which
+  132 carry the inline waiver marker and 44 are in scope.** The figures above were right when written;
+  seven lanes and a browser session have landed since. The waived figure in particular no longer
+  describes the tree — a browser session added partial evidence to twenty page boxes after that pass,
+  without the marker, so an inline-marker count now returns 132 rather than 166.
 
 Counts elsewhere that this pass falsifies:
 
@@ -114,12 +210,98 @@ Counts elsewhere that this pass falsifies:
   activity row and does notify. `BulkTicketEffectDeps` still declares only `webhooksDispatch` and
   `automationRunner`. The `P0` box and ticket 44 said this of both routes; both are corrected.
 - **The journal figure above and the § Production migrations figure disagree, and both were right when
-  written.** `backend/migrations/meta/_journal.json` holds **1,025 entries** today, with 0 duplicate
+  written.** *(Re-measured 2026-09-29: the journal now holds **1,027** entries at max `idx` 1154 — see
+  the engineering pass below for the two migrations added today. The 1,025 below stands as the
+  2026-09-28 reading.)* `backend/migrations/meta/_journal.json` holds **1,025 entries** as of 2026-09-28, with 0 duplicate
   `idx` and 0 journalled tags lacking a file (re-counted today, file read only, no database). §
   Production migrations records a production ledger reading of 1,019 journal entries at watermark
   `1803093634725`; the journal's max `when` is now `1803093640725`, so **six entries post-date that
   reading**. `pendingCount=0` was true of that reading and is not re-verifiable from here.
 
+
+### 2026-09-29 engineering pass
+
+Seven lanes ran against `docs/build-module/`'s open boxes, then this reconciliation lane settled the
+documentation. Backend `6b7a5adf5`…`3e8c0f97e` (36 commits), frontend `57b5398df`…`879ead178` plus
+this lane's docs commits. **Everything below was verified against the code by this lane; no lane's
+own summary was taken as evidence, and three lane claims did not survive that check — they are named
+under "claims that did not verify".**
+
+**What the seven lanes landed.**
+
+- **H1** — restore and audit for `core/tickets/`, `core/project-crud/`, `core/settings/`. Backend `045b2afd1`, frontend `64378742c`. Four soft deletes, four restore routes (`POST /build/{projectId}/restore`, `…/templates/{templateId}/restore`, `…/tickets/{ticketId}/restore`, `…/tickets/{ticketId}/comments/{commentId}/restore`), two new permission keys (`build:restore`, `build:tickets:restore`) present in the backend catalog (`rbac/permissions/build.ts:366-379`, wired at `catalog.ts:91`) and in all three frontend places. **No backfill migration**, correctly: `RoleGrantReconcilerService` converges at boot (`permission-catalog-sync.service.ts:40-67`) — with two caveats worth knowing, that it is skipped when `RBAC_GRANT_RECONCILE_ON_BOOT === "false"` and that it only converges roles at `version === 1`, so an admin-edited role never receives the new keys. Uniqueness: projects and tickets run a real occupant probe and 409 naming the occupying id; templates and comments have no business unique slot, so none is needed. Orphan rule: refuses upward with a 409 naming the deleted parent, cascades downward only on `eq(child.deletedAt, parent.deletedAt)`.
+- **H2** — the same for `core/roadmap/`, `core/releases/`, `core/feedback/`, `qa/`, `execution/`. Backend `96a142cc1`, `3e8c0f97e`; frontend `879ead178`. **It landed at 17:25 while this lane was running, so its share is evidence, not in flight.** Eight restore routes over roadmap_items, feedback_posts, project_releases, project_milestones, project_whiteboards, test_suites, test_cases, test_runs; five new permission keys (`build:qa:restore`, `build:roadmap:restore`, `build:releases:restore`, `build:whiteboards:restore`, `build:workspace:restore`) in the backend catalog and in the frontend union and vendored catalog; `pnpm verify:permissions` exits 0 at 764 == 764. **Nine** delete sites gained an audit row, not the seven the brief named — `qa/test-runs.service.ts` `deleteRun` and `qa/bugs.service.ts` `deleteBug` were also writing nothing. No migration.
+- **I** — outbox. Backend `74fa62fb8`, `17d5702d2`, `08cf6f782`, `a209e66fb`, `5b7728962`. 7 emit sites over 5 aggregate types, both new events with a registered consumer, webhook fan-out confirmed as a real transactional outbox (`enqueue(tx, …)` writes durable `build.webhook_deliveries` rows in the caller's transaction, then emits the pointer row). No outbox table, no migration. `check:outbox-consumers` genuinely repaired — it had resolved `from "./core"` to a barrel with no `@Module` and stopped there, hiding four Build consumers.
+- **J** — retention purge. Backend `4e3a54d75`, `a586e9b6f`, `4afc370b1`. All five behavioural claims verified clause by clause in [`99-kill-list.md`](./99-kill-list.md): dry-run default, `?confirm=destroy` opt-in, `legal_hold` short-circuiting at org and project level before any selection, audit before destruction via `logCriticalOutsideTransaction`, and `audit_log_retention_days` deliberately uncovered because its target has no `deleted_at`. **Never executed, and armed to execute automatically on the next deploy** — see § Two findings, third item.
+- **K** — ticket 44 and sprints. Backend `4cd154b7f`, `471229a63`, `b8245d8e0`, `6733a1496`; frontend `54d5c2306`. One effect module serving all three call sites, confirmed by grep: no rank/bulk effect symbol survives in `src/`. All five sprints lines retained, each verified present on disk.
+- **A–G, earlier today** — bounded reads, the FE-110 overlay rung, bulk effect parity, redirect observability, lifecycle predicates, the identity-scoped authorization census, and the approvals cursor index.
+
+**Box delta.** Measured over every `- [ ]` and `- [x]` under `docs/build-module/**`:
+
+| | Before this pass | After |
+|---|---|---|
+| Total boxes | 1,286 | **1,284** (two duplicated criteria removed from `10-goals.md`) |
+| Earned (`- [x]`) | 1,108 | **1,108** |
+| Open (`- [ ]`) | 178 | **176** |
+| — carrying the inline `OUT OF SCOPE — browser verification` marker | 128 | **132** (the six this pass marked, less two deduplicated) |
+| — **in-scope open** | 50 | **44** |
+
+**Boxes ticked by this pass: 0.** Every open box was read against today's code and none had all of its
+clauses met. Four came close and each is recorded with the one clause that blocks it. Inventing a
+tick for any of them would have been a fabrication.
+
+**Migrations authored today.** Journal re-read (file only, no database): **1,027 entries, max `idx`
+1154, max `when` 1803093642725, zero duplicate `idx`.** This falsifies the "1,025 entries" figure
+recorded in the 2026-09-28 pass above; two entries were added today and none by H2.
+
+| Tag | idx | What it is | State |
+|---|---|---|---|
+| `1500_build_project_approvals_inbox_cursor_index` | 1153 | one partial index `(org_id, approver_membership_id, created_at DESC, id DESC, status) WHERE deleted_at IS NULL`, with a `DO` block that also fails if the narrower `idx_project_approvals_approver_status` has gone missing | **APPLY-PENDING** |
+| `1540_build_retention_purge_indexes` | 1154 | two partial indexes `(org_id, project_id, deleted_at) WHERE deleted_at IS NOT NULL`, on `build.tickets` and `build.project_attachments`, matching the purge predicates exactly | **APPLY-PENDING** |
+
+**How "apply-pending" is and is not knowable from here:** the files say authored, journalled and
+hash-chained. Only a database says whether `__drizzle_migrations` holds their tags and whether the
+indexes exist in `pg_class`. Both are the newest journal entries and both were authored today, so
+apply-pending is the overwhelmingly likely state — but likely is not evidence, and no lane may
+confirm it from this checkout.
+
+**The open remainder — 44 in-scope boxes, split four ways.**
+
+- **(a) browser-class, 23.** Two kinds. **Three carry no waiver marker and cannot get one**, because they need an instrument no waiver supplies: `01-ia-navigation.md` navigation equivalence, `04-shared-components.md` focus and responsive mechanics, and this file's authenticated desktop/mobile matrix. **Twenty are the "Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict" boxes** on twenty page specifications, each now holding partial Cursor-IDE evidence from a browser session that ran *after* the waiver pass — which is why the waiver pass's census of 166 no longer describes this tree and why the marker count here is 132. Each of the twenty names the states it did and did not reach. This lane did not extend the waiver to them; that is Tarun's to widen if he wants it.
+- **(b) needs a database, 6.** `02-schemas.md` composite indexes (10 of 41 Build lists have an authored ceiling, and the harness autoloads a production `.env` — do not run it); `05-performance-caching.md` skeleton budgets; `performance-followup/cache-policy.md` ×2, one of which also needs a non-production Redis; `tickets/REVIEW-POINT-COVERAGE.md` approvals index (migration `1500` above); and the `P1: scalable reads` measured-plans qualifier. **Plus FINDING 1 above, which is not a box but is the highest-value thing on this list for a DB-enabled lane.**
+- **(c) Tarun's decision, 6.** Listed in full below.
+- **(d) genuinely unfinished, 9.** `02-schemas.md`'s lifecycle inventory, now blocked on three named hard deletes rather than on a count. `99-kill-list.md` ×3 — 30 live redirects with (a) met and (b)/(c) not, two parallel survivals gated on a deployment fact, and product copy with a third blocker beyond the two decisions. `10-project-issues.md` ×2 and `10-command-center.md` and `LANE-5-STATUS.md` per-item remainders. The four `ARCHITECTURE-VERIFICATION` rollups, settled child by child this pass: **no ticket blocks any of them any more** — 65 of 68 tickets are at zero open boxes and the three remaining boxes are browser-waived — so what blocks them is ticket 19's invalidation recipe, an `EXPLAIN` nobody here can take, and four `P2` qualifiers no pass has ever measured against source.
+
+**Claims a lane made that this lane could not verify in the code.**
+
+1. **Lane I's "12 entities recorded as deliberately uncovered" does not exist.** Searched `backend/docs/**`, every `src/scripts/check-*.mjs`, every `src/scripts/baselines/*.json`, and repo-wide for `uncovered`/`deliberate`/`twelve` near `entit`. The nearest real artefact withholds **five** tables and is a retention gate. Do not cite the figure until someone produces the file.
+2. **H2's "409 naming the occupant" does not name one**, and its upward refusal is a 404 rather than H1's 409 naming the parent. Neither is a defect — no partial unique exists on any of its eight tables, so the collision path cannot fire — but the guard must not later be cited as tested behaviour.
+3. **`check:outbox-consumers` is red at HEAD** (exit 1) on five HR/recruitment events. Build is clean and appears in the gate's REGISTERED list; the gate is not green. Any report of "gate green" for this lane is wrong.
+
+Two smaller corrections, both to lane framing rather than to code: `74fa62fb8` added no
+`OutboxWriter.emit` at all (its diff adds a `webhooksDispatch.enqueue`), so the 5→7 came entirely
+from `17d5702d2` and `08cf6f782`; and lane K's `build-ticket-bulk-effects.ts` was not deleted — it
+survives as two pure read helpers, though its effect exports are genuinely gone.
+
+**One thing this lane repaired rather than recorded.** Lane K's `54d5c2306` spliced its new block
+into the middle of the word "Verified" in `tickets/44-*.md`, leaving a duplicated paragraph, two
+truncated `**Verif` fragments and an orphaned `ied 2026-09-29 — …` tail attached to nothing. Repaired
+in `0239a603e`; the file states each criterion once and its Verified note is whole.
+
+### Six decisions that are Tarun's, and stay unimplemented
+
+Each is stated as one either/or. **Neither side of any of the six was implemented by any lane today**,
+which is the correct outcome — each changes a product commitment, not an implementation detail.
+
+1. **The open-questions process gate** (`99-open-questions.md`) — do we add a `.github/PULL_REQUEST_TEMPLATE.md` checkbox asserting that no open question in that file was silently resolved, or do we rely on reviewer awareness? There is no PR template today.
+2. **The command-center `view` parameter** (`10-command-center.md`) — does the command center get a second layout or an organization-wide saved view at all, or does `view` stay unread because there is nothing for it to select? Every other item on that box is implemented and tested.
+3. **Per-item client visibility** (`99-kill-list.md`) — do we build `ClientVisibilityPage` into the Client Portal page's tab strip, or delete the half-finished screen and let clients keep seeing everything the portal grant allows? It is reachable from no `app/**` route, and wiring it as-is would nest a `PageWrapper` in a `PageWrapper` and ship an FE-125-banned "Load more" control.
+4. **Retention — and J's purge has changed this question's shape.** It was "build the deletion or withdraw the copy". The deletion now exists in code, unapplied and never run, so it is now: **do we apply migration `1540` and let the daily sweep start deleting, or keep it switched off via `RETENTION_SCHEDULER_ENABLED=false` and change the copy to say data is kept indefinitely until we do?** Two things the answer depends on: the scheduler passes `confirm: true` automatically, so a deploy with the default settings starts deleting without anyone typing `?confirm=destroy`; and the purge keeps two of the three promises the settings screen makes, so (a) alone does not make that screen truthful — the audit-log axis needs a different shape.
+5. **The concurrency token on the rank route** (`tickets/REVIEW-POINT-COVERAGE.md` stage two) — do we require it now, breaking drag-and-drop for any client not yet sending one, or keep accept-and-warn? One line per schema once ruled.
+6. **The signed-URL TTL** (`05-performance-caching.md`) — do we shorten `SIGNED_URL_TTL` from 3,600 s to 60–120 s and key the Files list on `bumpPermissionsVersion`, or accept that a Build file download outlives access revocation? **This one depends on open question 10, which is still unanswered**, so it cannot be ruled in isolation.
+
+A seventh *item* is also Tarun's but sits inside a box counted under (d): writing a board `cursor`
+into the URL on `10-project-issues.md`, which changes that board's paging model.
 
 ## Scope
 
