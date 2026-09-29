@@ -271,6 +271,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
                           onChangeHtml={(html) => field.onChange(html || null)}
                           placeholder="Describe what's in this release…"
                           menuMode="static"
+                          output="html"
                         />
                       </div>
                     </FormControl>

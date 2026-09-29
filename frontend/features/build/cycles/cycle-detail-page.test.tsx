@@ -408,3 +408,30 @@ it("selecting a list-view ticket then clicking bulk-priority invokes useBulkUpda
   );
 });
 
+it("passes cycleId as a filter to useTicketColumnCounts so column counts are scoped to the cycle not the whole project (BUG-057)", () => {
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+
+  const calls = mockUseTicketColumnCounts.mock.calls;
+  const lastCall = calls.at(-1);
+  expect(lastCall?.[0]).toBe(1);
+  expect(lastCall?.[1]).toEqual(expect.objectContaining({ cycle: "5" }));
+});
+
+it("shows No matches empty state when a search is active but no tickets match so the user is not misled into thinking the cycle is empty (BUG-057)", () => {
+  mockUseBuildListFilters.mockReturnValue({
+    search: "alpha", debouncedSearch: "alpha", cursor: null,
+    setSearch: jest.fn(), setCursor: jest.fn(), clearAll: jest.fn(),
+    resetKey: "", value: jest.fn(() => ""), setValue: jest.fn(),
+    activeCount: 1, isFiltered: true,
+  });
+  mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({ data: [] }));
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  expect(screen.getByTestId("empty-state")).toHaveTextContent("No matches");
+});
+
+it("shows No tickets in this cycle empty state when no search is active and the cycle has no tickets (BUG-057)", () => {
+  mockUseProjectBoardTickets.mockReturnValue(baseQueryResult({ data: [] }));
+  render(<CycleDetailPage projectId="1" cycleId="5" />);
+  expect(screen.getByTestId("empty-state")).toHaveTextContent("No tickets in this cycle");
+});
+

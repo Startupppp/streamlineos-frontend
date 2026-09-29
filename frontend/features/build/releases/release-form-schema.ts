@@ -16,8 +16,7 @@ export const releaseFormSchema = z.object({
     .min(1, "Version is required")
     .trim()
     .max(30, "Version must be 30 characters or fewer")
-    .refine((v) => v.trim().length > 0, "Version cannot be whitespace only")
-    .refine((v) => MEANINGFUL_TEXT_RE.test(v) || VERSION_RE.test(v.trim()), "Enter a valid version, e.g. 1.4.0 or v2.0.0-beta"),
+    .refine((v) => VERSION_RE.test(v.trim()), "Enter a valid version, e.g. 1.4.0 or v2.0.0-beta"),
   description: z
     .string()
     .nullable()

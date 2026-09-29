@@ -1,21 +1,31 @@
 import { z } from "zod";
 
-export const decisionFormSchema = z.object({
-  title: z.string().min(1, "Required").max(200),
-  context: z.string(),
-  decision: z.string(),
-  optionsConsidered: z.string(),
-  status: z.enum(["proposed", "accepted", "superseded", "revisit"]),
-  ownerId: z.string(),
-  decidedAt: z.string(),
-  revisitAt: z.string(),
-  linkedTicketId: z.string(),
-});
+export const decisionFormSchema = z
+  .object({
+    title: z.string().trim().min(1, "Required").max(200),
+    context: z.string(),
+    decision: z.string(),
+    optionsConsidered: z.string(),
+    status: z.enum(["proposed", "accepted", "superseded", "revisit"]),
+    ownerId: z.string(),
+    decidedAt: z.string(),
+    revisitAt: z.string(),
+    linkedTicketId: z.string(),
+  })
+  .refine(
+    (d) => {
+      if (d.decidedAt && d.revisitAt) {
+        return d.revisitAt >= d.decidedAt;
+      }
+      return true;
+    },
+    { message: "Revisit date must be on or after the decided date", path: ["revisitAt"] },
+  );
 
 export type DecisionFormValues = z.infer<typeof decisionFormSchema>;
 
 export const riskFormSchema = z.object({
-  title: z.string().min(1, "Required").max(200),
+  title: z.string().trim().min(1, "Required").max(200),
   description: z.string(),
   probability: z.enum(["low", "medium", "high"]),
   impact: z.enum(["low", "medium", "high"]),

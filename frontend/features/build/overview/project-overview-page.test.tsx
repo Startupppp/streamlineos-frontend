@@ -597,4 +597,97 @@ describe("ProjectOverviewPage", () => {
       expect.objectContaining({ error: activityError }),
     );
   });
+
+  it("Open issues stat shows analytics openTickets not the column-count sum so Done tickets are excluded (BUG-036)", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    (useProjectAnalytics as jest.Mock).mockReturnValue({
+      data: {
+        healthStatus: "AT_RISK",
+        healthScore: 45,
+        healthBreakdown: {
+          completionPct: 4,
+          onTimePct: 100,
+          velocityScore: 100,
+          overdueTickets: 0,
+          totalTickets: 51,
+          openTickets: 49,
+        },
+        stateDistribution: [],
+        priorityBreakdown: [],
+        assigneeCompletion: [],
+        volumeOverTime: [],
+        cycleVelocity: [],
+        estimateVsActual: [],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    const { useTicketColumnCounts } = jest.requireMock("@/hooks/api/build/ticket-queries");
+    (useTicketColumnCounts as jest.Mock).mockReturnValue({
+      data: { Todo: 41, "In Progress": 5, "In Review": 1, Done: 2 },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByText("49")).toBeInTheDocument();
+    expect(screen.queryByText("51")).not.toBeInTheDocument();
+  });
+
+  it("Open issues stat shows dash when analytics has not loaded yet so the card never shows a stale sum including Done (BUG-036)", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    (useProjectAnalytics as jest.Mock).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.queryByText("51")).not.toBeInTheDocument();
+  });
+
+  it("empty project renders health as Not started not At risk so a newly created project is not alarming (BUG-003)", () => {
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    const { useProjectAnalytics } = jest.requireMock("@/hooks/api/build/advanced");
+    (useProjectAnalytics as jest.Mock).mockReturnValue({
+      data: {
+        healthStatus: "NOT_STARTED",
+        healthScore: 100,
+        healthBreakdown: {
+          completionPct: 0,
+          onTimePct: 100,
+          velocityScore: 100,
+          overdueTickets: 0,
+          totalTickets: 0,
+          openTickets: 0,
+        },
+        stateDistribution: [],
+        priorityBreakdown: [],
+        assigneeCompletion: [],
+        volumeOverTime: [],
+        cycleVelocity: [],
+        estimateVsActual: [],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ProjectOverviewPage projectId={101} />);
+
+    expect(screen.getByText("Not started")).toBeInTheDocument();
+    expect(screen.queryByText("At risk")).not.toBeInTheDocument();
+    expect(screen.queryByText("Critical")).not.toBeInTheDocument();
+  });
 });

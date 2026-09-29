@@ -313,12 +313,21 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     notRun: results.filter((result) => result.status === "not_run").length,
   };
 
+  const effectiveStatus: string =
+    run.status === "completed" || run.status === "aborted"
+      ? run.status
+      : runCounts.total > 0 && runCounts.notRun === 0
+        ? "completed"
+        : runCounts.total > runCounts.notRun
+          ? "in_progress"
+          : run.status;
+
   return (
     <PageWrapper
       title={run.name}
       backHref={`/build/${projectId}/qa`}
       actions={
-        canManage && run.status !== "completed" ? (
+        canManage && effectiveStatus !== "completed" ? (
           <CompleteRunButton onClick={handleCompleteRun} isPending={updateRun.isPending} />
         ) : undefined
       }
@@ -326,8 +335,8 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
       <PmPageShell>
         <PmSection index={0}>
           <PmPanel className="flex flex-wrap items-center gap-3 px-3 py-2.5">
-            <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[run.status])}>
-              {STATUS_LABELS[run.status]}
+            <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[effectiveStatus])}>
+              {STATUS_LABELS[effectiveStatus]}
             </Badge>
             {run.environment ? (
               <span className={cn(TEXT_ONE_LINE, "max-w-[12rem] text-dense text-muted-foreground")}>

@@ -27,6 +27,7 @@ import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pa
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getValidationFieldErrors, type ValidationFieldError } from "@/lib/api-envelope";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import { RiskMatrix } from "./risk-matrix";
 import { RiskFormSheet } from "./risk-form-sheet";
@@ -73,6 +74,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editRisk, setEditRisk] = useState<Risk | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Risk | null>(null);
+  const [riskFieldErrors, setRiskFieldErrors] = useState<readonly ValidationFieldError[]>([]);
 
   const { cursor, hasPrevious, goNext, goPrevious } = useBuildCursorPager(
     listFilters.resetKey,
@@ -139,10 +141,18 @@ export function RisksPage({ projectId }: RisksPageProps) {
     (input: CreateRiskInput) => {
       createRisk.mutate(input, {
         onSuccess: () => {
+          setRiskFieldErrors([]);
           toast.success("Risk added");
           setSheetOpen(false);
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => {
+          const fieldErrors = getValidationFieldErrors(e);
+          if (fieldErrors.length > 0) {
+            setRiskFieldErrors(fieldErrors);
+          } else {
+            toast.error(getErrorMessage(e));
+          }
+        },
       });
     },
     [createRisk],
@@ -152,10 +162,18 @@ export function RisksPage({ projectId }: RisksPageProps) {
     (input: UpdateRiskInput & { riskId: number }) => {
       updateRisk.mutate(input, {
         onSuccess: () => {
+          setRiskFieldErrors([]);
           toast.success("Risk updated");
           setEditRisk(null);
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => {
+          const fieldErrors = getValidationFieldErrors(e);
+          if (fieldErrors.length > 0) {
+            setRiskFieldErrors(fieldErrors);
+          } else {
+            toast.error(getErrorMessage(e));
+          }
+        },
       });
     },
     [updateRisk],
@@ -477,6 +495,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
         onSubmitEdit={handleUpdate}
         isPending={createRisk.isPending || updateRisk.isPending}
         projectId={projectId}
+        serverErrors={riskFieldErrors}
       />
 
       <ConfirmDialog

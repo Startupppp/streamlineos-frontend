@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +29,7 @@ import { ProjectMemberSelect } from "@/components/members/project-member-select"
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { useProject } from "@/hooks/api/build/projects";
 import type { Decision, CreateDecisionInput, UpdateDecisionInput } from "@/types/projects";
+import type { ValidationFieldError } from "@/lib/api-envelope";
 
 const CREATE_DEFAULTS: DecisionFormValues = {
   title: "", context: "", decision: "", optionsConsidered: "",
@@ -60,11 +61,12 @@ interface DecisionFormSheetProps {
   onSubmitEdit: (input: UpdateDecisionInput & { decisionId: number }) => void;
   isPending?: boolean;
   projectId: number;
+  serverErrors?: readonly ValidationFieldError[];
 }
 
 export function DecisionFormSheet({
   open, onOpenChange, mode, defaultValues,
-  onSubmitCreate, onSubmitEdit, isPending, projectId,
+  onSubmitCreate, onSubmitEdit, isPending, projectId, serverErrors,
 }: DecisionFormSheetProps) {
   const { data: project } = useProject(projectId);
   const projectKey = project?.key ?? "";
@@ -79,6 +81,16 @@ export function DecisionFormSheet({
       form.reset(mode === "edit" && defaultValues ? decisionToFormValues(defaultValues) : CREATE_DEFAULTS);
     }
   }, [open, mode, defaultValues, form]);
+
+  const appliedServerErrorsRef = useRef<readonly ValidationFieldError[] | undefined>(undefined);
+  useEffect(() => {
+    if (serverErrors && serverErrors !== appliedServerErrorsRef.current && serverErrors.length > 0) {
+      appliedServerErrorsRef.current = serverErrors;
+      for (const fe of serverErrors) {
+        form.setError(fe.path as keyof DecisionFormValues, { message: fe.message });
+      }
+    }
+  }, [serverErrors, form]);
 
   function handleSubmit(values: DecisionFormValues) {
     if (mode === "edit" && defaultValues) {

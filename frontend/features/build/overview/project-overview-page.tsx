@@ -133,7 +133,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
       return a.releaseDate.localeCompare(b.releaseDate);
     })[0];
 
-  const totalOpen = Object.values(columnCounts).reduce((sum, n) => sum + n, 0);
+  const totalOpen = analytics?.healthBreakdown?.openTickets ?? null;
   const completionPct = analytics?.healthBreakdown?.completionPct ?? null;
   const overdueCount = analytics?.healthBreakdown?.overdueTickets ?? null;
   const basePath = `/build/${projectId}`;
@@ -178,10 +178,10 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
           <StatCardGrid cols={5}>
             <StatCard
               label="Open issues"
-              value={totalOpen}
+              value={totalOpen !== null ? totalOpen : "—"}
               icon={LayoutGrid}
               tone="blue"
-              isLoading={columnCountsQuery.isLoading}
+              isLoading={analyticsQuery.isLoading}
               href={`${basePath}/issues`}
             />
             <StatCard

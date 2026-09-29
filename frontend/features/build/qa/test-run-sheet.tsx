@@ -37,6 +37,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getValidationFieldErrors } from "@/lib/api-envelope";
 import { useCreateTestRun, useTestCases, useTestSuites } from "@/hooks/api/build/qa";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
 
@@ -120,7 +121,16 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
           toast.success("Test run created");
           onOpenChange(false);
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => {
+          const fieldErrors = getValidationFieldErrors(e);
+          if (fieldErrors.length > 0) {
+            for (const fe of fieldErrors) {
+              form.setError(fe.path as keyof TestRunFormValues, { message: fe.message });
+            }
+          } else {
+            toast.error(getErrorMessage(e));
+          }
+        },
       },
     );
   }
