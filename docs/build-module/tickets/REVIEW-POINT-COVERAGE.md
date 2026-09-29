@@ -35,13 +35,13 @@ ticket's `**Status:**` header has repeatedly gone stale while its boxes were acc
 | Card | Subject | Status |
 |---|---|---|
 | A0 | CCG-1 premise was false | DONE |
-| A1 | Require the concurrency token | PARTIAL — stage one done, stage two is an owner decision |
+| A1 | Require the concurrency token | PARTIAL — stages one and two done, stage three is one deploy away |
 | A2 | Roadmap cursor matches its ORDER BY | DONE |
 | A3 | Column-count key is a real prefix | DONE |
 | A4 | Enum contracts derive from the catalog | DONE |
 | A5 | Activity-action contract opened | DONE |
 | A6 | Assignee filter from members | DONE |
-| A7 | Index-usable ticket predicates | PARTIAL — all call sites resolved, one index unmeasurable here |
+| A7 | Index-usable ticket predicates | PARTIAL — all call sites resolved, index now guarded, one plan unmeasurable here |
 | A8 | Collapse the project-access waterfall | DONE |
 | A9 | `core/` structure, pass-throughs deleted | DONE |
 | A10 | Narrow report invalidation | DONE |
@@ -88,12 +88,39 @@ two and is an owner decision, not an oversight.
       Bulk takes a **per-row** `versions` map — a single per-request version cannot detect that
       ticket A moved while ticket B did not, so it would protect nothing.
       Each route has a test asserting **omitting the token still succeeds**. 29 tests, all pass.
-- [ ] **Stage two — make the token required.** Deliberately NOT done. This is a breaking change and
-      the backend deploys to production on push: requiring it on the rank route breaks drag-and-drop
-      for any client not yet sending one. The review prescribed exactly this staging
-      ("accept-and-warn, then require"). Flip it once clients send the token — it is one line per schema.
-      **Owner decision.**
-      **NOT EARNED 2026-09-29 — BLOCKED — needs Tarun's decision: whether to require the concurrency token on the rank route now, breaking any client not yet sending one, or to keep accept-and-warn. One line per schema once ruled; not implemented here.**
+- [x] **Stage two — every client now sends a real token** (2026-09-29). An audit of all four routes
+      found every one of them UNSAFE to tighten: no frontend caller sent a token on any of them, so
+      requiring it would have 400'd every drag-reorder, every bulk action across backlog, cycles,
+      epics, triage and the board, and both client-visibility toggles.
+      - **Rank** — `version` is now required on `RankTicketInput`; both call sites
+        (`views/list-view.tsx`, `views/use-kanban-drag.ts`) read it off the row already in the
+        optimistic cache.
+      - **Bulk** — the per-row `versions` map is assembled inside `useBulkUpdateTickets` from the
+        same cache the optimistic patch reads, so none of the eight call sites changed. A ticket with
+        no cached copy throws and names the id rather than being defaulted.
+      - **Client visibility** — the read never *projected* `version`, so there was nothing to send.
+        Projection, response schema, frontend contract and row type all carry it now.
+      Nothing is defaulted, coalesced or cast: no `?? 1`, no `!`, no `as`. A defaulted or zero token
+      turns a loud 400 into a compare-and-swap that silently overwrites a concurrent edit.
+      **Making the field required rather than optional is what found the second caller** —
+      `settings/project-settings-portal-page.tsx:112` toggles ticket visibility through its own row
+      component and the audit missed it, because an optional field lets every call site compile while
+      every request fails at runtime.
+
+- [ ] **Stage three — flip the four schemas to required.** Still open, and it is now a *deploy
+      ordering* problem rather than a decision. `check:contract-parity` compares the frontend against
+      the backend on `origin/main`, which is the deployed API, so the order is forced:
+      **(1) backend projection → (2) frontend token-sending → (3) required flag.** Three pushes, not
+      one; the backend auto-deploys on push and the frontend does not deploy in lockstep.
+      Two further findings must be settled first, neither of which existed when stage two was framed:
+      - `toggleVisibilitySchema` is shared by four PATCH routes, but only `toggleTicketVisibility`
+        reads the token — milestone, comment and attachment handlers ignore it. Requiring it on the
+        shared schema would force clients to send a token three handlers discard. **Split the schema
+        before flipping**, do not reuse one.
+      - `updateBugSchema` has **no frontend caller at all**. `next.config.ts:172-176` redirects
+        `/build/:projectId/bugs` to the issues view, so the UI manages bugs as filtered tickets and
+        never touches this route. Requiring the token there is safe only if nothing outside this repo
+        calls it — which cannot be established from inside this repo.
 
 ## A2 / B8 — The roadmap cursor matches its ORDER BY
 
@@ -197,6 +224,17 @@ two and is an owner decision, not an oversight.
 
       **WHY THE BOX STILL DOES NOT TICK, in one sentence:** the index is in no database and no
       `EXPLAIN` was taken, so the claim is a static match between DDL and SQL, not a measured plan.
+      **2026-09-29 — the static match is now enforced rather than asserted.**
+      `approvals/build-approvals-inbox-index-alignment.spec.ts` reads the index from the Drizzle
+      table config and the `ORDER BY` from `getInboxPage` itself, then asserts they agree column for
+      column and direction for direction, plus the shape the plan depends on: equality columns lead,
+      `created_at` and `id` follow immediately with nothing between them, `status` trails the
+      ordering columns, the partial predicate matches the read's own `deleted_at IS NULL`, and the
+      narrower `idx_project_approvals_approver_status` still exists. Proven to bite — flipping the
+      index's `created_at` to `asc` fails the binding assertion and nothing else; the first test walks
+      a real index list and a real `ORDER BY` so the comparison cannot pass on two empty arrays.
+      This does not measure a plan. It means a later edit to the `ORDER BY` can no longer orphan the
+      index in silence, which was the way this would have rotted.
       **AND ONE SCOPE LIMIT THE BOX SHOULD CARRY:** this index serves one of the three approvals
       reads. `approvals-read.service.ts:93` and `:127` order by `due_at ASC NULLS LAST, id ASC`, which
       it does not help and was never meant to.
