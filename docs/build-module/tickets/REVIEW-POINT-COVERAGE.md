@@ -41,7 +41,7 @@ ticket's `**Status:**` header has repeatedly gone stale while its boxes were acc
 | A4 | Enum contracts derive from the catalog | DONE |
 | A5 | Activity-action contract opened | DONE |
 | A6 | Assignee filter from members | DONE |
-| A7 | Index-usable ticket predicates | PARTIAL |
+| A7 | Index-usable ticket predicates | PARTIAL — all call sites resolved, one index unmeasurable here |
 | A8 | Collapse the project-access waterfall | DONE |
 | A9 | `core/` structure, pass-throughs deleted | DONE |
 | A10 | Narrow report invalidation | DONE |
@@ -53,10 +53,10 @@ ticket's `**Status:**` header has repeatedly gone stale while its boxes were acc
 | B4 | One outbox aggregate-version scale | DONE |
 | B5 | Status group reaches the client | DONE |
 | B6 | No 200 over a rolled-back write | DONE |
-| B7 | `applyTicketChange` owns the effect set | PARTIAL |
+| B7 | `applyTicketChange` owns the effect set | PARTIAL — rank at parity, bulk blocked on a projection |
 | B8 | Roadmap keyset seam is called | DONE |
 | B9 | One Build list surface | DONE |
-| B10 | Search reaches the read contract | PARTIAL — views done, 7 minor pages left |
+| B10 | Search reaches the read contract | DONE |
 | B11 | Gates stop over-reporting coverage | DONE |
 | B12 | Schema-enforced invariants | DONE |
 | X1 | `check:type-assertions` is red | DONE |
@@ -145,7 +145,7 @@ two and is an owner decision, not an oversight.
 
 ## A7 — Index-usable ticket predicates
 
-**PARTIAL.**
+**PARTIAL** — all call sites resolved; one index question remains, and it cannot be settled from here.
 
 - [x] The `OR`+semi-join is a top-level `UNION ALL`, issued via `db.execute`, in both copies —
       `core/tickets/projects-tickets-read.service.ts:315-335,470-489` behind the shared
@@ -156,13 +156,20 @@ two and is an owner decision, not an oversight.
       `db/schema/build/activity.ts:39,49`; the feed filters on it directly.
 - [x] The approvals-inbox cursor no longer falls back to `lt(id, cursorId)` alone —
       `approvals/build-approvals-inbox.service.ts:19-29` requires both parts or applies no boundary.
-- [ ] **~16 leading-wildcard ILIKE sites remain** against trigram indexes that are dead under RLS
-      (BE-49, BE-80). `app.search_*_ids` covers 4 tables; these are not among them:
-      `client-portal/change-requests.service.ts:133`, `core/customers/projects-customers.service.ts:36`,
-      `core/members/build-members.service.ts:34-37`, `execution/cycles.service.ts:54`,
-      `execution/epics.service.ts:39`, `managed-products/managed-products.service.ts:95`,
-      `portfolios/portfolios.service.ts:87`, `qa/bugs.service.ts:35`,
-      `qa/test-management.service.ts:163`, `teams/team-members.service.ts:50-52`, `teams/teams.service.ts:61`.
+- [x] **Nine module-owned search sites moved to a trailing wildcard** through `escapeLike`
+      (commit `635fa91df`): change-request titles, business parties, managed products, portfolios,
+      bug titles, test-case titles, team names, plus new search params on modules and automations.
+      These sit on tenant tables under RLS, where BE-80 holds — the policy qual is not leakproof, so
+      the planner never reached the trigram index and the leading wildcard bought nothing.
+      Cost: prefix-only matching.
+- [x] **The two people-search sites are deliberately LEFT as substring**, reverting the first pass.
+      `users` is a global table and migration `1067` records in its own words that it
+      **"is NOT RLS-enabled (relrowsecurity = f)"**, while `0007` and `1067` built `gin_trgm` indexes
+      on `name`, `email`, `first_name` and `last_name`. BE-80's dead-index premise does not apply
+      there: those substring searches ARE index-served. Converting them would have lost surname
+      matching — "smith" no longer finding "John Smith" — and bought no index in exchange.
+      `escapeLike` is kept on both, so a user typing a bare `%` still cannot widen the search.
+      **The rule's purpose is an index; where the index is real, the substring stays.**
 - [ ] **`idx_project_approvals_approver_status` cannot supply the order.** It is
       `(org_id, approver_membership_id, status)` with no trailing `created_at, id`, while the read
       orders by `(created_at DESC, id DESC)` — `db/schema/build/approvals.ts:50`. Correctness is fine;
@@ -325,10 +332,16 @@ two and is an owner decision, not an oversight.
 
 - [x] `applyTicketChange` exists and owns the detail route's effect set; `check:ticket-write-module`
       gates writes through it (tickets 43, 45).
-- [ ] **Rank and bulk still carry their own inline effect dispatch** via injected `effectDeps` rather
-      than delegating — ticket 44 box 1, deferred because `applyTicketChange` wraps its own
-      transaction. Until then, dragging a card to Done and editing the same field in the detail panel
-      still produce different effect sets.
+- [x] **Rank reaches parity with the detail panel** (commit `460706ebd`). Dragging a card to Done now
+      writes an activity row and sends the IN_REVIEW notification. Both effects already ran *after*
+      `applyTicketChange`'s transaction committed and need no transaction-scoped write, which is what
+      let them extract without disturbing the one path that was already correct. The activity write
+      runs inside `withSavepoint`, so a failure cannot return 200 over a rolled-back write.
+- [ ] **Bulk still has its 2-effect gap.** The blocker is specific: `notifyNewAssignees` reads one
+      ticket per call, so wiring it to bulk's N tickets is an N+1 (BE-47), and a field-level activity
+      row needs `title`/`type`/`reporterId` that `readMutationTickets` does not project. Unblocking
+      means extending that projection first — a change affecting every caller of
+      `build-ticket-mutation-policy`, which deserves its own pass.
 
 ## B9 — One Build list surface
 
@@ -348,7 +361,7 @@ two and is an owner decision, not an oversight.
 
 ## B10 — Search reaches the read contract
 
-**PARTIAL.**
+**DONE** — every paginated surface reaches the server; the bounded catalogues are a deliberate leave.
 
 - [x] Governance is server-side: `hooks/api/build/governance.ts:39-46` carries `search`, forwarded at
       `:76,83`; `risks-page.tsx:91` and `decisions-page.tsx:89` pass `debouncedSearch`.
@@ -362,11 +375,17 @@ two and is an owner decision, not an oversight.
       Carried a bonus fix — the `views` query key took an optional cursor, making the unfiltered key the
       same *length* as a keyed one instead of a prefix of it. Same defect class as card A3. Now a true
       4-segment prefix (FE-34). 37 tests pass; `check:contract-parity` still PASS.
-- [ ] Same shape, lower severity, over catalog-sized or per-project lists:
-      `modules-page.tsx:71,76`, `automations-page.tsx:114-115`, `cycle-detail-page.tsx:212,223`,
-      `qa/runs/run-execution-page.tsx:213,216`, `workflow-page.tsx:66-87`,
-      `settings/project-settings-fields-page.tsx:33-60`, `custom-fields-settings.tsx:354-355`.
-      Each needs its backing endpoint checked for a `search` param before the page is touched.
+- [x] **Modules, automations and cycle tickets now search server-side** (commits `635fa91df`,
+      `5b3a6e335`). The client-side `.filter(...)` is gone from all three; `search` threads through to
+      the request. Their tests asserted the browser narrowing a list the server returned whole, and
+      were rewritten to assert the term reaches the read hook, each paired with a negative proving an
+      empty box sends no term.
+- [x] **Four pages deliberately LEFT filtering client-side, and this is the right answer.**
+      `run-execution-page` receives its results embedded in a single response; `workflow-page`,
+      `project-settings-fields-page` and `custom-fields-settings` read bounded per-project catalogues
+      whole. Nothing can be missed where everything is present, so pushing search to the server would
+      add a round trip and a contract for no correctness gain. The review's defect is a match falling
+      off a *paginated* page; these are not paginated.
 
 ## B11 — Gates stop reporting coverage they never checked
 
