@@ -289,7 +289,7 @@ export function FormSubmissionsTab({
                     key={key}
                     className="flex gap-3 text-sm py-1 border-b last:border-0"
                   >
-                    <span className="font-medium text-muted-foreground min-w-[130px] capitalize shrink-0">
+                    <span className="font-normal text-muted-foreground min-w-[130px] capitalize shrink-0">
                       {key.replace(/_/g, " ")}
                     </span>
                     <span className="text-foreground break-all">

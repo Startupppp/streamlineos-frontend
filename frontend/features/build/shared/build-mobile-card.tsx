@@ -74,11 +74,11 @@ export function BuildMobileCard({
       <div className="flex min-w-0 items-start gap-2">
         <div className="min-w-0 flex-1 space-y-0.5">
           {eyebrow ? (
-            <div className="truncate font-mono text-dense font-medium text-muted-foreground">
+            <div className="truncate font-mono text-dense font-normal text-muted-foreground">
               {eyebrow}
             </div>
           ) : null}
-          <div className="truncate text-sm font-semibold text-foreground">
+          <div className="truncate text-sm font-medium text-foreground">
             {title}
           </div>
         </div>

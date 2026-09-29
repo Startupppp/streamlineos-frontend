@@ -19,7 +19,7 @@ export function CycleVelocityPanel({ projectId }: { projectId: number }) {
   return (
     <section className="space-y-3" aria-labelledby="cycle-velocity-heading">
       <div>
-        <h2 id="cycle-velocity-heading" className="text-sm font-semibold">Velocity</h2>
+        <h2 id="cycle-velocity-heading" className="text-sm font-medium">Velocity</h2>
         <p className="text-xs text-muted-foreground">Committed and completed points across recent cycles.</p>
       </div>
       <div className="rounded-lg border border-border bg-card p-4">

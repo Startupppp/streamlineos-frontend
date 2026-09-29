@@ -207,12 +207,12 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
           <InfoSection label="Root Cause" value={incident.rootCause} />
           <InfoSection label="Customer Comms" value={incident.customerComms} />
           <div className="space-y-1">
-            <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Owner</p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Owner</p>
             <p className="text-xs">{owner ? (owner.name ?? owner.email) : "Unassigned"}</p>
           </div>
           {incident.linkedTicketId ? (
             <div className="space-y-1">
-              <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Linked Ticket</p>
+              <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Linked Ticket</p>
               <Badge variant="outline" className="max-w-full text-micro">
                 {linkedTicket
                   ? `${linkedTicket.project?.key ?? "Ticket"}-${linkedTicket.ticketNumber}: ${linkedTicket.title}`
@@ -224,7 +224,7 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
           ) : null}
           {incident.releaseId ? (
             <div className="space-y-1">
-              <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Affected Release</p>
+              <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Affected Release</p>
               <Badge variant="outline" className="text-micro">
                 {release
                   ? `${release.name} (${release.version})`
@@ -298,7 +298,7 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
 function InfoSection({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="space-y-1">
-      <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="whitespace-pre-wrap text-xs text-foreground">
         {value ?? <span className="italic text-muted-foreground">Not set</span>}
       </p>

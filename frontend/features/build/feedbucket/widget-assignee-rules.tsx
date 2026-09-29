@@ -66,7 +66,7 @@ export function WidgetAssigneeRules({ widget, members }: WidgetAssigneeRulesProp
       <div className="space-y-2">
         {SUBMISSION_TYPES.map(({ type, label }) => (
           <div key={type} className="flex items-center gap-3">
-            <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">{label}</span>
+            <span className="w-20 shrink-0 text-xs font-normal text-muted-foreground">{label}</span>
             <div className="flex-1 min-w-0">
               <AssigneeRuleRow
                 type={type}

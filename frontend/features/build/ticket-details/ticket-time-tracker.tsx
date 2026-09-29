@@ -129,7 +129,7 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
           <Clock className="h-3.5 w-3.5" />
           Time Tracking
           {totalSpent > 0 && (
-            <span className="text-foreground font-semibold">{totalSpent}h logged</span>
+            <span className="text-foreground font-medium">{totalSpent}h logged</span>
           )}
         </h4>
         <AnimatedIconButton

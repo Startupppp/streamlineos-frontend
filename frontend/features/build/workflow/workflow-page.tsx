@@ -174,7 +174,7 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
         >
           <div className="flex flex-1 min-h-0 flex-col gap-4">
             <PmSection index={0}>
-              <h2 className={`mb-1 text-sm font-semibold ${TEXT_ONE_LINE}`}>
+              <h2 className={`mb-1 text-sm font-medium ${TEXT_ONE_LINE}`}>
                 Statuses & WIP Limits
               </h2>
               <p className={`mb-3 text-xs text-muted-foreground ${TEXT_BODY}`}>

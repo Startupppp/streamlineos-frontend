@@ -134,7 +134,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="ml-auto h-4 w-4 rounded-full bg-status-danger-surface text-status-danger-ink-strong text-micro flex items-center justify-center font-bold shrink-0">
+                  <span className="ml-auto h-4 w-4 rounded-full bg-status-danger-surface text-status-danger-ink-strong text-micro flex items-center justify-center font-medium shrink-0">
                     {overdue}
                   </span>
                 </TooltipTrigger>
@@ -152,7 +152,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
               <TooltipTrigger asChild>
                 <span
                   className={cn(
-                    "text-sm font-semibold",
+                    "text-sm font-medium",
                     overCapacity ? "text-status-danger-ink-strong" : total > 3 ? "text-status-warning-ink-strong" : "text-foreground",
                   )}
                 >
@@ -190,7 +190,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
             className={cn(
               "text-sm tabular-nums",
               capacityData?.allocationPercent != null && capacityData.allocationPercent > 100
-                ? "text-status-danger-ink-strong font-semibold"
+                ? "text-status-danger-ink-strong font-medium"
                 : "text-muted-foreground",
             )}
           >
@@ -219,7 +219,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
             className={cn(
               "text-sm tabular-nums",
               capacityData?.varianceHours != null && capacityData.varianceHours > 0
-                ? "text-status-danger-ink-strong font-semibold"
+                ? "text-status-danger-ink-strong font-medium"
                 : "text-muted-foreground",
             )}
           >
@@ -240,7 +240,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
             {count > 0 && (
               <span
                 className={cn(
-                  "h-5 w-5 rounded text-micro font-semibold flex items-center justify-center",
+                  "h-5 w-5 rounded text-micro font-medium flex items-center justify-center",
                   getUtilizationClass(count),
                 )}
               >

@@ -18,7 +18,7 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
     {
       key: "key",
       header: "ID",
-      headerClassName: "w-16 text-micro uppercase tracking-wider font-bold",
+      headerClassName: "w-16 text-micro uppercase tracking-wider font-medium",
       className: "font-mono text-dense text-muted-foreground",
       cell: (row) => `${row.sequenceId ?? row.ticketNumber}`,
     },
@@ -26,7 +26,7 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
       key: "title",
       header: "Title",
       className: TABLE_TITLE_CELL,
-      headerClassName: "text-micro uppercase tracking-wider font-bold",
+      headerClassName: "text-micro uppercase tracking-wider font-medium",
       cell: (row) => (
         <button
           type="button"
@@ -40,21 +40,21 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
     {
       key: "status",
       header: "Status",
-      headerClassName: "w-28 text-micro uppercase tracking-wider font-bold",
+      headerClassName: "w-28 text-micro uppercase tracking-wider font-medium",
       className: "text-dense text-muted-foreground",
       cell: (row) => row.status.replace(/_/g, " "),
     },
     {
       key: "priority",
       header: "Priority",
-      headerClassName: "w-24 text-micro uppercase tracking-wider font-bold",
+      headerClassName: "w-24 text-micro uppercase tracking-wider font-medium",
       className: "text-dense text-muted-foreground",
       cell: (row) => row.priority ?? "—",
     },
     {
       key: "assignee",
       header: "Assignee",
-      headerClassName: "w-32 text-micro uppercase tracking-wider font-bold",
+      headerClassName: "w-32 text-micro uppercase tracking-wider font-medium",
       className: "text-xs",
       cell: (row) => {
         if (!row.assignee) {
@@ -70,7 +70,7 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
     {
       key: "dueDate",
       header: "Due Date",
-      headerClassName: "w-28 text-micro uppercase tracking-wider font-bold",
+      headerClassName: "w-28 text-micro uppercase tracking-wider font-medium",
       className: "font-mono text-dense tabular-nums",
       cell: (row) =>
         row.dueDate

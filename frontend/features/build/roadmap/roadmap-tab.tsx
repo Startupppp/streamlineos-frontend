@@ -134,7 +134,7 @@ export function RoadmapTab({
           <WifiOff className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-foreground">
+          <p className="text-sm font-medium text-foreground">
             You&apos;re offline
           </p>
           <p className="text-xs leading-relaxed text-muted-foreground">
@@ -268,7 +268,7 @@ export function RoadmapTab({
                 className="flex min-h-[120px] flex-col p-2"
               >
                 <div className="mb-2 flex items-center justify-between px-1">
-                  <span className="text-dense font-semibold uppercase tracking-wide text-muted-foreground">
+                  <span className="text-dense font-medium uppercase tracking-wide text-muted-foreground">
                     {col.label}
                   </span>
                   <span className="min-w-[20px] rounded-full border border-border/50 bg-background/80 px-1.5 py-0.5 text-center text-dense tabular-nums text-muted-foreground">

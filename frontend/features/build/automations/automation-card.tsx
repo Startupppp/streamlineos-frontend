@@ -83,7 +83,7 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit, canMana
           <div className="flex items-center gap-2 flex-wrap">
             <TruncatedText
               text={automation.name}
-              className="text-sm font-semibold text-foreground"
+              className="text-sm font-medium text-foreground"
             />
             <Badge
               variant="secondary"

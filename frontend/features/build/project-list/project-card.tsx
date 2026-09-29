@@ -180,7 +180,7 @@ export const ProjectCard = React.memo(function ProjectCard({
           <div
             className={cn(
               "flex h-8 w-8 shrink-0 items-center justify-center rounded-md ring-1 ring-inset",
-              "text-micro font-bold tracking-tight",
+              "text-micro font-medium tracking-tight",
               avatarTint,
             )}
             aria-hidden="true"
@@ -195,7 +195,7 @@ export const ProjectCard = React.memo(function ProjectCard({
                 showActions && "pr-7",
               )}
             >
-              <span className="font-mono text-micro font-semibold tracking-wide text-muted-foreground">
+              <span className="font-mono text-micro font-normal tracking-wide text-muted-foreground">
                 {project.key}
               </span>
               {canEdit ? (
@@ -207,7 +207,7 @@ export const ProjectCard = React.memo(function ProjectCard({
                 <Badge
                   variant="secondary"
                   className={cn(
-                    "gap-1 rounded-full border-0 px-1.5 py-0 text-micro font-semibold",
+                    "gap-1 rounded-full border-0 px-1.5 py-0 text-micro font-medium",
                     statusColor,
                   )}
                 >
@@ -222,7 +222,7 @@ export const ProjectCard = React.memo(function ProjectCard({
 
             <h3
               className={cn(
-                "text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary",
+                "text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-primary",
                 TEXT_ONE_LINE,
               )}
             >

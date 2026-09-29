@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { VIEW_TYPES, isViewType, type ViewType } from "@/lib/build/view-types";
 
 export type { ViewType } from "@/lib/build/view-types";
@@ -82,7 +83,10 @@ export const ViewSwitcher = memo(function ViewSwitcher({
     <div className={cn("flex min-w-0 items-center", className)}>
       <Select value={activeView} onValueChange={handleSelectChange}>
         <SelectTrigger
-          className="size-9 shrink-0 justify-center gap-0 px-0 sm:h-9 sm:w-fit sm:min-w-[7.5rem] sm:justify-between sm:gap-1 sm:px-2"
+          className={cn(
+            FILTER_SELECT_TRIGGER,
+            "size-9 shrink-0 justify-center gap-0 px-0 sm:h-9 sm:w-fit sm:min-w-[7.5rem] sm:justify-between sm:gap-1 sm:px-2",
+          )}
           aria-label="Select view"
         >
           <span className="inline-flex items-center gap-1.5 sm:hidden">
@@ -94,7 +98,10 @@ export const ViewSwitcher = memo(function ViewSwitcher({
             <span className="sr-only">{activeMeta?.label ?? "View"}</span>
           </span>
           <span className="hidden min-w-0 sm:inline-flex">
-            <SelectValue placeholder={activeMeta?.label ?? "View"} />
+            <SelectValue
+              placeholder={activeMeta?.label ?? "View"}
+              className="font-normal"
+            />
           </span>
         </SelectTrigger>
         <SelectContent className="min-w-[10rem]">
@@ -102,7 +109,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
             const AnimatedIcon = v.animatedIcon;
             const StaticIcon = v.staticIcon;
             return (
-              <SelectItem key={v.value} value={v.value}>
+              <SelectItem key={v.value} value={v.value} className="font-normal">
                 <span className="flex items-center gap-1.5">
                   {AnimatedIcon ? (
                     <AnimatedIcon size={14} className="h-3.5 w-3.5 text-muted-foreground" />

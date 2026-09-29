@@ -86,7 +86,7 @@ function LabelsHeader({
   return (
     <div className="mb-3 flex items-start justify-between gap-3 border-b border-border pb-3">
       <div className="min-w-0">
-        <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Labels</h3>
+        <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Labels</h3>
         <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
           Manage labels for organizing tickets across this organization.
         </p>

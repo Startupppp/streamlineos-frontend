@@ -106,7 +106,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           onClick={handleActivate}
           className={cn(
             TEXT_TWO_LINES,
-            "min-w-0 flex-1 text-left text-sm font-semibold leading-snug text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+            "min-w-0 flex-1 text-left text-sm font-medium leading-snug text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
           )}
         >
           {ticket.title}
@@ -228,7 +228,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
               assignee={primaryAssignee}
             />
             {primaryAssignee ? (
-              <span className="min-w-0 truncate text-dense font-medium text-muted-foreground">
+              <span className="min-w-0 truncate text-dense font-normal text-muted-foreground">
                 {getUserDisplayName(primaryAssignee)}
               </span>
             ) : null}

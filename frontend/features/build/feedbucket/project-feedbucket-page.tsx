@@ -115,7 +115,7 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
       <PmPageShell>
         {projectWidget ? (
           <PmSection index={0} className="flex flex-1 min-h-0 flex-col">
-            <p className="mb-2 text-sm font-semibold text-foreground">Submissions</p>
+            <p className="mb-2 text-sm font-medium text-foreground">Submissions</p>
             <PmPanel className="flex flex-1 min-h-0 h-full flex-col p-0" solid>
               <ProjectSubmissionsInbox
                 widgetId={projectWidget.id}

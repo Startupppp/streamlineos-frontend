@@ -34,7 +34,7 @@ export const FilterPill = React.forwardRef<HTMLButtonElement, FilterPillProps>(
         onClick={onClick}
         aria-pressed={active}
         className={cn(
-          "h-8 shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 text-xs font-medium outline-none transition-all duration-200 press-scale focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring",
+          "h-8 shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 text-xs font-normal outline-none transition-all duration-200 press-scale focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring",
           active
             ? (activeClassName ??
                 "border-primary bg-primary text-primary-foreground")
@@ -55,7 +55,7 @@ export const FilterPill = React.forwardRef<HTMLButtonElement, FilterPillProps>(
         {count != null && (
           <span
             className={cn(
-              "min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-micro font-semibold leading-none",
+              "min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-micro font-normal leading-none",
               active
                 ? "bg-white/20 dark:bg-black/20"
                 : "bg-muted text-muted-foreground",

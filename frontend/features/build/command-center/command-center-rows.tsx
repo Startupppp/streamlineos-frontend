@@ -120,7 +120,7 @@ export const MyWorkRow = memo(function MyWorkRow({
             className="text-label font-medium leading-tight text-foreground transition-colors group-hover:text-primary"
           />
           <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden">
-            <span className="shrink-0 font-mono text-micro font-medium text-primary/80">
+            <span className="shrink-0 font-mono text-micro font-normal text-primary/80">
               {item.projectKey}
             </span>
             <span className="shrink-0 text-micro text-muted-foreground">·</span>
@@ -203,7 +203,7 @@ export const ProjectCard = memo(function ProjectCard({
       >
         <Link
           href={base}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-micro font-bold text-primary ring-1 ring-primary/10 transition-transform duration-150 group-hover:scale-105 group-hover:ring-primary/25"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-micro font-medium text-primary ring-1 ring-primary/10 transition-transform duration-150 group-hover:scale-105 group-hover:ring-primary/25"
         >
           {project.key.substring(0, 2).toUpperCase()}
         </Link>

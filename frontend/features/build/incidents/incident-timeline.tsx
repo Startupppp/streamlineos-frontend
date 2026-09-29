@@ -175,7 +175,7 @@ export function IncidentTimeline({ projectId, incidentId, updates, canManage, un
 
   return (
     <div className="space-y-3">
-      <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">
         Timeline
       </p>
 

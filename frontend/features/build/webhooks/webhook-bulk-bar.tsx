@@ -36,7 +36,7 @@ export function WebhookBulkBar({
         "mb-2 gap-2 border-b border-border bg-background/95 py-1.5",
       )}
     >
-      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-dense font-semibold tabular-nums text-primary">
+      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-dense font-normal tabular-nums text-primary">
         {selectedCount} selected
       </span>
       <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide sm:ml-auto [&>*]:shrink-0">

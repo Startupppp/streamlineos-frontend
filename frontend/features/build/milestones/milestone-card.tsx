@@ -114,7 +114,7 @@ export const MilestoneCard = memo(function MilestoneCard({
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-start justify-between gap-2">
             <div className="min-w-0 space-y-0.5">
-              <TruncatedText text={milestone.name} className="text-label font-semibold text-foreground" />
+              <TruncatedText text={milestone.name} className="text-label font-medium text-foreground" />
               {milestone.description ? (
                 <p
                   className={cn(TEXT_TWO_LINES, "text-dense text-muted-foreground")}
@@ -127,7 +127,7 @@ export const MilestoneCard = memo(function MilestoneCard({
             <Badge
               variant="secondary"
               className={cn(
-                "h-5 shrink-0 rounded-full px-1.5 text-micro font-semibold",
+                "h-5 shrink-0 rounded-full px-1.5 text-micro font-medium",
                 cfg.badgeClassName,
               )}
             >

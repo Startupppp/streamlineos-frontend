@@ -102,8 +102,8 @@ interface ReviewRowProps {
 function ReviewRow({ label, value, muted = false }: ReviewRowProps) {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3">
-      <span className="text-xs font-medium text-muted-foreground shrink-0 pt-px">{label}</span>
-      <span className={muted ? "text-sm text-muted-foreground text-right" : "text-sm font-medium text-right"}>
+      <span className="text-xs font-normal text-muted-foreground shrink-0 pt-px">{label}</span>
+      <span className={muted ? "text-sm text-muted-foreground text-right" : "text-sm font-normal text-right"}>
         {value}
       </span>
     </div>

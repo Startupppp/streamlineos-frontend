@@ -129,7 +129,7 @@ export function PortalListPage() {
                   >
                     <div className="flex min-w-0 items-start gap-3">
                       <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-medium text-white"
                         style={{ backgroundColor: project.color ?? "var(--primary)" }}
                       >
                         {project.key.substring(0, 2)}
@@ -137,7 +137,7 @@ export function PortalListPage() {
                       <div className="min-w-0 flex-1">
                         <TruncatedText
                           text={project.name}
-                          className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary"
+                          className="text-sm font-medium text-foreground transition-colors group-hover:text-primary"
                         />
                         <p className="font-mono text-micro text-muted-foreground">{project.key}</p>
                       </div>

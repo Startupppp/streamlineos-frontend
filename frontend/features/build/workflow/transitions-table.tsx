@@ -305,7 +305,7 @@ export function TransitionsTable({
   return (
     <>
       <div className="mb-3 flex min-w-0 items-center justify-between gap-2 px-4 pt-4">
-        <h2 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Transitions</h2>
+        <h2 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Transitions</h2>
         {canManage ? <AddTransitionButton onClick={handleAddClick} /> : null}
       </div>
 

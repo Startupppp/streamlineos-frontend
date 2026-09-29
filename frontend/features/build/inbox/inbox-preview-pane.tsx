@@ -146,7 +146,7 @@ function NotificationFallbackPreview({
             {getTypeIcon(notification.type, notification.category)}
           </div>
           <div className="min-w-0 flex-1 overflow-hidden">
-            <h2 className="break-words text-sm font-semibold leading-snug text-foreground [overflow-wrap:anywhere]">
+            <h2 className="break-words text-sm font-medium leading-snug text-foreground [overflow-wrap:anywhere]">
               {notification.title}
             </h2>
             <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">

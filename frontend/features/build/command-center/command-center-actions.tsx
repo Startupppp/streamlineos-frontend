@@ -302,7 +302,7 @@ export function QuickCreateMenu({
         <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
         <DrawerContent className="flex max-h-[min(92dvh,40rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
           <DrawerHeader className="shrink-0 px-4 pb-2 pt-1">
-            <DrawerTitle className="text-sm font-semibold text-foreground">
+            <DrawerTitle className="text-sm font-medium text-foreground">
               Create
             </DrawerTitle>
           </DrawerHeader>
@@ -358,7 +358,7 @@ export function QuickCreateMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{triggerButton}</DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
+        <DropdownMenuLabel className="text-micro font-medium uppercase tracking-wider text-muted-foreground">
           Create
         </DropdownMenuLabel>
         {showNewProject ? (

@@ -153,7 +153,7 @@ export function GalleryCase({
       aria-label={title}
       className={navActive ? "mobile-nav-active" : undefined}
     >
-      <h2 className="mb-1 text-sm font-semibold text-foreground">{title}</h2>
+      <h2 className="mb-1 text-sm font-medium text-foreground">{title}</h2>
       <div
         data-case-frame={id}
         className="flex h-[32rem] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-background"

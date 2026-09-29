@@ -174,7 +174,7 @@ function BudgetOverview() {
     <GalleryCase id="budget-overview" title="Budget · stat cards + member breakdown">
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <h2 className="text-sm font-semibold text-foreground">Project Budget</h2>
+          <h2 className="text-sm font-medium text-foreground">Project Budget</h2>
           <Button size="sm" variant="outline" type="button">
             <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
             Update Budget
@@ -207,7 +207,7 @@ function IncidentDetailCase() {
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-foreground">
+            <h2 className="text-sm font-medium text-foreground">
               INC-{GALLERY_DETAIL_INCIDENT.incidentNumber} {GALLERY_DETAIL_INCIDENT.title}
             </h2>
           </div>
@@ -218,7 +218,7 @@ function IncidentDetailCase() {
         </div>
         <div className="flex flex-col gap-4 overflow-y-auto p-4">
           <div className="flex items-center gap-2">
-            <span className="rounded border border-status-danger-rule bg-status-danger-surface px-1.5 py-0.5 text-xs font-semibold uppercase text-status-danger-ink-strong">
+            <span className="rounded border border-status-danger-rule bg-status-danger-surface px-1.5 py-0.5 text-xs font-medium uppercase text-status-danger-ink-strong">
               {GALLERY_DETAIL_INCIDENT.severity}
             </span>
             <span className="rounded border border-category-orange-rule px-1.5 py-0.5 text-xs font-medium text-category-orange-ink">
@@ -333,13 +333,13 @@ function ReportsTabsCase() {
         </div>
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
           <TabsContent value="agile" className="mt-0 flex flex-col gap-4">
-            <h3 className="text-sm font-semibold text-foreground">Velocity</h3>
+            <h3 className="text-sm font-medium text-foreground">Velocity</h3>
             <div
               className="h-32 rounded-md border border-dashed border-border"
               role="img"
               aria-label="Velocity chart placeholder — live data not loaded in gallery"
             />
-            <h3 className="text-sm font-semibold text-foreground">Burnup</h3>
+            <h3 className="text-sm font-medium text-foreground">Burnup</h3>
             <div
               className="h-32 rounded-md border border-dashed border-border"
               role="img"

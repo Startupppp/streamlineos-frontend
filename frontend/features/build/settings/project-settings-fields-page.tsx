@@ -115,7 +115,7 @@ export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPa
             )}
             <PmPanel className="p-4" solid>
               <div className="mb-3 border-b border-border pb-3">
-                <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
                   Custom Fields
                 </h3>
                 <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>

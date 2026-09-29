@@ -14,7 +14,7 @@ import {
  * below `md` and labeled from `md` up (FE-117: aria-label on the button).
  */
 export const RESPONSIVE_ICON_LABEL_TRIGGER_CLASS =
-  "size-9 shrink-0 gap-1.5 p-0 text-xs font-normal md:h-9 md:w-auto md:px-2.5";
+  "size-9 shrink-0 gap-1.5 p-0 text-sm font-normal md:h-9 md:w-auto md:px-2.5";
 
 export const RESPONSIVE_ICON_LABEL_TEXT_CLASS = "hidden md:inline";
 

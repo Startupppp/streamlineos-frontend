@@ -86,7 +86,7 @@ export function ProjectAiMenu({
       <Sheet open={summary.open} onOpenChange={summary.handleOpenChange}>
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
           <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
-            <SheetTitle className="text-base font-semibold">Health summary</SheetTitle>
+            <SheetTitle className="text-base font-medium">Health summary</SheetTitle>
             <SheetDescription className="text-label text-muted-foreground">
               AI-generated draft grounded in this record. Review before you use it.
             </SheetDescription>

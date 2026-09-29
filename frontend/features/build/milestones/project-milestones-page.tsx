@@ -386,7 +386,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
           <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
             {selectedMilestoneIds.size > 0 && (
               <div className={cn(PM_TOOLBAR, "mb-2 rounded-lg border border-border/80 bg-card px-3 py-2")}>
-                <span className="text-sm font-medium">{selectedMilestoneIds.size} selected</span>
+                <span className="text-sm font-normal">{selectedMilestoneIds.size} selected</span>
                 <div className="flex items-center gap-2">
                   <Select onValueChange={handleBulkStatusChange}>
                     <SelectTrigger className="w-[160px]">

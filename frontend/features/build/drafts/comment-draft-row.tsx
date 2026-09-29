@@ -109,7 +109,7 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
       <div className="min-w-0 flex-1 overflow-hidden">
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="inline-flex w-fit max-w-[9rem] shrink-0 items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-micro font-medium text-muted-foreground">
+            <span className="inline-flex w-fit max-w-[9rem] shrink-0 items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-micro font-normal text-muted-foreground">
               <TruncatedText text={ticketKey} className="min-w-0" />
             </span>
             <TruncatedText
@@ -152,7 +152,7 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
         {hasMeta ? (
           <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             {ticketType ? (
-              <span className="inline-flex items-center gap-1 text-micro font-medium text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-micro font-normal text-muted-foreground">
                 <TicketTypeIcon type={ticketType} size="sm" />
                 <span className="capitalize">{ticketType.toLowerCase()}</span>
               </span>

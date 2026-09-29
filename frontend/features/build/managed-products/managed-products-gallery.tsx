@@ -416,11 +416,11 @@ export function ManagedProductsGallery() {
             <PmSection index={0} className="shrink-0">
               <div className="space-y-6">
                 <div>
-                  <p className="mb-3 text-sm font-semibold text-foreground">Projects</p>
+                  <p className="mb-3 text-sm font-medium text-foreground">Projects</p>
                   <StatCardGridSkeleton cols={3} />
                 </div>
                 <div>
-                  <p className="mb-3 text-sm font-semibold text-foreground">Feedback submissions</p>
+                  <p className="mb-3 text-sm font-medium text-foreground">Feedback submissions</p>
                   <StatCardGridSkeleton cols={4} />
                 </div>
               </div>

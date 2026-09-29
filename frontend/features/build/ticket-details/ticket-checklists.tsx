@@ -60,7 +60,7 @@ export function TicketChecklists({
       <div className="space-y-4">
         <div className="flex w-full items-center gap-2">
           <CheckSquare className="h-4 w-4 text-primary shrink-0" />
-          <h4 className="text-sm font-semibold">Checklists</h4>
+          <h4 className="text-sm font-medium">Checklists</h4>
           {canUpdate ? (
             <TicketAiGenerateChecklistAction
               projectId={projectId}

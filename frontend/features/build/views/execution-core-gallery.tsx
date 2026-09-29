@@ -194,7 +194,7 @@ function GalleryCase({
 }) {
   return (
     <section aria-labelledby={`case-title-${id}`}>
-      <h2 id={`case-title-${id}`} className="mb-2 text-sm font-semibold">
+      <h2 id={`case-title-${id}`} className="mb-2 text-sm font-medium">
         {title}
       </h2>
       <div
@@ -258,7 +258,7 @@ function TicketDetailCase() {
         <div className="flex min-w-0 flex-1 flex-col gap-3 border-r p-4">
           <div>
             <span className="font-mono text-xs text-muted-foreground">PROJ-42</span>
-            <h3 className="text-base font-semibold">Implement token-refresh flow for idle sessions</h3>
+            <h3 className="text-base font-medium">Implement token-refresh flow for idle sessions</h3>
           </div>
           <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
             Ticket description area. Long-form text describing the work item goes here.

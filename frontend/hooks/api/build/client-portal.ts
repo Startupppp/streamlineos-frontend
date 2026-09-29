@@ -59,13 +59,20 @@ export function usePortalProjectOverview(projectId: number) {
   });
 }
 
-export function usePortalChangeRequests(projectId: number) {
+export function usePortalChangeRequests(
+  projectId: number,
+  options?: { enabled?: boolean },
+) {
   const canView = useCan("build:changerequests:view");
   return useQuery<PortalChangeRequest[]>({
     queryKey: buildWorkQueryKeys.projects.clientPortal.changeRequests(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<PortalChangeRequest[]>(`/build/portal/projects/${projectId}/change-requests`, undefined, signal, portalChangeRequestListContract),
-    enabled: canView && !!projectId,
+    enabled: canView && !!projectId && (options?.enabled ?? true),
+    // A missing portal grant is a 404 ("Project not found"), not a broken page.
+    // Callers render isError or an empty picker; the default boundary would
+    // unmount the host (the approval sheet) before that UI can run.
+    throwOnError: false,
     staleTime: 60_000,
   });
 }

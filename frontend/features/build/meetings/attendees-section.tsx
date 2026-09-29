@@ -129,7 +129,7 @@ export function AttendeesSection({
                     aria-label={`Remove ${displayName}`}
                     disabled={removeAttendee.isPending}
                   >
-                    <span className="text-xs font-bold">&times;</span>
+                    <span className="text-xs font-normal">&times;</span>
                   </button>
                 )}
               </Badge>

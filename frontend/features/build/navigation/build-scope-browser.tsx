@@ -32,7 +32,7 @@ interface BuildScopeBrowserProps {
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <p className="px-2 pb-1 pt-2 text-micro font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+    <p className="px-2 pb-1 pt-2 text-micro font-medium uppercase tracking-[0.12em] text-muted-foreground">
       {children}
     </p>
   );

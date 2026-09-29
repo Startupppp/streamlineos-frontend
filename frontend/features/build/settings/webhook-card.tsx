@@ -402,7 +402,7 @@ export function WebhookCard({
             className="overflow-hidden border-t border-border"
           >
             <div className="p-3.5">
-              <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+              <p className="text-xs font-normal text-muted-foreground mb-2 flex items-center gap-1.5">
                 <Clock className="h-3 w-3" />
                 Recent Deliveries
               </p>

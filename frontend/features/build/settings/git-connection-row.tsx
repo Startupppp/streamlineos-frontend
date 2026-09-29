@@ -97,7 +97,7 @@ export const ConnectionRow = memo(function ConnectionRow({
             />
           </div>
           <div className="min-w-0">
-            <TruncatedText text={displayName} className="text-sm font-semibold" />
+            <TruncatedText text={displayName} className="text-sm font-medium" />
             {connection.repoName && connection.repoName !== connection.repoUrl ? (
               <TruncatedText text={connection.repoUrl} className="mt-0.5 text-xs text-muted-foreground" />
             ) : null}

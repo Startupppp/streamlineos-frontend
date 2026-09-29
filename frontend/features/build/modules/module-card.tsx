@@ -184,7 +184,7 @@ export const ModuleCard = memo(function ModuleCard({
               <div
                 className={cn(
                   "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
-                  isEmojiAvatar ? "text-xl leading-none" : "text-dense font-bold tracking-tight",
+                  isEmojiAvatar ? "text-xl leading-none" : "text-dense font-medium tracking-tight",
                   style.avatar,
                 )}
                 aria-hidden="true"
@@ -198,14 +198,14 @@ export const ModuleCard = memo(function ModuleCard({
                     href={`/build/${projectId}/issues?module=${mod.id}`}
                     className="min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-sm"
                   >
-                    <h3 className={cn(TEXT_TWO_LINES, "text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary")}>
+                    <h3 className={cn(TEXT_TWO_LINES, "text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-primary")}>
                       {mod.name}
                     </h3>
                   </Link>
                   <div className="flex shrink-0 items-center gap-1">
                     <span
                       className={cn(
-                        "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-micro font-semibold",
+                        "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-micro font-medium",
                         style.badge,
                       )}
                     >
@@ -227,7 +227,7 @@ export const ModuleCard = memo(function ModuleCard({
 
             <div className="mt-auto space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-dense font-medium tabular-nums text-muted-foreground">
+                <span className="text-dense font-normal tabular-nums text-muted-foreground">
                   <span className="text-foreground">{progress}%</span> complete
                 </span>
                 <ArrowRight

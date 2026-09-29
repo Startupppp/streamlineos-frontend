@@ -55,7 +55,7 @@ function GroupRowItem({
       className={cn(
         "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
         active
-          ? "bg-primary/10 text-primary font-medium"
+          ? "bg-primary/10 text-primary font-normal"
           : "text-foreground hover:bg-muted",
       )}
     >
@@ -94,7 +94,7 @@ function GroupingSidebarBody({
       meta: (
         <span
           className={cn(
-            "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-micro font-bold",
+            "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-micro font-medium",
             getColorSafe(projectStatusColors, s),
           )}
         />

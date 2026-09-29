@@ -417,7 +417,7 @@ export function WhiteboardPage({
                 solid
               >
                 <div className="mb-1 flex shrink-0 items-center px-1">
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-xs font-normal text-muted-foreground">
                     Boards
                   </span>
                 </div>

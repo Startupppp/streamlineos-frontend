@@ -55,7 +55,7 @@ export function PublicFormView({ formToken }: PublicFormViewProps) {
     <main className="min-h-dvh surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">
       <div className="w-full max-w-lg">
         <div className="gradient-brand text-white rounded-t-2xl px-6 py-8 text-center shadow-noir">
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {mutation.isSuccess ? "Submitted!" : (form?.name ?? "Loading form…")}
           </h1>
           {form?.description && !mutation.isSuccess && (
@@ -78,7 +78,7 @@ export function PublicFormView({ formToken }: PublicFormViewProps) {
 
           {formQuery.isError && (
             <div className="text-center py-8">
-              <p className="text-lg font-semibold text-foreground">Form unavailable</p>
+              <p className="text-lg font-medium text-foreground">Form unavailable</p>
               <p className="text-sm text-muted-foreground mt-2">
                 This form is not currently active or the link is invalid. Please contact the team for an
                 up-to-date link.
@@ -91,7 +91,7 @@ export function PublicFormView({ formToken }: PublicFormViewProps) {
               <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
               </div>
-              <p className="text-lg font-semibold text-foreground">Submission received</p>
+              <p className="text-lg font-medium text-foreground">Submission received</p>
               <p className="text-sm text-muted-foreground">
                 Your response has been recorded. Thank you for taking the time to fill this out.
               </p>

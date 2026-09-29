@@ -85,7 +85,7 @@ function TeamColorPickerField({
       </PopoverTrigger>
       <PopoverContent className="w-64 p-2.5" align="start">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-xs font-semibold">Pick a color</p>
+          <p className="text-xs font-medium">Pick a color</p>
           {hasColor ? (
             <Button
               type="button"

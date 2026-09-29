@@ -441,7 +441,7 @@ export function EpicsPage({ params }: PageProps) {
 
           {unlinkedStories.length > 0 && (
             <PmSection index={2} className="shrink-0">
-              <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
+              <h2 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-foreground">
                 <AlertCircle className="h-3.5 w-3.5 text-status-warning-ink" />
                 Stories without Epic
               </h2>

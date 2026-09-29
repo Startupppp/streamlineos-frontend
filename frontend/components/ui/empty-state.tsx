@@ -164,7 +164,7 @@ export function EmptyState({
       {headingText !== undefined && (
         <h2
           className={cn(
-            "font-semibold text-foreground",
+            "font-medium text-foreground",
             compact ? "text-label leading-tight" : "text-sm"
           )}
         >

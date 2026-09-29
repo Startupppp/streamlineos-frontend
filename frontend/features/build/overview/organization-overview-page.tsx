@@ -120,7 +120,7 @@ export function OrganizationOverviewPage() {
           {myWorkItems.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
-                <h2 className="text-sm font-semibold">My open work</h2>
+                <h2 className="text-sm font-medium">My open work</h2>
               </CardHeader>
               <CardContent className="space-y-2">
                 {myWorkItems.map((item) => (
@@ -155,7 +155,7 @@ export function OrganizationOverviewPage() {
           {canViewPortfolios && portfoliosData && portfoliosData.data.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
-                <h2 className="text-sm font-semibold">Portfolio health</h2>
+                <h2 className="text-sm font-medium">Portfolio health</h2>
               </CardHeader>
               <CardContent className="space-y-2">
                 {portfoliosData.data.map((portfolio) => (

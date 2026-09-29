@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { useTestRuns, useDeleteTestRun } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -117,16 +117,6 @@ function RunProgress({ run }: { run: TestRunListItem }) {
   );
 }
 
-function NewRunButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      New Test Run
-    </Button>
-  );
-}
-
 function RunDeleteButton({
   run,
   onDelete,
@@ -152,9 +142,10 @@ function RunDeleteButton({
 
 interface TestRunsTabProps {
   projectId: number;
+  createNonce?: number;
 }
 
-export function TestRunsTab({ projectId }: TestRunsTabProps) {
+export function TestRunsTab({ projectId, createNonce = 0 }: TestRunsTabProps) {
   const router = useRouter();
   const canManage = useCan("build:qa:manage");
   const listFilters = useBuildListFilters({
@@ -212,6 +203,11 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
   const handleNewRun = useCallback(() => {
     setSheetOpen(true);
   }, []);
+
+  useEffect(() => {
+    if (createNonce <= 0) return;
+    handleNewRun();
+  }, [createNonce, handleNewRun]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -327,28 +323,24 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex shrink-0 items-start gap-2">
-        <BuildListToolbar
-          filters={[
-            {
-              id: "status",
-              label: "Status",
-              active: listFilters.isActive("status"),
-              control: (
-                <BuildFilterSelect
-                  label="Status"
-                  value={statusValue}
-                  onValueChange={handleStatusChange}
-                  options={STATUS_OPTIONS}
-                />
-              ),
-            },
-          ]}
-          onClearAll={listFilters.clearAll}
-          className="flex-1 min-w-0"
-        />
-        {canManage ? <NewRunButton onClick={handleNewRun} /> : null}
-      </div>
+      <BuildListToolbar
+        filters={[
+          {
+            id: "status",
+            label: "Status",
+            active: listFilters.isActive("status"),
+            control: (
+              <BuildFilterSelect
+                label="Status"
+                value={statusValue}
+                onValueChange={handleStatusChange}
+                options={STATUS_OPTIONS}
+              />
+            ),
+          },
+        ]}
+        onClearAll={listFilters.clearAll}
+      />
 
       <BuildListSurface<TestRunListItem>
         permission="build:qa:view"

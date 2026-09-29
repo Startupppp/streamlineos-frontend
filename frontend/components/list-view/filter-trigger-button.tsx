@@ -29,7 +29,7 @@ export const FilterTriggerButton = forwardRef<
       icon={SlidersHorizontalIcon}
       iconSize={14}
       className={cn(
-        "relative size-9 shrink-0 gap-1 p-0 text-xs font-normal md:h-9 md:w-auto md:px-2",
+        "relative size-9 shrink-0 gap-1 p-0 text-sm font-normal md:h-9 md:w-auto md:px-2",
         "data-[state=open]:border-primary data-[state=open]:focus-visible:border-primary",
         className,
       )}
@@ -41,7 +41,7 @@ export const FilterTriggerButton = forwardRef<
     >
       <span className="hidden md:inline">Add filter</span>
       {activeFilterCount > 0 ? (
-        <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-micro font-semibold text-primary-foreground md:static md:ml-0.5 md:h-4 md:min-w-4 md:px-1">
+        <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-micro font-normal text-primary-foreground md:static md:ml-0.5 md:h-4 md:min-w-4 md:px-1">
           {activeFilterCount}
         </span>
       ) : null}

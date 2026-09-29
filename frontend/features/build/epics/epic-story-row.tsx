@@ -106,7 +106,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
               <TruncatedText
                 text={story.title}
                 className={cn(
-                  "max-w-[min(100%,18rem)] text-xs font-semibold sm:max-w-xs",
+                  "max-w-[min(100%,18rem)] text-xs font-medium sm:max-w-xs",
                   isDone && "text-muted-foreground line-through",
                 )}
               />

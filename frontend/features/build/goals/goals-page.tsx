@@ -309,7 +309,7 @@ export function GoalsPage() {
                       return (
                         <div key={level} className="flex flex-col gap-3">
                           <div className="flex items-center gap-2">
-                            <h2 className="text-sm font-semibold text-foreground">
+                            <h2 className="text-sm font-medium text-foreground">
                               {LEVEL_LABEL[level]}
                             </h2>
                             <Badge variant="secondary" className="text-micro">

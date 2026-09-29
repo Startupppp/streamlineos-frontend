@@ -121,7 +121,7 @@ export const InlineEstimate = memo(function InlineEstimate({
             display != null ? "text-foreground" : "text-muted-foreground",
           )}
         >
-          {display != null ? `${display} pts` : "pts"}
+          {display != null ? `${display} pts` : "Add pts"}
         </span>
       </button>
     </InlineFieldWrapper>

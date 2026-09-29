@@ -280,7 +280,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
             {isBoard && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Columns</p>
+                  <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Columns</p>
                   <Select value={options.columnBy} onValueChange={handleColumnByChange}>
                   <SelectTrigger aria-label="Columns" className="h-9 w-full">
                       <SelectValue />
@@ -293,7 +293,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Rows</p>
+                  <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Rows</p>
                   <Select value={options.rowBy} onValueChange={handleRowByChange}>
                   <SelectTrigger aria-label="Rows" className="h-9 w-full">
                       <SelectValue />
@@ -310,7 +310,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
             {isList && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Group by</p>
+                  <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Group by</p>
                   <Select value={options.groupBy} onValueChange={handleGroupByChange}>
                   <SelectTrigger aria-label="Group by" className="h-9 w-full">
                       <SelectValue />
@@ -323,7 +323,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Sub-group</p>
+                  <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Sub-group</p>
                   <Select value={options.rowBy} onValueChange={handleRowByChange}>
                   <SelectTrigger aria-label="Sub-group" className="h-9 w-full">
                       <SelectValue />
@@ -344,7 +344,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
         {showOrdering && (
           <>
             <div className="space-y-1.5">
-              <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Ordering</p>
+              <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Ordering</p>
               <Select value={options.orderBy} onValueChange={handleOrderByChange}>
                   <SelectTrigger aria-label="Ordering" className="h-9 w-full">
                   <SelectValue />
@@ -367,7 +367,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
         )}
 
         <div className="space-y-1.5">
-          <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Completed issues</p>
+          <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">Completed issues</p>
           <Select value={options.completedIssues} onValueChange={handleCompletedIssuesChange}>
                   <SelectTrigger aria-label="Completed issues" className="h-9 w-full">
               <SelectValue />
@@ -384,7 +384,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
           <>
             <Separator />
             <div className="space-y-0">
-              <p className="mb-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">Show</p>
+              <p className="mb-1 text-micro font-medium uppercase tracking-wider text-muted-foreground">Show</p>
               <DisplayToggleRow id="disp-sub-issues" label="Sub-issues" checked={options.showSubIssues} onCheckedChange={handleShowSubIssues} />
               {isBoard && (
                 <>
@@ -403,7 +403,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
           <>
             <Separator />
             <div className="space-y-0">
-              <p className="mb-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">Properties</p>
+              <p className="mb-1 text-micro font-medium uppercase tracking-wider text-muted-foreground">Properties</p>
               {propertyChips.map((chip) => (
                 <DisplayToggleRow
                   key={chip.key}

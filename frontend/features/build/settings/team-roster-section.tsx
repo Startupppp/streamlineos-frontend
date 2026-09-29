@@ -14,7 +14,7 @@ import { resolveImageUrl } from "@/lib/utils";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+    <p className="mb-2 text-dense font-medium uppercase tracking-wider text-muted-foreground">
       {children}
     </p>
   );

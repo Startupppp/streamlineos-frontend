@@ -134,7 +134,7 @@ export function BuildNavLink({
         <>
           <span
             aria-hidden
-            className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-status-danger-fill px-1 text-micro font-bold leading-none tabular-nums text-white"
+            className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-status-danger-fill px-1 text-micro font-normal leading-none tabular-nums text-white"
           >
             {badgeCount > BUILD_NAV_BADGE_CAP
               ? `${BUILD_NAV_BADGE_CAP}+`

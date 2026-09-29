@@ -238,7 +238,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
             {Object.keys(columnCounts).length > 0 && (
               <Card>
                 <CardHeader className="pb-2">
-                  <h2 className="text-sm font-semibold">Issues by status</h2>
+                  <h2 className="text-sm font-medium">Issues by status</h2>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {Object.entries(columnCounts).map(([status, count]) => (
@@ -249,7 +249,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
                       <span className="text-muted-foreground truncate">
                         {formatOverviewLabel(status)}
                       </span>
-                      <span className="font-mono tabular-nums font-medium">
+                      <span className="font-mono tabular-nums font-normal">
                         {count}
                       </span>
                     </div>
@@ -261,7 +261,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
             {nextMilestone && (
               <Card>
                 <CardHeader className="pb-2">
-                  <h2 className="text-sm font-semibold">Next milestone</h2>
+                  <h2 className="text-sm font-medium">Next milestone</h2>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <p className="text-sm font-medium truncate">
@@ -285,7 +285,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
             {nextRelease && (
               <Card>
                 <CardHeader className="pb-2">
-                  <h2 className="text-sm font-semibold">Next release</h2>
+                  <h2 className="text-sm font-medium">Next release</h2>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <p className="text-sm font-medium truncate">
@@ -310,7 +310,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
           {activityQuery.data && activityQuery.data.data.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
-                <h2 className="text-sm font-semibold flex items-center gap-2">
+                <h2 className="text-sm font-medium flex items-center gap-2">
                   <Activity className="h-4 w-4" aria-hidden="true" />
                   Recent activity
                 </h2>

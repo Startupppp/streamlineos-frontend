@@ -101,7 +101,7 @@ export function DeleteProjectDialog({
           <AlertDialogTitle>Delete project?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete{" "}
-            <span className="font-semibold text-foreground">{projectName}</span>{" "}
+            <span className="font-medium text-foreground">{projectName}</span>{" "}
             and all of its tickets and data. Type the project name to confirm.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -117,7 +117,7 @@ export function DeleteProjectDialog({
                 <FormItem>
                   <FormLabel>
                     Type{" "}
-                    <span className="font-mono font-semibold text-foreground">
+                    <span className="font-mono font-normal text-foreground">
                       {projectName}
                     </span>{" "}
                     to confirm

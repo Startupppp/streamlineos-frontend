@@ -136,12 +136,12 @@ export function ChecklistSection({
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleSave}
             onKeyDown={handleTitleKeyDown}
-            className="flex-1 text-sm font-semibold bg-transparent border-b border-input outline-none"
+            className="flex-1 text-sm font-medium bg-transparent border-b border-input outline-none"
             autoFocus
           />
         ) : (
           <span
-            className={cn("flex-1 text-sm font-semibold text-foreground", canUpdate && "cursor-pointer hover:text-foreground/80")}
+            className={cn("flex-1 text-sm font-medium text-foreground", canUpdate && "cursor-pointer hover:text-foreground/80")}
             onClick={canUpdate ? () => setEditingTitle(true) : undefined}
             onKeyDown={canUpdate ? handleTitleSpanKeyDown : undefined}
             role={canUpdate ? "button" : undefined}

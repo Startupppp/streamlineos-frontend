@@ -126,7 +126,7 @@ export function PageWrapper({
   const visibleFilters = isInterrupted ? undefined : filters;
   const titleClass =
     variant === "display"
-      ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-extrabold tracking-[-0.02em] text-foreground leading-tight"
+      ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-semibold tracking-[-0.02em] text-foreground leading-tight"
       : "text-base sm:text-lg font-semibold tracking-tight text-foreground leading-tight";
 
   const builtInBack =

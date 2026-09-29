@@ -51,11 +51,11 @@ export function BuildFilterSelect({
         aria-label={label}
         className={cn(BUILD_FILTER_TRIGGER_CLASS, className)}
       >
-        <SelectValue placeholder={label} />
+        <SelectValue placeholder={label} className="font-normal" />
       </SelectTrigger>
       <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
         {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
+          <SelectItem key={option.value} value={option.value} className="font-normal">
             {option.label}
           </SelectItem>
         ))}

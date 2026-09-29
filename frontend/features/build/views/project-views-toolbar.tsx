@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { ViewSwitcher, type ViewType } from "@/features/build/views/view-switcher";
@@ -73,7 +74,7 @@ interface ModuleFilterOption {
 }
 
 const MODULE_ALL = "__all__";
-const MODULE_SELECT_TRIGGER = "h-9 w-fit min-w-0 shrink-0 gap-1 px-2 text-xs";
+const MODULE_SELECT_TRIGGER = `${FILTER_SELECT_TRIGGER} h-9 w-fit min-w-0 shrink-0 gap-1 px-2 text-xs`;
 
 interface ProjectViewsToolbarProps {
   view: ViewType;
@@ -186,12 +187,12 @@ export function ProjectViewsToolbar({
       {moduleOptions.length > 0 ? (
         <Select value={moduleValue || MODULE_ALL} onValueChange={handleModuleChange}>
           <SelectTrigger className={MODULE_SELECT_TRIGGER} aria-label="Filter by module">
-            <SelectValue placeholder="Module" />
+            <SelectValue placeholder="Module" className="font-normal" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={MODULE_ALL} className="text-xs">All modules</SelectItem>
+            <SelectItem value={MODULE_ALL} className="text-xs font-normal">All modules</SelectItem>
             {moduleOptions.map((m) => (
-              <SelectItem key={m.id} value={String(m.id)} className="text-xs">
+              <SelectItem key={m.id} value={String(m.id)} className="text-xs font-normal">
                 {m.name}
               </SelectItem>
             ))}

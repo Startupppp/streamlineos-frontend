@@ -157,7 +157,7 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
             <PmSection index={0}>
               <PmPanel className="flex min-h-0 flex-col p-0" solid>
                 <div className="px-4 py-3 border-b border-border">
-                  <p className="text-sm font-semibold">Tickets</p>
+                  <p className="text-sm font-medium">Tickets</p>
                 </div>
                 <div className="px-4 py-2">
                   {tickets.map((ticket) => (
@@ -189,7 +189,7 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
             <PmSection index={1}>
               <PmPanel className="flex min-h-0 flex-col p-0" solid>
                 <div className="px-4 py-3 border-b border-border">
-                  <p className="text-sm font-semibold">Milestones</p>
+                  <p className="text-sm font-medium">Milestones</p>
                 </div>
                 <div className="px-4 py-2">
                   {milestones.map((milestone) => (

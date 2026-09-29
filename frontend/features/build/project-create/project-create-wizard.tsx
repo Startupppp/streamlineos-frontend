@@ -114,7 +114,7 @@ export function ProjectCreateWizard({
           <p className="text-xs text-muted-foreground mb-0.5">
             Step {step} of {TOTAL_STEPS}
           </p>
-          <SheetTitle className="text-lg font-semibold">
+          <SheetTitle className="text-lg font-medium">
             {currentLabel}
           </SheetTitle>
           <SheetDescription className="sr-only">

@@ -53,7 +53,7 @@ export const SwimlaneRowHeader = memo(function SwimlaneRowHeader({
             <User className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
         )}
-        <span className="text-sm font-semibold text-foreground">
+        <span className="text-sm font-medium text-foreground">
           {assignee ? getUserDisplayName(assignee) : rowKey}
         </span>
         <span className="text-xs text-muted-foreground tabular-nums">({count})</span>
@@ -63,7 +63,7 @@ export const SwimlaneRowHeader = memo(function SwimlaneRowHeader({
 
   return (
     <>
-      <span className="text-sm font-semibold text-foreground">{rowKey}</span>
+      <span className="text-sm font-medium text-foreground">{rowKey}</span>
       <span className="text-xs text-muted-foreground tabular-nums">({count})</span>
     </>
   );

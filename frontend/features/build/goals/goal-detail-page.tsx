@@ -244,7 +244,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
         <PmSection index={1} className="space-y-3">
           <div className="flex items-center gap-2">
             <ListChecks className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold">Key Results</h2>
+            <h2 className="text-sm font-medium">Key Results</h2>
             <Badge variant="secondary" className="text-micro">
               {detail.keyResults.length}
             </Badge>
@@ -276,7 +276,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Link2 className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold">Linked Work Items</h2>
+              <h2 className="text-sm font-medium">Linked Work Items</h2>
               <Badge variant="secondary" className="text-micro">
                 {detail.links.length}
               </Badge>
@@ -309,7 +309,7 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
         <PmSection index={3} className="space-y-3">
           <div className="flex items-center gap-2">
             <History className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold">Updates Timeline</h2>
+            <h2 className="text-sm font-medium">Updates Timeline</h2>
           </div>
           {detail.updates.length === 0 ? (
             <PmPanel className="flex items-center justify-center p-4">
@@ -334,9 +334,9 @@ export function GoalDetailPage({ goalId }: { goalId: number }) {
                       {update.previousValue !== null && update.newValue !== null ? (
                         <>
                           {" updated a key result from "}
-                          <span className="font-medium tabular-nums">{update.previousValue}</span>
+                          <span className="font-normal tabular-nums">{update.previousValue}</span>
                           {" to "}
-                          <span className="font-medium tabular-nums">{update.newValue}</span>
+                          <span className="font-normal tabular-nums">{update.newValue}</span>
                         </>
                       ) : (
                         " posted an update"

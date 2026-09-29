@@ -137,8 +137,8 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
             className={cn(
               "min-w-0 flex-1 text-sm leading-snug text-pretty",
               isUnread
-                ? "font-semibold text-foreground"
-                : "font-medium text-muted-foreground",
+                ? "font-medium text-foreground"
+                : "font-normal text-muted-foreground",
             )}
           />
           {isUnread ? (
@@ -161,13 +161,13 @@ export const InboxNotificationItem = React.memo(function InboxNotificationItem({
           {hasMeta ? (
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
               {ticketKey ? (
-                <span className="inline-flex max-w-[9rem] items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-micro font-medium text-muted-foreground">
+                <span className="inline-flex max-w-[9rem] items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-micro font-normal text-muted-foreground">
                   <TruncatedText text={ticketKey} className="min-w-0" />
                 </span>
               ) : null}
 
               {ticketType ? (
-                <span className="inline-flex items-center gap-1 text-micro font-medium text-muted-foreground">
+                <span className="inline-flex items-center gap-1 text-micro font-normal text-muted-foreground">
                   <TicketTypeIcon type={ticketType} size="sm" />
                   <span className="capitalize">{ticketType.toLowerCase()}</span>
                 </span>

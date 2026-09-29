@@ -19,7 +19,9 @@ describe("Build UI consistency contracts", () => {
     );
 
     expect(source).toContain("text-sm font-medium");
-    expect(source).toContain("font-semibold");
+    expect(source).not.toContain("font-bold");
+    expect(source).not.toContain("font-semibold");
+    expect(source).not.toContain("font-extrabold");
   });
 
   it("keeps My Work search and filters visible while stacking dense controls", () => {

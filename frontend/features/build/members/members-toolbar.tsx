@@ -21,13 +21,13 @@ import { type DisplayProps, DISPLAY_PROP_ITEMS } from "./display-props";
 export function WorkspaceRoleBadge({ role }: { role: "member" | "admin" }) {
   if (role === "admin") {
     return (
-      <Badge className="h-[18px] px-1.5 text-micro font-medium bg-primary/10 text-foreground border border-primary/20 hover:bg-primary/10">
+      <Badge className="h-[18px] px-1.5 text-micro font-normal bg-primary/10 text-foreground border border-primary/20 hover:bg-primary/10">
         Admin
       </Badge>
     );
   }
   return (
-    <Badge variant="secondary" className="h-[18px] px-1.5 text-micro font-medium">
+    <Badge variant="secondary" className="h-[18px] px-1.5 text-micro font-normal">
       Member
     </Badge>
   );
@@ -64,7 +64,7 @@ export function DisplayPropsToggle({
         </ResponsivePopoverTrigger>
       </MobileOnlyLabelTooltip>
       <ResponsivePopoverContent align="end" title="Display properties" className="w-52 p-3">
-        <p className="mb-3 text-label font-semibold text-foreground">
+        <p className="mb-3 text-label font-medium text-foreground">
           Display properties
         </p>
         <div>

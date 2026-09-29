@@ -40,7 +40,7 @@ export function TicketSubtasks({
     <div className="pt-2">
       <div className="mb-3 flex w-full items-center gap-2">
         <ListChecks className="h-4 w-4 text-primary" />
-        <h4 className="text-sm font-semibold">Subtasks</h4>
+        <h4 className="text-sm font-medium">Subtasks</h4>
         {subtasksTotal > 0 && (
           <Badge variant="secondary" className="text-xs">
             {subtasksDone}/{subtasksTotal}

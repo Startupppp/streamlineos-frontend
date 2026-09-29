@@ -69,7 +69,7 @@ function ProjectMobileCard({
           <div className="flex min-w-0 items-center justify-between gap-3 text-label text-muted-foreground">
             <span className="min-w-0 truncate">
               Progress{" "}
-              <span className="font-medium font-mono tabular-nums text-foreground">
+              <span className="font-normal font-mono tabular-nums text-foreground">
                 {progressValue !== null ? `${progressValue}%` : "—"}
               </span>
             </span>
@@ -78,14 +78,14 @@ function ProjectMobileCard({
               {targetDate ? (
                 <span
                   className={cn(
-                    "font-medium font-mono tabular-nums",
+                    "font-normal font-mono tabular-nums",
                     dateToneClasses[targetDate.tone],
                   )}
                 >
                   {targetDate.label}
                 </span>
               ) : (
-                <span className="font-medium text-foreground">—</span>
+                <span className="font-normal text-foreground">—</span>
               )}
             </span>
           </div>

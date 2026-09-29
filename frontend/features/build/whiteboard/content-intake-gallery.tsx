@@ -196,7 +196,7 @@ function CaseFrame({
 }) {
   return (
     <section aria-label={title}>
-      <h2 className="mb-2 text-sm font-semibold text-foreground">{title}</h2>
+      <h2 className="mb-2 text-sm font-medium text-foreground">{title}</h2>
       <div
         data-case-frame={id}
         className={`w-full min-w-0 overflow-hidden rounded-xl border border-border bg-background ${height}`}

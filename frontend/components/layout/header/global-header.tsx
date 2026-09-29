@@ -15,6 +15,7 @@ import { UserAvatarMenu } from "./user-avatar-menu";
 import { SidebarCollapseToggle } from "./sidebar-collapse-toggle";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { useIsBelowLg } from "@/hooks/common/use-mobile";
 
 function SearchButton({ compact = false }: { compact?: boolean }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -62,18 +63,36 @@ function NotificationBellPlaceholder() {
 function DesktopHeader({
   isSidebarCollapsed,
   onToggleSidebar,
+  onOpenMobileMenu,
+  mobileNavOpen = false,
   showSidebarToggle,
   hideAdminChrome = false,
   notificationBellSlot,
 }: {
   isSidebarCollapsed: boolean;
   onToggleSidebar?: () => void;
+  onOpenMobileMenu?: () => void;
+  mobileNavOpen?: boolean;
   showSidebarToggle: boolean;
   hideAdminChrome?: boolean;
   notificationBellSlot?: ReactNode;
 }) {
   const afterLoad = useAfterLoad();
-  const showLabels = !isSidebarCollapsed || !showSidebarToggle;
+  const isBelowLg = useIsBelowLg();
+  const drawerMode = isBelowLg && !!onOpenMobileMenu;
+  const toggleCollapsed = drawerMode ? !mobileNavOpen : isSidebarCollapsed;
+  const showLabels = !isSidebarCollapsed || !showSidebarToggle || drawerMode;
+
+  function handleSidebarToggle() {
+    if (drawerMode) {
+      onOpenMobileMenu();
+      return;
+    }
+    onToggleSidebar?.();
+  }
+
+  const showToggle =
+    showSidebarToggle && (drawerMode || !!onToggleSidebar);
 
   return (
     <div className="flex items-center h-full w-full px-4 gap-3">
@@ -82,20 +101,20 @@ function DesktopHeader({
         {!hideAdminChrome && (
           <>
             <ProductSwitcherMenu />
-            {showSidebarToggle && onToggleSidebar && (
+            {showToggle && (
               <SidebarCollapseToggle
-                isCollapsed={isSidebarCollapsed}
-                onToggle={onToggleSidebar}
+                isCollapsed={toggleCollapsed}
+                onToggle={handleSidebarToggle}
               />
             )}
             <div className="w-px h-4 bg-sidebar-border" />
             <WorkspaceSwitcher variant="header" />
           </>
         )}
-        {hideAdminChrome && showSidebarToggle && onToggleSidebar && (
+        {hideAdminChrome && showToggle && (
           <SidebarCollapseToggle
-            isCollapsed={isSidebarCollapsed}
-            onToggle={onToggleSidebar}
+            isCollapsed={toggleCollapsed}
+            onToggle={handleSidebarToggle}
           />
         )}
       </div>
@@ -162,6 +181,7 @@ function MobileHeader({
 export function GlobalHeader({
   isSidebarCollapsed = false,
   onToggleSidebar,
+  onOpenMobileMenu,
   showSidebarToggle = true,
   mobileNavOpen = false,
   hideAdminChrome = false,
@@ -170,6 +190,7 @@ export function GlobalHeader({
 }: {
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
+  onOpenMobileMenu?: () => void;
   showSidebarToggle?: boolean;
   mobileNavOpen?: boolean;
   hideAdminChrome?: boolean;
@@ -184,6 +205,8 @@ export function GlobalHeader({
             <DesktopHeader
               isSidebarCollapsed={isSidebarCollapsed}
               onToggleSidebar={onToggleSidebar}
+              onOpenMobileMenu={onOpenMobileMenu}
+              mobileNavOpen={mobileNavOpen}
               showSidebarToggle={showSidebarToggle}
               hideAdminChrome={hideAdminChrome}
               notificationBellSlot={notificationBellSlot}

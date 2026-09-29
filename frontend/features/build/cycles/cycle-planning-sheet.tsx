@@ -96,7 +96,7 @@ export function CyclePlanningSheet({ cycle, tickets, projectId, open, onOpenChan
           <div className="grid gap-4 md:grid-cols-2">
             <section className="space-y-2" aria-labelledby="cycle-planning-backlog">
               <div className="flex items-center justify-between gap-2">
-                <h3 id="cycle-planning-backlog" className="text-sm font-semibold">Backlog ({backlogTickets.length})</h3>
+                <h3 id="cycle-planning-backlog" className="text-sm font-medium">Backlog ({backlogTickets.length})</h3>
                 <Button type="button" variant="outline" size="sm" disabled={bulkUpdate.isPending || selectedBacklog.size === 0} onClick={() => moveTickets([...selectedBacklog], cycle?.id ?? null)}>
                   Add selected
                 </Button>
@@ -115,7 +115,7 @@ export function CyclePlanningSheet({ cycle, tickets, projectId, open, onOpenChan
             </section>
             <section className="space-y-2" aria-labelledby="cycle-planning-cycle">
               <div className="flex items-center justify-between gap-2">
-                <h3 id="cycle-planning-cycle" className="text-sm font-semibold">{cycle?.name ?? "Cycle"} ({cycleTickets.length})</h3>
+                <h3 id="cycle-planning-cycle" className="text-sm font-medium">{cycle?.name ?? "Cycle"} ({cycleTickets.length})</h3>
                 <Button type="button" variant="outline" size="sm" disabled={bulkUpdate.isPending || selectedCycle.size === 0} onClick={() => moveTickets([...selectedCycle], null)}>
                   Remove selected
                 </Button>

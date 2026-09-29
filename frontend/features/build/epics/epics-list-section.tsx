@@ -77,7 +77,7 @@ export function EpicsListSection({
             data-testid="offline-state"
           >
             <WifiOff className="h-5 w-5 text-muted-foreground" />
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-sm font-medium text-foreground">
               You&apos;re offline
             </p>
             <p className="text-xs text-muted-foreground">

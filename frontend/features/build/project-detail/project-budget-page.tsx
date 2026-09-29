@@ -230,7 +230,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
         {(budget?.plannedBudget ?? 0) > 0 ? (
           <PmSection index={1}>
             <PmPanel className="p-4">
-              <h3 className={cn("mb-3 text-sm font-semibold", TEXT_ONE_LINE)}>
+              <h3 className={cn("mb-3 text-sm font-medium", TEXT_ONE_LINE)}>
                 Budget Utilization
               </h3>
               <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
@@ -249,7 +249,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
           <PmSection index={2}>
             <PmPanel solid>
               <div className="border-b border-border/60 px-4 py-3">
-                <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
                   Member Cost Breakdown
                 </h3>
               </div>

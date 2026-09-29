@@ -173,7 +173,7 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
             <div className="flex max-h-80 flex-col gap-2 overflow-y-auto">
               {pinnedViews.length > 0 ? (
                 <div className="flex flex-col gap-0.5">
-                  <h3 className="px-1 pb-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
+                  <h3 className="px-1 pb-1 text-micro font-medium uppercase tracking-wider text-muted-foreground">
                     Pinned
                   </h3>
                   {pinnedViews.map((view) => (
@@ -194,7 +194,7 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
               {unpinnedViews.length > 0 ? (
                 <div className="flex flex-col gap-0.5">
                   {pinnedViews.length > 0 ? (
-                    <h3 className="px-1 pb-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
+                    <h3 className="px-1 pb-1 text-micro font-medium uppercase tracking-wider text-muted-foreground">
                       All views
                     </h3>
                   ) : null}

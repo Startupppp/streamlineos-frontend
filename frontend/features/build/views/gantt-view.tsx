@@ -426,7 +426,7 @@ export function GanttView({
                         isToday ? "fill-primary" : "fill-muted-foreground"
                       }
                       fontSize={11}
-                      fontWeight={isToday ? 600 : 400}
+                      fontWeight={isToday ? 500 : 400}
                     >
                       {day.getDate()}
                     </text>

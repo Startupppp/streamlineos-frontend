@@ -135,11 +135,11 @@ export function FilterCommandMenu({
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               ) : null}
-              <DrawerTitle className="text-sm font-semibold text-foreground">
+              <DrawerTitle className="text-sm font-medium text-foreground">
                 {isSearching ? "Search filters" : drillTitle}
               </DrawerTitle>
               {activeFilterCount > 0 && !activeCategory ? (
-                <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-dense font-semibold text-primary-foreground">
+                <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-dense font-medium text-primary-foreground">
                   {activeFilterCount}
                 </span>
               ) : null}

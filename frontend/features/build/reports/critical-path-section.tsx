@@ -43,7 +43,7 @@ export function CriticalPathSection({ projectId }: { projectId: number }) {
       >
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="font-semibold text-foreground">
+            <span className="font-medium text-foreground">
               Total duration:{" "}
               {numberFormatter.format(data?.totalDuration ?? 0)}
             </span>

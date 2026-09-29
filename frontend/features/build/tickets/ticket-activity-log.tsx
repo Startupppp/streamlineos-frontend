@@ -147,7 +147,7 @@ export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProp
               type="button"
               onClick={handleShowOlder}
               isPending={isFetchingNextPage}
-              className="mx-auto block rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+              className="mx-auto block rounded-md border border-border bg-card px-3 py-1.5 text-xs font-normal text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
             >
               Show older activity
               <span className="ml-1 tabular-nums opacity-70">

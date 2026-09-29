@@ -16,7 +16,7 @@ function ProviderLabel({ provider }: { provider: GitProvider }) {
     gitlab: "GitLab",
     bitbucket: "Bitbucket",
   };
-  return <span className="text-micro text-muted-foreground font-medium">{labels[provider]}</span>;
+  return <span className="text-micro text-muted-foreground font-normal">{labels[provider]}</span>;
 }
 
 function RefTypeIcon({ refType }: { refType: GitRefType }) {
