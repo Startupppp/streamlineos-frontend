@@ -17,6 +17,92 @@ module and sidebar PRDs (658 total, counted directly from the current PRD tree).
 completion; use `docs/specs/build/module/README.md` and its child PRDs for the
 complete product definition of done.
 
+## Two findings from 2026-09-29 that no lane in this checkout can close — READ THESE FIRST
+
+Both were found by reading code, both are release-relevant, and neither can be settled from this
+machine. They are recorded here rather than inside a checkbox because a reader who only skims the
+box list would not see them.
+
+### FINDING 1 — `deleteProject` appears unable to succeed for any project that holds a ticket
+
+This is not "may be unable". It is a static chain with no branch that avoids it, and it means
+project restore is reachable only for empty projects. **It still needs a DB-enabled lane to confirm
+the constraint is live on a real database**, which is the one step this checkout may not take.
+
+| Link | Evidence |
+|---|---|
+| The FK has no `ON DELETE` | `backend/migrations/0146_status_model_single_table.sql:41-47` — `ALTER TABLE tickets ADD CONSTRAINT fk_tickets_status FOREIGN KEY (org_id, project_id, status) REFERENCES project_statuses (org_id, project_id, name) ON UPDATE CASCADE NOT VALID;` then `VALIDATE CONSTRAINT` at `:47`. No `ON DELETE` clause, so Postgres defaults to `NO ACTION`; no `DEFERRABLE`, so it is checked at statement end, not at commit. |
+| Independently confirmed, not inferred | `backend/migrations/meta/0464_snapshot.json` records `{"name": "fk_tickets_status", …, "onDelete": "no action", "onUpdate": "cascade"}`. |
+| Still live at HEAD | `backend/src/db/schema/build/ticket-core.ts:100-104` declares the same `foreignKey({name: "fk_tickets_status", …}).onUpdate("cascade")` with no `.onDelete(...)`. No migration ever drops it — `grep -rln fk_tickets_status migrations/` returns only 0146. |
+| The delete soft-deletes the children then hard-deletes the parent | `backend/src/modules/build/core/project-crud/projects-write.service.ts:271-334`, one transaction: `:310-313` `update(tickets).set({deletedAt: now})` — rows and their `status` values stay — then `:322-329` `tx.delete(projectStatuses)`, the FK parent. |
+| Every surviving ticket still points at a parent | `ticket-core.ts:37` is `status: text("status").notNull().default("TODO")`. **NOT NULL**, and the constraint was VALIDATEd, so every live-or-soft-deleted ticket row has a `project_statuses` parent, and `:322-329` deletes exactly those parents while the children are present. |
+| Nothing prevents it | No ticket hard-delete on this path (the only `tickets` write is the soft update). No `status` nulling — impossible, the column is NOT NULL. No deferred constraint. No `ON DELETE SET NULL` or `CASCADE` anywhere on this constraint. |
+| How it would surface | `backend/src/common/http/all-exceptions.filter.ts:124-128` maps `23503` to `400` / `VALIDATION_FAILED` / `"Validation failed."`. So `DELETE /build/:projectId` (`projects-by-id.controller.ts:72`) would return **400 "Validation failed."** for any non-empty project — not a 500, and never a success. |
+| Why no test catches it | `projects-write-tenant-isolation.spec.ts:27-38` is the only delete happy path and its `tx` is a hand-rolled jest mock (`:29-34`, `delete: jest.fn().mockReturnValue({where: jest.fn().mockResolvedValue([])})`). No FK enforcement, so `:37 resolves.not.toThrow()` passes vacuously. This is the "specs that agree with the bug" shape. |
+
+**Consequence for restore.** `restoreProject` requires `project.deletedAt` to be non-null
+(`projects-restore.service.ts:47`), and `deleteProject` is the only writer of that column on this
+path. So **`POST /build/:projectId/restore` is reachable only for projects that had zero tickets.**
+
+**A SECOND, SEPARATE DEFECT FOUND IN THE SAME READ: even for an empty project, restore is lossy.**
+`deleteProject` hard-deletes `projectMembers` (`:314-321`), `projectStatuses` (`:322-329`),
+`ticketAssignees`, `ticketAttachments`, `ticketLabelMappings` and `timesheets` (`:298-309`).
+`restoreProject` (`projects-restore.service.ts:69-121`) restores only `projects`, `tickets` and
+`ticketComments`. A restored project comes back with no statuses and no members. That is the other
+side of the same design problem and it does not need a database to see.
+
+**WHAT A DB-ENABLED LANE MUST DO:** on a non-production database, confirm `fk_tickets_status` exists
+with `confdeltype = 'a'` (NO ACTION) and `convalidated = true`, then attempt
+`DELETE /build/:projectId` against a project holding one ticket, in a rolled-back transaction as the
+application role. If it raises 23503, the fix is a decision about the delete's order of operations,
+not a schema patch.
+
+### FINDING 2 — thirteen routes that landed today are absent from the vendored contract, so the frontend cannot call any of them
+
+`openapi:generate` was banned in every lane today, and the vendored contract was last regenerated
+**2026-09-28 18:57:55** (`frontend/contracts/openapi.json`, commit `cf34aace0`, `chore(api): vendor
+the republished contract`; byte-identical to `streamlineos-backend/openapi.json` at `da5eacbe9c`,
+sha256 `89ef110d…`). The file records no generation timestamp of its own — its `info.version` is the
+static string `"1.0"`. **Every route below landed 2026-09-29, after that vendoring.**
+
+Absent from `frontend/contracts/openapi.json`, confirmed by grepping each literal path and
+cross-checked by a JSON pass over all 3,075 paths (the only `restore` paths present belong to
+inventory, kb, organizations and users; the only `retention` paths are the settings pair plus
+fourteen unrelated `/cron/*-retention-*` sweeps):
+
+- H1's four restore routes — `POST /build/{projectId}/restore`, `POST /build/templates/{templateId}/restore`, `POST /build/{projectId}/tickets/{ticketId}/restore`, `POST /build/{projectId}/tickets/{ticketId}/comments/{commentId}/restore`.
+- H2's eight restore routes, for `roadmap_items`, `feedback_posts`, `project_releases`, `test_suites`, `test_cases`, `test_runs`, `project_milestones` and `project_whiteboards`.
+- J's retention purge route, `GET` **and** `POST /cron/build-project-retention-purge` (`cron-build-project-retention.controller.ts:31`, `:41`).
+
+**THE FRONTEND CANNOT CALL ANY OF THEM UNTIL THE CONTRACT IS REGENERATED.** The permission keys are
+in place on both sides — `build:restore` and `build:tickets:restore` (frontend `64378742c`) and
+H2's five (frontend `879ead178`), each in the `PermissionKey` union, the runtime catalog and
+`frontend/contracts/permission-catalog.json` — so `useCan` answers them and the role editor can
+grant them. What is missing is the operation, not the permission.
+
+**AND THE TWO CHEAP GATES ARE STRUCTURALLY BLIND TO THIS, which is why nothing went red.**
+
+- `frontend/scripts/check-contract-vendor.mjs` — **green, and run this lane.** It compares SHA-256 of the vendored copy against the backend artifact. Both are equally stale, so it cannot see the gap by construction.
+- `backend/src/scripts/check-api-contract-registry.mjs` — fail-closed "every operation must be classified", but it enumerates operations *from* `openapi.json`. An operation missing from the document is invisible to it: vacuously green.
+- `backend/src/scripts/check-openapi-fresh.ts` (`pnpm openapi:check`) — **this is the gate that bites, and it is red.** `diffArtifacts()` (`:28-42`) indexes `METHOD path` from the committed document against a freshly generated one; the routes above would come back as `added` and it would fail. It was **not run**, because its line 4 imports `generateOpenApiJson` — it *is* `openapi:generate`, and it boots Nest. So this is a static verdict on the gate, not an execution of it.
+
+**WHAT CLOSES IT:** one `pnpm openapi:generate` in the backend, a copy into
+`frontend/contracts/openapi.json`, and `pnpm check:contract-vendor` green afterwards. Until then
+`check:contract-vendor` will keep reporting success over a contract that is a day behind the routes.
+
+### A third thing, smaller but operationally urgent
+
+**J's retention purge is armed to destroy automatically on the next backend deploy, and its indexes
+are not applied.** `src/modules/cron/cron-retention-scheduler.service.ts:104` registers
+`["build-project-retention-purge", () => buildProjectRetention.sweep({ confirm: true })]` — the
+scheduler is the one caller that passes `confirm: true`; the HTTP route stays a dry run without
+`?confirm=destroy`. It arms in `onModuleInit` (`:115-127`) and is on unless `NODE_ENV === "test"` or
+`RETENTION_SCHEDULER_ENABLED === "false"` (`:144-145`). So "never executed" is true of every
+database today and stops being true one day after the next deploy, while migration `1540` — the two
+partial indexes its selection depends on — is apply-pending. Whoever deploys next should decide
+`RETENTION_SCHEDULER_ENABLED` before the deploy, not after. The full clause-by-clause verification
+of the purge is in [`99-kill-list.md`](./99-kill-list.md) under the product-copy box.
+
 ## Checkout reconciliation
 
 The top-level frontend repository and nested backend repository are both on `main`
