@@ -8,15 +8,7 @@ import {
   actionItemFormSchema,
   type ActionItemFormValues,
 } from "@/features/build/meetings/meeting-form-schema";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetBody,
-} from "@/components/ui/sheet";
+import { AppDialog } from "@/components/shared/app-dialog";
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
@@ -96,90 +88,95 @@ export function ActionItemFormSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md flex flex-col gap-0 p-0">
-        <SheetHeader className="px-6 py-4 border-b">
-          <SheetTitle>{mode === "edit" ? "Edit Action Item" : "New Action Item"}</SheetTitle>
-          <SheetDescription>
-            {mode === "edit" ? "Update the action item." : "Add a new action item to this meeting."}
-          </SheetDescription>
-        </SheetHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
-            <SheetBody className="px-6 py-5 space-y-4">
-              <FormField control={form.control} name="title" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl><Input {...field} placeholder="Action item title" className="text-sm" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="description" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (optional)</FormLabel>
-                  <FormControl><Textarea {...field} rows={3} placeholder="More details…" className="text-sm resize-none" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="assigneeId" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assignee</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger className="text-sm"><SelectValue placeholder="Unassigned" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value={NONE_SENTINEL}>Unassigned</SelectItem>
-                        {projectMembers.map((m) => (
-                          <SelectItem key={m.id} value={m.id}>{getUserDisplayName(m)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="status" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger className="text-sm"><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="open">Open</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="done">Done</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-              <FormField control={form.control} name="dueDate" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Due Date (optional)</FormLabel>
-                  <FormControl>
-                    <DatePicker value={field.value} onChange={field.onChange} placeholder="Select due date" className="text-sm" disablePast />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-            </SheetBody>
-            <SheetFooter className="shrink-0 px-6 py-4 border-t">
-              <div className="grid w-full grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                >
-                  Cancel
-                </Button>
-                <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
-                  {mode === "edit" ? "Save Changes" : "Add Item"}
-                </LoadingButton>
-              </div>
-            </SheetFooter>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+    <AppDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={mode === "edit" ? "Edit Action Item" : "New Action Item"}
+      description={
+        mode === "edit"
+          ? "Update the action item."
+          : "Add a new action item to this meeting."
+      }
+      footer={
+        <div className="grid w-full grid-cols-2 gap-2">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <LoadingButton
+            type="submit"
+            form="action-item-form"
+            isPending={isPending}
+            loadingText="Saving…"
+          >
+            {mode === "edit" ? "Save Changes" : "Add Item"}
+          </LoadingButton>
+        </div>
+      }
+    >
+      <Form {...form}>
+        <form
+          id="action-item-form"
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-4"
+          noValidate
+        >
+          <FormField control={form.control} name="title" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl><Input {...field} placeholder="Action item title" className="text-sm" /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="description" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description (optional)</FormLabel>
+              <FormControl><Textarea {...field} rows={3} placeholder="More details…" className="text-sm resize-none" /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField control={form.control} name="assigneeId" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Assignee</FormLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <FormControl><SelectTrigger className="text-sm"><SelectValue placeholder="Unassigned" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value={NONE_SENTINEL}>Unassigned</SelectItem>
+                    {projectMembers.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>{getUserDisplayName(m)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="status" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <FormControl><SelectTrigger className="text-sm"><SelectValue /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="done">Done</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
+          <FormField control={form.control} name="dueDate" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Due Date (optional)</FormLabel>
+              <FormControl>
+                <DatePicker value={field.value} onChange={field.onChange} placeholder="Select due date" className="text-sm" disablePast />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </form>
+      </Form>
+    </AppDialog>
   );
 }

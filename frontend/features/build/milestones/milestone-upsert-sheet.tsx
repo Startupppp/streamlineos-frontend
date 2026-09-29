@@ -9,15 +9,7 @@ import {
   type MilestoneFormValues,
 } from "@/features/build/milestones/milestone-schema";
 import { toMilestoneStatus } from "@/features/build/milestones/milestone-status";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetBody,
-} from "@/components/ui/sheet";
+import { AppDialog } from "@/components/shared/app-dialog";
 import {
   Form,
   FormField,
@@ -248,156 +240,152 @@ export function MilestoneUpsertSheet({
 
   return (
     <>
-      <Sheet open onOpenChange={handleOpenChange}>
-        <SheetContent className="w-full sm:max-w-md flex flex-col gap-0 p-0">
-          <SheetHeader className="px-6 py-4 border-b">
-            <SheetTitle>
-              {isEdit ? "Edit Milestone" : "New Milestone"}
-            </SheetTitle>
-            <SheetDescription>
-              {isEdit
-                ? "Update the milestone details and keep its delivery status current."
-                : "Create a checkpoint with an owner, target date, and delivery status."}
-            </SheetDescription>
-          </SheetHeader>
-
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="flex flex-col flex-1 min-h-0"
+      <AppDialog
+        open
+        onOpenChange={handleOpenChange}
+        title={isEdit ? "Edit Milestone" : "New Milestone"}
+        description={
+          isEdit
+            ? "Update the milestone details and keep its delivery status current."
+            : "Create a checkpoint with an owner, target date, and delivery status."
+        }
+        footer={
+          <div className="grid w-full grid-cols-2 gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <LoadingButton
+              type="submit"
+              form="milestone-form"
+              isPending={isPending}
+              loadingText="Saving…"
             >
-              <SheetBody className="px-6 py-5 space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name *</FormLabel>
+              {isEdit ? "Save Changes" : "Create Milestone"}
+            </LoadingButton>
+          </div>
+        }
+      >
+        <Form {...form}>
+          <form
+            id="milestone-form"
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+            noValidate
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. MVP Launch" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      rows={3}
+                      placeholder="Optional description…"
+                      className="resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="ownerMembershipId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Owner</FormLabel>
+                  <FormControl>
+                    <MemberPicker
+                      candidates={candidates}
+                      value={
+                        field.value != null
+                          ? (userIdByMembershipId.get(field.value) ??
+                            undefined)
+                          : undefined
+                      }
+                      onChange={(userId) =>
+                        field.onChange(
+                          userId != null
+                            ? (membershipIdByUserId.get(userId) ?? null)
+                            : null,
+                        )
+                      }
+                      allowUnassigned
+                      placeholder="Unassigned"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="targetDate"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Target Date *</FormLabel>
+                    <FormControl>
+                      <DatePicker
+                        value={targetDateValue}
+                        onChange={handleTargetDateChange}
+                        placeholder="Pick a date"
+                        className="text-sm"
+                        disablePast
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
                       <FormControl>
-                        <Input placeholder="e.g. MVP Launch" {...field} />
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          rows={3}
-                          placeholder="Optional description…"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="ownerMembershipId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Owner</FormLabel>
-                      <FormControl>
-                        <MemberPicker
-                          candidates={candidates}
-                          value={
-                            field.value != null
-                              ? (userIdByMembershipId.get(field.value) ??
-                                undefined)
-                              : undefined
-                          }
-                          onChange={(userId) =>
-                            field.onChange(
-                              userId != null
-                                ? (membershipIdByUserId.get(userId) ?? null)
-                                : null,
-                            )
-                          }
-                          allowUnassigned
-                          placeholder="Unassigned"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="targetDate"
-                    render={() => (
-                      <FormItem>
-                        <FormLabel>Target Date *</FormLabel>
-                        <FormControl>
-                          <DatePicker
-                            value={targetDateValue}
-                            onChange={handleTargetDateChange}
-                            placeholder="Pick a date"
-                            className="text-sm"
-                            disablePast
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="PENDING">Pending</SelectItem>
-                            <SelectItem value="ACHIEVED">Achieved</SelectItem>
-                            <SelectItem value="MISSED">Missed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </SheetBody>
-
-              <SheetFooter className="px-6 py-4 border-t shrink-0">
-                <div className="grid w-full grid-cols-2 gap-2">
-                  <Button type="button" variant="outline" onClick={onClose}>
-                    Cancel
-                  </Button>
-                  <LoadingButton
-                    type="submit"
-                    isPending={isPending}
-                    loadingText="Saving…"
-                  >
-                    {isEdit ? "Save Changes" : "Create Milestone"}
-                  </LoadingButton>
-                </div>
-              </SheetFooter>
-            </form>
-          </Form>
-        </SheetContent>
-      </Sheet>
+                      <SelectContent>
+                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="ACHIEVED">Achieved</SelectItem>
+                        <SelectItem value="MISSED">Missed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </form>
+        </Form>
+      </AppDialog>
       <TicketConflictDialog
         open={conflictFields !== null}
         fields={conflictFields ?? []}
