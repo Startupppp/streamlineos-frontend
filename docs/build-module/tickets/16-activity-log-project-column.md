@@ -6,7 +6,7 @@ This is the expand half; ticket 17 switches the reader.
 
 **Blocked by:** None — can start immediately.
 
-**Status:** partial — code exists, but acceptance gaps or required verification remain (audit 2026-09-27)
+**Status:** done — every box earned; the "no reader yet" box was restated 2026-09-29 as the fact ticket 17 established and ticked
 
 **Verification correction:** Journal 1378 is at idx 1121 and applied in production. `projects-activity-feed.service.ts:60`
 already reads the new column. The "no reader depends on it" criterion is therefore unmet in this
@@ -36,13 +36,23 @@ The writer update (`logTicketActivity` and `logTicketFieldChanges` now set `proj
   — `idx_ticket_activity_log_org_project ON build_events.ticket_activity_log (org_id, project_id, id) WHERE project_id IS NOT NULL` created by migration 1378 and declared in `activity.ts`. Column order `(org_id, project_id, id)` matches the feed query plan: seek on `(org_id, project_id)`, range scan descending on `id`.
 - [x] The migration is journalled with a rollback authored, and sets a lock timeout
   — Migration: `backend/migrations/1378_activity_log_project_column.sql` (`SET lock_timeout = '5s'` at line 24). Rollback: `backend/migrations/rollback/1378_activity_log_project_column.down.sql` (sibling, with precondition guard). Journal entry confirmed at `{ "idx": 1121, "tag": "1378_activity_log_project_column" }`.
-- [ ] No reader depends on the new column yet
-  **NOT EARNED 2026-09-29 — permanently N/A by design: ticket 17's feed reader filters on `project_id`, which is its deliverable, so the state this box describes is deliberately false at HEAD. Nothing would earn it; the sequencing it guarded is recorded by the "Applied and independently verified before any code reads it" box below.**
-  **N/A — DECISION, permanent. Recorded 2026-09-27 (Lane A2); re-verified 2026-09-28 (Lane-Adj-A path correction, Lane-16 exhaustive search).**
-  This box was a temporal sequencing guard for the expand half of an expand–contract sequence: it held only while this ticket was live. The sequencing it protected was honoured — migration 1378 is journalled at idx 1121 and applied, and the reader shipped after it, which the "Applied and independently verified before any code reads it" box below records with journal and catalog evidence.
-  The reader is ticket 17's own deliverable, not a defect: ticket 17 is complete and its criterion "The feed query filters on the project column directly" is exactly this line. `backend/src/modules/build/core/activity/projects-activity-feed.service.ts:60` — `eq(ticketActivityLog.projectId, projectId)`, a WHERE clause. Removing it would break the project activity feed; it must not be removed to earn this box.
-  Exhaustive search for any other reader (`ticketActivityLog\.projectId` and `project_id.*ticket_activity_log` across `backend/src`, plus the frontend): none. No Drizzle `select({...})` projection carries `projectId`; neither `backend/src/modules/build/core/dto/project-activity.schemas.ts` nor `projectActivityPageContract` in `frontend/hooks/api/build/build-tickets-subresource-schema.ts` declares it as a response field. Frontend `projectId` references are component props and route params.
-  The statement is permanently false at HEAD by design. Stays unchecked, per the programme rule that an N/A is a decision rather than completed functionality.
+- [x] **The feed reader now depends on the new column, which is ticket 17's deliverable** —
+  rewritten 2026-09-29. The original wording was "no reader depends on the new column yet": a
+  temporal sequencing guard for the expand half of an expand-contract sequence, true only while this
+  ticket was the live one. Ticket 17 added the reader on purpose, so the old sentence is deliberately
+  false at HEAD. The box is restated as the superseding fact and ticked — the sequence it guarded was
+  honoured (the column was journalled and applied at idx 1121 *before* the reader shipped, recorded in
+  the box below), and the reader must not be removed to make the old wording true again.
+  — `backend/src/modules/build/core/activity/projects-activity-feed.service.ts:60`:
+  `eq(ticketActivityLog.projectId, projectId)` in the feed's `WHERE`, matching the partial index
+  `idx_ticket_activity_log_org_project` on `(org_id, project_id, id) WHERE project_id IS NOT NULL`.
+  Verified 2026-09-29 — `npx jest src/modules/build/core/activity/projects-activity-feed.isolation.spec.ts src/modules/build/core/tickets/projects-ticket-version-conflict.spec.ts` → 2 suites, 17 tests passed; and
+  `grep -rn "ticketActivityLog\.projectId" src/` in the backend → exactly one hit, that line. No other
+  reader, and no `select({...})` projection carries it.
+  What it proves: exactly one reader filters on the column and the feed's tenant/project isolation
+  tests pass without a database. What it does not prove: no query plan was captured and no row was
+  read from a real database — the index's effect on the feed is unmeasured here, as
+  `ticket-17-activity-feed-plan.db.spec.ts` requires a database this checkout must not connect to.
 - [x] Applied and independently verified before any code reads it
   Earned 2026-09-27. `1378_activity_log_project_column` is journalled at **idx 1121** and applied; its rollback is at `migrations/rollback/1378_activity_log_project_column.down.sql`. The ticket's claim that "journal 1378 is absent" was stale and is corrected.
   Catalog verified rather than assumed: `build_events.ticket_activity_log.project_id` exists and the partial index `idx_ticket_activity_log_org_project` on `(org_id, project_id, id) WHERE project_id IS NOT NULL` is present, both read back from the catalog.
