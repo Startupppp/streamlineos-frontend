@@ -276,7 +276,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
                     variant="outline"
                     className="h-5 px-2 py-0.5 text-micro"
                   >
-                    {formatOverviewLabel(nextMilestone.status)}
+                    {formatOverviewLabel(nextMilestone.status ?? "Unknown")}
                   </Badge>
                 </CardContent>
               </Card>
