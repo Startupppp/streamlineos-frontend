@@ -250,30 +250,18 @@ jest.mock("@animateicons/react/lucide", () => ({
   EllipsisIcon: () => <span data-testid="ellipsis-icon" />,
 }));
 
-export const { useGoals, useGoalsPage, useGoal, useDeleteGoal } = jest.requireMock("@/hooks/api/goals") as {
+export const { useGoals, useGoalsPage, useGoal, useDeleteGoal }: {
   useGoals: jest.Mock;
   useGoalsPage: jest.Mock;
   useGoal: jest.Mock;
   useDeleteGoal: jest.Mock;
-};
-export const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
-  usePageState: jest.Mock;
-};
-export const { useCan } = jest.requireMock("@/hooks/api/access") as {
-  useCan: jest.Mock;
-};
-export const { useFeedbucketSubmissions } = jest.requireMock("@/hooks/api/feedbucket") as {
-  useFeedbucketSubmissions: jest.Mock;
-};
-export const { useManagedProductInsights } = jest.requireMock(
-  "@/hooks/api/build/managed-products",
-) as { useManagedProductInsights: jest.Mock };
-export const { useRoadmapItems } = jest.requireMock("@/hooks/api/build/roadmap") as {
-  useRoadmapItems: jest.Mock;
-};
-export const { useManagedProducts } = jest.requireMock("@/hooks/api/build/managed-products") as {
-  useManagedProducts: jest.Mock;
-};
+} = jest.requireMock("@/hooks/api/goals");
+export const { usePageState }: { usePageState: jest.Mock } = jest.requireMock("@/hooks/api/use-page-state");
+export const { useCan }: { useCan: jest.Mock } = jest.requireMock("@/hooks/api/access");
+export const { useFeedbucketSubmissions }: { useFeedbucketSubmissions: jest.Mock } = jest.requireMock("@/hooks/api/feedbucket");
+export const { useManagedProductInsights }: { useManagedProductInsights: jest.Mock } = jest.requireMock("@/hooks/api/build/managed-products");
+export const { useRoadmapItems }: { useRoadmapItems: jest.Mock } = jest.requireMock("@/hooks/api/build/roadmap");
+export const { useManagedProducts }: { useManagedProducts: jest.Mock } = jest.requireMock("@/hooks/api/build/managed-products");
 
 export const EMPTY_GOALS_RESULT = {
   data: [],

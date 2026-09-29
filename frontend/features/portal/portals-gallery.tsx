@@ -88,11 +88,17 @@ const STUB_OVERVIEW: PortalProjectOverview = {
   ],
 };
 
-const STUB_ACCESS = {
-  scopes: {} as Record<string, "all" | "team" | "own" | "none">,
+const STUB_ACCESS: {
+  scopes: Record<string, "all" | "team" | "own" | "none">;
+  isOrgOwner: boolean;
+  canManageOrganizationMembership: boolean;
+  modules: Record<string, boolean>;
+  membershipId: null;
+} = {
+  scopes: {},
   isOrgOwner: true,
   canManageOrganizationMembership: true,
-  modules: { build: true } as Record<string, boolean>,
+  modules: { build: true },
   membershipId: null,
 };
 

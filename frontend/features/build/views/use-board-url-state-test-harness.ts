@@ -1,5 +1,3 @@
-import type { ChangeEvent } from "react";
-
 let mockSearchParams = new URLSearchParams();
 export const mockReplace = jest.fn();
 export const mockPush = jest.fn();
@@ -67,7 +65,7 @@ jest.mock("sonner", () => ({
 
 
 export function nameEvent(value: string) {
-  return { target: { value } } as ChangeEvent<HTMLInputElement>;
+  return { target: { value } };
 }
 
 export function setParams(init: Record<string, string>) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, type ChangeEvent } from "react";
+import { useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useCreateView, useUpdateView } from "@/hooks/api/build/advanced";
@@ -108,7 +108,7 @@ export function useBoardSavedViews({
   }, [activeView, updateView, projectId, filters, layoutType, displayOptions]);
 
   const handleSaveViewNameChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setSaveViewName(e.target.value),
+    (e: { target: { value: string } }) => setSaveViewName(e.target.value),
     [],
   );
 

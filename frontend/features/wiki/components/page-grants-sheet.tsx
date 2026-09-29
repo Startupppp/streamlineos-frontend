@@ -206,7 +206,8 @@ export default function PageGrantsSheet({
   }
 
   function handleAccessChange(value: string) {
-    setSelectedAccess(value as "view" | "comment" | "edit");
+    const opt = ACCESS_OPTIONS.find((o) => o.value === value);
+    if (opt) setSelectedAccess(opt.value);
   }
 
   function handleMemberSearchChange(value: string) {

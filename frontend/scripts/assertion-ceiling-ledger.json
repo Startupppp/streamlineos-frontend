@@ -1,10 +1,6 @@
 {
   "note": "Rule 4 of check-type-assertions.mjs: a per-file ZERO-GROWTH ceiling on plain `as X` and non-null `!` assertions in application code. Seeded at the head count. It may only ever go DOWN: --update-ledger refuses to raise a number, and the gate fails both when a file gains an assertion and when an entry outlives its site. `as const` is excluded by decision (it narrows, it does not force). Specs are outside this gate entirely — see the rule 4 header.",
   "files": {
-    "app/(authenticated)/accounting/opening-balances/page.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
     "app/(authenticated)/build/[projectId]/cycles/[cycleId]/not-found.tsx": {
       "as": 1,
       "nonNull": 0
@@ -73,16 +69,8 @@
       "as": 1,
       "nonNull": 0
     },
-    "app/(public)/wiki/[shareToken]/page.tsx": {
-      "as": 4,
-      "nonNull": 0
-    },
     "app/page.tsx": {
       "as": 2,
-      "nonNull": 0
-    },
-    "components/assistant/ask-os-chat-utils.tsx": {
-      "as": 9,
       "nonNull": 0
     },
     "components/automations/ai-node-config-forms.tsx": {
@@ -106,7 +94,7 @@
       "nonNull": 0
     },
     "components/editor/plate/plate-combobox-elements.tsx": {
-      "as": 8,
+      "as": 2,
       "nonNull": 4
     },
     "components/editor/plate/plate-elements.tsx": {
@@ -125,20 +113,12 @@
       "as": 1,
       "nonNull": 0
     },
-    "components/editor/plate/plate-value-convert.ts": {
-      "as": 5,
-      "nonNull": 0
-    },
     "components/editor/plate/toolbar/align-dropdown.tsx": {
       "as": 1,
       "nonNull": 0
     },
     "components/editor/plate/toolbar/color-buttons.tsx": {
       "as": 4,
-      "nonNull": 0
-    },
-    "components/editor/plate/toolbar/font-size-input.tsx": {
-      "as": 1,
       "nonNull": 0
     },
     "components/editor/plate/toolbar/list-buttons.tsx": {
@@ -155,10 +135,6 @@
     },
     "components/editor/tiptap-editor.tsx": {
       "as": 3,
-      "nonNull": 0
-    },
-    "components/entitlement-gate.tsx": {
-      "as": 1,
       "nonNull": 0
     },
     "components/hr/onboarding-wizard.tsx": {
@@ -209,32 +185,12 @@
       "as": 1,
       "nonNull": 0
     },
-    "components/ui/stat-card.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
     "components/ui/status-map-badge.tsx": {
       "as": 1,
       "nonNull": 0
     },
-    "features/accounting/ap/purchase-bills-page.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/accounting/core/dimension-form-dialog.tsx": {
+    "e2e/fixtures/api-oracle.ts": {
       "as": 2,
-      "nonNull": 0
-    },
-    "features/accounting/purchases/new-purchase-bill-page.tsx": {
-      "as": 2,
-      "nonNull": 0
-    },
-    "features/accounting/settings/accounting-settings-page.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/accounting/taxes/tax-payment-form-fields.tsx": {
-      "as": 1,
       "nonNull": 0
     },
     "features/billing/ai-credits-settings-page.tsx": {
@@ -309,10 +265,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/build/views/use-board-url-state.ts": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/calendar/big-calendar-wrapper.tsx": {
       "as": 2,
       "nonNull": 0
@@ -334,7 +286,7 @@
       "nonNull": 0
     },
     "features/chat/channel-item-menu.tsx": {
-      "as": 2,
+      "as": 1,
       "nonNull": 0
     },
     "features/chat/chat-bubble.tsx": {
@@ -517,28 +469,12 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/hr/helpdesk/create-ticket-dialog.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/hr/helpdesk/my-tickets-tab.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/hr/helpdesk/queue-tab.tsx": {
-      "as": 2,
-      "nonNull": 0
-    },
-    "features/hr/helpdesk/ticket-detail-sheet.tsx": {
-      "as": 2,
-      "nonNull": 0
-    },
     "features/hr/leaves/components/leave-approvals.tsx": {
       "as": 1,
       "nonNull": 0
     },
     "features/hr/leaves/components/leaves-wfh-content.tsx": {
-      "as": 6,
+      "as": 5,
       "nonNull": 0
     },
     "features/hr/leaves/components/wfh-tab-content.tsx": {
@@ -571,94 +507,6 @@
     },
     "features/hr/policies/policy-upsert-sheet.tsx": {
       "as": 2,
-      "nonNull": 0
-    },
-    "features/recruitment/candidate-detail/calibration-tab.tsx": {
-      "as": 3,
-      "nonNull": 0
-    },
-    "features/recruitment/candidate-detail/documents-tab.tsx": {
-      "as": 2,
-      "nonNull": 0
-    },
-    "features/recruitment/candidate-detail/vault-upload-area.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/candidates/bulk-import-page.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/candidates/candidate-sheets.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/candidates/candidates-page.tsx": {
-      "as": 3,
-      "nonNull": 0
-    },
-    "features/recruitment/components/automations-client.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/email-sequences/email-sequences-page.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/hiring-flows/round-form-sheet.tsx": {
-      "as": 2,
-      "nonNull": 0
-    },
-    "features/recruitment/inbox/recruitment-inbox-page.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/interview-feedback-form.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/interviews/interview-form-sheet.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/jobs/create-job-form/hiring-pipeline-sections.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/jobs/create-job-form/index.tsx": {
-      "as": 3,
-      "nonNull": 0
-    },
-    "features/recruitment/jobs/create-job-form/job-posting-preview.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/jobs/create-job-form/parse-job.ts": {
-      "as": 5,
-      "nonNull": 0
-    },
-    "features/recruitment/pipeline-kanban.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/question-bank/question-form-body.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/question-bank/question-form-dialog.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/referrals/invite-referrers-sheet.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/reports-page.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/recruitment/reports/components/schedule-report-sheet.tsx": {
-      "as": 1,
       "nonNull": 0
     },
     "features/hr/settings/hr-integrations/webhook-upsert-sheet.tsx": {
@@ -825,6 +673,90 @@
       "as": 1,
       "nonNull": 0
     },
+    "features/recruitment/candidate-detail/calibration-tab.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/recruitment/candidate-detail/documents-tab.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/recruitment/candidate-detail/vault-upload-area.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/candidates/bulk-import-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/candidates/candidate-sheets.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/candidates/candidates-page.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/recruitment/components/automations-client.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/email-sequences/email-sequences-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/hiring-flows/round-form-sheet.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/recruitment/interview-feedback-form.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/interviews/interview-form-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/jobs/create-job-form/hiring-pipeline-sections.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/jobs/create-job-form/index.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/recruitment/jobs/create-job-form/job-posting-preview.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/jobs/create-job-form/parse-job.ts": {
+      "as": 5,
+      "nonNull": 0
+    },
+    "features/recruitment/pipeline-kanban.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/question-bank/question-form-body.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/question-bank/question-form-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/referrals/invite-referrers-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/reports-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/recruitment/reports/components/schedule-report-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
     "features/settings/delegations/delegations-page.tsx": {
       "as": 1,
       "nonNull": 0
@@ -901,10 +833,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "features/surveys/list/survey-list-filters.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/surveys/participants/survey-participants-page.tsx": {
       "as": 1,
       "nonNull": 0
@@ -949,16 +877,8 @@
       "as": 3,
       "nonNull": 0
     },
-    "features/wiki/components/page-share-popover.tsx": {
-      "as": 1,
-      "nonNull": 0
-    },
     "features/wiki/components/public-page-content.tsx": {
       "as": 7,
-      "nonNull": 0
-    },
-    "features/wiki/components/space-detail-page.tsx": {
-      "as": 1,
       "nonNull": 0
     },
     "features/wiki/components/space-sheet.tsx": {
@@ -967,14 +887,6 @@
     },
     "features/wiki/components/templates-page.tsx": {
       "as": 1,
-      "nonNull": 0
-    },
-    "features/wiki/lib/export-page.ts": {
-      "as": 2,
-      "nonNull": 0
-    },
-    "features/wiki/lib/version-diff.ts": {
-      "as": 3,
       "nonNull": 0
     },
     "features/workflows/builder/workflow-node-palette.tsx": {
@@ -993,6 +905,10 @@
       "as": 4,
       "nonNull": 0
     },
+    "hooks/api/build/advanced.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
     "hooks/api/crm/activity-timeline.ts": {
       "as": 4,
       "nonNull": 0
@@ -1005,16 +921,12 @@
       "as": 2,
       "nonNull": 0
     },
-    "hooks/api/crm/contacts.ts": {
-      "as": 4,
-      "nonNull": 0
-    },
     "hooks/api/crm/crm-activities.ts": {
       "as": 1,
       "nonNull": 0
     },
     "hooks/api/crm/deals.ts": {
-      "as": 7,
+      "as": 3,
       "nonNull": 0
     },
     "hooks/api/crm/metadata.ts": {
