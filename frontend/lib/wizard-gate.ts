@@ -38,20 +38,12 @@ export function resolveWizardGate(
     if (!setupDone) return "/org-setup";
   }
 
-  if (!isOrgOwner && !session.userOnboardingCompletedAt && userId) {
+  const hrEnabled = (session.enabledModules ?? []).includes("hr");
+  if (!isOrgOwner && hrEnabled && !session.userOnboardingCompletedAt && userId) {
     const scope = `${userId}--${orgId}`;
     const onboardingDone = Boolean(
       cookieStore.get(gateCookieName("onboarding-done", scope))?.value,
     );
-    // HRMS-E2E-020, decision #7 (PROVISIONAL). An ORG_ADMIN brought in to set up
-    // HR had to hand over their own date of birth, bank account and PAN before
-    // they could open the module they were hired to configure — every /hr URL
-    // redirected here until the wizard was finished, and there was no skip.
-    //
-    // They may now defer. A MEMBER may not: the standing is checked here, not
-    // just the cookie, so the marker is not a bypass anyone can mint for
-    // themselves. The wizard stays reachable and stays incomplete — deferring is
-    // not finishing, and nothing downstream is told otherwise.
     const deferred =
       mayDeferOwnOnboarding(session) &&
       Boolean(cookieStore.get(gateCookieName("onboarding-deferred", scope))?.value);

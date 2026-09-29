@@ -99,5 +99,6 @@ export async function completeOnboardingGate<TExpected, TResult>(
  * (FE-52).
  */
 export function mayDeferOwnOnboarding(session: Session | null | undefined): boolean {
-  return session?.user?.role === "ORG_ADMIN";
+  const role = session?.user?.role;
+  return role === "ORG_ADMIN" || role === "MEMBER";
 }
