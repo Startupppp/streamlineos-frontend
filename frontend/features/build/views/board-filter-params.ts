@@ -10,21 +10,29 @@ import {
 } from "../shared/use-build-list-url-state";
 import type { TicketOrderBy, TicketOrderDir } from "@/hooks/api/build/ticket-queries";
 
-const VALID_ORDER_BY = new Set<TicketOrderBy>(["created", "updated", "priority", "dueDate", "rank"]);
-const VALID_ORDER_DIR = new Set<TicketOrderDir>(["asc", "desc"]);
+const VALID_ORDER_BY = new Set<string>(["created", "updated", "priority", "dueDate", "rank"]);
+const VALID_ORDER_DIR = new Set<string>(["asc", "desc"]);
 
 const DISPLAY_ORDER_ALIASES: Readonly<Record<string, TicketOrderBy>> = { manual: "rank" };
+
+function isTicketOrderBy(v: string): v is TicketOrderBy {
+  return VALID_ORDER_BY.has(v);
+}
+
+function isTicketOrderDir(v: string): v is TicketOrderDir {
+  return VALID_ORDER_DIR.has(v);
+}
 
 export function parseBoardOrderBy(v: string | null): TicketOrderBy | undefined {
   if (!v) return undefined;
   const aliased = DISPLAY_ORDER_ALIASES[v];
   if (aliased !== undefined) return aliased;
-  return VALID_ORDER_BY.has(v as TicketOrderBy) ? (v as TicketOrderBy) : undefined;
+  return isTicketOrderBy(v) ? v : undefined;
 }
 
 export function parseBoardOrderDir(v: string | null): TicketOrderDir | undefined {
   if (!v) return undefined;
-  return VALID_ORDER_DIR.has(v as TicketOrderDir) ? (v as TicketOrderDir) : undefined;
+  return isTicketOrderDir(v) ? v : undefined;
 }
 
 export function useBoardFilterParams() {

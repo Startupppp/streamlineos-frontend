@@ -16,6 +16,7 @@ import type {
   PortalChangeRequest,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 
 const portalProjectListContract = lazyContract(() =>
@@ -126,7 +127,7 @@ export function useClientVisibilityTicketsInfinite(projectId: number) {
         signal,
         visibilitySummaryContract,
       ),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) =>
       lastPage.tickets.pagination.nextCursor ?? undefined,
     enabled: canManage && !!projectId,
@@ -155,7 +156,7 @@ export function useClientVisibilityMilestonesInfinite(projectId: number) {
         signal,
         visibilitySummaryContract,
       ),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) =>
       lastPage.milestones.pagination.nextCursor ?? undefined,
     enabled: canManage && !!projectId,

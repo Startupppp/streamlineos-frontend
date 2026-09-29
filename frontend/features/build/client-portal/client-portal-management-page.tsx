@@ -47,7 +47,7 @@ const GRANT_FILTER_DEFINITIONS = [
 ] as const;
 
 function isPortalTab(v: string | null): v is PortalTab {
-  return PORTAL_TABS.includes(v as PortalTab);
+  return v !== null && PORTAL_TABS.some((t) => t === v);
 }
 
 function filterValue(raw: string): string | undefined {

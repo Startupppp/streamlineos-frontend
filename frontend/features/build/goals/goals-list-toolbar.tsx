@@ -36,6 +36,10 @@ export const GOAL_FILTER_DEFINITIONS = [
 export const GOAL_SCOPE_VALUES = ["own", "all"] as const;
 export const GOAL_HEALTH_VALUES = ["on_track", "at_risk", "off_track"] as const;
 export const GOAL_DUE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+function isGoalHealth(v: string): v is (typeof GOAL_HEALTH_VALUES)[number] {
+  return GOAL_HEALTH_VALUES.some((h) => h === v);
+}
 export const GOAL_DUE_FILTER_LABEL = "Due on or before";
 
 export const GOAL_SCOPE_FILTER_OPTIONS: readonly BuildFilterOption[] = [
@@ -63,8 +67,8 @@ export function resolveGoalOutcomeParams(
   const health = read("health");
   const scope = read("scope");
   const due = read("due");
-  if ((GOAL_HEALTH_VALUES as readonly string[]).includes(health)) {
-    params.health = health as GoalOutcomeParams["health"];
+  if (isGoalHealth(health)) {
+    params.health = health;
   }
   if (scope === "own") params.scope = "own";
   if (GOAL_DUE_PATTERN.test(due)) params.due = due;

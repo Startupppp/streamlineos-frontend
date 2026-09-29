@@ -65,7 +65,7 @@ const COMMAND_CENTER_HEALTH_VALUES = [
 type CommandCenterHealth = (typeof COMMAND_CENTER_HEALTH_VALUES)[number];
 
 function isCommandCenterHealth(v: string): v is CommandCenterHealth {
-  return (COMMAND_CENTER_HEALTH_VALUES as readonly string[]).includes(v);
+  return COMMAND_CENTER_HEALTH_VALUES.some((h) => h === v);
 }
 
 const COMMAND_CENTER_SCOPE_VALUES = [
@@ -77,7 +77,7 @@ const COMMAND_CENTER_SCOPE_VALUES = [
 type CommandCenterScope = (typeof COMMAND_CENTER_SCOPE_VALUES)[number];
 
 function isCommandCenterScope(v: string): v is CommandCenterScope {
-  return (COMMAND_CENTER_SCOPE_VALUES as readonly string[]).includes(v);
+  return COMMAND_CENTER_SCOPE_VALUES.some((s) => s === v);
 }
 
 const ProjectCreateWizard = dynamic(

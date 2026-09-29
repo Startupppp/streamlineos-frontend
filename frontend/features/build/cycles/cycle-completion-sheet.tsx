@@ -33,7 +33,7 @@ export function CycleCompletionSheet({ cycle, nextCycle, tickets, projectStatuse
           {incompleteCount > 0 ? (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">{incompleteCount} unfinished ticket{incompleteCount === 1 ? " remains" : "s remain"}. Choose where to move them before completing this cycle.</p>
-              <Select value={moveTo} onValueChange={(value) => onMoveToChange(value as "backlog" | "next")}>
+              <Select value={moveTo} onValueChange={(value) => { if (value === "backlog" || value === "next") onMoveToChange(value); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="backlog">Move to backlog</SelectItem>

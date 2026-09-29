@@ -4,7 +4,7 @@ export const WORKLOAD_GROUPS = ["none", "team"] as const;
 export type WorkloadGroup = (typeof WORKLOAD_GROUPS)[number];
 
 export function isWorkloadGroup(value: string): value is WorkloadGroup {
-  return (WORKLOAD_GROUPS as readonly string[]).includes(value);
+  return WORKLOAD_GROUPS.some((g) => g === value);
 }
 
 export interface MemberCapacityData {

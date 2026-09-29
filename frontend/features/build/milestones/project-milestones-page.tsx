@@ -103,8 +103,9 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
 
   const statusFilterValue = listFilters.value("status");
   const serverStatus =
-    statusFilterValue !== BUILD_FILTER_ALL
-      ? (statusFilterValue as "PENDING" | "ACHIEVED" | "MISSED")
+    statusFilterValue !== BUILD_FILTER_ALL &&
+    (statusFilterValue === "PENDING" || statusFilterValue === "ACHIEVED" || statusFilterValue === "MISSED")
+      ? statusFilterValue
       : undefined;
   const fromValue = readDateFilter(listFilters.value("from"));
   const toValue = readDateFilter(listFilters.value("to"));

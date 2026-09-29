@@ -87,11 +87,13 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
   });
 
   const serverAction = listFilters.value("action");
+  const resolvedAction: AutomationActionType | undefined = (() => {
+    if (serverAction === BUILD_FILTER_ALL) return undefined;
+    const match = ACTION_TYPES.find((a) => a.value === serverAction);
+    return match ? match.value : undefined;
+  })();
   const serverFilters = {
-    action:
-      serverAction !== BUILD_FILTER_ALL
-        ? (serverAction as AutomationActionType)
-        : undefined,
+    action: resolvedAction,
   };
 
   const {

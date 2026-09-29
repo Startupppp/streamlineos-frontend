@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 const milestoneOwnerSchema = z.object({
   membershipId: z.number().int(),
@@ -34,8 +35,8 @@ const intakeItemSchema = z.object({
   orgId: z.string(),
   title: z.string(),
   description: z.unknown(),
-  source: z.enum(["manual", "web_form", "email"]),
-  status: z.enum(["pending", "accepted", "declined", "duplicate"]),
+  source: z.enum(DB_ENUMS.intake_source),
+  status: z.enum(DB_ENUMS.intake_status),
   submitterEmail: z.string().nullable(),
   submitterName: z.string().nullable(),
   priority: z.enum(["low", "medium", "high", "urgent"]).nullable(),
@@ -73,21 +74,21 @@ const whiteboardListItemSchema = z.object({
   id: z.number(),
   name: z.string(),
   elementCount: z.number(),
-  visibility: z.enum(['project', 'private', 'public']),
+  visibility: z.enum(DB_ENUMS.whiteboard_visibility),
   createdBy: z.string().nullable(),
   updatedAt: z.string().nullable(),
 });
 
 const whiteboardShareSchema = z.object({
   userId: z.string(),
-  role: z.enum(['viewer', 'editor']),
+  role: z.enum(DB_ENUMS.whiteboard_share_role),
   name: z.string().nullable(),
   email: z.string().nullable(),
 });
 
 const whiteboardSharingUpdateSchema = z.object({
-  visibility: z.enum(['project', 'private', 'public']),
-  publicAccess: z.enum(['viewer', 'editor']),
+  visibility: z.enum(DB_ENUMS.whiteboard_visibility),
+  publicAccess: z.enum(DB_ENUMS.whiteboard_share_role),
   shareToken: z.string().nullable(),
   linkExpiresAt: z.string().nullable(),
   allowExport: z.boolean(),
@@ -100,9 +101,9 @@ const whiteboardDetailSchema = z.object({
   projectId: z.number(),
   name: z.string(),
   data: excalidrawSceneDataSchema,
-  visibility: z.enum(["project", "private", "public"]),
+  visibility: z.enum(DB_ENUMS.whiteboard_visibility),
   access: z.enum(["view", "edit", "manage"]),
-  sharing: z.object({ visibility: z.enum(["project", "private", "public"]), publicAccess: z.enum(["viewer", "editor"]), shareToken: z.string().nullable(), linkExpiresAt: z.string().nullable(), allowExport: z.boolean() }).nullable(),
+  sharing: z.object({ visibility: z.enum(DB_ENUMS.whiteboard_visibility), publicAccess: z.enum(DB_ENUMS.whiteboard_share_role), shareToken: z.string().nullable(), linkExpiresAt: z.string().nullable(), allowExport: z.boolean() }).nullable(),
   shares: z.array(whiteboardShareSchema).nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.string().nullable(),

@@ -106,7 +106,15 @@ export function GanttView({
   onTicketClick,
   onCreateTicket,
 }: GanttViewProps) {
-  const resolution = usePageState({ permission: "build:view", isLoading: false, isError: false });
+  const { data: cpData, isLoading: cpLoading, isError: cpIsError, error: cpError } = useCriticalPath(projectId);
+  const { data: milestonesPage, isLoading: milestonesLoading, isError: milestonesIsError, error: milestonesError } = useProjectMilestones(projectId);
+
+  const resolution = usePageState({
+    permission: "build:view",
+    isLoading: cpLoading || milestonesLoading,
+    isError: cpIsError || milestonesIsError,
+    error: cpError ?? milestonesError,
+  });
   const router = useRouter();
   const requestLeave = useNavigationLeave();
   const [weekOffset, setWeekOffset] = useState(0);
@@ -203,8 +211,6 @@ export function GanttView({
     requestLeave(() => router.push(`/build/${projectId}/backlog`));
   }, [projectId, requestLeave, router]);
 
-  const { data: cpData } = useCriticalPath(projectId);
-  const { data: milestonesPage } = useProjectMilestones(projectId);
   const milestones = milestonesPage?.data;
 
   const criticalPathIds = useMemo(

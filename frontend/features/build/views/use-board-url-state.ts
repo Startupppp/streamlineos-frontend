@@ -176,7 +176,7 @@ export function useBoardUrlState(
   }, [boardTickets]);
 
   const statuses =
-    data && "statuses" in data ? (data.statuses as ProjectStatus[]) : undefined;
+    data && "statuses" in data ? data.statuses : undefined;
 
   const qaFilterActive =
     filterType === "BUG" && !!(filterSeverity || filterQaState);

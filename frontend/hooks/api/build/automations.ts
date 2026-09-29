@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import type { ProjectAutomation, AutomationActionType } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const projectAutomationListContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then(
@@ -75,7 +76,7 @@ export function useAutomations(
         projectAutomationListContract,
       );
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,

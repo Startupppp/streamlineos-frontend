@@ -98,8 +98,9 @@ export function ManagedProductsPage() {
     search: listFilters.debouncedSearch.trim() || undefined,
     ownerId: ownerIdValue || undefined,
     sort:
-      sortValue && sortValue !== BUILD_FILTER_ALL
-        ? (sortValue as "name" | "updated" | "status")
+      sortValue && sortValue !== BUILD_FILTER_ALL &&
+      (sortValue === "name" || sortValue === "updated" || sortValue === "status")
+        ? sortValue
         : undefined,
   });
 

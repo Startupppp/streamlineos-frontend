@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 export const formRowContract = z.object({
   id: z.number().int(),
@@ -7,7 +8,7 @@ export const formRowContract = z.object({
   formNumber: z.number().int(),
   name: z.string(),
   description: z.string().nullable(),
-  type: z.enum(["task_request", "bug_report", "feature_request", "change_request", "client_approval", "risk_report", "qa_issue", "generic"]),
+  type: z.enum(DB_ENUMS.form_type),
   fields: z.array(z.object({
     key: z.string(),
     label: z.string(),

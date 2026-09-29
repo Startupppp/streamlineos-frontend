@@ -181,19 +181,19 @@ import { useBuildListFilters } from "@/features/build/shared/use-build-list-filt
 import { useEpicPage } from "@/hooks/api/build/advanced";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
-export const mockUseProject = useProject as jest.Mock;
-export const mockUseProjectBoardTickets = useProjectBoardTickets as jest.Mock;
-export const mockUseUpdateTicket = useUpdateTicket as jest.Mock;
-export const mockUseDeleteTicket = useDeleteTicket as jest.Mock;
-export const mockUseCreateTicket = useCreateTicket as jest.Mock;
-export const mockUseBulkUpdateTickets = useBulkUpdateTickets as jest.Mock;
-export const mockUseCycles = useCycles as jest.Mock;
-export const mockUseCan = useCan as jest.Mock;
-export const mockUseAccess = useAccess as jest.Mock;
-export const mockUseBuildListKeyboard = useBuildListKeyboard as jest.Mock;
-export const mockUseBuildListFilters = useBuildListFilters as jest.Mock;
-export const mockUseEpicPage = useEpicPage as jest.Mock;
-export const mockUseOnlineStatus = useOnlineStatus as jest.Mock;
+export const mockUseProject = jest.mocked(useProject);
+export const mockUseProjectBoardTickets = jest.mocked(useProjectBoardTickets);
+export const mockUseUpdateTicket = jest.mocked(useUpdateTicket);
+export const mockUseDeleteTicket = jest.mocked(useDeleteTicket);
+export const mockUseCreateTicket = jest.mocked(useCreateTicket);
+export const mockUseBulkUpdateTickets = jest.mocked(useBulkUpdateTickets);
+export const mockUseCycles = jest.mocked(useCycles);
+export const mockUseCan = jest.mocked(useCan);
+export const mockUseAccess = jest.mocked(useAccess);
+export const mockUseBuildListKeyboard = jest.mocked(useBuildListKeyboard);
+export const mockUseBuildListFilters = jest.mocked(useBuildListFilters);
+export const mockUseEpicPage = jest.mocked(useEpicPage);
+export const mockUseOnlineStatus = jest.mocked(useOnlineStatus);
 
 export const ACCESS_LOADING = { data: undefined, isLoading: true };
 export const ACCESS_GRANTED = {
@@ -273,7 +273,7 @@ export function epicPageResult(
   };
 }
 
-export function readyPage(tickets: unknown[], updatedAt = 0) {
+export function readyPage(tickets: { type?: string }[], updatedAt = 0) {
   mockUseProjectBoardTickets.mockReturnValue({
     data: tickets,
     isLoading: false,
@@ -283,7 +283,7 @@ export function readyPage(tickets: unknown[], updatedAt = 0) {
   });
   mockUseEpicPage.mockReturnValue(
     epicPageResult(
-      (tickets as { type?: string }[]).filter((t) => t.type === "EPIC"),
+      tickets.filter((t) => t.type === "EPIC"),
       { dataUpdatedAt: updatedAt },
     ),
   );

@@ -39,7 +39,7 @@ const VISIBILITY_TABS = ["tickets", "milestones"] as const;
 type VisibilityTab = (typeof VISIBILITY_TABS)[number];
 
 function isVisibilityTab(value: string | null): value is VisibilityTab {
-  return VISIBILITY_TABS.includes(value as VisibilityTab);
+  return value !== null && VISIBILITY_TABS.some((t) => t === value);
 }
 
 interface ClientVisibilityPageProps {

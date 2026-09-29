@@ -66,7 +66,7 @@ export function ManagedProductBulkToolbar({
 
       <Select
         value={pendingStatus}
-        onValueChange={(v) => setPendingStatus(v as "active" | "archived" | "")}
+        onValueChange={(v) => { if (v === "active" || v === "archived") setPendingStatus(v); }}
       >
         <SelectTrigger className="h-8 w-36 text-sm" aria-label="Set status">
           <SelectValue placeholder="Set status…" />

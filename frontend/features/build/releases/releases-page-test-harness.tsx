@@ -197,10 +197,10 @@ export function installReleasesNavigationMocks() {
 }
 
 
-export const mockUseReleases = useReleases as jest.Mock;
-export const mockUseDeleteRelease = useDeleteRelease as jest.Mock;
-export const mockUseCan = useCan as jest.Mock;
-export const mockUseAccess = useAccess as jest.Mock;
+export const mockUseReleases = jest.mocked(useReleases);
+export const mockUseDeleteRelease = jest.mocked(useDeleteRelease);
+export const mockUseCan = jest.mocked(useCan);
+export const mockUseAccess = jest.mocked(useAccess);
 
 export const ACCESS_GRANTED = {
   data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },

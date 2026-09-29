@@ -89,7 +89,7 @@ export function resolveTicketBackHref(
   }
 
   for (const key of candidate.searchParams.keys()) {
-    if (!TICKET_COLLECTION_QUERY_KEYS.includes(key as (typeof TICKET_COLLECTION_QUERY_KEYS)[number])) {
+    if (!TICKET_COLLECTION_QUERY_KEYS.some((k) => k === key)) {
       return fallback;
     }
   }

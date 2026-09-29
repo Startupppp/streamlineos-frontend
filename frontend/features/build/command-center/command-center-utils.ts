@@ -11,7 +11,7 @@ export interface CommandCenterDueWindow {
 }
 
 export function isCommandCenterDue(value: string): value is CommandCenterDue {
-  return (COMMAND_CENTER_DUE_VALUES as readonly string[]).includes(value);
+  return COMMAND_CENTER_DUE_VALUES.some((v) => v === value);
 }
 
 export function resolveDueWindow(

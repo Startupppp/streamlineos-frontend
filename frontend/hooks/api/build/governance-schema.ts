@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { idCursorPageContract } from "@/hooks/api/cursor-page-schema";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
-const riskLevelContract = z.enum(["low", "medium", "high"]);
-const riskStatusValueContract = z.enum(["open", "mitigating", "monitoring", "accepted", "closed"]);
-const decisionStatusValueContract = z.enum(["proposed", "accepted", "superseded", "revisit"]);
+const riskLevelContract = z.enum(DB_ENUMS.risk_probability);
+const riskStatusValueContract = z.enum(DB_ENUMS.risk_status);
+const decisionStatusValueContract = z.enum(DB_ENUMS.decision_status);
 
 export const riskRowContract = z.object({
   id: z.number().int(),

@@ -1,5 +1,6 @@
 import type { AccessState } from "@/lib/rbac/gate";
 import type { ProjectWebhook } from "@/hooks/api/build/webhooks";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
 export interface BuildListKeyboardOptions {
   itemCount?: number;
@@ -233,11 +234,7 @@ beforeEach(() => {
   mockDeleteMutateAsync.mockClear();
   mockDeleteMutateAsync.mockImplementation((_webhookId?: unknown) => Promise.resolve());
   st.searchParams = new URLSearchParams();
-  (
-    jest.requireMock("@/hooks/common/use-online-status") as {
-      useOnlineStatus: jest.Mock;
-    }
-  ).useOnlineStatus.mockReturnValue(true);
+  jest.mocked(useOnlineStatus).mockReturnValue(true);
 });
 
 export const SAMPLE_WEBHOOK: ProjectWebhook = {

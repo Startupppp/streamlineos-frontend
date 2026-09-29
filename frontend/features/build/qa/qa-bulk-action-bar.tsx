@@ -38,10 +38,12 @@ export function QaBulkActionBar({
 
   const handlePriorityChange = useCallback(
     (priority: string) => {
-      const ids = Array.from(selectedIds) as number[];
+      const validPriority = PRIORITY_OPTIONS.find((opt) => opt.value === priority);
+      if (!validPriority) return;
+      const ids = Array.from(selectedIds).filter((id): id is number => typeof id === "number");
       ids.forEach((id) => {
         updateTestCase.mutate(
-          { projectId, id, priority: priority as TestCasePriority },
+          { projectId, id, priority: validPriority.value },
           { onError: (e) => toast.error(getErrorMessage(e)) },
         );
       });
@@ -50,7 +52,7 @@ export function QaBulkActionBar({
   );
 
   const handleArchive = useCallback(() => {
-    const ids = Array.from(selectedIds) as number[];
+    const ids = Array.from(selectedIds).filter((id): id is number => typeof id === "number");
     ids.forEach((id) => {
       deleteTestCase.mutate(
         { projectId, id },

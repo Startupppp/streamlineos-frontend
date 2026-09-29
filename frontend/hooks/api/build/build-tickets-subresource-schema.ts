@@ -5,6 +5,7 @@ import {
   ticketPriorityContract,
   ticketTypeContract,
 } from "./build-tickets-core-schema";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 const ticketRelationRelatedTicketSchema = z
   .object({
@@ -289,7 +290,7 @@ export const projectActivityPageContract = z.object({
   data: z.array(
     z.object({
       id: z.number().int(),
-      action: z.string(),
+      action: z.enum(DB_ENUMS.ticket_activity_action),
       label: z.string(),
       fromValue: z.string().nullable(),
       toValue: z.string().nullable(),

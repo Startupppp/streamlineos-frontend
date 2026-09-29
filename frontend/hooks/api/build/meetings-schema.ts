@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 const meetingRowContract = z.object({
   id: z.number().int(),
@@ -7,8 +8,8 @@ const meetingRowContract = z.object({
   projectId: z.number().int(),
   meetingNumber: z.number().int(),
   title: z.string(),
-  type: z.string(),
-  status: z.string(),
+  type: z.enum(DB_ENUMS.meeting_type),
+  status: z.enum(DB_ENUMS.project_meeting_status),
   agenda: z.string().nullable(),
   notes: z.string().nullable(),
   scheduledAt: z.string().nullable(),
@@ -46,7 +47,7 @@ export const actionItemRowContract = z.object({
   description: z.string().nullable(),
   assigneeId: z.string().nullable(),
   dueDate: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(DB_ENUMS.action_item_status),
   convertedTicketId: z.number().int().nullable(),
   createdBy: z.string().nullable(),
   createdAt: z.string(),

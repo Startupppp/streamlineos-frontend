@@ -93,7 +93,7 @@ export function useApprovalInbox(filters?: InboxFilters) {
     queryKey: buildWorkQueryKeys.projects.approvals.inbox(activeFilters),
     queryFn: async ({ pageParam, signal }) => {
       const params: Record<string, string> = {};
-      if (pageParam !== undefined) params["cursor"] = pageParam as string;
+      if (pageParam !== undefined) params["cursor"] = pageParam;
       if (activeFilters?.status) params["status"] = activeFilters.status;
       if (activeFilters?.type) params["type"] = activeFilters.type;
       if (activeFilters?.q) params["q"] = activeFilters.q;

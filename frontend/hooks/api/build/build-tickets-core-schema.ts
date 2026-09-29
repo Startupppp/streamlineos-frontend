@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 const userSummarySchema = z
   .object({
@@ -11,9 +12,9 @@ const userSummarySchema = z
   })
   .nullable();
 
-export const ticketTypeContract = z.enum(["EPIC", "STORY", "TASK", "BUG"]);
+export const ticketTypeContract = z.enum(DB_ENUMS.ticket_type);
 
-export const ticketPriorityContract = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
+export const ticketPriorityContract = z.enum(DB_ENUMS.ticket_priority);
 
 export const ticketRowContract = z.object({
   id: z.number().int(),

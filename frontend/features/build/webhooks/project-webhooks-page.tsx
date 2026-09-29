@@ -77,7 +77,9 @@ export function ProjectWebhooksPage({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const stateParam = searchParams.get("state") as "active" | "inactive" | null;
+  const rawStateParam = searchParams.get("state");
+  const stateParam: "active" | "inactive" | null =
+    rawStateParam === "active" || rawStateParam === "inactive" ? rawStateParam : null;
   const eventParam = searchParams.get("event") ?? undefined;
   const qParam = searchParams.get("q") ?? undefined;
   const fromParam = searchParams.get("from") ?? undefined;

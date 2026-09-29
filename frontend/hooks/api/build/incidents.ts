@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type {
   Incident,
   IncidentDetail,
@@ -110,7 +111,7 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
           }
         : response;
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 60_000,

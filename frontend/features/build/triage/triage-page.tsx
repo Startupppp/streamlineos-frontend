@@ -79,11 +79,10 @@ export function TriagePage({ projectId }: TriagePageProps) {
   const ownerValue = listFilters.value("ownerId");
   const triageOwner = ownerValue !== BUILD_FILTER_ALL ? ownerValue : undefined;
   const sortValue = listFilters.value("sort");
-  const triageSort = (["created", "updated", "priority", "dueDate", "rank"] as const).includes(
-    sortValue as "created" | "updated" | "priority" | "dueDate" | "rank",
-  )
-    ? (sortValue as "created" | "updated" | "priority" | "dueDate" | "rank")
-    : "created";
+  const triageSort =
+    sortValue === "created" || sortValue === "updated" || sortValue === "priority" || sortValue === "dueDate" || sortValue === "rank"
+      ? sortValue
+      : "created";
   const urlStatus = listFilters.value("status");
   const triageStatus = urlStatus === BUILD_FILTER_ALL ? TRIAGE_STATUS : urlStatus;
   const {

@@ -44,7 +44,7 @@ jest.mock("@/hooks/api/build/workload-capacity", () => ({
 }));
 
 export const mockUseProjectTeams = jest.fn(
-  (..._args: unknown[]) => ({ data: undefined }) as { data: unknown },
+  (..._args: unknown[]): { data: unknown } => ({ data: undefined }),
 );
 
 jest.mock("@/hooks/api/build/teams", () => ({
@@ -52,7 +52,7 @@ jest.mock("@/hooks/api/build/teams", () => ({
 }));
 
 export const mockUsePageState = jest.fn(
-  (..._args: unknown[]) => ({ kind: "ready" }) as { kind: string; permission?: string },
+  (..._args: unknown[]): { kind: string; permission?: string } => ({ kind: "ready" }),
 );
 
 jest.mock("@/hooks/api/use-page-state", () => ({

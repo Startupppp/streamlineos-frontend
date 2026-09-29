@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DB_ENUMS } from "@/contracts/db-enums.generated";
 
 export const teamRowContract = z.object({
   id: z.number().int(),
@@ -71,7 +72,7 @@ export const teamProjectItemContract = z.object({
   id: z.number().int(),
   name: z.string(),
   key: z.string(),
-  status: z.string(),
+  status: z.enum(DB_ENUMS.project_status),
   addedAt: z.string(),
 });
 

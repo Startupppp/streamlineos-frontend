@@ -104,11 +104,13 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
     fromFilterValue !== BUILD_FILTER_ALL ? fromFilterValue : undefined;
   const dateFilterTo =
     toFilterValue !== BUILD_FILTER_ALL ? toFilterValue : undefined;
+  const resolvedCycleStatus =
+    statusFilterValue !== BUILD_FILTER_ALL &&
+    (statusFilterValue === "draft" || statusFilterValue === "active" || statusFilterValue === "completed")
+      ? statusFilterValue
+      : undefined;
   const cycleFilters: CycleListFilters = {
-    status:
-      statusFilterValue !== BUILD_FILTER_ALL
-        ? (statusFilterValue as "draft" | "active" | "completed")
-        : undefined,
+    status: resolvedCycleStatus,
     q: listFilters.debouncedSearch || undefined,
     from: dateFilterFrom,
     to: dateFilterTo,

@@ -86,10 +86,11 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
   const horizonValue = listFilters.value("horizon");
   const sortValue = listFilters.value("sort");
 
-  const typedStatus = useMemo(
-    () => (statusValue && statusValue !== BUILD_FILTER_ALL ? (statusValue as RoadmapStatus) : undefined),
-    [statusValue],
-  );
+  const typedStatus = useMemo(() => {
+    if (!statusValue || statusValue === BUILD_FILTER_ALL) return undefined;
+    if (statusValue === "planned" || statusValue === "in_progress" || statusValue === "completed" || statusValue === "cancelled") return statusValue;
+    return undefined;
+  }, [statusValue]);
 
   const filters = useMemo(
     () => ({

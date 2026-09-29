@@ -96,8 +96,8 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     () => [
       { value: BUILD_FILTER_ALL, label: "All owners" },
       ...members.map((m) => ({
-        value: m.id as string,
-        label: (m.name ?? m.email) as string,
+        value: String(m.id),
+        label: m.name ?? m.email ?? String(m.id),
       })),
     ],
     [members],

@@ -9,7 +9,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export interface WebhookListFilters {
+export interface WebhookListFilters extends Record<string, unknown> {
   state?: "active" | "inactive";
   event?: string;
   q?: string;
@@ -54,7 +54,7 @@ export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
   const hasFilters = filters !== undefined && Object.values(filters).some((v) => v !== undefined);
   const activeFilters = hasFilters ? filters : undefined;
   return useQuery<WebhookPage>({
-    queryKey: buildWorkQueryKeys.projects.webhooks(projectId, activeFilters as Record<string, unknown> | undefined),
+    queryKey: buildWorkQueryKeys.projects.webhooks(projectId, activeFilters),
     queryFn: ({ signal }) =>
       apiClient.get<WebhookPage>(
         `/build/${projectId}/webhooks`,

@@ -12,17 +12,10 @@ import type {
 } from "./use-build-scope-directory";
 import type { BuildScopeRef } from "./use-build-nav-preferences";
 
-export const mockUseBuildScopeDirectory =
-  useBuildScopeDirectory as jest.MockedFunction<typeof useBuildScopeDirectory>;
-export const mockUseReconciledBuildScopes =
-  useReconciledBuildScopes as jest.MockedFunction<
-    typeof useReconciledBuildScopes
-  >;
-export const mockUseBuildScopeRecents =
-  useBuildScopeRecents as jest.MockedFunction<typeof useBuildScopeRecents>;
-export const mockUseBuildScopeStars = useBuildScopeStars as jest.MockedFunction<
-  typeof useBuildScopeStars
->;
+export const mockUseBuildScopeDirectory = jest.mocked(useBuildScopeDirectory);
+export const mockUseReconciledBuildScopes = jest.mocked(useReconciledBuildScopes);
+export const mockUseBuildScopeRecents = jest.mocked(useBuildScopeRecents);
+export const mockUseBuildScopeStars = jest.mocked(useBuildScopeStars);
 
 export function makeEntry(
   overrides: Partial<BuildScopeDirectoryEntry> = {},
@@ -82,7 +75,7 @@ export function makeDirectory(
 
 export const DEFAULT_PROPS = {
   currentScopeKey: "organization",
-  settingsHrefFor: () => null as string | null,
+  settingsHrefFor: (): string | null => null,
   onSelect: jest.fn(),
 };
 
@@ -98,13 +91,13 @@ export function setupMocks(
     recents: [],
     replaceRecents: jest.fn(),
     recordScope: jest.fn(),
-  } as ReturnType<typeof useBuildScopeRecents>);
+  });
   mockUseBuildScopeStars.mockReturnValue({
     starred: [],
     isStarred: () => false,
     toggleStar: jest.fn(),
     replaceStarred: jest.fn(),
-  } as ReturnType<typeof useBuildScopeStars>);
+  });
 }
 
 export function renderBrowser(props: Partial<typeof DEFAULT_PROPS> = {}) {
