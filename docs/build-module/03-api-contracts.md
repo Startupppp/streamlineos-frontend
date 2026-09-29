@@ -1,5 +1,17 @@
 # Build API Contracts
 
+> **2026-09-29 — THIRTEEN BUILD ROUTES EXIST IN THE BACKEND AND NOT IN THE VENDORED CONTRACT, SO NO
+> FRONTEND CODE CAN CALL THEM.** The twelve `POST …/restore` routes that landed today (four from
+> lane H1, eight from lane H2) and lane J's `GET`/`POST /cron/build-project-retention-purge` are all
+> absent from `frontend/contracts/openapi.json`, which was last regenerated **2026-09-28 18:57:55**
+> (commit `cf34aace0`). Measured: 3,075 paths, zero `/build/**/restore`, zero `retention-purge`.
+> `openapi:generate` was banned in every lane today, and the two cheap gates cannot see the gap —
+> `check:contract-vendor` compares two equally stale files and passes, and
+> `check:api-contract-registry` enumerates operations *from* the document it is checking. Only
+> `openapi:check` would fail, and it boots Nest. **The permission keys are in place on both sides; it
+> is the operations that are missing.** Full detail, including what closes it, in
+> [`RELEASE-STATUS.md`](./RELEASE-STATUS.md) § Two findings, FINDING 2.
+
 ## Evidence
 
 - Controllers: `backend/src/modules/build/**/*.controller.ts`.
