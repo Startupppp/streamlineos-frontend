@@ -41,7 +41,7 @@ import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { EmployeeListItem } from "@/types/hr";
 import { HrPanel, HrStatusBadge } from "@/features/hr/shared/hr-ui";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
+import { FILTER_ROW_STACKS_ON_MOBILE, PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 
 const VIEW_MODES = ["grid", "list"] as const;
 type ViewMode = (typeof VIEW_MODES)[number];
@@ -342,7 +342,7 @@ export function EmployeesListPage() {
           )}
         </div>
       }
-      filtersClassName="max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:overflow-x-visible max-md:[&>[data-slot=search-input]]:min-w-0 max-md:[&>[data-slot=search-input]]:basis-auto max-md:[&>[data-slot=search-input]]:w-full max-md:[&>*:not([data-slot=search-input])]:w-full"
+      filtersClassName={FILTER_ROW_STACKS_ON_MOBILE}
       filters={
         <EmployeesFilters
           search={search}

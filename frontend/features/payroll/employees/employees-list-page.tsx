@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyPersonIllustration } from "@/components/illustrations";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_ROW_STACKS_ON_MOBILE, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { SalaryProfileSheet } from "@/features/payroll/runs/salary-profile-sheet";
 import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -204,7 +204,7 @@ export function EmployeesListPage() {
           </Button>
         ) : undefined
       }
-      filtersClassName="max-md:flex-col max-md:items-stretch max-md:overflow-visible max-md:[&>*]:w-full"
+      filtersClassName={FILTER_ROW_STACKS_ON_MOBILE}
       filters={
         <>
           <SearchInput

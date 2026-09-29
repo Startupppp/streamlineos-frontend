@@ -10,7 +10,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_ROW_STACKS_ON_MOBILE, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -170,6 +170,7 @@ export function ComponentsPageContent() {
         subtitle="Manage salary components used in payroll runs"
         badge={data?.items.length}
         filters={filters}
+        filtersClassName={FILTER_ROW_STACKS_ON_MOBILE}
         actions={
           canManage ? (
             <AnimatedIconButton icon={PlusIcon} iconSize={16} iconClassName="mr-1.5" size="sm" onClick={handleAddNew}>

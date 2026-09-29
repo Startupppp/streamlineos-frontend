@@ -24,6 +24,14 @@ export const FILTER_SELECT_TRIGGER =
 export const FILTER_TOOLBAR_ROW =
   "flex w-full min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x [&>[data-slot=search-input]]:min-w-[12rem] [&>[data-slot=search-input]]:flex-1 [&>[data-slot=search-input]]:basis-[12rem] [&>[data-slot=select-trigger]]:shrink-0 [&>*:not([data-slot=search-input])]:shrink-0";
 
+/**
+ * `PageWrapper filtersClassName` for a filter row that must stack below md
+ * instead of scrolling sideways. The base row grows the search input and pins
+ * every select to its own width, which clips the trailing filters at 390px.
+ */
+export const FILTER_ROW_STACKS_ON_MOBILE =
+  "max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:overflow-x-visible max-md:[&>[data-slot=search-input]]:min-w-0 max-md:[&>[data-slot=search-input]]:basis-auto max-md:[&>[data-slot=search-input]]:w-full max-md:[&>*:not([data-slot=search-input])]:w-full";
+
 export const CONTENT_PANEL_SOLID =
   "rounded-xl border border-border bg-card shadow-sm";
 

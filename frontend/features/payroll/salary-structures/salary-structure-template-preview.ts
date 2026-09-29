@@ -14,9 +14,19 @@ function num(value: string | null | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-/** Blank basic, or deductions that exceed gross, is not a payable estimate. */
-export function estimateTemplateNet(values: TemplatePreviewInput): { net: number; valid: boolean } {
+/**
+ * Blank basic, a negative component, or deductions that exceed gross, is not a
+ * payable estimate.
+ */
+export function estimateTemplateNet(values: TemplatePreviewInput): {
+  net: number;
+  valid: boolean;
+  hasNegativeComponent: boolean;
+} {
   const basicBlank = values.basicSalary.trim() === "";
+  const hasNegativeComponent = Object.values(values).some(
+    (value) => num(value) < 0,
+  );
   const basic = num(values.basicSalary);
   const hra = (basic * num(values.hraPercent)) / 100;
   const gross =
@@ -28,5 +38,9 @@ export function estimateTemplateNet(values: TemplatePreviewInput): { net: number
     num(values.otherAllowances);
   const pf = (basic * num(values.pfDeductionPercent)) / 100;
   const net = gross - pf - num(values.professionalTax);
-  return { net, valid: !basicBlank && net >= 0 };
+  return {
+    net,
+    valid: !basicBlank && !hasNegativeComponent && net >= 0,
+    hasNegativeComponent,
+  };
 }

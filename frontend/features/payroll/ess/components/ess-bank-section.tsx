@@ -408,7 +408,6 @@ export function EssBankSection({
           illustrationPreset="payroll"
           title="No bank details on file"
           description="Add your bank account so payroll can deposit your salary."
-          action={{ label: "Add Bank Details", onClick: handleOpen }}
           className={PAGE_BODY_EMPTY_CLASS}
         />
       )}
