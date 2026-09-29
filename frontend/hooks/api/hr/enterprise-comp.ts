@@ -9,6 +9,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export interface TimeDevice {
   id: number;
@@ -342,6 +343,7 @@ export function useWorkforceCostSummary() {
     queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/costing/summary", undefined, signal, _costSummaryContract),
     staleTime: 5 * 60_000,
     enabled: canRead && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -353,6 +355,7 @@ export function useCostByDepartment(periodKey: string) {
     queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/costing/by-department", { periodKey }, signal, _costByDepartmentContract),
     staleTime: 5 * 60_000,
     enabled: !!periodKey && canRead && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -364,5 +367,6 @@ export function useCostByLocation() {
     queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/costing/by-location", undefined, signal, _costByLocationContract),
     staleTime: 5 * 60_000,
     enabled: canRead && hrEnabled,
+    ...INLINE_READ_ERROR,
   });
 }

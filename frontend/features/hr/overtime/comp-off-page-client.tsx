@@ -73,6 +73,7 @@ export function CompOffPageClient() {
                 illustrationSize="md"
                 title="No comp-off balance"
                 description="Work overtime on a holiday or weekend to earn compensatory off days."
+                action={{ label: "Request overtime", href: "/hr/overtime" }}
                 className="py-12"
               />
             )}

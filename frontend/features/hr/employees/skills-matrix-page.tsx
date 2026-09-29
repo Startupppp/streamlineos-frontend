@@ -127,6 +127,7 @@ export function SkillsMatrixPage() {
           illustration={<EmptyTeamIllustration className="h-40 w-40 opacity-95" />}
           title="No skills data yet"
           description="Add skills to employee profiles to see the matrix here."
+          action={{ label: "Open the directory", href: "/hr/employees" }}
         />
       ) : (
         <ScrollArea className="w-full">

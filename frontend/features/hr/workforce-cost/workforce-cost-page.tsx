@@ -95,6 +95,7 @@ export function WorkforceCostPage() {
                 illustrationPreset="chart"
                 title="No department cost data"
                 description="Cost by department appears once employees have compensation recorded for this period."
+                action={{ label: "Open salary profiles", href: "/payroll/employees" }}
                 compact
               />
             ) : (
@@ -128,6 +129,7 @@ export function WorkforceCostPage() {
                 illustrationPreset="chart"
                 title="No location cost data"
                 description="Cost by location appears once employees are assigned to locations."
+                action={{ label: "Open the directory", href: "/hr/employees" }}
                 compact
               />
             ) : (
