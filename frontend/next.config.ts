@@ -124,6 +124,16 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      source: "/hr/dashboard",
+      destination: "/hr",
+      permanent: false,
+    },
+    {
+      source: "/hr/settings/company",
+      destination: "/settings/organization",
+      permanent: false,
+    },
+    {
       source: "/hr/leave-policies",
       destination: "/hr/settings/policies",
       permanent: true,
