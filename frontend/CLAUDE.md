@@ -143,7 +143,7 @@ const pageState = usePageState({ permission: "build:view", isLoading, isError, e
 **FE-107.** Animate interactive surfaces with `AnimatedIconButton` and `useAnimatedIcon`; static `lucide-react` is for non-interactive icons only. Banned: `@phosphor-icons/react`, `react-icons`.
 **FE-108.** Animate only `opacity` and `transform`, 150–250ms micro / 250–350ms panels, nothing over 400ms. Respect `prefers-reduced-motion` via `useReducedMotion()`.
 **FE-109.** Import shared variants from `lib/motion-variants.ts`; never redefine them.
-**FE-110.** Take the lowest overlay rung that suffices ([ladder](./UI-KIT.md#overlay-ladder)). Escalating past the first rung that fits is a violation.
+**FE-110.** Take the lowest overlay rung that suffices ([ladder](./UI-KIT.md#overlay-ladder)). Escalating past the first rung that fits is a violation. **One clause escalates on content rather than count:** a form is rung-4 `Sheet` at any field count if one of its fields is a *toolbar-bearing composite editor* — a `TiptapEditor` (or equivalent) rendering its own persistent menu bar, i.e. `menuMode="static"` — because the rung-3 `sm:max-w-md` dialog cannot hold an editor and its toolbar. Mechanically: the overlay's own subtree contains such an editor, or it does not. **A merely tall plain control does not qualify** — `Textarea rows={6}`, an option-card grid, a checkbox grid: FE-110 counts fields, not pixels.
 **FE-111.** Below `md`, every rung-2 popover and rung-3/4 filter or menu panel becomes a **Drawer** via `ResponsivePopover`. Date pickers and 1–3 item menus are exempt.
 
 ## 8. Performance & Accessibility

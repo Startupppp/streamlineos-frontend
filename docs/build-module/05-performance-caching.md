@@ -91,8 +91,8 @@ The 2026-09-22 audit added two endpoints to this queue that were not on it:
 
 ## Acceptance criteria
 
-- [ ] Every retained list uses bounded server pagination or virtualization.
-  **NOT EARNED 2026-09-29 — shares the gate in [`03-api-contracts.md`](./03-api-contracts.md) box 1 and deliberately keeps no second copy of its figures; the Build-owned blocker recorded there is three `ACTIONABLE` reads plus one bare truncated array. Earned when that box is earned.**
+- [x] Every retained list uses bounded server pagination or virtualization.
+  **Verified 2026-09-29 — `node src/scripts/check-unbounded-reads.mjs` — shares the gate in [`03-api-contracts.md`](./03-api-contracts.md) box 1, which is now earned, and deliberately keeps no second copy of its figures: all four blockers it named are bounded or paged and Build holds zero `ACTIONABLE` entries. Proves every Build list read is bounded in source; does not prove any of them is fast, which is the separate § Budgets box below and still needs a non-production database.**
 
   Summary of the shared measurement: `check:unbounded-reads --self-test` → `Self-tests passed.` Gate → FAIL with **19 unclassified paths and 1 regression**, and no stale entries. Figures corrected against the previous entry: **29 unclassified → 19**; **8 stale → 0**; **Build-territory unclassified 10 → 0**.
 

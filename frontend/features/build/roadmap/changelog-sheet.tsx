@@ -17,14 +17,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetBody,
-} from "@/components/ui/sheet";
+import { AppDialog } from "@/components/shared/app-dialog";
 import {
   Select,
   SelectContent,
@@ -98,107 +91,118 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
   }
 
   return (
-    <Sheet open onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
-        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-          <SheetTitle>{isEdit ? "Edit Changelog Entry" : "New Changelog Entry"}</SheetTitle>
-        </SheetHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSave)} className="flex flex-col flex-1 min-h-0">
-            <SheetBody className="px-6 py-5 space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
+    <AppDialog
+      open
+      onOpenChange={onClose}
+      title={isEdit ? "Edit Changelog Entry" : "New Changelog Entry"}
+      footer={
+        <div className="grid w-full grid-cols-2 gap-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <LoadingButton
+            type="submit"
+            form="changelog-form"
+            isPending={isPending}
+            loadingText="Saving…"
+          >
+            {isEdit ? "Save Changes" : "Create Entry"}
+          </LoadingButton>
+        </div>
+      }
+    >
+      <Form {...form}>
+        <form
+          id="changelog-form"
+          onSubmit={form.handleSubmit(handleSave)}
+          className="space-y-4"
+          noValidate
+        >
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="e.g. Introducing the public roadmap" />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="content"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Content</FormLabel>
+                <FormControl>
+                  <Textarea {...field} rows={6} />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. Introducing the public roadmap" />
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                     </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Content</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} rows={6} />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {CHANGELOG_TYPE_OPTIONS.map((o) => (
-                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="version"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Version</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g. v1.4.0" />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="isPublished"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Published</p>
-                        <p className="text-xs text-muted-foreground">Show this entry on the public changelog</p>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          className="border border-border data-[state=unchecked]:bg-input"
-                        />
-                      </FormControl>
-                    </div>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-            </SheetBody>
-            <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
-              <LoadingButton type="submit" className="flex-1" isPending={isPending} loadingText="Saving…">
-                {isEdit ? "Save Changes" : "Create Entry"}
-              </LoadingButton>
-            </SheetFooter>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+                    <SelectContent>
+                      {CHANGELOG_TYPE_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="version"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Version</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. v1.4.0" />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="isPublished"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Published</p>
+                    <p className="text-xs text-muted-foreground">Show this entry on the public changelog</p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="border border-border data-[state=unchecked]:bg-input"
+                    />
+                  </FormControl>
+                </div>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
+    </AppDialog>
   );
 }

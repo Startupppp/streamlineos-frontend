@@ -174,8 +174,29 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
     ticket-42: unchecked=0
     ```
     All five complete. Ticket 30's final box (`docs/build-module/tickets/30-enable-rls-three-build-tables.md:27`) includes the `db:verify-rls` run result: 17 of 17 behavioural probes PASS, `IN-SCOPE MISSING: 0`, `IN-SCOPE COVERED: 979`, `PLATFORM-GLOBAL: 10`. Tenant isolation is database-enforced, not only application-layer; the two pre-authentication tables (`magic_link_tokens`, `impersonation_sessions`) are registered in the closed-list allowlist and pinned by a spec.
-- [ ] **P0: transaction and event correctness.** Complete 36-38 before 11-13 and 43-45. Trigger owns the token; return the persisted version; cover pending timestamp-scale events and replay deduplication. Required audit/outbox effects must not be silently lost.
-  - **NOT EARNED 2026-09-29 — re-counted today: the three constituent tickets that still carry a box (11, 38, 44) are all adjudicated permanent N/A, so the count is not the blocker. The box stays open on its own last sentence, but the rank half closed today: backend `460706ebd` gave `RankTicketEffectDeps` an `activity` and a `dispatch` member, so a drag now writes an activity row and notifies. `BulkTicketEffectDeps` still declares only `webhooksDispatch` and `automationRunner`, so a bulk status change still loses two families. Earned by widening bulk the same way.**
+- [x] **P0: transaction and event correctness.** Complete 36-38 before 11-13 and 43-45. Trigger owns the token; return the persisted version; cover pending timestamp-scale events and replay deduplication. Required audit/outbox effects must not be silently lost.
+  - **Earned 2026-09-29 (Lane C).** The box's own last sentence — "required audit/outbox effects
+    must not be silently lost" — now holds on every ticket-write route. Backend `460706ebd` closed
+    rank; backend `23db19e26` closed bulk by widening `BulkTicketEffectDeps` with `activity`,
+    `dispatch` and `transfer` and moving the dispatch into
+    `core/tickets/build-ticket-bulk-effects.ts`. `ProjectsTicketsQueryService.bulkUpdate`
+    (`core/tickets/projects-tickets-query.service.ts:39`) now supplies all five. The three
+    constituent tickets that still carry a box (11, 38, 44) are adjudicated permanent N/A and were
+    never the blocker.
+
+    **Verified 2026-09-29 — `npx jest src/modules/build/core/tickets/` → 57 of 58 suites pass, 355
+    of 358 tests; the single failing suite is another lane's in-flight
+    `projects-ticket-relations-soft-delete.spec.ts` and touches none of these files. `pnpm typecheck`
+    exits 0 with a 12GB heap (exit code checked, not grepped).** It proves that
+    `applyTicketChange` and `bulkMutateTickets`, driven over the same TODO→IN_REVIEW change, emit an
+    identical set of activity, notification and automation effects
+    (`core/tickets/bulk-vs-panel-effect-parity.spec.ts`), and that the added per-batch reads are
+    constant in the batch size (`projects-bulk-write-isolation.spec.ts` asserts the same read count
+    at size 1 and size 100). It does not prove the webhook family agrees between the detail route and
+    the rank/bulk routes: the detail route publishes its status change through `OutboxWriter` and
+    enqueues only `ticket.updated`, while rank and bulk also enqueue `ticket.status_changed`. That
+    divergence predates this lane and is a webhook-contract question, not a lost audit effect. No
+    database was contacted; every assertion is against doubles typed on the real services.
   - Not earned 2026-09-28 (Lane ROLLUP). Six of the nine constituent tickets are at zero boxes and three (11, 38, 44) carry one adjudicated-N/A box each. **But the box is not blocked on those three counts — it is blocked on its own last sentence.** Rank and bulk still lose two of the four effect families, so the audit trail hole this box names is open at HEAD.
 
     Three qualifiers verified and passing:
@@ -183,7 +204,7 @@ bare frontend filenames are resolved to their full paths in the corresponding nu
     - *Return the persisted version.* `core/tickets/apply-ticket-change.ts:287` is `.returning({ id: tickets.id, version: tickets.version })` and `:385` returns `{ updated: true, updatedAt, version: updatedVersion }`.
     - *Timestamp-scale events and replay deduplication.* Ticket 37, 9 of 9 boxes, including the two-producer scale agreement and the idempotent-replay remediation.
 
-    **Blocker — "required audit/outbox effects must not be silently lost" fails on rank and bulk.** `applyTicketChange` dispatches four effect families; rank and bulk dispatch two. From `backend/`:
+    **Blocker — "required audit/outbox effects must not be silently lost" fails on rank and bulk.** (Superseded 2026-09-29: closed by `460706ebd` for rank and `23db19e26` for bulk; the file and line references below describe the pre-fix shape.) `applyTicketChange` dispatches four effect families; rank and bulk dispatch two. From `backend/`:
     ```
     grep -n "activity\|Activity\|notif\|Notif\|webhook\|automation" src/modules/build/core/tickets/apply-ticket-change.ts
     ```

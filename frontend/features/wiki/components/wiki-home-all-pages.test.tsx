@@ -167,8 +167,10 @@ jest.mock("@/components/ui/table-pagination", () => ({
 }));
 
 jest.mock("@/components/ui/dropdown-menu", () => ({
-  DropdownMenu: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
+  DropdownMenu: ({ children, open }: { children: React.ReactNode; open?: boolean }) => (
+    <div data-menu-open={open === undefined ? "uncontrolled" : String(open)}>
+      {children}
+    </div>
   ),
   DropdownMenuTrigger: ({ children }: { children: React.ReactNode; asChild?: boolean }) => (
     <div>{children}</div>
@@ -640,6 +642,88 @@ describe("WikiHomeAllPages — right-click context menu on card view (task G)", 
     const notCancelled = fireEvent.contextMenu(pageActionsBtn);
 
     expect(notCancelled).toBe(false);
+  });
+});
+
+interface RowContextMenuEvent {
+  preventDefault: () => void;
+}
+
+function firstOf(rows: ListRow[], index: number): ListRow {
+  const row = rows[index];
+  if (!row) throw new Error(`expected a row at index ${index}`);
+  return row;
+}
+
+function openMenuIn(columnKey: string, row: ListRow): Element | null {
+  return renderListCell(columnKey, row).container.querySelector(
+    '[data-menu-open="true"]',
+  );
+}
+
+describe("WikiHomeAllPages — right-click context menu on list rows", () => {
+  function lastRowContextMenuHandler(): (
+    row: ListRow,
+    event: RowContextMenuEvent,
+  ) => void {
+    const lastCall = DataTable.mock.calls.at(-1);
+    if (!lastCall) throw new Error("DataTable was never rendered");
+    const props: {
+      onRowContextMenu?: (row: ListRow, event: RowContextMenuEvent) => void;
+    } = lastCall[0];
+    const handler = props.onRowContextMenu;
+    if (!handler) throw new Error("DataTable received no onRowContextMenu");
+    return handler;
+  }
+
+  function contextMenuEvent(): RowContextMenuEvent & { preventDefault: jest.Mock } {
+    return { preventDefault: jest.fn() };
+  }
+
+  function renderRows(ids: number[]): ListRow[] {
+    mockSearchParams = new URLSearchParams();
+    const items: ListRow[] = ids.map((id) => makeItem(id));
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse(items),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    render(<WikiHomeAllPages />);
+    return items;
+  }
+
+  it("hands DataTable an onRowContextMenu handler, so a list row has the same right-click affordance the cards already have", () => {
+    renderRows([1]);
+
+    expect(lastRowContextMenuHandler()).toBeInstanceOf(Function);
+  });
+
+  it("suppresses the native browser menu when a row is right clicked", () => {
+    const row = firstOf(renderRows([1]), 0);
+    const event = contextMenuEvent();
+
+    act(() => {
+      lastRowContextMenuHandler()(row, event);
+    });
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens only the right-clicked row's action menu, leaving every other row closed", () => {
+    const rows = renderRows([1, 2]);
+    const first = firstOf(rows, 0);
+    const second = firstOf(rows, 1);
+
+    expect(openMenuIn("actions", first)).toBeNull();
+
+    act(() => {
+      lastRowContextMenuHandler()(first, contextMenuEvent());
+    });
+
+    expect(openMenuIn("actions", first)).not.toBeNull();
+    expect(openMenuIn("actions", second)).toBeNull();
   });
 });
 
