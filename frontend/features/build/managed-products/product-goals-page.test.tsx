@@ -1,6 +1,25 @@
 import "./product-scope-pages.test-harness";
 import { fireEvent } from "@testing-library/react";
 import { ProductGoalsPage } from "./product-goals-page";
+
+jest.mock("@/components/ui/date-picker", () => ({
+  DatePicker: ({
+    ariaLabel,
+    value,
+    onChange,
+  }: {
+    ariaLabel?: string;
+    value?: string;
+    onChange: (value: string) => void;
+  }) => (
+    <input
+      aria-label={ariaLabel}
+      type="date"
+      value={value ?? ""}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  ),
+}));
 import {
   EMPTY_GOALS_PAGE_RESULT,
   mockRouterReplace,

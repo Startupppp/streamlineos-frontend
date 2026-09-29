@@ -228,6 +228,7 @@ jest.mock("@/lib/utils", () => ({
 }));
 
 jest.mock("date-fns", () => ({
+  ...jest.requireActual("date-fns"),
   formatDistanceToNow: () => "2 days ago",
   format: () => "Jan 1, 2025",
 }));
