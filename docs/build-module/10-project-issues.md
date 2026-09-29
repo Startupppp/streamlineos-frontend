@@ -380,7 +380,7 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     that import graph.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
+- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **BROWSER VERIFICATION PENDING** (2026-09-29: waived by Tarun; see the open non-browser box above).
   - Keyboard, create-shortcut permission gate: verified in jsdom.
 
     ```text
@@ -395,4 +395,4 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     ```
 
   - **BROWSER-ONLY** and NOT ticked: `Tab` focus order, focus management in overlays, screen-reader output, `prefers-reduced-motion`, real 375 px layout, and high-density desktop. jsdom cannot observe any of them (FE-123).
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **BROWSER VERIFICATION PENDING** (2026-09-29: waived by Tarun; see the open non-browser box above).

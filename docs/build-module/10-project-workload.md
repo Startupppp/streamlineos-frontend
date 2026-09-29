@@ -123,5 +123,5 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     - **File size:** `workload-view.tsx` is 460 lines after the addition, inside the 500-line limit it was released under (FE-57).
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass.
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data.
+- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **BROWSER VERIFICATION PENDING** (2026-09-29: waived for this pass by Tarun; every non-browser criterion on this page is ticked above).
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **BROWSER VERIFICATION PENDING** (2026-09-29: waived for this pass by Tarun; every non-browser criterion on this page is ticked above).
