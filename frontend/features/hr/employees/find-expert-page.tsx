@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -50,7 +51,7 @@ export function FindExpertPage() {
 
   const { data: departments } = useHrDepartments();
 
-  const { data: experts, isLoading, isError, error, refetch } = useFindExpert({
+  const { data: experts, isLoading, isFetching, isError, error, refetch } = useFindExpert({
     skill: activeParams.skill,
     department: activeParams.department || undefined,
     role: activeParams.role || undefined,
@@ -133,10 +134,10 @@ export function FindExpertPage() {
             className="flex-1"
             aria-label="Skill search"
           />
-          <Button type="submit" disabled={!query.trim()}>
-            <Search className="h-4 w-4 mr-1.5" />
+          <LoadingButton type="submit" isPending={isFetching} disabled={!query.trim()}>
+            {!isFetching && <Search className="h-4 w-4 mr-1.5" />}
             Search
-          </Button>
+          </LoadingButton>
         </form>
 
         <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
