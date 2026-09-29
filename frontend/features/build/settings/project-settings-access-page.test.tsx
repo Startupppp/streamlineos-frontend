@@ -1,9 +1,11 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
 import { ProjectSettingsAccessPage } from "./project-settings-access-page";
 
 const mockRefetch = jest.fn();
+
+let mockCanManage = false;
 
 let mockProjectMembers = {
   data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } } as
@@ -16,7 +18,7 @@ let mockProjectMembers = {
 };
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: jest.fn(() => false),
+  useCan: () => mockCanManage,
   useCanState: jest.fn(() => "granted"),
 }));
 
@@ -103,19 +105,44 @@ jest.mock("@/components/ui/page-wrapper", () => ({
   PageWrapper: ({
     children,
     filters,
+    actions,
   }: {
     children: React.ReactNode;
     filters?: React.ReactNode;
+    actions?: React.ReactNode;
   }) => (
     <div>
+      {actions}
       {filters}
       {children}
     </div>
   ),
 }));
 
+jest.mock("@/features/build/shared/build-header-actions", () => ({
+  BuildHeaderActions: ({
+    actions,
+  }: {
+    actions: { id: string; label: string; onSelect: () => void }[];
+  }) => (
+    <div>
+      {actions.map((a) => (
+        <button key={a.id} type="button" onClick={a.onSelect}>
+          {a.label}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
+jest.mock("@/features/build/settings/add-project-member-dialog", () => ({
+  AddProjectMemberDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="add-project-member-dialog" /> : null,
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
+  mockCanManage = false;
   mockRefetch.mockResolvedValue(undefined);
   mockProjectMembers = {
     data: { data: [], pagination: { limit: 25, hasMore: false, nextCursor: null } },
@@ -246,5 +273,41 @@ describe("ProjectSettingsAccessPage — keyboard shortcuts (Requirement C3)", ()
     expect(mockUseBuildListKeyboard).toHaveBeenCalledWith(
       expect.objectContaining({ itemCount: 2 }),
     );
+  });
+});
+
+describe("ProjectSettingsAccessPage — Add member button gate (FE-44, FE-122)", () => {
+  it("renders the Add member button when the viewer holds build:manage so project invites are reachable", () => {
+    mockCanManage = true;
+    render(<ProjectSettingsAccessPage projectId={42} />);
+    expect(screen.getByRole("button", { name: /add member/i })).toBeInTheDocument();
+  });
+
+  it("does not render the Add member button when the viewer lacks build:manage so the mutation control fails closed", () => {
+    mockCanManage = false;
+    render(<ProjectSettingsAccessPage projectId={42} />);
+    expect(screen.queryByRole("button", { name: /add member/i })).not.toBeInTheDocument();
+  });
+
+  it("opens AddProjectMemberDialog when the Add member button is clicked", () => {
+    mockCanManage = true;
+    render(<ProjectSettingsAccessPage projectId={42} />);
+    expect(screen.queryByTestId("add-project-member-dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /add member/i }));
+    expect(screen.getByTestId("add-project-member-dialog")).toBeInTheDocument();
+  });
+
+  it("wires the keyboard c shortcut to the add dialog when the viewer holds build:manage", () => {
+    mockCanManage = true;
+    render(<ProjectSettingsAccessPage projectId={42} />);
+    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0] as { onCreate?: () => void } | undefined;
+    expect(typeof lastCallArgs?.onCreate).toBe("function");
+  });
+
+  it("keyboard c shortcut is not wired when the viewer lacks build:manage so the shortcut also fails closed", () => {
+    mockCanManage = false;
+    render(<ProjectSettingsAccessPage projectId={42} />);
+    const lastCallArgs = mockUseBuildListKeyboard.mock.calls.at(-1)?.[0] as { onCreate?: () => void } | undefined;
+    expect(lastCallArgs?.onCreate).toBeUndefined();
   });
 });
