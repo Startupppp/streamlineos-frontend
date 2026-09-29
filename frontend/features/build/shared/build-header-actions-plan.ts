@@ -29,6 +29,24 @@ export interface BuildHeaderActionsPlan {
   mobileColumns: string;
 }
 
+function promoteLoneOverflow(
+  inline: BuildHeaderAction[],
+  overflow: BuildHeaderAction[],
+  primary: BuildHeaderAction | undefined,
+): { inline: BuildHeaderAction[]; overflow: BuildHeaderAction[] } {
+  if (overflow.length !== 1) {
+    return { inline, overflow };
+  }
+  const lone = overflow[0];
+  if (primary && inline.at(-1) === primary) {
+    return {
+      inline: [...inline.slice(0, -1), lone, primary],
+      overflow: [],
+    };
+  }
+  return { inline: [...inline, lone], overflow: [] };
+}
+
 export function planBuildHeaderActions(
   actions: readonly BuildHeaderAction[],
 ): BuildHeaderActionsPlan {
@@ -38,36 +56,46 @@ export function planBuildHeaderActions(
   const desktopSecondarySlots =
     BUILD_HEADER_DESKTOP_VISIBLE - (primary ? 1 : 0);
   const desktopSecondary = secondary.slice(0, desktopSecondarySlots);
-  const desktopOverflow = secondary.slice(desktopSecondarySlots);
-  const desktopInline = primary
+  const desktopOverflowRaw = secondary.slice(desktopSecondarySlots);
+  const desktopInlineBase = primary
     ? [...desktopSecondary, primary]
     : desktopSecondary;
+  const desktop = promoteLoneOverflow(
+    desktopInlineBase,
+    desktopOverflowRaw,
+    primary,
+  );
 
   const fitsOneMobileRow = actions.length <= BUILD_HEADER_MOBILE_VISIBLE;
-  const mobileInline = fitsOneMobileRow
-    ? desktopInline
+  const mobileInlineRaw = fitsOneMobileRow
+    ? desktop.inline
     : primary
       ? [primary]
       : secondary.slice(0, 1);
-  const mobileOverflow = fitsOneMobileRow
+  const mobileOverflowRaw = fitsOneMobileRow
     ? []
     : primary
       ? secondary
       : secondary.slice(1);
+  const mobile = promoteLoneOverflow(
+    mobileInlineRaw,
+    mobileOverflowRaw,
+    primary,
+  );
 
   const mobileColumns =
-    mobileOverflow.length > 0
+    mobile.overflow.length > 0
       ? "grid-cols-[1fr_auto]"
-      : mobileInline.length >= BUILD_HEADER_MOBILE_VISIBLE
+      : mobile.inline.length >= BUILD_HEADER_MOBILE_VISIBLE
         ? "grid-cols-2"
         : "grid-cols-1";
 
   return {
     isEmpty: actions.length === 0,
-    desktopInline,
-    desktopOverflow,
-    mobileInline,
-    mobileOverflow,
+    desktopInline: desktop.inline,
+    desktopOverflow: desktop.overflow,
+    mobileInline: mobile.inline,
+    mobileOverflow: mobile.overflow,
     mobileColumns,
   };
 }

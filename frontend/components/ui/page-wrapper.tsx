@@ -77,7 +77,10 @@ const backButtonClassName = "-ml-2 size-9 shrink-0 sm:size-8";
 function SubtitleBlock({ subtitle }: { subtitle: React.ReactNode }) {
   if (typeof subtitle === "string") {
     return (
-      <p className="mt-0.5 max-w-3xl text-label leading-snug text-muted-foreground">
+      <p
+        className="mt-0.5 max-w-3xl text-label leading-snug text-muted-foreground line-clamp-2"
+        title={subtitle}
+      >
         {subtitle}
       </p>
     );

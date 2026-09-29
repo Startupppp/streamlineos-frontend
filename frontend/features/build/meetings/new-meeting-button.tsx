@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { MeetingType } from "@/types/projects";
+import type { Ref } from "react";
 
 export interface MeetingTemplate {
   type: MeetingType;
@@ -62,15 +63,16 @@ export const MEETING_TEMPLATES: MeetingTemplate[] = [
 interface NewMeetingButtonProps {
   onBlank: () => void;
   onTemplate: (tpl: MeetingTemplate) => void;
+  triggerRef?: Ref<HTMLButtonElement>;
 }
 
-export function NewMeetingButton({ onBlank, onTemplate }: NewMeetingButtonProps) {
+export function NewMeetingButton({ onBlank, onTemplate, triggerRef }: NewMeetingButtonProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   const { iconRef: chevronRef } = useAnimatedIcon();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button {...hoverHandlers}>
+        <Button ref={triggerRef} {...hoverHandlers}>
           <PlusIcon ref={iconRef} size={14} />
           New Meeting
           <ChevronDownIcon ref={chevronRef} size={12} className="ml-0.5" />

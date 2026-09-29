@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, type MutableRefObject } from "react";
 import { SparklesIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -19,6 +19,8 @@ import type { ProjectSummaryResult } from "@/types/projects/ai";
 
 interface ProjectAiMenuProps {
   projectId: number;
+  hideTrigger?: boolean;
+  runRef?: MutableRefObject<(() => void) | null>;
 }
 
 function formatSummary(data: ProjectSummaryResult): AiActionResult {
@@ -31,7 +33,11 @@ function formatSummary(data: ProjectSummaryResult): AiActionResult {
   return { text: lines.join("\n") };
 }
 
-export function ProjectAiMenu({ projectId }: ProjectAiMenuProps) {
+export function ProjectAiMenu({
+  projectId,
+  hideTrigger = false,
+  runRef,
+}: ProjectAiMenuProps) {
   const canUseAI = useCan("build:ai:use");
   const summaryMutation = useProjectAiSummary(projectId);
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -49,23 +55,33 @@ export function ProjectAiMenu({ projectId }: ProjectAiMenuProps) {
     void summary.execute();
   }, [summary]);
 
+  useEffect(() => {
+    if (!runRef) return;
+    runRef.current = handleSummarizeClick;
+    return () => {
+      runRef.current = null;
+    };
+  }, [runRef, handleSummarizeClick]);
+
   if (!canUseAI) return null;
 
   return (
     <>
-      <LoadingButton
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={handleSummarizeClick}
-        isPending={summary.isPending}
-        loadingText="Summarizing…"
-        className="w-full gap-1.5 sm:w-auto"
-        {...hoverHandlers}
-      >
-        <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
-        Summarize
-      </LoadingButton>
+      {!hideTrigger ? (
+        <LoadingButton
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleSummarizeClick}
+          isPending={summary.isPending}
+          loadingText="Summarizing…"
+          className="w-full gap-1.5 sm:w-auto"
+          {...hoverHandlers}
+        >
+          <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />
+          Summarize
+        </LoadingButton>
+      ) : null}
 
       <Sheet open={summary.open} onOpenChange={summary.handleOpenChange}>
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">

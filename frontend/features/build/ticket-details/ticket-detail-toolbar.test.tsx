@@ -61,3 +61,17 @@ it("opens the mobile overflow confirmation before deleting", async () => {
   await user.click(screen.getByRole("button", { name: "Delete" }));
   expect(onDelete).toHaveBeenCalledTimes(1);
 });
+
+it("shows share as a button on mobile when delete is unavailable", () => {
+  render(
+    <TicketDetailToolbar
+      isMobile
+      rightPanelCollapsed={false}
+      onExpandRightPanel={jest.fn()}
+      onDelete={jest.fn()}
+      isDeleting={false}
+    />,
+  );
+  expect(screen.queryByRole("button", { name: "More actions" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Copy share link" })).toBeInTheDocument();
+});

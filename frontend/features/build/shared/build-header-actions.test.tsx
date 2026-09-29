@@ -98,6 +98,34 @@ describe("BuildHeaderActions", () => {
     expect(screen.getAllByLabelText("More actions").length).toBeGreaterThan(0);
   });
 
+  it("renders a lone overflow action as a button, not a menu", () => {
+    const { container } = render(
+      <BuildHeaderActions
+        actions={[
+          { id: "log-time", label: "Log time" },
+          { id: "summarize", label: "Summarize" },
+          { id: "import-export", label: "Import / Export" },
+          { id: "create", label: "Create Issue", primary: true },
+        ]}
+      />,
+    );
+    const root = container.querySelector<HTMLElement>(
+      "[data-slot=build-header-actions]",
+    );
+    expect(root).not.toBeNull();
+    const desktopOverflow = root!.querySelectorAll<HTMLElement>(
+      "[aria-label='More actions'].hidden.sm\\:inline-flex",
+    );
+    expect(desktopOverflow).toHaveLength(0);
+    const importButtons = screen.getAllByRole("button", {
+      name: "Import / Export",
+    });
+    expect(importButtons.length).toBeGreaterThan(0);
+    expect(
+      importButtons.some((button) => button.className.includes("sm:inline-flex")),
+    ).toBe(true);
+  });
+
   it("runs the handler the caller supplied", () => {
     const onSelect = jest.fn();
     render(

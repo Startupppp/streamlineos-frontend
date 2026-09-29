@@ -125,3 +125,17 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- At `/build/6/workload`, the sandbox showed 22 tickets, 0 assigned and 22
+  unassigned. Opening **Add filter → Status → Done** narrowed the count to 16;
+  **Clear** restored 22. The sheet closed with Escape. No assignment or ticket
+  data was changed.
+- At a 375 px viewport, the selector navigated to the project Board route.
+  The **Hide done (16)** option was checked and the Done column showed its
+  empty placeholder while retaining its 16-item count; this is consistent
+  with hiding completed cards, not hiding the column. Detailed grouping,
+  assignments, mobile/keyboard/screen-reader coverage beyond this route, and
+  error/denied/production states remain unverified; acceptance boxes remain
+  unchecked.

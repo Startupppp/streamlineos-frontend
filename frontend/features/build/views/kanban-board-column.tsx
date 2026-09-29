@@ -35,6 +35,7 @@ export interface KanbanBoardColumnProps {
   showHeaderQuickAdd?: boolean;
   stretch?: boolean;
   hasActiveFilters?: boolean;
+  completedTicketsHidden?: boolean;
   minHeightClass?: string;
   onRename: (oldName: string, newName: string) => void;
   onColorChange: (statusId: number, color: string) => void;
@@ -58,6 +59,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
   serverCount,
   displayOptions,
   hasActiveFilters = false,
+  completedTicketsHidden = false,
   dragHandleProps,
   isColumnDragging = false,
   showHeaderQuickAdd = false,
@@ -81,7 +83,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
       {...columnDraggableProps}
       data-wip-state={wipState}
       className={cn(
-        "flex min-h-0 w-72 min-w-[280px] shrink-0 flex-col self-stretch rounded-xl border border-border bg-muted",
+        "flex min-h-0 w-72 min-w-[240px] shrink-0 flex-col self-stretch rounded-xl border border-border bg-muted sm:min-w-[280px]",
         wipState === "at" && statusToneClasses("warning").rule,
         wipState === "over" && statusToneClasses("danger").rule,
         isColumnDragging && "opacity-95 shadow-lg ring-2 ring-primary/20",
@@ -124,6 +126,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
                   column={column}
                   compact={minHeightClass === "min-h-[60px]"}
                   hasActiveFilters={hasActiveFilters}
+                  completedTicketsHidden={completedTicketsHidden}
                 />
               ) : null}
               {provided.placeholder}
@@ -155,12 +158,18 @@ export function ColumnEmptyState({
   column,
   compact,
   hasActiveFilters = false,
+  completedTicketsHidden = false,
 }: {
   column: KanbanColumn;
   compact: boolean;
   hasActiveFilters?: boolean;
+  completedTicketsHidden?: boolean;
 }) {
-  const kind = hasActiveFilters ? "filtered" : emptyColumnKind(column);
+  const kind = completedTicketsHidden
+    ? "hiddenCompleted"
+    : hasActiveFilters
+      ? "filtered"
+      : emptyColumnKind(column);
   const { Icon, title, hint } = EMPTY_COLUMN_COPY[kind];
 
   return (
@@ -205,6 +214,11 @@ const EMPTY_COLUMN_COPY = {
     Icon: SearchX,
     title: "No matches here",
     hint: "This column has tickets, but none match the current filters.",
+  },
+  hiddenCompleted: {
+    Icon: CircleCheck,
+    title: "Completed tickets are hidden",
+    hint: "Turn off Hide done to view completed tickets.",
   },
 } as const;
 

@@ -104,3 +104,20 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- At `/build/6/meetings`, the authenticated sandbox showed **No meetings yet**.
+  Searching for `zz-no-match-qa-sentinel` changed the state to **No meetings
+  found**; keyboard activation of **Clear search** removed `q` and restored
+  the original empty state.
+- Opened **New Meeting → Blank meeting** and canceled without entering or
+  submitting data. Before the fix, Cancel left focus at the document root
+  because the dropdown menu item that opened the sheet had unmounted. The
+  sheet now returns focus to the persistent **New Meeting** trigger. The
+  focused integration test failed before the fix and passes after it; the live
+  browser confirms focus restoration. No meeting was created.
+- Template content, required-field submission, attendee selection, edit and
+  delete, keyboard Escape, other breakpoints, permission/error/conflict states,
+  screen reader, and production behavior remain unverified; acceptance boxes
+  remain unchecked.

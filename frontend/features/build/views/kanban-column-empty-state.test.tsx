@@ -77,4 +77,18 @@ describe("ColumnEmptyState — a filtered column is not an empty column", () => 
     expect(screen.getByText("No tickets")).toBeInTheDocument();
     expect(screen.queryByText("No matches here")).not.toBeInTheDocument();
   });
+
+  it("explains when completed tickets are hidden instead of saying none are done", () => {
+    render(
+      <ColumnEmptyState
+        column={{ id: "DONE", name: "Done", color: null, order: 0 }}
+        compact={false}
+        completedTicketsHidden
+      />,
+    );
+
+    expect(screen.getByText("Completed tickets are hidden")).toBeInTheDocument();
+    expect(screen.getByText("Turn off Hide done to view completed tickets.")).toBeInTheDocument();
+    expect(screen.queryByText("Nothing done yet")).not.toBeInTheDocument();
+  });
 });

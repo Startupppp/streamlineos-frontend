@@ -104,3 +104,15 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- At 375×812, `/build/6/settings?section=danger` exposed the irreversible
+  project-delete warning and required the exact project name before enabling
+  Delete. Without entering that name, both Escape and Cancel closed the dialog
+  and restored focus to **Delete Project** after a local fix. The focused
+  integration test passes for both close paths.
+- No project deletion or settings mutation was performed. Other settings
+  sections received only visual/navigation spot checks; denied/error states,
+  full keyboard and screen-reader behavior, other breakpoints, and production
+  behavior remain unverified. Acceptance boxes remain unchecked.

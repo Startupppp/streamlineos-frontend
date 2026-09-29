@@ -3,6 +3,20 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { TriagePage } from "./triage-page";
 import { ApiError } from "@/lib/api-envelope";
 
+const mockBuildListFilters = {
+  search: "",
+  debouncedSearch: "",
+  cursor: null,
+  setSearch: jest.fn(),
+  setCursor: jest.fn(),
+  clearAll: jest.fn(),
+  resetKey: "",
+  value: jest.fn(() => ""),
+  setValue: jest.fn(),
+  activeCount: 0,
+  isFiltered: false,
+};
+
 jest.mock("@/hooks/api/build/projects", () => ({
   useProject: jest.fn(),
 }));
@@ -31,19 +45,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/features/build/shared/use-build-list-filters", () => ({
-  useBuildListFilters: () => ({
-    search: "",
-    debouncedSearch: "",
-    cursor: null,
-    setSearch: jest.fn(),
-    setCursor: jest.fn(),
-    clearAll: jest.fn(),
-    resetKey: "",
-    value: jest.fn(() => ""),
-    setValue: jest.fn(),
-    activeCount: 0,
-    isFiltered: false,
-  }),
+  useBuildListFilters: () => mockBuildListFilters,
 }));
 
 jest.mock("@/components/ui/table-pagination", () => ({
@@ -172,6 +174,7 @@ function baseTicketsResult(overrides = {}) {
 }
 
 beforeEach(() => {
+  mockBuildListFilters.isFiltered = false;
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseProject.mockReturnValue({ data: { key: "PROJ" } });
@@ -243,6 +246,15 @@ it("renders an empty state when there are no submissions, so triage-empty is dis
   render(<TriagePage projectId={1} />);
   expect(screen.queryByTestId("error-state")).not.toBeInTheDocument();
   expect(screen.queryByTestId("no-permission")).not.toBeInTheDocument();
+});
+
+it("labels an empty filtered result as no matches and offers filter clearing", () => {
+  mockBuildListFilters.isFiltered = true;
+  mockUseTickets.mockReturnValue(
+    baseTicketsResult({ data: { data: [], pagination: { hasMore: false } } }),
+  );
+  render(<TriagePage projectId={1} />);
+  expect(screen.getByText("No results match your filters")).toBeInTheDocument();
 });
 
 it("renders triage rows when submissions are present, confirming the ready state renders content", () => {

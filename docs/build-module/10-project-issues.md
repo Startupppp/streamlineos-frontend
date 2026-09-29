@@ -420,4 +420,12 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - At 320 × 700, the Issues toolbar wraps into a second row and the mobile module
   bar stays visible; at 768 × 900, the board retains its horizontally scrollable
   columns. This is breakpoint spot-check evidence only.
+- Opened sandbox ticket BQS-22 from the board and verified browser Back and
+  Forward returned to the board and ticket detail respectively. At 375 px with
+  **Hide done (16)** enabled, the Done column still displayed “Nothing done
+  yet” despite hiding 16 completed tickets. Changed the empty-state copy to
+  **Completed tickets are hidden** with an instruction to turn off Hide done;
+  the component regression test passed and the same mobile browser column now
+  shows that explanatory copy. Toggled Hide done off to confirm the 16 Done
+  cards reappeared, then restored it on. No ticket data was modified.
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; see the open non-browser box above).

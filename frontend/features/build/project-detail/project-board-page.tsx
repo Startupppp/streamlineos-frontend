@@ -1,9 +1,7 @@
 "use client";
 
 import { use, useCallback, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { format, addDays } from "date-fns";
-import { Clock3 } from "lucide-react";
 import { useProject } from "@/hooks/api/build/projects";
 import { useCycles } from "@/hooks/api/build/advanced";
 import { useBulkUpdateTickets } from "@/hooks/api/build/tickets";
@@ -16,12 +14,9 @@ import { useBoardUrlState } from "@/features/build/views/use-board-url-state";
 import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-keyboard";
 import { ProjectBoardContent } from "@/features/build/views/project-board-content";
 import { ProjectViewsToolbar } from "@/features/build/views/project-views-toolbar";
-import { CreateTicketDialog } from "@/features/build/tickets/create-ticket-dialog";
-import { ProjectAiMenu } from "@/features/build/ai/project-ai-menu";
-import { TicketImportExportDialog } from "@/features/build/import-export/components/ticket-import-export-dialog";
+import { ProjectBoardHeaderActions } from "@/features/build/project-detail/project-board-header-actions";
 import { SaveViewDialog } from "@/features/build/views/save-view-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
@@ -338,28 +333,12 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       contentClassName="!p-0 flex flex-col"
       className="relative"
       actions={
-        <>
-          <Button variant="outline" asChild>
-            <Link href={`/timesheets?projectId=${projectId}`}>
-              <Clock3 aria-hidden="true" />
-              Log time
-            </Link>
-          </Button>
-          <div className="flex w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
-            <ProjectAiMenu projectId={projectId} />
-          </div>
-          <div className="flex w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
-            <TicketImportExportDialog projectId={projectId} />
-          </div>
-          <div className="flex w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
-            <CreateTicketDialog
-              projectId={projectId}
-              defaultCycleId={createDefaultCycleId}
-              externalOpen={createParamOpen}
-              onExternalOpenChange={handleCreateOpenChange}
-            />
-          </div>
-        </>
+        <ProjectBoardHeaderActions
+          projectId={projectId}
+          createDefaultCycleId={createDefaultCycleId}
+          createOpen={createParamOpen}
+          onCreateOpenChange={handleCreateOpenChange}
+        />
       }
       filters={
         <ProjectViewsToolbar

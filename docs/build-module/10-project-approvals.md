@@ -102,5 +102,10 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — pending browser QA.
+- [ ] Browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — pending; the request form currently crashes as detailed below.
+
+## Browser QA evidence (partial, 2026-09-29)
+
+- Local route `/build/6/approvals` renders the no-approvals state. Opening Request approval → Request task approval reproducibly replaces the route with the Next.js error boundary after briefly showing the form; browser error text is `ApiError: Project not found`, with `RequestApprovalSheet` in the component stack. Reload restores the list. No request was submitted.
+- The failing read has not yet been isolated to an endpoint/status, so no fix is claimed. Task/release/milestone forms, validation, permissions, mutations, responsive/accessibility coverage, isolation, and production verification remain pending; acceptance criteria above remain unchecked.

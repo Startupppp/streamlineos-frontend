@@ -20,6 +20,7 @@ import type { KanbanTicket, KanbanColumn, DisplayOptions } from "../shared/types
 import type { ListSelection } from "./list-view-shared";
 import {
   filterHiddenCompletedTickets,
+  isCompletedTicketStatus,
 } from "../shared/completed-status";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -232,10 +233,13 @@ export function KanbanBoard({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-0">
-                  <div className="kanban-scroll-container scrollbar-hide flex h-[min(480px,calc(100dvh-12rem))] max-h-[min(480px,calc(100dvh-12rem))] items-stretch gap-3 overflow-x-auto overflow-y-hidden pb-2 pt-0.5">
+                  <div className="kanban-scroll-container flex h-[min(480px,calc(100dvh-12rem))] max-h-[min(480px,calc(100dvh-12rem))] items-stretch gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x pb-2 pt-0.5 [scrollbar-width:thin] md:scrollbar-hide">
                     {visibleColumns.map((col) => (
                       <KanbanBoardColumn
                         hasActiveFilters={hasActiveFilters}
+                        completedTicketsHidden={
+                          hideCompleted && isCompletedTicketStatus(col.id, optimisticStatuses)
+                        }
                         key={col.id}
                         column={col}
                         tickets={rowByStatus.get(col.id) ?? []}
@@ -279,7 +283,7 @@ export function KanbanBoard({
             ref={columnsProvided.innerRef}
             {...columnsProvided.droppableProps}
             className={cn(
-              "kanban-scroll-container scrollbar-hide flex h-full min-w-0 items-start gap-3 overflow-x-auto pb-1 px-1",
+              "kanban-scroll-container flex h-full min-w-0 items-start gap-3 overflow-x-auto overscroll-x-contain touch-pan-x pb-1 px-1 [scrollbar-width:thin] md:scrollbar-hide",
               visibleColumns.length > BOARD_COLUMN_VIRTUALIZATION_THRESHOLD && "[&>*]:content-visibility-auto",
             )}
           >
@@ -297,6 +301,9 @@ export function KanbanBoard({
                   {(columnProvided, columnSnapshot) => (
                     <KanbanBoardColumn
                       hasActiveFilters={hasActiveFilters}
+                      completedTicketsHidden={
+                        hideCompleted && isCompletedTicketStatus(col.id, optimisticStatuses)
+                      }
                       column={col}
                       tickets={columnTickets}
                       projectId={projectId}

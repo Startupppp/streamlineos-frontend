@@ -7,22 +7,29 @@ jest.mock("@/hooks/api/build/projects", () => ({
 }));
 
 describe("DangerZoneSection", () => {
-  it("restores focus to Delete Project when its confirmation is canceled", async () => {
-    const user = userEvent.setup();
-    render(
-      <DangerZoneSection
-        projectId={6}
-        projectName="Build QA Sandbox"
-        onDeleted={jest.fn()}
-      />,
-    );
+  it.each(["Escape", "Cancel"])(
+    "restores focus to Delete Project when its confirmation closes with %s",
+    async (closeAction) => {
+      const user = userEvent.setup();
+      render(
+        <DangerZoneSection
+          projectId={6}
+          projectName="Build QA Sandbox"
+          onDeleted={jest.fn()}
+        />,
+      );
 
-    const trigger = screen.getByRole("button", { name: "Delete Project" });
-    await user.click(trigger);
-    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+      const trigger = screen.getByRole("button", { name: "Delete Project" });
+      await user.click(trigger);
+      expect(screen.getByRole("alertdialog")).toBeInTheDocument();
 
-    await user.keyboard("{Escape}");
+      if (closeAction === "Escape") {
+        await user.keyboard("{Escape}");
+      } else {
+        await user.click(screen.getByRole("button", { name: "Cancel" }));
+      }
 
-    await waitFor(() => expect(trigger).toHaveFocus());
-  });
+      await waitFor(() => expect(trigger).toHaveFocus());
+    },
+  );
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import type { RefObject } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,6 +52,7 @@ interface MeetingFormSheetProps {
   selectedTemplate?: MeetingTemplate | null;
   onGenerateAgenda?: (sources: AgendaSource[]) => string;
   hasActiveCycle?: boolean;
+  returnFocusRef?: RefObject<HTMLElement | null>;
 }
 
 export function MeetingFormSheet({
@@ -65,6 +67,7 @@ export function MeetingFormSheet({
   selectedTemplate,
   onGenerateAgenda,
   hasActiveCycle = false,
+  returnFocusRef,
 }: MeetingFormSheetProps) {
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
   const [attendeeComboValue, setAttendeeComboValue] = useState("");
@@ -175,7 +178,15 @@ export function MeetingFormSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
+      <SheetContent
+        className="w-full sm:max-w-lg flex flex-col gap-0 p-0"
+        onCloseAutoFocus={(event) => {
+          const target = returnFocusRef?.current;
+          if (!target?.isConnected) return;
+          event.preventDefault();
+          target.focus();
+        }}
+      >
         <SheetHeader className="px-6 py-4 border-b">
           <SheetTitle>{mode === "edit" ? "Edit Meeting" : "New Meeting"}</SheetTitle>
           <SheetDescription>

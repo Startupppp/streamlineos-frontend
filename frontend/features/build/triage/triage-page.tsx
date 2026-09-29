@@ -272,8 +272,11 @@ export function TriagePage({ projectId }: TriagePageProps) {
             <PmSection index={0} className={PM_FILL_SECTION}>
               <EmptyState
                 illustrationPreset="tasks"
-                title="Nothing to triage"
-                description="All issues have been processed. New issues added to the backlog will appear here."
+                title={listFilters.isFiltered ? "No results match your filters" : "Nothing to triage"}
+                description={listFilters.isFiltered ? "Try adjusting the filters to find triage issues." : "All issues have been processed. New issues added to the backlog will appear here."}
+                filtersActive={listFilters.isFiltered}
+                filteredTitle="No results match your filters"
+                onClearFilters={listFilters.isFiltered ? listFilters.clearAll : undefined}
                 className={CONTENT_FILL_PANEL}
               />
             </PmSection>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, useRef, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { AlertTriangle } from "lucide-react";
@@ -20,9 +20,20 @@ export const DangerZoneSection = memo(function DangerZoneSection({
   onDeleted,
 }: DangerZoneSectionProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleDeleteClick = useCallback(() => {
     setDeleteDialogOpen(true);
+  }, []);
+
+  const handleDeleteDialogOpenChange = useCallback((open: boolean) => {
+    setDeleteDialogOpen(open);
+    if (!open) {
+      window.setTimeout(() => {
+        const deleteButton = deleteButtonRef.current;
+        if (deleteButton?.isConnected) deleteButton.focus();
+      }, 0);
+    }
   }, []);
 
   return (
@@ -38,21 +49,22 @@ export const DangerZoneSection = memo(function DangerZoneSection({
           sprints, and associated data.
         </p>
         <AnimatedIconButton
-          variant="destructive"
           size="sm"
-          onClick={handleDeleteClick}
-          icon={Trash2Icon}
           iconSize={14}
+          icon={Trash2Icon}
+          ref={deleteButtonRef}
+          variant="destructive"
           iconClassName="mr-1.5"
+          onClick={handleDeleteClick}
         >
           Delete Project
         </AnimatedIconButton>
         <DeleteProjectDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
           projectId={projectId}
-          projectName={projectName}
           onDeleted={onDeleted}
+          open={deleteDialogOpen}
+          projectName={projectName}
+          onOpenChange={handleDeleteDialogOpenChange}
         />
       </CardContent>
     </Card>

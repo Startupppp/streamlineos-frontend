@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { useMeetings, useCreateMeeting } from "@/hooks/api/build/meetings";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
@@ -82,6 +82,7 @@ interface MeetingsListPageProps {
 }
 
 export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
+  const meetingTriggerRef = useRef<HTMLButtonElement>(null);
   const canManage = useCan("build:meetings:manage");
 
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
@@ -375,7 +376,11 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
       }
       actions={
         canManage ? (
-          <NewMeetingButton onBlank={handleOpenSheet} onTemplate={handleOpenTemplate} />
+          <NewMeetingButton
+            onBlank={handleOpenSheet}
+            onTemplate={handleOpenTemplate}
+            triggerRef={meetingTriggerRef}
+          />
         ) : undefined
       }
     >
@@ -455,6 +460,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
         selectedTemplate={selectedTemplate}
         onGenerateAgenda={handleGenerateAgenda}
         hasActiveCycle={!!activeCycle}
+        returnFocusRef={meetingTriggerRef}
       />
     </PageWrapper>
   );

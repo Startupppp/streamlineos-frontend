@@ -102,5 +102,11 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — pending browser QA.
+- [ ] Browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — partial local evidence recorded below; remaining cases pending.
+
+## Browser QA evidence (partial, 2026-09-29)
+
+- Route `/build/6/triage`, local project `Build QA Sandbox`: verified one pending row (BQS-22), sentinel search `zz-no-match-qa-sentinel`, corrected filtered-empty message and Clear filters action, then restored the original row. No triage action or project record mutation was performed.
+- The filtered-empty defect was fixed in `frontend/features/build/triage/triage-page.tsx`; focused regression coverage passes with `pnpm -C frontend exec jest features/build/triage/triage-page.test.tsx --runInBand` (13 tests).
+- This is partial local browser evidence only. Keyboard/screen-reader/reduced-motion/full responsive coverage, API failure paths, authorization/data isolation, and production verification remain pending; the acceptance criteria above remain unchecked.

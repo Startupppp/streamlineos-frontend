@@ -75,17 +75,29 @@ export const ViewSwitcher = memo(function ViewSwitcher({
   );
 
   const activeMeta = views.find((v) => v.value === activeView) ?? views[0];
+  const ActiveAnimatedIcon = activeMeta?.animatedIcon;
+  const ActiveStaticIcon = activeMeta?.staticIcon;
 
   return (
     <div className={cn("flex min-w-0 items-center", className)}>
       <Select value={activeView} onValueChange={handleSelectChange}>
         <SelectTrigger
-          className="h-9 w-fit min-w-0 shrink-0 gap-1 px-2 sm:min-w-[7.5rem]"
+          className="size-9 shrink-0 justify-center gap-0 px-0 sm:h-9 sm:w-fit sm:min-w-[7.5rem] sm:justify-between sm:gap-1 sm:px-2"
           aria-label="Select view"
         >
-          <SelectValue placeholder={activeMeta?.label ?? "View"} />
+          <span className="inline-flex items-center gap-1.5 sm:hidden">
+            {ActiveAnimatedIcon ? (
+              <ActiveAnimatedIcon size={14} className="h-3.5 w-3.5" />
+            ) : ActiveStaticIcon ? (
+              <ActiveStaticIcon className="h-3.5 w-3.5" />
+            ) : null}
+            <span className="sr-only">{activeMeta?.label ?? "View"}</span>
+          </span>
+          <span className="hidden min-w-0 sm:inline-flex">
+            <SelectValue placeholder={activeMeta?.label ?? "View"} />
+          </span>
         </SelectTrigger>
-        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+        <SelectContent className="min-w-[10rem]">
           {views.map((v) => {
             const AnimatedIcon = v.animatedIcon;
             const StaticIcon = v.staticIcon;

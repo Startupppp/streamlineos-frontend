@@ -19,9 +19,17 @@ import { TicketImportPanel } from "./ticket-import-panel";
 
 interface TicketImportExportDialogProps {
   projectId: number;
+  hideTrigger?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function TicketImportExportDialog({ projectId }: TicketImportExportDialogProps) {
+export function TicketImportExportDialog({
+  projectId,
+  hideTrigger = false,
+  open,
+  onOpenChange,
+}: TicketImportExportDialogProps) {
   const canImport = useCan("build:tickets:create");
   const canExport = useCan("build:tickets:view");
   if (!canImport && !canExport) return null;
@@ -30,37 +38,56 @@ export function TicketImportExportDialog({ projectId }: TicketImportExportDialog
       projectId={projectId}
       canImport={canImport}
       canExport={canExport}
+      hideTrigger={hideTrigger}
+      open={open}
+      onOpenChange={onOpenChange}
     />
   );
 }
 
-interface DialogContentProps extends TicketImportExportDialogProps {
+interface DialogContentProps {
+  projectId: number;
   canImport: boolean;
   canExport: boolean;
+  hideTrigger: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 function TicketImportExportDialogContent({
   projectId,
   canImport,
   canExport,
+  hideTrigger,
+  open: openProp,
+  onOpenChange,
 }: DialogContentProps) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [tab, setTab] = useState(canImport ? "import" : "export");
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : uncontrolledOpen;
+
+  function handleOpenChange(next: boolean) {
+    if (!isControlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <AnimatedIconButton
-          type="button"
-          variant="outline"
-          size="sm"
-          icon={DownloadIcon}
-          iconSize={14}
-          className="w-full gap-1.5 sm:w-auto"
-        >
-          {canImport ? "Import / Export" : "Export"}
-        </AnimatedIconButton>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {!hideTrigger ? (
+        <DialogTrigger asChild>
+          <AnimatedIconButton
+            type="button"
+            variant="outline"
+            size="sm"
+            icon={DownloadIcon}
+            iconSize={14}
+            className="w-full gap-1.5 sm:w-auto"
+          >
+            {canImport ? "Import / Export" : "Export"}
+          </AnimatedIconButton>
+        </DialogTrigger>
+      ) : null}
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Import and export tickets</DialogTitle>

@@ -155,16 +155,8 @@ jest.mock("@/features/build/views/project-views-toolbar", () => ({
   ProjectViewsToolbar: () => null,
 }));
 
-jest.mock("@/features/build/tickets/create-ticket-dialog", () => ({
-  CreateTicketDialog: () => null,
-}));
-
-jest.mock("@/features/build/ai/project-ai-menu", () => ({
-  ProjectAiMenu: () => null,
-}));
-
-jest.mock("@/features/build/import-export/components/ticket-import-export-dialog", () => ({
-  TicketImportExportDialog: () => null,
+jest.mock("@/features/build/project-detail/project-board-header-actions", () => ({
+  ProjectBoardHeaderActions: () => null,
 }));
 
 jest.mock("@/features/build/views/save-view-dialog", () => ({

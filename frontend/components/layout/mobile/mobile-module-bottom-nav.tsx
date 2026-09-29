@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/drawer";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { useNavIntentPrefetch } from "@/components/layout/nav-intent-prefetch";
 import { NavPendingIndicator } from "@/components/layout/nav-pending-indicator";
 
@@ -47,10 +46,9 @@ function ModuleNavLink({
       aria-label={route.label}
     >
       <Icon className="size-5 shrink-0" />
-      <TruncatedText
-        text={route.label}
-        className="max-w-full truncate text-center text-micro leading-none"
-      />
+      <span className="max-w-full px-0.5 text-center text-micro leading-tight">
+        {route.label}
+      </span>
       <NavPendingIndicator />
     </Link>
   );
@@ -82,10 +80,9 @@ function MoreTab({
       aria-expanded={isOpen}
     >
       <EllipsisIcon ref={iconRef} className="size-5 shrink-0" />
-      <TruncatedText
-        text="More"
-        className="max-w-full truncate text-center text-micro leading-none"
-      />
+      <span className="max-w-full px-0.5 text-center text-micro leading-tight">
+        More
+      </span>
     </button>
   );
 }

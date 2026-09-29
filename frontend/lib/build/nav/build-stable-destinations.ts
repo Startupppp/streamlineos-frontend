@@ -14,7 +14,7 @@ export const BUILD_MY_WORK_DESTINATIONS: BuildNavDestination[] = [
   },
   {
     id: "my-work-assigned",
-    label: "Assigned to me",
+    label: "Assigned",
     href: `${BUILD_ROOT_PATH}/my-work`,
     icon: CheckSquare,
     requiredPermission: "build:tickets:view",

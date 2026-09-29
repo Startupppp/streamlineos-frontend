@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Plus } from "lucide-react";
+import { Layers, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,12 @@ import {
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
+import {
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
+import { cn } from "@/lib/utils";
 import { useCan, useCanState } from "@/hooks/api/access";
 import {
   useViews,
@@ -132,15 +138,21 @@ export function SavedViewsMenu({ projectId }: SavedViewsMenuProps) {
     <>
       <ResponsivePopover open={menuOpen} onOpenChange={setMenuOpen}>
         <ResponsivePopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9 shrink-0 gap-1 px-2 text-xs"
-            aria-label="Saved views"
-          >
-            Views
-          </Button>
+          <MobileOnlyLabelTooltip label="Saved views">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={cn(
+                RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+                "border-border/70 bg-card",
+              )}
+              aria-label="Saved views"
+            >
+              <Layers className="size-3.5 shrink-0" aria-hidden="true" />
+              <ResponsiveIconLabelText>Views</ResponsiveIconLabelText>
+            </Button>
+          </MobileOnlyLabelTooltip>
         </ResponsivePopoverTrigger>
         <ResponsivePopoverContent
           align="start"

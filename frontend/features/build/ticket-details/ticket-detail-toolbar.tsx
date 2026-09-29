@@ -57,37 +57,45 @@ export function TicketDetailToolbar({
       ) : null}
 
       {isMobile ? (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <AnimatedIconButton
-                size="icon"
-                variant="outline"
-                icon={EllipsisIcon}
-                iconSize={16}
-                className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
-                aria-label="More actions"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent forceMount align="end" className="w-52">
-              <DropdownMenuItem onSelect={handleShare} className="gap-2">
-                <ShareIcon size={14} />
-                Share
-              </DropdownMenuItem>
-              {canDeleteTicket && (
+        canDeleteTicket ? (
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <AnimatedIconButton
+                  size="icon"
+                  variant="outline"
+                  icon={EllipsisIcon}
+                  iconSize={16}
+                  className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
+                  aria-label="More actions"
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent forceMount align="end" className="w-52">
+                <DropdownMenuItem onSelect={handleShare} className="gap-2">
+                  <ShareIcon size={14} />
+                  Share
+                </DropdownMenuItem>
                 <TicketDetailDeleteMenuItem onRequestDelete={handleOpenOverflowDelete} />
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {canDeleteTicket && (
+              </DropdownMenuContent>
+            </DropdownMenu>
             <TicketDetailDeleteDialog
               open={overflowDeleteOpen}
               onOpenChange={setOverflowDeleteOpen}
               onDelete={onDelete}
               isDeleting={isDeleting}
             />
-          )}
-        </>
+          </>
+        ) : (
+          <AnimatedIconButton
+            size="icon"
+            variant="outline"
+            icon={ShareIcon}
+            iconSize={16}
+            className="h-9 w-9 touch-manipulation border-border/60 bg-card/50 backdrop-blur-sm sm:h-8 sm:w-8"
+            onClick={handleShare}
+            aria-label="Copy share link"
+          />
+        )
       ) : (
         <>
           <AnimatedIconButton

@@ -122,3 +122,14 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
 - [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+
+### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
+
+- At `/build/6/milestones`, the sandbox rendered one existing overdue pending
+  milestone. Searching for `zz-no-match-qa-sentinel` updated the URL and
+  displayed “No results match your filters” with zero summary counts. Keyboard
+  activation of **Clear filters** removed `q` and restored the milestone row
+  and its original summary counts.
+- No milestone was changed. Creation/edit/status/delete, loading/error/denied
+  states, other viewports, assistive-technology behavior, and production
+  behavior remain unverified; acceptance boxes remain unchecked.
