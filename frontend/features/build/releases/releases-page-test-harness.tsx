@@ -1,4 +1,5 @@
 import { render } from "@testing-library/react";
+import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
 import { ReleasesPage } from "./releases-page";
 
 export const releaseState: {
@@ -181,6 +182,7 @@ export function releaseColumnCell(
 }
 import { useReleases, useDeleteRelease } from "@/hooks/api/build/releases";
 import { useCan, useAccess } from "@/hooks/api/access";
+import type { AccessResponse } from "@/hooks/api/access-schema";
 
 export const mockReplace = jest.fn();
 let mockSearchParams = new URLSearchParams();
@@ -202,24 +204,95 @@ export const mockUseDeleteRelease = jest.mocked(useDeleteRelease);
 export const mockUseCan = jest.mocked(useCan);
 export const mockUseAccess = jest.mocked(useAccess);
 
-export const ACCESS_GRANTED = {
-  data: { isOrgOwner: false, scopes: { "build:view": "all" }, modules: {} },
-  isLoading: false,
-};
-export const ACCESS_DENIED = {
-  data: { isOrgOwner: false, scopes: {}, modules: {} },
-  isLoading: false,
-};
+type AccessQueryResult = ReturnType<typeof useAccess>;
 
-export function baseQueryResult(overrides = {}) {
+function successfulQuery<T>(data: T, dataUpdatedAt = 0): UseQueryResult<T, Error> {
+  return {
+    data,
+    error: null,
+    isError: false,
+    isPending: false,
+    isLoading: false,
+    isLoadingError: false,
+    isRefetchError: false,
+    isSuccess: true,
+    status: "success",
+    fetchStatus: "idle",
+    dataUpdatedAt,
+    errorUpdatedAt: 0,
+    failureCount: 0,
+    failureReason: null,
+    errorUpdateCount: 0,
+    isFetched: true,
+    isFetchedAfterMount: true,
+    isFetching: false,
+    isInitialLoading: false,
+    isPaused: false,
+    isPlaceholderData: false,
+    isRefetching: false,
+    isStale: false,
+    isEnabled: true,
+    refetch: async () => successfulQuery(data, dataUpdatedAt),
+    promise: Promise.resolve(data),
+  };
+}
+
+function failedQuery<T>(error: Error): UseQueryResult<T, Error> {
   return {
     data: undefined,
+    error,
+    isError: true,
+    isPending: false,
     isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-    ...overrides,
+    isLoadingError: true,
+    isRefetchError: false,
+    isSuccess: false,
+    status: "error",
+    fetchStatus: "idle",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: 0,
+    failureCount: 1,
+    failureReason: error,
+    errorUpdateCount: 1,
+    isFetched: true,
+    isFetchedAfterMount: true,
+    isFetching: false,
+    isInitialLoading: false,
+    isPaused: false,
+    isPlaceholderData: false,
+    isRefetching: false,
+    isStale: true,
+    isEnabled: true,
+    refetch: async () => failedQuery<T>(error),
+    promise: new Promise<T>(() => undefined),
   };
+}
+
+export const ACCESS_GRANTED: AccessQueryResult = successfulQuery<AccessResponse>({
+  isOrgOwner: false,
+  scopes: { "build:view": "all" },
+  modules: {},
+  canManageOrganizationMembership: false,
+});
+export const ACCESS_DENIED: AccessQueryResult = successfulQuery<AccessResponse>({
+  isOrgOwner: false,
+  scopes: {},
+  modules: {},
+  canManageOrganizationMembership: false,
+});
+
+type ReleaseQueryResult = ReturnType<typeof useReleases>;
+type ReleasePage = NonNullable<ReleaseQueryResult["data"]>;
+type ReleaseQueryOverrides =
+  | { data?: ReleasePage; isError?: false; error?: null }
+  | { data?: undefined; isError: true; error: Error };
+
+export function baseQueryResult(
+  overrides: ReleaseQueryOverrides = {},
+): ReleaseQueryResult {
+  if (overrides.isError) return failedQuery<ReleasePage>(overrides.error);
+  const data: ReleasePage = overrides.data ?? cursorPage<Release>([]);
+  return successfulQuery<ReleasePage>(data);
 }
 
 export function cursorPage<T>(items: T[]) {
@@ -233,8 +306,34 @@ export function installReleasesMocks() {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
   mockUseReleases.mockReturnValue(baseQueryResult({ data: cursorPage([]) }));
-  mockUseDeleteRelease.mockReturnValue({ mutate: jest.fn(), isPending: false });
+  mockUseDeleteRelease.mockReturnValue(makeMutationResult<void, Error, number>());
   releaseState.dataTableProps = {};
+}
+
+function makeMutationResult<
+  TData = unknown,
+  TError = Error,
+  TVariables = any,
+  TContext = any,
+>(): UseMutationResult<TData, TError, TVariables, TContext> {
+  return {
+    context: undefined,
+    data: undefined,
+    error: null,
+    failureCount: 0,
+    failureReason: null,
+    isPaused: false,
+    status: "idle",
+    variables: undefined,
+    submittedAt: 0,
+    isError: false,
+    isIdle: true,
+    isPending: false,
+    isSuccess: false,
+    mutate: jest.fn(),
+    mutateAsync: jest.fn(),
+    reset: jest.fn(),
+  };
 }
 
 export const releaseRow = {

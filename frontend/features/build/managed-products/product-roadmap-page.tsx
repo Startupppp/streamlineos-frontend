@@ -86,7 +86,7 @@ export function ProductRoadmapPage({ managedProductId }: ProductRoadmapPageProps
   const horizonValue = listFilters.value("horizon");
   const sortValue = listFilters.value("sort");
 
-  const typedStatus = useMemo(() => {
+  const typedStatus = useMemo<RoadmapStatus | undefined>(() => {
     if (!statusValue || statusValue === BUILD_FILTER_ALL) return undefined;
     if (statusValue === "planned" || statusValue === "in_progress" || statusValue === "completed" || statusValue === "cancelled") return statusValue;
     return undefined;

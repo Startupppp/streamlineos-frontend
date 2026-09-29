@@ -1,4 +1,5 @@
 import React from "react";
+import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
 
 jest.mock("@/hooks/api/build/projects", () => ({ useProject: jest.fn() }));
 jest.mock("@/hooks/api/build/ticket-queries", () => ({ useProjectBoardTickets: jest.fn() }));
@@ -180,6 +181,8 @@ import { useBuildListKeyboard } from "@/features/build/shared/use-build-list-key
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useEpicPage } from "@/hooks/api/build/advanced";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import type { AccessResponse } from "@/hooks/api/access-schema";
+import type { Cycle, Epic, ProjectWithDetails, Ticket } from "@/types/projects";
 
 export const mockUseProject = jest.mocked(useProject);
 export const mockUseProjectBoardTickets = jest.mocked(useProjectBoardTickets);
@@ -195,46 +198,225 @@ export const mockUseBuildListFilters = jest.mocked(useBuildListFilters);
 export const mockUseEpicPage = jest.mocked(useEpicPage);
 export const mockUseOnlineStatus = jest.mocked(useOnlineStatus);
 
-export const ACCESS_LOADING = { data: undefined, isLoading: true };
-export const ACCESS_GRANTED = {
-  data: { isOrgOwner: false, scopes: { "build:view": "all", "build:tickets:view": "all", "build:tickets:create": "all" }, modules: { BUILD: true } },
-  isLoading: false,
-};
-export const ACCESS_DENIED = {
-  data: { isOrgOwner: false, scopes: {}, modules: { BUILD: true } },
-  isLoading: false,
-};
+type AccessQueryResult = ReturnType<typeof useAccess>;
 
-export const disabledQueryResult = () => ({ data: undefined, isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+function pendingQuery<T>(): UseQueryResult<T, Error> {
+  return {
+    data: undefined,
+    error: null,
+    isError: false,
+    isPending: true,
+    isLoading: true,
+    isLoadingError: false,
+    isRefetchError: false,
+    isSuccess: false,
+    status: "pending",
+    fetchStatus: "idle",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: 0,
+    failureCount: 0,
+    failureReason: null,
+    errorUpdateCount: 0,
+    isFetched: false,
+    isFetchedAfterMount: false,
+    isFetching: false,
+    isInitialLoading: true,
+    isPaused: false,
+    isPlaceholderData: false,
+    isRefetching: false,
+    isStale: true,
+    isEnabled: false,
+    refetch: async () => pendingQuery<T>(),
+    promise: new Promise<T>(() => undefined),
+  };
+}
 
-export function makeMutationResult() {
-  return { mutate: jest.fn(), mutateAsync: jest.fn(), isPending: false };
+function successfulQuery<T>(data: T, dataUpdatedAt = 0): UseQueryResult<T, Error> {
+  return {
+    data,
+    error: null,
+    isError: false,
+    isPending: false,
+    isLoading: false,
+    isLoadingError: false,
+    isRefetchError: false,
+    isSuccess: true,
+    status: "success",
+    fetchStatus: "idle",
+    dataUpdatedAt,
+    errorUpdatedAt: 0,
+    failureCount: 0,
+    failureReason: null,
+    errorUpdateCount: 0,
+    isFetched: true,
+    isFetchedAfterMount: true,
+    isFetching: false,
+    isInitialLoading: false,
+    isPaused: false,
+    isPlaceholderData: false,
+    isRefetching: false,
+    isStale: false,
+    isEnabled: true,
+    refetch: async () => successfulQuery(data, dataUpdatedAt),
+    promise: Promise.resolve(data),
+  };
+}
+
+function failedQuery<T>(error: Error): UseQueryResult<T, Error> {
+  return {
+    data: undefined,
+    error,
+    isError: true,
+    isPending: false,
+    isLoading: false,
+    isLoadingError: true,
+    isRefetchError: false,
+    isSuccess: false,
+    status: "error",
+    fetchStatus: "idle",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: 0,
+    failureCount: 1,
+    failureReason: error,
+    errorUpdateCount: 1,
+    isFetched: true,
+    isFetchedAfterMount: true,
+    isFetching: false,
+    isInitialLoading: false,
+    isPaused: false,
+    isPlaceholderData: false,
+    isRefetching: false,
+    isStale: true,
+    isEnabled: true,
+    refetch: async () => failedQuery<T>(error),
+    promise: new Promise<T>(() => undefined),
+  };
+}
+
+export const ACCESS_LOADING: AccessQueryResult = pendingQuery<AccessResponse>();
+export const ACCESS_GRANTED: AccessQueryResult = successfulQuery<AccessResponse>({
+  isOrgOwner: false,
+  canManageOrganizationMembership: false,
+  scopes: { "build:view": "all", "build:tickets:view": "all", "build:tickets:create": "all" },
+  modules: { BUILD: true },
+});
+export const ACCESS_DENIED: AccessQueryResult = successfulQuery<AccessResponse>({
+  isOrgOwner: false,
+  canManageOrganizationMembership: false,
+  scopes: {},
+  modules: { BUILD: true },
+});
+
+export const disabledQueryResult = <T = never>(): UseQueryResult<T, Error> => pendingQuery<T>();
+
+type BoardQueryResult = ReturnType<typeof useProjectBoardTickets>;
+
+function boardQueryResult(data: Ticket[]): BoardQueryResult {
+  return {
+    data,
+    total: data.length,
+    loadedCount: data.length,
+    isTruncated: false,
+    dataUpdatedAt: 0,
+    error: null,
+    errorUpdatedAt: 0,
+    failureCount: 0,
+    failureReason: null,
+    errorUpdateCount: 0,
+    isError: false,
+    isFetched: true,
+    isFetchedAfterMount: true,
+    isFetching: false,
+    isLoading: false,
+    isPending: false,
+    isLoadingError: false,
+    isInitialLoading: false,
+    isPaused: false,
+    isPlaceholderData: false,
+    isRefetchError: false,
+    isRefetching: false,
+    isStale: false,
+    isSuccess: true,
+    isEnabled: true,
+    status: "success",
+    fetchStatus: "idle",
+    fetchNextPage: jest.fn(),
+    fetchPreviousPage: jest.fn(),
+    hasNextPage: false,
+    hasPreviousPage: false,
+    isFetchNextPageError: false,
+    isFetchingNextPage: false,
+    isFetchPreviousPageError: false,
+    isFetchingPreviousPage: false,
+    refetch: jest.fn(),
+    promise: new Promise<Awaited<BoardQueryResult["promise"]>>(() => undefined),
+  };
+}
+
+type MutationParts<T> = T extends UseMutationResult<infer Data, infer Error, infer Variables, infer Context>
+  ? [Data, Error, Variables, Context]
+  : never;
+
+export function makeMutationResult<
+  TData = unknown,
+  TError = Error,
+  TVariables = any,
+  TContext = any,
+>(): UseMutationResult<
+  TData,
+  TError,
+  TVariables,
+  TContext
+> {
+  return {
+    context: undefined,
+    data: undefined,
+    error: null,
+    failureCount: 0,
+    failureReason: null,
+    isPaused: false,
+    status: "idle",
+    variables: undefined,
+    submittedAt: 0,
+    isError: false,
+    isIdle: true,
+    isPending: false,
+    isSuccess: false,
+    mutate: jest.fn(),
+    mutateAsync: jest.fn(),
+    reset: jest.fn(),
+  };
 }
 
 export function installEpicsPageMocks() {
   mockUseCan.mockReturnValue(true);
   mockUseAccess.mockReturnValue(ACCESS_GRANTED);
-  mockUseProject.mockReturnValue({
-    data: { id: 1, key: "TEST", statuses: [], settings: { modules: {} } },
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-  });
-  mockUseProjectBoardTickets.mockReturnValue({
-    data: [],
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-  });
-  mockUseUpdateTicket.mockReturnValue(makeMutationResult());
-  mockUseDeleteTicket.mockReturnValue(makeMutationResult());
-  mockUseCreateTicket.mockReturnValue(makeMutationResult());
-  mockUseBulkUpdateTickets.mockReturnValue(makeMutationResult());
-  mockUseCycles.mockReturnValue({ data: [] });
+  const project: ProjectWithDetails = {
+    id: 1,
+    orgId: "org-1",
+    name: "Test project",
+    description: null,
+    key: "TEST",
+    managedProductId: null,
+    startDate: null,
+    endDate: null,
+    status: null,
+    settings: { modules: { epics: true, timeTracking: false, wiki: false } },
+    statuses: [],
+  };
+  mockUseProject.mockReturnValue(successfulQuery<ProjectWithDetails | null>(project));
+  mockUseProjectBoardTickets.mockReturnValue(boardQueryResult([]));
+  type UpdateParts = MutationParts<ReturnType<typeof useUpdateTicket>>;
+  type DeleteParts = MutationParts<ReturnType<typeof useDeleteTicket>>;
+  type CreateParts = MutationParts<ReturnType<typeof useCreateTicket>>;
+  type BulkParts = MutationParts<ReturnType<typeof useBulkUpdateTickets>>;
+  mockUseUpdateTicket.mockReturnValue(makeMutationResult<UpdateParts[0], UpdateParts[1], UpdateParts[2], UpdateParts[3]>());
+  mockUseDeleteTicket.mockReturnValue(makeMutationResult<DeleteParts[0], DeleteParts[1], DeleteParts[2], DeleteParts[3]>());
+  mockUseCreateTicket.mockReturnValue(makeMutationResult<CreateParts[0], CreateParts[1], CreateParts[2], CreateParts[3]>());
+  mockUseBulkUpdateTickets.mockReturnValue(makeMutationResult<BulkParts[0], BulkParts[1], BulkParts[2], BulkParts[3]>());
+  mockUseCycles.mockReturnValue(disabledQueryResult<Cycle[]>());
   mockUseBuildListKeyboard.mockReturnValue({ focusedIndex: null, setFocusedIndex: jest.fn() });
-  mockUseBuildListFilters.mockReturnValue({ search: "", debouncedSearch: "", setSearch: jest.fn(), value: jest.fn(() => "all"), isActive: jest.fn(() => false), setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: false });
+  mockUseBuildListFilters.mockReturnValue({ search: "", debouncedSearch: "", setSearch: jest.fn(), value: jest.fn(() => "all"), isActive: jest.fn(() => false), setValue: jest.fn(), clearAll: jest.fn(), activeCount: 0, isFiltered: false, cursor: null, setCursor: jest.fn(), resetKey: "", isPending: false });
   mockUseEpicPage.mockReturnValue(epicPageResult([]));
   mockUseOnlineStatus.mockReturnValue(true);
 }
@@ -250,7 +432,7 @@ export const EPIC_ROW = {
 };
 
 export function epicPageResult(
-  rows: unknown[],
+  rows: Epic[],
   overrides: {
     hasMore?: boolean;
     nextCursor?: string | null;
@@ -262,25 +444,20 @@ export function epicPageResult(
   } = {},
 ) {
   const { hasMore = false, nextCursor = null, ...rest } = overrides;
-  return {
-    data: { data: rows, pagination: { limit: 25, hasMore, nextCursor } },
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    dataUpdatedAt: 0,
-    refetch: jest.fn(),
-    ...rest,
-  };
+  const page = { data: rows, pagination: { limit: 25, hasMore, nextCursor } };
+  if (rest.isError) {
+    const result = failedQuery<typeof page>(rest.error instanceof Error ? rest.error : new Error("Epics unavailable"));
+    if (!rest.refetch) return result;
+    return { ...result, refetch: async () => { rest.refetch?.(); return result; } };
+  }
+  if (rest.isLoading) return pendingQuery<typeof page>();
+  const result = successfulQuery(page, rest.dataUpdatedAt ?? 0);
+  if (!rest.refetch) return result;
+  return { ...result, refetch: async () => { rest.refetch?.(); return result; } };
 }
 
-export function readyPage(tickets: { type?: string }[], updatedAt = 0) {
-  mockUseProjectBoardTickets.mockReturnValue({
-    data: tickets,
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-  });
+export function readyPage(tickets: Ticket[], updatedAt = 0) {
+  mockUseProjectBoardTickets.mockReturnValue(boardQueryResult(tickets));
   mockUseEpicPage.mockReturnValue(
     epicPageResult(
       tickets.filter((t) => t.type === "EPIC"),
@@ -302,6 +479,8 @@ export function filtersReturning(values: Record<string, string>, isFiltered = tr
     isFiltered,
     cursor: null,
     setCursor: jest.fn(),
+    resetKey: "",
+    isPending: false,
   };
 }
 
