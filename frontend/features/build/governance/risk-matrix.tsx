@@ -27,7 +27,7 @@ export function RiskMatrix({ cells, onCellClick, selectedCell }: RiskMatrixProps
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4 w-full max-w-xs">
+    <div className="w-full">
       <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground mb-2">
         Risk Matrix <span className="text-micro normal-case font-normal">(open risks)</span>
       </p>
@@ -55,7 +55,7 @@ export function RiskMatrix({ cells, onCellClick, selectedCell }: RiskMatrixProps
                     aria-pressed={isSelected}
                     onClick={() => onCellClick?.(prob, impact)}
                     className={cn(
-                      "flex-1 h-10 rounded flex items-center justify-center text-label font-semibold transition-all",
+                      "flex-1 h-12 rounded-md flex items-center justify-center text-label font-semibold transition-all",
                       sev.className,
                       isSelected && "ring-2 ring-offset-1 ring-foreground/30",
                       onCellClick && "cursor-pointer hover:opacity-75",

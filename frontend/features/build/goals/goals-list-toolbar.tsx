@@ -1,7 +1,7 @@
 "use client";
 
-import type { ChangeEvent, RefObject } from "react";
-import { Input } from "@/components/ui/input";
+import type { RefObject } from "react";
+import { DatePicker } from "@/components/ui/date-picker";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import {
   BuildFilterSelect,
@@ -92,8 +92,8 @@ export function GoalsListToolbar({
     listFilters.setValue("scope", value);
   const handleHealthChange = (value: string) =>
     listFilters.setValue("health", value);
-  const handleDueChange = (event: ChangeEvent<HTMLInputElement>) =>
-    listFilters.setValue("due", event.target.value || BUILD_FILTER_ALL);
+  const handleDueChange = (value: string) =>
+    listFilters.setValue("due", value || BUILD_FILTER_ALL);
 
   const dueValue = listFilters.value("due");
 
@@ -173,11 +173,12 @@ export function GoalsListToolbar({
       label: GOAL_DUE_FILTER_LABEL,
       active: listFilters.isActive("due"),
       control: (
-        <Input
-          type="date"
-          aria-label={GOAL_DUE_FILTER_LABEL}
+        <DatePicker
+          ariaLabel={GOAL_DUE_FILTER_LABEL}
+          clearable
           value={dueValue === BUILD_FILTER_ALL ? "" : dueValue}
           onChange={handleDueChange}
+          placeholder={GOAL_DUE_FILTER_LABEL}
           className={BUILD_FILTER_TRIGGER_CLASS}
         />
       ),

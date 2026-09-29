@@ -40,13 +40,18 @@ export function BuildFilterSelect({
   disabled,
   className,
 }: BuildFilterSelectProps) {
+  const hasMatch = options.some((option) => option.value === value);
   return (
-    <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+    <Select
+      value={hasMatch ? value : undefined}
+      onValueChange={onValueChange}
+      disabled={disabled}
+    >
       <SelectTrigger
         aria-label={label}
         className={cn(BUILD_FILTER_TRIGGER_CLASS, className)}
       >
-        <SelectValue />
+        <SelectValue placeholder={label} />
       </SelectTrigger>
       <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
         {options.map((option) => (

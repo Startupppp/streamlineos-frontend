@@ -135,15 +135,15 @@ export function ProjectWebhooksPage({
   );
 
   const handleFromChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      updateUrl({ from: e.target.value || undefined });
+    (value: string) => {
+      updateUrl({ from: value || undefined });
     },
     [updateUrl],
   );
 
   const handleToChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      updateUrl({ to: e.target.value || undefined });
+    (value: string) => {
+      updateUrl({ to: value || undefined });
     },
     [updateUrl],
   );

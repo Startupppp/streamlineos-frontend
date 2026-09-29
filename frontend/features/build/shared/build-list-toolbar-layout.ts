@@ -21,7 +21,7 @@ export const BUILD_TOOLBAR_DRAWER_DESCRIPTION =
   "Narrow this list. Changes apply immediately; close the sheet to return to the results.";
 
 export const BUILD_TOOLBAR_ROOT_CLASS =
-  "grid w-full min-w-0 items-center gap-2 md:flex md:flex-nowrap md:overflow-x-auto md:overscroll-x-contain md:scrollbar-hide md:touch-pan-x";
+  "grid w-full min-w-0 items-center gap-2 md:flex md:flex-wrap md:overflow-x-hidden";
 
 export const BUILD_TOOLBAR_TRAILING_CLASS =
   "flex min-w-0 items-center gap-2 md:ml-auto md:shrink-0";
@@ -95,4 +95,49 @@ export function buildToolbarLayout({
       trailing,
     }),
   };
+}
+
+/**
+ * How many filters stay inline as the viewport grows.
+ * Index 0 is always outside. Later filters move into the Filters menu
+ * until there is room: 1 at md, 2 at lg, 3 at xl, 4 from 2xl.
+ */
+export function toolbarInlineVisibility(index: number, collapsed: boolean): string {
+  const mobile = collapsed ? "max-md:hidden" : "max-md:w-full";
+  const desktop =
+    index <= 0
+      ? ""
+      : index === 1
+        ? "md:hidden lg:block"
+        : index === 2
+          ? "md:hidden xl:block"
+          : index === 3
+            ? "md:hidden 2xl:block"
+            : "md:hidden";
+  return [mobile, desktop].filter(Boolean).join(" ");
+}
+
+/** Drawer copy of a filter. Hidden wherever that filter is already inline. */
+export function toolbarDrawerVisibility(index: number, collapsed: boolean): string {
+  if (index <= 0) return collapsed ? "md:hidden" : "hidden";
+  if (!collapsed) {
+    if (index === 1) return "hidden md:block lg:hidden";
+    if (index === 2) return "hidden md:block xl:hidden";
+    if (index === 3) return "hidden md:block 2xl:hidden";
+    return "hidden md:block";
+  }
+  if (index === 1) return "lg:hidden";
+  if (index === 2) return "xl:hidden";
+  if (index === 3) return "2xl:hidden";
+  return "";
+}
+
+/** Filters button: mobile drawer, plus desktop whenever a filter would overflow. */
+export function toolbarMoreButtonClass(filterCount: number, collapse: boolean): string {
+  const mobile = collapse ? "inline-flex w-full" : "hidden";
+  if (filterCount <= 1) return `${mobile} md:hidden`;
+  if (filterCount === 2) return `${mobile} md:inline-flex md:w-auto lg:hidden`;
+  if (filterCount === 3) return `${mobile} md:inline-flex md:w-auto xl:hidden`;
+  if (filterCount === 4) return `${mobile} md:inline-flex md:w-auto 2xl:hidden`;
+  return `${mobile} md:inline-flex md:w-auto`;
 }

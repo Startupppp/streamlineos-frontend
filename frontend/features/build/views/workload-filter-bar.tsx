@@ -157,7 +157,7 @@ export const WorkloadFilterBar = memo(function WorkloadFilterBar({
 
       {hasActiveFilters && activeFilterCount > 0 ? (
         <div className="flex w-full min-w-0 items-center gap-1.5">
-          <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
             {filters.cycleId !== "all" ? (
               <FilterChip
                 label={cycleMap.get(filters.cycleId)?.name ?? filters.cycleId}

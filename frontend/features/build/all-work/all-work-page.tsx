@@ -285,7 +285,7 @@ export function AllWorkPage() {
           <PageTabsToolbar
             tabsDensity="icons"
             tabs={
-              <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide sm:gap-2 [&>*]:shrink-0">
+              <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
                 <AllWorkViewSwitcher
                   activeView={view}
                   onViewChange={handleViewChangeWithReset}

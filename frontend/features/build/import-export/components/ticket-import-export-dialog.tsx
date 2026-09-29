@@ -56,7 +56,7 @@ function TicketImportExportDialogContent({
           size="sm"
           icon={DownloadIcon}
           iconSize={14}
-          className="h-8 gap-1.5 text-xs"
+          className="w-full gap-1.5 sm:w-auto"
         >
           {canImport ? "Import / Export" : "Export"}
         </AnimatedIconButton>

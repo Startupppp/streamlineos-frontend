@@ -14,7 +14,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyTicketIllustration } from "@/components/illustrations";
 import { useFeedbucketWidgets } from "@/hooks/api/feedbucket";
 import { useProject } from "@/hooks/api/build/projects";
 import { CreateFeedbucketWidgetSheet } from "./create-feedbucket-widget-sheet";
@@ -127,7 +126,7 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
         ) : (
           <EmptyState
             className={CONTENT_FILL_PANEL}
-            illustration={<EmptyTicketIllustration className="h-24 w-24" />}
+            illustrationPreset="mail"
             title="No feedback widget"
             description="Create a widget to embed on your product and start collecting feedback for this project."
             action={{ label: "Create feedback widget", onClick: handleOpenCreate }}

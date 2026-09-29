@@ -21,7 +21,7 @@ export function ApprovalBulkActionBar({
   onClear,
 }: ApprovalBulkActionBarProps) {
   const canManage = useCan("build:approvals:manage");
-  if (!canManage) return null;
+  if (!canManage || selectedCount < 1) return null;
   return (
     <div
       className={cn(

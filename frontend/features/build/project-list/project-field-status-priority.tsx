@@ -67,7 +67,7 @@ export const InlineProjectStatus = memo(function InlineProjectStatus({
             <Badge
               variant="secondary"
               className={cn(
-                "gap-0.5 rounded-full border-0 px-1.5 py-0 text-micro font-semibold uppercase tracking-wide",
+                "gap-0.5 rounded-full border-0 px-1.5 py-0 text-micro font-semibold",
                 "cursor-pointer transition-opacity hover:opacity-80",
                 statusColor,
               )}

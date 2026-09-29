@@ -112,7 +112,9 @@ function buildColumns(
       cell: (row) => (
         <div className="flex flex-wrap items-center gap-1">
           <TrustBadge trustState={row.trustState} />
-          <OwnerMissingBadge ownerMembershipId={row.ownerMembershipId} />
+          {row.ownerUserId ? (
+            <OwnerMissingBadge ownerMembershipId={row.ownerMembershipId} />
+          ) : null}
         </div>
       ),
     },
@@ -362,6 +364,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
   const handleCursorChange = useCallback(
     (nextCursor: string | undefined) => {
       if ((nextCursor ?? "") === urlCursor) return;
+      update({ [KB_PAGE_CURSOR_PARAM]: nextCursor ? nextCursor : null });
     },
     [update, urlCursor],
   );
@@ -570,7 +573,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
           {data !== undefined && (
             <span className="text-sm text-muted-foreground tabular-nums">
               {data.boundedCount.isExact
-                ? `${data.boundedCount.count} pages`
+                ? `${data.boundedCount.count} ${data.boundedCount.count === 1 ? "page" : "pages"}`
                 : `${data.boundedCount.count}+ pages`}
             </span>
           )}

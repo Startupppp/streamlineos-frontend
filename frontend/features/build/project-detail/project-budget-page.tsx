@@ -185,7 +185,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
           empty={
             <EmptyState
               className={CONTENT_FILL_PANEL}
-              illustrationPreset="calendar"
+              illustrationPreset="expenses"
               title="No budget data"
               description="Budget details are unavailable for this project."
             />
@@ -267,7 +267,7 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
         {(budget?.memberBreakdown?.length ?? 0) === 0 && !isLoading ? (
           <EmptyState
               className={CONTENT_FILL_PANEL}
-              illustrationPreset="calendar"
+              illustrationPreset="expenses"
               title="No billable time logged"
               description="Log billable hours to track costs against this project's budget."
             />

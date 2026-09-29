@@ -338,22 +338,28 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
       contentClassName="!p-0 flex flex-col"
       className="relative"
       actions={
-        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center [&>*]:w-full sm:[&>*]:w-auto [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
-          <Button variant="outline" size="sm" asChild>
+        <>
+          <Button variant="outline" asChild>
             <Link href={`/timesheets?projectId=${projectId}`}>
               <Clock3 aria-hidden="true" />
               Log time
             </Link>
           </Button>
-          <ProjectAiMenu projectId={projectId} />
-          <TicketImportExportDialog projectId={projectId} />
-          <CreateTicketDialog
-            projectId={projectId}
-            defaultCycleId={createDefaultCycleId}
-            externalOpen={createParamOpen}
-            onExternalOpenChange={handleCreateOpenChange}
-          />
-        </div>
+          <div className="flex w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
+            <ProjectAiMenu projectId={projectId} />
+          </div>
+          <div className="flex w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
+            <TicketImportExportDialog projectId={projectId} />
+          </div>
+          <div className="flex w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
+            <CreateTicketDialog
+              projectId={projectId}
+              defaultCycleId={createDefaultCycleId}
+              externalOpen={createParamOpen}
+              onExternalOpenChange={handleCreateOpenChange}
+            />
+          </div>
+        </>
       }
       filters={
         <ProjectViewsToolbar
@@ -385,9 +391,10 @@ export function ProjectBoardPage({ params, defaultView }: PageProps) {
     >
       {showFirstRunState ? (
         <EmptyState
+          illustrationPreset="ticket"
           title="No tickets yet"
           description="Create your first ticket to get started tracking work."
-          className="flex-1"
+          className="min-h-full w-full flex-1"
         />
       ) : <ProjectBoardContent
         view={view}

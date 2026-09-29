@@ -265,7 +265,7 @@ export function TeamsListPage() {
               ) : (
                 <EmptyState
                   className={CONTENT_FILL_PANEL}
-                  illustrationPreset="projects"
+                  illustrationPreset="team"
                   title="No teams yet"
                   description="Create a team to group members and track work together."
                   action={canCreate ? { label: "New team", onClick: handleOpenCreate } : undefined}

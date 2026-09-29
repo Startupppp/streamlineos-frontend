@@ -131,7 +131,7 @@ function NotificationFallbackPreview({
               type="button"
               size="icon"
               variant="ghost"
-              className="mt-0.5 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
+              className="mt-0.5 shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
               onClick={onClose}
               aria-label="Back to inbox"
             >
@@ -199,7 +199,7 @@ function NotificationFallbackPreview({
               asChild
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-xs"
+              className="gap-1.5"
             >
               <Link href={normalizeBuildDeepLink(notification.link)}>
                 <ExternalLink className="h-3.5 w-3.5" />

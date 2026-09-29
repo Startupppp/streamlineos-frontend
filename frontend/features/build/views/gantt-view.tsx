@@ -268,7 +268,7 @@ export function GanttView({
     <PageState resolution={resolution} loading={null}>
     <div className="flex h-full min-h-0 flex-col gap-3">
       <div className={cn(PM_TOOLBAR, "gap-2")}>
-        <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <Select
             value={String(displayMonth)}
             onValueChange={handleMonthChange}
@@ -323,7 +323,7 @@ export function GanttView({
         {datedTickets.length === 0 ? (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-[2px]">
             <EmptyState
-              illustrationPreset="projects"
+              illustrationPreset="calendar"
               title="No work items with dates"
               description="Set start or due dates on tickets to plot them on the timeline. You can do this from ticket detail, the backlog table, or inline on the board."
               action={

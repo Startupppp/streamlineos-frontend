@@ -22,6 +22,9 @@ import {
   BUILD_TOOLBAR_ROOT_CLASS,
   BUILD_TOOLBAR_TRAILING_CLASS,
   buildToolbarLayout,
+  toolbarDrawerVisibility,
+  toolbarInlineVisibility,
+  toolbarMoreButtonClass,
   type BuildToolbarFilter,
   type BuildToolbarSearch,
 } from "./build-list-toolbar-layout";
@@ -39,9 +42,11 @@ interface BuildListToolbarProps {
 function ToolbarFilterSlot({
   filter,
   collapsed,
+  index,
 }: {
   filter: BuildToolbarFilter;
   collapsed: boolean;
+  index: number;
 }) {
   return (
     <div
@@ -49,7 +54,7 @@ function ToolbarFilterSlot({
       data-filter-id={filter.id}
       className={cn(
         "min-w-0 md:w-auto md:shrink-0 md:flex-none md:basis-auto",
-        collapsed ? "max-md:hidden" : "max-md:w-full",
+        toolbarInlineVisibility(index, collapsed),
       )}
     >
       {filter.control}
@@ -111,21 +116,25 @@ export function BuildListToolbar({
         />
       ) : null}
 
-      {layout.filters.map((entry) => (
+      {layout.filters.map((entry, index) => (
         <ToolbarFilterSlot
           key={entry.filter.id}
           filter={entry.filter}
           collapsed={entry.collapsed}
+          index={index}
         />
       ))}
 
-      {layout.collapse ? (
+      {layout.collapse || layout.filters.length > 1 ? (
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
             <Button
               type="button"
               variant="outline"
-              className="w-full min-w-0 justify-center gap-1.5 md:hidden"
+              className={cn(
+                "min-w-0 justify-center gap-1.5",
+                toolbarMoreButtonClass(layout.filters.length, layout.collapse),
+              )}
             >
               <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span className="truncate">{BUILD_TOOLBAR_FILTERS_LABEL}</span>
@@ -148,13 +157,17 @@ export function BuildListToolbar({
               tabIndex={-1}
               className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 outline-none"
             >
-              {layout.filters
-                .filter((entry) => entry.collapsed)
-                .map((entry) => (
-                  <ToolbarDrawerField key={entry.filter.id} filter={entry.filter} />
-                ))}
+              {layout.filters.map((entry, index) => {
+                const drawerClass = toolbarDrawerVisibility(index, entry.collapsed);
+                if (drawerClass === "hidden") return null;
+                return (
+                  <div key={entry.filter.id} className={drawerClass}>
+                    <ToolbarDrawerField filter={entry.filter} />
+                  </div>
+                );
+              })}
               {trailing ? (
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5 md:hidden">
                   <span className="text-sm font-medium text-foreground">
                     {trailingLabel}
                   </span>

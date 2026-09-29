@@ -388,7 +388,7 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
                 <span className="text-sm font-medium">{selectedMilestoneIds.size} selected</span>
                 <div className="flex items-center gap-2">
                   <Select onValueChange={handleBulkStatusChange}>
-                    <SelectTrigger className="h-8 w-[160px] text-sm">
+                    <SelectTrigger className="w-[160px]">
                       <SelectValue placeholder="Set status…" />
                     </SelectTrigger>
                     <SelectContent>

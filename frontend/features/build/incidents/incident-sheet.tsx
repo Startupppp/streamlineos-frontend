@@ -29,6 +29,7 @@ import { useProject } from "@/hooks/api/build/projects";
 import { useReleases } from "@/hooks/api/build/releases";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
+import { BuildDateTimeField } from "@/features/build/shared/build-datetime-field";
 import type { Incident, IncidentDetail, IncidentSeverity, IncidentStatus } from "@/hooks/api/build/incidents-schema";
 
 const SEVERITIES: IncidentSeverity[] = ["critical", "high", "medium", "low"];
@@ -83,11 +84,21 @@ function IncidentInputField({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-dense">{label}</FormLabel>
-          <FormControl>
-            <Input {...field} type={type} placeholder={placeholder} className="text-dense" />
-          </FormControl>
-          <FormMessage className="text-micro" />
+          <FormLabel>{label}</FormLabel>
+          {type === "datetime-local" ? (
+            <BuildDateTimeField
+              value={typeof field.value === "string" ? field.value : ""}
+              onChange={field.onChange}
+              dateLabel={label}
+              timeLabel={`${label} time`}
+              clearable
+            />
+          ) : (
+            <FormControl>
+              <Input {...field} type={type} placeholder={placeholder} />
+            </FormControl>
+          )}
+          <FormMessage />
         </FormItem>
       )}
     />
@@ -111,11 +122,11 @@ function IncidentTextareaField({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-dense">{label}</FormLabel>
+          <FormLabel>{label}</FormLabel>
           <FormControl>
-            <Textarea {...field} className="min-h-[72px] resize-none text-dense" placeholder={placeholder} />
+            <Textarea {...field} className="min-h-[72px] resize-none" placeholder={placeholder} />
           </FormControl>
-          <FormMessage className="text-micro" />
+          <FormMessage />
         </FormItem>
       )}
     />
@@ -263,15 +274,14 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-dense">Title <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        className="text-dense"
                         placeholder="Short incident summary"
                       />
                     </FormControl>
-                    <FormMessage className="text-micro" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -281,7 +291,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-dense">Description</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <TiptapEditor
                         content={field.value}
@@ -292,7 +302,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                         menuMode="static"
                       />
                     </FormControl>
-                    <FormMessage className="text-micro" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -303,7 +313,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                   name="severity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-dense">Severity</FormLabel>
+                      <FormLabel>Severity</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger>
@@ -318,7 +328,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage className="text-micro" />
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -327,7 +337,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-dense">Status</FormLabel>
+                      <FormLabel>Status</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger>
@@ -342,7 +352,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage className="text-micro" />
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -374,7 +384,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                 name="ownerId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-dense">Owner</FormLabel>
+                    <FormLabel>Owner</FormLabel>
                     <ProjectMemberSelect
                       projectId={projectId}
                       mode="single"
@@ -382,14 +392,13 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                       onChange={(v) => field.onChange(v ?? "")}
                       allowUnassigned
                       placeholder="Unassigned"
-                      className="text-dense"
                     />
-                    <FormMessage className="text-micro" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid gap-4">
                 <IncidentInputField
                   control={form.control}
                   name="detectedAt"
@@ -415,7 +424,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                 name="linkedTicketId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-dense">Linked Ticket</FormLabel>
+                    <FormLabel>Linked Ticket</FormLabel>
                     <FormControl>
                       <TicketCombobox
                         projectId={projectId}
@@ -424,10 +433,9 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                         onChange={field.onChange}
                         placeholder="Link a ticket…"
                         allowClear
-                        className="text-dense"
                       />
                     </FormControl>
-                    <FormMessage className="text-micro" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -437,7 +445,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                 name="releaseId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-dense">Affected release</FormLabel>
+                    <FormLabel>Affected release</FormLabel>
                     <Select value={field.value || NO_RELEASE} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
@@ -453,7 +461,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage className="text-micro" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -469,11 +477,11 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                   name="followUpWaiverReason"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-dense">Closure waiver</FormLabel>
+                      <FormLabel>Closure waiver</FormLabel>
                       <FormControl>
-                        <Textarea {...field} className="text-dense min-h-[72px] resize-none" placeholder="Why can unresolved follow-ups be waived?" />
+                        <Textarea {...field} className="min-h-[72px] resize-none" placeholder="Why can unresolved follow-ups be waived?" />
                       </FormControl>
-                      <FormMessage className="text-micro" />
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -483,14 +491,13 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
             <SheetFooter className="px-5 py-3 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">
                 <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="text-dense">
+                  <Button variant="outline" size="sm">
                     Cancel
                   </Button>
                 </SheetClose>
                 <LoadingButton
                   type="submit"
                   size="sm"
-                  className="text-dense"
                   isPending={isPending}
                   loadingText="Saving…"
                 >

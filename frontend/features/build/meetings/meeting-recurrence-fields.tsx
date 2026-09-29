@@ -8,7 +8,8 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -22,21 +23,19 @@ export function MeetingRecurrenceFields() {
   const { control, watch, setValue } = useFormContext<MeetingFormValues>();
   const recurrenceEnabled = watch("recurrenceEnabled");
 
-  function handleToggle(e: React.ChangeEvent<HTMLInputElement>) {
-    setValue("recurrenceEnabled", e.target.checked);
+  function handleRecurrenceChecked(checked: boolean | "indeterminate") {
+    setValue("recurrenceEnabled", checked === true, { shouldDirty: true });
   }
 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
+        <Checkbox
           id="recurrence-toggle"
           checked={recurrenceEnabled}
-          onChange={handleToggle}
-          className="rounded border-border"
+          onCheckedChange={handleRecurrenceChecked}
         />
-        <label htmlFor="recurrence-toggle" className="text-sm font-medium cursor-pointer">
+        <label htmlFor="recurrence-toggle" className="cursor-pointer text-sm font-medium">
           Recurring meeting
         </label>
       </div>
@@ -48,7 +47,7 @@ export function MeetingRecurrenceFields() {
             name="recurrenceFrequency"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs">Repeat</FormLabel>
+                <FormLabel>Repeat</FormLabel>
                 <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -69,9 +68,15 @@ export function MeetingRecurrenceFields() {
             name="recurrenceEndDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs">End date (optional)</FormLabel>
+                <FormLabel>End date (optional)</FormLabel>
                 <FormControl>
-                  <Input {...field} type="date" />
+                  <DatePicker
+                    ariaLabel="Recurrence end date"
+                    clearable
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Pick an end date"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

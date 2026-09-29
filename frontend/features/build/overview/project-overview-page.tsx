@@ -28,6 +28,16 @@ function isAnalyticsRange(v: string | null): v is "7d" | "30d" | "90d" {
   return v === "7d" || v === "30d" || v === "90d";
 }
 
+function formatOverviewLabel(value: string): string {
+  const words = value.toLowerCase().split(/[_\s]+/).filter(Boolean);
+  if (words.length === 0) return value;
+  return words
+    .map((word, index) =>
+      index === 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word,
+    )
+    .join(" ");
+}
+
 interface ProjectOverviewPageProps {
   projectId: number;
 }
@@ -151,9 +161,10 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
         loading={<ProjectOverviewSkeleton />}
         empty={
           <EmptyState
+            illustrationPreset="projects"
             title="Project not found"
             description="This project may have been deleted or moved."
-            className="flex-1"
+            className="min-h-full w-full flex-1"
           />
         }
       >
@@ -204,7 +215,11 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
             />
             <StatCard
               label="Health"
-              value={analytics?.healthStatus ?? "No data"}
+              value={
+                analytics?.healthStatus
+                  ? formatOverviewLabel(analytics.healthStatus)
+                  : "No data"
+              }
               icon={Target}
               tone={
                 analytics?.healthStatus === "EXCELLENT"
@@ -232,7 +247,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
                       className="flex items-center justify-between text-sm"
                     >
                       <span className="text-muted-foreground truncate">
-                        {status}
+                        {formatOverviewLabel(status)}
                       </span>
                       <span className="font-mono tabular-nums font-medium">
                         {count}
@@ -261,7 +276,7 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
                     variant="outline"
                     className="h-5 px-2 py-0.5 text-micro"
                   >
-                    {nextMilestone.status}
+                    {formatOverviewLabel(nextMilestone.status)}
                   </Badge>
                 </CardContent>
               </Card>

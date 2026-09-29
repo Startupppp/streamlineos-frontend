@@ -38,6 +38,13 @@ import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+function formatStatusName(name: string): string {
+  const words = name.toLowerCase().split(/[_\s]+/).filter(Boolean);
+  const first = words[0];
+  if (!first) return name;
+  return [first.charAt(0).toUpperCase() + first.slice(1), ...words.slice(1)].join(" ");
+}
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { format, parseISO, isValid } from "date-fns";
 
@@ -257,13 +264,13 @@ export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount,
               onKeyDown={handleStopPropagation}
             >
               <Badge variant="secondary" className="h-5 px-1.5 text-micro">
-                {(epic.status ?? "TODO").replace(/_/g, " ")}
+                {formatStatusName(epic.status ?? "TODO")}
               </Badge>
               <Badge
                 variant="outline"
                 className={cn("h-5 px-1.5 text-micro", getColorSafe(priorityColors, epic.priority || "MEDIUM"))}
               >
-                {epic.priority || "MEDIUM"}
+                {formatStatusName(epic.priority || "MEDIUM")}
               </Badge>
               {canUpdate && (
                 <EditEpicDialog

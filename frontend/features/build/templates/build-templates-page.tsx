@@ -229,7 +229,10 @@ export function BuildTemplatesPage() {
                     label="Category"
                     value={categoryFilter}
                     onValueChange={handleCategoryChange}
-                    options={CATEGORY_OPTIONS}
+                    options={[
+                      { value: BUILD_FILTER_ALL, label: "All categories" },
+                      ...CATEGORY_OPTIONS,
+                    ]}
                   />
                 ),
               },
@@ -240,9 +243,12 @@ export function BuildTemplatesPage() {
                 control: (
                   <BuildFilterSelect
                     label="Sort"
-                    value={sortFilter}
+                    value={sortFilter === "newest" ? BUILD_FILTER_ALL : sortFilter}
                     onValueChange={handleSortChange}
-                    options={SORT_OPTIONS}
+                    options={[
+                      { value: BUILD_FILTER_ALL, label: "Newest first" },
+                      { value: "name", label: "A – Z" },
+                    ]}
                   />
                 ),
               },

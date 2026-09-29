@@ -107,7 +107,11 @@ export function RoadmapListPage() {
     : undefined;
   const projectIdValue = listFilters.value("projectId");
   const projectId = /^\d+$/.test(projectIdValue) ? Number(projectIdValue) : undefined;
-  const horizon = listFilters.value("horizon") || undefined;
+  const horizonValue = listFilters.value("horizon");
+  const horizon =
+    horizonValue !== BUILD_FILTER_ALL && horizonValue !== ""
+      ? horizonValue
+      : undefined;
   const ownerIdValue = listFilters.value("ownerId");
   const ownerId = /^\d+$/.test(ownerIdValue) ? Number(ownerIdValue) : undefined;
 
@@ -165,7 +169,7 @@ export function RoadmapListPage() {
 
   const renderRoadmapFilters = useCallback(
     () => (
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="contents">
         <BuildFilterSelect
           label="Status"
           value={statusValue}

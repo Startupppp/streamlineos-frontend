@@ -95,7 +95,11 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
   );
 
   return (
-    <PageWrapper noInternalScroll>
+    <PageWrapper
+      noInternalScroll
+      title="Chat"
+      subtitle="The conversation for this project"
+    >
       <PmPageShell>
         <PageState
           resolution={pageState}

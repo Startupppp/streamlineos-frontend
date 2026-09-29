@@ -22,6 +22,7 @@ import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatDateTime } from "@/lib/date-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { PmPageShell, PmSection } from "@/components/pm-chrome";
@@ -84,7 +85,7 @@ function FileDownloadButton({ projectId, file }: { projectId: number; file: Proj
     <LoadingButton
       variant="ghost"
       size="sm"
-      className="h-7 w-7"
+      className="size-9"
       isPending={isFetching}
       onClick={handleClick}
       type="button"
@@ -107,7 +108,7 @@ function FileCard({
   onDelete: (id: number) => void;
 }) {
   const handleConfirmDelete = useCallback(() => onDelete(file.id), [file.id, onDelete]);
-  const date = new Date(file.createdAt).toLocaleString();
+  const date = formatDateTime(file.createdAt);
 
   return (
     <Card className={CONTENT_PANEL_SOLID}>
@@ -133,7 +134,7 @@ function FileCard({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 text-destructive hover:text-destructive"
+                    className="size-9 text-destructive hover:text-destructive"
                     type="button"
                     aria-label="Delete file"
                   >
@@ -254,7 +255,7 @@ export function FilesPage({ projectId }: FilesPageProps) {
         {data.length === 0 ? (
           <EmptyState
             className="flex-1 min-h-0"
-            illustrationPreset="activity"
+            illustrationPreset="documents"
             title="No files yet"
             description="Upload files to share documents, images, and resources with your project team."
             action={canManage ? { label: "Upload file", onClick: handleUploadClick } : undefined}

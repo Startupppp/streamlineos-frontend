@@ -61,24 +61,27 @@ function PreviewError({
   onClose?: () => void;
 }) {
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-        <AlertCircle className="h-6 w-6 text-muted-foreground" />
-      </div>
-      <p className="mb-1 font-medium text-foreground">{title}</p>
-      <p className="text-sm text-muted-foreground">{description}</p>
+    <div className="flex h-full min-h-0 flex-1 flex-col">
       {onClose ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="mt-6 h-8 gap-1.5 text-xs lg:hidden"
-          onClick={onClose}
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to inbox
-        </Button>
+        <div className="flex shrink-0 px-2 pt-2 lg:hidden">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            aria-label="Back to inbox"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </div>
       ) : null}
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+          <AlertCircle className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <p className="mb-1 font-medium text-foreground">{title}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
     </div>
   );
 }
@@ -216,7 +219,7 @@ export function InboxTicketPreview({
               type="button"
               size="icon"
               variant="ghost"
-              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
+              className="shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
               onClick={onClose}
               aria-label="Back to inbox"
             >

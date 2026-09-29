@@ -155,7 +155,11 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     <>
     <PageWrapper
       title="Wiki"
-      subtitle={isProjectScoped ? undefined : "Your team knowledge base"}
+      subtitle={
+        isProjectScoped
+          ? "Docs and decisions for this project"
+          : "Your team knowledge base"
+      }
       actions={newPageAction}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-6">

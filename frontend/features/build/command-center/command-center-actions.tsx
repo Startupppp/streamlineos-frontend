@@ -154,9 +154,9 @@ export function PinnedNav({ defaultProjectId = null }: PinnedNavProps) {
   );
 
   return (
-    <div className="min-w-0 w-full max-w-full overflow-hidden">
+    <div className="min-w-0 w-full max-w-full">
       <motion.div
-        className="flex w-0 min-w-full max-w-full flex-nowrap items-center gap-1.5 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x [&>*]:shrink-0"
+        className="flex w-full min-w-0 flex-wrap items-center gap-1.5"
         variants={listContainer}
         initial="hidden"
         animate="show"

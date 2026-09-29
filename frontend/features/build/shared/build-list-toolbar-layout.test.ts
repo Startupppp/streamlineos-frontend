@@ -1,5 +1,8 @@
 import {
   buildToolbarLayout,
+  toolbarDrawerVisibility,
+  toolbarInlineVisibility,
+  toolbarMoreButtonClass,
   type BuildToolbarFilter,
   type BuildToolbarSearch,
 } from "./build-list-toolbar-layout";
@@ -78,5 +81,28 @@ describe("Build adaptive filter layout", () => {
   it("reports nothing active on a pristine toolbar", () => {
     const layout = buildToolbarLayout({ search, filters: [filter("status")] });
     expect(layout.anyActive).toBe(false);
+  });
+});
+
+describe("toolbar viewport visibility", () => {
+  it("keeps the first filter inline and parks later filters in the menu until the screen is wide", () => {
+    expect(toolbarInlineVisibility(0, true)).toBe("max-md:hidden");
+    expect(toolbarInlineVisibility(1, true)).toContain("md:hidden");
+    expect(toolbarInlineVisibility(1, true)).toContain("lg:block");
+    expect(toolbarInlineVisibility(4, true)).toContain("md:hidden");
+    expect(toolbarInlineVisibility(4, true)).not.toContain("2xl:block");
+  });
+
+  it("hides a drawer field wherever that filter is already inline", () => {
+    expect(toolbarDrawerVisibility(0, false)).toBe("hidden");
+    expect(toolbarDrawerVisibility(0, true)).toBe("md:hidden");
+    expect(toolbarDrawerVisibility(1, true)).toBe("lg:hidden");
+  });
+
+  it("shows the Filters button on desktop only while a filter would overflow", () => {
+    expect(toolbarMoreButtonClass(1, false)).toContain("md:hidden");
+    expect(toolbarMoreButtonClass(2, true)).toContain("lg:hidden");
+    expect(toolbarMoreButtonClass(5, true)).toContain("md:inline-flex");
+    expect(toolbarMoreButtonClass(5, true)).not.toContain("lg:hidden");
   });
 });

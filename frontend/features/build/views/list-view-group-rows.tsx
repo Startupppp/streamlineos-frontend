@@ -1,9 +1,17 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { LIST_RENDER_PAGE_SIZE, useItemSelectHandler } from "./list-view-shared";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import {
+  LIST_RENDER_PAGE_SIZE,
+  useItemSelectHandler,
+} from "./list-view-shared";
 import { ListViewItem } from "./list-view-item";
-import type { ListSelection, ListViewItemProps, Ticket } from "./list-view-shared";
+import type {
+  ListSelection,
+  ListViewItemProps,
+  Ticket,
+} from "./list-view-shared";
 
 interface GroupRenderLimit {
   visibleCount: number;
@@ -11,11 +19,6 @@ interface GroupRenderLimit {
   showMore: () => void;
 }
 
-/**
- * The flat list path has always capped its render at LIST_RENDER_PAGE_SIZE; the
- * grouped paths did not, so switching on `groupBy` silently mounted every
- * autoloaded ticket at once. Each group now carries the same cap.
- */
 export function useGroupRenderLimit(total: number): GroupRenderLimit {
   const [visibleCount, setVisibleCount] = useState(LIST_RENDER_PAGE_SIZE);
   const showMore = useCallback(
@@ -39,16 +42,12 @@ export function ShowMoreRowsButton({
   onShowMore: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onShowMore}
-      className="mx-auto mt-1.5 block rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-    >
-      Show {Math.min(LIST_RENDER_PAGE_SIZE, total - visibleCount)} more
-      <span className="ml-1 tabular-nums opacity-70">
-        ({visibleCount} of {total})
-      </span>
-    </button>
+    <InfiniteScrollSentinel
+      hasNextPage={visibleCount < total}
+      isFetchingNextPage={false}
+      onLoadMore={onShowMore}
+      label={`Show ${Math.min(LIST_RENDER_PAGE_SIZE, total - visibleCount)} more rows`}
+    />
   );
 }
 

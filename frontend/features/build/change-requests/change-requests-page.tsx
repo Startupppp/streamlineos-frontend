@@ -327,7 +327,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
               </span>
               <div className="flex items-center gap-2">
                 <Select onValueChange={handleBulkStatusChange}>
-                  <SelectTrigger className="h-8 w-[160px] text-sm">
+                  <SelectTrigger className="w-[160px]">
                     <SelectValue placeholder="Set status…" />
                   </SelectTrigger>
                   <SelectContent>
@@ -375,7 +375,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
             empty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
-                illustrationPreset="ticket"
+                illustrationPreset="approval"
                 title="No change requests"
                 description="Create a change request to get started."
                 action={
@@ -388,7 +388,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
             filteredEmpty={
               <EmptyState
                 className={CONTENT_FILL_PANEL}
-                illustrationPreset="ticket"
+                illustrationPreset="approval"
                 title="No change requests match your filters"
                 description="Try adjusting or clearing the filters."
                 onClearFilters={listFilters.clearAll}

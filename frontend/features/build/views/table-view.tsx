@@ -279,7 +279,14 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
         minWidth="640px"
         mobileCard={renderMobileCard}
         className="w-full min-w-0 flex-1 overflow-hidden"
-        emptyState={<EmptyState className="min-h-0 flex-1 border-0 bg-transparent" title="No work items" />}
+        emptyState={
+          <EmptyState
+            illustrationPreset="ticket"
+            title="No work items"
+            description="Tickets in this view will show up here."
+            className="min-h-64 w-full flex-1 border-0 bg-transparent"
+          />
+        }
       />
     </div>
   );

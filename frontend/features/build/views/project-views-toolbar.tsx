@@ -162,7 +162,7 @@ export function ProjectViewsToolbar({
   );
 
   const leading = (
-    <div className="flex min-w-0 shrink-0 items-center gap-1">
+    <div className="flex min-w-0 flex-wrap items-center gap-1">
       <ViewSwitcher activeView={view} onViewChange={onViewChange} />
 
       <div className="flex items-center gap-0.5 sm:gap-1">

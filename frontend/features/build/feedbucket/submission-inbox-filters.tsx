@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent, type RefObject } from "react";
+import { useEffect, useState, type RefObject } from "react";
 import {
   Select,
   SelectContent,
@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { SearchInput } from "@/components/ui/search-input";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -74,12 +74,12 @@ export function SubmissionInboxFilters({ values, onChange, searchInputRef }: Sub
     onChange("assigneeId", value === "" ? null : value);
   }
 
-  function handleFromChange(event: ChangeEvent<HTMLInputElement>) {
-    onChange("from", inputToDateParam(event.target.value));
+  function handleFromChange(value: string) {
+    onChange("from", inputToDateParam(value));
   }
 
-  function handleToChange(event: ChangeEvent<HTMLInputElement>) {
-    onChange("to", inputToDateParam(event.target.value));
+  function handleToChange(value: string) {
+    onChange("to", inputToDateParam(value));
   }
 
   return (
@@ -140,20 +140,22 @@ export function SubmissionInboxFilters({ values, onChange, searchInputRef }: Sub
         className="w-[170px]"
       />
 
-      <Input
-        type="date"
-        aria-label="From date"
+      <DatePicker
+        ariaLabel="From date"
+        clearable
         value={dateParamToInput(values.from)}
         onChange={handleFromChange}
-        className="h-9 w-[140px] text-sm"
+        placeholder="From date"
+        className="w-[10.5rem]"
       />
 
-      <Input
-        type="date"
-        aria-label="To date"
+      <DatePicker
+        ariaLabel="To date"
+        clearable
         value={dateParamToInput(values.to)}
         onChange={handleToChange}
-        className="h-9 w-[140px] text-sm"
+        placeholder="To date"
+        className="w-[10.5rem]"
       />
     </div>
   );

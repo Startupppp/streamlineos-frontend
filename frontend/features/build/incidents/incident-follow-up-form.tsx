@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -188,7 +189,13 @@ export function FollowUpFields({
             <FormItem>
               <FormLabel className="text-dense">Due date</FormLabel>
               <FormControl>
-                <Input {...field} type="date" className="text-dense" />
+                <DatePicker
+                  ariaLabel="Due date"
+                  clearable
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Pick a due date"
+                />
               </FormControl>
               <FormMessage className="text-micro" />
             </FormItem>

@@ -49,7 +49,7 @@ const STATUS_OPTIONS = [
 ];
 
 const SORT_OPTIONS = [
-  { value: BUILD_FILTER_ALL, label: "Default" },
+  { value: BUILD_FILTER_ALL, label: "Default order" },
   { value: "name", label: "Name" },
   { value: "updated", label: "Last updated" },
   { value: "status", label: "Status" },

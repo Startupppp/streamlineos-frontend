@@ -393,7 +393,7 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
           </PageState>
         </PmSection>
 
-        <PmSection index={1}>
+        <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-3">
             <PageTabsToolbar
               tabsDensity="labeled"
@@ -416,15 +416,14 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
             <TabsContent value="grants" className="mt-0 flex min-h-0 flex-1 flex-col">
               {grants.length === 0 ? (
                 <EmptyState
-                  illustrationPreset="projects"
+                  illustrationPreset="invitation"
                   title={listFilters.isFiltered ? "No matching grants" : "No grants"}
                   description={
                     listFilters.isFiltered
                       ? "No grant matches the current filters. Clear them to see every grant on this project."
                       : "Grant a client portal membership access to this project from the Client Access settings."
                   }
-                  compact
-                  className={CONTENT_FILL_PANEL}
+                  className="min-h-full w-full flex-1"
                   action={
                     listFilters.isFiltered
                       ? { label: "Clear filters", onClick: listFilters.clearAll }
@@ -451,11 +450,12 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
             </TabsContent>
 
             <TabsContent value="visibility" className="mt-0 flex min-h-0 flex-1 flex-col">
-              <p className="text-sm text-muted-foreground">
-                Per-item visibility is not available on this surface yet. Only tickets and
-                milestones that are already marked visible appear in the client portal, and the
-                Preview tab shows exactly what a client sees today.
-              </p>
+              <EmptyState
+                illustrationPreset="permissions"
+                title="Visibility lives on each item"
+                description="Tickets and milestones already marked visible appear in the client portal. Open Preview to see exactly what a client sees today."
+                className="min-h-full w-full flex-1"
+              />
             </TabsContent>
 
             <TabsContent value="preview" className="mt-0 flex min-h-0 flex-1 flex-col">

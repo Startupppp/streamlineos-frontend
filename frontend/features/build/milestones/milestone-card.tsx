@@ -127,7 +127,7 @@ export const MilestoneCard = memo(function MilestoneCard({
             <Badge
               variant="secondary"
               className={cn(
-                "h-5 shrink-0 rounded-full px-1.5 text-micro font-semibold uppercase tracking-wide",
+                "h-5 shrink-0 rounded-full px-1.5 text-micro font-semibold",
                 cfg.badgeClassName,
               )}
             >

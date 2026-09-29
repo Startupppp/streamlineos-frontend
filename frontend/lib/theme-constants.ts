@@ -64,11 +64,11 @@ export const healthDotColors: Record<HealthStatus, string> = {
 };
 
 export const projectStatusDisplayLabels: Record<string, string> = {
-  ACTIVE: "IN PROGRESS",
-  PLANNING: "PLANNING",
-  COMPLETED: "COMPLETED",
-  ON_HOLD: "ON HOLD",
-  ARCHIVED: "ARCHIVED",
+  ACTIVE: "In progress",
+  PLANNING: "Planning",
+  COMPLETED: "Completed",
+  ON_HOLD: "On hold",
+  ARCHIVED: "Archived",
 };
 
 export function getColorSafe(map: Readonly<Record<string, string>>, key: string): string {

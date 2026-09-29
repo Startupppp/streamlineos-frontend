@@ -60,7 +60,7 @@ export function ProjectAiMenu({ projectId }: ProjectAiMenuProps) {
         onClick={handleSummarizeClick}
         isPending={summary.isPending}
         loadingText="Summarizing…"
-        className="h-8 gap-1.5 text-xs"
+        className="w-full gap-1.5 sm:w-auto"
         {...hoverHandlers}
       >
         <SparklesIcon ref={iconRef} className="h-3.5 w-3.5 text-primary" />

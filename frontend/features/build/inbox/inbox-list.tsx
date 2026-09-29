@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -167,7 +168,7 @@ export function InboxList({
           ))}
         </TabsList>
         {hasUnread ? (
-          <AnimatedIconButton icon={CheckCheckIcon} iconSize={14} variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground" disabled={isMarkingAll} onClick={handleMarkAll} aria-label="Mark all read" title="Mark all read" />
+          <AnimatedIconButton icon={CheckCheckIcon} iconSize={16} variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" disabled={isMarkingAll} onClick={handleMarkAll} aria-label="Mark all read" title="Mark all read" />
         ) : null}
       </div>
       <InboxFilterBar q={q} type={type} projectId={projectId} hasActiveFilters={hasActiveFilters} onQChange={handleQChange} onTypeChange={handleTypeChange} onProjectClear={onProjectClear} onClearFilters={handleClearFilters} searchInputRef={searchInputRef} />
@@ -175,7 +176,7 @@ export function InboxList({
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border-l border-border scrollbar-hide">
         <PageState resolution={pageState} loading={<div className="flex min-h-full flex-col"><InboxListSkeleton /></div>} onRetry={handleRetry} compact className="min-h-full w-full flex-1"
           empty={hasNextPage || !isOnline ? <div /> : (
-            <EmptyState illustration={<EmptyInboxIllustration />} title={emptyTitle} description={emptyDesc} filtersActive={hasActiveFilters} filteredTitle="No matching notifications" onClearFilters={hasActiveFilters ? onClearFilters : undefined} compact className="min-h-full w-full flex-1 rounded-lg border-dashed p-4" />
+            <EmptyState illustration={<EmptyInboxIllustration />} title={emptyTitle} description={emptyDesc} filtersActive={hasActiveFilters} filteredTitle="No matching notifications" onClearFilters={hasActiveFilters ? onClearFilters : undefined} className="min-h-full w-full flex-1" />
           )}
         >
           <div>
@@ -186,13 +187,13 @@ export function InboxList({
                 </div>
               ))}
             </div>
-            {heldCount > 0 || hasNextPage ? (
-              <div className="flex justify-center py-3">
-                <button type="button" onClick={handleLoadMore} disabled={isFetchingNextPage} className="text-dense text-primary hover:underline disabled:opacity-50">
-                  {heldCount > 0 ? `Show ${Math.min(heldCount, renderPageSize)} more (${visibleCount} of ${total})` : isFetchingNextPage ? "Loading…" : "Load older notifications"}
-                </button>
-              </div>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={heldCount > 0 || hasNextPage === true}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={handleLoadMore}
+              label="Load older notifications"
+              pending="Loading…"
+            />
           </div>
         </PageState>
       </div>

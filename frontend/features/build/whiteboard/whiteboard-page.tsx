@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -377,6 +376,7 @@ export function WhiteboardPage({
   return (
     <PageWrapper
       title={selectedBoard?.name ?? "Whiteboard"}
+      subtitle={selectedBoard ? undefined : "Visual brainstorming for this project"}
       badge={visibilityBadge}
       leading={leadingToggle}
       noInternalScroll
@@ -399,7 +399,7 @@ export function WhiteboardPage({
           </PageState>
         ) : !boards || boards.length === 0 ? (
           <EmptyState
-            illustration={<EmptyUploadIllustration />}
+            illustrationPreset="documents"
             title="Create your first board"
             description="Whiteboards let your team brainstorm visually with sticky notes, shapes, arrows, and freehand drawing."
             action={
@@ -477,7 +477,7 @@ export function WhiteboardPage({
                   solid
                 >
                   <EmptyState
-                    illustration={<EmptyUploadIllustration />}
+                    illustrationPreset="documents"
                     title="Select a board"
                     description="Choose a board from the list to start editing."
                     compact

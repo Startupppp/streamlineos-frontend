@@ -307,7 +307,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
                 <PmPanel className="p-1.5">
                   <nav
                     aria-label="Project settings"
-                    className="flex w-full gap-0.5 overflow-x-auto md:flex-col md:overflow-visible [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                    className="flex w-full flex-wrap gap-0.5 md:flex-col md:flex-nowrap"
                   >
                     {navSections.map((section) => (
                       <button

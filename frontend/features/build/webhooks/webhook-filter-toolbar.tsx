@@ -2,6 +2,7 @@
 
 import type { ChangeEvent, RefObject } from "react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -23,8 +24,8 @@ interface WebhookFilterToolbarProps {
   onSearchChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onStateChange: (value: string) => void;
   onEventChange: (value: string) => void;
-  onFromChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  onToChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onFromChange: (value: string) => void;
+  onToChange: (value: string) => void;
   onDensityToggle: () => void;
 }
 
@@ -50,11 +51,11 @@ export function WebhookFilterToolbar({
         placeholder="Search by URL…"
         value={search}
         onChange={onSearchChange}
-        className="h-8 text-sm w-48 shrink-0"
+        className="w-48 shrink-0"
         aria-label="Search webhooks"
       />
       <Select value={state ?? "all"} onValueChange={onStateChange}>
-        <SelectTrigger className="h-8 text-sm w-36 shrink-0" aria-label="Filter by state">
+        <SelectTrigger className="w-36 shrink-0" aria-label="Filter by state">
           <SelectValue placeholder="All states" />
         </SelectTrigger>
         <SelectContent>
@@ -64,7 +65,7 @@ export function WebhookFilterToolbar({
         </SelectContent>
       </Select>
       <Select value={event ?? "all"} onValueChange={onEventChange}>
-        <SelectTrigger className="h-8 text-sm w-44 shrink-0" aria-label="Filter by event">
+        <SelectTrigger className="w-44 shrink-0" aria-label="Filter by event">
           <SelectValue placeholder="All events" />
         </SelectTrigger>
         <SelectContent>
@@ -76,19 +77,21 @@ export function WebhookFilterToolbar({
           ))}
         </SelectContent>
       </Select>
-      <Input
-        type="date"
+      <DatePicker
+        ariaLabel="Filter from date"
+        clearable
         value={from ?? ""}
         onChange={onFromChange}
-        className="h-8 text-sm w-36 shrink-0"
-        aria-label="Filter from date"
+        placeholder="From date"
+        className="w-40 shrink-0"
       />
-      <Input
-        type="date"
+      <DatePicker
+        ariaLabel="Filter to date"
+        clearable
         value={to ?? ""}
         onChange={onToChange}
-        className="h-8 text-sm w-36 shrink-0"
-        aria-label="Filter to date"
+        placeholder="To date"
+        className="w-40 shrink-0"
       />
       <Button
         variant="outline"

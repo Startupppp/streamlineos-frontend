@@ -300,12 +300,12 @@ export function TicketFilterBar({
       </div>
       <div
         className={cn(
-          "order-2 flex w-full min-w-0 items-center gap-1 sm:contents",
+          "order-2 flex w-full min-w-0 flex-wrap items-center gap-1 sm:contents",
           !leading && "justify-end",
         )}
       >
         {leading ? (
-          <div className="order-1 min-w-0 flex-1 sm:flex-none sm:shrink-0">
+          <div className="order-1 min-w-0 sm:flex-none sm:shrink-0">
             {leading}
           </div>
         ) : null}
@@ -318,7 +318,7 @@ export function TicketFilterBar({
   ) : (
     <div
       className={cn(
-        "flex w-full min-w-0 flex-nowrap items-center gap-1 sm:gap-1.5",
+        "flex w-full min-w-0 flex-wrap items-center gap-1 sm:gap-1.5",
         leading ? "justify-between" : align === "end" ? "sm:justify-end" : "justify-start",
       )}
     >
@@ -343,7 +343,7 @@ export function TicketFilterBar({
 
       {hasFilterChips ? (
         <div className="flex w-full min-w-0 items-center gap-1.5">
-          <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1 [&>*]:shrink-0">
             {selectedStatuses.map((s) => (
               <FilterChip
                 key={`status-${s}`}

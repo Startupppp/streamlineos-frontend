@@ -347,13 +347,13 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
           onRetry={handleRetry}
         >
           <PmSection index={0} className="shrink-0">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
               <SearchInput
                 ref={searchInputRef}
                 value={listFilters.search}
                 onValueChange={listFilters.setSearch}
                 placeholder="Search automations…"
-                className="flex-1 h-8 text-sm"
+                className="min-w-[12rem] flex-1"
                 aria-label="Search automations"
               />
               <Select
@@ -361,7 +361,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
                 onValueChange={handleTriggerFilterChange}
               >
                 <SelectTrigger
-                  className="h-8 w-44 text-sm"
+                  className="w-44"
                   aria-label="Filter by trigger"
                 >
                   <SelectValue />
@@ -383,7 +383,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
                 onValueChange={handleActionFilterChange}
               >
                 <SelectTrigger
-                  className="h-8 w-40 text-sm"
+                  className="w-40"
                   aria-label="Filter by action"
                 >
                   <SelectValue />

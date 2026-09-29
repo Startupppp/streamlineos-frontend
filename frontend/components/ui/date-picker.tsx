@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { format, parseISO, isValid } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -36,6 +36,9 @@ interface DatePickerProps {
   disabledDays?: (date: Date) => boolean;
   dateFormat?: string;
   disablePast?: boolean;
+  /** Lets an optional field return to empty. */
+  clearable?: boolean;
+  ariaLabel?: string;
 }
 
 function parseDateValue(value: string | undefined): Date | undefined {
@@ -58,6 +61,8 @@ export function DatePicker({
   disabledDays,
   dateFormat = "PPP",
   disablePast = false,
+  clearable = false,
+  ariaLabel,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const selected = parseDateValue(value);
@@ -90,6 +95,9 @@ export function DatePicker({
   );
 
   const handleOpenChange = useCallback((o: boolean) => setOpen(o), []);
+  const handleClear = useCallback(() => {
+    onChange("");
+  }, [onChange]);
   const isDateDisabled = useCallback(
     (date: Date) =>
       isDateOutsideBounds(date, effectiveFromDate, toDate) ||
@@ -101,16 +109,22 @@ export function DatePicker({
     toDate !== undefined ||
     disabledDays !== undefined;
 
+  const sized = className != null && /\b(?:w-|max-w-|min-w-|flex-)/.test(className);
+
   return (
+    <div className={cn("relative min-w-0", sized ? className : "w-full")}>
     <Popover open={open} onOpenChange={handleOpenChange} modal>
       <PopoverTrigger asChild>
         <Button
           id={id}
+          type="button"
           variant="outline"
           disabled={disabled}
+          aria-label={ariaLabel}
           className={cn(
             FIELD_CONTROL_CLASS,
             "w-full min-w-0 justify-start gap-2 px-3 text-left font-normal",
+            clearable && selected && "pr-8",
             !selected && "text-muted-foreground",
             className,
           )}
@@ -139,5 +153,18 @@ export function DatePicker({
         />
       </PopoverContent>
     </Popover>
+    {clearable && selected && !disabled ? (
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="absolute right-1 top-1/2 size-7 -translate-y-1/2"
+        aria-label={ariaLabel ? `Clear ${ariaLabel}` : "Clear date"}
+        onClick={handleClear}
+      >
+        <X className="h-3.5 w-3.5" />
+      </Button>
+    ) : null}
+    </div>
   );
 }

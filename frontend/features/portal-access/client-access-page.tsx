@@ -400,7 +400,7 @@ export function ClientAccessPage() {
             {filteredRows.length === 0 ? (
               <EmptyState
                 className={CONTENT_FILL_PANEL}
-                illustrationPreset="clients"
+                illustrationPreset="invitation"
                 title={isFiltered ? "No matching grants" : "No client access grants"}
                 description={
                   isFiltered

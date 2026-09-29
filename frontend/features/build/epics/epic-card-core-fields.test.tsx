@@ -69,8 +69,8 @@ beforeEach(() => {
 describe("EpicCard — the core fields the page contract lists are on the card", () => {
   it("renders the epic's own status beside its priority, which is a different field", () => {
     renderCard();
-    expect(screen.getByText("IN PROGRESS")).toBeInTheDocument();
-    expect(screen.getByText("HIGH")).toBeInTheDocument();
+    expect(screen.getByText("In progress")).toBeInTheDocument();
+    expect(screen.getByText("High")).toBeInTheDocument();
   });
 
   it("renders the owner by display name rather than an id or nothing at all", () => {

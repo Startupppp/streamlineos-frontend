@@ -67,7 +67,11 @@ export function decodeRowKey(key: string): string {
 }
 
 export function formatStatusName(name: string): string {
-  return name.replace(/_/g, " ");
+  const words = name.toLowerCase().split(/[_\s]+/).filter(Boolean);
+  if (words.length === 0) return name;
+  const [first, ...rest] = words;
+  if (!first) return name;
+  return [first.charAt(0).toUpperCase() + first.slice(1), ...rest].join(" ");
 }
 
 export function buildColumns(

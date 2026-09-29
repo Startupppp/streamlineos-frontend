@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, memo, useCallback, useState, useRef } from "react";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useReducedMotion } from "framer-motion";
 import {
   Accordion,
@@ -253,7 +254,12 @@ export const ListView = memo(function ListView({
           })}
         </Accordion>
         {tickets.length === 0 && (
-          <EmptyState title="No work items" compact className="py-12" />
+          <EmptyState
+            illustrationPreset="ticket"
+            title="No work items"
+            description="Tickets in this view will show up here."
+            className="min-h-full w-full flex-1"
+          />
         )}
       </div>
     );
@@ -303,7 +309,12 @@ export const ListView = memo(function ListView({
             ))}
           </Accordion>
           {optimisticTickets.length === 0 && (
-            <EmptyState title="No work items" compact className="py-12" />
+            <EmptyState
+              illustrationPreset="ticket"
+              title="No work items"
+              description="Tickets in this view will show up here."
+              className="min-h-full w-full flex-1"
+            />
           )}
         </div>
       </DragDropContext>
@@ -366,22 +377,21 @@ export const ListView = memo(function ListView({
               />
             ))}
           </div>
-          {optimisticTickets.length > visibleFlatCount && (
-            <button
-              type="button"
-              onClick={handleShowMoreFlat}
-              className="mx-auto rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-            >
-              Show {Math.min(LIST_RENDER_PAGE_SIZE, optimisticTickets.length - visibleFlatCount)} more
-              <span className="ml-1 tabular-nums opacity-70">
-                ({visibleFlatCount} of {optimisticTickets.length})
-              </span>
-            </button>
-          )}
+          <InfiniteScrollSentinel
+            hasNextPage={optimisticTickets.length > visibleFlatCount}
+            isFetchingNextPage={false}
+            onLoadMore={handleShowMoreFlat}
+            label={`Show ${Math.min(LIST_RENDER_PAGE_SIZE, Math.max(0, optimisticTickets.length - visibleFlatCount))} more rows`}
+          />
         </div>
       )}
       {tickets.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground text-sm">No work items found</div>
+        <EmptyState
+          illustrationPreset="ticket"
+          title="No work items"
+          description="Tickets in this view will show up here."
+          className="min-h-full w-full flex-1"
+        />
       )}
     </div>
   );
