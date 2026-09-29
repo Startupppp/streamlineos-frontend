@@ -178,6 +178,29 @@ two and is an owner decision, not an oversight.
       **AUTHORED 2026-09-29 — APPLY-PENDING, NOT EARNED.** The index now exists as DDL and as a schema
       declaration; it is not in any database, so the box stays open.
 
+      **RE-VERIFIED 2026-09-29 (reconciliation lane), and the verdict is stronger than "authored":
+      the new index does supply the order, proved by matching the DDL against the query rather than
+      by trusting the commit.** `BuildApprovalsInboxService.getInboxPage`
+      (`src/modules/build/approvals/build-approvals-inbox.service.ts:43-63`) has WHERE
+      `org_id = $1 AND approver_membership_id = $2 AND status IN ('pending','escalated') AND deleted_at IS NULL`
+      (`build-inbox-count.service.ts:11-17`), keyset bound
+      `created_at < $ OR (created_at = $ AND id < $)` (`:19-28`), `ORDER BY created_at DESC, id DESC`
+      (`:62`) and `.limit(limit)` (`:63`). The index leads with the two equality columns, then carries
+      `created_at DESC, id DESC` **immediately and in the query's own directions with nothing between
+      them**, so one ordered range scan satisfies both the keyset bound and the sort with no sort node;
+      `status` trails the ordering columns, so the two-value `IN` is a filter inside that one range
+      rather than two unordered ranges; and the partial predicate matches the query's
+      `deleted_at IS NULL` exactly. The migration's own `DO` block re-reads `pg_get_indexdef` and
+      additionally **fails if `idx_project_approvals_approver_status` has gone missing** (`:40`), which
+      is the "index prefix is not redundancy" rule enforced in DDL rather than in review.
+      Journal: `idx` 1153, `when` 1803093641725, and it is no longer the tail — `1540` follows at 1154.
+
+      **WHY THE BOX STILL DOES NOT TICK, in one sentence:** the index is in no database and no
+      `EXPLAIN` was taken, so the claim is a static match between DDL and SQL, not a measured plan.
+      **AND ONE SCOPE LIMIT THE BOX SHOULD CARRY:** this index serves one of the three approvals
+      reads. `approvals-read.service.ts:93` and `:127` order by `due_at ASC NULLS LAST, id ASC`, which
+      it does not help and was never meant to.
+
       `migrations/1500_build_project_approvals_inbox_cursor_index.sql`, journal `idx` 1153, and
       `db/schema/build/approvals.ts:51`:
 

@@ -204,6 +204,14 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   **THE DECISION, in one sentence a non-engineer can answer:** *do we move all 28 Build redirects out of `next.config.ts` and into `proxy.ts` so their traffic can be counted before we delete any of them — or do we accept deleting them on judgement with no traffic data, at the risk of breaking bookmarks and old notification links we cannot see?*
 
   **NOT EARNED 2026-09-29:** *temporary* 30/30 ✓ · *observable* 2/30, implemented and tested, 28 blocked on the sentence above · *removed after deep-link migration* — 0 removed, and correctly 0, because no redirect meets any of the three deletion proofs.
+
+  **RE-VERIFIED CLAUSE BY CLAUSE 2026-09-29 (reconciliation lane). The three clauses have three different answers and only one of them is met, so the box is correctly open.**
+
+  - **(a) Temporary — MET, 30 of 30.** All 28 `next.config.ts` Build entries (`:152`–`:300`) carry `permanent: false` → 307. Whole-file tally: 46 `permanent: false`, 7 `permanent: true`, and **none of the 7 is a Build path** — they are `/signup`, `/login`, `/hr/recruitment`, `/hr/recruitment/:path*`, `/hr/leave-policies`, `/hr/leave-policies/:path*`, `/hr/settings/managers`. The two `proxy.ts` redirects go through `redirectTo` (`proxy.ts:136-144`) to a bare `NextResponse.redirect(url)`, which defaults to 307. No 301 or 308 on any Build redirect.
+  - **(b) Observable — NOT MET, 2 of 30, and the counter is weaker than "implemented and tested" suggests.** `frontend/lib/observability/legacy-redirect.ts` is 27 lines: a module-private `Map`, an increment, and one `console.info(JSON.stringify({event:"legacy_redirect",source,destination,hits}))`. Wired at exactly two sites, `proxy.ts:178` and `:185`. `legacyRedirectHits` and `observedLegacyRedirectSources` have **no non-test readers** — a grep over `app components features hooks lib scripts proxy.ts` returns only the module and its own test. So it is a per-process in-memory counter that resets on every cold start and is aggregated nowhere; it is a log line, not a metric. That is worth stating because a reader could otherwise cite "implemented and tested" as traffic data. The 28 remain structurally uncountable for the routing-order reason recorded above.
+  - **(c) Removed after deep-link migration — NOT MET, and no mechanism exists to make it happen.** There is no expiry date, no TTL, no gate, no ledger, and no script in `frontend/scripts/` touching redirects, legacy paths or deep links. Zero removed is still the correct number; what is missing is not a deletion but any mechanism that would ever schedule one. The decision sentence above is the unblock and is still unanswered.
+
+  **NET: the box needs all three and has (a).**
 - [ ] No removed surface retains a parallel schema, permission, cache key, or endpoint family.
   **NOT EARNED 2026-09-29 — every tombstone claim below still holds, but two parallel survivals remain, so "the only exception is deliberate" is false. Earned when the two named below are removed.**
 
@@ -571,3 +579,29 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   **The state today is the one state that is not acceptable, and that is the whole point of asking.** A customer can set a 90-day attachment retention, be told attachments are deleted after 90 days, and have them kept forever. If that promise was ever relied on in a security questionnaire, a DPA or a GDPR response, it is a false statement already made. **(b) is cheap and can ship this week** — it is a copy-and-control change on one frontend file, and it makes the product truthful immediately; it does not preclude (a) later. **(a) is the right long-term answer and needs a backend retention sweeper plus a `legalHold` reader**, neither of which exists. An engineer cannot choose between them because the choice is about what the company is willing to promise, not about how hard either is.
 
   **NEITHER SIDE OF EITHER DECISION IS IMPLEMENTED IN THIS PASS, AND THAT IS THE CORRECT OUTCOME.** Wiring the Visibility panel would newly ship an FE-125-banned control; withdrawing the retention copy would silently remove a capability a customer may believe they bought. Both are product commitments. **The box cannot tick until both sentences above are answered, and it does not tick today.**
+
+  **2026-09-29, reconciliation lane — DECISION 2 HAS CHANGED SHAPE. The deletion the copy promises now exists in code. It is unapplied, has never run, and is armed to run automatically on the next deploy.**
+
+  The sentence above — "Do we (a) build the deletion so the setting is true, or (b) remove those settings" — was written when no deleter existed. Backend `a586e9b6f` and `4afc370b1` (today, lane J) built it. Verified this lane, code read only, no database touched:
+
+  | Clause | State at HEAD | Evidence |
+  |---|---|---|
+  | A consumer that acts on the retention values | exists | `src/modules/cron/cron-build-project-retention.service.ts:265-296` reads `project_retention_settings`, keyset-paged by `id`. The `core/settings` reads at `projects-retention-settings.service.ts:82,:123,:192` are the API echoing what the customer wrote; this is the first reader that *acts*. |
+  | Dry-run is the default | yes | `:136` `const dryRun = opts.confirm !== true;`; the dry-run branches count instead of deleting at `:301-308` and `:356-363`. |
+  | `?confirm=destroy` is the opt-in | yes | `cron-build-project-retention.controller.ts:58` `const confirm = query.confirm === "destroy";`, behind `assertCronSecret` (`:57`) and an 1800s lease (`:60`). |
+  | `legal_hold` skips before any selection | yes, at both levels | `sweepOrg`'s first statement is `if (await this.organizationHeld(tx, orgId)) return;` (`:194`), ahead of `readSettings` (`:205`); per project, `decideBuildRetention:70` returns `{eligible:false, reason:"legal_hold"}` as its first check. No row of either target is read until both pass. |
+  | Audit written before destruction, outside the tx | yes | `recordPurge` (`:378-402`) uses `logCriticalOutsideTransaction`; called at `:326` then `tx.delete(tickets)` at `:327-329`, and at `:371` then `tx.delete(projectAttachments)` at `:372-377`. Per batch of 200. |
+  | Which of the three promises it keeps | two of three | `closed_tickets` and `project_attachments` (`BuildRetentionEntity` at `:23`). **`audit_log_retention_days` is deliberately NOT covered** — its target `ticket_activity_log` has no `deleted_at` column (`src/db/schema/build/activity.ts:35-44`), so the sweep's soft-delete-then-purge shape cannot reach it. |
+
+  **THE DECISION IS THEREFORE NO LONGER "BUILD IT OR WITHDRAW IT". IT IS NOW:**
+
+  > **The deletion the settings screen promises is written and tested but has never run, and its two database indexes are not applied. Do we (a) apply migration `1540` and let the daily sweep start deleting, or (b) keep it switched off and change the copy to say data is kept indefinitely until we do?**
+
+  **Two things an owner must know before answering, and neither is a preference.**
+
+  1. **The automatic path destroys; only the HTTP route is safe.** `src/modules/cron/cron-retention-scheduler.service.ts:104` registers `["build-project-retention-purge", () => buildProjectRetention.sweep({ confirm: true })]`. The scheduler arms on `onModuleInit` (`:115-127`) and is on unless `NODE_ENV === "test"` or `RETENTION_SCHEDULER_ENABLED === "false"` (`:144-145`). So in a normal deployment this deletes daily, with no `?confirm=destroy` typed by anyone. **"Never executed" is true of every database today and stops being true one day after the next backend deploy.** If (b) is the answer, `RETENTION_SCHEDULER_ENABLED=false` is the control, and it must be set before the deploy, not after.
+  2. **Migration `1540` is apply-pending, and the sweep's selection is what it indexes.** `migrations/1540_build_retention_purge_indexes.sql`, journal `idx` 1154, two partial indexes on `(org_id, project_id, deleted_at) WHERE deleted_at IS NOT NULL` for `build.tickets` and `build.project_attachments`, matching the two purge predicates exactly. Until it is applied the first destroying sweep selects those rows without them.
+
+  **Still true, and unchanged by any of this:** the third promise (audit logs) is not kept by the new code, so answer (a) does not by itself make the whole settings screen truthful. That axis needs either a `deleted_at` on its target or a different sweep shape.
+
+  **Nothing was implemented on either side of the reframed decision by this lane, and no database was touched.**
