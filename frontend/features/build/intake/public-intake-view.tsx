@@ -95,7 +95,7 @@ function LegacyIntakeForm({ projectId }: { projectId: string }) {
             control={control}
             name="requestType"
             render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || undefined)}>
+              <Select value={field.value || undefined} onValueChange={(v) => field.onChange(v || undefined)}>
                 <SelectTrigger id="intake-type" className="text-sm">
                   <SelectValue placeholder="Select type…" />
                 </SelectTrigger>
@@ -115,7 +115,7 @@ function LegacyIntakeForm({ projectId }: { projectId: string }) {
             control={control}
             name="priority"
             render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || undefined)}>
+              <Select value={field.value || undefined} onValueChange={(v) => field.onChange(v || undefined)}>
                 <SelectTrigger id="intake-priority" className="text-sm">
                   <SelectValue placeholder="Select priority…" />
                 </SelectTrigger>
@@ -217,7 +217,7 @@ function DynamicIntakeForm({ projectId }: { projectId: string }) {
     [mutation],
   );
 
-  if (formQuery.isLoading) {
+  if (formQuery.isPending) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
@@ -312,7 +312,7 @@ export function PublicIntakeView({ projectId }: PublicIntakeViewProps) {
   const title = intakeFormQuery.data?.name ?? "Submit a request";
 
   function renderForm() {
-    if (intakeFormQuery.isLoading) {
+    if (intakeFormQuery.isPending) {
       return (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (

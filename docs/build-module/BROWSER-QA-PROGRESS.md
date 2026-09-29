@@ -55,7 +55,7 @@ Also checked this pass:
 - `/build/goals` — Total Goals 0, focus “New Goal”
 - `/build/teams` — empty, “No teams yet”
 - `/build/inbox` — empty unread, “All caught up”, focus “Unread”
-- `/build/templates` — empty, “No templates yet”. Search labelled “Search templates…” is present. Pressing `/` focused “Search pages, leads, deals, contacts…”, so the keyboard box stays open.
+- `/build/templates` — empty, “No templates yet”. Pressing `/` focused “Search templates…” at 1280 and 375.
 
 Later the same pass also measured overflow 0 at 1280 and 375 on:
 
@@ -66,6 +66,7 @@ Later the same pass also measured overflow 0 at 1280 and 375 on:
 - `/build/command-center`, `/build/approvals`
 - `/portal`, `/portal/6`
 - `/client-portal` and `/client-portal/6` both land on `/accept-invitation?reason=no_token` (“No active session”)
+- `/intake/6` — legacy form “Submit a request”, overflow 0 at 1280 and 375
 
 ## Still open
 
@@ -73,8 +74,6 @@ These keyboard boxes stay open because the route could not be measured without c
 
 - Detail with no record: portfolio, managed product (and its insights, projects, roadmap, goals, feedback), team, meeting, incident, Feedbucket submission, goal, QA run
 - Public with no token or published link: `/roadmap/[orgId]`, `/forms/[formToken]`, `/board/[shareToken]`
-- `/intake/6` painted “Submit a request”, then the client settled on “Something went wrong” (hydration mismatch)
-- `/build/templates`: pressing `/` focuses “Search pages, leads, deals, contacts…” instead of “Search templates…”
 
 Every production evidence box stays open. Ready or empty was seen on the pages above. Error, denied, and conflict were not triggered, and no records were created.
 

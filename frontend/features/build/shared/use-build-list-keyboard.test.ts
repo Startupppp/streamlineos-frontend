@@ -1,11 +1,16 @@
 import { renderHook, act, fireEvent } from "@testing-library/react";
 import { useBuildListKeyboard } from "./use-build-list-keyboard";
+import {
+  claimBuildListSearchTarget,
+  tryHandleBuildListSearchShortcut,
+} from "./build-list-search-target";
 
 const mockOpen = jest.fn();
 const mockClear = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  claimBuildListSearchTarget({ current: null })();
 });
 
 function setup(itemCount = 5) {
@@ -303,6 +308,19 @@ describe("useBuildListKeyboard — / focuses the page search", () => {
     expect(document.activeElement).toBe(other);
     search.remove();
     other.remove();
+  });
+
+  it("claims the shared search target while enabled so the global / handler defers to page search", () => {
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    const { unmount } = setupWithSearch({ current: input });
+
+    expect(tryHandleBuildListSearchShortcut()).toBe(true);
+    expect(document.activeElement).toBe(input);
+
+    unmount();
+    expect(tryHandleBuildListSearchShortcut()).toBe(false);
+    input.remove();
   });
 });
 

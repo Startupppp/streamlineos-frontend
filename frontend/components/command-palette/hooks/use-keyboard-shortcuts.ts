@@ -4,16 +4,17 @@ import { useEffect, useRef, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCommandPalette } from "./use-command-palette";
 import { extractBuildProjectId } from "@/lib/build/extract-build-project-id";
+import { tryHandleBuildListSearchShortcut } from "@/features/build/shared/build-list-search-target";
 
 function isInputTarget(e: KeyboardEvent): boolean {
   const target = e.target;
-  if (!(target instanceof Element)) return false;
+  if (!(target instanceof HTMLElement)) return false;
   const tag = target.tagName.toLowerCase();
   return (
     tag === "input" ||
     tag === "textarea" ||
     tag === "select" ||
-    (target as HTMLElement).isContentEditable
+    target.isContentEditable
   );
 }
 
@@ -64,6 +65,10 @@ export function useKeyboardShortcuts() {
       }
 
       if (e.key === "/") {
+        if (tryHandleBuildListSearchShortcut()) {
+          e.preventDefault();
+          return;
+        }
         e.preventDefault();
         setPaletteOpen(true);
         return;
