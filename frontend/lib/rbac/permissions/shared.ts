@@ -122,6 +122,12 @@ export const SHARED_PERMISSIONS: Permission[] = [
     description: "Manage roadmap items, feedback, and changelog entries",
   },
   {
+    name: "build:roadmap:restore",
+    resource: "build:roadmap",
+    action: "restore",
+    description: "Restore soft-deleted roadmap items and feedback posts",
+  },
+  {
     name: "reports:view",
     resource: "reports",
     action: "view",
