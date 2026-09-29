@@ -115,7 +115,8 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
 ## Acceptance criteria
 
 - [x] Every killed page has a migration target and caller census. The executed-removals table above lists each removed path, its "Job preserved at" target, and its "Deep link preserved by" redirect. `frontend/lib/build/build-redirect-route-removal.test.ts` and `build-route-manifest.test.ts` enforce that no redirect-only page file remains and the manifest matches the disk. Both directions are pinned.
-- [ ] Redirects are temporary, observable, and removed after deep-link migration. **2026-09-28 NOT EARNED. Re-derived independently this lane; the 28 figure holds, the line range and the supporting totals are corrected.** **Re-checked later the same day by a second lane: all figures reproduce, but the census counted `next.config.ts` only — `proxy.ts` holds two more Build redirects, so the surface is 30. See the second-lane note below.**
+- [ ] Redirects are temporary, observable, and removed after deep-link migration.
+  **NOT EARNED 2026-09-29 — 30 Build compatibility redirects are still live and none carries a removal date: 28 in `frontend/next.config.ts` (`grep -c 'source: "/build' next.config.ts` → 28, re-run today) plus 2 in `frontend/proxy.ts:177,:182`. Earned when the deep-link migration completes and the redirects are deleted.**
 
   Re-measured, `frontend/next.config.ts`:
 
@@ -172,7 +173,8 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   **WHAT WOULD ACTUALLY CLOSE `observable`, and it is a design decision, not a line of code.** A `next.config.ts` redirect is resolved by the Next.js routing layer before any application code runs, so it can never be counted where it lives. Closing this clause means **moving all 28 into `proxy.ts`'s `redirectTo`** — i.e. trading 28 declarative config entries for 28 imperative branches on the Node runtime — and then counting there. That is a real trade with a real cost (config is the better home for a static redirect; code is the only home that can observe one), and nobody has made it. Until it is made, *observable* has no implementation and (A)'s automated expiry stays premature because it would gate removal on a signal that does not exist.
 
   **(B) STANDS at 30 entries, escalation trigger unchanged. NOT EARNED:** *temporary* 30/30 ✓ · *removed after deep-link migration* — the open (A)/(B) choice, blocked on the clause below · *observable* — no implementation, and the cheap partial was refused on purpose.
-- [ ] No removed surface retains a parallel schema, permission, cache key, or endpoint family. **2026-09-28 NOT EARNED. Every tombstone claim re-verified this lane and all hold; but the re-verification found two parallel survivals the previous entry missed, so "the only exception is deliberate" is no longer accurate.** **Re-checked later the same day by a second lane: every tombstone measurement reproduces, both survivals are confirmed — the trigger pair is now proven undispatchable by construction — and six further call sites plus two dead vestiges were added. See the second-lane note below.**
+- [ ] No removed surface retains a parallel schema, permission, cache key, or endpoint family.
+  **NOT EARNED 2026-09-29 — every tombstone claim below still holds, but two parallel survivals remain, so "the only exception is deliberate" is false. Earned when the two named below are removed.**
 
   **THE DELIBERATE EXCEPTION — re-verified, unchanged.** The Sprint endpoint family (`/build/:projectId/sprints`) is retained as a 410 tombstone. Measured on disk:
 
@@ -294,7 +296,8 @@ not picked up again. Retired 2026-09-22 during backlog reconciliation.
   **SETTLES WHEN** step 2 is deployed, after which step 3 is one commit over those five lines, and this survival is closed. There is a second, unrelated dead flag worth a line while someone is in there: nothing in the backend reads `settings.features` at all, so the whole `features: Record<string, boolean>` blob may be dead — measured only for `sprints`, not for its other seventeen keys.
 
   **SURVIVAL 2 needs nothing further; STILL NOT EARNED on survival 1's step 3.**
-- [ ] Product copy does not advertise removed or unimplemented capabilities. **2026-09-28 NOT EARNED. The previous entry proposed option (A) as the settling check and asserted its result without running it. This lane ran it. The asserted result was FALSE.** **Re-checked later the same day by a second lane: the withdrawal is upheld, two of its counts are wrong, the pattern it used cannot match the plural "Sprints", and the `features/build/` scope hid public landing/SEO copy plus a second class of finding — retention copy that promises deletion nothing performs. The verification decision is resolved in the second-lane note below.**
+- [ ] Product copy does not advertise removed or unimplemented capabilities.
+  **NOT EARNED 2026-09-29 — the public landing and SEO copy is fixed and the misleading Visibility-tab copy is corrected; what remains is BLOCKED — needs Tarun's decision, on two items: whether `ClientVisibilityPage` gets wired into a route (it is reachable from no `app/**` route today) and whether the retention copy's promised deletion gets implemented or withdrawn. Neither side implemented here.**
 
   **2026-09-28 — public copy fixed, two findings remain and both are owner decisions.** The five
   public strings naming the retired concept are renamed: `features/landing/data/pillars.ts:20`

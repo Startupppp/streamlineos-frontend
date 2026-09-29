@@ -137,7 +137,8 @@ All 9 `/build/workspaces*` endpoints are deleted, along with `src/modules/build/
 
 ## Acceptance criteria
 
-- [ ] Every collection is cursor/page bounded and sorted deterministically. **2026-09-28 NOT EARNED — third pass, and the basis of the verdict changes. The gate has moved decisively: its remaining failures are now ENTIRELY OUTSIDE BUILD, and the Build-owned blocker is three reads classified `ACTIONABLE`, not an unclassified backlog.**
+- [ ] Every collection is cursor/page bounded and sorted deterministically.
+  **NOT EARNED 2026-09-29 — Build territory has zero unclassified paths, but the classification file records three Build reads as `ACTIONABLE` (`projects-tickets-read.service.ts` still serves OFFSET pages by default, `build-ticket-bulk-mutation.ts:164`, `whiteboard-board-helpers.ts` `loadShares`) and `GET /build/:projectId/automations` returns a bare `.limit(100)` array with no cursor. Earned when those four are bounded or paged. This box owns the numbers; sibling boxes must point here rather than copy them.**
 
   `check:unbounded-reads --self-test` → `Self-tests passed.` Gate run, verbatim tail:
 
