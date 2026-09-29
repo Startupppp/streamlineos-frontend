@@ -192,7 +192,11 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
                 </TabsContent>
 
                 <TabsContent value="submissions">
-                  <FormSubmissionsTab projectId={projectId} formId={formId} />
+                  <FormSubmissionsTab
+                    projectId={projectId}
+                    formId={formId}
+                    hasActions={form.actions.length > 0}
+                  />
                 </TabsContent>
               </Tabs>
             </motion.div>

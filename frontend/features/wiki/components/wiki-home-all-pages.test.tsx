@@ -901,3 +901,40 @@ describe("WikiHomeAllPages — the cursor is URL-backed so page two is deep-link
     expect(keyForAlpha).not.toBe(keyForBeta);
   });
 });
+
+describe("BUG-033 — card view shows resolved owner name instead of Owner-missing badge", () => {
+  it("card view shows the resolved owner display name when ownerNames map has a match, not the Owner-missing badge", () => {
+    useOrgMembersByIds.mockReturnValue({
+      data: {
+        data: [{ userId: "user-1", name: "Alice Smith", email: "alice@test.com" }],
+      },
+    });
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([makeItem(1, { ownerUserId: "user-1" })]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<WikiHomeAllPages />);
+
+    expect(screen.getByText("Alice Smith")).toBeInTheDocument();
+    expect(screen.queryByText("Owner missing")).not.toBeInTheDocument();
+  });
+
+  it("card view still shows Owner-missing badge when ownerNames map has no match for the page ownerUserId", () => {
+    useOrgMembersByIds.mockReturnValue({ data: { data: [] } });
+    useKbPageCollection.mockReturnValue({
+      data: makeResponse([makeItem(1, { ownerUserId: null, ownerMembershipId: null })]),
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+
+    render(<WikiHomeAllPages />);
+
+    expect(screen.getByText("Owner missing")).toBeInTheDocument();
+  });
+});

@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useProject } from "@/hooks/api/build/projects";
 import { useCycles } from "@/hooks/api/build/advanced";
 import { useTickets, useUpdateTicket, useBulkUpdateTickets } from "@/hooks/api/build/tickets";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/build/tickets";
+import { removeTicketFromCollections } from "@/hooks/api/build/ticket-cache";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
@@ -57,6 +59,7 @@ interface TriagePageProps {
 
 export function TriagePage({ projectId }: TriagePageProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const requestLeave = useNavigationLeave();
   const listFilters = useBuildListFilters({
     filters: [{ param: "status" }],
@@ -109,7 +112,10 @@ export function TriagePage({ projectId }: TriagePageProps) {
   const [pendingDecline, setPendingDecline] = useState<Set<number>>(new Set());
 
   const isLoading = projectLoading || ticketsLoading;
-  const tickets = useMemo(() => ticketPage?.data ?? [], [ticketPage?.data]);
+  const tickets = useMemo(
+    () => (ticketPage?.data ?? []).filter((t) => t.type !== "EPIC" && t.cycleId === null),
+    [ticketPage?.data],
+  );
   const visibleCount = tickets.length;
   const hasMore = ticketPage?.pagination.hasMore ?? false;
 
@@ -151,6 +157,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
               next.delete(ticketId);
               return next;
             });
+            removeTicketFromCollections(queryClient, projectId, ticketId);
             toast.success("Ticket moved to In Progress");
           },
           onError: (err) => {
@@ -164,7 +171,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
         },
       );
     },
-    [updateTicket],
+    [updateTicket, queryClient, projectId, tickets],
   );
 
   const handleDecline = useCallback(
@@ -181,6 +188,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
               next.delete(ticketId);
               return next;
             });
+            removeTicketFromCollections(queryClient, projectId, ticketId);
             toast.success("Ticket declined");
           },
           onError: (err) => {
@@ -194,7 +202,7 @@ export function TriagePage({ projectId }: TriagePageProps) {
         },
       );
     },
-    [updateTicket],
+    [updateTicket, queryClient, projectId, tickets],
   );
 
   const handleOpen = useCallback(

@@ -14,7 +14,8 @@ function isInputTarget(e: KeyboardEvent): boolean {
     tag === "input" ||
     tag === "textarea" ||
     tag === "select" ||
-    target.isContentEditable
+    target.isContentEditable ||
+    target.closest('[contenteditable="true"]') !== null
   );
 }
 

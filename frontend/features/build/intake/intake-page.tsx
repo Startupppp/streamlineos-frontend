@@ -8,6 +8,7 @@ import {
   useCycles,
   useModules,
 } from "@/hooks/api/build/advanced";
+import { useAcceptIntakeRequest } from "@/hooks/api/build/intake-mutations";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -39,7 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, ExternalLink } from "lucide-react";
+import { Plus, ExternalLink, TicketIcon } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
@@ -63,6 +64,7 @@ const WORK_STATES = [
   "backlog",
   "todo",
   "in_progress",
+  "in_review",
   "done",
   "cancelled",
 ] as const;
@@ -95,6 +97,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
   const { data: modules } = useModules(projectId);
 
   const createMutation = useCreateIntakeRequest();
+  const acceptMutation = useAcceptIntakeRequest();
   const updateMutation = useUpdateIntakeRequest();
 
   const createForm = useForm<CreateIntakeForm>({
@@ -156,21 +159,43 @@ export function IntakePage({ projectId }: { projectId: number }) {
   );
 
   const onAcceptSubmit = useCallback(
-    (_: AcceptForm) => {
+    (data: AcceptForm) => {
       if (selectedItemId === null) return;
-      updateMutation.mutate(
-        { intakeRequestId: selectedItemId, projectId, status: "accepted" },
+      acceptMutation.mutate(
         {
-          onSuccess: () => {
+          intakeRequestId: selectedItemId,
+          projectId,
+          status: "accepted",
+          state: data.state,
+          assigneeId: data.assigneeId,
+          cycleId: data.cycleId,
+          moduleId: data.moduleId,
+        },
+        {
+          onSuccess: (result) => {
             setAcceptOpen(false);
             acceptForm.reset();
-            toast.success("Item accepted and work item created");
+            const ticketId = result?.linkedWorkItemId;
+            if (ticketId) {
+              toast.success("Item accepted — ticket created", {
+                action: {
+                  label: "View ticket",
+                  onClick: () => {
+                    const url = `/build/${projectId}/tickets/${ticketId}`;
+                    if (typeof window !== "undefined") window.open(url, "_blank");
+                  },
+                  icon: <TicketIcon className="h-4 w-4" />,
+                },
+              });
+            } else {
+              toast.success("Item accepted and work item created");
+            }
           },
           onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
-    [selectedItemId, updateMutation, projectId, acceptForm],
+    [selectedItemId, acceptMutation, projectId, acceptForm],
   );
 
   const onDeclineSubmit = useCallback(
@@ -562,7 +587,7 @@ export function IntakePage({ projectId }: { projectId: number }) {
                   size="sm"
                   type="submit"
                   form="accept-intake-form"
-                  isPending={updateMutation.isPending}
+                  isPending={acceptMutation.isPending}
                   loadingText="Accepting…"
                 >
                   Accept & Create

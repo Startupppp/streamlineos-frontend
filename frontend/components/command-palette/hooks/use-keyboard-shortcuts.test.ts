@@ -88,6 +88,42 @@ describe("extractProjectId — regex fix", () => {
   });
 });
 
+describe("c shortcut — contenteditable guard (BUG-035)", () => {
+  it("does not fire c shortcut when event.target is directly contenteditable", () => {
+    const editor = document.createElement("div");
+    editor.setAttribute("contenteditable", "true");
+    document.body.appendChild(editor);
+    renderHook(() => useKeyboardShortcuts());
+    editor.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "c", bubbles: true, cancelable: true }),
+    );
+    expect(mockOpenCreateTicket).not.toHaveBeenCalled();
+    document.body.removeChild(editor);
+  });
+
+  it("does not fire c shortcut when event.target is an atomic node with contenteditable=false inside a contenteditable=true editor", () => {
+    const editor = document.createElement("div");
+    editor.setAttribute("contenteditable", "true");
+    const atomicNode = document.createElement("span");
+    atomicNode.setAttribute("contenteditable", "false");
+    editor.appendChild(atomicNode);
+    document.body.appendChild(editor);
+    renderHook(() => useKeyboardShortcuts());
+    atomicNode.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "c", bubbles: true, cancelable: true }),
+    );
+    expect(mockOpenCreateTicket).not.toHaveBeenCalled();
+    document.body.removeChild(editor);
+  });
+
+  it("still fires c shortcut when event.target is outside any contenteditable tree", () => {
+    mockPathname.current = "/build/1/backlog";
+    renderHook(() => useKeyboardShortcuts());
+    press("c");
+    expect(mockOpenCreateTicket).toHaveBeenCalledWith(1);
+  });
+});
+
 describe("/ shortcut — global palette handler", () => {
   it("opens the palette when / is pressed", () => {
     renderHook(() => useKeyboardShortcuts());

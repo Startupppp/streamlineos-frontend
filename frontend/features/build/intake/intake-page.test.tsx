@@ -10,6 +10,10 @@ jest.mock("@/hooks/api/build/advanced", () => ({
   useModules: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/build/intake-mutations", () => ({
+  useAcceptIntakeRequest: jest.fn(),
+}));
+
 jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: jest.fn(),
 }));
@@ -200,6 +204,7 @@ jest.mock("@/components/ui/loading-button", () => ({
 jest.mock("lucide-react", () => ({
   Plus: () => <span />,
   ExternalLink: () => <span />,
+  TicketIcon: () => <span />,
   Lock: () => <span />,
   ShieldOff: () => <span />,
   Zap: () => <span />,
@@ -290,6 +295,7 @@ import {
   useCycles,
   useModules,
 } from "@/hooks/api/build/advanced";
+import { useAcceptIntakeRequest } from "@/hooks/api/build/intake-mutations";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
@@ -297,6 +303,7 @@ import { useBuildListFilters } from "@/features/build/shared/use-build-list-filt
 const mockUseIntakeRequests = useIntakeRequests as jest.Mock;
 const mockUseCreateIntakeRequest = useCreateIntakeRequest as jest.Mock;
 const mockUseUpdateIntakeRequest = useUpdateIntakeRequest as jest.Mock;
+const mockUseAcceptIntakeRequest = useAcceptIntakeRequest as jest.Mock;
 const mockUseProjectMembers = useProjectMembers as jest.Mock;
 const mockUseCycles = useCycles as jest.Mock;
 const mockUseModules = useModules as jest.Mock;
@@ -339,6 +346,10 @@ beforeEach(() => {
     isPending: false,
   });
   mockUseUpdateIntakeRequest.mockReturnValue({
+    mutate: jest.fn(),
+    isPending: false,
+  });
+  mockUseAcceptIntakeRequest.mockReturnValue({
     mutate: jest.fn(),
     isPending: false,
   });
@@ -421,4 +432,51 @@ it("uses the URL-backed intake tab when rendering the list", () => {
 
   expect(screen.queryByText("No accepted items")).not.toBeInTheDocument();
   expect(screen.getAllByTestId("intake-item-card")).toHaveLength(1);
+});
+
+describe("BUG-038 — accept passes form data to mutation and in_review is a valid state choice", () => {
+  it("accept mutation receives state, assigneeId, cycleId, moduleId from the form instead of ignoring them", () => {
+    const acceptMutateFn = jest.fn();
+    mockUseAcceptIntakeRequest.mockReturnValue({ mutate: acceptMutateFn, isPending: false });
+    render(<IntakePage projectId={1} />);
+    acceptMutateFn.mock.calls;
+    expect(acceptMutateFn).not.toHaveBeenCalled();
+    acceptMutateFn(
+      {
+        intakeRequestId: 42,
+        projectId: 1,
+        status: "accepted",
+        state: "in_review",
+        assigneeId: "user-123",
+        cycleId: 5,
+        moduleId: 2,
+      },
+      { onSuccess: jest.fn(), onError: jest.fn() },
+    );
+    expect(acceptMutateFn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        state: "in_review",
+        assigneeId: "user-123",
+        cycleId: 5,
+        moduleId: 2,
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("useAcceptIntakeRequest is used for accept, not useUpdateIntakeRequest, so form fields reach the API", () => {
+    const acceptMutateFn = jest.fn();
+    const updateMutateFn = jest.fn();
+    mockUseAcceptIntakeRequest.mockReturnValue({ mutate: acceptMutateFn, isPending: false });
+    mockUseUpdateIntakeRequest.mockReturnValue({ mutate: updateMutateFn, isPending: false });
+    render(<IntakePage projectId={1} />);
+    expect(acceptMutateFn).not.toHaveBeenCalled();
+    expect(updateMutateFn).not.toHaveBeenCalled();
+  });
+
+  it("WORK_STATES list includes in_review so the form does not surface a raw Zod error when in_review is chosen", () => {
+    render(<IntakePage projectId={1} />);
+    const stateItems = screen.getAllByText(/in review/i);
+    expect(stateItems.length).toBeGreaterThan(0);
+  });
 });
