@@ -11,11 +11,15 @@ import type {
   CreateGrantInput,
   UpdateGrantInput,
 } from "@/types/portal-access/grants";
+import type { PortalMembershipRow } from "@/hooks/api/portal-access/portal-access-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 
 const membershipListContract = lazyContract(() =>
   import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.membershipListContract),
+);
+const membershipRowContract_ = lazyContract(() =>
+  import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.membershipRowContract),
 );
 const grantListContract = lazyContract(() =>
   import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.grantListContract),
@@ -31,6 +35,24 @@ export function usePortalMemberships(params?: { cursor?: string; limit?: number;
     queryFn: ({ signal }) => apiClient.get<PortalMembershipsPage>("/portal-access/memberships", params, signal, membershipListContract),
     enabled: canView,
     staleTime: 30_000,
+  });
+}
+
+export interface InviteClientInput {
+  firstName: string;
+  lastName?: string;
+  email?: string;
+}
+
+export function useInviteClient() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:clientvisibility:manage", {
+    mutationKey: ["portalAccess", "memberships", "invite"],
+    mutationFn: (data: InviteClientInput) =>
+      apiClient.post<PortalMembershipRow>("/portal-access/invite-client", data, undefined, membershipRowContract_),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.memberships() });
+    },
   });
 }
 

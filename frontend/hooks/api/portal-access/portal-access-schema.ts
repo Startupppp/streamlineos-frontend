@@ -1,12 +1,20 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
-/**
- * Contracts for `PortalAccessController` handlers.
- *
- * Derived from `portal-access-response.schemas.ts` in the backend.
- * NOT `.strict()`. Timestamps are ISO strings.
- */
+export const membershipRowContract = z.object({
+  portalMembershipId: z.string(),
+  organizationId: z.string(),
+  audience: z.string().nullable(),
+  partyContactId: z.string(),
+  userMembershipId: z.number().nullable(),
+  status: z.enum(["PENDING", "ACTIVE", "SUSPENDED", "REVOKED"]),
+  sessionEpoch: z.number(),
+  deletedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type PortalMembershipRow = z.infer<typeof membershipRowContract>;
 
 const membershipListItemContract = z.object({
   portalMembershipId: z.string(),
