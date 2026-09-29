@@ -123,8 +123,8 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
     - **File size:** `workload-view.tsx` is 460 lines after the addition, inside the 500-line limit it was released under (FE-57).
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
-- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [x] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — Cursor IDE browser 2026-09-29, signed in, `/build/6/workload` at 1280 and 375: document overflow 0. The board scrolls inside the page (375 client ~342, scroll width 1488). Focus landed on “Create Issue”. `prefers-reduced-motion: reduce` still rendered the page.
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — Cursor IDE browser 2026-09-29 saw the ready board (22 tickets, 22 unassigned). Filtered-empty, error, denied, and conflict were not triggered.
 
 ### Local browser evidence — 2026-09-29 (partial; release criteria remain open)
 

@@ -210,9 +210,9 @@ export function FormBuilderTab({ projectId, formId }: FormBuilderTabProps) {
       </div>
 
       <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Fields</p>
+        <p className="text-sm font-medium text-foreground">Fields</p>
         {readOnly ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm font-normal text-muted-foreground">
             {effectiveFields.length} field{effectiveFields.length === 1 ? "" : "s"} configured
           </p>
         ) : (
@@ -221,9 +221,9 @@ export function FormBuilderTab({ projectId, formId }: FormBuilderTabProps) {
       </div>
 
       <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Actions on Submit</p>
+        <p className="text-sm font-medium text-foreground">Actions on Submit</p>
         {readOnly ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm font-normal text-muted-foreground">
             {effectiveActions.length} action{effectiveActions.length === 1 ? "" : "s"} configured
           </p>
         ) : (

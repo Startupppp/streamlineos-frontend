@@ -185,7 +185,7 @@ export function ColumnEmptyState({
         className="h-8 w-8 text-muted-foreground opacity-40"
       />
       <div className="space-y-0.5">
-        <p className="text-xs font-medium text-foreground">{title}</p>
+        <p className="text-sm font-medium text-foreground">{title}</p>
         {compact ? null : (
           <p className="text-sm font-normal text-muted-foreground">{hint}</p>
         )}

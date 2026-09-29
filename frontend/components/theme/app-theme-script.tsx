@@ -1,13 +1,17 @@
 "use client";
 
+import { APP_FONT_CLASS } from "@/lib/theme/app-fonts";
 import {
   APP_THEME_MODE_STORAGE_KEY,
   APP_THEME_STORAGE_KEY,
+  AUTHENTICATED_PALETTE_CLASS,
   getSelectableThemeIds,
 } from "@/lib/theme/app-themes";
 
+const SHELL_CLASSES = [AUTHENTICATED_PALETTE_CLASS, ...APP_FONT_CLASS.split(" ")];
+
 export function AppThemeScript({ nonce }: { nonce?: string }) {
-  const script = `try{var d=document.documentElement;var t=localStorage.getItem(${JSON.stringify(
+  const script = `try{var d=document.documentElement;${JSON.stringify(SHELL_CLASSES)}.forEach(function(c){d.classList.add(c)});var t=localStorage.getItem(${JSON.stringify(
     APP_THEME_STORAGE_KEY,
   )});if(t&&${JSON.stringify(
     getSelectableThemeIds(),

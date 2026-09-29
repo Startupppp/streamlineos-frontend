@@ -15,15 +15,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans:
-    var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-display:
-    var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, sans-serif;
-  --font-serif:
-    var(--font-geist-sans), "Geist", Georgia, "Times New Roman", serif;
+  --font-sans: var(--app-font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--app-font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--app-font-sans), Georgia, "Times New Roman", serif;
   --font-mono:
-    var(--font-geist-mono), ui-monospace, SFMono-Regular, "Cascadia Code",
+    var(--app-font-mono), ui-monospace, SFMono-Regular, "Cascadia Code",
     "Consolas", monospace;
   --color-gold: var(--gold);
   --color-blue: var(--blue);
@@ -74,6 +70,8 @@
 :root {
   --font-geist-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-geist-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+  --app-font-sans: var(--font-geist-sans), "Geist";
+  --app-font-mono: var(--font-geist-mono), "Geist Mono";
 
   --radius: 0.625rem;
 
@@ -94,9 +92,17 @@
   --ring: var(--primary, #0b1220);
 
   /* â”€â”€â”€ Accent (neutral hover wash â€” used by shadcn dropdown/menu/command item hover) â”€â”€â”€ */
-  --accent: color-mix(in srgb, var(--primary) 10%, var(--muted)); /* selected and active surfaces follow the chosen palette */
+  --accent: color-mix(
+    in srgb,
+    var(--primary) 10%,
+    var(--muted)
+  ); /* selected and active surfaces follow the chosen palette */
   --accent-foreground: #0f172a; /* slate-900 â€” readable on neutral wash */
-  --secondary: color-mix(in srgb, var(--foreground) 6%, var(--muted)); /* neutral table and calendar headers */
+  --secondary: color-mix(
+    in srgb,
+    var(--foreground) 6%,
+    var(--muted)
+  ); /* neutral table and calendar headers */
   --secondary-foreground: #0b1220;
 
   /* â”€â”€â”€ Status / Semantic â”€â”€â”€ */
@@ -193,6 +199,103 @@
   --blue: #1d4ed8;
 }
 
+/*
+ * Authenticated shell only. Warm stone: paper canvas, white cards, warm ink.
+ * IBM Plex replaces Geist here. Public pages keep the :root fonts and colors.
+ * A selected color theme still overrides the accent block below.
+ */
+html.app-neutral {
+  --app-font-sans: var(--font-plex-sans, "IBM Plex Sans"), "IBM Plex Sans";
+  --app-font-mono: var(--font-plex-mono, "IBM Plex Mono"), "IBM Plex Mono";
+  --background: #fafaf9;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+  --muted: #f5f5f4;
+  --muted-foreground: #57534e;
+  --border: #e7e5e4;
+  --input: #e7e5e4;
+  --secondary: #f5f5f4;
+  --secondary-foreground: #1c1917;
+  --accent: #f5f5f4;
+  --accent-foreground: #1c1917;
+  --sidebar: #f5f5f4;
+  --sidebar-foreground: #1c1917;
+  --sidebar-accent: #e7e5e4;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #e7e5e4;
+  --bg-glass: rgba(255, 255, 255, 0.78);
+  --border-glass: rgba(28, 25, 23, 0.08);
+}
+
+html.app-neutral:not([class*="theme-"]) {
+  --primary: #1c1917;
+  --primary-foreground: #fafaf9;
+  --ring: #1c1917;
+  --sidebar-primary: #1c1917;
+  --sidebar-primary-foreground: #fafaf9;
+  --sidebar-ring: #1c1917;
+  --brand-deep: #1c1917;
+  --brand-core: #44403c;
+  --brand-bright: #78716c;
+  --brand-cyan: #57534e;
+  --gradient-signature: linear-gradient(
+    135deg,
+    #1c1917 0%,
+    #44403c 55%,
+    #78716c 100%
+  );
+  --gold: #44403c;
+  --blue: #1c1917;
+}
+
+html.app-neutral.dark {
+  --background: #0c0a09;
+  --foreground: #fafaf9;
+  --card: #1c1917;
+  --card-foreground: #fafaf9;
+  --popover: #1c1917;
+  --popover-foreground: #fafaf9;
+  --muted: #292524;
+  --muted-foreground: #a8a29e;
+  --border: #292524;
+  --input: #44403c;
+  --secondary: #292524;
+  --secondary-foreground: #fafaf9;
+  --accent: #292524;
+  --accent-foreground: #fafaf9;
+  --sidebar: #0c0a09;
+  --sidebar-foreground: #fafaf9;
+  --sidebar-accent: #292524;
+  --sidebar-accent-foreground: #fafaf9;
+  --sidebar-border: #292524;
+  --bg-glass: rgba(12, 10, 9, 0.78);
+  --border-glass: rgba(250, 250, 249, 0.12);
+}
+
+html.app-neutral.dark:not([class*="theme-"]) {
+  --primary: #fafaf9;
+  --primary-foreground: #1c1917;
+  --ring: #d6d3d1;
+  --sidebar-primary: #fafaf9;
+  --sidebar-primary-foreground: #1c1917;
+  --sidebar-ring: #d6d3d1;
+  --brand-deep: #fafaf9;
+  --brand-core: #e7e5e4;
+  --brand-bright: #a8a29e;
+  --brand-cyan: #d6d3d1;
+  --gradient-signature: linear-gradient(
+    135deg,
+    #fafaf9 0%,
+    #e7e5e4 55%,
+    #a8a29e 100%
+  );
+  --gold: #e7e5e4;
+  --blue: #fafaf9;
+}
+
 /* â”€â”€â”€ Shadow override for dark mode â€” light glass-highlight instead of dark drop â”€â”€â”€ */
 
 /* â”€â”€â”€ Hide scrollbar utility (top-level, outside @layer so it always wins) â”€â”€â”€ */
@@ -269,8 +372,6 @@
 
 /* â”€â”€â”€ Shadows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-
-
 /* â”€â”€â”€ Hover effects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .press-scale {
   transition: transform 0.1s ease;
@@ -332,8 +433,15 @@
 }
 
 @keyframes caret-blink {
-  0%,70%,100% { opacity: 1; }
-  20%,50% { opacity: 0; }
+  0%,
+  70%,
+  100% {
+    opacity: 1;
+  }
+  20%,
+  50% {
+    opacity: 0;
+  }
 }
 
 .animate-caret-blink {
@@ -483,23 +591,27 @@
   animation: brand-sweep 8s ease-in-out infinite;
 }
 
-
 .logo-gradient-static {
   animation: none;
   background: linear-gradient(135deg, var(--brand-core), var(--brand-cyan));
   background-size: 100% 100%;
 }
 
-
 @keyframes goal-everything-border {
   0% {
-    background-position: 0 0, 0% 50%;
+    background-position:
+      0 0,
+      0% 50%;
   }
   50% {
-    background-position: 0 0, 100% 50%;
+    background-position:
+      0 0,
+      100% 50%;
   }
   100% {
-    background-position: 0 0, 0% 50%;
+    background-position:
+      0 0,
+      0% 50%;
   }
 }
 
@@ -536,8 +648,12 @@ button.goal-everything-chip {
     );
   background-origin: border-box;
   background-clip: padding-box, border-box;
-  background-size: 100% 100%, 280% 100%;
-  background-position: 0 0, 0% 50%;
+  background-size:
+    100% 100%,
+    280% 100%;
+  background-position:
+    0 0,
+    0% 50%;
   animation: goal-everything-border 2s ease-in-out infinite;
 }
 
@@ -568,8 +684,12 @@ button.goal-everything-chip[aria-checked="true"] {
       color-mix(in srgb, var(--brand-cyan) 12%, var(--card)) 100%
     ),
     linear-gradient(var(--brand-core), var(--brand-core));
-  background-size: 100% 100%, 100% 100%;
-  background-position: 0 0, 0 0;
+  background-size:
+    100% 100%,
+    100% 100%;
+  background-position:
+    0 0,
+    0 0;
 }
 
 button.goal-everything-chip[aria-checked="true"]::before {
@@ -595,9 +715,18 @@ button.goal-everything-chip[aria-checked="true"]::before {
         color-mix(in srgb, var(--brand-core) 14%, var(--card)) 0%,
         color-mix(in srgb, var(--brand-cyan) 12%, var(--card)) 100%
       ),
-      linear-gradient(135deg, var(--brand-deep), var(--brand-core), var(--brand-cyan));
-    background-size: 100% 100%, 100% 100%;
-    background-position: 0 0, 0 0;
+      linear-gradient(
+        135deg,
+        var(--brand-deep),
+        var(--brand-core),
+        var(--brand-cyan)
+      );
+    background-size:
+      100% 100%,
+      100% 100%;
+    background-position:
+      0 0,
+      0 0;
   }
 
   button.goal-everything-chip::before {
@@ -1396,30 +1525,70 @@ button.goal-everything-chip[aria-checked="true"]::before {
    10% wash of the 500 and ink lifts to 400 — the pattern the codebase already
    applies by hand, made automatic. */
 .dark {
-  --status-success-surface: color-mix(in oklab, var(--color-emerald-500, #10b981) 10%, transparent);
+  --status-success-surface: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 10%,
+    transparent
+  );
   --status-success-ink: var(--color-emerald-400, #34d399);
   --status-success-ink-strong: var(--color-emerald-300, #6ee7b7);
-  --status-success-rule: color-mix(in oklab, var(--color-emerald-500, #10b981) 30%, transparent);
+  --status-success-rule: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 30%,
+    transparent
+  );
 
-  --status-warning-surface: color-mix(in oklab, var(--color-amber-500, #f59e0b) 10%, transparent);
+  --status-warning-surface: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 10%,
+    transparent
+  );
   --status-warning-ink: var(--color-amber-400, #fbbf24);
   --status-warning-ink-strong: var(--color-amber-300, #fcd34d);
-  --status-warning-rule: color-mix(in oklab, var(--color-amber-500, #f59e0b) 30%, transparent);
+  --status-warning-rule: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 30%,
+    transparent
+  );
 
-  --status-danger-surface: color-mix(in oklab, var(--color-red-500, #ef4444) 10%, transparent);
+  --status-danger-surface: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 10%,
+    transparent
+  );
   --status-danger-ink: var(--color-red-400, #f87171);
   --status-danger-ink-strong: var(--color-red-300, #fca5a5);
-  --status-danger-rule: color-mix(in oklab, var(--color-red-500, #ef4444) 30%, transparent);
+  --status-danger-rule: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 30%,
+    transparent
+  );
 
-  --status-info-surface: color-mix(in oklab, var(--color-blue-500, #3b82f6) 10%, transparent);
+  --status-info-surface: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 10%,
+    transparent
+  );
   --status-info-ink: var(--color-blue-400, #60a5fa);
   --status-info-ink-strong: var(--color-blue-300, #93c5fd);
-  --status-info-rule: color-mix(in oklab, var(--color-blue-500, #3b82f6) 30%, transparent);
+  --status-info-rule: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 30%,
+    transparent
+  );
 
-  --status-neutral-surface: color-mix(in oklab, var(--color-slate-500, #64748b) 10%, transparent);
+  --status-neutral-surface: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 10%,
+    transparent
+  );
   --status-neutral-ink: var(--color-slate-400, #94a3b8);
   --status-neutral-ink-strong: var(--color-slate-300, #cbd5e1);
-  --status-neutral-rule: color-mix(in oklab, var(--color-slate-500, #64748b) 30%, transparent);
+  --status-neutral-rule: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 30%,
+    transparent
+  );
 }
 
 /* ─── Density ───
@@ -1454,7 +1623,8 @@ button.goal-everything-chip[aria-checked="true"]::before {
      defined first and consumed nowhere, so the product was the truth and the
      token was the aspiration; correcting the token means the migration changes
      nothing visible. */
-  --elevation-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -14px rgba(15, 23, 42, 0.12);
+  --elevation-card:
+    0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -14px rgba(15, 23, 42, 0.12);
   --elevation-raised: 0 4px 12px -2px rgb(11 18 32 / 0.1);
 
   /* A control that lifts off the page — the primary button. Neutral, because it
@@ -1470,15 +1640,16 @@ button.goal-everything-chip[aria-checked="true"]::before {
      hand-written `.shadow-noir` in 49 places, with its dark twin in a separate
      `.dark .shadow-noir` rule — which is exactly the split a token removes. */
   --elevation-noir:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px -10px rgba(15, 23, 42, 0.12),
+    0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -10px rgba(15, 23, 42, 0.12),
     0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
 .dark {
   --elevation-panel: 0 1px 2px 0 rgb(0 0 0 / 0.4);
-  --elevation-card: inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.5);
-  --elevation-raised: inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 8px 24px -6px rgb(0 0 0 / 0.6);
+  --elevation-card:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.5);
+  --elevation-raised:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 8px 24px -6px rgb(0 0 0 / 0.6);
 
   /* Deeper on a dark ground, where a light shadow is invisible. */
   --elevation-control: 0 8px 22px -10px rgb(0 0 0 / 0.6);
@@ -1489,10 +1660,8 @@ button.goal-everything-chip[aria-checked="true"]::before {
      lifts rather than darkens: a dark ring on a dark ground is invisible. */
   --elevation-noir:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 8px 24px -12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
+    0 8px 24px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
-
 
 /* ─── Solid fills ───
    A surface is a pale wash behind quiet text; a fill is a solid colour with
@@ -1617,72 +1786,199 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 .dark {
-  --category-blue-surface: color-mix(in oklab, var(--color-blue-500, #3b82f6) 12%, transparent);
+  --category-blue-surface: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 12%,
+    transparent
+  );
   --category-blue-ink: var(--color-blue-300, #93c5fd);
-  --category-blue-rule: color-mix(in oklab, var(--color-blue-500, #3b82f6) 30%, transparent);
+  --category-blue-rule: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 30%,
+    transparent
+  );
   --category-blue-fill: var(--color-blue-400, #60a5fa);
-  --category-emerald-surface: color-mix(in oklab, var(--color-emerald-500, #10b981) 12%, transparent);
+  --category-emerald-surface: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 12%,
+    transparent
+  );
   --category-emerald-ink: var(--color-emerald-300, #6ee7b7);
-  --category-emerald-rule: color-mix(in oklab, var(--color-emerald-500, #10b981) 30%, transparent);
+  --category-emerald-rule: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 30%,
+    transparent
+  );
   --category-emerald-fill: var(--color-emerald-400, #34d399);
-  --category-violet-surface: color-mix(in oklab, var(--color-violet-500, #8b5cf6) 12%, transparent);
+  --category-violet-surface: color-mix(
+    in oklab,
+    var(--color-violet-500, #8b5cf6) 12%,
+    transparent
+  );
   --category-violet-ink: var(--color-violet-300, #c4b5fd);
-  --category-violet-rule: color-mix(in oklab, var(--color-violet-500, #8b5cf6) 30%, transparent);
+  --category-violet-rule: color-mix(
+    in oklab,
+    var(--color-violet-500, #8b5cf6) 30%,
+    transparent
+  );
   --category-violet-fill: var(--color-violet-400, #a78bfa);
-  --category-amber-surface: color-mix(in oklab, var(--color-amber-500, #f59e0b) 12%, transparent);
+  --category-amber-surface: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 12%,
+    transparent
+  );
   --category-amber-ink: var(--color-amber-300, #fcd34d);
-  --category-amber-rule: color-mix(in oklab, var(--color-amber-500, #f59e0b) 30%, transparent);
+  --category-amber-rule: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 30%,
+    transparent
+  );
   --category-amber-fill: var(--color-amber-400, #fbbf24);
-  --category-rose-surface: color-mix(in oklab, var(--color-rose-500, #f43f5e) 12%, transparent);
+  --category-rose-surface: color-mix(
+    in oklab,
+    var(--color-rose-500, #f43f5e) 12%,
+    transparent
+  );
   --category-rose-ink: var(--color-rose-300, #fda4af);
-  --category-rose-rule: color-mix(in oklab, var(--color-rose-500, #f43f5e) 30%, transparent);
+  --category-rose-rule: color-mix(
+    in oklab,
+    var(--color-rose-500, #f43f5e) 30%,
+    transparent
+  );
   --category-rose-fill: var(--color-rose-400, #fb7185);
-  --category-cyan-surface: color-mix(in oklab, var(--color-cyan-500, #06b6d4) 12%, transparent);
+  --category-cyan-surface: color-mix(
+    in oklab,
+    var(--color-cyan-500, #06b6d4) 12%,
+    transparent
+  );
   --category-cyan-ink: var(--color-cyan-300, #67e8f9);
-  --category-cyan-rule: color-mix(in oklab, var(--color-cyan-500, #06b6d4) 30%, transparent);
+  --category-cyan-rule: color-mix(
+    in oklab,
+    var(--color-cyan-500, #06b6d4) 30%,
+    transparent
+  );
   --category-cyan-fill: var(--color-cyan-400, #22d3ee);
-  --category-pink-surface: color-mix(in oklab, var(--color-pink-500, #ec4899) 12%, transparent);
+  --category-pink-surface: color-mix(
+    in oklab,
+    var(--color-pink-500, #ec4899) 12%,
+    transparent
+  );
   --category-pink-ink: var(--color-pink-300, #f9a8d4);
-  --category-pink-rule: color-mix(in oklab, var(--color-pink-500, #ec4899) 30%, transparent);
+  --category-pink-rule: color-mix(
+    in oklab,
+    var(--color-pink-500, #ec4899) 30%,
+    transparent
+  );
   --category-pink-fill: var(--color-pink-400, #f472b6);
-  --category-slate-surface: color-mix(in oklab, var(--color-slate-500, #64748b) 12%, transparent);
+  --category-slate-surface: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 12%,
+    transparent
+  );
   --category-slate-ink: var(--color-slate-300, #cbd5e1);
-  --category-slate-rule: color-mix(in oklab, var(--color-slate-500, #64748b) 30%, transparent);
+  --category-slate-rule: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 30%,
+    transparent
+  );
   --category-slate-fill: var(--color-slate-400, #94a3b8);
-  --category-sky-surface: color-mix(in oklab, var(--color-sky-500, #0ea5e9) 12%, transparent);
+  --category-sky-surface: color-mix(
+    in oklab,
+    var(--color-sky-500, #0ea5e9) 12%,
+    transparent
+  );
   --category-sky-ink: var(--color-sky-300, #7dd3fc);
-  --category-sky-rule: color-mix(in oklab, var(--color-sky-500, #0ea5e9) 30%, transparent);
+  --category-sky-rule: color-mix(
+    in oklab,
+    var(--color-sky-500, #0ea5e9) 30%,
+    transparent
+  );
   --category-sky-fill: var(--color-sky-400, #38bdf8);
-  --category-teal-surface: color-mix(in oklab, var(--color-teal-500, #14b8a6) 12%, transparent);
+  --category-teal-surface: color-mix(
+    in oklab,
+    var(--color-teal-500, #14b8a6) 12%,
+    transparent
+  );
   --category-teal-ink: var(--color-teal-300, #5eead4);
-  --category-teal-rule: color-mix(in oklab, var(--color-teal-500, #14b8a6) 30%, transparent);
+  --category-teal-rule: color-mix(
+    in oklab,
+    var(--color-teal-500, #14b8a6) 30%,
+    transparent
+  );
   --category-teal-fill: var(--color-teal-400, #2dd4bf);
-  --category-green-surface: color-mix(in oklab, var(--color-green-500, #22c55e) 12%, transparent);
+  --category-green-surface: color-mix(
+    in oklab,
+    var(--color-green-500, #22c55e) 12%,
+    transparent
+  );
   --category-green-ink: var(--color-green-300, #86efac);
-  --category-green-rule: color-mix(in oklab, var(--color-green-500, #22c55e) 30%, transparent);
+  --category-green-rule: color-mix(
+    in oklab,
+    var(--color-green-500, #22c55e) 30%,
+    transparent
+  );
   --category-green-fill: var(--color-green-400, #4ade80);
-  --category-orange-surface: color-mix(in oklab, var(--color-orange-500, #f97316) 12%, transparent);
+  --category-orange-surface: color-mix(
+    in oklab,
+    var(--color-orange-500, #f97316) 12%,
+    transparent
+  );
   --category-orange-ink: var(--color-orange-300, #fdba74);
-  --category-orange-rule: color-mix(in oklab, var(--color-orange-500, #f97316) 30%, transparent);
+  --category-orange-rule: color-mix(
+    in oklab,
+    var(--color-orange-500, #f97316) 30%,
+    transparent
+  );
   --category-orange-fill: var(--color-orange-400, #fb923c);
-  --category-indigo-surface: color-mix(in oklab, var(--color-indigo-500, #6366f1) 12%, transparent);
+  --category-indigo-surface: color-mix(
+    in oklab,
+    var(--color-indigo-500, #6366f1) 12%,
+    transparent
+  );
   --category-indigo-ink: var(--color-indigo-300, #a5b4fc);
-  --category-indigo-rule: color-mix(in oklab, var(--color-indigo-500, #6366f1) 30%, transparent);
+  --category-indigo-rule: color-mix(
+    in oklab,
+    var(--color-indigo-500, #6366f1) 30%,
+    transparent
+  );
   --category-indigo-fill: var(--color-indigo-400, #818cf8);
-  --category-fuchsia-surface: color-mix(in oklab, var(--color-fuchsia-500, #d946ef) 12%, transparent);
+  --category-fuchsia-surface: color-mix(
+    in oklab,
+    var(--color-fuchsia-500, #d946ef) 12%,
+    transparent
+  );
   --category-fuchsia-ink: var(--color-fuchsia-300, #f0abfc);
-  --category-fuchsia-rule: color-mix(in oklab, var(--color-fuchsia-500, #d946ef) 30%, transparent);
+  --category-fuchsia-rule: color-mix(
+    in oklab,
+    var(--color-fuchsia-500, #d946ef) 30%,
+    transparent
+  );
   --category-fuchsia-fill: var(--color-fuchsia-400, #e879f9);
-  --category-lime-surface: color-mix(in oklab, var(--color-lime-500, #84cc16) 12%, transparent);
+  --category-lime-surface: color-mix(
+    in oklab,
+    var(--color-lime-500, #84cc16) 12%,
+    transparent
+  );
   --category-lime-ink: var(--color-lime-300, #bef264);
-  --category-lime-rule: color-mix(in oklab, var(--color-lime-500, #84cc16) 30%, transparent);
+  --category-lime-rule: color-mix(
+    in oklab,
+    var(--color-lime-500, #84cc16) 30%,
+    transparent
+  );
   --category-lime-fill: var(--color-lime-400, #a3e635);
-  --category-red-surface: color-mix(in oklab, var(--color-red-500, #ef4444) 12%, transparent);
+  --category-red-surface: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 12%,
+    transparent
+  );
   --category-red-ink: var(--color-red-300, #fca5a5);
-  --category-red-rule: color-mix(in oklab, var(--color-red-500, #ef4444) 30%, transparent);
+  --category-red-rule: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 30%,
+    transparent
+  );
   --category-red-fill: var(--color-red-400, #f87171);
 }
-
 
 /* ─── Gradient stops ───
    The stops, not the gradient.
@@ -1700,24 +1996,64 @@ button.goal-everything-chip[aria-checked="true"]::before {
 :root {
   --gradient-success-from: var(--color-emerald-500, #10b981);
   --gradient-success-to: var(--color-emerald-400, #34d399);
-  --gradient-success-wash-from: color-mix(in oklab, var(--color-emerald-500, #10b981) 15%, transparent);
-  --gradient-success-wash-to: color-mix(in oklab, var(--color-emerald-500, #10b981) 5%, transparent);
+  --gradient-success-wash-from: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 15%,
+    transparent
+  );
+  --gradient-success-wash-to: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 5%,
+    transparent
+  );
   --gradient-warning-from: var(--color-amber-500, #f59e0b);
   --gradient-warning-to: var(--color-amber-400, #fbbf24);
-  --gradient-warning-wash-from: color-mix(in oklab, var(--color-amber-500, #f59e0b) 15%, transparent);
-  --gradient-warning-wash-to: color-mix(in oklab, var(--color-amber-500, #f59e0b) 5%, transparent);
+  --gradient-warning-wash-from: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 15%,
+    transparent
+  );
+  --gradient-warning-wash-to: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 5%,
+    transparent
+  );
   --gradient-danger-from: var(--color-red-500, #ef4444);
   --gradient-danger-to: var(--color-red-400, #f87171);
-  --gradient-danger-wash-from: color-mix(in oklab, var(--color-red-500, #ef4444) 15%, transparent);
-  --gradient-danger-wash-to: color-mix(in oklab, var(--color-red-500, #ef4444) 5%, transparent);
+  --gradient-danger-wash-from: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 15%,
+    transparent
+  );
+  --gradient-danger-wash-to: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 5%,
+    transparent
+  );
   --gradient-info-from: var(--color-blue-500, #3b82f6);
   --gradient-info-to: var(--color-blue-400, #60a5fa);
-  --gradient-info-wash-from: color-mix(in oklab, var(--color-blue-500, #3b82f6) 15%, transparent);
-  --gradient-info-wash-to: color-mix(in oklab, var(--color-blue-500, #3b82f6) 5%, transparent);
+  --gradient-info-wash-from: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 15%,
+    transparent
+  );
+  --gradient-info-wash-to: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 5%,
+    transparent
+  );
   --gradient-neutral-from: var(--color-slate-500, #64748b);
   --gradient-neutral-to: var(--color-slate-400, #94a3b8);
-  --gradient-neutral-wash-from: color-mix(in oklab, var(--color-slate-500, #64748b) 15%, transparent);
-  --gradient-neutral-wash-to: color-mix(in oklab, var(--color-slate-500, #64748b) 5%, transparent);
+  --gradient-neutral-wash-from: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 15%,
+    transparent
+  );
+  --gradient-neutral-wash-to: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 5%,
+    transparent
+  );
   --gradient-gold-to: #d4a544;
   --color-surface-soft-base: #f4f7fc;
 }
@@ -1725,24 +2061,64 @@ button.goal-everything-chip[aria-checked="true"]::before {
 .dark {
   --gradient-success-from: var(--color-emerald-400, #34d399);
   --gradient-success-to: var(--color-emerald-500, #10b981);
-  --gradient-success-wash-from: color-mix(in oklab, var(--color-emerald-500, #10b981) 22%, transparent);
-  --gradient-success-wash-to: color-mix(in oklab, var(--color-emerald-500, #10b981) 8%, transparent);
+  --gradient-success-wash-from: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 22%,
+    transparent
+  );
+  --gradient-success-wash-to: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 8%,
+    transparent
+  );
   --gradient-warning-from: var(--color-amber-400, #fbbf24);
   --gradient-warning-to: var(--color-amber-500, #f59e0b);
-  --gradient-warning-wash-from: color-mix(in oklab, var(--color-amber-500, #f59e0b) 22%, transparent);
-  --gradient-warning-wash-to: color-mix(in oklab, var(--color-amber-500, #f59e0b) 8%, transparent);
+  --gradient-warning-wash-from: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 22%,
+    transparent
+  );
+  --gradient-warning-wash-to: color-mix(
+    in oklab,
+    var(--color-amber-500, #f59e0b) 8%,
+    transparent
+  );
   --gradient-danger-from: var(--color-red-400, #f87171);
   --gradient-danger-to: var(--color-red-500, #ef4444);
-  --gradient-danger-wash-from: color-mix(in oklab, var(--color-red-500, #ef4444) 22%, transparent);
-  --gradient-danger-wash-to: color-mix(in oklab, var(--color-red-500, #ef4444) 8%, transparent);
+  --gradient-danger-wash-from: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 22%,
+    transparent
+  );
+  --gradient-danger-wash-to: color-mix(
+    in oklab,
+    var(--color-red-500, #ef4444) 8%,
+    transparent
+  );
   --gradient-info-from: var(--color-blue-400, #60a5fa);
   --gradient-info-to: var(--color-blue-500, #3b82f6);
-  --gradient-info-wash-from: color-mix(in oklab, var(--color-blue-500, #3b82f6) 22%, transparent);
-  --gradient-info-wash-to: color-mix(in oklab, var(--color-blue-500, #3b82f6) 8%, transparent);
+  --gradient-info-wash-from: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 22%,
+    transparent
+  );
+  --gradient-info-wash-to: color-mix(
+    in oklab,
+    var(--color-blue-500, #3b82f6) 8%,
+    transparent
+  );
   --gradient-neutral-from: var(--color-slate-400, #94a3b8);
   --gradient-neutral-to: var(--color-slate-500, #64748b);
-  --gradient-neutral-wash-from: color-mix(in oklab, var(--color-slate-500, #64748b) 22%, transparent);
-  --gradient-neutral-wash-to: color-mix(in oklab, var(--color-slate-500, #64748b) 8%, transparent);
+  --gradient-neutral-wash-from: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 22%,
+    transparent
+  );
+  --gradient-neutral-wash-to: color-mix(
+    in oklab,
+    var(--color-slate-500, #64748b) 8%,
+    transparent
+  );
 }
 
 /* ─── Utility exposure ───

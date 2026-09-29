@@ -9,10 +9,12 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { APP_FONT_CLASS } from "@/lib/theme/app-fonts";
 import {
   APP_THEMES,
   APP_THEME_MODE_STORAGE_KEY,
   APP_THEME_STORAGE_KEY,
+  AUTHENTICATED_PALETTE_CLASS,
   DEFAULT_APP_THEME,
   DEFAULT_APP_THEME_MODE,
   getAppThemeClass,
@@ -84,6 +86,14 @@ function applyDarkClass(isDark: boolean): void {
   root.style.colorScheme = isDark ? "dark" : "light";
 }
 
+function applyAuthenticatedPalette(active: boolean): void {
+  const root = document.documentElement;
+  root.classList.toggle(AUTHENTICATED_PALETTE_CLASS, active);
+  for (const name of APP_FONT_CLASS.split(" ")) {
+    if (name.length > 0) root.classList.toggle(name, active);
+  }
+}
+
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<AppThemeId>(readStoredTheme);
   const [mode, setModeState] = useState<AppThemeMode>(readStoredMode);
@@ -107,9 +117,11 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   }, [isDark]);
 
   useEffect(() => {
+    applyAuthenticatedPalette(true);
     return () => {
       applyThemeClass(DEFAULT_APP_THEME);
       applyDarkClass(false);
+      applyAuthenticatedPalette(false);
     };
   }, []);
 

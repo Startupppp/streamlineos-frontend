@@ -1,3 +1,6 @@
+/** Present on <html> only while the authenticated shell is mounted. */
+export const AUTHENTICATED_PALETTE_CLASS = "app-neutral";
+
 export const APP_THEME_STORAGE_KEY = "streamlineos-app-theme";
 export const APP_THEME_MODE_STORAGE_KEY = "streamlineos-app-theme-mode";
 
@@ -26,7 +29,7 @@ export function resolveIsDark(
 }
 
 export const APP_THEMES = [
-  { id: "default", label: "Ink", swatch: "#0b1220" },
+  { id: "default", label: "Ink", swatch: "#1c1917" },
   { id: "red", label: "Red", swatch: "#dc2626" },
   { id: "orange", label: "Orange", swatch: "#ea580c" },
   { id: "amber", label: "Amber", swatch: "#fbbf24" },

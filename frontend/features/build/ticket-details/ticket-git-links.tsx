@@ -56,7 +56,7 @@ export function TicketGitLinks({ projectId, ticketId }: TicketGitLinksProps) {
         Development
       </span>
       {!links || links.length === 0 ? (
-        <p className="text-dense text-muted-foreground italic">No linked commits or PRs yet</p>
+        <p className="text-micro font-normal italic text-muted-foreground">No linked commits or PRs yet</p>
       ) : (
         <div className="space-y-1.5">
           {links.map((link) => (
