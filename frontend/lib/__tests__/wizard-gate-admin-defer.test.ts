@@ -45,19 +45,16 @@ const DEFERRED = gateCookieName("onboarding-deferred", `${USER}--${ORG}`);
 
 describe("an org admin may defer their own onboarding wizard", () => {
   it("still sends an admin to the wizard the first time", () => {
-    // The paired positive. The wizard is deferrable, not removed — an admin who
-    // has not chosen to skip still lands there, which is what keeps the bank
-    // details worth collecting at all.
-    expect(resolveWizardGate(session() as never, cookies())).toBe("/employee-onboarding");
+    expect(resolveWizardGate(session() as never, cookies(), "/hr")).toBe("/employee-onboarding");
   });
 
   it("lets an admin who chose later go on to /hr", () => {
-    expect(resolveWizardGate(session() as never, cookies([DEFERRED]))).toBeNull();
+    expect(resolveWizardGate(session() as never, cookies([DEFERRED]), "/hr")).toBeNull();
   });
 
   it("lets a MEMBER who chose later go on — BUG-018 / FE-122", () => {
     const member = session({ user: { id: USER, isOrgOwner: false, role: "MEMBER" } });
-    expect(resolveWizardGate(member as never, cookies([DEFERRED]))).toBeNull();
+    expect(resolveWizardGate(member as never, cookies([DEFERRED]), "/hr")).toBeNull();
   });
 
   it("does not let a deferral skip org setup, which is a different gate", () => {
@@ -65,16 +62,16 @@ describe("an org admin may defer their own onboarding wizard", () => {
       user: { id: USER, isOrgOwner: true, role: "ORG_ADMIN" },
       orgOnboardingCompletedAt: null,
     });
-    expect(resolveWizardGate(owner as never, cookies([DEFERRED]))).toBe("/org-setup");
+    expect(resolveWizardGate(owner as never, cookies([DEFERRED]), "/org-setup")).toBe("/org-setup");
   });
 
   it("does not let a deferral outrank a suspended organization", () => {
     const suspended = session({ organizationAccess: "suspended" });
-    expect(resolveWizardGate(suspended as never, cookies([DEFERRED]))).toBe("/access-suspended");
+    expect(resolveWizardGate(suspended as never, cookies([DEFERRED]), "/hr")).toBe("/access-suspended");
   });
 
   it("still honours the completed cookie for an admin who finished properly", () => {
     const done = gateCookieName("onboarding-done", `${USER}--${ORG}`);
-    expect(resolveWizardGate(session() as never, cookies([done]))).toBeNull();
+    expect(resolveWizardGate(session() as never, cookies([done]), "/hr")).toBeNull();
   });
 });

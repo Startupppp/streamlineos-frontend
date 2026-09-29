@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { mayDeferOwnOnboarding, writeGateCookie } from "@/lib/onboarding-gate";
+import { mayDeferOwnOnboarding, ONBOARDING_DEFERRED_MAX_AGE, writeGateCookie } from "@/lib/onboarding-gate";
 
 /**
  * HRMS-E2E-020. An ORG_ADMIN brought in to set up HR was redirected to this
@@ -35,7 +35,7 @@ export function AdminDeferBanner() {
 
   const handleDefer = useCallback(() => {
     if (!userId || !orgId) return;
-    writeGateCookie("onboarding-deferred", `${userId}--${orgId}`);
+    writeGateCookie("onboarding-deferred", `${userId}--${orgId}`, ONBOARDING_DEFERRED_MAX_AGE);
     router.push(destination);
   }, [orgId, router, userId, destination]);
 

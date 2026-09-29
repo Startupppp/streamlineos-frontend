@@ -17,7 +17,7 @@ export default async function EmployeeOnboardingLayout({
 }) {
   const session = await requireSession();
 
-  const gate = resolveWizardGate(session, await cookies());
+  const gate = resolveWizardGate(session, await cookies(), "/employee-onboarding");
   if (gate !== "/employee-onboarding") redirect(gate ?? "/dashboard");
 
   return (

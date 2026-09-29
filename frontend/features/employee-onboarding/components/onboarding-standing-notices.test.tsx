@@ -66,19 +66,25 @@ describe("DeferredOnboardingReminder — /hr does not forget a deferred wizard",
   });
 });
 
-describe("MemberOnboardingNote — a member is told why they were redirected", () => {
-  it("explains the redirect to someone who may not defer", () => {
+describe("MemberOnboardingNote — explains why the HR wizard runs", () => {
+  it("shows every non-owner at the wizard why they are there and that it can be done later", () => {
+    signedIn();
+
+    render(<MemberOnboardingNote />);
+
+    expect(screen.getByText(/activates your access to the HR module/i)).toBeInTheDocument();
+  });
+
+  it("also shows for a MEMBER, since the wizard gate is now HR-scoped not role-scoped", () => {
     signedIn({ user: { id: "usr-member", role: "MEMBER" } });
 
     render(<MemberOnboardingNote />);
 
-    expect(
-      screen.getByText(/asks every employee to complete this profile before using HR/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/activates your access to the HR module/i)).toBeInTheDocument();
   });
 
-  it("stays out of an administrator's way, who has the skip control instead", () => {
-    signedIn();
+  it("is not shown to an org owner who follows the org-setup path instead — FE-122 negative", () => {
+    signedIn({ user: { id: "usr-owner", role: "OWNER", isOrgOwner: true } });
 
     const { container } = render(<MemberOnboardingNote />);
 
