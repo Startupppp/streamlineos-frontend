@@ -35,14 +35,14 @@ ticket's `**Status:**` header has repeatedly gone stale while its boxes were acc
 | Card | Subject | Status |
 |---|---|---|
 | A0 | CCG-1 premise was false | DONE |
-| A1 | Require the concurrency token | PARTIAL |
+| A1 | Require the concurrency token | PARTIAL — stage one done, stage two is an owner decision |
 | A2 | Roadmap cursor matches its ORDER BY | DONE |
 | A3 | Column-count key is a real prefix | DONE |
 | A4 | Enum contracts derive from the catalog | DONE |
 | A5 | Activity-action contract opened | DONE |
 | A6 | Assignee filter from members | DONE |
 | A7 | Index-usable ticket predicates | PARTIAL |
-| A8 | Collapse the project-access waterfall | PARTIAL |
+| A8 | Collapse the project-access waterfall | DONE |
 | A9 | `core/` structure, pass-throughs deleted | DONE |
 | A10 | Narrow report invalidation | DONE |
 | A11 | Deletion candidates | DECIDED + DONE |
@@ -56,10 +56,10 @@ ticket's `**Status:**` header has repeatedly gone stale while its boxes were acc
 | B7 | `applyTicketChange` owns the effect set | PARTIAL |
 | B8 | Roadmap keyset seam is called | DONE |
 | B9 | One Build list surface | DONE |
-| B10 | Search reaches the read contract | PARTIAL |
+| B10 | Search reaches the read contract | PARTIAL — views done, 7 minor pages left |
 | B11 | Gates stop over-reporting coverage | DONE |
-| B12 | Schema-enforced invariants | PARTIAL |
-| X1 | `check:type-assertions` is red | OPEN |
+| B12 | Schema-enforced invariants | DONE |
+| X1 | `check:type-assertions` is red | DONE |
 
 ---
 
@@ -74,18 +74,25 @@ ticket's `**Status:**` header has repeatedly gone stale while its boxes were acc
 
 ## A1 — Require the concurrency token the code already checks
 
-**PARTIAL.** The main route now requires it; four siblings still take no token.
+**PARTIAL by design.** The main route requires the token. The four siblings now accept and enforce
+it when given, which is stage one of the review's own staged rollout. Making it mandatory is stage
+two and is an owner decision, not an oversight.
 
 - [x] `version` is no longer `.optional()` on ticket update — `backend/src/modules/build/core/dto/ticket.schemas.ts:183`.
 - [x] The 409 returns the current value — `core/tickets/ticket-version-conflict.exception.ts:6-11` sets
       `code: "PROJECTS_TICKET_CONFLICT"`, `details: { currentVersion }`.
-- [ ] **Sibling routes carry a token.** Four write `build.tickets` with no version field at all:
-      `rankTicketSchema` (`ticket.schemas.ts:237`), `bulkUpdateSchema` (`:193`),
-      `updateBugSchema` (`qa/dto/bugs.schemas.ts:32`), `toggleVisibilitySchema`
-      (`client-portal/dto/client-portal.schemas.ts:20`).
-      **Blocked on an owner decision — this is a breaking API change.** Requiring a token on the rank
-      route breaks drag-and-drop for any client that does not yet send one, and this backend deploys
-      to production on push. The review itself said to stage it: accept-and-warn, then require.
+- [x] **Stage one — the four sibling routes accept and enforce a token when given** (commit `47482aa55`).
+      `rankTicketSchema`, `bulkUpdateSchema`, `updateBugSchema` and `toggleVisibilitySchema` each gained
+      an optional token and compare-and-swap only when the caller supplies one, reusing
+      `TicketVersionConflictException` so the 409 body matches the main route.
+      Bulk takes a **per-row** `versions` map — a single per-request version cannot detect that
+      ticket A moved while ticket B did not, so it would protect nothing.
+      Each route has a test asserting **omitting the token still succeeds**. 29 tests, all pass.
+- [ ] **Stage two — make the token required.** Deliberately NOT done. This is a breaking change and
+      the backend deploys to production on push: requiring it on the rank route breaks drag-and-drop
+      for any client not yet sending one. The review prescribed exactly this staging
+      ("accept-and-warn, then require"). Flip it once clients send the token — it is one line per schema.
+      **Owner decision.**
 
 ## A2 / B8 — The roadmap cursor matches its ORDER BY
 
@@ -164,15 +171,20 @@ ticket's `**Status:**` header has repeatedly gone stale while its boxes were acc
 
 ## A8 — Collapse the project-access waterfall
 
-**PARTIAL.**
+**DONE.** Closed 2026-09-29.
 
 - [x] `resolveProjectAccess` batches to 2 round trips (project+perms parallel, then members+teams
       parallel) — `core/project-crud/project-access.ts:83-163`.
 - [x] `getProject` no longer re-implements the cascade; it calls `resolveProjectAccess` and preserves
       the `PROJECTS_NOT_FOUND` 404 body — commit `4b837c21d`, spec `projects-query-get-project.spec.ts`.
-- [ ] **One access resolution per request.** `ProjectAccessCache` defaults to a fresh per-call
-      instance, and `listTickets` / `getColumnCounts` are two separate HTTP routes, so a board render
-      still resolves access twice. Needs a request-scoped instance.
+- [x] **One access resolution per request** (commit `47482aa55`). `getOrCreateRequestCache()` holds one
+      `ProjectAccessCache` per request in a `WeakMap` keyed on the `AsyncLocalStorage` tenant-context
+      object, so `listTickets` and `getColumnCounts` share it instead of each building a fresh one.
+      A rejected lookup is evicted rather than cached, and the inner key still carries
+      `orgId:userId:projectId`, so a reused context object could not bleed across tenants.
+      A request-scoped Nest provider was rejected: it forces every injector up the chain to become
+      request-scoped. 22 tests including "compute called once within one context" paired with
+      "compute called twice across two contexts".
 
 ## A9 — `core/` has a structure and the pass-throughs are gone
 
@@ -340,10 +352,16 @@ ticket's `**Status:**` header has repeatedly gone stale while its boxes were acc
 
 - [x] Governance is server-side: `hooks/api/build/governance.ts:39-46` carries `search`, forwarded at
       `:76,83`; `risks-page.tsx:91` and `decisions-page.tsx:89` pass `debouncedSearch`.
-- [ ] **`project-settings-views-page.tsx:51-53` filters a 25-row keyset page in the browser** and the
-      backend has no support at all — `listViewsQuerySchema` (`execution/dto/workspace.schemas.ts:5-8`)
-      accepts only `cursor` and `limit`. Needs a backend change and a frontend change. A miss renders
-      as an empty state, indistinguishable from "no such view exists".
+- [x] **Project views search reaches the server** (commits `47482aa55`, `894e9dbbb`). `listViewsQuerySchema`
+      gained a bounded, trimmed, optional `search`, kept `.strict()`; the service ANDs
+      `name ILIKE 'term%'` — **trailing wildcard only, so it stays btree-usable per BE-49** — through the
+      existing `escapeLike`, so a user typing `%` cannot match everything. The client-side `.filter(...)`
+      is deleted and `debouncedSearch` is passed down. Keyset contract intact.
+      Cost to the user, stated plainly: prefix-only matching. "Sprint Board" matches "Sprint";
+      "Weekly Sprint" does not.
+      Carried a bonus fix — the `views` query key took an optional cursor, making the unfiltered key the
+      same *length* as a keyed one instead of a prefix of it. Same defect class as card A3. Now a true
+      4-segment prefix (FE-34). 37 tests pass; `check:contract-parity` still PASS.
 - [ ] Same shape, lower severity, over catalog-sized or per-project lists:
       `modules-page.tsx:71,76`, `automations-page.tsx:114-115`, `cycle-detail-page.tsx:212,223`,
       `qa/runs/run-execution-page.tsx:213,216`, `workflow-page.tsx:66-87`,
@@ -368,12 +386,17 @@ ticket's `**Status:**` header has repeatedly gone stale while its boxes were acc
       executed SQL to the shared builder, so the test name no longer outruns what it proves.
 - Correction to the review: **`check:build-execution-plan` does not exist** and never did — no script,
   no npm target, no git history under that name. That card's claim cannot be actioned as written.
-- [ ] `createChangeRequest`'s own wrapper (auth + insert + audit) still has no direct spec. The
-      load-bearing concurrency half is covered; the wrapper is not.
+- [x] `createChangeRequest`'s wrapper now has its own spec — `client-portal/change-requests-create.spec.ts`
+      (commit `47482aa55`): access gate denies before the transaction opens, field mapping, the row
+      really comes from inside the transaction, and the audit entry is written on success and not on
+      denial. Its transaction double **invokes its callback**, so the assertions inside it run (BE-136).
+      Deliberately in a new file: `change-requests.isolation.spec.ts` sits at the
+      `check:transaction-callbacks` VOID ratchet ceiling with 13 bare doubles, and growing it would
+      have pushed the gate over.
 
 ## B12 — Invariants the schema could enforce
 
-**PARTIAL** — five of six closed.
+**DONE** — all six closed; the last one was still live until 2026-09-29.
 
 - [x] **Client-portal parent visibility — fixed 2026-09-29, commit `6b7a5adf5`.** This was the one
       finding still live. See ticket 35 for why it was reported done on 2026-09-27: the evidence was
@@ -395,13 +418,20 @@ ticket's `**Status:**` header has repeatedly gone stale while its boxes were acc
       unbounded duplicates.
 - [x] The off-journal tables are journalled — `migrations/1393_build_qa_bug_tables.sql` (idx in
       `_journal.json`) creates both with RLS and policies; `1394` handles the `cycle_scope_events` rename.
-- [ ] **62 hardcoded `build.`-prefixed table names inside `sql` templates have no gate.** All correct
-      today (5 spot-checked against the Drizzle schema), but the index and tenancy gates scan Drizzle
-      table objects, not string literals, so drift would be silent.
+- [x] **Hardcoded table names in `sql` templates now have a gate** (commit `47482aa55`).
+      `check:build-sql-table-literals` extracts every `build.*` / `build_events.*` literal appearing
+      inside a `sql` template and asserts each names a real Drizzle table.
+      Result: **624 files scanned, 40 literals, 0 unknown** — so the review's "all correct today" holds,
+      and drift is no longer silent. The self-test plants a bad table name and proves the gate catches
+      it (10/10), because a gate with no self-test reports zero vacuously.
+      The review's "62" appears to have counted `build.table(...)` schema-builder calls, not
+      sql-template literals; the real figure is 40.
+      Gate states its own blind spots: names built by concatenation, literals outside `sql` templates,
+      and migration files.
 
 ## X1 — `check:type-assertions` is red
 
-**OPEN.** Not a review card; surfaced while verifying B5/A4 and it blocks a clean gate run.
+**DONE.** Not a review card; surfaced while verifying B5/A4 and it was blocking a clean gate run.
 
 Correction worth recording: both CLAUDE.md files call this a hard zero for `as X`. Reading the script,
 hard zero applies only to `as any` / `@ts-ignore` / `@ts-expect-error` / `@ts-nocheck`. Plain `as X`
@@ -409,11 +439,21 @@ and non-null `!` are a per-file, zero-growth ceiling.
 
 `node scripts/check-type-assertions.mjs` → exit 1, three failures:
 
-- [ ] Rule 4 counts 434 plain assertions against a floor of 458 — the tree improved and the ledger
-      must be lowered. `--update-ledger` only ever lowers, so this is the sanctioned move.
-- [ ] 6 files hold an unledgered plain assertion and must be narrowed at the use site.
-- [ ] 28 ceiling entries are stale — "an exception that outlives its site is how the next reader
-      inherits a licence nobody meant to grant."
+**Closed 2026-09-29, commit `e751c2123`.** `node scripts/check-type-assertions.mjs` → **exit 0**.
+
+- [x] Eleven assertions **narrowed, not ledgered**, so the claim is true rather than excused:
+      `page-grants-sheet.tsx` (`ACCESS_OPTIONS.find` runtime narrow), `portals-gallery.tsx` (explicit
+      annotation replacing `{} as Record<>`), `use-board-saved-views.ts` (parameter widened to
+      `{ target: { value: string } }`, which removed the cast at its call site too), and seven
+      `jest.requireMock() as {}` in `product-scope-pages.test-harness.tsx`.
+- [x] Two genuinely unavoidable assertions ledgered **with their reason**: the e2e API oracle (an
+      external seam) and one `initialPageParam` in `hooks/api/build/advanced.ts`. The second wants an
+      explicit generic on `useInfiniteQuery`; left rather than reached across file ownership.
+- [x] 28 stale ceiling entries pruned via `--update-ledger`, which can only lower.
+- [x] `CEILING_FLOOR_TOTAL` 458 → 423 — the ratchet moving in its **tightening** direction, documented
+      in the file's existing convention. No gate logic was changed; the diff is the constant and a comment.
+- [x] Final: 423 plain assertions (413 `as X` + 10 non-null) in 248 files, and **0** of
+      `as any` / `@ts-ignore` / `@ts-expect-error` / `@ts-nocheck`. `pnpm type-check` exit 0.
 
 ---
 
