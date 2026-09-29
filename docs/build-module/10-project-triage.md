@@ -102,8 +102,8 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Every core field, action, overlay, query parameter, bulk action, shortcut, state, and permission above is implemented and tested.
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
-- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — pending browser QA.
-- [ ] Browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — partial local evidence recorded below; remaining cases pending.
+- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; pending browser QA; focus order, screen-reader output, reduced motion and real viewport widths are not observable in jsdom)
+- [ ] Browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; partial local evidence recorded below; the remaining cases need an authenticated non-production target)
 
 ## Browser QA evidence (partial, 2026-09-29)
 
