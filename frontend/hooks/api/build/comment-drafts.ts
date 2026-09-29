@@ -136,15 +136,32 @@ export function useDeleteCommentDraft() {
 
 export function useDeleteCommentDraftByTicket() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:tickets:view", {
-    meta: { buildCacheSync: false },
-    mutationKey: ["projects", "comment-drafts", "delete-by-ticket"],
-    mutationFn: (ticketId: number) =>
-      apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/tickets/${ticketId}`, undefined, undefined, commentDraftDeletedContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+  return useAuthorizedMutation<{ deleted: boolean }, Error, number, { previous: CommentDraftListItem[] | undefined }>(
+    "build:tickets:view",
+    {
+      meta: { buildCacheSync: false },
+      mutationKey: ["projects", "comment-drafts", "delete-by-ticket"],
+      mutationFn: (ticketId: number) =>
+        apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/tickets/${ticketId}`, undefined, undefined, commentDraftDeletedContract),
+      onMutate: (ticketId: number) => {
+        const listKey = buildWorkQueryKeys.projects.commentDrafts.mine();
+        const previous = qc.getQueryData<CommentDraftListItem[]>(listKey);
+        qc.setQueryData<CommentDraftListItem[]>(
+          listKey,
+          (current) => current?.filter((d) => d.ticketId !== ticketId) ?? [],
+        );
+        return { previous };
+      },
+      onError: (_err, _ticketId, context) => {
+        if (context?.previous !== undefined) {
+          qc.setQueryData(buildWorkQueryKeys.projects.commentDrafts.mine(), context.previous);
+        }
+      },
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
+      },
     },
-  });
+  );
 }
 
 export function useDeleteAllCommentDrafts() {

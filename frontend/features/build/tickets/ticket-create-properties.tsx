@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo, forwardRef } from "react";
+import { useState, useEffect, memo, forwardRef } from "react";
 import { Check, AlertTriangle, ArrowUp, Minus, ArrowDown, User, Zap, Tag } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { XIcon } from "@animateicons/react/lucide";
@@ -106,6 +106,10 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [cycleOpen, setCycleOpen] = useState(false);
   const [estimateInput, setEstimateInput] = useState(value.points !== null ? String(value.points) : "");
+
+  useEffect(() => {
+    if (value.points === null) setEstimateInput("");
+  }, [value.points]);
 
   const statusConfig = buildStatusConfig(projectStatuses);
   const statusList = projectStatuses.length > 0

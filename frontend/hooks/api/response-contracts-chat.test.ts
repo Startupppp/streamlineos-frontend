@@ -5,9 +5,11 @@ import {
   chatChannelMemberPreviewContract,
   chatChannelPageContract,
   chatHuddleContract,
+  chatMessageContract,
   chatMessagesPageContract,
   chatPollPageContract,
   chatPublicChannelContract,
+  chatSendResponseContract,
 } from "@/hooks/api/chat-schema";
 import { chatChannelDetailContract } from "@/hooks/api/chat-extra-schema";
 
@@ -501,5 +503,45 @@ describe("BITE — the message payload that actually shipped is rejected", () =>
 
   it("rejects a page whose cursor was dropped rather than nulled", () => {
     expect(chatMessagesPageContract.safeParse({ messages: [MESSAGE] }).success).toBe(false);
+  });
+});
+
+const SEND_RESPONSE = {
+  id: 901,
+  orgId: "org_1",
+  channelId: 7,
+  senderMembershipId: 41,
+  content: "hello",
+  replyToId: null,
+  isEdited: false,
+  isDeleted: false,
+  messageType: "text",
+  metadata: null,
+  actionStatus: null,
+  clientKey: "ck_abc123",
+  channelPosition: 13,
+  createdAt: "2026-09-02T12:00:00.000Z",
+  updatedAt: "2026-09-02T12:00:00.000Z",
+};
+
+describe("chatSendResponseContract — BUG-058: POST send endpoint returns a raw message without sender/attachments/replyTo", () => {
+  it("accepts the raw send response which has no sender, attachments or replyTo fields", () => {
+    expect(chatSendResponseContract.safeParse(SEND_RESPONSE).success).toBe(true);
+  });
+
+  it("accepts a send response with a null senderMembershipId when the sender account is gone", () => {
+    expect(chatSendResponseContract.safeParse({ ...SEND_RESPONSE, senderMembershipId: null }).success).toBe(true);
+  });
+
+  it("accepts a send response with a null clientKey when the client did not supply one", () => {
+    expect(chatSendResponseContract.safeParse({ ...SEND_RESPONSE, clientKey: null }).success).toBe(true);
+  });
+
+  it("rejects the send response through chatMessageContract — sender is required there so parsing always fails (BUG-058 root cause)", () => {
+    const result = chatMessageContract.safeParse(SEND_RESPONSE);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    const paths = result.error.issues.map((i) => i.path.join("."));
+    expect(paths).toEqual(expect.arrayContaining(["sender"]));
   });
 });
