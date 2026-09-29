@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { isFormFieldPath } from "@/lib/form-field-path";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { testRunSchema, type TestRunFormValues } from "./qa-schema";
@@ -96,7 +97,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
   }
 
   function handleModeChange(v: string) {
-    setMode(v as "suite" | "cases");
+    if (v === "suite" || v === "cases") setMode(v);
   }
 
   function handleSubmit(values: TestRunFormValues) {
@@ -125,7 +126,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
           const fieldErrors = getValidationFieldErrors(e);
           if (fieldErrors.length > 0) {
             for (const fe of fieldErrors) {
-              form.setError(fe.path as keyof TestRunFormValues, { message: fe.message });
+              if (isFormFieldPath(form.getValues(), fe.path)) form.setError(fe.path, { message: fe.message });
             }
           } else {
             toast.error(getErrorMessage(e));

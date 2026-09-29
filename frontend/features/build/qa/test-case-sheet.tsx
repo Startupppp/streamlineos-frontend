@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
+import { isFormFieldPath } from "@/lib/form-field-path";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { testCaseSchema, type TestCaseFormValues } from "./qa-schema";
@@ -142,7 +143,7 @@ export function TestCaseSheet({
       const fieldErrors = getValidationFieldErrors(e);
       if (fieldErrors.length > 0) {
         for (const fe of fieldErrors) {
-          form.setError(fe.path as keyof TestCaseFormValues, { message: fe.message });
+          if (isFormFieldPath(form.getValues(), fe.path)) form.setError(fe.path, { message: fe.message });
         }
       } else {
         toast.error(getErrorMessage(e));

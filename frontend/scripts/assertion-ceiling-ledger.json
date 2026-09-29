@@ -85,10 +85,6 @@
       "as": 3,
       "nonNull": 0
     },
-    "components/command-palette/hooks/use-keyboard-shortcuts.ts": {
-      "as": 1,
-      "nonNull": 0
-    },
     "components/editor/editor-image-context-menu.tsx": {
       "as": 1,
       "nonNull": 0
@@ -246,10 +242,6 @@
       "nonNull": 0
     },
     "features/build/project-list/use-display-prefs.ts": {
-      "as": 1,
-      "nonNull": 0
-    },
-    "features/build/qa/test-run-sheet.tsx": {
       "as": 1,
       "nonNull": 0
     },
