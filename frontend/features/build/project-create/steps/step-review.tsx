@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { useProjectTemplates } from "@/hooks/api/build/templates";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { WizardDraft } from "../use-project-create";
 
@@ -19,9 +20,30 @@ const WORKFLOW_LABELS: Record<string, string> = {
   custom: "Custom",
 };
 
+const FEATURE_LABELS: Record<string, string> = {
+  backlog: "Backlog",
+  kanban: "Kanban Board",
+  epics: "Epics",
+  bugs: "Bug Tracker",
+  qa: "QA / Testing",
+  releases: "Releases",
+  timeTracking: "Time Tracking",
+  approvals: "Approvals",
+  devops: "DevOps / CI",
+  chat: "Chat",
+  docs: "Docs / Wiki",
+  budget: "Budget",
+  clientPortal: "Client Portal",
+  changeRequests: "Change Requests",
+  forms: "Forms",
+  automations: "Automations",
+  ai: "AI Assistant",
+};
+
 export function StepReview({ draft }: StepReviewProps) {
   const { data: templatePages } = useProjectTemplates();
   const { data: membersData } = useOrgMembers(1, 100);
+  const { data: clientsList } = useSimpleClientsList();
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
   const selectedLabels = useMemo(
@@ -43,6 +65,7 @@ export function StepReview({ draft }: StepReviewProps) {
             ? [`+${selectedLabels.length - 2} more`]
             : []),
         ].join(", ");
+
   const templateName =
     draft.templateId !== null
       ? ((templatePages?.pages.flatMap((page) => page.data) ?? []).find(
@@ -50,12 +73,30 @@ export function StepReview({ draft }: StepReviewProps) {
         )?.name ?? "Unknown template")
       : "Blank";
 
-  const moduleEntries: Array<[string, boolean]> = [
-    ["Epics", draft.modules.epics],
-    ["Time Tracking", draft.modules.timeTracking],
-    ["Wiki", draft.modules.wiki],
-  ];
-  const enabledModules = moduleEntries.filter(([, enabled]) => enabled).map(([name]) => name);
+  const managerLabel = useMemo(() => {
+    if (!draft.managerId) return "Not assigned";
+    const m = members.find((x) => x.userId === draft.managerId);
+    if (!m) return "Unknown member";
+    return getUserDisplayName({ name: m.name, email: m.email });
+  }, [draft.managerId, members]);
+
+  const clientLabel = useMemo(() => {
+    if (!draft.clientId) return null;
+    const client = clientsList?.find((c) => String(c.id) === draft.clientId);
+    return client ? client.name : "Unknown client";
+  }, [draft.clientId, clientsList]);
+
+  const enabledFeatures = useMemo(() => {
+    const all: string[] = [];
+    for (const [key, enabled] of Object.entries(draft.features)) {
+      if (enabled && FEATURE_LABELS[key]) {
+        all.push(FEATURE_LABELS[key]);
+      }
+    }
+    if (draft.modules.epics && !draft.features["epics"]) all.push("Epics");
+    if (draft.modules.wiki && !draft.features["docs"]) all.push("Wiki");
+    return all;
+  }, [draft.features, draft.modules]);
 
   return (
     <div className="space-y-4">
@@ -75,14 +116,22 @@ export function StepReview({ draft }: StepReviewProps) {
         />
         <ReviewRow label="Template" value={templateName} />
         <ReviewRow
-          label="Modules"
-          value={enabledModules.length > 0 ? enabledModules.join(", ") : "None"}
-          muted={enabledModules.length === 0}
+          label="Features"
+          value={enabledFeatures.length > 0 ? enabledFeatures.join(", ") : "None"}
+          muted={enabledFeatures.length === 0}
         />
         <ReviewRow
           label="Workflow"
           value={WORKFLOW_LABELS[draft.workflow] ?? draft.workflow}
         />
+        <ReviewRow
+          label="Manager"
+          value={managerLabel}
+          muted={!draft.managerId}
+        />
+        {clientLabel !== null && (
+          <ReviewRow label="Client" value={clientLabel} />
+        )}
         <ReviewRow
           label="Team"
           value={teamLabel}

@@ -72,6 +72,7 @@ export function buildProjectCatalog(basePath: string): BuildScopeCatalog {
         label: "Cycles",
         href: `${basePath}/cycles`,
         icon: Calendar,
+        searchTerms: ["sprint", "sprints", "iteration", "iterations"],
         requiredPermission: "build:cycles:view",
       },
       {

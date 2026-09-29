@@ -35,6 +35,8 @@ import { useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 
+const GANTT_MAX_DAYS = 28;
+
 const MONTHS = [
   "January",
   "February",
@@ -106,8 +108,26 @@ export function GanttView({
   onTicketClick,
   onCreateTicket,
 }: GanttViewProps) {
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  const startOfWeek = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - d.getDay() + weekOffset * 7);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, [weekOffset]);
+
+  const milestoneWindow = useMemo(() => {
+    const end = new Date(startOfWeek);
+    end.setDate(end.getDate() + GANTT_MAX_DAYS);
+    return {
+      from: startOfWeek.toISOString().split("T")[0] ?? "",
+      to: end.toISOString().split("T")[0] ?? "",
+    };
+  }, [startOfWeek]);
+
   const { data: cpData, isLoading: cpLoading, isError: cpIsError, error: cpError } = useCriticalPath(projectId);
-  const { data: milestonesPage, isLoading: milestonesLoading, isError: milestonesIsError, error: milestonesError } = useProjectMilestones(projectId);
+  const { data: milestonesPage, isLoading: milestonesLoading, isError: milestonesIsError, error: milestonesError } = useProjectMilestones(projectId, milestoneWindow);
 
   const resolution = usePageState({
     permission: "build:view",
@@ -117,19 +137,6 @@ export function GanttView({
   });
   const router = useRouter();
   const requestLeave = useNavigationLeave();
-  const [weekOffset, setWeekOffset] = useState(0);
-
-  const datedTickets = useMemo(
-    () => tickets.filter((t) => t.startDate || t.dueDate),
-    [tickets],
-  );
-
-  const startOfWeek = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - d.getDay() + weekOffset * 7);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, [weekOffset]);
 
   const [viewportWidth, setViewportWidth] = useState(1280);
   useEffect(() => {
@@ -219,14 +226,14 @@ export function GanttView({
   );
 
   const rowMap = useMemo<Map<number, number>>(
-    () => new Map(datedTickets.map((t, i): [number, number] => [t.id, i])),
-    [datedTickets],
+    () => new Map(tickets.map((t, i): [number, number] => [t.id, i])),
+    [tickets],
   );
 
   const barGeometries = useMemo(
     () =>
       new Map(
-        datedTickets.map((t) => [
+        tickets.map((t) => [
           t.id,
           computeBarGeometry(
             t.startDate,
@@ -241,7 +248,7 @@ export function GanttView({
         ]),
       ),
     [
-      datedTickets,
+      tickets,
       rowMap,
       startOfWeek,
       numDays,
@@ -257,14 +264,14 @@ export function GanttView({
   }
 
   const rowBand = resolveGanttRowBand(
-    datedTickets.length,
+    tickets.length,
     scrollTop,
     scrollViewportHeight,
     headerHeight,
     rowHeight,
   );
 
-  const contentHeight = headerHeight + datedTickets.length * rowHeight;
+  const contentHeight = headerHeight + tickets.length * rowHeight;
   const svgHeight = Math.max(contentHeight, scrollViewportHeight || 200);
   const bodyHeight = svgHeight - headerHeight;
   const svgWidth = labelWidth + days.length * dayWidth;
@@ -326,7 +333,7 @@ export function GanttView({
       </div>
 
       <PmPanel className="relative flex min-h-0 flex-1 flex-col">
-        {datedTickets.length === 0 ? (
+        {tickets.length === 0 ? (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-[2px]">
             <EmptyState
               illustrationPreset="calendar"
@@ -443,7 +450,7 @@ export function GanttView({
               />
 
               <GanttTicketRows
-                tickets={datedTickets}
+                tickets={tickets}
                 band={rowBand}
                 geometries={barGeometries}
                 criticalPathIds={criticalPathIds}

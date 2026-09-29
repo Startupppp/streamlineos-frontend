@@ -198,4 +198,17 @@ describe("CommandPaletteDialogBody — project-scoped route catalog", () => {
       expect(screen.queryByText(href)).not.toBeInTheDocument();
     }
   });
+
+  it("surfaces the Cycles route when the user searches by the Sprint synonym so Scrum teams migrating can discover the feature — BUG-017", () => {
+    accessData = {
+      isOrgOwner: false,
+      scopes: { "build:view": "all", "build:cycles:view": "all" },
+    };
+    enabledModules = ["BUILD"];
+
+    render(<CommandPaletteDialogBody />);
+    typeQuery("sprint");
+
+    expect(screen.getByText(`${PROJECT_BASE_PATH}/cycles`)).toBeInTheDocument();
+  });
 });

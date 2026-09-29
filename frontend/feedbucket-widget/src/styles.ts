@@ -14,6 +14,7 @@ export function getStyles(): string {
   font-size: 14px;
   line-height: 1.5;
   color: #0b1220;
+  pointer-events: none;
 }
 .widget.positioned { transform: none; }
 .widget.dragging {
@@ -40,6 +41,7 @@ export function getStyles(): string {
   border-radius: 16px;
   box-shadow: 0 6px 24px rgba(11,18,32,0.16);
   transition: opacity 160ms ease;
+  pointer-events: auto;
 }
 .launcher-btn {
   display: flex;

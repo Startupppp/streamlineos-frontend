@@ -54,6 +54,7 @@ function toNavRoute(destination: BuildNavDestination): NavRoute {
     href: destination.href,
     requiredPermission: destination.requiredPermission,
   };
+  if (destination.searchTerms) route.searchTerms = destination.searchTerms;
   return destination.exact ? { ...route, exact: true } : route;
 }
 

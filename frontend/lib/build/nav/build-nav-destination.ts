@@ -13,6 +13,7 @@ export interface BuildNavDestination {
   id: string;
   label: string;
   href: string;
+  searchTerms?: readonly string[];
   icon: ComponentType<{ className?: string }>;
   requiredPermission: PermissionKey | PermissionKey[];
   requiredOrgModule?: string;

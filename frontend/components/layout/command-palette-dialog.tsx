@@ -190,6 +190,7 @@ export function CommandPaletteDialogBody() {
           href: r.href,
           icon: r.icon,
           group: group.label,
+          searchTerms: r.searchTerms ?? [],
         })),
     );
   }, [navGroups, projectNavGroups]);
@@ -237,7 +238,9 @@ export function CommandPaletteDialogBody() {
     const q = query.toLowerCase();
     return pages.filter(
       (p) =>
-        p.name.toLowerCase().includes(q) || p.group.toLowerCase().includes(q),
+        p.name.toLowerCase().includes(q) ||
+        p.group.toLowerCase().includes(q) ||
+        p.searchTerms.some((term) => term.toLowerCase().includes(q)),
     );
   }, [query, pages]);
 
@@ -390,7 +393,7 @@ export function CommandPaletteDialogBody() {
               {items.map((page) => (
                 <CommandItem
                   key={page.href}
-                  value={`${page.name} ${page.group}`}
+                  value={[page.name, page.group, ...page.searchTerms].join(" ")}
                   onSelect={() => handleSelect(page.href)}
                   className={COMMAND_ITEM_CLASS}
                 >
