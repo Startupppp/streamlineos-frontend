@@ -137,7 +137,7 @@ export function ChangelogTab({
 
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <PageState
           resolution={resolution}
           loading={<ChangelogListSkeleton />}
@@ -153,7 +153,7 @@ export function ChangelogTab({
           onRetry={handleRetry}
           className={CONTENT_FILL_PANEL}
         >
-          <>
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <PmStaggerList className="space-y-2">
               {(data?.data ?? []).map((entry) => (
                 <ChangelogEntryCard
@@ -167,16 +167,18 @@ export function ChangelogTab({
                 />
               ))}
             </PmStaggerList>
-            <TablePagination
-              mode="cursor"
-              rowCount={(data?.data ?? []).length}
-              hasMore={hasNext}
-              hasPrevious={Boolean(cursor)}
-              onNext={handleNext}
-              onPrevious={handlePrev}
-            />
-          </>
+          </div>
         </PageState>
+        {(data?.data ?? []).length > 0 || Boolean(cursor) ? (
+          <TablePagination
+            mode="cursor"
+            rowCount={(data?.data ?? []).length}
+            hasMore={hasNext}
+            hasPrevious={Boolean(cursor)}
+            onNext={handleNext}
+            onPrevious={handlePrev}
+          />
+        ) : null}
       </div>
 
       {sheetOpen ? <ChangelogSheet onClose={handleCloseSheet} /> : null}

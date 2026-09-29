@@ -83,7 +83,7 @@ describe("DocumentKbLinkPanel", () => {
     renderPanel(
       stateFixture({
         publishable: false,
-        blockers: [{ code: "BELONGS_TO_AN_EMPLOYEE", message: "This document belongs to an employee." }],
+        blockers: [{ code: "BELONGS_TO_AN_EMPLOYEE", message: "This document belongs to an employee.", known: true }],
       }),
     );
 
@@ -107,7 +107,7 @@ describe("DocumentKbLinkPanel", () => {
       stateFixture({
         link: { ...liveLink, status: "unpublished", unpublishReason: "source_no_longer_publishable" },
         publishable: false,
-        blockers: [{ code: "CLASSIFICATION_NOT_SHAREABLE", message: "Only Internal or Restricted documents can be shared." }],
+        blockers: [{ code: "CLASSIFICATION_NOT_SHAREABLE", message: "Only Internal or Restricted documents can be shared.", known: true }],
       }),
     );
 

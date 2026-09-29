@@ -312,8 +312,8 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
             onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           >
-            <div className="flex min-h-0 flex-1 flex-col gap-2">
-              <div className="space-y-8">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div className="min-h-0 flex-1 space-y-8 overflow-y-auto">
                 {GOAL_LEVEL_ORDER.map((level) => {
                   const levelGoals = grouped.get(level) ?? [];
                   if (levelGoals.length === 0) return null;
@@ -341,13 +341,14 @@ export function ProductGoalsPage({ managedProductId }: ProductGoalsPageProps) {
                   );
                 })}
               </div>
-              <TablePagination
-                mode="offset"
-                page={page}
-                pageSize={PAGE_SIZE}
-                total={totalGoals}
-                onPageChange={handlePageChange}
-              />
+              {totalGoals > 0 ? (
+                <TablePagination
+                  page={page}
+                  pageSize={PAGE_SIZE}
+                  total={totalGoals}
+                  onPageChange={handlePageChange}
+                />
+              ) : null}
             </div>
           </PageState>
         </PmSection>

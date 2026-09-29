@@ -218,38 +218,39 @@ export const MyWorkContent = memo(function MyWorkContent({
           />
         </div>
       ) : showBucketList ? (
-        <ScrollArea className="min-h-0 flex-1" hideScrollbar>
-          <div className="flex flex-col gap-3">
-            {BUCKET_ORDER.map((bucket) => {
-              const items =
-                dueBuckets?.[bucket]?.map((t) => ({
-                  id: t.id,
-                  projectId: t.projectId ?? 0,
-                  projectName: t.projectName ?? "",
-                  projectKey: t.projectKey ?? "",
-                  ticketNumber: t.ticketNumber,
-                  title: t.title,
-                  status: t.status,
-                  priority: t.priority,
-                  type: t.type,
-                  dueDate: t.dueDate,
-                })) ?? [];
-              if (items.length === 0) return null;
-              return <BucketSection key={bucket} bucket={bucket} items={items} />;
-            })}
-            <TablePagination
-              mode="cursor"
-              rowCount={kanbanTickets.length}
-              pageNumber={pageNumber}
-              hasPrevious={hasPrevious}
-              hasMore={hasMore}
-              onPrevious={onPreviousPage}
-              onNext={onNextPage}
-              hideOnSinglePage
-              showLabels
-            />
-          </div>
-        </ScrollArea>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <ScrollArea className="min-h-0 flex-1" hideScrollbar>
+            <div className="flex flex-col gap-3">
+              {BUCKET_ORDER.map((bucket) => {
+                const items =
+                  dueBuckets?.[bucket]?.map((t) => ({
+                    id: t.id,
+                    projectId: t.projectId ?? 0,
+                    projectName: t.projectName ?? "",
+                    projectKey: t.projectKey ?? "",
+                    ticketNumber: t.ticketNumber,
+                    title: t.title,
+                    status: t.status,
+                    priority: t.priority,
+                    type: t.type,
+                    dueDate: t.dueDate,
+                  })) ?? [];
+                if (items.length === 0) return null;
+                return <BucketSection key={bucket} bucket={bucket} items={items} />;
+              })}
+            </div>
+          </ScrollArea>
+          <TablePagination
+            mode="cursor"
+            rowCount={kanbanTickets.length}
+            pageNumber={pageNumber}
+            hasPrevious={hasPrevious}
+            hasMore={hasMore}
+            onPrevious={onPreviousPage}
+            onNext={onNextPage}
+            hideOnSinglePage
+          />
+        </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <MyWorkViewBody
@@ -267,7 +268,6 @@ export const MyWorkContent = memo(function MyWorkContent({
             onPrevious={onPreviousPage}
             onNext={onNextPage}
             hideOnSinglePage
-            showLabels
           />
         </div>
       )}

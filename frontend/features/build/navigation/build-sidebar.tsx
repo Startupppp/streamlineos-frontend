@@ -174,7 +174,14 @@ export function BuildSidebar({ isCollapsed, onNavigate }: BuildSidebarProps) {
         </>
       ) : null}
 
-      <div className={cn("pt-2", isCollapsed ? "space-y-1" : "space-y-0.5")}>
+      <div
+        className={cn(
+          "pt-2",
+          isCollapsed
+            ? "flex flex-col items-center gap-1"
+            : "space-y-0.5",
+        )}
+      >
         <BuildAgentPulse isCollapsed={isCollapsed} onNavigate={onNavigate} />
         <BuildQuickCreate
           scope={model.scope}

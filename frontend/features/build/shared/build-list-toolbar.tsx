@@ -13,6 +13,11 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
 import { SearchInput } from "@/components/ui/search-input";
 import { cn } from "@/lib/utils";
 import {
@@ -127,24 +132,30 @@ export function BuildListToolbar({
 
       {layout.collapse || layout.filters.length > 1 ? (
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              className={cn(
-                "min-w-0 justify-center gap-1.5",
-                toolbarMoreButtonClass(layout.filters.length, layout.collapse),
-              )}
-            >
-              <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="truncate">{BUILD_TOOLBAR_FILTERS_LABEL}</span>
-              {layout.collapsedActiveCount > 0 ? (
-                <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 px-1 text-dense font-medium tabular-nums text-foreground">
-                  {layout.collapsedActiveCount}
-                </span>
-              ) : null}
-            </Button>
-          </DrawerTrigger>
+          <MobileOnlyLabelTooltip label={BUILD_TOOLBAR_FILTERS_LABEL}>
+            <DrawerTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                aria-label={BUILD_TOOLBAR_FILTERS_LABEL}
+                className={cn(
+                  "min-w-0 justify-center",
+                  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+                  toolbarMoreButtonClass(layout.filters.length, layout.collapse),
+                )}
+              >
+                <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <ResponsiveIconLabelText className="truncate">
+                  {BUILD_TOOLBAR_FILTERS_LABEL}
+                </ResponsiveIconLabelText>
+                {layout.collapsedActiveCount > 0 ? (
+                  <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 px-1 text-dense font-medium tabular-nums text-foreground">
+                    {layout.collapsedActiveCount}
+                  </span>
+                ) : null}
+              </Button>
+            </DrawerTrigger>
+          </MobileOnlyLabelTooltip>
           <DrawerContent className="max-h-[85dvh] gap-0">
             <DrawerHeader className="shrink-0 border-b border-border text-left">
               <DrawerTitle className="text-base">{drawerTitle}</DrawerTitle>

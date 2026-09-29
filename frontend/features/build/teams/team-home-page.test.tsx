@@ -542,8 +542,8 @@ describe("TeamHomePage — pagination controls (BLD-X-FE-TEAMS-DETAIL-008)", () 
     };
     mockUsePageState.mockReturnValue({ kind: "ready" });
     render(<TeamHomePage teamId={1} />);
-    expect(screen.queryByText("Next")).not.toBeInTheDocument();
-    expect(screen.queryByText("Previous")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Next page" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Previous page" })).not.toBeInTheDocument();
   });
 
   it("renders the Next button when pagination has more results", () => {
@@ -554,7 +554,7 @@ describe("TeamHomePage — pagination controls (BLD-X-FE-TEAMS-DETAIL-008)", () 
     };
     mockUsePageState.mockReturnValue({ kind: "ready" });
     render(<TeamHomePage teamId={1} />);
-    expect(screen.getByText("Next")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next page" })).toBeInTheDocument();
   });
 });
 

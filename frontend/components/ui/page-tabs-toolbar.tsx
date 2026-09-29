@@ -5,6 +5,9 @@ import { ListFilter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
+  MobileOnlyLabelTooltip,
+} from "@/components/ui/responsive-icon-label";
+import {
   ResponsivePopover,
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
@@ -68,18 +71,22 @@ export function PageTabsToolbar({
       </div>
       {!filtersAlwaysVisible ? (
         <ResponsivePopover>
-          <ResponsivePopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className={cn("h-9 shrink-0 gap-1.5 px-2.5", filtersButtonClass(collapseBelow))}
-              aria-label="Filters"
-            >
-              <ListFilter className="h-4 w-4" />
-              <span>Filters</span>
-            </Button>
-          </ResponsivePopoverTrigger>
+          <MobileOnlyLabelTooltip label="Filters">
+            <ResponsivePopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "size-9 shrink-0 p-0",
+                  filtersButtonClass(collapseBelow),
+                )}
+                aria-label="Filters"
+              >
+                <ListFilter className="h-4 w-4 shrink-0" aria-hidden="true" />
+              </Button>
+            </ResponsivePopoverTrigger>
+          </MobileOnlyLabelTooltip>
           <ResponsivePopoverContent
             title="Filters"
             align="end"

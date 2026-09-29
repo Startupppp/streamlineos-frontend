@@ -3,12 +3,18 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
+import {
   ResponsivePopover,
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
 import { DisplayToggleRow } from "@/features/build/shared/display-toggle-row";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { cn } from "@/lib/utils";
 import { SlidersHorizontalIcon } from "@animateicons/react/lucide";
 import { type DisplayProps, DISPLAY_PROP_ITEMS } from "./display-props";
 
@@ -42,17 +48,21 @@ export function DisplayPropsToggle({
 
   return (
     <ResponsivePopover>
-      <ResponsivePopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 min-h-9 gap-1.5 text-xs shrink-0"
-          {...hoverHandlers}
-        >
-          <SlidersHorizontalIcon ref={iconRef} size={13} />
-          Display
-        </Button>
-      </ResponsivePopoverTrigger>
+      <MobileOnlyLabelTooltip label="Display">
+        <ResponsivePopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-label="Display"
+            className={cn(RESPONSIVE_ICON_LABEL_TRIGGER_CLASS, "min-h-9 shrink-0")}
+            {...hoverHandlers}
+          >
+            <SlidersHorizontalIcon ref={iconRef} size={13} aria-hidden="true" />
+            <ResponsiveIconLabelText>Display</ResponsiveIconLabelText>
+          </Button>
+        </ResponsivePopoverTrigger>
+      </MobileOnlyLabelTooltip>
       <ResponsivePopoverContent align="end" title="Display properties" className="w-52 p-3">
         <p className="mb-3 text-label font-semibold text-foreground">
           Display properties

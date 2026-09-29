@@ -244,6 +244,13 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
     Boolean(filterClientId);
   const filtersActive = hasFiltersOrSearch || activeGroup !== null;
 
+  const pageTitle =
+    managedProductId === undefined ? "All Projects" : "Linked Projects";
+  const pageSubtitle =
+    managedProductId === undefined
+      ? "Browse and manage every project in your organization"
+      : "Projects linked to this managed product";
+
   const handleKeyboardOpenProject = useCallback(
     (index: number) => {
       const project = visibleProjects[index];
@@ -288,8 +295,8 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
         />
       )}
       <PageWrapper
-        title="All Projects"
-        subtitle="Browse and manage every project in your organization"
+        title={pageTitle}
+        subtitle={pageSubtitle}
         actions={<BuildHeaderActions actions={headerActions} />}
         filters={
           <ProjectFilterBar
@@ -337,23 +344,25 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                 onClearFilters={handleClearFilters}
               />
             ) : viewMode === "grid" ? (
-              <>
-                <PmStaggerList
-                  className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
-                  role="list"
-                  aria-label="Projects grid"
-                >
-                  {visibleProjects.map((project) => (
-                    <motion.div
-                      key={project.id}
-                      variants={shouldReduceMotion ? fadeUpReduced : fadeUp}
-                      className="h-full"
-                      role="listitem"
-                    >
-                      <ProjectCard project={project} />
-                    </motion.div>
-                  ))}
-                </PmStaggerList>
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  <PmStaggerList
+                    className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
+                    role="list"
+                    aria-label="Projects grid"
+                  >
+                    {visibleProjects.map((project) => (
+                      <motion.div
+                        key={project.id}
+                        variants={shouldReduceMotion ? fadeUpReduced : fadeUp}
+                        className="h-full"
+                        role="listitem"
+                      >
+                        <ProjectCard project={project} />
+                      </motion.div>
+                    ))}
+                  </PmStaggerList>
+                </div>
                 {hasNextPage ? (
                   <TablePagination
                     mode="cursor"
@@ -365,7 +374,7 @@ export function ProjectsPage({ managedProductId }: ProjectsPageProps) {
                     disabled={isFetchingNextPage}
                   />
                 ) : null}
-              </>
+              </div>
             ) : (
               <div className="flex min-h-0 flex-1 gap-3">
                 <div className="flex min-w-0 flex-1 flex-col">

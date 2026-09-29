@@ -29,6 +29,7 @@ import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { notFound } from "next/navigation";
 import type { ViewType } from "@/features/build/views/view-switcher";
 
@@ -357,7 +358,7 @@ export function WorkloadBoardPage({ params }: PageProps) {
     >
       {!isOnline ? (
         <EmptyState
-          className="flex-1"
+          className={CONTENT_FILL_PANEL}
           illustrationPreset="team"
           title="You are offline"
           description="Showing cached data. Reconnect to see the latest workload."

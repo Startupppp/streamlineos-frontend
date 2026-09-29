@@ -300,34 +300,38 @@ export function GoalsPage() {
                 />
               }
             >
-              <div className="flex flex-col gap-6 overflow-y-auto">
-                {GOAL_LEVEL_ORDER.map((level) => {
-                  const levelGoals = grouped.get(level) ?? [];
-                  if (levelGoals.length === 0) return null;
-                  return (
-                    <div key={level} className="flex flex-col gap-3">
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-sm font-semibold text-foreground">
-                          {LEVEL_LABEL[level]}
-                        </h2>
-                        <Badge variant="secondary" className="text-micro">
-                          {levelGoals.length}
-                        </Badge>
-                      </div>
-                      <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {levelGoals.map((goal) => (
-                          <GoalCard
-                            key={goal.id}
-                            goal={goal}
-                            onEdit={canManage ? handleEditGoalCard : undefined}
-                            onDelete={canManage ? handleDeleteGoalCard : undefined}
-                          />
-                        ))}
-                      </PmStaggerList>
-                    </div>
-                  );
-                })}
-                {totalGoals > GOALS_PAGE_SIZE ? (
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  <div className="flex flex-col gap-6">
+                    {GOAL_LEVEL_ORDER.map((level) => {
+                      const levelGoals = grouped.get(level) ?? [];
+                      if (levelGoals.length === 0) return null;
+                      return (
+                        <div key={level} className="flex flex-col gap-3">
+                          <div className="flex items-center gap-2">
+                            <h2 className="text-sm font-semibold text-foreground">
+                              {LEVEL_LABEL[level]}
+                            </h2>
+                            <Badge variant="secondary" className="text-micro">
+                              {levelGoals.length}
+                            </Badge>
+                          </div>
+                          <PmStaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {levelGoals.map((goal) => (
+                              <GoalCard
+                                key={goal.id}
+                                goal={goal}
+                                onEdit={canManage ? handleEditGoalCard : undefined}
+                                onDelete={canManage ? handleDeleteGoalCard : undefined}
+                              />
+                            ))}
+                          </PmStaggerList>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                {totalGoals > 0 ? (
                   <TablePagination
                     page={page}
                     pageSize={GOALS_PAGE_SIZE}

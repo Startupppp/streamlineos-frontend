@@ -463,10 +463,11 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
       }
     >
       {hasCycles ? (
-        <div className="flex flex-1 min-h-0 flex-col gap-6">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
           {!isOnline ? (
             <div
-              className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2"
+              className="flex shrink-0 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2"
               data-testid="offline-banner"
             >
               <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -541,6 +542,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
             </>
           ) : null}
           <CycleVelocityPanel projectId={projectId} />
+          </div>
           <TablePagination
             mode="cursor"
             rowCount={displayedCycles.length}

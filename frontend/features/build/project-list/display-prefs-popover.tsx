@@ -3,6 +3,11 @@
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
+import {
   ResponsivePopover,
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
@@ -128,17 +133,20 @@ export function DisplayPrefsPopover({
 
   return (
     <ResponsivePopover>
-      <ResponsivePopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          aria-label="Display"
-          className="h-9 gap-1.5 text-xs"
-        >
-          <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-          <span className="hidden sm:inline">Display</span>
-        </Button>
-      </ResponsivePopoverTrigger>
+      <MobileOnlyLabelTooltip label="Display">
+        <ResponsivePopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-label="Display"
+            className={RESPONSIVE_ICON_LABEL_TRIGGER_CLASS}
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <ResponsiveIconLabelText>Display</ResponsiveIconLabelText>
+          </Button>
+        </ResponsivePopoverTrigger>
+      </MobileOnlyLabelTooltip>
       <ResponsivePopoverContent
         align="end"
         title="Display options"

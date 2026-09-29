@@ -20,6 +20,7 @@ import { PageState } from "@/components/shared/page-state";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -490,6 +491,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
       filtersActive
       filteredTitle="No pages match your filters."
       onClearFilters={handleClearFilters}
+      className={CONTENT_FILL_PANEL}
     />
   ) : (
     <EmptyState
@@ -501,6 +503,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
       tertiaryAction={
         canImport ? { label: "Import pages", href: KB_IMPORT } : undefined
       }
+      className={CONTENT_FILL_PANEL}
     />
   );
 
@@ -609,6 +612,7 @@ export function WikiHomeAllPages({ projectId, onItemCountChange, onRowsChange }:
         loading={<DataTableSkeleton columns={columns.length} />}
         empty={emptyNode}
         onRetry={handleRetry}
+        className={CONTENT_FILL_PANEL}
       >
         {view === "card" ? (
           rows.length === 0 ? (

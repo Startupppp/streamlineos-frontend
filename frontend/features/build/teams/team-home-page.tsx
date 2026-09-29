@@ -26,6 +26,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Select,
   SelectContent,
@@ -440,8 +441,9 @@ export function TeamHomePage({ teamId }: Props) {
               />
             </PmPanel>
           ) : (
-            <PmPanel role="list" aria-label="Team members">
-              {pageMembers.map((member) => {
+            <PmPanel role="list" aria-label="Team members" className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                {pageMembers.map((member) => {
                 const displayName = getUserDisplayName({
                   firstName: member.firstName,
                   lastName: member.lastName,
@@ -485,19 +487,16 @@ export function TeamHomePage({ teamId }: Props) {
                   </div>
                 );
               })}
+              </div>
               {(memberPager.hasPrevious || membersResult.data?.pagination.hasMore) ? (
-                <div className="flex items-center justify-end gap-2 border-t px-3 py-2">
-                  {memberPager.hasPrevious ? (
-                    <Button type="button" variant="outline" size="sm" onClick={memberPager.goPrevious}>
-                      Previous
-                    </Button>
-                  ) : null}
-                  {membersResult.data?.pagination.hasMore ? (
-                    <Button type="button" variant="outline" size="sm" onClick={handleMembersNext}>
-                      Next
-                    </Button>
-                  ) : null}
-                </div>
+                <TablePagination
+                  mode="cursor"
+                  rowCount={pageMembers.length}
+                  hasMore={Boolean(membersResult.data?.pagination.hasMore)}
+                  hasPrevious={memberPager.hasPrevious}
+                  onNext={handleMembersNext}
+                  onPrevious={memberPager.goPrevious}
+                />
               ) : null}
             </PmPanel>
           )}

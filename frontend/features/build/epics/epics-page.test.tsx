@@ -16,7 +16,6 @@ import {
   mockUseEpicPage,
   mockUseOnlineStatus,
   mockUseProject,
-  mockUseProjectBoardTickets,
   mockUseUpdateTicket,
   params,
   readCapturedToolbarFilters,
@@ -25,11 +24,13 @@ import {
 import { EpicsPage } from "./epics-page";
 import { ApiError } from "@/lib/api-envelope";
 
+const epicRow = { ...EPIC_ROW, version: 1 };
+
 beforeEach(installEpicsPageMocks);
 
 describe("EpicsPage — every epic filter is asked of the server, not applied to one page of rows", () => {
   it("forwards health, status, owner and the page size, so a filtered page is filtered by the database", async () => {
-    readyPage([EPIC_ROW]);
+    readyPage([epicRow]);
     mockUseBuildListFilters.mockReturnValue(
       filtersReturning({ health: "at_risk", status: "IN_PROGRESS", ownerId: "user-3" }),
     );
@@ -46,7 +47,7 @@ describe("EpicsPage — every epic filter is asked of the server, not applied to
   });
 
   it("forwards no filter value when every control is at its sentinel, so the request is not narrowed by accident", async () => {
-    readyPage([EPIC_ROW]);
+    readyPage([epicRow]);
     await act(async () => { render(<EpicsPage params={params} />); });
     expect(mockUseEpicPage).toHaveBeenCalledWith(
       1,
@@ -60,11 +61,9 @@ describe("EpicsPage — every epic filter is asked of the server, not applied to
   });
 
   it("renders exactly the epics the server returned, without re-filtering them here", async () => {
-    mockUseProjectBoardTickets.mockReturnValue({
-      data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn(),
-    });
+    readyPage([]);
     mockUseEpicPage.mockReturnValue(
-      epicPageResult([EPIC_ROW, { ...EPIC_ROW, id: 12, title: "Epic Two" }]),
+      epicPageResult([epicRow, { ...epicRow, id: 12, title: "Epic Two" }]),
     );
     await act(async () => { render(<EpicsPage params={params} />); });
     expect(screen.getAllByTestId("epic-card")).toHaveLength(2);
@@ -73,7 +72,7 @@ describe("EpicsPage — every epic filter is asked of the server, not applied to
 
 describe("EpicsPage — the epic page is a URL cursor, so a page is shareable and bounded", () => {
   it("forwards the URL cursor to the epic read", async () => {
-    readyPage([EPIC_ROW]);
+    readyPage([epicRow]);
     mockUseBuildListFilters.mockReturnValue({
       ...filtersReturning({}, false),
       cursor: "epic-cursor-1",
@@ -87,11 +86,9 @@ describe("EpicsPage — the epic page is a URL cursor, so a page is shareable an
 
   it("writes the server's next cursor to the URL when Next is pressed", async () => {
     const setCursor = jest.fn();
-    mockUseProjectBoardTickets.mockReturnValue({
-      data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn(),
-    });
+    readyPage([]);
     mockUseEpicPage.mockReturnValue(
-      epicPageResult([EPIC_ROW], { hasMore: true, nextCursor: "next-epic" }),
+      epicPageResult([epicRow], { hasMore: true, nextCursor: "next-epic" }),
     );
     mockUseBuildListFilters.mockReturnValue({ ...filtersReturning({}, false), setCursor });
     await act(async () => { render(<EpicsPage params={params} />); });
@@ -100,20 +97,16 @@ describe("EpicsPage — the epic page is a URL cursor, so a page is shareable an
   });
 
   it("disables Next when the server says there is no further page", async () => {
-    mockUseProjectBoardTickets.mockReturnValue({
-      data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn(),
-    });
-    mockUseEpicPage.mockReturnValue(epicPageResult([EPIC_ROW]));
+    readyPage([]);
+    mockUseEpicPage.mockReturnValue(epicPageResult([epicRow]));
     await act(async () => { render(<EpicsPage params={params} />); });
     expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
   });
 
   it("offers no Previous on a deep-linked cursor, because the page before it was never visited here", async () => {
-    mockUseProjectBoardTickets.mockReturnValue({
-      data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn(),
-    });
+    readyPage([]);
     mockUseEpicPage.mockReturnValue(
-      epicPageResult([EPIC_ROW], { hasMore: true, nextCursor: "n" }),
+      epicPageResult([epicRow], { hasMore: true, nextCursor: "n" }),
     );
     mockUseBuildListFilters.mockReturnValue({ ...filtersReturning({}, false), cursor: "deep" });
     await act(async () => { render(<EpicsPage params={params} />); });
@@ -122,11 +115,9 @@ describe("EpicsPage — the epic page is a URL cursor, so a page is shareable an
 
   it("returns to the cursor it came from when Previous is pressed after a Next", async () => {
     const setCursor = jest.fn();
-    mockUseProjectBoardTickets.mockReturnValue({
-      data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn(),
-    });
+    readyPage([]);
     mockUseEpicPage.mockReturnValue(
-      epicPageResult([EPIC_ROW], { hasMore: true, nextCursor: "second" }),
+      epicPageResult([epicRow], { hasMore: true, nextCursor: "second" }),
     );
     mockUseBuildListFilters.mockReturnValue({
       ...filtersReturning({}, false),
@@ -150,21 +141,17 @@ describe("EpicsPage — the epic page is a URL cursor, so a page is shareable an
 
 describe("EpicsPage — dependencies reach the card from the epic row itself", () => {
   it("passes the dependency count the epic endpoint projected on that row", async () => {
-    mockUseProjectBoardTickets.mockReturnValue({
-      data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn(),
-    });
+    readyPage([]);
     mockUseEpicPage.mockReturnValue(
-      epicPageResult([{ ...EPIC_ROW, dependencyCount: 3 }]),
+      epicPageResult([{ ...epicRow, dependencyCount: 3 }]),
     );
     await act(async () => { render(<EpicsPage params={params} />); });
     expect(screen.getByTestId("epic-card")).toHaveAttribute("data-dependency-count", "3");
   });
 
   it("passes no dependency count for a row that carries none, rather than inventing zero", async () => {
-    mockUseProjectBoardTickets.mockReturnValue({
-      data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn(),
-    });
-    mockUseEpicPage.mockReturnValue(epicPageResult([EPIC_ROW]));
+    readyPage([]);
+    mockUseEpicPage.mockReturnValue(epicPageResult([epicRow]));
     await act(async () => { render(<EpicsPage params={params} />); });
     expect(screen.getByTestId("epic-card")).toHaveAttribute("data-dependency-count", "");
   });
@@ -182,13 +169,13 @@ describe("EpicsPage — offline", () => {
 
   it("dates the loaded epics while offline, so a stale list is not read as current", async () => {
     mockUseOnlineStatus.mockReturnValue(false);
-    readyPage([EPIC_ROW], Date.now() - 2 * 60 * 1000);
+    readyPage([epicRow], Date.now() - 2 * 60 * 1000);
     await act(async () => { render(<EpicsPage params={params} />); });
     expect(screen.getByTestId("offline-banner-freshness")).toHaveTextContent(/last updated .*2 minutes ago/i);
   });
 
   it("shows no offline banner while online, so the notice is not always on", async () => {
-    readyPage([EPIC_ROW], Date.now());
+    readyPage([epicRow], Date.now());
     await act(async () => { render(<EpicsPage params={params} />); });
     expect(screen.queryByTestId("offline-banner")).not.toBeInTheDocument();
     expect(screen.queryByTestId("offline-state")).not.toBeInTheDocument();
@@ -197,7 +184,7 @@ describe("EpicsPage — offline", () => {
 
 describe("EpicsPage — the ? shortcut has a target", () => {
   it("opens the shortcut help dialog when ? fires", async () => {
-    readyPage([EPIC_ROW]);
+    readyPage([epicRow]);
     await act(async () => { render(<EpicsPage params={params} />); });
     const calls = mockUseBuildListKeyboard.mock.calls;
     const options = calls[calls.length - 1][0];
@@ -207,7 +194,7 @@ describe("EpicsPage — the ? shortcut has a target", () => {
   });
 
   it("keeps the shortcut help dialog closed until ? fires", async () => {
-    readyPage([EPIC_ROW]);
+    readyPage([epicRow]);
     await act(async () => { render(<EpicsPage params={params} />); });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -251,10 +238,11 @@ describe("EpicsPage — the c and e shortcuts have a real target", () => {
     rank: "1002", parentTicketId: null, originalEstimate: null, timeSpent: null,
     startDate: null, dueDate: null, moduleId: null, cycleId: null,
     sequenceId: "PROJ-3", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",
+    version: 1,
   };
 
   it("passes onCreate and onEdit to useBuildListKeyboard when the caller may create and update", async () => {
-    mockUseProjectBoardTickets.mockReturnValue({ data: [EPIC], isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+    readyPage([EPIC]);
 
     await act(async () => {
       render(<EpicsPage params={params} />);
@@ -267,7 +255,7 @@ describe("EpicsPage — the c and e shortcuts have a real target", () => {
 
   it("passes no onCreate when build:tickets:create is denied, so c cannot open a sheet the caller may not submit", async () => {
     mockUseCan.mockReturnValue(false);
-    mockUseProjectBoardTickets.mockReturnValue({ data: [EPIC], isLoading: false, isError: false, error: undefined, refetch: jest.fn() });
+    readyPage([EPIC]);
 
     await act(async () => {
       render(<EpicsPage params={params} />);
@@ -307,8 +295,8 @@ describe("EpicsPage — linking a story carries the concurrency token", () => {
     const mutate = jest.fn();
     mockUseUpdateTicket.mockReturnValue({ ...makeMutationResult(), mutate });
     readyPage([
-      EPIC_ROW,
-      { ...EPIC_ROW, id: 31, title: "Loose story", type: "STORY", version: 9, epicId: null },
+      epicRow,
+      { ...epicRow, id: 31, title: "Loose story", type: "STORY", version: 9, epicId: null },
     ]);
     await act(async () => { render(<EpicsPage params={params} />); });
     await act(async () => { fireEvent.click(screen.getAllByTestId("link-story-btn")[0]); });
@@ -318,7 +306,7 @@ describe("EpicsPage — linking a story carries the concurrency token", () => {
   it("sends nothing when the story is not in the loaded page, rather than a patch with no token", async () => {
     const mutate = jest.fn();
     mockUseUpdateTicket.mockReturnValue({ ...makeMutationResult(), mutate });
-    readyPage([EPIC_ROW]);
+    readyPage([epicRow]);
     await act(async () => { render(<EpicsPage params={params} />); });
     await act(async () => { fireEvent.click(screen.getAllByTestId("link-story-btn")[0]); });
     expect(mutate).not.toHaveBeenCalled();
@@ -355,9 +343,7 @@ describe("EpicsPage — the failure surface carries the request id", () => {
 
 describe("EpicsPage — a failed epic read is a failure, not an empty list", () => {
   it("resolves to the error state when the epic read fails even though the project read succeeded", async () => {
-    mockUseProjectBoardTickets.mockReturnValue({
-      data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn(),
-    });
+    readyPage([]);
     mockUseEpicPage.mockReturnValue(
       epicPageResult([], {
         isError: true,
@@ -372,9 +358,7 @@ describe("EpicsPage — a failed epic read is a failure, not an empty list", () 
 
   it("retries the epic read along with the project and board reads", async () => {
     const refetchEpics = jest.fn();
-    mockUseProjectBoardTickets.mockReturnValue({
-      data: [], isLoading: false, isError: false, error: undefined, refetch: jest.fn(),
-    });
+    readyPage([]);
     mockUseEpicPage.mockReturnValue(
       epicPageResult([], { isError: true, error: new Error("boom"), refetch: refetchEpics }),
     );

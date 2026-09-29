@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { StepTemplate } from "./step-template";
 import type { WizardDraft } from "../use-project-create";
 
-let mockPageStateResolution: { kind: string; error?: unknown } = { kind: "ready" };
+let mockPageStateResolution: { kind: string; error?: unknown; permission?: string | null } = { kind: "ready" };
 let mockTemplatesResult: {
   data: { pages: { data: { id: number; name: string; description?: string | null; tickets?: unknown[] }[] }[] } | undefined;
   isLoading: boolean;

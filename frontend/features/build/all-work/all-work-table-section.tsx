@@ -151,7 +151,7 @@ export function AllWorkTableSection({
   const tableRows = useMemo(() => tickets.map(toTableTicket), [tickets]);
 
   return (
-    <div className="pb-2 pt-2">
+    <div className="flex min-h-0 flex-1 flex-col">
       <DataTable
         data={tableRows}
         columns={tableColumns}
@@ -184,7 +184,7 @@ export function AllWorkTableSection({
           <MobileTicketCard row={row} onTicketClick={onTicketClick} />
         )}
         minWidth="640px"
-        className={cn(PM_PANEL_SOLID, "overflow-hidden")}
+        className={cn(PM_PANEL_SOLID, "min-h-0 flex-1 overflow-hidden")}
       />
     </div>
   );

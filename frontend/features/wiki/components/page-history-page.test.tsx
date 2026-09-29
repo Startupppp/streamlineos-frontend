@@ -129,7 +129,7 @@ const mockVersionTwo = {
   title: "Test Page",
   content: CURRENT_PAGE_CONTENT,
   authorName: "Bob",
-  changeSummary: "Second edit",
+  changeSummary: null,
   createdAt: new Date().toISOString(),
 };
 

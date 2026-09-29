@@ -128,7 +128,8 @@ export function BuildQuickCreate({
             aria-label={isCollapsed ? "Create" : undefined}
             className={cn(
               "h-8 w-full justify-start gap-2.5 rounded-md px-2.5 text-label font-medium text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-              isCollapsed && "mx-auto h-8 w-8 justify-center px-0",
+              isCollapsed &&
+                "mx-auto size-8 justify-center p-0 has-[>svg]:px-0",
             )}
           >
             <SidebarAnimatedNavIcon

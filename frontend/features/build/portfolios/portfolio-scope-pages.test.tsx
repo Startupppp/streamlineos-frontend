@@ -115,7 +115,7 @@ jest.mock("@/features/build/shared/use-build-list-filters", () => ({
 }));
 
 jest.mock("@/features/build/shared/use-build-cursor-pager", () => {
-  const { useState } = require("react");
+  const { useState } = jest.requireActual<typeof import("react")>("react");
   return {
     useBuildCursorPager: () => {
       const [cursor, setCursor] = useState<string | undefined>(undefined);
