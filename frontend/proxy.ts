@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getToken, type JWT } from "next-auth/jwt";
+import { recordLegacyRedirect } from "@/lib/observability/legacy-redirect";
 import {
   sessionCookieBases,
   SESSION_EXPIRED_QUERY,
@@ -174,11 +175,13 @@ export async function proxy(req: NextRequest) {
 
   if (matchesRoute(pathname, "/projects")) {
     const rest = pathname.slice("/projects".length);
+    recordLegacyRedirect("/projects", "/build" + rest);
     return redirectTo(req, "/build" + rest, req.nextUrl.search);
   }
 
   if (matchesRoute(pathname, "/product-management")) {
     const rest = pathname.slice("/product-management".length);
+    recordLegacyRedirect("/product-management", "/build" + rest);
     return redirectTo(req, "/build" + rest, req.nextUrl.search);
   }
 
