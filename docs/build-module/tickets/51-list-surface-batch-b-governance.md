@@ -35,6 +35,7 @@ This batch holds the page the review singled out: a 545-line risks page with no 
   register when a status filter narrows the server-filtered rows. It was failing on a stale mock rather than
   on the migration, and was repaired without touching a single assertion.
 - [ ] No page in the batch changes visibly, including its empty and error states
+  **NOT EARNED 2026-09-29 — deliberately false for one page: `forms/forms-list-page.tsx` lost an FE-40 violation that hid its toolbar while access resolved, which is a visible change. Nothing would earn it except putting the bug back.**
   **Left unchecked deliberately, for one page.** Nine of the ten migrations are mechanical and the rendered
   output is unchanged; the empty-state split from one `EmptyState` carrying `filtersActive` into the surface's
   `empty` and `filteredEmpty` produces identical copy in both branches.

@@ -118,3 +118,5 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
   reduced-motion, mobile/high-density layouts, production API state, or
   ready/error/denied/conflict handling. The two browser acceptance boxes above
   remain unchecked.
+- [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
+- [ ] Production browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — **OUT OF SCOPE — browser verification** (2026-09-29: waived by Tarun, not a release blocker; every non-browser criterion on this page is ticked above).
