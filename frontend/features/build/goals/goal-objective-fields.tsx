@@ -26,7 +26,7 @@ export function GoalObjectiveFields() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
         <Target className="h-4 w-4" />
         <span>Objective</span>
       </div>

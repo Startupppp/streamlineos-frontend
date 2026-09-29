@@ -31,7 +31,7 @@ interface TicketSidebarMetadataProps {
 function PropertyRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[100px_1fr] items-center gap-2 min-h-[36px]">
-      <span className="text-xs text-muted-foreground font-medium truncate">
+      <span className="text-xs text-muted-foreground font-normal truncate">
         {label}
       </span>
       <div className="min-w-0">{children}</div>

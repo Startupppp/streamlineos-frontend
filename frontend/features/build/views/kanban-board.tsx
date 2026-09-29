@@ -233,7 +233,7 @@ export function KanbanBoard({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-0">
-                  <div className="kanban-scroll-container flex h-[min(480px,calc(100dvh-12rem))] max-h-[min(480px,calc(100dvh-12rem))] items-stretch gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x pb-2 pt-0.5 [scrollbar-width:thin] md:scrollbar-hide">
+                  <div className="kanban-scroll-container flex h-[min(480px,calc(100dvh-12rem))] max-h-[min(480px,calc(100dvh-12rem))] min-w-0 w-full max-w-full items-stretch gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x pb-2 pt-0.5 [scrollbar-width:thin] md:scrollbar-hide">
                     {visibleColumns.map((col) => (
                       <KanbanBoardColumn
                         hasActiveFilters={hasActiveFilters}
@@ -283,7 +283,7 @@ export function KanbanBoard({
             ref={columnsProvided.innerRef}
             {...columnsProvided.droppableProps}
             className={cn(
-              "kanban-scroll-container flex h-full min-w-0 items-start gap-3 overflow-x-auto overscroll-x-contain touch-pan-x pb-1 px-1 [scrollbar-width:thin] md:scrollbar-hide",
+              "kanban-scroll-container flex h-full min-w-0 w-full max-w-full items-start gap-3 overflow-x-auto overscroll-x-contain touch-pan-x pb-1 px-1 [scrollbar-width:thin] md:scrollbar-hide",
               visibleColumns.length > BOARD_COLUMN_VIRTUALIZATION_THRESHOLD && "[&>*]:content-visibility-auto",
             )}
           >

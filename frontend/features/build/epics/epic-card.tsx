@@ -247,7 +247,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, dependencyCount,
                 {isExpanded ? <ChevronDownIcon ref={expandIconRef} size={14} /> : <ChevronRightIcon ref={expandIconRef} size={14} />}
               </Button>
               <div className="min-w-0 space-y-0.5">
-                <CardTitle className="flex min-w-0 items-center gap-1.5 text-label font-semibold">
+                <CardTitle className="flex min-w-0 items-center gap-1.5 text-label font-medium">
                   <Layers className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <TruncatedText text={epic.title} />
                 </CardTitle>

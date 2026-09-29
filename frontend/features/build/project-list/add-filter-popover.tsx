@@ -72,7 +72,7 @@ function FilterOption<T extends string>({ value, label, active, onSelect }: Filt
       className={cn(
         "flex w-full items-center rounded-md px-2 py-1.5 text-left text-label transition-colors",
         active
-          ? "bg-primary/10 text-primary font-medium"
+          ? "bg-primary/10 text-primary font-normal"
           : "text-foreground hover:bg-muted",
       )}
     >
@@ -103,9 +103,9 @@ function FilterCategoryButton({
       className={cn(
         "flex w-full items-center rounded-md px-2 py-1.5 text-left text-xs transition-colors",
         active
-          ? "bg-primary text-primary-foreground font-medium"
+          ? "bg-primary text-primary-foreground font-normal"
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
-        filled && "font-medium text-foreground",
+        filled && "font-normal text-foreground",
       )}
     >
       {category.label}
@@ -117,7 +117,7 @@ function FilterCategoryButton({
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-3">
-      <p className="mb-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="mb-1 text-micro font-medium uppercase tracking-wider text-muted-foreground">
         {title}
       </p>
       <div className="space-y-0.5">{children}</div>
@@ -190,7 +190,7 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
         className="w-72 p-3"
       >
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-label font-semibold text-foreground">Add filter</p>
+          <p className="text-label font-medium text-foreground">Add filter</p>
           {hasAny ? (
             <button
               type="button"

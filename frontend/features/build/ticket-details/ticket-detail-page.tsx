@@ -284,7 +284,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
       title={pageTitle}
       subtitle={
         <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5">
-          <span className="shrink-0 font-mono text-label font-medium text-muted-foreground">
+          <span className="shrink-0 font-mono text-label font-normal text-muted-foreground">
             {displayKey}
           </span>
           {versionedTicket.parentTicketId != null ? (

@@ -90,11 +90,11 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
             loading={
               <div className="space-y-6">
                 <div>
-                  <h2 className="mb-3 text-sm font-semibold text-foreground">Projects</h2>
+                  <h2 className="mb-3 text-sm font-medium text-foreground">Projects</h2>
                   <StatCardGridSkeleton cols={3} />
                 </div>
                 <div>
-                  <h2 className="mb-3 text-sm font-semibold text-foreground">Feedback submissions</h2>
+                  <h2 className="mb-3 text-sm font-medium text-foreground">Feedback submissions</h2>
                   <StatCardGridSkeleton cols={4} />
                 </div>
               </div>
@@ -111,7 +111,7 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
           >
             <div className="space-y-6">
               <div>
-                <h2 className="mb-3 text-sm font-semibold text-foreground">Projects</h2>
+                <h2 className="mb-3 text-sm font-medium text-foreground">Projects</h2>
                 <StatCardGrid cols={3}>
                   <StatCard
                     label="Linked projects"
@@ -135,7 +135,7 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
               </div>
 
               <div>
-                <h2 className="mb-3 text-sm font-semibold text-foreground">Feedback submissions</h2>
+                <h2 className="mb-3 text-sm font-medium text-foreground">Feedback submissions</h2>
                 <StatCardGrid cols={4}>
                   <StatCard
                     label="Open"
@@ -165,7 +165,7 @@ export function ProductInsightsPage({ managedProductId }: ProductInsightsPagePro
               </div>
 
               <div>
-                <h2 className="mb-3 text-sm font-semibold text-foreground">Roadmap outcomes</h2>
+                <h2 className="mb-3 text-sm font-medium text-foreground">Roadmap outcomes</h2>
                 <StatCardGrid cols={4}>
                   <StatCard
                     label="Roadmap items"

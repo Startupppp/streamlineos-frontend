@@ -118,7 +118,7 @@ export function BuildScopeSelector({
       aria-label={triggerLabel}
       aria-expanded={open}
       aria-haspopup="listbox"
-      className="mx-auto flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-micro font-bold text-primary transition-colors hover:bg-primary/15 motion-reduce:transition-none"
+      className="mx-auto flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-micro font-medium text-primary transition-colors hover:bg-primary/15 motion-reduce:transition-none"
     >
       {scopeAvatarText(currentRef)}
     </button>
@@ -133,7 +133,7 @@ export function BuildScopeSelector({
     >
       <span
         aria-hidden
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary/10 text-micro font-bold text-primary"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary/10 text-micro font-medium text-primary"
       >
         {scopeAvatarText(currentRef)}
       </span>
@@ -144,7 +144,7 @@ export function BuildScopeSelector({
           ) : (
             <TruncatedText
               text={currentRef.name}
-              className="min-w-0 flex-1 text-label font-semibold text-sidebar-foreground"
+              className="min-w-0 flex-1 text-label font-medium text-sidebar-foreground"
             />
           )}
           {identity.isArchived ? (

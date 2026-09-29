@@ -169,7 +169,7 @@ export function GoalFormSheet({
               <Target className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <SheetTitle className="text-lg font-semibold">
+              <SheetTitle className="text-lg font-medium">
                 {isEdit ? "Edit Goal" : "New Goal"}
               </SheetTitle>
               <p className="text-xs text-muted-foreground mt-0.5">

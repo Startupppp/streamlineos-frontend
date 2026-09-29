@@ -81,7 +81,7 @@ export const WorkItemRow = memo(function WorkItemRow({
             {item.title}
           </p>
           <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden">
-            <span className="shrink-0 font-mono text-micro font-medium text-primary/80">
+            <span className="shrink-0 font-mono text-micro font-normal text-primary/80">
               {item.projectKey}
             </span>
             <span className="shrink-0 text-micro text-muted-foreground">·</span>
@@ -129,10 +129,10 @@ export const BucketSection = memo(function BucketSection({
     <PmPanel>
       <div className="flex items-center gap-2 border-b border-border/50 bg-muted/20 px-3 py-2">
         <cfg.icon className={cn("h-3.5 w-3.5 shrink-0", cfg.iconClass)} />
-        <span className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
           {cfg.label}
         </span>
-        <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-micro font-medium tabular-nums text-primary">
+        <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-micro font-normal tabular-nums text-primary">
           {items.length}
         </span>
       </div>

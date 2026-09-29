@@ -17,7 +17,7 @@ it("renders zero points distinctly from an unset estimate", () => {
   rerender(<InlineEstimate ticketId={1} projectId={2} version={5} currentPoints={null} />);
 
   expect(screen.getByRole("button", { name: "Change estimate" })).toHaveTextContent(
-    "pts",
+    "Add pts",
   );
   expect(screen.getByRole("button", { name: "Change estimate" })).not.toHaveTextContent(
     "0 pts",

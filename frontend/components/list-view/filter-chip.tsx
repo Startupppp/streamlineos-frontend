@@ -33,7 +33,7 @@ export function FilterChip({ label, color, onRemove, className }: FilterChipProp
           style={{ backgroundColor: color }}
         />
       ) : null}
-      <span className="min-w-0 truncate font-medium leading-none">{label}</span>
+      <span className="min-w-0 truncate font-normal leading-none">{label}</span>
       <button
         type="button"
         onClick={handleRemoveClick}

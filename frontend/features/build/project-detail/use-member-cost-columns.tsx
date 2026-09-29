@@ -90,7 +90,7 @@ export function useMemberCostColumns({
       className: "text-right w-[120px]",
       headerClassName: "text-right",
       cell: (row) => (
-        <span className="font-mono text-sm font-medium whitespace-nowrap">{formatMoneyCompact(row.cost, display)}</span>
+        <span className="font-mono text-sm font-normal whitespace-nowrap">{formatMoneyCompact(row.cost, display)}</span>
       ),
     },
   ], [resolveMemberUser, resolveMemberImage, display]);

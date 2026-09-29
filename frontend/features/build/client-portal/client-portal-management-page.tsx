@@ -132,7 +132,7 @@ function PublicationStateBanner({
     <>
       <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
         <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-semibold">
+          <span className="text-sm font-medium">
             {isPublished ? "Portal published" : "Portal not published"}
           </span>
           <span className="text-xs text-muted-foreground">
@@ -208,7 +208,7 @@ function PreviewSection({ projectId }: { projectId: number }) {
     <div className="flex flex-col gap-3 p-4">
       {data.milestones.length > 0 && (
         <div>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Milestones
           </p>
           <div className="flex flex-col gap-1">
@@ -223,7 +223,7 @@ function PreviewSection({ projectId }: { projectId: number }) {
       )}
       {data.tasks.length > 0 && (
         <div>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Tasks
           </p>
           <div className="flex flex-col gap-1">

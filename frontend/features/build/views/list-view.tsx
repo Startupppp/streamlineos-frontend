@@ -280,7 +280,7 @@ export const ListView = memo(function ListView({
               <AccordionItem key={group} value={group} className="border-b-0">
                 <div className="mb-1.5 flex items-center gap-2">
                   <AccordionTrigger className="flex flex-1 items-center gap-2 py-0 hover:no-underline font-normal [&>svg]:ml-auto">
-                    <span className="text-sm font-semibold text-foreground">{group}</span>
+                    <span className="text-sm font-medium text-foreground">{group}</span>
                     <span className="text-xs text-muted-foreground tabular-nums">({items.length})</span>
                   </AccordionTrigger>
                   {projectId && (
@@ -333,7 +333,7 @@ export const ListView = memo(function ListView({
             <AccordionItem key={group} value={group} className="border-b-0">
               <div className="mb-1.5 flex items-center gap-2">
                 <AccordionTrigger className="flex flex-1 items-center gap-2 py-0 hover:no-underline font-normal [&>svg]:ml-auto">
-                  <span className="text-sm font-semibold text-foreground">{group}</span>
+                  <span className="text-sm font-medium text-foreground">{group}</span>
                   <span className="text-xs text-muted-foreground tabular-nums">({items.length})</span>
                 </AccordionTrigger>
                 {projectId && (

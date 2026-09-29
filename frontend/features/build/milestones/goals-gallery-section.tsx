@@ -21,7 +21,7 @@ const NOOP = () => undefined;
 export function GalleryCase({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section data-case={id} aria-label={title}>
-      <h2 className="mb-1 text-sm font-semibold text-foreground">{title}</h2>
+      <h2 className="mb-1 text-sm font-medium text-foreground">{title}</h2>
       <div data-case-frame={id} className="flex h-[34rem] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-background">
         {children}
       </div>
@@ -124,7 +124,7 @@ export function GoalsGalleryCases() {
         <PageWrapper title="Grow ARR to $5M" subtitle="Company goal · On track · 65% progress">
           <PmPageShell>
             <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
-              <h2 className="text-sm font-semibold">Key Results</h2>
+              <h2 className="text-sm font-medium">Key Results</h2>
               <ul className="flex flex-col gap-2" aria-label="Key results">
                 {STUB_KEY_RESULTS.map((kr) => (
                   <li key={kr.id}><KeyResultRow keyResult={kr} onCheckIn={NOOP} canManage /></li>

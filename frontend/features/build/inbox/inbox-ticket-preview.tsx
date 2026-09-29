@@ -228,7 +228,7 @@ export function InboxTicketPreview({
           ) : null}
           <div className="min-w-0 flex-1 overflow-hidden">
             <div className="flex min-w-0 items-center gap-1.5">
-              <span className="shrink-0 font-mono text-dense font-medium tabular-nums text-muted-foreground">
+              <span className="shrink-0 font-mono text-dense font-normal tabular-nums text-muted-foreground">
                 {displayKey}
               </span>
               <span

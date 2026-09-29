@@ -330,7 +330,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <Map className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <h2 className="text-sm font-semibold">Roadmap</h2>
+                <h2 className="text-sm font-medium">Roadmap</h2>
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -365,7 +365,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
           {linkedProjects.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
-                <h2 className="text-sm font-semibold">Linked projects</h2>
+                <h2 className="text-sm font-medium">Linked projects</h2>
               </CardHeader>
               <CardContent className="space-y-2">
                 {linkedProjects.map((proj, index) => (
@@ -390,7 +390,7 @@ export function ManagedProductOverviewPage({ managedProductId }: ManagedProductO
           {product?.vision && (
             <Card>
               <CardHeader className="pb-2">
-                <h2 className="text-sm font-semibold">Vision</h2>
+                <h2 className="text-sm font-medium">Vision</h2>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">{product.vision}</p>

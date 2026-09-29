@@ -84,7 +84,7 @@ export function StandupPanel({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-foreground">Standup</h3>
+      <h3 className="text-sm font-medium text-foreground">Standup</h3>
 
       <div className={cn(PM_PANEL_SOLID, "space-y-3 p-4")}>
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Your Update</p>
@@ -131,7 +131,7 @@ export function StandupPanel({
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Team Updates</p>
             {otherEntries.map((entry) => (
               <div key={entry.userId} className={cn(PM_PANEL, "space-y-2 p-3")}>
-                <p className={cn(TEXT_ONE_LINE, "text-xs font-semibold text-foreground")}>
+                <p className={cn(TEXT_ONE_LINE, "text-xs font-medium text-foreground")}>
                   {memberName(entry.userId)}
                 </p>
                 {entry.yesterday ? (

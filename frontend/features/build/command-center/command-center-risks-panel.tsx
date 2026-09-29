@@ -29,7 +29,7 @@ function RiskRow({ title, impact, status }: { title: string; impact: string; sta
       <span className={`shrink-0 text-micro font-medium ${IMPACT_TONE[impact] ?? ""}`}>
         {impact}
       </span>
-      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-micro font-medium text-muted-foreground">
+      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-micro font-normal text-muted-foreground">
         {status}
       </span>
     </div>

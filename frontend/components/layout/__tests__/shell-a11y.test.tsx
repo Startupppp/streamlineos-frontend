@@ -116,6 +116,12 @@ jest.mock("@/components/layout/header/sidebar-collapse-toggle", () => ({
   ),
 }));
 
+const mockUseIsBelowLg = jest.fn(() => false);
+jest.mock("@/hooks/common/use-mobile", () => ({
+  useIsMobile: () => false,
+  useIsBelowLg: () => mockUseIsBelowLg(),
+}));
+
 void MockIcon;
 
 import { ShellOfflineBanner } from "@/components/layout/shell-offline-banner";
@@ -189,6 +195,10 @@ describe("a11y — RouteErrorBoundary (error state)", () => {
 // ─── GlobalHeader ─────────────────────────────────────────────────────────────
 
 describe("a11y — GlobalHeader", () => {
+  beforeEach(() => {
+    mockUseIsBelowLg.mockReturnValue(false);
+  });
+
   it("renders a banner landmark", () => {
     render(<GlobalHeader showSidebarToggle={false} />);
     expect(screen.getByRole("banner")).toBeInTheDocument();
@@ -247,6 +257,47 @@ describe("a11y — GlobalHeader", () => {
     expect(
       screen.getByRole("button", { name: "Expand sidebar" }),
     ).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("below lg opens the mobile nav drawer instead of collapsing the desktop sidebar", () => {
+    mockUseIsBelowLg.mockReturnValue(true);
+    const onToggleSidebar = jest.fn();
+    const onOpenMobileMenu = jest.fn();
+    render(
+      <GlobalHeader
+        isSidebarCollapsed={false}
+        onToggleSidebar={onToggleSidebar}
+        onOpenMobileMenu={onOpenMobileMenu}
+        showSidebarToggle={true}
+      />,
+    );
+
+    const toggle = screen.getByRole("button", { name: "Expand sidebar" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    toggle.click();
+
+    expect(onOpenMobileMenu).toHaveBeenCalledTimes(1);
+    expect(onToggleSidebar).not.toHaveBeenCalled();
+  });
+
+  it("below lg collapse control closes an open mobile nav drawer", () => {
+    mockUseIsBelowLg.mockReturnValue(true);
+    const onOpenMobileMenu = jest.fn();
+    render(
+      <GlobalHeader
+        isSidebarCollapsed={false}
+        onToggleSidebar={jest.fn()}
+        onOpenMobileMenu={onOpenMobileMenu}
+        mobileNavOpen={true}
+        showSidebarToggle={true}
+      />,
+    );
+
+    const toggle = screen.getByRole("button", { name: "Collapse sidebar" });
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    toggle.click();
+
+    expect(onOpenMobileMenu).toHaveBeenCalledTimes(1);
   });
 
   it("Search button carries the exact aria-label", () => {

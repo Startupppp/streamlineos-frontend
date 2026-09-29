@@ -1,14 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { PlusIcon } from "@animateicons/react/lucide";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTestCases, useTestSuites, useDeleteTestCase } from "@/hooks/api/build/qa";
 import { useCan } from "@/hooks/api/access";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useBuildCursorPager } from "@/features/build/shared/use-build-cursor-pager";
 import type { TestCase } from "@/types/projects";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -51,21 +48,12 @@ const FILTER_DEFINITIONS = [
   { param: "automationStatus", options: ["manual", "automated", "planned"] as const },
 ] as const;
 
-function NewCaseButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Button onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      New Test Case
-    </Button>
-  );
-}
-
 interface TestCasesTabProps {
   projectId: number;
+  createNonce?: number;
 }
 
-export function TestCasesTab({ projectId }: TestCasesTabProps) {
+export function TestCasesTab({ projectId, createNonce = 0 }: TestCasesTabProps) {
   const canManage = useCan("build:qa:manage");
   const listFilters = useBuildListFilters({ filters: FILTER_DEFINITIONS });
 
@@ -117,6 +105,11 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     setEditCase(null);
     setSheetOpen(true);
   }, []);
+
+  useEffect(() => {
+    if (createNonce <= 0) return;
+    handleNewCase();
+  }, [createNonce, handleNewCase]);
 
   const handleDeleteRow = useCallback((tc: TestCase) => setDeleteTarget(tc), []);
 
@@ -207,60 +200,56 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex shrink-0 items-start gap-2">
-        <BuildListToolbar
-          search={{
-            value: listFilters.search,
-            onValueChange: listFilters.setSearch,
-            placeholder: "Search cases…",
-            label: "Search test cases",
-          }}
-          filters={[
-            {
-              id: "suite",
-              label: "Suite",
-              active: listFilters.isActive("suite"),
-              control: (
-                <BuildFilterSelect
-                  label="Suite"
-                  value={suiteValue}
-                  onValueChange={handleSuiteChange}
-                  options={suiteOptions}
-                />
-              ),
-            },
-            {
-              id: "priority",
-              label: "Priority",
-              active: listFilters.isActive("priority"),
-              control: (
-                <BuildFilterSelect
-                  label="Priority"
-                  value={priorityValue}
-                  onValueChange={handlePriorityChange}
-                  options={PRIORITY_OPTIONS}
-                />
-              ),
-            },
-            {
-              id: "automationStatus",
-              label: "Automation",
-              active: listFilters.isActive("automationStatus"),
-              control: (
-                <BuildFilterSelect
-                  label="Automation"
-                  value={automationStatusValue}
-                  onValueChange={handleAutomationStatusChange}
-                  options={AUTOMATION_STATUS_OPTIONS}
-                />
-              ),
-            },
-          ]}
-          onClearAll={listFilters.clearAll}
-          className="flex-1 min-w-0"
-        />
-        {canManage ? <NewCaseButton onClick={handleNewCase} /> : null}
-      </div>
+      <BuildListToolbar
+        search={{
+          value: listFilters.search,
+          onValueChange: listFilters.setSearch,
+          placeholder: "Search cases…",
+          label: "Search test cases",
+        }}
+        filters={[
+          {
+            id: "suite",
+            label: "Suite",
+            active: listFilters.isActive("suite"),
+            control: (
+              <BuildFilterSelect
+                label="Suite"
+                value={suiteValue}
+                onValueChange={handleSuiteChange}
+                options={suiteOptions}
+              />
+            ),
+          },
+          {
+            id: "priority",
+            label: "Priority",
+            active: listFilters.isActive("priority"),
+            control: (
+              <BuildFilterSelect
+                label="Priority"
+                value={priorityValue}
+                onValueChange={handlePriorityChange}
+                options={PRIORITY_OPTIONS}
+              />
+            ),
+          },
+          {
+            id: "automationStatus",
+            label: "Automation",
+            active: listFilters.isActive("automationStatus"),
+            control: (
+              <BuildFilterSelect
+                label="Automation"
+                value={automationStatusValue}
+                onValueChange={handleAutomationStatusChange}
+                options={AUTOMATION_STATUS_OPTIONS}
+              />
+            ),
+          },
+        ]}
+        onClearAll={listFilters.clearAll}
+      />
 
       {selectedIds.size > 0 ? (
         <QaBulkActionBar

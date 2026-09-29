@@ -195,7 +195,7 @@ function CommentItemComponent({
       </Avatar>
       <div className="min-w-0 max-w-full flex-1">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="min-w-0 truncate text-xs font-semibold">
+          <span className="min-w-0 truncate text-xs font-medium">
             {getUserDisplayName(user)}
           </span>
           <span className="shrink-0 text-dense text-muted-foreground">{timeAgo}</span>

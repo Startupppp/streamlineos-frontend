@@ -364,7 +364,7 @@ export function TeamHomePage({ teamId }: Props) {
         <PmSection index={0}>
           <PmPanel className="flex flex-wrap items-center gap-3 p-4">
             <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold text-white"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-medium text-white"
               style={{ backgroundColor: data.color ?? "#64748b" }}
             >
               {data.icon ?? data.key.slice(0, 2)}
@@ -392,7 +392,7 @@ export function TeamHomePage({ teamId }: Props) {
 
         <PmSection index={1} className="space-y-3">
           <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
               Members{pageMembers.length > 0 ? ` (${pageMembers.length}${membersResult.data?.pagination.hasMore ? "+" : ""})` : ""}
             </p>
             <div className="flex min-w-0 flex-wrap items-center gap-2">

@@ -207,7 +207,7 @@ export function EditProjectSheet({
           className="w-full sm:max-w-[480px] p-0 flex flex-col overflow-hidden"
         >
           <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
-            <SheetTitle className="text-xl font-semibold tracking-tight">
+            <SheetTitle className="text-xl font-medium tracking-tight">
               Edit Project
             </SheetTitle>
           </SheetHeader>

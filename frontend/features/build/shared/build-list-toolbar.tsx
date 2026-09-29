@@ -74,7 +74,7 @@ function ToolbarFilterSlot({
 function ToolbarDrawerField({ filter }: { filter: BuildToolbarFilter }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium text-foreground">{filter.label}</span>
+      <span className="text-sm font-normal text-foreground">{filter.label}</span>
       <div className="[&_[data-slot=select-trigger]]:w-full">{filter.control}</div>
     </div>
   );
@@ -164,7 +164,7 @@ export function BuildListToolbar({
                   {BUILD_TOOLBAR_FILTERS_LABEL}
                 </ResponsiveIconLabelText>
                 {layout.collapsedActiveCount > 0 ? (
-                  <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 px-1 text-dense font-medium tabular-nums text-foreground">
+                  <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 px-1 text-dense font-normal tabular-nums text-foreground">
                     {layout.collapsedActiveCount}
                   </span>
                 ) : null}
@@ -237,7 +237,7 @@ export function BuildListToolbar({
           onFocus={handleSearchFocus}
           onBlur={handleSearchBlur}
           className={cn(
-            "min-w-0 flex-1 basis-0 md:min-w-[12rem] md:max-w-xs md:basis-[12rem] lg:max-w-sm",
+            "min-w-0 flex-1 basis-[12rem]",
             searchExpanded && "max-md:max-w-none max-md:basis-auto",
           )}
         />
@@ -248,7 +248,7 @@ export function BuildListToolbar({
           <motion.div
             key="build-toolbar-actions"
             data-slot="build-toolbar-actions"
-            className="flex min-w-0 shrink-0 flex-wrap items-center gap-2 md:min-w-0 md:flex-1"
+            className="flex shrink-0 flex-nowrap items-center gap-2"
             initial={actionInitial}
             animate={actionAnimate}
             exit={actionInitial}

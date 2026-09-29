@@ -116,7 +116,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
         <div className="min-w-0">
-          <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+          <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
             Workflow Statuses
           </h3>
           <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>

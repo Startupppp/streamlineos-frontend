@@ -64,7 +64,7 @@ function IntakeTokenForm({ intakeToken }: IntakeTokenFormProps) {
         <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
           <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
         </div>
-        <p className="text-lg font-semibold text-foreground">Request submitted</p>
+        <p className="text-lg font-medium text-foreground">Request submitted</p>
         <p className="text-sm text-muted-foreground">
           Your request has been received and will be reviewed by the team. Thank you for reaching out.
         </p>
@@ -212,7 +212,7 @@ export function PublicIntakeTokenView({ intakeToken }: PublicIntakeTokenViewProp
     <main className="min-h-dvh surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">
       <div className="w-full max-w-lg">
         <div className="gradient-brand text-white rounded-t-2xl px-6 py-8 text-center shadow-noir">
-          <h1 className="text-2xl font-bold tracking-tight">Submit a request</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Submit a request</h1>
           <p className="text-white/80 text-sm mt-1">
             Fill in the details below and we&rsquo;ll review your request.
           </p>

@@ -356,7 +356,7 @@ export function CycleDetailPage({
         ) : (
           <>
             {view === "board" && (
-              <div className="h-full w-full pb-1">
+              <div className="h-full min-h-0 min-w-0 w-full overflow-hidden pb-1">
                 <KanbanBoard
                   tickets={cycleTickets}
                   projectId={projectId}

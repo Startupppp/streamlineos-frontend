@@ -82,7 +82,7 @@ export function CycleCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 min-w-0">
             <Link
-              className="min-w-0 truncate font-semibold text-sm hover:underline"
+              className="min-w-0 truncate font-medium text-sm hover:underline"
               href={href}
               title={cycle.name}
             >

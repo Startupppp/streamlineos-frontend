@@ -113,7 +113,7 @@ export function LabelPicker({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
         <Tag className="h-3.5 w-3.5" />
         Labels
       </div>

@@ -42,7 +42,7 @@ export function ChartCard({
   return (
     <PmPanel className="p-4">
       <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
-        <h3 className={cn("flex min-w-0 items-center gap-2 text-sm font-semibold", TEXT_ONE_LINE)}>
+        <h3 className={cn("flex min-w-0 items-center gap-2 text-sm font-medium", TEXT_ONE_LINE)}>
           <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span className={TEXT_ONE_LINE}>{title}</span>
         </h3>

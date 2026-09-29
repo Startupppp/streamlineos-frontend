@@ -135,7 +135,7 @@ export function TicketDialogDescriptionSection({
 
       {(showLinksEditor || relatedLinks.length > 0) && (
         <div className="mt-3">
-          <p className="mb-1.5 text-dense font-medium text-muted-foreground">
+          <p className="mb-1.5 text-dense font-normal text-muted-foreground">
             Related links
           </p>
           <TicketRelatedLinksEditor

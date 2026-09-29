@@ -141,7 +141,7 @@ export function GoalKeyResultsPanel({ keyResults, onAdd, onUpdate, onRemove }: G
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
           <ListChecks className="h-4 w-4" />
           <span>Key Results</span>
         </div>

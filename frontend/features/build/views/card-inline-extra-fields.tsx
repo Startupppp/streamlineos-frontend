@@ -172,7 +172,7 @@ export const InlineLabels = memo(function InlineLabels({
                 {selectedLabels.slice(0, 2).map((label) => (
                   <span
                     key={label.id}
-                    className="max-w-[7.5rem] truncate rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                    className="max-w-[7.5rem] truncate rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground"
                     style={{
                       backgroundColor: `${resolveLabelColor(label.color)}1a`,
                       color: resolveLabelColor(label.color),

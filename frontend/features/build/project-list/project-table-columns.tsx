@@ -66,7 +66,7 @@ export function useProjectTableColumns({
             )}
           >
             <span
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-micro font-bold tracking-tight bg-primary/10 text-primary ring-1 ring-primary/10"
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-micro font-medium tracking-tight bg-primary/10 text-primary ring-1 ring-primary/10"
               aria-hidden="true"
             >
               {p.key.slice(0, 2).toUpperCase()}

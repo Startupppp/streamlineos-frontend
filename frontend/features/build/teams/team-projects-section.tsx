@@ -258,7 +258,7 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
     <>
       <PmSection index={2} className="space-y-3">
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-          <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
             Projects{teamProjects.length > 0 ? ` (${teamProjects.length})` : ""}
           </p>
           {canManage ? (

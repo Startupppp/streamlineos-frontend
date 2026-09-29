@@ -67,7 +67,7 @@ export const InlineProjectTitle = memo(function InlineProjectTitle({
           <button
             type="button"
             className={cn(
-              "w-full text-left text-label font-semibold text-foreground transition-colors hover:text-primary",
+              "w-full text-left text-label font-medium text-foreground transition-colors hover:text-primary",
               TEXT_ONE_LINE,
             )}
             aria-label="Edit project name"

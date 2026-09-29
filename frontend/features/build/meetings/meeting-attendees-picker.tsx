@@ -68,7 +68,7 @@ export function MeetingAttendeePicker({
                   onClick={handleRemove(userId)}
                   aria-label={`Remove ${getUserDisplayName(member)}`}
                 >
-                  <span className="text-xs font-bold">&times;</span>
+                  <span className="text-xs font-normal">&times;</span>
                 </button>
               </Badge>
             );

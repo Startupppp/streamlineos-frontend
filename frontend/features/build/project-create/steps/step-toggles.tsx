@@ -114,7 +114,7 @@ export function StepToggles({ draft, updateDraft }: StepSharedProps) {
       <div className="space-y-6 py-4">
         {GROUPS.map((group) => (
           <div key={group.title} className="space-y-2">
-            <h3 className="text-sm font-semibold">{group.title}</h3>
+            <h3 className="text-sm font-medium">{group.title}</h3>
             <div className="space-y-2">
               {group.items.map((item) => {
                 const id = item.kind === "module" ? `mod-${item.key}` : `feat-${item.key}`;

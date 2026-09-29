@@ -44,7 +44,7 @@ function SectionLabel({
   if (isCollapsed)
     return <div aria-hidden className="mx-auto my-1.5 h-px w-5 bg-sidebar-border" />;
   return (
-    <p className="px-2 pb-1 pt-2 text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/65">
+    <p className="px-2 pb-1 pt-2 text-micro font-medium uppercase tracking-[0.08em] text-sidebar-foreground/65">
       {label}
     </p>
   );

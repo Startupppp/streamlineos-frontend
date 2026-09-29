@@ -131,7 +131,7 @@ export function TicketDetailMainSection({
           onChange={onTitleChange}
           readOnly={!canUpdate}
           rows={2}
-          className="h-auto w-full max-w-full min-h-0 resize-none break-words border-0 bg-transparent px-0 py-1 text-lg font-semibold leading-snug shadow-none [overflow-wrap:anywhere] [word-break:break-word] hover:border-0 focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xl"
+          className="h-auto w-full max-w-full min-h-0 resize-none break-words border-0 bg-transparent px-0 py-1 text-lg font-medium leading-snug shadow-none [overflow-wrap:anywhere] [word-break:break-word] hover:border-0 focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xl"
           placeholder="Ticket title"
         />
       </div>

@@ -103,9 +103,10 @@ Backend guards and record scope are authoritative. Controls fail closed while ac
 - [x] Lists are bounded/virtualized and remain usable at 10k work items and 1k members.
 - [x] Server/client schemas, errors, cursor semantics, cache keys, optimistic patches, and invalidations have contract tests.
 - [ ] Keyboard, screen-reader, reduced-motion, 375 px mobile, and high-density desktop checks pass. — pending browser QA.
-- [ ] Browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — pending; the request form currently crashes as detailed below.
+- [ ] Browser evidence confirms ready, empty, filtered-empty, error, denied, and conflict behavior without modifying real data. — empty and the request form are verified; filtered-empty, error, denied, and conflict are still open.
 
-## Browser QA evidence (partial, 2026-09-29)
+## Browser QA evidence (2026-09-29)
 
-- Local route `/build/6/approvals` renders the no-approvals state. Opening Request approval → Request task approval reproducibly replaces the route with the Next.js error boundary after briefly showing the form; browser error text is `ApiError: Project not found`, with `RequestApprovalSheet` in the component stack. Reload restores the list. No request was submitted.
-- The failing read has not yet been isolated to an endpoint/status, so no fix is claimed. Task/release/milestone forms, validation, permissions, mutations, responsive/accessibility coverage, isolation, and production verification remain pending; acceptance criteria above remain unchecked.
+- Local route `/build/6/approvals` (Build QA Sandbox, authenticated, `http://localhost:1000`) renders the empty state: heading "Approvals", "No approvals yet". No approval was created, decided, or deleted.
+- Opening Request approval → Request task approval used to replace the page with the Next.js error boundary (`ApiError: Project not found` from `RequestApprovalSheet`). Retested after the fix: the sheet stays open, the task picker becomes "Search tasks…", and the page heading remains "Approvals". Resource timing for that open shows `GET /build/6/tickets?limit=50` (200) and does not call `/build/portal/projects/6/change-requests`, which was the 404. Cancel closes the sheet and leaves the empty list. `request-approval-sheet.test.tsx` and `card-field-estimate.test.tsx`: 42 tests passed.
+- Keyboard, screen-reader, reduced-motion, 375 px, high-density, filtered-empty, error, denied, and conflict states are not verified on this page. Those acceptance boxes stay open.

@@ -61,13 +61,13 @@ function UpdateCard({
     <Card className={cn(CONTENT_PANEL_SOLID, focused && "ring-2 ring-primary")}>
       <CardContent className="p-4 space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize bg-muted text-muted-foreground">
+          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-normal capitalize bg-muted text-muted-foreground">
             {update.status}
           </span>
-          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize bg-muted text-muted-foreground">
+          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-normal capitalize bg-muted text-muted-foreground">
             {update.audience}
           </span>
-          <span className="text-dense font-medium text-muted-foreground">{update.authorName}</span>
+          <span className="text-dense font-normal text-muted-foreground">{update.authorName}</span>
         </div>
         <p className="text-sm text-foreground whitespace-pre-wrap">{update.body}</p>
         {update.wins ? (
@@ -95,7 +95,7 @@ function UpdateCard({
           </div>
         ) : null}
         <div className="flex items-center justify-between pt-1">
-          <span className="text-dense font-medium text-muted-foreground tabular-nums">{date}</span>
+          <span className="text-dense font-normal text-muted-foreground tabular-nums">{date}</span>
           {canManage ? (
             <Button
               variant="ghost"

@@ -62,7 +62,7 @@ export function SidebarAssigneeSection({
                   onClick={() => onRemoveAssignee(person.id)}
                   aria-label={`Remove ${displayName}`}
                 >
-                  <span className="text-sm font-bold leading-none">&times;</span>
+                  <span className="text-sm font-normal leading-none">&times;</span>
                 </button> : null}
               </div>
             );

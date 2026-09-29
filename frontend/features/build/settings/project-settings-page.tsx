@@ -322,8 +322,8 @@ export function ProjectSettingsPage({ params }: PageProps) {
                             "md:mt-2 md:border-t md:border-border md:pt-2 max-md:ml-1 max-md:border-l max-md:border-border max-md:pl-2",
                           activeSection === section.id
                             ? section.id === "danger"
-                              ? "bg-destructive/10 font-semibold text-destructive"
-                              : "bg-accent font-semibold text-accent-foreground"
+                              ? "bg-destructive/10 font-medium text-destructive"
+                              : "bg-accent font-medium text-accent-foreground"
                             : section.id === "danger"
                               ? "text-destructive hover:bg-destructive/5 hover:text-destructive"
                               : "text-foreground/80 hover:bg-muted hover:text-foreground",
@@ -341,7 +341,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
                   <div className="space-y-4">
                     <PmPanel className="p-4" solid>
                       <div className="mb-3 border-b border-border pb-3">
-                        <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                        <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
                           General
                         </h3>
                         <p
@@ -368,7 +368,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
                     </PmPanel>
                     <PmPanel className="p-4" solid>
                       <div className="mb-3 border-b border-border pb-3">
-                        <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                        <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
                           Member Roles
                         </h3>
                         <p
@@ -385,7 +385,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
                     </PmPanel>
                     <PmPanel className="p-4" solid>
                       <div className="mb-3 border-b border-border pb-3">
-                        <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                        <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
                           Billing
                         </h3>
                         <p
@@ -424,7 +424,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
                 {activeSection === "teams" ? (
                   <PmPanel className="p-4" solid>
                     <div className="mb-3 border-b border-border pb-3">
-                      <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                      <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
                         Teams &amp; Roster
                       </h3>
                       <p
@@ -449,7 +449,7 @@ export function ProjectSettingsPage({ params }: PageProps) {
                     <div className="mb-3 border-b border-destructive/20 pb-3">
                       <h3
                         className={cn(
-                          "text-sm font-semibold text-destructive",
+                          "text-sm font-medium text-destructive",
                           TEXT_ONE_LINE,
                         )}
                       >

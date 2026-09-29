@@ -488,7 +488,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
           ) : null}
           {activeCycles.length > 0 ? (
             <section>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
                 Active
               </p>
               <div className="grid gap-3">
@@ -503,7 +503,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
 
           {upcomingCycles.length > 0 ? (
             <section>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
                 Upcoming
               </p>
               <div className="grid gap-3">
@@ -523,7 +523,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
                   onClick={handleToggleCompleted}
                   aria-expanded={showCompleted}
                   aria-controls="completed-cycles"
-                  className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 hover:text-foreground transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3 hover:text-foreground transition-colors"
                   {...completedChevronHoverHandlers}
                 >
                   {showCompleted ? (
@@ -562,7 +562,7 @@ export function CyclesPage({ projectId }: CyclesPageProps) {
               <WifiOff className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-foreground">
+              <p className="text-sm font-medium text-foreground">
                 You&apos;re offline
               </p>
               <p className="text-xs leading-relaxed text-muted-foreground">

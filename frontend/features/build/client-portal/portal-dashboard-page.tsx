@@ -69,7 +69,7 @@ function SectionTitle({
     <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
       <div className="flex min-w-0 items-center gap-2">
         <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        <h2 className="text-sm font-medium text-foreground">{title}</h2>
       </div>
       {actions}
     </div>

@@ -191,7 +191,7 @@ export function PortfoliosProgramsGalleryCases() {
         >
           <PmPageShell>
             <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
-              <h2 className="text-sm font-semibold">Linked projects</h2>
+              <h2 className="text-sm font-medium">Linked projects</h2>
               <ul aria-label="Linked projects" className="flex flex-col gap-2">
                 <li className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 text-sm"><span className="font-medium">Auth service refactor</span></li>
                 <li className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 text-sm"><span className="font-medium">Data pipeline v2</span></li>

@@ -54,14 +54,14 @@ export function SetupInstructions({
 }) {
   return (
     <div className={cn(!compact && PM_PANEL, !compact && "p-4 sm:p-5", className)}>
-      <h3 className="mb-1 text-sm font-semibold text-foreground">How it works</h3>
+      <h3 className="mb-1 text-sm font-medium text-foreground">How it works</h3>
       <p className="mb-3 text-xs text-muted-foreground">
         Connect a GitHub repository once, then commits and PRs link to tickets automatically.
       </p>
       <ol className="space-y-3">
         {GITHUB_STEPS.map((step, index) => (
           <li key={step.title} className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-semibold text-foreground">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-medium text-foreground">
               {index + 1}
             </span>
             <div className="min-w-0 space-y-0.5 pt-0.5">

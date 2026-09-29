@@ -149,12 +149,12 @@ export function IncidentDecisions({
 
   return (
     <div className="space-y-3">
-      <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">
         Decisions
       </p>
 
       {sorted.length === 0 && (
-        <p className="text-xs italic text-muted-foreground">No decisions recorded yet.</p>
+        <p className="text-micro font-normal italic text-muted-foreground">No decisions recorded yet.</p>
       )}
 
       {sorted.map((d) => (

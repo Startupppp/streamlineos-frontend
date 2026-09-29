@@ -141,7 +141,7 @@ export function PolicySection({ settings, projectId, canEdit }: PolicySectionPro
       <PmSection index={0}>
         <PmPanel className="p-4" solid>
           <div className="mb-3 border-b border-border pb-3">
-            <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Retention policy</h3>
+            <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Retention policy</h3>
             <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
               Record how long this project&apos;s work artifacts should be retained. These values
               are stored as policy — no automated job deletes on their basis yet, so nothing is
@@ -264,7 +264,7 @@ export function HoldsSection({ settings, projectId, canEdit }: HoldsSectionProps
       <PmSection index={0}>
         <PmPanel className="p-4" solid>
           <div className="mb-3 border-b border-border pb-3">
-            <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Legal hold</h3>
+            <h3 className={cn("text-sm font-medium", TEXT_ONE_LINE)}>Legal hold</h3>
             <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
               A legal hold records that this project&apos;s data may be subject to litigation or
               regulatory review. Because no automated retention deletion runs yet, the hold

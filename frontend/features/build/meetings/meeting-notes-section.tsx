@@ -59,7 +59,7 @@ export function MeetingNotesSection({ meeting, projectId, canManage }: MeetingNo
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <h3 className="text-sm font-semibold text-foreground">Agenda</h3>
+        <h3 className="text-sm font-medium text-foreground">Agenda</h3>
         <div className={cn(PM_PANEL, "overflow-hidden")}>
           <TiptapEditor
             content={meeting.agenda ?? ""}
@@ -75,7 +75,7 @@ export function MeetingNotesSection({ meeting, projectId, canManage }: MeetingNo
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-foreground">Notes</h3>
+          <h3 className="text-sm font-medium text-foreground">Notes</h3>
           {canManage && dirty ? (
             <LoadingButton size="sm" className="text-xs" onClick={handleSave} isPending={updateMeeting.isPending} loadingText="Saving…">
               Save Notes

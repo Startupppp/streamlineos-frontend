@@ -37,7 +37,7 @@ function ReleaseRow({
         <span className="truncate text-xs font-medium text-foreground">{name}</span>
         <span className="ml-1.5 text-micro text-muted-foreground">{version}</span>
       </div>
-      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-micro font-medium text-muted-foreground">
+      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-micro font-normal text-muted-foreground">
         {STATUS_LABEL[status] ?? status}
       </span>
     </div>

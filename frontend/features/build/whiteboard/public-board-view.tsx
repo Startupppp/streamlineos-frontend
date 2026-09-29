@@ -191,7 +191,7 @@ export function PublicBoardView({ shareToken }: PublicBoardViewProps) {
           <Link2Off className="w-6 h-6 text-muted-foreground" />
         </div>
         <div className="space-y-1.5 max-w-xs">
-          <p className="text-base font-semibold text-foreground">
+          <p className="text-base font-medium text-foreground">
             This board link is invalid or has expired
           </p>
           <p className="text-sm text-muted-foreground">
@@ -216,7 +216,7 @@ export function PublicBoardView({ shareToken }: PublicBoardViewProps) {
         </p>
         <div className="shrink-0 flex items-center gap-2">
           {isViewOnly ? (
-            <Badge variant="secondary" className="gap-1 text-xs font-medium">
+            <Badge variant="secondary" className="gap-1 text-xs font-normal">
               <Eye className="w-3 h-3" />
               View only
             </Badge>

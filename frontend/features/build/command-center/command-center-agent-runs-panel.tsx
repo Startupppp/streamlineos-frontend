@@ -64,12 +64,12 @@ export function AgentRunsPanel() {
               <div className="flex min-w-0 items-start justify-between gap-2">
                 <p className="min-w-0 truncate text-sm font-medium text-foreground">{signal.title}</p>
                 {signal.confidence !== null && signal.confidence !== undefined && (
-                  <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-micro font-medium text-muted-foreground">
+                  <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-micro font-normal text-muted-foreground">
                     {signal.confidence}% confidence
                   </span>
                 )}
               </div>
-              <span className="w-fit rounded bg-muted px-1.5 py-0.5 text-micro font-medium text-muted-foreground">
+              <span className="w-fit rounded bg-muted px-1.5 py-0.5 text-micro font-normal text-muted-foreground">
                 {SIGNAL_TYPE_LABELS[signal.type] ?? signal.type}
               </span>
               {signal.evidence && (

@@ -66,7 +66,7 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, canManage, on
       <div className={cn("w-1 shrink-0", STATUS_LEFT_COLOR[item.status] ?? "bg-border")} />
       <div className="min-w-0 flex-1 px-4 py-3">
         <div className="mb-1 flex flex-wrap items-center gap-2">
-          <TruncatedText text={item.title} className="text-sm font-semibold" />
+          <TruncatedText text={item.title} className="text-sm font-medium" />
           <Badge
             variant={STATUS_BADGE_VARIANT[item.status] ?? "outline"}
             className="text-xs font-medium px-1.5 py-0.5 rounded-md"
@@ -74,7 +74,7 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, canManage, on
             {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
           </Badge>
           {item.requestType && (
-            <Badge variant="outline" className="text-xs font-medium px-1.5 py-0.5 rounded-md">
+            <Badge variant="outline" className="text-xs font-normal px-1.5 py-0.5 rounded-md">
               {REQUEST_TYPE_LABEL[item.requestType] ?? item.requestType}
             </Badge>
           )}

@@ -70,7 +70,7 @@ export function AgentTokensSection({ createRef }: AgentTokensSectionProps = {}) 
         <div className="min-w-0 space-y-0.5">
           <div className="flex items-center gap-2">
             <Bot className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            <h3 className="text-sm font-semibold tracking-tight text-foreground">
+            <h3 className="text-sm font-medium tracking-tight text-foreground">
               AI Agent Access (MCP)
             </h3>
           </div>

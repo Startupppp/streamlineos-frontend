@@ -56,7 +56,7 @@ export function ProjectCardFooter({
       {hasTickets ? (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-micro font-medium tabular-nums text-muted-foreground">
+            <span className="text-micro font-normal tabular-nums text-muted-foreground">
               <span className="text-foreground">{progressValue}%</span> complete
             </span>
             <span className="text-micro tabular-nums text-muted-foreground">
@@ -102,7 +102,7 @@ export function ProjectCardFooter({
         ) : dateMeta ? (
           <div
             className={cn(
-              "flex shrink-0 items-center gap-1 text-micro font-medium tabular-nums",
+              "flex shrink-0 items-center gap-1 text-micro font-normal tabular-nums",
               dateToneClasses[dateMeta.tone],
             )}
           >

@@ -468,7 +468,7 @@ export function ActivityFeed({
             <button
               type="button"
               onClick={handleShowOlderComments}
-              className="mx-auto block rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+              className="mx-auto block rounded-md border border-border bg-card px-3 py-1.5 text-xs font-normal text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
             >
               Show older comments
               <span className="ml-1 tabular-nums opacity-70">

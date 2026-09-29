@@ -165,7 +165,7 @@ export const ListViewItem = memo(function ListViewItem({
             currentPriority={ticket.priority}
           />
         ) : showPriority && ticket.priority ? (
-          <span className="text-xs font-medium flex-shrink-0 text-muted-foreground">{ticket.priority}</span>
+          <span className="text-xs font-normal flex-shrink-0 text-muted-foreground">{ticket.priority}</span>
         ) : null}
         {showEstimate && hasProjectId && canUpdate ? (
           <InlineEstimate

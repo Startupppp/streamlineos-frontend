@@ -39,7 +39,7 @@ export function useMembersColumns({
             <div className="flex items-center gap-2.5 min-w-0">
               <Avatar className="h-7 w-7 shrink-0">
                 <AvatarImage src={resolveImageUrl(member.image)} alt={displayName} />
-                <AvatarFallback className="text-micro font-semibold bg-primary/10 text-foreground">
+                <AvatarFallback className="text-micro font-medium bg-primary/10 text-foreground">
                   {getUserInitials(member)}
                 </AvatarFallback>
               </Avatar>

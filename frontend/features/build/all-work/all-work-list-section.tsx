@@ -85,10 +85,10 @@ const GroupSection = memo(function GroupSection({
             projectName={group.label}
           />
         )}
-        <TruncatedText text={group.label} className="text-label font-semibold text-foreground" />
+        <TruncatedText text={group.label} className="text-label font-medium text-foreground" />
         <Badge
           variant="secondary"
-          className="h-5 shrink-0 rounded-md bg-primary/10 px-1.5 text-micro font-medium tabular-nums text-primary"
+          className="h-5 shrink-0 rounded-md bg-primary/10 px-1.5 text-micro font-normal tabular-nums text-primary"
         >
           {group.tickets.length}{hasMore ? "+" : ""}
         </Badge>

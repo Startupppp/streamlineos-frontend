@@ -174,7 +174,7 @@ function StatButton({ stat, value, isActive, onToggle }: StatButtonProps) {
         <stat.icon className={cn("h-4 w-4", stat.text)} />
       </div>
       <div>
-        <p className="text-lg font-semibold text-foreground tabular-nums">
+        <p className="text-lg font-medium text-foreground tabular-nums">
           {value}
         </p>
         <p className="text-dense text-muted-foreground">{stat.label}</p>
@@ -332,28 +332,28 @@ export const WorkloadView = memo(function WorkloadView({
               data-testid="workload-header-row"
               className="sticky top-0 z-10 flex shrink-0 border-b bg-secondary"
             >
-              <div className="w-52 shrink-0 px-4 py-2.5 text-micro font-bold text-muted-foreground uppercase tracking-wider">
+              <div className="w-52 shrink-0 px-4 py-2.5 text-micro font-medium text-muted-foreground uppercase tracking-wider">
                 Member
               </div>
-              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-medium text-muted-foreground text-center">
                 Tickets
               </div>
-              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-medium text-muted-foreground text-center">
                 Points
               </div>
-              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-medium text-muted-foreground text-center">
                 Leave
               </div>
-              <div className="w-24 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+              <div className="w-24 shrink-0 px-2 py-2.5 text-micro font-medium text-muted-foreground text-center">
                 Allocation
               </div>
-              <div className="w-24 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+              <div className="w-24 shrink-0 px-2 py-2.5 text-micro font-medium text-muted-foreground text-center">
                 Estimate
               </div>
-              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-medium text-muted-foreground text-center">
                 Actual
               </div>
-              <div className="w-24 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
+              <div className="w-24 shrink-0 px-2 py-2.5 text-micro font-medium text-muted-foreground text-center">
                 Variance
               </div>
               {days.map((day, i) => (
@@ -364,14 +364,14 @@ export const WorkloadView = memo(function WorkloadView({
                     isSameDay(day, new Date()) && "bg-primary/5",
                   )}
                 >
-                  <p className="text-micro font-bold text-muted-foreground uppercase tracking-wider">
+                  <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider">
                     {format(day, "EEE")}
                   </p>
                   <p
                     className={cn(
                       "text-dense",
                       isSameDay(day, new Date())
-                        ? "text-primary font-bold"
+                        ? "text-primary font-medium"
                         : "text-muted-foreground",
                     )}
                   >
@@ -397,7 +397,7 @@ export const WorkloadView = memo(function WorkloadView({
                   {groupEntry.label !== null && (
                     <div
                       data-testid="workload-group-caption"
-                      className="flex shrink-0 border-b border-border bg-muted/40 px-4 py-1.5 text-micro font-bold uppercase tracking-wider text-muted-foreground"
+                      className="flex shrink-0 border-b border-border bg-muted/40 px-4 py-1.5 text-micro font-medium uppercase tracking-wider text-muted-foreground"
                     >
                       {groupEntry.label}
                       <span className="ml-2 tabular-nums font-normal normal-case tracking-normal">

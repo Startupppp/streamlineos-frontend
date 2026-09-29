@@ -66,7 +66,7 @@ export function WorkloadUnassignedRow({
           <span className="text-sm text-muted-foreground">Unassigned</span>
         </div>
         <div className="w-20 shrink-0 px-2 py-3 text-center">
-          <span className="text-sm font-semibold text-status-warning-ink-strong">
+          <span className="text-sm font-medium text-status-warning-ink-strong">
             {tickets.length}
           </span>
         </div>

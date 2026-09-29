@@ -61,7 +61,7 @@ export function ExcalidrawCanvas({
     >
       {isFullscreen && (
         <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-3">
-          <span className="flex-1 truncate text-sm font-semibold text-foreground">
+          <span className="flex-1 truncate text-sm font-medium text-foreground">
             {detail.name}
           </span>
           {saveStatus === "dirty" && (

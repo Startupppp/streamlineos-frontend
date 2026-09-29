@@ -77,8 +77,8 @@ export const InlineAssignee = memo(function InlineAssignee({
       avatarClassName="h-5 w-5 border border-background cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all"
     />
   ) : (
-    <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center shrink-0 cursor-pointer hover:border-muted-foreground/60 transition-colors">
-      <span className="text-micro text-muted-foreground">?</span>
+    <div className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border border-dashed border-muted-foreground/30 bg-muted transition-colors hover:border-muted-foreground/60">
+      <User className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
     </div>
   );
 

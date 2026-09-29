@@ -58,7 +58,7 @@ export function TicketDialogTitleField({
                   autoCorrect="off"
                   spellCheck={false}
                   placeholder="Issue title"
-                  className="min-w-0 flex-1 border-0 bg-transparent p-0 text-lg font-semibold leading-tight text-foreground outline-none placeholder:text-muted-foreground focus:ring-0"
+                  className="min-w-0 flex-1 border-0 bg-transparent p-0 text-lg font-normal leading-tight text-foreground outline-none placeholder:text-muted-foreground focus:ring-0"
                 />
               </FormControl>
               {canUseAI ? (

@@ -166,7 +166,7 @@ export function FilterDatesPanel({
       <div className="mb-2.5 flex items-center gap-2 text-xs text-muted-foreground">
         <CalendarRange className="h-3.5 w-3.5 shrink-0" />
         {hasDate ? (
-          <span className="font-medium text-foreground">Range active</span>
+          <span className="font-normal text-foreground">Range active</span>
         ) : (
           <span>Select a date range</span>
         )}

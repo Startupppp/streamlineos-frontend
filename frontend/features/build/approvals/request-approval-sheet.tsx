@@ -73,20 +73,24 @@ interface EntityItem extends ComboboxOption {
 function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
   const { data: project } = useProject(projectId);
   const projectKey = project?.key ?? "";
+  const idFor = (type: ApprovalEntityType) => (entityType === type ? projectId : 0);
 
-  const { data: ticketsData, isFetching: ticketsFetching } = useTickets(projectId, { limit: 50 });
-  const { data: milestonesPage, isFetching: milestonesFetching } = useProjectMilestones(projectId);
-  const { data: releasesPage, isFetching: releasesFetching } = useReleases(projectId);
+  const { data: ticketsData, isFetching: ticketsFetching } = useTickets(idFor("task"), { limit: 50 });
+  const { data: milestonesPage, isFetching: milestonesFetching } = useProjectMilestones(idFor("milestone"));
+  const { data: releasesPage, isFetching: releasesFetching } = useReleases(idFor("release"));
   const milestones = milestonesPage?.data;
   const releases = releasesPage?.data;
-  const { data: changeRequests, isFetching: crFetching } = useChangeRequests(projectId);
+  const { data: changeRequests, isFetching: crFetching } = useChangeRequests(idFor("change_request"));
   const { data: timesheetData, isFetching: timesheetFetching } = useTimesheetEntries(
     { projectId, limit: 50 },
     entityType === "timesheet" && projectId > 0,
   );
-  const { data: budget, isFetching: budgetFetching } = useProjectBudget(projectId);
-  const { data: projectFiles, isFetching: filesFetching } = useProjectFiles(projectId);
-  const { data: portalCRs, isFetching: portalCRFetching } = usePortalChangeRequests(projectId);
+  const { data: budget, isFetching: budgetFetching } = useProjectBudget(idFor("budget"));
+  const { data: projectFiles, isFetching: filesFetching } = useProjectFiles(idFor("document"));
+  const portalLookup = entityType === "client_approval" && projectId > 0;
+  const { data: portalCRs, isFetching: portalCRFetching } = usePortalChangeRequests(projectId, {
+    enabled: portalLookup,
+  });
 
   if (entityType === "task") {
     const tickets = ticketsData?.data ?? [];

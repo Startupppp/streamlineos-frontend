@@ -175,12 +175,12 @@ export function IncidentTimeline({ projectId, incidentId, updates, canManage, un
 
   return (
     <div className="space-y-3">
-      <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="text-micro font-medium uppercase tracking-wider text-muted-foreground">
         Timeline
       </p>
 
       {sorted.length === 0 && (
-        <p className="text-xs text-muted-foreground italic">No updates yet.</p>
+        <p className="text-micro font-normal italic text-muted-foreground">No updates yet.</p>
       )}
 
       {sorted.map((u) => (

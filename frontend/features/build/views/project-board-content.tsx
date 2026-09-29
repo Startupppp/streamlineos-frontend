@@ -159,7 +159,7 @@ export function ProjectBoardContent({
           <WifiOff className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-foreground">
+          <p className="text-sm font-medium text-foreground">
             You&apos;re offline
           </p>
           <p className="text-xs leading-relaxed text-muted-foreground">
@@ -187,7 +187,7 @@ export function ProjectBoardContent({
           <ListPlus className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-foreground">No tickets yet</p>
+          <p className="text-sm font-medium text-foreground">No tickets yet</p>
           <p className="text-xs leading-relaxed text-muted-foreground">
             Create the first ticket to start tracking work on this project.
           </p>
@@ -212,7 +212,7 @@ export function ProjectBoardContent({
           <SearchX className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-foreground">No tickets match your filters</p>
+          <p className="text-sm font-medium text-foreground">No tickets match your filters</p>
           <p className="text-xs leading-relaxed text-muted-foreground">
             Try adjusting your search or filters to find what you&apos;re looking for.
           </p>
@@ -238,7 +238,7 @@ export function ProjectBoardContent({
         return (
           <motion.div
             key="board"
-            className="flex h-full min-h-0 w-full flex-1 flex-col pb-1"
+            className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden pb-1"
             variants={viewVariants}
             initial="initial"
             animate="animate"
@@ -405,7 +405,7 @@ export function ProjectBoardContent({
 
   return (
     <ModuleNamesProvider modules={modules}>
-    <div className={cn(PAGE_CHROME_X, "flex min-h-0 flex-1 flex-col")}>
+    <div className={cn(PAGE_CHROME_X, "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden")}>
       <PageState
         resolution={resolution}
         loading={<KanbanBoardSkeleton />}
@@ -417,7 +417,7 @@ export function ProjectBoardContent({
               : firstRunEmptyState
         }
         onRetry={onRetry}
-        className="flex-1"
+        className="min-w-0 overflow-hidden flex-1"
       >
         <AnimatePresence mode="wait" initial={false}>
           {renderViewPane(view)}

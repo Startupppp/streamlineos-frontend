@@ -132,6 +132,14 @@ export function DashboardShell({
     }
     setMobileMenuOpen(true);
   }, [hideSidebar]);
+
+  const handleToggleMobileMenu = useCallback(() => {
+    if (hideSidebar) {
+      setProductSwitcherOpen(true);
+      return;
+    }
+    setMobileMenuOpen((open) => !open);
+  }, [hideSidebar]);
   const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
   const deferCloseMobileMenu = useCallback(() => {
@@ -257,6 +265,7 @@ export function DashboardShell({
                 <GlobalHeader
                   isSidebarCollapsed={isSidebarCollapsed}
                   onToggleSidebar={handleToggleSidebar}
+                  onOpenMobileMenu={handleToggleMobileMenu}
                   showSidebarToggle={showSidebarToggle}
                   mobileNavOpen={mobileMenuOpen}
                   hideAdminChrome={isPortalRoute}

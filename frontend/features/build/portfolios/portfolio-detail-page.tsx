@@ -335,7 +335,7 @@ function PortfolioDetailContent({ portfolioId }: Props) {
 
             {data.strategicGoal ? (
               <div>
-                <p className="mb-1 text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1 text-dense font-medium uppercase tracking-wider text-muted-foreground">
                   Strategic Goal
                 </p>
                 <p className={cn(TEXT_BODY, "text-sm text-foreground")}>
@@ -346,7 +346,7 @@ function PortfolioDetailContent({ portfolioId }: Props) {
 
             {data.description ? (
               <div>
-                <p className="mb-1 text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1 text-dense font-medium uppercase tracking-wider text-muted-foreground">
                   Description
                 </p>
                 <p className={cn(TEXT_BODY, "text-sm text-muted-foreground")}>
@@ -359,7 +359,7 @@ function PortfolioDetailContent({ portfolioId }: Props) {
 
         <PmSection index={1} className="space-y-3">
           <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
               Linked Projects
               {linkedProjects.length > 0 ? ` (${linkedProjects.length})` : ""}
             </p>
@@ -441,7 +441,7 @@ function PortfolioDetailContent({ portfolioId }: Props) {
         </PmSection>
 
         <PmSection index={2} className="space-y-3">
-          <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
             Programs
             {linkedPrograms.length > 0 ? ` (${linkedPrograms.length})` : ""}
           </p>

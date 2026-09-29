@@ -6,7 +6,7 @@ export function BackendUnavailableView() {
     <div className="flex flex-1 min-h-full w-full items-center justify-center p-8">
       <div className="max-w-md text-center">
         <ConnectionLostIllustration className="mx-auto mb-6 h-48 w-48" />
-        <h2 className="mb-2 text-xl font-bold text-foreground">Backend unavailable</h2>
+        <h2 className="mb-2 text-xl font-medium text-foreground">Backend unavailable</h2>
         <p className="mb-1 text-sm text-muted-foreground">
           The API server could not be reached during page render.
         </p>
