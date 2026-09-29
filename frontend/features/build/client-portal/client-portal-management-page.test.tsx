@@ -160,6 +160,14 @@ const mockUseUnpublishPortal = jest.fn();
 const mockUsePortalPreview = jest.fn();
 const mockUseProjectClientGrants = jest.fn();
 const mockUseCan = jest.fn();
+const mockRevokeMutate = jest.fn();
+const mockUseRevokeGrant = jest.fn(
+  (grantId: string): { mutate: jest.Mock; isPending: boolean; grantId: string } => ({
+    mutate: mockRevokeMutate,
+    isPending: false,
+    grantId,
+  }),
+);
 const mockUseOnlineStatus = jest.fn();
 const mockUsePageState = jest.fn();
 
@@ -172,6 +180,7 @@ jest.mock("@/hooks/api/build/client-portal-management", () => ({
 
 jest.mock("@/hooks/api/portal-access/grants", () => ({
   useProjectClientGrants: (params?: unknown) => mockUseProjectClientGrants(params),
+  useRevokeGrant: (grantId: string) => mockUseRevokeGrant(grantId),
 }));
 
 jest.mock("@/components/ui/table-pagination", () => ({
@@ -417,6 +426,74 @@ describe("ClientPortalManagementPage — grants tab", () => {
     const { ClientPortalManagementPage } = require("./client-portal-management-page");
     render(<ClientPortalManagementPage projectId={1} />);
     expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+  });
+
+  it("opens the shortcut help dialog when ? is pressed, so the shortcut has a target instead of setting dead state", () => {
+    mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+
+    expect(screen.queryByText("Keyboard shortcuts")).toBeNull();
+    fireEvent.keyDown(document, { key: "?" });
+    expect(screen.getByText("Keyboard shortcuts")).toBeInTheDocument();
+  });
+
+  it("offers a revoke control on an active grant when the viewer holds build:clientvisibility:manage", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.getByRole("button", { name: "Revoke" })).toBeInTheDocument();
+  });
+
+  it("NEGATIVE — offers no revoke control when the viewer lacks build:clientvisibility:manage, so the control fails closed (FE-44)", () => {
+    mockUseCan.mockReturnValue(false);
+    mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Revoke" })).toBeNull();
+  });
+
+  it("NEGATIVE — offers no revoke control on an already revoked grant, because revoking twice is not an action", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(
+      baseQuery({
+        data: {
+          ...GRANTS_PAGE,
+          data: [{ ...SAMPLE_GRANT, status: "REVOKED" }],
+        },
+      }),
+    );
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(screen.queryByRole("button", { name: "Revoke" })).toBeNull();
+  });
+
+  it("confirms through a destructive ConfirmDialog before revoking, and does not revoke on the click alone (FE-83)", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
+    expect(mockRevokeMutate).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("dialog", { name: "Revoke portal access?" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+    expect(mockRevokeMutate).toHaveBeenCalledTimes(1);
+  });
+
+  it("revokes the grant the row belongs to, not some other grant in the list", () => {
+    mockUseCan.mockReturnValue(true);
+    mockUseProjectClientGrants.mockReturnValue(baseQuery({ data: GRANTS_PAGE }));
+    const { ClientPortalManagementPage } = require("./client-portal-management-page");
+    render(<ClientPortalManagementPage projectId={1} />);
+    expect(mockUseRevokeGrant).toHaveBeenCalledWith(
+      SAMPLE_GRANT.projectClientGrantId,
+    );
   });
 
   it("NEGATIVE — grant name is absent when grants list is empty", () => {

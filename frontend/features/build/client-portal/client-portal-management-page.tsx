@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { usePortalSettings, usePublishPortal, useUnpublishPortal, usePortalPreview } from "@/hooks/api/build/client-portal-management";
 import { useProjectClientGrants } from "@/hooks/api/portal-access/grants";
+import { GrantRow } from "@/features/build/client-portal/grant-row";
 import { useCan } from "@/hooks/api/access";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -28,10 +29,8 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
-  PM_ROW,
 } from "@/components/pm-chrome";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { cn } from "@/lib/utils";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
 const PORTAL_TABS = ["grants", "visibility", "preview"] as const;
@@ -159,44 +158,6 @@ function PublicationStateBanner({
         destructive
       />
     </>
-  );
-}
-
-function GrantRow({ grant }: { grant: { projectClientGrantId: string; status: string; contactFirstName: string | null; contactLastName: string | null; expiresAt: string | null; canViewMilestones: boolean; canViewTasks: boolean; canViewAttachments: boolean; canViewComments: boolean; canSubmitChangeRequests: boolean } }) {
-  const name =
-    [grant.contactFirstName, grant.contactLastName].filter(Boolean).join(" ") ||
-    grant.projectClientGrantId.slice(0, 8) + "…";
-
-  const capabilities = [
-    grant.canViewMilestones && "Milestones",
-    grant.canViewTasks && "Tasks",
-    grant.canViewAttachments && "Attachments",
-    grant.canViewComments && "Comments",
-    grant.canSubmitChangeRequests && "Change Requests",
-  ].filter(Boolean);
-
-  return (
-    <div className={cn(PM_ROW, "flex-col items-start gap-1 py-3")}>
-      <div className="flex w-full items-center justify-between">
-        <span className="text-sm font-medium">{name}</span>
-        <Badge
-          variant={grant.status === "ACTIVE" ? "default" : "secondary"}
-          className="text-micro"
-        >
-          {grant.status.toLowerCase()}
-        </Badge>
-      </div>
-      {capabilities.length > 0 && (
-        <p className="text-xs text-muted-foreground">
-          Can view: {capabilities.join(", ")}
-        </p>
-      )}
-      {grant.expiresAt && (
-        <p className="text-xs text-muted-foreground">
-          Expires {new Date(grant.expiresAt).toLocaleDateString()}
-        </p>
-      )}
-    </div>
   );
 }
 
@@ -472,6 +433,10 @@ export function ClientPortalManagementPage({ projectId }: ClientPortalManagement
             </TabsContent>
           </Tabs>
         </PmSection>
+        <ShortcutHelpDialog
+          open={shortcutHelpOpen}
+          onOpenChange={handleShortcutHelpOpenChange}
+        />
       </PmPageShell>
     </PageWrapper>
   );
